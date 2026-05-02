@@ -10,7 +10,8 @@ By Luis Humberto de la Torre Herrera · All Global Holding LLC / MIRMAR EMPRESAS
 
 | Doc | Para qué sirve |
 |---|---|
-| [`docs/playbook.md`](./docs/playbook.md) | **Manual operativo de vForge.** Filosofía, sistema de diseño, flujo en 5 fases, patrones de prompt, quality gates, lessons learned. **Léelo primero.** |
+| [`docs/playbook.md`](./docs/playbook.md) | **Manual operativo de vForge.** Filosofía, sistema de diseño, flujo en 6 fases, modelo de las 3 capas (prompt vs código), patrones de prompt, quality gates, lessons learned. **Léelo primero.** |
+| [`docs/architecture.md`](./docs/architecture.md) | **Arquitectura del cerebro Forge.** Cómo está cableado el agente IA detrás de la mascota: routing, adapters, anillos de privilegio, ADRs y roadmap a Forge funcional. |
 | [`docs/v0-prompt.md`](./docs/v0-prompt.md) | Prompts exactos para pegar en v0.dev: master, screens 1–10, refinements, correctivos, brand consolidado, sistema de tema día/noche, mascota ForgeOrb. |
 
 ---
