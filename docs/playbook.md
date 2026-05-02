@@ -13,7 +13,7 @@
 3. [Stack obligatorio](#3-stack-obligatorio)
 4. [Sistema de diseño](#4-sistema-de-diseño)
 5. [Flujo de trabajo en 5 fases](#5-flujo-de-trabajo-en-5-fases)
-6. [Patrones de prompt para v0.dev](#6-patrones-de-prompt-para-v0dev)
+6. [El modelo de las 3 capas (cuándo prompt vs cuándo código)](#6-el-modelo-de-las-3-capas-cuándo-prompt-vs-cuándo-código)
 7. [Pipeline de assets e íconos](#7-pipeline-de-assets-e-íconos)
 8. [Quality gates antes de declarar `done`](#8-quality-gates-antes-de-declarar-done)
 9. [Lessons learned](#9-lessons-learned)
@@ -176,22 +176,69 @@ Cuando v0 **ignora** o **sustituye** un componente custom por uno genérico (tí
 
 ---
 
-## 6. Patrones de prompt para v0.dev
+## 6. El modelo de las 3 capas (cuándo prompt vs cuándo código)
 
-| Patrón | Cuándo usar | Característica clave | Ejemplo |
+> Regla maestra: **empezar siempre por la capa más baja. Subir solo cuando la anterior demostró que falla.** Esta regla protege la creatividad de v0 y evita que el playbook se vuelva código pre-cocinado.
+
+### Capa 1 — Prompt descriptivo en v0 *(default)*
+Lenguaje natural, denso pero conversacional. v0 puede mejorar tu idea.
+
+**Aplica a:** layout, composición, screens, secciones, listas, cards, copy, microinteracciones comunes, paletas, jerarquía tipográfica, theme tokens.
+
+### Capa 2 — Prompt con código literal (JSX / CSS / SVG embedded)
+Empuja el JSX exacto dentro del prompt. Bloquea la creatividad de v0 a cambio de garantizar geometría.
+
+**Aplica a:** componente icónico que v0 ignoró 2× con descripciones; SVG con coordenadas exactas; pseudo-elementos sub-pixel; animaciones con timing específico.
+
+### Capa 3 — Código directo en el repo *(Claude edita)*
+No pasa por v0. Quirúrgico, multi-archivo, atómico.
+
+**Aplica a:** configs (`next.config`, `tailwind.config`, `tsconfig`, `.eslintrc`); GitHub Actions / CI; deps npm; refactors cross-file (rename de tokens, mover paths); bug fixes post-commit; operaciones git; documentación; scripts; manifest, robots, sitemap.
+
+### Matriz de decisión
+
+| Necesidad | Capa | Por qué |
+|---|---|---|
+| Pantalla nueva, sección, layout | 1 | Pan y mantequilla de v0 |
+| Copy, tono, microcopy | 1 | Iteración natural |
+| Brand mark / logo (texto + CSS) | 1 → 2 si falla 2× | Comprobado: la marca quedó con prompt directo |
+| Mascota / SVG con coords exactas | 2 directo | Geometría es más rápido en código |
+| Animación con timing específico | 2 directo | Describir keyframes es tedioso |
+| Tema claro/oscuro (tokens) | 1 | v0 entiende variables CSS |
+| Refactor cross-file (rename token) | 3 | v0 no hace bien multi-archivo |
+| Configs / CI / hooks | 3 | No es dominio de v0 |
+| Bug en código ya commiteado | 3 | Atomicidad y precisión |
+| Dependencias npm | 3 | Operación de terminal |
+| Docs (`README`, `playbook`) | 3 | Vive fuera del preview |
+| OG image custom con hero | 1 → 2 | v0 puede generar la composición |
+| Favicon SVG simple | 1 | Genera y descarga |
+
+### Roles operativos
+
+- **Luis dirige el flujo creativo en v0** con prompts descriptivos (capa 1).
+- **Claude interviene** solo cuando: (a) cambio de código no-UI, (b) v0 falló 2× y se necesita JSX literal listo (capa 2), (c) toca git/CI/infra/configs/docs (capa 3).
+- **Si v0 falla**, primer envío es **refinement descriptivo más afilado**, no nuclear. El nuclear (§7/§8/§9 de `v0-prompt.md`) solo si el refinement también fue ignorado.
+- **Auditorías de calidad** (Lighthouse, contraste, build verde) las mide Claude; Luis sigue iterando lo visual.
+
+---
+
+## 6.1 Patrones de prompt para v0.dev
+
+| Patrón | Capa | Cuándo usar | Ejemplo |
 |---|---|---|---|
-| **Master** | Arranque del proyecto | Stack, tokens, layout, mock data, screens 1ª pasada | §2 |
-| **Screen** | Una pantalla nueva | Header + secciones + interacciones, todo en 6–12 líneas | §3.x |
-| **Refinement** | Detalle visual no quedó | Quirúrgico, 3–6 líneas, foco en UN componente | §4 |
-| **Surgical** | v0 sustituyó o ignoró | Trae **JSX/SVG literal**, lista de pasos numerados | §7 |
+| **Master** | 1 | Arranque del proyecto | `v0-prompt.md` §2 |
+| **Screen** | 1 | Una pantalla nueva | §3.x |
+| **Refinement** | 1 | Detalle visual no quedó (1ª vuelta) | §4 |
+| **Surgical / Nuclear** | 2 | v0 sustituyó o ignoró 2× — JSX literal | §7, §8, §9 |
+| **Token tweak** | 1 | Calibrar paleta o tipografía | §10 |
 
-### Reglas duras del prompt
+### Reglas duras del prompt (todas las capas)
 
-1. **Adjuntar referencia visual** cuando exista (logo, mascota, mood board). Texto solo no basta.
-2. **Tokens, no hex.** Decir `var(--green)`, no `#7CFF3C`, en el prompt. Educa a v0 a usar tokens.
+1. **Adjuntar referencia visual** cuando exista (logo, mascota, mood board). Texto solo no basta para componentes icónicos.
+2. **Tokens, no hex.** Decir `var(--green)`, no `#7CFF3C`. Educa a v0 a usar tokens.
 3. **Listas DO / DON'T explícitas.** v0 obedece bien negativos puntuales ("Do NOT use Sparkles").
 4. **Tamaño de respuesta acotado.** Una pantalla por turno. Una corrección por turno.
-5. **Cuando ignore, dale código.** El JSX literal es el mejor "te lo deletreo".
+5. **Cuando ignore 2×, sube de capa.** No te quedes pegado en la 1.
 
 ---
 
@@ -283,6 +330,10 @@ El acento `#7CFF3C` es perfecto para dots, fills, glows y CTAs (alta visibilidad
 ### 9.11 Componentes "on-color": pasarles un prop de inversión
 
 Si un componente icónico tiene strokes de color X y vive dentro de un contenedor con bg de color X, queda invisible. Ejemplo: el ForgeOrb verde dentro del botón verde del bottom nav → círculo vacío. Solución: prop `onGreen` (o `inverse`) que invierte los strokes a negro y mapea cualquier "cutout fill" al color del contenedor. Aplica a cualquier mascota/icon custom que reuse en superficies de acento.
+
+### 9.12 No saltar a la capa 2 antes de tiempo
+
+Sesgo descubierto al iterar la marca: tras una sola falla de v0 con la descripción del logo, Claude pasó directo a JSX literal (capa 2). Pero un prompt directo bien escrito en v0 (capa 1) terminó produciendo el wordmark correctamente. **Regla:** dos intentos descriptivos antes de subir de capa. La capa 2 cuesta creatividad de v0; la capa 1 cuesta solo un turno extra.
 
 ---
 
