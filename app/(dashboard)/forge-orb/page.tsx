@@ -1,6 +1,6 @@
 "use client";
 
-import { ForgeOrb } from "@/components/vforge/forge-orb";
+import { ForgeOrb } from "@/components/ui/forge-orb";
 
 export default function ForgeOrbDemoPage() {
   return (

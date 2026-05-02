@@ -11,4 +11,4 @@ export { MobileNav } from "./mobile-nav";
 export { Drawer } from "./drawer";
 export { ProjectSwitcher } from "./project-switcher";
 export { AppShell } from "./app-shell";
-export { ForgeOrb, ForgeOrbDemo } from "./forge-orb";
+export { ForgeOrb, ForgeOrbDemo } from "@/components/ui/forge-orb";
