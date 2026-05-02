@@ -14,7 +14,7 @@ interface StatCardProps {
 }
 
 const deltaToneClasses = {
-  positive: "text-vf-green",
+  positive: "text-vf-green-quiet",
   warning: "text-vf-warning",
   neutral: "text-vf-fg-2",
 };

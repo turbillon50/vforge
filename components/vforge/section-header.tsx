@@ -21,7 +21,7 @@ export function SectionHeader({ title, rightCta, className }: SectionHeaderProps
       {rightCta && (
         <Link
           href={rightCta.href}
-          className="text-sm text-vf-green hover:underline underline-offset-4"
+          className="text-sm text-vf-green-quiet hover:text-vf-green hover:underline underline-offset-4 transition-colors"
         >
           {rightCta.label}
         </Link>

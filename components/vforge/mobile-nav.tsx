@@ -81,14 +81,14 @@ export function MobileNav({ className }: MobileNavProps) {
               <item.icon
                 className={cn(
                   "w-5 h-5",
-                  isActive ? "text-vf-green" : "text-vf-fg-2"
+                  isActive ? "text-vf-green-quiet" : "text-vf-fg-2"
                 )}
               />
             )}
             <span
               className={cn(
                 "text-[10px] tracking-wide",
-                isActive ? "text-vf-green" : "text-vf-fg-2"
+                isActive ? "text-vf-green-quiet" : "text-vf-fg-2"
               )}
             >
               {item.name}

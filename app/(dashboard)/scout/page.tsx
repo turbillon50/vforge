@@ -38,7 +38,7 @@ export default function ScoutPage() {
         className="bg-vf-bg-1 border border-vf-border rounded-xl p-5 md:p-6 space-y-4 stagger-fade-up"
         style={{ animationDelay: "150ms" }}
       >
-        <div className="flex items-center gap-2 text-vf-green mb-2">
+        <div className="flex items-center gap-2 text-vf-green-quiet mb-2">
           <ForgeOrb size={16} state="idle" glow={false} />
           <span className="font-mono text-xs uppercase tracking-wide">Consulta al Scout</span>
         </div>
