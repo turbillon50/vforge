@@ -272,6 +272,18 @@ Tener los 8 proyectos reales con dominios, slugs y stacks reales hizo que v0 gen
 
 `claude/<slug>-<feature>-<id>` para Claude Code, `feat:`/`fix:`/`docs:` para los mensajes. Hace que el git log sea legible por máquina y por humano.
 
+### 9.9 Cuando v0 se aferra: usar prompts "nucleares" (delete + recreate)
+
+Después de pegar un correctivo con JSX literal, v0 a veces sigue editando el archivo viejo en vez de reemplazarlo, especialmente para componentes con muchas dependencias (el wordmark importa fuentes, la mascota importa framer-motion). La solución: prompts que **explícitamente** dicen "Step 1. Delete the file. Step 2. Create the new file with this code." Numerar los pasos sube ~50% la tasa de éxito al primer intento. Ver §8 y §9 de `v0-prompt.md`.
+
+### 9.10 Verde lima fluorescente: introducir un sibling "quiet"
+
+El acento `#7CFF3C` es perfecto para dots, fills, glows y CTAs (alta visibilidad). Como **texto** en labels de cuerpo (links "Ver todos", deltas "+1 esta semana") satura la pantalla en dark mode y se siente fluorescente — aunque el contraste WCAG sea AAA. La cura: token `--green-quiet` (#A8E682 dark / #4F9B2F light) para textos no-críticos. `--green` queda solo para señales (status, CTAs, marca, mascota). Ver §10 de `v0-prompt.md`.
+
+### 9.11 Componentes "on-color": pasarles un prop de inversión
+
+Si un componente icónico tiene strokes de color X y vive dentro de un contenedor con bg de color X, queda invisible. Ejemplo: el ForgeOrb verde dentro del botón verde del bottom nav → círculo vacío. Solución: prop `onGreen` (o `inverse`) que invierte los strokes a negro y mapea cualquier "cutout fill" al color del contenedor. Aplica a cualquier mascota/icon custom que reuse en superficies de acento.
+
 ---
 
 ## 10. Cómo evolucionar este playbook

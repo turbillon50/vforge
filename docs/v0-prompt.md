@@ -890,3 +890,479 @@ After the changes, render at the bottom of the v0 preview:
 </div>
 ```
 ````
+
+---
+
+## 8) ☢️ Brand "nuclear" — destruir y recrear
+
+> Cuando v0 ignoró el §5 y dejó el wordmark con corchetes `[V]Forge` en texto plano. Este prompt lo obliga a borrar el archivo y recrearlo con CSS literal.
+
+````
+NUCLEAR REPLACEMENT — completely delete the current components/shell/brand.tsx
+and recreate it from scratch. The file as it stands ignores the metallic
+chrome typography and green-rails spec. Do not patch it; replace it.
+
+Step 1. Delete components/shell/brand.tsx.
+Step 2. Create a NEW components/shell/brand.tsx with EXACTLY this code:
+
+```tsx
+"use client";
+import { cn } from "@/lib/utils";
+
+type BrandSize = "sm" | "md" | "lg" | "xl";
+
+const FONT_PX: Record<BrandSize, number> = { sm: 16, md: 22, lg: 40, xl: 72 };
+
+export function Brand({
+  size = "md",
+  showTagline = false,
+  showReflection = false,
+  className,
+}: {
+  size?: BrandSize;
+  showTagline?: boolean;
+  showReflection?: boolean;
+  className?: string;
+}) {
+  const px = FONT_PX[size];
+  return (
+    <div className={cn("brand-root inline-flex flex-col items-center", className)}>
+      <div
+        className="brand-wordmark"
+        style={{ fontSize: px, lineHeight: 1, fontWeight: 700, letterSpacing: "-0.04em" }}
+      >
+        <span className="brand-v">V</span>
+        <span className="brand-forge">
+          <span className="brand-letter">F</span>
+          <span className="brand-ring" aria-hidden />
+          <span className="brand-letter">r</span>
+          <span className="brand-letter">g</span>
+          <span className="brand-letter">e</span>
+        </span>
+      </div>
+
+      {showTagline && (
+        <div className="brand-tagline">
+          <span className="brand-line" />
+          <span className="brand-tagline-text">BUILD. DEPLOY. EVOLVE.</span>
+          <span className="brand-line" />
+        </div>
+      )}
+
+      {showReflection && size === "xl" && (
+        <div
+          aria-hidden
+          className="brand-reflection"
+          style={{ fontSize: px, lineHeight: 1, fontWeight: 700, letterSpacing: "-0.04em" }}
+        >
+          <span className="brand-v">V</span>
+          <span className="brand-forge">
+            <span className="brand-letter">F</span>
+            <span className="brand-ring" />
+            <span className="brand-letter">r</span>
+            <span className="brand-letter">g</span>
+            <span className="brand-letter">e</span>
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+Step 3. Append (or replace) these styles in app/globals.css under the
+existing token definitions:
+
+```css
+[data-theme="dark"] {
+  --metal: linear-gradient(180deg, #f7f7f7 0%, #d8d8d8 28%, #8a8a8a 52%, #c8c8c8 76%, #4b4b4b 100%);
+  --metal-shadow: 0 1px 0 rgba(0,0,0,0.6);
+}
+[data-theme="light"] {
+  --metal: linear-gradient(180deg, #1f1f1f 0%, #4a4a4a 28%, #6a6a6a 52%, #3a3a3a 76%, #0d0d0d 100%);
+  --metal-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+
+.brand-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.04em;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+.brand-letter,
+.brand-v {
+  background: var(--metal);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(var(--metal-shadow));
+}
+.brand-v {
+  position: relative;
+  display: inline-block;
+  transform: skewX(-10deg);
+  padding: 0 0.12em;
+  margin-right: 0.08em;
+}
+.brand-v::before,
+.brand-v::after {
+  content: "";
+  position: absolute;
+  top: -8%;
+  width: 3px;
+  height: 116%;
+  background: var(--green);
+  box-shadow: 0 0 14px var(--green-glow), 0 0 28px var(--green-glow);
+  border-radius: 1.5px;
+}
+.brand-v::before { left: 0; }
+.brand-v::after  { right: 0; }
+
+.brand-forge {
+  display: inline-flex;
+  align-items: center;
+}
+.brand-ring {
+  position: relative;
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  margin: 0 0.04em;
+  border: 0.08em solid var(--green);
+  border-radius: 50%;
+  box-shadow:
+    0 0 10px var(--green-glow),
+    0 0 22px var(--green-glow),
+    inset 0 0 6px var(--green-soft);
+}
+.brand-ring::before {
+  content: "";
+  position: absolute;
+  top: -0.22em;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0.12em;
+  height: 0.32em;
+  background: var(--green);
+  border-radius: 1px;
+  box-shadow: 0 0 6px var(--green-glow);
+}
+.brand-ring::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.18em;
+  height: 0.18em;
+  transform: translate(-50%, -50%);
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 4px var(--green-glow);
+}
+
+.brand-tagline {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.4em;
+  color: var(--green-text);
+  text-transform: uppercase;
+}
+.brand-line {
+  width: 32px;
+  height: 1px;
+  background: var(--green-text);
+  position: relative;
+}
+.brand-line::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--green);
+  transform: translateY(-50%);
+}
+.brand-line:first-child::after { right: -2px; }
+.brand-line:last-child::after  { left:  -2px; }
+
+.brand-reflection {
+  margin-top: 6px;
+  transform: scaleY(-1);
+  opacity: 0.18;
+  filter: blur(0.5px);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.6), transparent 70%);
+          mask-image: linear-gradient(180deg, rgba(0,0,0,0.6), transparent 70%);
+  pointer-events: none;
+}
+[data-theme="light"] .brand-reflection { opacity: 0.10; }
+
+[data-theme="light"] .brand-v::before,
+[data-theme="light"] .brand-v::after {
+  box-shadow: 0 0 10px var(--green-glow), 0 0 18px var(--green-glow);
+}
+[data-theme="light"] .brand-ring {
+  box-shadow:
+    0 0 6px rgba(124,255,60,0.35),
+    inset 0 0 4px rgba(124,255,60,0.18);
+}
+```
+
+Step 4. Verify the topbar imports <Brand /> from "@/components/shell/brand"
+and renders <Brand size="sm" />. If it imports from any other path, fix it.
+
+Step 5. Render the 4 sizes vertically at the bottom of the v0 preview:
+
+```tsx
+<div className="bg-bg p-12 space-y-10 flex flex-col items-center">
+  <Brand size="sm" />
+  <Brand size="md" />
+  <Brand size="lg" showTagline />
+  <Brand size="xl" showTagline showReflection />
+</div>
+```
+
+Do NOT keep brackets around the "V" (no `[V]` notation). Do NOT use
+plain Geist text. The wordmark must use the metallic gradient via
+-webkit-background-clip: text.
+````
+
+---
+
+## 9) ☢️ Mascota "nuclear" — verifica el archivo Y cablea el bottom nav
+
+> El bottom nav muestra un círculo verde sólido sin ojitos. Probable: el ForgeOrb usa `var(--green)` strokes sobre fondo verde → invisible. Solución: prop `onGreen` que pinta los strokes de negro.
+
+````
+NUCLEAR — the FORGE tab in the bottom nav currently renders an empty
+green circle. The ForgeOrb component is either missing or its strokes
+are var(--green) on top of a green button → invisible. Fix in three
+surgical steps.
+
+Step 1 — VERIFY OR CREATE components/ui/forge-orb.tsx with this EXACT
+code (overwrite if it exists):
+
+```tsx
+"use client";
+import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useState } from "react";
+
+type ForgeOrbProps = {
+  size?: number;
+  state?: "idle" | "loading" | "happy" | "error";
+  glow?: boolean;
+  onGreen?: boolean;
+  className?: string;
+  ariaLabel?: string;
+};
+
+export function ForgeOrb({
+  size = 96,
+  state = "idle",
+  glow = true,
+  onGreen = false,
+  className,
+  ariaLabel = "Forge",
+}: ForgeOrbProps) {
+  const reduce = useReducedMotion();
+  const stroke = onGreen
+    ? "#000"
+    : state === "error"
+    ? "var(--error)"
+    : "var(--green)";
+  const cutoutFill = onGreen ? "var(--green)" : "var(--bg)";
+
+  const [look, setLook] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    if (reduce || state === "happy") return;
+    const targets = [
+      { x: 0, y: 0 }, { x: -4, y: 0 }, { x: 0, y: 0 },
+      { x: 4, y: 0 }, { x: 0, y: 3 }, { x: 0, y: -3 },
+    ];
+    let i = 0;
+    const id = setInterval(() => {
+      i = (i + 1) % targets.length;
+      setLook(targets[i]);
+    }, 1400 + Math.random() * 1600);
+    return () => clearInterval(id);
+  }, [reduce, state]);
+
+  const eyeY = state === "happy" ? 2 : look.y;
+  const eyeX = state === "happy" || state === "error" ? 0 : look.x;
+  const eyeScaleY = state === "happy" ? 0.5 : 1;
+
+  return (
+    <span
+      role="img"
+      aria-label={ariaLabel}
+      className={className}
+      style={{
+        position: "relative",
+        display: "inline-block",
+        width: size,
+        height: size,
+        filter: onGreen
+          ? "none"
+          : "drop-shadow(0 0 10px var(--green-glow)) drop-shadow(0 0 22px var(--green-glow))",
+      }}
+    >
+      {glow && !onGreen && (
+        <span
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: "-30%",
+            background: "radial-gradient(closest-side, var(--green-glow), transparent 70%)",
+            opacity: 0.45,
+            pointerEvents: "none",
+          }}
+        />
+      )}
+      <svg viewBox="0 0 200 200" width={size} height={size} fill="none">
+        <motion.g
+          animate={
+            state === "loading" && !reduce ? { rotate: 360 }
+            : state === "error" && !reduce ? { scale: [1, 1.05, 1] }
+            : { rotate: 0 }
+          }
+          transition={
+            state === "loading" ? { repeat: Infinity, ease: "linear", duration: 1.6 }
+            : state === "error" ? { repeat: Infinity, duration: 0.8 }
+            : { duration: 0 }
+          }
+          style={{ transformOrigin: "100px 100px" }}
+        >
+          <path d="M 100,20 A 80,80 0 1,1 99.99,20" stroke={stroke} strokeWidth="6" strokeLinecap="round" fill="none" />
+          <circle cx="100" cy="100" r="72" stroke={stroke} strokeOpacity="0.45" strokeWidth="1.2" fill="none" />
+          <rect x="98.5" y="10" width="3" height="14" rx="1.5" fill={stroke} />
+          <rect x="96" y="20" width="8" height="6" fill={cutoutFill} />
+        </motion.g>
+
+        <motion.g
+          animate={{ x: eyeX, y: eyeY, scaleY: eyeScaleY }}
+          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+          style={{ transformOrigin: "100px 100px" }}
+        >
+          <motion.g
+            animate={!reduce && state !== "happy" ? { scaleY: [1, 1, 0.08, 1, 1] } : { scaleY: 1 }}
+            transition={
+              !reduce && state !== "happy"
+                ? { repeat: Infinity, duration: 5.5, times: [0, 0.93, 0.96, 0.99, 1], ease: "easeInOut" }
+                : { duration: 0 }
+            }
+            style={{ transformOrigin: "100px 100px" }}
+          >
+            <rect x="82" y="80" width="8" height="40" rx="4" fill={stroke} />
+            <rect x="110" y="80" width="8" height="40" rx="4" fill={stroke} />
+          </motion.g>
+        </motion.g>
+      </svg>
+    </span>
+  );
+}
+```
+
+Step 2 — Open components/shell/mobile-nav.tsx. Find the FORGE tab
+(elevated center button with bg-green). Whatever is inside it (Sparkles,
+Zap, blank, or nothing), DELETE it and replace with this exact JSX:
+
+```tsx
+import { ForgeOrb } from "@/components/ui/forge-orb";
+
+// inside the FORGE tab button:
+<ForgeOrb size={32} state="idle" glow={false} onGreen ariaLabel="Forge" />
+```
+
+The `onGreen` prop renders the orb in BLACK strokes so it reads
+against the lime button background. That's the bug fix.
+
+Step 3 — Search the codebase for these icons and replace each with
+<ForgeOrb /> at the appropriate size:
+  · `<Sparkles ... />` next to "FORGE" header in chat messages →
+    <ForgeOrb size={14} state="idle" glow={false} className="inline-block align-[-2px]" />
+  · `<Loader2 ... />` or generic spinner inside /forge "Building
+    en Vercel..." row →
+    <ForgeOrb size={20} state="loading" glow={false} />
+  · Any empty-state placeholder on /vision, /hunter, /scout →
+    <ForgeOrb size={120} state="idle" />
+
+Do NOT leave Sparkles, Zap, Power, Loader2, or Circle as a substitute
+for the mascot anywhere.
+
+Render at the bottom of preview:
+```tsx
+<div className="bg-bg p-12 grid grid-cols-5 gap-8 place-items-center">
+  <ForgeOrb size={96} state="idle" />
+  <ForgeOrb size={96} state="loading" />
+  <ForgeOrb size={96} state="happy" />
+  <ForgeOrb size={96} state="error" />
+  <div className="bg-green p-3 rounded-full inline-flex">
+    <ForgeOrb size={32} state="idle" glow={false} onGreen />
+  </div>
+</div>
+```
+The last cell verifies the on-green variant renders correctly.
+````
+
+---
+
+## 10) Contraste de textos verdes — apagar la fluorescencia
+
+> Para los labels que se ven "fosforescentes" en dark mode (Ver todos, +1 esta semana, etc.). Introduce un verde gemelo más calmado, sin tocar el verde principal.
+
+````
+Audit and fix green text contrast / readability.
+
+The token --green #7CFF3C has 14.5:1 contrast on black (WCAG AAA),
+but it's hyper-saturated lime. On dark mode it screams. The fix is
+NOT to change --green — it must stay loud for dots, fills, ring
+strokes and CTAs. Instead, introduce a quieter sibling for body text.
+
+Step 1 — Add to globals.css under the existing token blocks:
+
+```css
+:root {
+  --green-quiet: #A8E682;  /* desaturated, comfortable for body labels */
+}
+[data-theme="light"] {
+  --green-quiet: #4F9B2F;  /* darker for AA contrast on white */
+}
+```
+
+Step 2 — Replace --green with --green-quiet in these contexts ONLY:
+  · "Ver todos" / "Ver más" link text
+  · stat-card delta lines: "+1 esta semana", "últimos 30 días"
+  · in-card subtle annotations like "12 ok · 2 fallidos"
+    (this one stays --warning, it's a mixed-status indicator;
+    if currently green, switch to --warning)
+  · sidebar group labels (CONTROL / HERRAMIENTAS / SISTEMA) —
+    keep them --fg-2 (gray), NEVER green
+  · activity-row time stamps: --fg-2, never green
+  · empty-state subtitles: --fg-1
+  · brand <Brand /> tagline "BUILD. DEPLOY. EVOLVE."
+  · mobile bottom nav active tab label
+
+Step 3 — KEEP --green (loud) ONLY in:
+  · status pill "live" dot + text
+  · stat-card icons (top-left of each card)
+  · primary CTA buttons (bg-green text-black)
+  · brand <Brand /> rails and ring
+  · ForgeOrb strokes
+  · Forge chat message left-border accent
+  · Filter chip when active (bg-green-dim border-green text-green-quiet)
+
+Step 4 — Self-audit: search the codebase for `text-green`,
+`text-[var(--green)]`, `color: var(--green)`. Each match must be
+either (a) one of the sanctioned loud uses above, or (b) replaced
+with --green-quiet.
+
+Result: the dashboard should feel ~30% calmer on dark mode while
+keeping the lime energy in the right places (status, CTAs, brand).
+The light mode also benefits because --green-quiet at #4F9B2F has
+4.6:1 on white.
+````
