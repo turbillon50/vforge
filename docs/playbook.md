@@ -49,18 +49,22 @@
 ## 3. Stack obligatorio
 
 ```
-Framework:        Next.js 14 App Router · TypeScript estricto · ESLint
-Estilos:          Tailwind CSS 3.4 · shadcn/ui (primitives only)
-Animación:        framer-motion
+Framework:        Next.js 16 App Router (Turbopack) · TypeScript estricto · ESLint
+React:            19
+Estilos:          Tailwind CSS 4 (sintaxis @import + @theme inline) · shadcn/ui (primitives only)
+Animación:        framer-motion 12
 Iconos:           lucide-react
 Tema:             next-themes (data-theme attribute)
-Tipografía:       Geist Sans (display + body) · Geist Mono (técnico)
+Tipografía:       Geist Sans (display + body) · Geist Mono (técnico) — vía next/font/google
 Hosting:          Vercel (vercel.app o dominio propio)
 Repo:             GitHub bajo turbillon50/<slug>
 Formato commits:  Conventional Commits (feat:, fix:, docs:, refactor:)
+Package manager:  npm (package-lock.json en repo)
 ```
 
-**Nunca:** MUI, Chakra, Mantine, styled-components, emotion, iconos genéricos infantiles.
+> **Nota histórica:** el brief original especificaba Next 14 + Tailwind 3.4. v0 entregó Next 16 + Tailwind 4 y se adoptó como default. Razón en [`ADR-007`](./decisions/007-adopt-next-16-tailwind-4.md). Para proyectos nuevos, este es el stack base.
+
+**Nunca:** MUI, Chakra, Mantine, styled-components, emotion, iconos genéricos infantiles, pnpm (incompatible con CI actual).
 
 ---
 
