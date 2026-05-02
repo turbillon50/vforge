@@ -1,0 +1,519 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   vForge Design System — Dual Theme Tokens
+   ============================================ */
+
+/* Shared tokens (both themes) */
+:root {
+  --green:         #7CFF3C;
+  --green-strong:  #2D8E1F;
+  --green-dim:     rgba(124, 255, 60, 0.12);
+  --green-soft:    rgba(124, 255, 60, 0.06);
+  --warning:       #F5A524;
+  --error:         #F31260;
+  --info:          #006FEE;
+  
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark theme — default */
+[data-theme="dark"] {
+  --bg:        #000000;
+  --bg-1:      #0A0A0A;
+  --bg-2:      #111111;
+  --bg-3:      #161616;
+  --bg-elev:   #1C1C1C;
+
+  --fg:        #FAFAFA;
+  --fg-1:      #A1A1A1;
+  --fg-2:      #717171;
+  --fg-3:      #525252;
+
+  --border:    #1F1F1F;
+  --border-1:  #2A2A2A;
+  --border-2:  #383838;
+
+  --green-glow: rgba(124, 255, 60, 0.35);
+  --green-glow-light: rgba(124, 255, 60, 0.22);
+  --shadow-elev: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 0 0 1px var(--border);
+  --green-text: var(--green);
+  --green-quiet: #A8E682;
+
+  /* Metallic gradient — bright chrome on black */
+  --metal: linear-gradient(180deg,
+    #f7f7f7 0%, #d8d8d8 28%, #8a8a8a 52%, #c8c8c8 76%, #4b4b4b 100%);
+  --metal-shadow: 0 1px 0 rgba(0,0,0,0.6);
+
+  /* Reflection opacity */
+  --reflection-opacity: 0.18;
+  --glow-multiplier: 1;
+}
+
+/* Light theme — equally intentional */
+[data-theme="light"] {
+  --bg:        #FFFFFF;
+  --bg-1:      #FAFAFA;
+  --bg-2:      #F4F4F4;
+  --bg-3:      #EDEDED;
+  --bg-elev:   #FFFFFF;
+
+  --fg:        #0A0A0A;
+  --fg-1:      #525252;
+  --fg-2:      #717171;
+  --fg-3:      #A1A1A1;
+
+  --border:    #E5E5E5;
+  --border-1:  #D4D4D4;
+  --border-2:  #B8B8B8;
+
+  --green-glow: rgba(124, 255, 60, 0.22);
+  --green-glow-light: rgba(124, 255, 60, 0.12);
+  --shadow-elev: 0 1px 2px 0 rgba(0,0,0,0.04), 0 0 0 1px var(--border);
+  --green-text: var(--green-strong);
+  --green-quiet: #4F9B2F;
+
+  /* Metallic gradient — graphite chrome on white */
+  --metal: linear-gradient(180deg,
+    #1f1f1f 0%, #4a4a4a 28%, #6a6a6a 52%, #3a3a3a 76%, #0d0d0d 100%);
+  --metal-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  
+  /* Reflection opacity — reduced in light */
+  --reflection-opacity: 0.10;
+  --glow-multiplier: 0.6;
+}
+
+/* Fallback for SSR / no JS */
+:root:not([data-theme]) {
+  --bg:        #000000;
+  --bg-1:      #0A0A0A;
+  --bg-2:      #111111;
+  --bg-3:      #161616;
+  --bg-elev:   #1C1C1C;
+  --fg:        #FAFAFA;
+  --fg-1:      #A1A1A1;
+  --fg-2:      #717171;
+  --fg-3:      #525252;
+  --border:    #1F1F1F;
+  --border-1:  #2A2A2A;
+  --border-2:  #383838;
+  --green-glow: rgba(124, 255, 60, 0.35);
+  --green-glow-light: rgba(124, 255, 60, 0.22);
+  --shadow-elev: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 0 0 1px var(--border);
+  --green-text: var(--green);
+  --green-quiet: #A8E682;
+  --metal: linear-gradient(180deg, #f7f7f7 0%, #d8d8d8 28%, #8a8a8a 52%, #c8c8c8 76%, #4b4b4b 100%);
+  --metal-shadow: 0 1px 0 rgba(0,0,0,0.6);
+  --reflection-opacity: 0.18;
+  --glow-multiplier: 1;
+}
+
+/* shadcn compatibility layer */
+[data-theme="dark"],
+[data-theme="light"],
+:root:not([data-theme]) {
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --card: var(--bg-1);
+  --card-foreground: var(--fg);
+  --popover: var(--bg-1);
+  --popover-foreground: var(--fg);
+  --primary: var(--green);
+  --primary-foreground: #000000;
+  --secondary: var(--bg-2);
+  --secondary-foreground: var(--fg);
+  --muted: var(--bg-2);
+  --muted-foreground: var(--fg-2);
+  --accent: var(--green-dim);
+  --accent-foreground: var(--green);
+  --destructive: var(--error);
+  --destructive-foreground: var(--fg);
+  --input: var(--border-1);
+  --ring: var(--green);
+  --radius: 0.5rem;
+  --sidebar: var(--bg);
+  --sidebar-foreground: var(--fg);
+  --sidebar-primary: var(--green);
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: var(--bg-1);
+  --sidebar-accent-foreground: var(--fg);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--green);
+}
+
+@theme inline {
+  --font-sans: 'Geist', 'Geist Fallback', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Custom vForge colors */
+  --color-vf-bg: var(--bg);
+  --color-vf-bg-1: var(--bg-1);
+  --color-vf-bg-2: var(--bg-2);
+  --color-vf-bg-3: var(--bg-3);
+  --color-vf-bg-elev: var(--bg-elev);
+  --color-vf-fg: var(--fg);
+  --color-vf-fg-1: var(--fg-1);
+  --color-vf-fg-2: var(--fg-2);
+  --color-vf-fg-3: var(--fg-3);
+  --color-vf-border: var(--border);
+  --color-vf-border-1: var(--border-1);
+  --color-vf-border-2: var(--border-2);
+  --color-vf-green: var(--green);
+  --color-vf-green-dim: var(--green-dim);
+  --color-vf-green-glow: var(--green-glow);
+  --color-vf-green-soft: var(--green-soft);
+  --color-vf-green-strong: var(--green-strong);
+  --color-vf-green-text: var(--green-text);
+  --color-vf-green-quiet: var(--green-quiet);
+  --color-vf-warning: var(--warning);
+  --color-vf-error: var(--error);
+  --color-vf-info: var(--info);
+}
+
+@layer base {
+  * {
+    @apply border-vf-border outline-ring/50;
+  }
+  body {
+    @apply bg-vf-bg text-vf-fg antialiased;
+  }
+  html {
+    @apply bg-vf-bg;
+    transition: background-color 200ms var(--ease), color 200ms var(--ease);
+  }
+}
+
+@layer utilities {
+  .tracking-tight-vf {
+    letter-spacing: -0.02em;
+  }
+  .tracking-tighter-vf {
+    letter-spacing: -0.04em;
+  }
+  .tracking-body-vf {
+    letter-spacing: -0.005em;
+  }
+  .text-green-themed {
+    color: var(--green-text);
+  }
+}
+
+/* Green text that needs contrast in light mode */
+[data-theme="light"] .text-vf-green {
+  color: var(--green-strong);
+}
+
+/* Keep original green for icons, glows, borders - only change text */
+[data-theme="light"] .text-vf-green-always {
+  color: var(--green);
+}
+
+/* Metallic text effect */
+.text-metal {
+  background: var(--metal);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(var(--metal-shadow));
+}
+
+/* Green glow effect — auto-adjusts per theme */
+.green-glow {
+  box-shadow: 0 0 12px var(--green-glow), 0 0 4px var(--green-glow);
+}
+
+.green-glow-sm {
+  box-shadow: 0 0 6px var(--green-glow);
+}
+
+.green-glow-lg {
+  box-shadow: 0 0 14px var(--green-glow), 0 0 28px var(--green-glow);
+}
+
+[data-theme="light"] .green-glow-lg {
+  box-shadow: 0 0 10px var(--green-glow-light), 0 0 18px var(--green-glow-light);
+}
+
+/* Green ring glow */
+.ring-glow {
+  box-shadow: 0 0 10px var(--green-glow), 0 0 22px var(--green-glow), inset 0 0 6px var(--green-soft);
+}
+
+[data-theme="light"] .ring-glow {
+  box-shadow: 0 0 6px var(--green-glow-light), inset 0 0 4px var(--green-soft);
+}
+
+/* Project favicon — reduce opacity in light */
+[data-theme="light"] .project-favicon {
+  opacity: 0.7;
+}
+
+/* Pulse animation for live status */
+@keyframes pulse-live {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.dot-live {
+  animation: pulse-live 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Page transition stagger */
+.stagger-fade-up {
+  animation: fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Theme transition for all colored elements */
+[data-theme] {
+  transition: background-color 200ms var(--ease), border-color 200ms var(--ease), color 200ms var(--ease);
+}
+
+/* Scrollbar styling — theme aware */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-2);
+}
+
+/* Safe area padding for mobile */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ForgeOrb on green background — dark strokes for contrast */
+.forge-orb-on-green {
+  filter: none !important;
+}
+.forge-orb-on-green svg path {
+  stroke: #0a3d00 !important;
+}
+.forge-orb-on-green svg rect {
+  fill: #0a3d00 !important;
+}
+.forge-orb-on-green svg circle {
+  stroke: #0a3d00 !important;
+  fill: #0a3d00 !important;
+}
+/* Hide the gap mask rect on green bg */
+.forge-orb-on-green svg rect[fill="var(--bg, #000)"] {
+  fill: var(--green) !important;
+}
+/* Eye highlight dots should be visible */
+.forge-orb-on-green svg circle[fill="white"] {
+  fill: rgba(255,255,255,0.8) !important;
+}
+
+/* ============================================
+   Brand Wordmark Styles
+   ============================================ */
+
+.brand-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.04em;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.brand-letter,
+.brand-v {
+  background: var(--metal);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(var(--metal-shadow));
+}
+
+.brand-v {
+  position: relative;
+  display: inline-block;
+  transform: skewX(-10deg);
+  padding: 0 0.12em;
+  margin-right: 0.08em;
+}
+
+.brand-v::before,
+.brand-v::after {
+  content: "";
+  position: absolute;
+  top: -8%;
+  width: 3px;
+  height: 116%;
+  background: var(--green);
+  box-shadow: 0 0 14px var(--green-glow), 0 0 28px var(--green-glow);
+  border-radius: 1.5px;
+}
+.brand-v::before { left: 0; }
+.brand-v::after  { right: 0; }
+
+.brand-forge {
+  display: inline-flex;
+  align-items: center;
+}
+
+.brand-ring {
+  position: relative;
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  margin: 0 0.04em;
+  border: 0.08em solid var(--green);
+  border-radius: 50%;
+  box-shadow:
+    0 0 10px var(--green-glow),
+    0 0 22px var(--green-glow),
+    inset 0 0 6px var(--green-soft);
+}
+
+.brand-ring::before {
+  content: "";
+  position: absolute;
+  top: -0.22em;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0.12em;
+  height: 0.32em;
+  background: var(--green);
+  border-radius: 1px;
+  box-shadow: 0 0 6px var(--green-glow);
+}
+
+.brand-ring::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.18em;
+  height: 0.18em;
+  transform: translate(-50%, -50%);
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 4px var(--green-glow);
+}
+
+.brand-tagline {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.4em;
+  color: var(--green-quiet);
+  text-transform: uppercase;
+}
+
+.brand-line {
+  width: 32px;
+  height: 1px;
+  background: var(--green-quiet);
+  opacity: 0.7;
+  position: relative;
+}
+
+.brand-line::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--green);
+  transform: translateY(-50%);
+}
+.brand-line:first-child::after { right: -2px; }
+.brand-line:last-child::after  { left:  -2px; }
+
+.brand-reflection {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.04em;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  margin-top: 6px;
+  transform: scaleY(-1);
+  opacity: var(--reflection-opacity);
+  filter: blur(0.5px);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.6), transparent 70%);
+          mask-image: linear-gradient(180deg, rgba(0,0,0,0.6), transparent 70%);
+  pointer-events: none;
+}
+
+/* Light theme adjustments for brand */
+[data-theme="light"] .brand-v::before,
+[data-theme="light"] .brand-v::after {
+  box-shadow: 0 0 10px var(--green-glow), 0 0 18px var(--green-glow);
+}
+
+[data-theme="light"] .brand-ring {
+  box-shadow:
+    0 0 6px rgba(124,255,60,0.35),
+    inset 0 0 4px rgba(124,255,60,0.18);
+}
