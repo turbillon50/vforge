@@ -12,7 +12,7 @@
 2. [Cuándo aplicar este playbook](#2-cuándo-aplicar-este-playbook)
 3. [Stack obligatorio](#3-stack-obligatorio)
 4. [Sistema de diseño](#4-sistema-de-diseño)
-5. [Flujo de trabajo en 5 fases](#5-flujo-de-trabajo-en-5-fases)
+5. [Flujo de trabajo en 6 fases](#5-flujo-de-trabajo-en-6-fases)
 6. [El modelo de las 3 capas (cuándo prompt vs cuándo código)](#6-el-modelo-de-las-3-capas-cuándo-prompt-vs-cuándo-código)
 7. [Pipeline de assets e íconos](#7-pipeline-de-assets-e-íconos)
 8. [Quality gates antes de declarar `done`](#8-quality-gates-antes-de-declarar-done)
@@ -129,9 +129,9 @@ Reglas no negociables:
 
 ---
 
-## 5. Flujo de trabajo en 5 fases
+## 5. Flujo de trabajo en 6 fases
 
-> Estas son las 5 fases en orden estricto. Saltar de fase 2 a fase 4 sin pasar por 3 produce caos.
+> Estas son las 6 fases en orden estricto. Saltar de fase 2 a fase 4 sin pasar por 3 produce caos. La fase 6 (handoff a código) es la que cierra el proyecto.
 
 ### Fase 1 — Scaffold local (`~10 min`)
 
@@ -173,6 +173,46 @@ Si una pantalla salió bien pero un detalle no (ej. la paleta tiene azules suelt
 ### Fase 5 — Correctivos quirúrgicos
 
 Cuando v0 **ignora** o **sustituye** un componente custom por uno genérico (típico: pone `Sparkles` en lugar del ForgeOrb), pasa a artillería pesada: el correctivo lleva el **JSX literal** del componente. v0 no improvisa cuando le das código exacto. Ver [`docs/v0-prompt.md` §7](./v0-prompt.md).
+
+### Fase 6 — Transición v0 → código (handoff)
+
+Llega un punto en cada proyecto donde v0 ya rinde marginalmente: las pantallas existen, la navegación funciona, los datos cargan, la marca está puesta. El último 20–25% (bugs finos, multi-file refactors, configs, CI, tipado estricto) cuesta menos en código directo que en otra ronda de prompts.
+
+**Criterios de salida (cumplidos = adiós v0):**
+
+- [x] Las N rutas existen y navegan sin errores
+- [x] Día/noche funciona
+- [x] Layout responsive (desktop + móvil) verificado
+- [x] Datos mock cargan en cada pantalla
+- [x] Marca presente (aunque con polish pendiente)
+
+**Handoff (Luis hace una cosa, Claude el resto):**
+
+1. **Luis:** botón **GitHub → Sync to repository** en v0, apuntando a la rama del feature. Confirma el push y avisa.
+2. **Claude:** `git pull`, `npm install`, `npm run build` para línea base.
+3. **Claude:** auditoría — qué quedó bien, qué bugs detectó, propuesta de orden de fixes.
+4. **Claude:** itera con commits atómicos (un fix = un commit), cada uno verificable con `npm run build`.
+5. **Claude:** Lighthouse, contraste WCAG en ambos temas, build sin warnings, type-check estricto.
+6. **Claude:** marca el PR como **Ready for review** y entrega reporte final.
+
+**Lo que se queda en código (Claude) desde aquí:**
+
+- Refactors cross-file (mover componentes, renombrar tokens).
+- Tipado estricto, eliminación de `any`.
+- Configs (`next.config`, `tailwind.config`, `eslint`, `tsconfig`).
+- GitHub Actions (build check, lint check en cada PR).
+- PWA verification (manifest, maskable icons en safe zone).
+- Vercel config (env vars, redirects, headers).
+- Bug fixes finos.
+- Documentación.
+
+**Lo que vuelve a v0 (raro, pero pasa):**
+
+- Diseñar una pantalla nueva no contemplada en el plan original.
+- Explorar visualmente una variación de layout para discutir.
+- Generar assets de imagen (OG variants, hero illustrations).
+
+> Cuando esto pase, hacer la rama desde v0 (`v0/...`) en vez de la del feature, para no contaminar el código limpio. Después se mergea con cuidado.
 
 ---
 
