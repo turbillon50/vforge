@@ -391,7 +391,7 @@ Tighten interactions. Use framer-motion `<motion.div>` with `initial={{opacity:0
 
 ### Si el bottom nav móvil no quedó
 ```
-Fix the mobile bottom nav. 5 tabs: Hub · Proyectos · FORGE (raised) · Bóveda · Módulos. The center FORGE tab must be a circular button with margin-top: -16px, bg --green, text black, 4px solid --bg ring (so it pops above the bar), and a pulsing green-glow shadow. Icon: Sparkles (lucide). The other 4 tabs are flat: small icon top + label below (10px mono uppercase). Active tab: text white. Inactive: text --fg-2.
+Fix the mobile bottom nav. 5 tabs: Hub · Proyectos · FORGE (raised) · Bóveda · Módulos. The center FORGE tab must be a circular button with margin-top: -16px, bg --green, text black, 4px solid --bg ring (so it pops above the bar), and a pulsing green-glow shadow. INSIDE the green button, render <ForgeOrb size={32} state="idle" glow={false} /> — NOT a Sparkles icon, NOT a Zap icon, NOT a generic lucide primitive. The mascot orb IS the button content. The other 4 tabs are flat: small icon top + label below (10px mono uppercase). Active tab: text white. Inactive: text --fg-2.
 ```
 
 ### Si v0 mete dependencias raras
@@ -401,196 +401,492 @@ Use only shadcn/ui primitives plus framer-motion and lucide-react. No other UI l
 
 ---
 
-## 5) Logo `<Brand />` — versión "VForge premium"
+## 5) Logo `<Brand />` + íconos del sistema + soporte de tema (consolidado)
 
-> En v0: abre el componente `<Brand />` que ya generó, **adjunta la referencia visual `vforge-logo.png`** y pega este prompt.
+> En v0: abre el componente `<Brand />`, **adjunta la referencia visual `vforge-logo.png`** (el wordmark plateado con anillo verde) y pega este prompt. Reemplaza por completo la versión anterior. Incluye: recreación CSS fiel del wordmark, exportación de íconos del sistema (favicon, PWA, Apple touch, OG) y comportamiento dual día/noche del wordmark sin redibujarlo.
 
 ````
-Replace the existing <Brand /> component with a faithful CSS recreation of
-the attached reference image. Build it as a single self-contained React
-component, no images, no SVG sprites — pure CSS + a tiny inline SVG only
-for the ring's "tab" notch if needed.
+Ship a faithful CSS recreation of the attached vForge wordmark AND export
+all the system icons the project needs (favicon, PWA, Apple touch, OG).
+Single source of truth for the brand.
 
-# VISUAL TARGET (per the attached image)
-- Pure black background.
-- Large word-mark "VForge" in chrome / brushed-aluminium typography:
-  · "V" leans slightly italic (skewX(-10deg)), thick stroke.
-  · "Forge" letters: clean tight tracking, slight bevel/3D.
-  · Both V and Forge use the SAME metallic gradient:
-      background: linear-gradient(180deg,
-        #f7f7f7 0%,
-        #d8d8d8 28%,
-        #8a8a8a 52%,
-        #c8c8c8 76%,
-        #4b4b4b 100%);
-      -webkit-background-clip: text;
-      color: transparent;
-      filter: drop-shadow(0 1px 0 rgba(0,0,0,0.6));
-- Around the "V": two vertical lime-green light-bars (left + right edge),
-  not skewed brackets — they look like neon rails that the V sits between.
-  Each bar:  width 3px, height ~115% of the V, background var(--green) #7CFF3C,
-  box-shadow: 0 0 14px var(--green-glow), 0 0 28px var(--green-glow).
-  They sit just outside the V's silhouette, slightly inclined to follow
-  the V's italic angle.
-- The "o" in "Forge" is REPLACED with a glowing green power-button ring:
-  · Outer ring: 0.85em diameter, 2px solid var(--green), border-radius 50%.
-  · Box-shadow: 0 0 10px var(--green-glow), 0 0 22px var(--green-glow), inset 0 0 6px var(--green-soft).
-  · A vertical "tab" notch breaks the top of the ring: a 2px-wide × 6px-tall
-    lime-green slit centered at top, with the same glow. Implement as a
-    `::before` pseudo placed over the top edge to mask + redraw the slit.
-  · A tiny solid green dot lives in the very center of the ring (4px circle,
-    solid green, glow), to match the reference (looks like the LED indicator).
-- Tagline beneath: small mono uppercase "BUILD. DEPLOY. EVOLVE." in
-  var(--green), letter-spacing 0.4em, font-size 11px, font-weight 500.
-  Flank the tagline with two thin horizontal green lines (1px, 32px wide),
-  each ending in a tiny green dot — exactly like the reference.
-- Subtle reflection beneath the wordmark (NOT the tagline): use
-  `transform: scaleY(-1)` of a copy with mask-image gradient fading to
-  transparent, opacity 0.18, blur 0.5px. Keep it subtle.
+# 1. WORDMARK <Brand />
+- Pure CSS recreation of the attached image (no <img>, no external SVG except
+  for the optional ring "tab" notch).
+- Word "VForge". The "V" leans skewX(-10deg), thick. "Forge" is tight tracking.
+  Letterforms must read as brushed aluminium / chrome.
 
-# COMPONENT API
+## Metallic gradient (token-aware — different per theme)
+Define two metallic gradients in globals.css:
+
+  /* dark theme — bright chrome on black */
+  [data-theme="dark"] {
+    --metal: linear-gradient(180deg,
+      #f7f7f7 0%, #d8d8d8 28%, #8a8a8a 52%, #c8c8c8 76%, #4b4b4b 100%);
+    --metal-shadow: 0 1px 0 rgba(0,0,0,0.6);
+  }
+
+  /* light theme — graphite chrome on white */
+  [data-theme="light"] {
+    --metal: linear-gradient(180deg,
+      #1f1f1f 0%, #4a4a4a 28%, #6a6a6a 52%, #3a3a3a 76%, #0d0d0d 100%);
+    --metal-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  }
+
+Apply with -webkit-background-clip: text, color: transparent,
+filter: drop-shadow(var(--metal-shadow)).
+
+## Green V rails (both themes)
+Around the V: two vertical lime-green light bars (left + right edge),
+width 3px, height ~115% of the V cap-height, background var(--green) #7CFF3C.
+Box-shadow: 0 0 14px var(--green-glow), 0 0 28px var(--green-glow).
+On light theme reduce glow to 0 0 10px / 0 0 18px so it doesn't bloom.
+
+## Green ring replacing the "o" in "Forge"
+- Outer circle 0.85em, 2px solid var(--green), border-radius 50%.
+- Box-shadow (dark): 0 0 10px var(--green-glow), 0 0 22px var(--green-glow), inset 0 0 6px var(--green-soft).
+- Box-shadow (light): tighter — 0 0 6px rgba(124,255,60,0.35), inset 0 0 4px rgba(124,255,60,0.18).
+- Vertical "tab" notch on top: 2px × 6px lime-green slit, glowing,
+  rendered via ::before that masks the top of the ring then redraws
+  the slit above it.
+- Tiny 4px solid green dot in dead center of the ring (the LED).
+
+## Tagline "BUILD. DEPLOY. EVOLVE."
+Below wordmark, mono uppercase, var(--green-text), letter-spacing 0.4em,
+font-size 11px, weight 500. Flank with two 1px × 32px green hairlines,
+each ending in a tiny green dot — exactly like the reference.
+
+## Reflection (xl size only)
+A scaleY(-1) copy of the wordmark, mask-image gradient fading to
+transparent, opacity 0.18 (dark) / 0.10 (light), 0.5px blur.
+
+## Component API
 ```tsx
 type BrandProps = {
-  size?: "sm" | "md" | "lg" | "xl";  // sm=topbar, md=sidebar, lg=hero, xl=splash
-  showTagline?: boolean;             // default true on lg/xl, false on sm/md
-  showReflection?: boolean;          // default true only on xl
+  size?: "sm" | "md" | "lg" | "xl"; // sm=topbar, md=sidebar, lg=hero, xl=splash
+  showTagline?: boolean;
+  showReflection?: boolean;
   className?: string;
 };
 ```
+Sizes: sm 16px · md 22px · lg 40px · xl 72px.
 
-Sizes (font-size for the wordmark):
-  sm: 16px, md: 22px, lg: 40px, xl: 72px.
+# 2. SYSTEM ICONS (export to /public)
+Generate these files. They all share the same shape: the green power-button
+ring with the tab on top — same as the "o" in the wordmark.
+
+  /public/favicon.svg            // 32×32, transparent bg, vector
+  /public/favicon.ico            // 48×48 fallback (multi-res 16/32/48)
+  /public/icon-192.png           // PWA, 192×192, maskable safe-zone
+  /public/icon-512.png           // PWA, 512×512, maskable safe-zone
+  /public/apple-touch-icon.png   // 180×180, no transparency, bg #000
+  /public/og.png                 // 1200×630, dark variant
+  /public/og-light.png           // 1200×630, light variant
+
+For PWA maskable icons: place the ring inside an 80%-of-canvas safe zone,
+fill the surrounding 10% on each edge with solid var(--bg) so the OS can
+mask to a circle/squircle without clipping the brand.
+
+OG images: dark variant = black bg + ring + "vForge" wordmark (lg) +
+tagline + faint grid pattern. Light variant = inverse.
+
+# 3. WIRE INTO METADATA
+Update app/layout.tsx Next.js Metadata:
+
+```ts
+export const metadata: Metadata = {
+  title: { default: "vForge — Build · Deploy · Evolve", template: "%s · vForge" },
+  description: "El sistema operativo para crear y controlar tus aplicaciones como una fábrica.",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/manifest.webmanifest",
+  openGraph: {
+    title: "vForge — Build · Deploy · Evolve",
+    description: "El sistema operativo para crear y controlar tus aplicaciones como una fábrica.",
+    images: [{ url: "/og.png", width: 1200, height: 630 }],
+    locale: "es_MX", type: "website",
+  },
+};
+```
+
+Generate /public/manifest.webmanifest:
+```json
+{
+  "name": "vForge",
+  "short_name": "vForge",
+  "description": "Build · Deploy · Evolve",
+  "start_url": "/hub",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
+```
+
+# 4. TOKEN ADDITIONS (drop into globals.css)
+Add a green-strong variant for AA contrast on white:
+
+  --green:        #7CFF3C;   // accent surfaces / glows / icons
+  --green-strong: #2D8E1F;   // text/CTA labels on light bg (≥4.5:1 AA)
+  --green-text:   var(--green);  // overridden in [data-theme="light"]
+
+Use --green for fills, glows, ring strokes (works on both themes).
+Use --green-text for any GREEN TEXT (tagline, "Procede" link, status pill
+text "Live" in light mode, etc.).
 
 # DON'T
-- Do NOT use any other accent color. Only lime green #7CFF3C glows.
-- Do NOT add background image, gradient, or vignette to the component
-  itself — the parent supplies the black bg.
-- Do NOT use a real <img> or external SVG. Pure CSS + minimal inline pseudo-elements.
-- Do NOT animate the logo here (the mascot does the animation; this stays static).
+- Do NOT redraw the brand for light mode — same glyph, just swap --metal
+  and reduce glow intensity.
+- Do NOT use accent colors other than green/error/warning/info tokens.
+- Do NOT inline the icons as base64 — write real files in /public.
+- Type strict, no `any`.
 
-Render the component inside a centered black <div className="bg-bg p-16">
-preview so I can see it at all four sizes stacked vertically.
+Render the component inside a 2-column preview:
+left column on bg-bg (dark), right column on a forced white surface
+(<div data-theme="light" className="bg-white p-12 rounded-xl">…</div>),
+to verify both themes side by side.
 ````
 
 ---
 
-## 6) Mascota / Loader `<ForgeOrb />` — con expresión y ojitos animados
+## 6) Sistema de tema día / noche para TODA la app
 
-> En v0: crea un componente nuevo `<ForgeOrb />`, **adjunta la referencia visual `forge-orb-blue.png`** (la versión azul) y pega este prompt. v0 va a recrearla en verde con animaciones.
+> En v0: pega esto después de la sección 5 para activar light/dark con contraste real (no solo tokens espejados).
 
 ````
-Create a new component called <ForgeOrb /> based on the attached
-reference image (a glowing circular character with a small tab notch on
-top and two vertical "eye" bars inside). The reference is BLUE — recreate
-it in lime green #7CFF3C to match the vForge brand. It will be used as:
-  · the loader on /forge while Forge is "thinking"
-  · the empty-state mascot on /vision, /hunter, /scout
-  · the favicon (static SVG export)
-  · the avatar on Forge chat messages
-This is the "soul" of the app, so animation matters.
+Implement a real Light/Dark theme system for vForge. Goal: identical
+hierarchy and feel in both modes; not "blank page with same components"
+— each mode should feel intentionally designed.
 
-# VISUAL SPEC (recreate the attached image, GREEN)
-- SVG-based React component, viewBox="0 0 200 200", responsive width.
-- The body is a circular ring:
-  · Outer circle: cx=100 cy=100 r=80, stroke=var(--green) #7CFF3C,
-    stroke-width=6, fill=none.
-  · Add an inner subtle ring at r=72, stroke-width=1, opacity=0.5,
-    same green — gives the double-line feel of the reference image.
-  · Add a "tab" notch on the top center: a small gap in the outer
-    circle from 88° to 92° (use stroke-dasharray or two arcs), and
-    above it draw a 2px × 10px green vertical slit centered at x=100, y=18.
-- Inside the ring, two vertical "eye" capsules:
-  · Left eye:  x=82  y=80  width=8  height=40  rx=4  fill=var(--green)
-  · Right eye: x=110 y=80  width=8  height=40  rx=4  fill=var(--green)
-  · Each eye must be its own <rect> wrapped in a <g class="eye"> so we
-    can transform them independently.
-- Glow: apply an SVG <filter> using feGaussianBlur (stdDeviation 2.5)
-  + feMerge, attached to BOTH the ring and the eyes.
-  Also apply CSS filter: drop-shadow(0 0 12px var(--green-glow))
-  drop-shadow(0 0 22px var(--green-glow)) on the parent <svg>.
-- Outside the SVG, on the parent wrapper: a subtle radial-gradient
-  background-glow circle (200% size, opacity 0.18, fading to transparent)
-  so the orb feels like it lives in space — but only when prop `glow`
-  is true.
+# STACK
+- next-themes (npm i next-themes)
+- attribute="data-theme" on <html>
+- defaultTheme="dark"
+- enableSystem=true (respect prefers-color-scheme on first visit)
+- disableTransitionOnChange=false (we DO want a 200ms fade)
 
-# ANIMATIONS (this is the magic — make it feel alive)
-Use framer-motion for the eye <g> elements. Behavior loop:
+# TOKENS (replace globals.css :root entirely)
 
-1. **Idle look-around** (default infinite loop):
-   Sequence with random pauses between 1.5s and 4s:
-   - look center (translate 0,0)  → hold 2s
-   - look left   (translate -4,0) → hold 1.2s
-   - look center                 → hold 1.6s
-   - look right  (translate +4,0) → hold 1.4s
-   - look down   (translate 0,+3) → hold 1.0s
-   - look up     (translate 0,-3) → hold 1.2s
-   Use `transition: { duration: 0.25, ease: [0.4,0,0.2,1] }` between targets.
-   Both eyes move together (group transform).
+```css
+/* shared */
+:root {
+  --green:         #7CFF3C;
+  --green-strong:  #2D8E1F;
+  --green-dim:     rgba(124, 255, 60, 0.12);
+  --green-soft:    rgba(124, 255, 60, 0.06);
+  --warning:       #F5A524;
+  --error:         #F31260;
+  --info:          #006FEE;
+  --radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-2. **Blink** (interrupts the loop every 4–7s, randomized):
-   Animate `scaleY` of the eye group: 1 → 0.08 → 1, total 180ms,
-   easeInOut. Both eyes blink in sync.
+/* dark — default */
+[data-theme="dark"] {
+  --bg: #000000; --bg-1: #0A0A0A; --bg-2: #111111; --bg-3: #161616; --bg-elev: #1C1C1C;
+  --fg: #FAFAFA; --fg-1: #A1A1A1; --fg-2: #717171; --fg-3: #525252;
+  --border: #1F1F1F; --border-1: #2A2A2A; --border-2: #383838;
+  --green-glow: rgba(124, 255, 60, 0.35);
+  --shadow-elev: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 0 0 1px var(--border);
+  --green-text: var(--green);
+}
 
-3. **Squint / smile** (when prop `mood="happy"`):
-   eyes scaleY 0.5, translateY +2, hold. Used by /forge after
-   successful deploy.
-
-4. **Spin** (when prop `state="loading"`):
-   The OUTER ring rotates 360° infinite, 1.6s linear. Eyes keep
-   doing the idle look-around independently — feels like the orb is
-   processing while still aware of you.
-
-5. **Pulse** (when prop `state="error"`):
-   Tint the green to var(--error) #F31260, eyes do quick scaleY
-   0.3 / 1 / 0.3 / 1 (concerned blink), and the whole orb pulses
-   scale 1 → 1.05 → 1 every 800ms.
-
-6. **Hover follow-cursor** (always on if `interactive` prop):
-   On mouse move within 200px of the orb, eyes translate up to
-   ±6px in the direction of the cursor. Use `useMotionValue` +
-   `useSpring(stiffness: 120, damping: 20)`. On mouse leave, return
-   to idle loop.
-
-# COMPONENT API
-```tsx
-type ForgeOrbProps = {
-  size?: number;                                    // px, default 96
-  state?: "idle" | "loading" | "happy" | "error";   // default "idle"
-  mood?: "neutral" | "happy" | "concerned";         // overrides eye expression
-  glow?: boolean;                                   // background glow halo, default true
-  interactive?: boolean;                             // follows cursor, default false
-  className?: string;
-  ariaLabel?: string;                                // default "Forge"
-};
+/* light — equally intentional */
+[data-theme="light"] {
+  --bg: #FFFFFF; --bg-1: #FAFAFA; --bg-2: #F4F4F4; --bg-3: #EDEDED; --bg-elev: #FFFFFF;
+  --fg: #0A0A0A; --fg-1: #525252; --fg-2: #717171; --fg-3: #A1A1A1;
+  --border: #E5E5E5; --border-1: #D4D4D4; --border-2: #B8B8B8;
+  --green-glow: rgba(124, 255, 60, 0.22);
+  --shadow-elev: 0 1px 2px 0 rgba(0,0,0,0.04), 0 0 0 1px var(--border);
+  --green-text: var(--green-strong);
+}
 ```
 
-# ACCESSIBILITY
-- Wrap SVG with role="img" and aria-label from props.
-- If user has prefers-reduced-motion, disable the rotation, the cursor
-  follow and the random look-around — keep only a slow blink every 4s.
+# CONTRAST AUDIT (must pass before declaring done)
+- fg / bg          ≥ 16:1  in BOTH themes
+- fg-1 / bg        ≥ 4.5:1 (body)
+- fg-2 / bg        ≥ 3:1  (secondary captions only)
+- green-text / bg  ≥ 4.5:1 (use --green on dark, --green-strong on light)
+- white-on-green button (CTA): use bg-green text-black on BOTH themes
+  → black on #7CFF3C is 12.4:1, perfect.
 
-# WHERE TO USE IT
-At the bottom of the file, export 4 demo blocks for the v0 preview:
+# APPLICATION RULES (refactor existing components)
 
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-12 bg-bg">
-    <ForgeOrb size={120} />                              // idle
-    <ForgeOrb size={120} state="loading" />              // ring spinning
-    <ForgeOrb size={120} state="happy" />                // post-deploy
-    <ForgeOrb size={120} state="error" />                // build failed
-  </div>
+1. NEVER hardcode #000, #FFF, #FAFAFA, etc. Use tokens.
+2. Status pill colors stay the same hex per state, but pill BG uses
+   --bg-2, border --border in both themes.
+3. Project favicon gradients: keep their tones in dark; on light mode,
+   lower their opacity to 0.6 so they don't scream.
+4. Green dot pulse on "live" status: keep --green; box-shadow alpha
+   already handled by token.
+5. Code chips (Geist Mono): bg-bg-2 text-fg in both themes.
+6. Forge chat user message bg: dark → bg-3, light → bg-2.
+7. Vault add-secret tiles: bg-bg-1 hover:bg-bg-2 in both.
+8. Sidebar active item: 2px green left bar + bg-bg-1 (slightly tinted
+   in both modes).
+9. Reflection / glow effects in dark are dialed back ~40% in light.
+10. Logo <Brand /> already swaps --metal via [data-theme] (Section 5).
 
-Then wire it into:
-  · /forge — show <ForgeOrb state="loading" /> in place of typing indicator
-    while a Forge message is streaming.
-  · /vision, /hunter, /scout — empty-state hero shows <ForgeOrb size={160} interactive />
-  · Forge chat avatar — small <ForgeOrb size={28} />
-  · Favicon — export static SVG (no animation) of the same shape.
+# THEME TOGGLE COMPONENT <ThemeToggle />
+Place in the topbar, next to the bell.
+- Pill 56×28, rounded-full, bg-bg-2 border-border.
+- Inside: a 22×22 circle that slides left↔right when toggled
+  (transform translateX(0) ↔ translateX(28px)), 200ms ease.
+- The circle is bg-bg-elev with a sun icon (light) or moon icon (dark)
+  from lucide. Stroke color: currentColor = --fg.
+- Aria-label: "Cambiar tema · {actual}" with sr-only state text.
+- On click: setTheme(theme === "dark" ? "light" : "dark") +
+  navigator.vibrate?.(8).
+
+For mobile drawer, expose the toggle as a full row at the bottom of
+the drawer above the brand: label "Tema · Oscuro" / "Tema · Claro" with
+the same toggle on the right.
+
+# SSR HANDLING
+- Wrap the app in <ThemeProvider> in app/layout.tsx (in a `"use client"`
+  provider component).
+- Add `suppressHydrationWarning` to <html>.
+- Inline a script in <head> that reads localStorage and sets data-theme
+  BEFORE first paint to avoid the flash:
+
+```html
+<script dangerouslySetInnerHTML={{ __html: `
+  (function(){
+    try{
+      var t = localStorage.getItem('theme');
+      if(!t){ t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; }
+      document.documentElement.setAttribute('data-theme', t);
+    }catch(e){}
+  })();
+`}} />
+```
+
+# META THEME COLOR (per theme)
+Add inside <head>:
+  <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#000000" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF" />
+
+# DELIVERABLE
+- Refactored globals.css with token blocks above.
+- New components/providers/theme-provider.tsx and components/ui/theme-toggle.tsx.
+- Topbar + drawer mount <ThemeToggle />.
+- Visual audit at the bottom of v0 preview: render /hub side by side at
+  390px wide, one panel forced dark, one forced light. Both must look
+  intentional, balanced, premium.
 
 # DON'T
-- Do NOT use a PNG/JPG — pure SVG.
-- Do NOT use any other color than green/error variants.
-- Do NOT make the eyes circular dots — they're vertical capsules,
-  rounded ends, just like the reference image.
-- Do NOT animate by re-rendering — use framer-motion / CSS transforms only.
-- Keep the API typed strictly, no `any`.
+- Don't generate "high-contrast" or "sepia" — only dark and light.
+- Don't re-skin charts or icons per theme; tokens take care of it.
+- The toggle is binary; FIRST visit defaults to OS preference.
+- Type strict, zero `any`.
+````
+
+---
+
+## 7) ⚠️ CORRECTIVO — Forzar `<ForgeOrb />` (mascota) y reemplazar la estrellita del bottom nav
+
+> Cuando v0 deja `Sparkles` o `Zap` en lugar de la mascota verde con ojitos, pega este prompt **completo**. Trae el JSX literal del componente para que v0 no pueda substituirlo por un icono de lucide.
+
+````
+URGENT — Replace the Sparkles icon in the bottom nav center button with
+the vForge mascot orb. Right now /forge tab shows a generic Sparkles
+icon. That is wrong. The center FORGE button must be the green ring
+character with two vertical "eye" bars inside, exactly like the attached
+reference image (which is blue — render it in green).
+
+# STEP 1 — Create or REPLACE components/ui/forge-orb.tsx
+
+Create the file with this EXACT SVG content. Do not substitute the shapes
+for any lucide icon. Do not use Sparkles, Zap, Power, or Circle. The
+geometry is non-negotiable:
+
+```tsx
+"use client";
+import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useState } from "react";
+
+type ForgeOrbProps = {
+  size?: number;
+  state?: "idle" | "loading" | "happy" | "error";
+  glow?: boolean;
+  className?: string;
+  ariaLabel?: string;
+};
+
+export function ForgeOrb({
+  size = 96,
+  state = "idle",
+  glow = true,
+  className,
+  ariaLabel = "Forge",
+}: ForgeOrbProps) {
+  const reduce = useReducedMotion();
+  const stroke = state === "error" ? "var(--error)" : "var(--green)";
+
+  const [look, setLook] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    if (reduce || state === "happy") return;
+    const targets = [
+      { x: 0, y: 0 }, { x: -4, y: 0 }, { x: 0, y: 0 },
+      { x: 4, y: 0 }, { x: 0, y: 3 }, { x: 0, y: -3 },
+    ];
+    let i = 0;
+    const id = setInterval(() => {
+      i = (i + 1) % targets.length;
+      setLook(targets[i]);
+    }, 1400 + Math.random() * 1600);
+    return () => clearInterval(id);
+  }, [reduce, state]);
+
+  const eyeY = state === "happy" ? 2 : state === "error" ? 0 : look.y;
+  const eyeX = state === "happy" || state === "error" ? 0 : look.x;
+  const eyeScaleY = state === "happy" ? 0.5 : 1;
+
+  return (
+    <span
+      role="img"
+      aria-label={ariaLabel}
+      className={className}
+      style={{
+        position: "relative",
+        display: "inline-block",
+        width: size, height: size,
+        filter: "drop-shadow(0 0 10px var(--green-glow)) drop-shadow(0 0 22px var(--green-glow))",
+      }}
+    >
+      {glow && (
+        <span aria-hidden style={{
+          position: "absolute", inset: "-30%",
+          background: "radial-gradient(closest-side, var(--green-glow), transparent 70%)",
+          opacity: 0.45, pointerEvents: "none",
+        }} />
+      )}
+      <svg viewBox="0 0 200 200" width={size} height={size} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <motion.g
+          animate={
+            state === "loading" && !reduce ? { rotate: 360 }
+            : state === "error" && !reduce ? { scale: [1, 1.05, 1] }
+            : { rotate: 0 }
+          }
+          transition={
+            state === "loading" ? { repeat: Infinity, ease: "linear", duration: 1.6 }
+            : state === "error" ? { repeat: Infinity, duration: 0.8 }
+            : { duration: 0 }
+          }
+          style={{ transformOrigin: "100px 100px" }}
+        >
+          <path d="M 100,20 A 80,80 0 1,1 99.99,20" stroke={stroke} strokeWidth="6" strokeLinecap="round" fill="none" />
+          <circle cx="100" cy="100" r="72" stroke={stroke} strokeOpacity="0.45" strokeWidth="1.2" fill="none" />
+          <rect x="98.5" y="10" width="3" height="14" rx="1.5" fill={stroke} />
+          <rect x="96" y="20" width="8" height="6" fill="var(--bg)" />
+        </motion.g>
+
+        <motion.g
+          animate={{ x: eyeX, y: eyeY, scaleY: eyeScaleY }}
+          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+          style={{ transformOrigin: "100px 100px" }}
+        >
+          <motion.g
+            animate={!reduce && state !== "happy" ? { scaleY: [1, 1, 0.08, 1, 1] } : { scaleY: 1 }}
+            transition={
+              !reduce && state !== "happy"
+                ? { repeat: Infinity, duration: 5.5, times: [0, 0.93, 0.96, 0.99, 1], ease: "easeInOut" }
+                : { duration: 0 }
+            }
+            style={{ transformOrigin: "100px 100px" }}
+          >
+            <rect x="82" y="80" width="8" height="40" rx="4" fill={stroke} />
+            <rect x="110" y="80" width="8" height="40" rx="4" fill={stroke} />
+          </motion.g>
+        </motion.g>
+      </svg>
+    </span>
+  );
+}
+```
+
+# STEP 2 — Replace the Sparkles icon in the mobile bottom nav
+
+Open components/shell/mobile-nav.tsx. Find the center FORGE tab. It
+currently renders `<Sparkles className="h-5 w-5" />` (or similar) inside
+a green circular button. REPLACE that icon with:
+
+```tsx
+import { ForgeOrb } from "@/components/ui/forge-orb";
+
+// inside the FORGE tab button:
+<ForgeOrb size={32} state="idle" glow={false} className="forge-orb-on-green" ariaLabel="Forge" />
+```
+
+The container button keeps its lime-green circle bg, the -16px raised
+margin, and the 4px ring of var(--bg). The orb sits centered inside.
+
+In globals.css, add the on-green variant so the orb reads against
+the bright green button:
+
+```css
+.forge-orb-on-green svg path,
+.forge-orb-on-green svg circle,
+.forge-orb-on-green svg rect:not([fill="var(--bg)"]) {
+  stroke: #000 !important;
+  fill: #000;
+}
+.forge-orb-on-green svg rect[fill="var(--bg)"] { fill: var(--green); }
+.forge-orb-on-green { filter: none !important; }
+```
+
+# STEP 3 — Replace the "Building en Vercel..." spinner
+
+In the seeded /forge chat conversation, the "Building en Vercel…" step
+uses a generic loop spinner. Replace that inline icon with:
+
+```tsx
+<ForgeOrb size={20} state="loading" glow={false} />
+```
+
+Place it in the same flex row, mr-2.
+
+# STEP 4 — Replace the lightning bolt next to "FORGE" header in chat messages
+
+Each Forge message header reads `FORGE ⚡` (a Zap icon). Replace the Zap
+with:
+
+```tsx
+<ForgeOrb size={14} state="idle" glow={false} className="inline-block align-[-2px]" />
+```
+
+# STEP 5 — Add the orb to empty states
+
+On /vision, /hunter, /scout, when there is no recent item or the user
+hasn't searched yet, show a centered `<ForgeOrb size={120} state="idle" />`
+with a one-line message below in fg-1.
+
+# DON'T
+- Do NOT use lucide Sparkles, Zap, Power, Circle, Loader2, or any
+  similar primitive in place of <ForgeOrb />.
+- Do NOT change the SVG geometry. Eyes must be vertical capsules, not
+  dots, not stars.
+- Do NOT animate via re-render — only framer-motion / CSS transforms.
+- TypeScript strict, no `any`.
+
+After the changes, render at the bottom of the v0 preview:
+
+```tsx
+<div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-12 bg-bg place-items-center">
+  <ForgeOrb size={120} />
+  <ForgeOrb size={120} state="loading" />
+  <ForgeOrb size={120} state="happy" />
+  <ForgeOrb size={120} state="error" />
+</div>
+```
 ````
