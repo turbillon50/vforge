@@ -398,3 +398,199 @@ Fix the mobile bottom nav. 5 tabs: Hub · Proyectos · FORGE (raised) · Bóveda
 ```
 Use only shadcn/ui primitives plus framer-motion and lucide-react. No other UI libraries (no MUI, no Chakra, no Mantine, no styled-components, no emotion). All icons must come from lucide-react.
 ```
+
+---
+
+## 5) Logo `<Brand />` — versión "VForge premium"
+
+> En v0: abre el componente `<Brand />` que ya generó, **adjunta la referencia visual `vforge-logo.png`** y pega este prompt.
+
+````
+Replace the existing <Brand /> component with a faithful CSS recreation of
+the attached reference image. Build it as a single self-contained React
+component, no images, no SVG sprites — pure CSS + a tiny inline SVG only
+for the ring's "tab" notch if needed.
+
+# VISUAL TARGET (per the attached image)
+- Pure black background.
+- Large word-mark "VForge" in chrome / brushed-aluminium typography:
+  · "V" leans slightly italic (skewX(-10deg)), thick stroke.
+  · "Forge" letters: clean tight tracking, slight bevel/3D.
+  · Both V and Forge use the SAME metallic gradient:
+      background: linear-gradient(180deg,
+        #f7f7f7 0%,
+        #d8d8d8 28%,
+        #8a8a8a 52%,
+        #c8c8c8 76%,
+        #4b4b4b 100%);
+      -webkit-background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 1px 0 rgba(0,0,0,0.6));
+- Around the "V": two vertical lime-green light-bars (left + right edge),
+  not skewed brackets — they look like neon rails that the V sits between.
+  Each bar:  width 3px, height ~115% of the V, background var(--green) #7CFF3C,
+  box-shadow: 0 0 14px var(--green-glow), 0 0 28px var(--green-glow).
+  They sit just outside the V's silhouette, slightly inclined to follow
+  the V's italic angle.
+- The "o" in "Forge" is REPLACED with a glowing green power-button ring:
+  · Outer ring: 0.85em diameter, 2px solid var(--green), border-radius 50%.
+  · Box-shadow: 0 0 10px var(--green-glow), 0 0 22px var(--green-glow), inset 0 0 6px var(--green-soft).
+  · A vertical "tab" notch breaks the top of the ring: a 2px-wide × 6px-tall
+    lime-green slit centered at top, with the same glow. Implement as a
+    `::before` pseudo placed over the top edge to mask + redraw the slit.
+  · A tiny solid green dot lives in the very center of the ring (4px circle,
+    solid green, glow), to match the reference (looks like the LED indicator).
+- Tagline beneath: small mono uppercase "BUILD. DEPLOY. EVOLVE." in
+  var(--green), letter-spacing 0.4em, font-size 11px, font-weight 500.
+  Flank the tagline with two thin horizontal green lines (1px, 32px wide),
+  each ending in a tiny green dot — exactly like the reference.
+- Subtle reflection beneath the wordmark (NOT the tagline): use
+  `transform: scaleY(-1)` of a copy with mask-image gradient fading to
+  transparent, opacity 0.18, blur 0.5px. Keep it subtle.
+
+# COMPONENT API
+```tsx
+type BrandProps = {
+  size?: "sm" | "md" | "lg" | "xl";  // sm=topbar, md=sidebar, lg=hero, xl=splash
+  showTagline?: boolean;             // default true on lg/xl, false on sm/md
+  showReflection?: boolean;          // default true only on xl
+  className?: string;
+};
+```
+
+Sizes (font-size for the wordmark):
+  sm: 16px, md: 22px, lg: 40px, xl: 72px.
+
+# DON'T
+- Do NOT use any other accent color. Only lime green #7CFF3C glows.
+- Do NOT add background image, gradient, or vignette to the component
+  itself — the parent supplies the black bg.
+- Do NOT use a real <img> or external SVG. Pure CSS + minimal inline pseudo-elements.
+- Do NOT animate the logo here (the mascot does the animation; this stays static).
+
+Render the component inside a centered black <div className="bg-bg p-16">
+preview so I can see it at all four sizes stacked vertically.
+````
+
+---
+
+## 6) Mascota / Loader `<ForgeOrb />` — con expresión y ojitos animados
+
+> En v0: crea un componente nuevo `<ForgeOrb />`, **adjunta la referencia visual `forge-orb-blue.png`** (la versión azul) y pega este prompt. v0 va a recrearla en verde con animaciones.
+
+````
+Create a new component called <ForgeOrb /> based on the attached
+reference image (a glowing circular character with a small tab notch on
+top and two vertical "eye" bars inside). The reference is BLUE — recreate
+it in lime green #7CFF3C to match the vForge brand. It will be used as:
+  · the loader on /forge while Forge is "thinking"
+  · the empty-state mascot on /vision, /hunter, /scout
+  · the favicon (static SVG export)
+  · the avatar on Forge chat messages
+This is the "soul" of the app, so animation matters.
+
+# VISUAL SPEC (recreate the attached image, GREEN)
+- SVG-based React component, viewBox="0 0 200 200", responsive width.
+- The body is a circular ring:
+  · Outer circle: cx=100 cy=100 r=80, stroke=var(--green) #7CFF3C,
+    stroke-width=6, fill=none.
+  · Add an inner subtle ring at r=72, stroke-width=1, opacity=0.5,
+    same green — gives the double-line feel of the reference image.
+  · Add a "tab" notch on the top center: a small gap in the outer
+    circle from 88° to 92° (use stroke-dasharray or two arcs), and
+    above it draw a 2px × 10px green vertical slit centered at x=100, y=18.
+- Inside the ring, two vertical "eye" capsules:
+  · Left eye:  x=82  y=80  width=8  height=40  rx=4  fill=var(--green)
+  · Right eye: x=110 y=80  width=8  height=40  rx=4  fill=var(--green)
+  · Each eye must be its own <rect> wrapped in a <g class="eye"> so we
+    can transform them independently.
+- Glow: apply an SVG <filter> using feGaussianBlur (stdDeviation 2.5)
+  + feMerge, attached to BOTH the ring and the eyes.
+  Also apply CSS filter: drop-shadow(0 0 12px var(--green-glow))
+  drop-shadow(0 0 22px var(--green-glow)) on the parent <svg>.
+- Outside the SVG, on the parent wrapper: a subtle radial-gradient
+  background-glow circle (200% size, opacity 0.18, fading to transparent)
+  so the orb feels like it lives in space — but only when prop `glow`
+  is true.
+
+# ANIMATIONS (this is the magic — make it feel alive)
+Use framer-motion for the eye <g> elements. Behavior loop:
+
+1. **Idle look-around** (default infinite loop):
+   Sequence with random pauses between 1.5s and 4s:
+   - look center (translate 0,0)  → hold 2s
+   - look left   (translate -4,0) → hold 1.2s
+   - look center                 → hold 1.6s
+   - look right  (translate +4,0) → hold 1.4s
+   - look down   (translate 0,+3) → hold 1.0s
+   - look up     (translate 0,-3) → hold 1.2s
+   Use `transition: { duration: 0.25, ease: [0.4,0,0.2,1] }` between targets.
+   Both eyes move together (group transform).
+
+2. **Blink** (interrupts the loop every 4–7s, randomized):
+   Animate `scaleY` of the eye group: 1 → 0.08 → 1, total 180ms,
+   easeInOut. Both eyes blink in sync.
+
+3. **Squint / smile** (when prop `mood="happy"`):
+   eyes scaleY 0.5, translateY +2, hold. Used by /forge after
+   successful deploy.
+
+4. **Spin** (when prop `state="loading"`):
+   The OUTER ring rotates 360° infinite, 1.6s linear. Eyes keep
+   doing the idle look-around independently — feels like the orb is
+   processing while still aware of you.
+
+5. **Pulse** (when prop `state="error"`):
+   Tint the green to var(--error) #F31260, eyes do quick scaleY
+   0.3 / 1 / 0.3 / 1 (concerned blink), and the whole orb pulses
+   scale 1 → 1.05 → 1 every 800ms.
+
+6. **Hover follow-cursor** (always on if `interactive` prop):
+   On mouse move within 200px of the orb, eyes translate up to
+   ±6px in the direction of the cursor. Use `useMotionValue` +
+   `useSpring(stiffness: 120, damping: 20)`. On mouse leave, return
+   to idle loop.
+
+# COMPONENT API
+```tsx
+type ForgeOrbProps = {
+  size?: number;                                    // px, default 96
+  state?: "idle" | "loading" | "happy" | "error";   // default "idle"
+  mood?: "neutral" | "happy" | "concerned";         // overrides eye expression
+  glow?: boolean;                                   // background glow halo, default true
+  interactive?: boolean;                             // follows cursor, default false
+  className?: string;
+  ariaLabel?: string;                                // default "Forge"
+};
+```
+
+# ACCESSIBILITY
+- Wrap SVG with role="img" and aria-label from props.
+- If user has prefers-reduced-motion, disable the rotation, the cursor
+  follow and the random look-around — keep only a slow blink every 4s.
+
+# WHERE TO USE IT
+At the bottom of the file, export 4 demo blocks for the v0 preview:
+
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-8 p-12 bg-bg">
+    <ForgeOrb size={120} />                              // idle
+    <ForgeOrb size={120} state="loading" />              // ring spinning
+    <ForgeOrb size={120} state="happy" />                // post-deploy
+    <ForgeOrb size={120} state="error" />                // build failed
+  </div>
+
+Then wire it into:
+  · /forge — show <ForgeOrb state="loading" /> in place of typing indicator
+    while a Forge message is streaming.
+  · /vision, /hunter, /scout — empty-state hero shows <ForgeOrb size={160} interactive />
+  · Forge chat avatar — small <ForgeOrb size={28} />
+  · Favicon — export static SVG (no animation) of the same shape.
+
+# DON'T
+- Do NOT use a PNG/JPG — pure SVG.
+- Do NOT use any other color than green/error variants.
+- Do NOT make the eyes circular dots — they're vertical capsules,
+  rounded ends, just like the reference image.
+- Do NOT animate by re-rendering — use framer-motion / CSS transforms only.
+- Keep the API typed strictly, no `any`.
+````
