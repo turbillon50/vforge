@@ -45,6 +45,29 @@ const scoreStyles = {
 
 export default function VisionPage() {
   const [repoUrl, setRepoUrl] = useState("");
+  const [pasteHint, setPasteHint] = useState<string | null>(null);
+
+  async function handlePasteFromClipboard() {
+    setPasteHint(null);
+    try {
+      if (!navigator.clipboard?.readText) {
+        setPasteHint("Tu navegador no expone el portapapeles · usa ⌘/Ctrl+V");
+        return;
+      }
+      const text = (await navigator.clipboard.readText()).trim();
+      if (!text) {
+        setPasteHint("El portapapeles está vacío");
+        return;
+      }
+      setRepoUrl(text);
+      setPasteHint(null);
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(8);
+      }
+    } catch {
+      setPasteHint("Permiso del portapapeles denegado · usa ⌘/Ctrl+V");
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -98,6 +121,8 @@ export default function VisionPage() {
               Analizar
             </Button>
             <Button
+              type="button"
+              onClick={handlePasteFromClipboard}
               variant="outline"
               className="w-full sm:w-auto border-vf-border text-vf-fg-1 hover:bg-vf-bg-2 hover:text-vf-fg"
             >
@@ -105,6 +130,11 @@ export default function VisionPage() {
               Pegar del portapapeles
             </Button>
           </div>
+          {pasteHint && (
+            <p className="text-xs text-vf-fg-2 font-mono" role="status">
+              {pasteHint}
+            </p>
+          )}
         </div>
 
         {/* Method Tiles */}

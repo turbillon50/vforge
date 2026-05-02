@@ -48,11 +48,15 @@ const INITIAL_MESSAGES: ChatMessageData[] = [
 export default function ForgePage() {
   const [messages, setMessages] = useState<ChatMessageData[]>(INITIAL_MESSAGES);
 
-  const handleSend = (content: string) => {
+  const handleSend = (content: string, attachments?: { id: string; kind: string; label: string; meta: string }[]) => {
+    const attachmentNote =
+      attachments && attachments.length > 0
+        ? `\n\n📎 ${attachments.length} adjunto${attachments.length === 1 ? "" : "s"}: ${attachments.map((a) => a.label).join(", ")}`
+        : "";
     const newMessage: ChatMessageData = {
       id: Date.now().toString(),
       role: "user",
-      content,
+      content: content + attachmentNote,
     };
     setMessages((prev) => [...prev, newMessage]);
 
