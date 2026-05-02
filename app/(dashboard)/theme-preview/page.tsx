@@ -36,7 +36,7 @@ function HubPreview() {
             label={stat.label}
             value={stat.value}
             icon={stat.icon}
-            trend={stat.trend}
+            deltaLabel={stat.trend}
           />
         ))}
       </div>
@@ -51,7 +51,7 @@ function HubPreview() {
       </div>
 
       {/* Projects */}
-      <SectionHeader title="Proyectos recientes" href="/projects" />
+      <SectionHeader title="Proyectos recientes" rightCta={{ label: "Ver todos", href: "/projects" }} />
       <div className="rounded-lg border border-vf-border overflow-hidden">
         {PROJECTS.slice(0, 3).map((project, i) => (
           <ProjectRow

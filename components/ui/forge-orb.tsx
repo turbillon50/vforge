@@ -173,7 +173,7 @@ export function ForgeOrb({
         rotate: 360,
         transition: {
           repeat: Infinity,
-          ease: "linear",
+          ease: "linear" as const,
           duration: Math.max(0.6, 1.6 - intensity),
         },
       };
@@ -185,7 +185,7 @@ export function ForgeOrb({
         transition: {
           repeat: Infinity,
           duration: 2,
-          ease: "easeInOut",
+          ease: "easeInOut" as const,
         },
       };
     }
@@ -205,7 +205,7 @@ export function ForgeOrb({
         scale: [1, 1.1, 1],
         transition: {
           duration: 0.6,
-          ease: "easeOut",
+          ease: "easeOut" as const,
         },
       };
     }
@@ -216,7 +216,7 @@ export function ForgeOrb({
         transition: {
           repeat: Infinity,
           duration: 1.5,
-          ease: "easeInOut",
+          ease: "easeInOut" as const,
         },
       };
     }
@@ -227,7 +227,7 @@ export function ForgeOrb({
       transition: {
         repeat: Infinity,
         duration: 3,
-        ease: "easeInOut",
+        ease: "easeInOut" as const,
       },
     };
   };
@@ -263,7 +263,7 @@ export function ForgeOrb({
           transition={{
             repeat: Infinity,
             duration: state === "loading" ? 1 : 3,
-            ease: "easeInOut",
+            ease: "easeInOut" as const,
           }}
           style={{
             position: "absolute",
@@ -378,7 +378,7 @@ export function ForgeOrb({
             }}
             transition={{
               duration: isBlinking ? 0.08 : 0.2,
-              ease: "easeOut",
+              ease: "easeOut" as const,
             }}
             style={{ transformOrigin: "85px 100px" }}
           />
@@ -397,7 +397,7 @@ export function ForgeOrb({
             }}
             transition={{
               duration: isBlinking ? 0.08 : 0.2,
-              ease: "easeOut",
+              ease: "easeOut" as const,
             }}
             style={{ transformOrigin: "115px 100px" }}
           />

@@ -77,12 +77,14 @@ export function MobileNav({ className }: MobileNavProps) {
               "transition-colors duration-150"
             )}
           >
-            <item.icon
-              className={cn(
-                "w-5 h-5",
-                isActive ? "text-vf-green" : "text-vf-fg-2"
-              )}
-            />
+            {item.icon && (
+              <item.icon
+                className={cn(
+                  "w-5 h-5",
+                  isActive ? "text-vf-green" : "text-vf-fg-2"
+                )}
+              />
+            )}
             <span
               className={cn(
                 "text-[10px] tracking-wide",
