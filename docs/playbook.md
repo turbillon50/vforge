@@ -218,6 +218,75 @@ Llega un punto en cada proyecto donde v0 ya rinde marginalmente: las pantallas e
 
 > Cuando esto pase, hacer la rama desde v0 (`v0/...`) en vez de la del feature, para no contaminar el código limpio. Después se mergea con cuidado.
 
+### Fase 7 — Integraciones de infraestructura
+
+Tras el deploy temporal en `*.vercel.app`, el proyecto necesita ser "enchufado" a su infraestructura permanente. Cada integración sigue el mismo patrón: **Luis genera el token, Claude ejecuta vía API**.
+
+**Patrón canónico:**
+
+1. **Luis:** crea una cuenta en el proveedor (si no existe), genera un API token con scope mínimo necesario, lo pega en el chat junto con cualquier dato del recurso (nombre del dominio comprado, nombre del proyecto, etc.).
+2. **Claude:** stash del token en `/tmp/.{provider}-env` con `chmod 600`, ejecuta toda la API, verifica que la integración quedó funcional, borra el token al terminar.
+3. **Claude:** documenta el flujo en `docs/integrations/{provider}.md` con los endpoints usados, los scopes mínimos, los webhooks configurados y los env vars que el proyecto consume.
+
+**Integraciones canónicas para cualquier proyecto vForge:**
+
+| Integración | Proveedor canónico | Scope mínimo | Activa cuando |
+|---|---|---|---|
+| **Hosting + auto-deploy** | Vercel | team-scoped | Fase 6 cierra |
+| **Dominio** | Name.com (registrar) → Vercel (DNS managed) | dominio específico | Fase 7, primer paso |
+| **Base de datos** | Neon (Postgres serverless) | proyecto específico | Antes de M0 (Vault real) |
+| **Object storage** | Cloudflare R2 (S3-compatible) | bucket específico | Antes de M6 (image gen, blob persist) |
+| **Email transaccional** | Resend | sending domain específico | Antes de billing emails (Fase 3) |
+| **Analytics + errors** | Vercel Analytics + Sentry | proyecto específico | Antes de soft-launch a clientes |
+
+**Flujo específico de dominio (Name.com → Vercel):**
+
+```
+Luis envía:
+  - username de Name.com
+  - API token de Name.com
+  - nombre del dominio (ej. vforge.com)
+
+Claude ejecuta:
+  1. POST a Name.com /v4/domains/{name}/dns para crear los records
+     (CNAME @ → cname.vercel-dns.com, o A records 76.76.21.21)
+  2. POST a Vercel API /v9/projects/{id}/domains para registrar el dominio
+  3. Polling de /v9/projects/{id}/domains/{name}/config hasta verified:true
+  4. Vercel emite SSL automático (Let's Encrypt)
+  5. PATCH a Vercel env var NEXT_PUBLIC_SITE_URL = https://{dominio}
+  6. Trigger redeploy para que metadataBase y OG image apunten al nuevo dominio
+  7. curl a las N rutas en el dominio nuevo, verificar 200
+  8. Reporte a Luis con: URL canónica, fecha de expiración del SSL, fecha de
+     renovación del dominio, costo mensual de Vercel-managed DNS (gratis para
+     hobby, incluido en Pro)
+```
+
+**Flujo específico de base de datos (Neon):**
+
+```
+Luis envía:
+  - API token de Neon (con scope al proyecto que crea ahora o al que ya existe)
+  - opcional: nombre del proyecto Neon (default: nombre del repo vforge)
+
+Claude ejecuta:
+  1. POST a Neon /api/v2/projects para crear (si no existe)
+  2. GET /api/v2/projects/{id}/connection_uri para extraer DATABASE_URL
+  3. POST a Vercel /v10/projects/{id}/env con DATABASE_URL (encrypted, prod+preview)
+  4. Crear migración inicial en supabase/drizzle/prisma según stack del proyecto
+     con tablas mínimas: users, projects, secrets, forge_runs, activity_events
+  5. Run migration en branch principal de Neon
+  6. Configurar branching automático (cada PR = branch de DB)
+  7. Reporte: connection string verificada, schema creado, branching activo
+```
+
+**Reglas duras de la fase:**
+
+1. **Nunca commitear tokens** — siempre vía env vars o tmp files con chmod 600.
+2. **Nunca usar full-account scope** si el proveedor permite scope granular (proyecto / dominio / bucket específico).
+3. **Siempre borrar el tmp file con el token** al terminar la integración.
+4. **Documentar los endpoints exactos usados** en `docs/integrations/{provider}.md` para que Forge AI pueda replicarlo automáticamente cuando esté funcional (M5+).
+5. **Cada integración nueva = ADR si introduce vendor lock-in** (ej. Neon, Cloudflare R2, Resend).
+
 ---
 
 ## 6. El modelo de las 3 capas (cuándo prompt vs cuándo código)
