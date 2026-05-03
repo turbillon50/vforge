@@ -1,4 +1,5 @@
-import { sql, queryAll } from "@/lib/db/client";
+import { queryAll } from "@/lib/db/client";
+import { neon } from "@neondatabase/serverless";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -100,29 +101,40 @@ export async function POST(req: Request) {
   const vercel_url = body.vercel_url ?? null;
   const domain = body.domain ?? null;
 
-  try {
-    await sql`
-      INSERT INTO projects (
-        id, name, description,
-        github_repo, github_url,
-        vercel_url, domain,
-        category, status
-      )
-      VALUES (
-        ${id}, ${name}, ${description},
-        ${github_repo}, ${github_url},
-        ${vercel_url}, ${domain},
-        ${category}, 'unknown'
-      )
-    `;
+  // Atomic: project.insert + audit_events.insert in one transaction.
+  // If either fails, neither commits — avoids the orphan-project /
+  // duplicate-id retry loop that would otherwise occur (Codex P2).
+  const dburl = process.env.DATABASE_URL;
+  if (!dburl) {
+    return jsonError("DATABASE_URL not configured", 500);
+  }
+  const txClient = neon(dburl);
+  const auditPayload = JSON.stringify({ name, category, github_repo });
 
-    await sql`
-      INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
-      VALUES (
-        ${OPERATOR_USER_ID}, 'project.create', 'project', ${id}, 1,
-        ${JSON.stringify({ name, category, github_repo })}::jsonb
-      )
-    `;
+  try {
+    await txClient.transaction([
+      txClient`
+        INSERT INTO projects (
+          id, name, description,
+          github_repo, github_url,
+          vercel_url, domain,
+          category, status
+        )
+        VALUES (
+          ${id}, ${name}, ${description},
+          ${github_repo}, ${github_url},
+          ${vercel_url}, ${domain},
+          ${category}, 'unknown'
+        )
+      `,
+      txClient`
+        INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
+        VALUES (
+          ${OPERATOR_USER_ID}, 'project.create', 'project', ${id}, 1,
+          ${auditPayload}::jsonb
+        )
+      `,
+    ]);
 
     return new Response(JSON.stringify({ id, name }), {
       status: 201,
@@ -136,6 +148,7 @@ export async function POST(req: Request) {
     return jsonError(`db error: ${message}`, 500);
   }
 }
+
 
 function jsonError(message: string, status: number): Response {
   return new Response(JSON.stringify({ error: message }), {
