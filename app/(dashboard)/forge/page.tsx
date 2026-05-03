@@ -5,17 +5,30 @@ import { ChatStream } from "@/components/vforge/chat-stream";
 import { Composer } from "@/components/vforge/composer";
 import type { ChatMessageData } from "@/components/vforge/chat-message";
 
-const SESSION_STORAGE_KEY = "vforge_session_id";
+const SCOPE_STORAGE_KEY = "vforge_chat_scope"; // 'general' | projectId
+const SESSION_PREFIX = "vforge_session_id_";
 
-const WELCOME: ChatMessageData = {
+const WELCOME_GENERAL: ChatMessageData = {
   id: "welcome",
   role: "forge",
   content:
-    "Hola Luis. Soy V — tu asociada digital. Tengo memoria persistente, conozco tu portafolio (34 repos), el método vForge, y los ADRs. Pregúntame lo que sea o dale start con cualquier idea.",
+    "Hola Luis. Soy V — tu asociada digital. Estamos en modo general: tengo memoria persistente, conozco los 34 proyectos, el método vForge y los ADRs. Si quieres enfocar la conversación en un proyecto específico, escógelo del selector arriba. Si no, pregúntame lo que sea.",
 };
+
+function welcomeForProject(name: string): ChatMessageData {
+  return {
+    id: "welcome",
+    role: "forge",
+    content: `Conversación enfocada en **${name}**. Cualquier pregunta que hagas la voy a interpretar respecto a este proyecto a menos que cambies de tema explícitamente. ¿Qué quieres revisar de ${name}?`,
+  };
+}
 
 function makeSessionId() {
   return `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function sessionKeyFor(scope: string) {
+  return SESSION_PREFIX + scope;
 }
 
 interface PersistedTurn {
@@ -25,25 +38,45 @@ interface PersistedTurn {
   created_at: string;
 }
 
+interface ProjectOption {
+  id: string;
+  name: string;
+  category: string;
+}
+
 export default function ForgePage() {
-  const [messages, setMessages] = useState<ChatMessageData[]>([WELCOME]);
+  const [scope, setScope] = useState<string>("general");
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [messages, setMessages] = useState<ChatMessageData[]>([WELCOME_GENERAL]);
   const [streaming, setStreaming] = useState(false);
   const [hydrating, setHydrating] = useState(true);
   const sessionIdRef = useRef<string>("");
 
-  // Resolve session id from sessionStorage (per-tab persistence) + hydrate
-  // history of conversations from the DB on mount.
+  // Load scope from storage and project list on first mount.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    let sid = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    const saved = localStorage.getItem(SCOPE_STORAGE_KEY) ?? "general";
+    setScope(saved);
+    void fetch("/api/projects", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { projects: [] }))
+      .then((d: { projects: ProjectOption[] }) => setProjects(d.projects))
+      .catch(() => undefined);
+  }, []);
+
+  // Whenever scope changes, resolve its session id and rehydrate history.
+  useEffect(() => {
+    if (typeof window === "undefined" || !scope) return;
+    localStorage.setItem(SCOPE_STORAGE_KEY, scope);
+    let sid = sessionStorage.getItem(sessionKeyFor(scope));
     if (!sid) {
       sid = makeSessionId();
-      sessionStorage.setItem(SESSION_STORAGE_KEY, sid);
+      sessionStorage.setItem(sessionKeyFor(scope), sid);
     }
     sessionIdRef.current = sid;
 
+    setHydrating(true);
     void hydrate(sid);
-  }, []);
+  }, [scope]);
 
   async function hydrate(sessionId: string) {
     try {
@@ -52,30 +85,39 @@ export default function ForgePage() {
         { cache: "no-store" },
       );
       if (!res.ok) {
-        setHydrating(false);
+        setMessages([welcomeFor(scope)]);
         return;
       }
       const { turns } = (await res.json()) as { turns: PersistedTurn[] };
       if (turns.length > 0) {
-        const restored: ChatMessageData[] = turns.map((t) => ({
-          id: t.id,
-          role: t.role === "assistant" ? "forge" : "user",
-          content: t.content,
-        }));
-        setMessages(restored);
+        setMessages(
+          turns.map((t) => ({
+            id: t.id,
+            role: t.role === "assistant" ? "forge" : "user",
+            content: t.content,
+          })),
+        );
+      } else {
+        setMessages([welcomeFor(scope)]);
       }
     } catch {
-      // Network or parse error — silently keep the welcome stub.
+      setMessages([welcomeFor(scope)]);
     } finally {
       setHydrating(false);
     }
   }
 
+  function welcomeFor(s: string): ChatMessageData {
+    if (s === "general") return WELCOME_GENERAL;
+    const p = projects.find((x) => x.id === s);
+    return welcomeForProject(p?.name ?? s);
+  }
+
   function newSession() {
     const sid = makeSessionId();
-    sessionStorage.setItem(SESSION_STORAGE_KEY, sid);
+    sessionStorage.setItem(sessionKeyFor(scope), sid);
     sessionIdRef.current = sid;
-    setMessages([WELCOME]);
+    setMessages([welcomeFor(scope)]);
   }
 
   const handleSend = async (
@@ -119,6 +161,7 @@ export default function ForgePage() {
         body: JSON.stringify({
           messages: history,
           sessionId: sessionIdRef.current,
+          projectId: scope === "general" ? null : scope,
         }),
       });
       if (!res.ok || !res.body) {
@@ -183,26 +226,56 @@ export default function ForgePage() {
     void handleSend(action.toLowerCase());
   };
 
+  const projectsByCategory = projects.reduce<Record<string, ProjectOption[]>>(
+    (acc, p) => {
+      (acc[p.category] ||= []).push(p);
+      return acc;
+    },
+    {},
+  );
+
   return (
     <div className="flex flex-col h-full -mx-4 md:-mx-6 -mt-6 -mb-6">
-      <header className="sticky top-0 z-10 bg-vf-bg border-b border-vf-border px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-lg font-semibold tracking-tight-vf text-vf-fg">
+      <header className="sticky top-0 z-10 bg-vf-bg border-b border-vf-border px-4 py-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <h1 className="text-lg font-semibold tracking-tight-vf text-vf-fg flex-shrink-0">
             V
           </h1>
-          <span
-            className="text-xs font-mono text-vf-fg-2 hidden sm:inline-block"
-            title={sessionIdRef.current}
+          <select
+            value={scope}
+            onChange={(e) => setScope(e.target.value)}
+            disabled={streaming}
+            className="bg-vf-bg-2 border border-vf-border-1 rounded-md px-2 py-1.5 text-sm text-vf-fg focus:outline-none focus:border-vf-border-2 max-w-[180px] truncate"
+            title="Modo de conversación"
           >
-            sesión {sessionIdRef.current.slice(2, 10)}
-          </span>
+            <option value="general">🌐 General</option>
+            {(["produccion", "activo", "en_revision", "en_pausa", "archivo"] as const).map((cat) => {
+              const items = projectsByCategory[cat] ?? [];
+              if (items.length === 0) return null;
+              return (
+                <optgroup
+                  key={cat}
+                  label={
+                    cat === "produccion" ? "🟢 Producción" :
+                    cat === "activo" ? "🔵 Activo" :
+                    cat === "en_revision" ? "🟡 En revisión" :
+                    cat === "en_pausa" ? "⏸️ En pausa" : "📦 Archivo"
+                  }
+                >
+                  {items.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </optgroup>
+              );
+            })}
+          </select>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-shrink-0">
           <button
             type="button"
             onClick={newSession}
             className="text-xs text-vf-fg-2 hover:text-vf-fg transition-colors"
-            title="Empezar una conversación nueva (limpia memoria de sesión)"
+            title="Empezar una conversación nueva en este modo"
           >
             Nueva
           </button>
@@ -211,11 +284,7 @@ export default function ForgePage() {
               className={`w-2 h-2 rounded-full bg-vf-green ${streaming ? "" : "dot-live"}`}
             />
             <span className="text-sm text-vf-fg-1">
-              {hydrating
-                ? "Cargando…"
-                : streaming
-                  ? "Pensando…"
-                  : "Listo"}
+              {hydrating ? "Cargando…" : streaming ? "Pensando…" : "Listo"}
             </span>
           </div>
         </div>

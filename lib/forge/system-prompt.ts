@@ -1,4 +1,4 @@
-import { queryOne, queryAll } from "@/lib/db/client";
+import { queryAll, queryOne } from "@/lib/db/client";
 
 interface SystemConfig {
   ai_name: string;
@@ -16,6 +16,20 @@ interface KnowledgeEntry {
   tags: string[];
 }
 
+interface ProjectFocus {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  status: string;
+  github_repo: string | null;
+  github_url: string | null;
+  github_private: boolean;
+  github_language: string | null;
+  vercel_url: string | null;
+  domain: string | null;
+}
+
 /**
  * Build the system prompt for V by combining:
  *  1. Core personality from system_config
@@ -23,8 +37,11 @@ interface KnowledgeEntry {
  *  3. Method + key ADRs (always included)
  *  4. Recent lessons (last 10)
  *  5. Project catalog summary (counts + names by category)
+ *  6. Optional: focused project context when conversation is project-scoped
  */
-export async function buildSystemPrompt(): Promise<{
+export async function buildSystemPrompt(
+  options: { projectId?: string | null } = {},
+): Promise<{
   systemPrompt: string;
   config: SystemConfig;
 }> {
@@ -66,8 +83,42 @@ export async function buildSystemPrompt(): Promise<{
      ORDER BY category`,
   );
 
+  // Optional focused project context
+  let projectFocus: ProjectFocus | null = null;
+  if (options.projectId) {
+    projectFocus = await queryOne<ProjectFocus>(
+      `SELECT id, name, description, category, status,
+              github_repo, github_url, github_private, github_language,
+              vercel_url, domain
+         FROM projects WHERE id = $1`,
+      [options.projectId],
+    );
+  }
+
   const knowledgeSection = formatKnowledge([...coreKnowledge, ...lessons]);
   const projectSection = formatProjects(projectSummary);
+  const focusSection = projectFocus
+    ? [
+        "─────────────────────────────────────────",
+        `PROYECTO EN FOCO — ${projectFocus.name}`,
+        "─────────────────────────────────────────",
+        `id:           ${projectFocus.id}`,
+        `descripción:  ${projectFocus.description ?? "(sin descripción)"}`,
+        `categoría:    ${projectFocus.category}`,
+        `estado:       ${projectFocus.status}`,
+        `repo:         ${projectFocus.github_repo ?? "—"}${projectFocus.github_private ? " (privado)" : ""}`,
+        `lenguaje:     ${projectFocus.github_language ?? "—"}`,
+        `URL deploy:   ${projectFocus.vercel_url ?? "—"}`,
+        `dominio:      ${projectFocus.domain ?? "—"}`,
+        "",
+        `Esta conversación está enfocada en este proyecto. Cuando Luis pregunte algo sin especificar proyecto, asume que se refiere a ${projectFocus.name}. Si Luis cambia explícitamente de tema, sigue el flujo natural.`,
+      ].join("\n")
+    : [
+        "─────────────────────────────────────────",
+        "MODO CONVERSACIÓN",
+        "─────────────────────────────────────────",
+        "Modo general: la conversación NO está enfocada en un proyecto específico. Si Luis menciona un proyecto, identifícalo del catálogo. Si la pregunta es ambigua, pregunta a cuál se refiere.",
+      ].join("\n");
 
   const systemPrompt = [
     config.ai_personality,
@@ -81,6 +132,8 @@ export async function buildSystemPrompt(): Promise<{
     "CATÁLOGO DE PROYECTOS (real, cross-checked GitHub + Vercel)",
     "─────────────────────────────────────────",
     projectSection,
+    "",
+    focusSection,
     "",
     "─────────────────────────────────────────",
     "CONFIGURACIÓN ACTUAL",
