@@ -1,317 +1,490 @@
 "use client";
 
-import { useState } from "react";
-import { VAULT_SECRETS, PROJECTS } from "@/lib/mock-data";
-import { Lock, Clipboard, Camera, Upload, Mic, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import {
-  CameraCapture,
-  FileDropZone,
-  VoiceRecorder,
-  PasteText,
-  type CameraCaptureResult,
-  type FileDropResult,
-  type VoiceRecorderResult,
-  type PasteTextResult,
-} from "@/components/web-apis";
+  Lock,
+  Plus,
+  Eye,
+  EyeOff,
+  Copy,
+  Check,
+  Trash2,
+  ShieldCheck,
+  ShieldAlert,
+  KeyRound,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-type FilterType = "all" | "castores" | "vandefi" | "urmah" | "global";
-type CaptureMethod = "paste" | "camera" | "upload" | "voice" | null;
-
-interface CapturedDraft {
-  method: CaptureMethod;
-  summary: string;
-  capturedAt: Date;
+interface SecretMetadata {
+  id: string;
+  name: string;
+  description: string | null;
+  provider: string | null;
+  scope: string | null;
+  created_at: string;
+  rotated_at: string | null;
+  last_used_at: string | null;
 }
 
-const FILTERS: { key: FilterType; label: string }[] = [
-  { key: "all", label: "Todos" },
-  { key: "castores", label: "Castores" },
-  { key: "vandefi", label: "VanDeFi" },
-  { key: "urmah", label: "URMAH" },
-  { key: "global", label: "Globales" },
-];
-
-const METHOD_TILES: {
-  method: Exclude<CaptureMethod, null>;
-  icon: typeof Clipboard;
-  title: string;
-  description: string;
-}[] = [
-  {
-    method: "paste",
-    icon: Clipboard,
-    title: "Pegar texto",
-    description: "Copia y pega el valor del secreto",
-  },
-  {
-    method: "camera",
-    icon: Camera,
-    title: "Foto del archivo .env",
-    description: "Escanea con la cámara del móvil",
-  },
-  {
-    method: "upload",
-    icon: Upload,
-    title: "Subir .env",
-    description: "Arrastra o selecciona un archivo",
-  },
-  {
-    method: "voice",
-    icon: Mic,
-    title: "Dictado por voz",
-    description: "Dicta el nombre y valor del secreto",
-  },
-];
+interface VaultHealth {
+  ok: boolean;
+  error?: string;
+}
 
 export default function VaultPage() {
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
-  const [activeMethod, setActiveMethod] = useState<CaptureMethod>(null);
-  const [drafts, setDrafts] = useState<CapturedDraft[]>([]);
+  const [secrets, setSecrets] = useState<SecretMetadata[]>([]);
+  const [health, setHealth] = useState<VaultHealth | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
 
-  const filteredSecrets = VAULT_SECRETS.filter((secret) => {
-    if (activeFilter === "all") return true;
-    if (activeFilter === "global") return secret.project === null;
-    return secret.project === activeFilter;
-  });
-
-  const getProjectName = (projectId: string | null) => {
-    if (!projectId) return "Global";
-    const project = PROJECTS.find((p) => p.id === projectId);
-    return project?.name || projectId;
-  };
-
-  function pushDraft(method: Exclude<CaptureMethod, null>, summary: string) {
-    setDrafts((prev) => [
-      { method, summary, capturedAt: new Date() },
-      ...prev,
-    ]);
+  async function load() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/vault/operator-secrets", { cache: "no-store" });
+      if (!res.ok) throw new Error("fail");
+      const data = (await res.json()) as { secrets: SecretMetadata[]; vault_health: VaultHealth };
+      setSecrets(data.secrets);
+      setHealth(data.vault_health);
+    } catch {
+      setHealth({ ok: false, error: "fetch failed" });
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function handlePaste(r: PasteTextResult) {
-    pushDraft("paste", `${r.text.length} caracteres pegados`);
-  }
-  function handleCamera(r: CameraCaptureResult) {
-    pushDraft(
-      "camera",
-      `Foto ${r.width}×${r.height} (${(r.blob.size / 1024).toFixed(0)} KB)`,
-    );
-  }
-  function handleUpload(r: FileDropResult) {
-    pushDraft(
-      "upload",
-      `${r.file.name} · ${(r.file.size / 1024).toFixed(1)} KB`,
-    );
-  }
-  function handleVoice(r: VoiceRecorderResult) {
-    pushDraft(
-      "voice",
-      `${r.durationSec.toFixed(1)}s · ${r.mimeType.split(";")[0]}`,
-    );
-  }
+  useEffect(() => {
+    void load();
+  }, []);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <header className="space-y-1">
-        <p
-          className="font-mono text-[11px] uppercase tracking-wide text-vf-fg-2 stagger-fade-up"
-          style={{ animationDelay: "0ms" }}
-        >
-          BÓVEDA · 0-knowledge
+        <p className="font-mono text-[11px] uppercase tracking-wide text-vf-fg-2">
+          Bóveda · server-side encrypted
         </p>
-        <h1
-          className="text-3xl md:text-4xl font-semibold tracking-tight-vf text-vf-fg stagger-fade-up"
-          style={{ animationDelay: "50ms" }}
-        >
-          Tus secretos
-        </h1>
-        <p
-          className="text-vf-fg-1 stagger-fade-up"
-          style={{ animationDelay: "100ms" }}
-        >
-          Cifrados extremo a extremo · acceso por 2FA
+        <div className="flex items-baseline justify-between gap-3">
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight-vf text-vf-fg">
+            {loading ? "Cargando…" : `${secrets.length} secreto${secrets.length === 1 ? "" : "s"}`}
+          </h1>
+          <button
+            type="button"
+            onClick={() => setShowAdd(true)}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-vf-green text-black text-sm font-medium flex-shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            Agregar
+          </button>
+        </div>
+        <p className="text-sm text-vf-fg-2">
+          Cifradas AES-256-GCM con master pepper · V las invoca automáticamente cuando las necesita
         </p>
       </header>
 
-      {/* Filter Chips */}
-      <div
-        className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide stagger-fade-up"
-        style={{ animationDelay: "150ms" }}
-      >
-        {FILTERS.map((filter) => (
-          <button
-            key={filter.key}
-            onClick={() => setActiveFilter(filter.key)}
-            className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-150",
-              "border min-h-[44px]",
-              activeFilter === filter.key
-                ? "bg-vf-green text-black border-vf-green"
-                : "bg-vf-bg-1 text-vf-fg-1 border-vf-border hover:bg-vf-bg-2 hover:text-vf-fg",
-            )}
-          >
-            {filter.label}
-          </button>
-        ))}
-      </div>
+      {/* Vault health */}
+      {health && (
+        <div
+          className={cn(
+            "flex items-center gap-2 px-3 py-2 rounded-md text-xs font-mono",
+            health.ok
+              ? "bg-vf-green-soft border border-vf-green/30 text-vf-green-quiet"
+              : "bg-vf-bg-2 border border-vf-error/40 text-vf-error",
+          )}
+        >
+          {health.ok ? (
+            <>
+              <ShieldCheck className="w-3.5 h-3.5" />
+              vault crypto OK · self-test passed
+            </>
+          ) : (
+            <>
+              <ShieldAlert className="w-3.5 h-3.5" />
+              vault crypto error: {health.error}
+            </>
+          )}
+        </div>
+      )}
 
-      {/* Add Secret Card */}
-      <div
-        className="bg-vf-bg-1 border border-vf-border rounded-lg p-5 stagger-fade-up"
-        style={{ animationDelay: "200ms" }}
-      >
-        <h2 className="text-lg font-semibold text-vf-fg mb-1">
-          Agregar secreto
-        </h2>
-        <p className="text-sm text-vf-fg-2 mb-4">Elige cómo lo capturas</p>
-
-        <div className="grid grid-cols-2 gap-3">
-          {METHOD_TILES.map((tile) => (
-            <button
-              key={tile.method}
-              onClick={() => setActiveMethod(tile.method)}
-              className={cn(
-                "flex flex-col items-start gap-2 p-4 rounded-lg",
-                "bg-vf-bg border border-vf-border",
-                "hover:bg-vf-bg-2 hover:border-vf-border-1 transition-colors duration-150",
-                "text-left min-h-[44px]",
-              )}
-            >
-              <tile.icon className="w-5 h-5 text-vf-green" />
-              <div>
-                <div className="text-sm font-medium text-vf-fg">
-                  {tile.title}
-                </div>
-                <div className="text-xs text-vf-fg-2 mt-0.5">
-                  {tile.description}
-                </div>
-              </div>
-            </button>
+      {/* List or empty state */}
+      {!loading && secrets.length === 0 ? (
+        <EmptyState onAdd={() => setShowAdd(true)} />
+      ) : (
+        <div className="border border-vf-border rounded-xl overflow-hidden bg-vf-bg-1">
+          {secrets.map((s, i) => (
+            <SecretRow
+              key={s.id}
+              secret={s}
+              isFirst={i === 0}
+              onDelete={load}
+            />
           ))}
         </div>
+      )}
 
-        {/* Drafts pending backend */}
-        {drafts.length > 0 && (
-          <div className="mt-5 pt-5 border-t border-vf-border space-y-2">
-            <p className="font-mono text-[11px] uppercase tracking-wide text-vf-fg-2">
-              Capturas pendientes · esperando backend
-            </p>
-            {drafts.slice(0, 5).map((d, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 text-sm bg-vf-bg-2 border border-vf-border rounded-md px-3 py-2"
-              >
-                <Check className="w-4 h-4 text-vf-green-quiet flex-shrink-0" />
-                <span className="font-mono text-xs text-vf-fg-2 uppercase">
-                  {d.method}
-                </span>
-                <span className="text-vf-fg flex-1 min-w-0 truncate">
-                  {d.summary}
-                </span>
-                <span className="font-mono text-[10px] text-vf-fg-3 flex-shrink-0">
-                  {d.capturedAt.toLocaleTimeString("es-MX", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </div>
-            ))}
+      {showAdd && (
+        <AddSecretModal
+          onClose={() => setShowAdd(false)}
+          onAdded={() => {
+            setShowAdd(false);
+            void load();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EmptyState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="border border-dashed border-vf-border-1 rounded-xl px-6 py-16 text-center space-y-4">
+      <KeyRound className="w-10 h-10 text-vf-fg-3 mx-auto" />
+      <div>
+        <h2 className="text-vf-fg font-semibold text-lg">La bóveda está vacía</h2>
+        <p className="text-vf-fg-2 text-sm mt-1 max-w-md mx-auto">
+          Agrega tus API keys una por una. Cada una se cifra con AES-256-GCM
+          server-side. V las invoca cuando ejecuta acciones.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onAdd}
+        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-vf-green text-black text-sm font-medium"
+      >
+        <Plus className="w-4 h-4" />
+        Agregar tu primera key
+      </button>
+    </div>
+  );
+}
+
+function SecretRow({
+  secret,
+  isFirst,
+  onDelete,
+}: {
+  secret: SecretMetadata;
+  isFirst: boolean;
+  onDelete: () => void;
+}) {
+  const [revealed, setRevealed] = useState<string | null>(null);
+  const [revealing, setRevealing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function reveal() {
+    if (revealed) {
+      setRevealed(null);
+      return;
+    }
+    setRevealing(true);
+    try {
+      const res = await fetch(`/api/vault/operator-secrets/${secret.id}/value`, {
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error("fail");
+      const data = (await res.json()) as { value: string };
+      setRevealed(data.value);
+    } catch {
+      // silent
+    } finally {
+      setRevealing(false);
+    }
+  }
+
+  async function copy() {
+    setRevealing(true);
+    try {
+      const res = await fetch(`/api/vault/operator-secrets/${secret.id}/value`, {
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error("fail");
+      const data = (await res.json()) as { value: string };
+      await navigator.clipboard.writeText(data.value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // silent
+    } finally {
+      setRevealing(false);
+    }
+  }
+
+  async function doDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/vault/operator-secrets/${secret.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) onDelete();
+    } finally {
+      setDeleting(false);
+      setConfirmingDelete(false);
+    }
+  }
+
+  const meta: string[] = [];
+  if (secret.provider) meta.push(secret.provider);
+  if (secret.scope) meta.push(secret.scope);
+  if (secret.last_used_at) {
+    meta.push(`usado ${new Date(secret.last_used_at).toLocaleDateString("es-MX")}`);
+  } else {
+    meta.push("nunca usado");
+  }
+
+  return (
+    <div
+      className={cn(
+        "px-4 py-4 flex items-center gap-3",
+        !isFirst && "border-t border-vf-border",
+      )}
+    >
+      <Lock className="w-4 h-4 text-vf-green-quiet flex-shrink-0" />
+      <div className="flex-1 min-w-0">
+        <div className="font-mono text-sm text-vf-fg truncate">{secret.name}</div>
+        {revealed && (
+          <div className="font-mono text-[11px] text-vf-fg break-all bg-vf-bg-2 border border-vf-border-1 rounded px-2 py-1 mt-1">
+            {revealed}
+          </div>
+        )}
+        <div className="font-mono text-[11px] text-vf-fg-2 truncate mt-0.5">
+          {meta.join(" · ")}
+          {secret.description && ` · ${secret.description}`}
+        </div>
+      </div>
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <button
+          type="button"
+          onClick={reveal}
+          disabled={revealing}
+          className="w-9 h-9 flex items-center justify-center rounded-md text-vf-fg-2 hover:text-vf-fg hover:bg-vf-bg-2 disabled:opacity-50"
+          aria-label={revealed ? "Ocultar" : "Ver"}
+          title={revealed ? "Ocultar" : "Ver valor"}
+        >
+          {revealed ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
+        <button
+          type="button"
+          onClick={copy}
+          disabled={revealing}
+          className={cn(
+            "w-9 h-9 flex items-center justify-center rounded-md hover:bg-vf-bg-2 disabled:opacity-50",
+            copied ? "text-vf-green" : "text-vf-fg-2 hover:text-vf-fg",
+          )}
+          aria-label="Copiar"
+          title="Copiar al portapapeles"
+        >
+          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+        </button>
+        {!confirmingDelete ? (
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            className="w-9 h-9 flex items-center justify-center rounded-md text-vf-fg-3 hover:text-vf-error hover:bg-vf-bg-2"
+            aria-label="Borrar"
+            title="Borrar (Anillo 3)"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        ) : (
+          <div className="flex items-center gap-1 text-xs">
+            <button
+              type="button"
+              onClick={() => setConfirmingDelete(false)}
+              className="px-2 py-1 rounded text-vf-fg-2"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={doDelete}
+              disabled={deleting}
+              className="px-2 py-1 rounded bg-vf-error text-white text-xs disabled:opacity-50"
+            >
+              {deleting ? "…" : "Sí"}
+            </button>
           </div>
         )}
       </div>
+    </div>
+  );
+}
 
-      {/* Secrets List */}
-      <section
-        className="stagger-fade-up"
-        style={{ animationDelay: "250ms" }}
+function AddSecretModal({
+  onClose,
+  onAdded,
+}: {
+  onClose: () => void;
+  onAdded: () => void;
+}) {
+  const [form, setForm] = useState({
+    name: "",
+    value: "",
+    description: "",
+    provider: "",
+    scope: "platform-global",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showValue, setShowValue] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!form.name.trim() || !form.value) {
+      setError("Nombre y valor son requeridos");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/vault/operator-secrets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          value: form.value,
+          description: form.description || null,
+          provider: form.provider || null,
+          scope: form.scope || null,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `error ${res.status}`);
+      }
+      onAdded();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md bg-vf-bg-1 border border-vf-border rounded-xl p-5 space-y-4"
+        onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="font-mono text-[11px] uppercase tracking-wide text-vf-fg-2 mb-3">
-          {filteredSecrets.length} secreto{filteredSecrets.length !== 1 ? "s" : ""}
-        </h3>
-
-        <div className="bg-vf-bg-1 border border-vf-border rounded-lg overflow-hidden">
-          {filteredSecrets.length === 0 ? (
-            <div className="p-6 text-center text-vf-fg-2 text-sm">
-              No hay secretos en esta categoría
-            </div>
-          ) : (
-            filteredSecrets.map((secret, index) => (
-              <div
-                key={secret.name}
-                className={cn(
-                  "flex items-center gap-4 px-4 py-4",
-                  "hover:bg-vf-bg-2 transition-colors duration-150",
-                  index > 0 && "border-t border-vf-border",
-                )}
-              >
-                <Lock className="w-5 h-5 text-vf-fg-2 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="font-mono text-sm text-vf-fg truncate">
-                    {secret.name}
-                  </div>
-                  <div className="font-mono text-[11px] text-vf-fg-2 truncate mt-0.5">
-                    {getProjectName(secret.project)}
-                    {secret.lastUsed && ` · usado hace ${secret.lastUsed}`}
-                    {secret.injectedTo.length > 0 &&
-                      ` · inyectado a ${secret.injectedTo.join(", ")}`}
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-vf-fg-1 hover:text-vf-fg min-h-[44px]"
-                >
-                  Ver
-                </Button>
-              </div>
-            ))
-          )}
+        <div>
+          <h2 className="text-lg font-semibold text-vf-fg">Agregar secret</h2>
+          <p className="text-xs text-vf-fg-2 mt-1">
+            Cifrado AES-256-GCM. Server-side. V lo invoca cuando lo necesite.
+          </p>
         </div>
-      </section>
+        <form onSubmit={submit} className="space-y-3">
+          <Field
+            label="Nombre (UPPER_SNAKE_CASE)"
+            value={form.name}
+            placeholder="ej. STRIPE_SECRET_KEY"
+            mono
+            onChange={(v) =>
+              setForm({ ...form, name: v.toUpperCase().replace(/[^A-Z0-9_]/g, "") })
+            }
+          />
+          <div>
+            <label className="block text-xs text-vf-fg-2 mb-1">Valor</label>
+            <div className="relative">
+              <textarea
+                value={form.value}
+                onChange={(e) => setForm({ ...form, value: e.target.value })}
+                placeholder="sk_live_..."
+                rows={3}
+                className="w-full bg-vf-bg-2 border border-vf-border-1 rounded-md px-3 py-2 text-sm text-vf-fg font-mono placeholder:text-vf-fg-3 focus:outline-none focus:border-vf-border-2 resize-none"
+                style={{ WebkitTextSecurity: showValue ? "none" : "disc" } as React.CSSProperties}
+              />
+              <button
+                type="button"
+                onClick={() => setShowValue((v) => !v)}
+                className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded text-vf-fg-2 hover:text-vf-fg hover:bg-vf-bg"
+                aria-label={showValue ? "Ocultar" : "Ver"}
+              >
+                {showValue ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          </div>
+          <Field
+            label="Provider (opcional)"
+            value={form.provider}
+            placeholder="ej. anthropic, openai, vercel, stripe"
+            onChange={(v) => setForm({ ...form, provider: v.toLowerCase() })}
+          />
+          <Field
+            label="Descripción (opcional)"
+            value={form.description}
+            placeholder="¿Qué hace esta key? ¿Para qué proyecto?"
+            onChange={(v) => setForm({ ...form, description: v })}
+          />
+          <div>
+            <label className="block text-xs text-vf-fg-2 mb-1">Scope</label>
+            <select
+              value={form.scope}
+              onChange={(e) => setForm({ ...form, scope: e.target.value })}
+              className="w-full bg-vf-bg-2 border border-vf-border-1 rounded-md px-3 py-2 text-sm text-vf-fg focus:outline-none focus:border-vf-border-2"
+            >
+              <option value="platform-global">platform-global (toda la fábrica)</option>
+              <option value="platform">platform (vForge interno)</option>
+              <option value="account-wide">account-wide (cuenta del provider)</option>
+              <option value="project-scoped">project-scoped (limitada a un proyecto)</option>
+            </select>
+          </div>
 
-      {/* Modals */}
-      {activeMethod === "paste" && (
-        <PasteText
-          title="Pegar secreto"
-          hint="KEY=valor o cualquier texto"
-          placeholder="STRIPE_SECRET_KEY=sk_live_..."
-          onAccept={handlePaste}
-          onClose={() => setActiveMethod(null)}
-          validate={(text) =>
-            text.length > 50_000 ? "Texto demasiado largo (máx 50 KB)" : null
-          }
-        />
-      )}
-      {activeMethod === "camera" && (
-        <CameraCapture
-          title="Foto del .env"
-          hint="Encuadra el archivo o el sticker con la clave"
-          preferredFacing="environment"
-          onCapture={handleCamera}
-          onClose={() => setActiveMethod(null)}
-        />
-      )}
-      {activeMethod === "upload" && (
-        <FileDropZone
-          title="Subir archivo .env"
-          hint="Arrastra, pega o selecciona el .env"
-          accept=".env,.txt,text/plain,application/octet-stream"
-          readAsText
-          onAccept={handleUpload}
-          onClose={() => setActiveMethod(null)}
-        />
-      )}
-      {activeMethod === "voice" && (
-        <VoiceRecorder
-          title="Dictar secreto"
-          hint="Di el nombre y el valor"
-          maxDurationSec={45}
-          onCapture={handleVoice}
-          onClose={() => setActiveMethod(null)}
-        />
-      )}
+          {error && (
+            <p className="text-xs text-vf-error font-mono" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 h-11 rounded-md border border-vf-border bg-vf-bg-2 text-vf-fg text-sm font-medium"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 h-11 rounded-md bg-vf-green text-black text-sm font-semibold disabled:opacity-50"
+            >
+              {submitting ? "Cifrando…" : "Guardar"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  placeholder,
+  onChange,
+  mono,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (v: string) => void;
+  mono?: boolean;
+}) {
+  return (
+    <div>
+      <label className="block text-xs text-vf-fg-2 mb-1">{label}</label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={cn(
+          "w-full bg-vf-bg-2 border border-vf-border-1 rounded-md px-3 py-2 text-sm text-vf-fg placeholder:text-vf-fg-3 focus:outline-none focus:border-vf-border-2",
+          mono && "font-mono",
+        )}
+      />
     </div>
   );
 }

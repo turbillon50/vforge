@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { sql } from "@/lib/db/client";
 import { buildSystemPrompt } from "@/lib/forge/system-prompt";
+import { getOperatorSecret } from "@/lib/vault/get-secret";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,9 +38,14 @@ export async function POST(req: Request) {
     return jsonError("sessionId (string) required", 400);
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  // Pull from Vault first, fall back to env. This is V invoking her own
+  // operator secret to call Claude — every read is audited and cached
+  // for 60s in-process.
+  const apiKey = await getOperatorSecret("ANTHROPIC_API_KEY", {
+    auditUserId: userId,
+  });
   if (!apiKey) {
-    return jsonError("ANTHROPIC_API_KEY not configured", 500);
+    return jsonError("ANTHROPIC_API_KEY not configured (vault or env)", 500);
   }
 
   const { systemPrompt, config } = await buildSystemPrompt({
