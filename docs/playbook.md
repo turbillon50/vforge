@@ -18,6 +18,8 @@
 8. [Quality gates antes de declarar `done`](#8-quality-gates-antes-de-declarar-done)
 9. [Lessons learned](#9-lessons-learned)
 10. [Cómo evolucionar este playbook](#10-cómo-evolucionar-este-playbook)
+11. [Pasos manuales del operador (lo que Claude NO puede hacer)](#11-pasos-manuales-del-operador-lo-que-claude-no-puede-hacer)
+12. [Doctrina de recuperación: el operador tiene acceso universal a dashboards](#12-doctrina-de-recuperación-el-operador-tiene-acceso-universal-a-dashboards)
 
 ---
 
@@ -459,6 +461,94 @@ Sesgo descubierto al iterar la marca: tras una sola falla de v0 con la descripci
 2. Versiona con tag git: `playbook-v2`, `playbook-v3`. El tag apunta al commit que cierra esa versión.
 3. Cuando un cambio sea estructural (ej. cambiar de v0 a Cursor para ciertos casos), abrir issue antes del PR para discutir.
 4. Las **reglas duras del prompt** (§6) son sagradas. Si una se va a romper, primero documentar por qué.
+
+---
+
+## 11. Pasos manuales del operador (lo que Claude NO puede hacer)
+
+> *Anthropic policies, requisitos legales/financieros y diseño de seguridad zero-knowledge requieren que algunas tareas las haga el humano. Esta es la lista exhaustiva por fase. Cuando Forge AI esté funcional (post-M11), esta lista no encoge — son pasos irreductibles.*
+
+### Fase 1 — Concepción visual
+
+| Paso | Por qué manual | Tiempo |
+|---|---|---|
+| Generar logo / mascota / mood en ChatGPT image gen | Decisión de marca + criterio subjetivo del operador | 10–30 min |
+| Subir las imágenes a `docs/visual-refs/` | Claude no genera imágenes nativamente | 1 min (después de generar) |
+
+### Fase 7 — Integraciones (donde más manual hay)
+
+| Paso | Por qué manual | Tiempo |
+|---|---|---|
+| Crear cuenta en cada provider (Vercel, Name.com, Neon, Clerk, Anthropic, OpenAI, Gemini, Perplexity) si no existe | Aceptación de Terms of Service = compromiso legal | 5–15 min por provider la primera vez |
+| Comprar dominio | Compromiso financiero | 5 min |
+| Generar API token con scope mínimo | Cada provider exige login en su dashboard | 1–2 min por token |
+| Pegar el token en chat con el provider del que viene | Único modo de pasarlo a Claude | 30 s por token |
+| Aceptar upgrade de plan Free → Pro cuando se quede corto | Compromiso financiero recurrente | 1 min cuando aplique |
+| Agregar dominio satélite en Clerk dashboard (Settings → Domains) | Política Clerk requiere consola | 2 min por dominio nuevo |
+
+### M0 — Vault real (zero-knowledge)
+
+| Paso | Por qué manual | Cuándo |
+|---|---|---|
+| Crear Vault Master Password en cliente al primer uso de `/vault` | Zero-knowledge: Claude jamás ve la clave en clear | 1 vez por usuario, primer secret |
+| Descargar y guardar físicamente los 3 backup codes | Zero-knowledge: única vía de recovery | 1 vez por usuario, mismo evento |
+| Generar `VFORGE_MASTER_PEPPER` (32 bytes random) y agregarlo a Vercel env como encrypted | El operador es el único que ve el pepper en clear | 1 vez por proyecto, antes del primer deploy |
+| Decidir si rotar pepper tras una breach | Decisión de seguridad operacional | Ad-hoc |
+
+### Operación continua
+
+| Paso | Por qué manual | Frecuencia |
+|---|---|---|
+| Aprobar acciones de Anillo 2 en `/forge` chat (deploy producción, env vars, dominios, GitHub Actions) | Diseño de seguridad — freno humano | Cada acción |
+| Aprobar acciones de Anillo 3 (rotar key, billing, borrar proyecto) con confirmación + 2FA | Diseño de seguridad — máxima fricción intencional | Raro, pero crítico |
+| Revisar dashboards de costo de cada provider (Anthropic, OpenAI, Gemini, Vercel, Neon) | Detectar uso anómalo antes de un cap automático | Semanal hasta que M9 (cost tracking) esté live |
+| Auditar `audit_events` periódicamente | Detectar accesos sospechosos | Mensual |
+| Aprobar PRs marcados como `Ready for review` | Veto humano sobre código que va a producción | Cada PR |
+
+### Lo que SÍ es 100% automatizable (Claude lo hace solo o pronto Forge AI)
+
+- Configurar DNS records (Name.com API)
+- Crear proyectos / env vars en Vercel (Vercel API)
+- Crear schemas / migraciones en Neon (Neon API)
+- Listar usuarios / sesiones en Clerk (Clerk API)
+- Llamadas a modelos (Anthropic / OpenAI / Gemini / Perplexity API)
+- git ops (commits, PRs, branches, merges)
+- Verificación de rutas / Lighthouse / contraste WCAG
+- Generación de runbooks de integración nuevos
+- Refactors cross-file
+- ADRs nuevos cuando emerge una decisión
+
+> **Regla:** todo paso manual del operador queda documentado en este §11 con su razón. Si en el futuro un paso manual se puede automatizar (ej. Anthropic libera un API para crear keys programáticamente), se promueve a "automatizable" y se actualiza el adapter correspondiente.
+
+---
+
+## 12. Doctrina de recuperación: el operador tiene acceso universal a dashboards
+
+> *Capa de seguridad implícita del método vForge. Cualquier estado del sistema es recuperable manualmente porque el operador (Luis) tiene login a cada provider del stack.*
+
+**Premisa operativa:** todo lo que Claude o Forge AI ejecuta vía API también es accesible vía dashboard web por el humano. Esto significa:
+
+| Si pasa esto... | El operador puede... |
+|---|---|
+| Claude pierde el VERCEL_TOKEN o expira | Login en vercel.com → regenerar token → pasarlo de nuevo |
+| Forge AI rompe un deploy | Login en vercel.com → "Promote previous deployment" |
+| Una migration de Neon corrompe data | Login en neon.tech → branch from snapshot anterior → promote como production |
+| Clerk pierde una sesión activa | Login en dashboard.clerk.com → revocar session forzada → user re-loguea |
+| API key de Anthropic se compromete | Login en console.anthropic.com → revoke + roll → pasar nueva |
+| Dominio falla DNS | Login en name.com → editar records manualmente |
+| GitHub Actions queda colgado | Login en github.com → cancel run → re-run |
+| Vault Master Password se pierde Y backup codes se perdieron | Sin recuperación (ese es el contrato zero-knowledge) — recrear secrets manualmente desde providers |
+
+**Implicación para el diseño:**
+
+1. **Toda automatización es preferible**, pero **ninguna es indispensable** — siempre hay rescate manual.
+2. **Tokens que damos a Claude son revocables sin downtime real** — solo se interrumpe la automatización hasta que el operador genere un nuevo token y lo pase de nuevo.
+3. **Los runbooks de `docs/integrations/{provider}.md` documentan ambos caminos**: el flow API (Claude/Forge AI) y el flow dashboard (operador manual). El operador puede ejecutar cualquiera de los pasos en consola si la automatización falla.
+4. **Cuando Forge AI sea autónomo**, este principio sigue aplicando: el operador es el "circuit breaker" final. Forge AI puede operar 24/7, pero cualquier acción es revertible vía dashboard por Luis.
+
+**Excepción única:** Vault Master Password + backup codes. Si ambos se pierden, los secrets están perdidos para siempre. Es el contrato zero-knowledge — explícitamente no recuperable porque su valor de seguridad depende de que el server jamás los haya visto.
+
+**Consecuencia para el modelo multi-user (futuro):** cada usuario externo es responsable de sus propios backup codes. vForge no puede recuperar un Vault perdido, igual que 1Password no puede. Esto es UX-disclosed claramente al setup.
 
 ---
 

@@ -10,12 +10,14 @@ By Luis Humberto de la Torre Herrera · All Global Holding LLC / MIRMAR EMPRESAS
 
 | Doc | Para qué sirve |
 |---|---|
-| [`AGENTS.md`](./AGENTS.md) | **Protocolo multi-agente.** Si eres un agente IA entrando a este repo, **léeme primero**. Define roles, capas, anillos de privilegio. |
-| [`docs/playbook.md`](./docs/playbook.md) | **Manual operativo de vForge.** Filosofía, sistema de diseño, flujo en 6 fases, modelo de las 3 capas (prompt vs código), patrones de prompt, quality gates, lessons learned. |
+| [`docs/method.md`](./docs/method.md) | **El Método vForge — manual ejecutivo.** Para alguien que pregunta "¿cómo construyes apps?". 1-2 páginas, scanneable. **Empieza por aquí.** |
+| [`AGENTS.md`](./AGENTS.md) | **Protocolo multi-agente.** Si eres un agente IA entrando a este repo, léeme. Define roles, capas, anillos de privilegio. |
+| [`docs/playbook.md`](./docs/playbook.md) | **Manual operativo extendido.** Filosofía, sistema de diseño, flujo en 7 fases, modelo de las 3 capas, quality gates, lessons learned, pasos manuales del operador. |
 | [`docs/architecture.md`](./docs/architecture.md) | **Arquitectura del cerebro Forge.** Cómo está cableado el agente IA detrás de la mascota: routing, adapters, anillos de privilegio, roadmap a Forge funcional. |
-| [`docs/decisions/`](./docs/decisions/) | **Architecture Decision Records (ADRs).** Cada decisión arquitectónica significativa como archivo individual con contexto, razón y alternativas consideradas. |
-| [`docs/v0-prompt.md`](./docs/v0-prompt.md) | Prompts exactos para pegar en v0.dev: master, screens 1–10, refinements, correctivos, brand consolidado, sistema de tema día/noche, mascota ForgeOrb. |
-| [`docs/visual-refs/`](./docs/visual-refs/) | Referencias visuales del proyecto (logos, mascotas, screenshots, moodboards). Memoria visual que cualquier agente puede leer. |
+| [`docs/decisions/`](./docs/decisions/) | **Architecture Decision Records (ADRs).** 8 decisiones arquitectónicas estructurales documentadas. |
+| [`docs/integrations/`](./docs/integrations/) | **Runbooks por proveedor.** Name.com (dominio), Neon (DB), Clerk (auth), Model Providers (Anthropic/OpenAI/Gemini/Perplexity). |
+| [`docs/v0-prompt.md`](./docs/v0-prompt.md) | Prompts exactos para pegar en v0.dev. |
+| [`docs/visual-refs/`](./docs/visual-refs/) | Referencias visuales del proyecto. Memoria visual que cualquier agente puede leer. |
 
 ---
 
