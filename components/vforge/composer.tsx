@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Paperclip, Camera, Mic, X } from "lucide-react";
+import { Paperclip, Camera, Mic, X, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   CameraCapture,
@@ -119,7 +119,11 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    // Cmd/Ctrl + Enter always submits (works on both desktop and mobile
+    // hardware keyboards). Plain Enter inserts a newline so users can
+    // multi-line freely on mobile virtual keyboards. The explicit Send
+    // button is the canonical submit affordance.
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       handleSubmit();
     }
@@ -218,9 +222,10 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Dile a Forge qué hacer…"
+            placeholder="Dile a V qué hacer…  ·  ⌘/Ctrl + Enter para enviar"
             disabled={disabled}
             rows={1}
+            enterKeyHint="enter"
             className={cn(
               "w-full bg-vf-bg-2 border border-vf-border-1 rounded-md",
               "px-4 py-3 text-sm text-vf-fg placeholder:text-vf-fg-2",
@@ -231,20 +236,40 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
           />
         </div>
 
-        {/* Mic button */}
-        <button
-          type="button"
-          onClick={() => setShowVoice(true)}
-          className={cn(
-            "w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full",
-            "bg-vf-green text-black",
-            "hover:bg-vf-green/90 transition-colors duration-150",
-            "voice-button green-glow-sm",
-          )}
-          aria-label="Grabar voz"
-        >
-          <Mic className="w-5 h-5" />
-        </button>
+        {/* Voice + Send buttons */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowVoice(true)}
+            disabled={disabled}
+            className={cn(
+              "w-10 h-10 flex items-center justify-center rounded-full",
+              "bg-vf-bg-2 border border-vf-border-1 text-vf-fg-1",
+              "hover:bg-vf-bg-3 hover:text-vf-fg transition-colors duration-150",
+              "disabled:opacity-40 disabled:cursor-not-allowed",
+            )}
+            aria-label="Grabar voz"
+            title="Grabar audio"
+          >
+            <Mic className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={disabled || (!value.trim() && attachments.length === 0)}
+            className={cn(
+              "w-10 h-10 flex items-center justify-center rounded-full",
+              "bg-vf-green text-black",
+              "hover:bg-vf-green/90 transition-colors duration-150",
+              "voice-button green-glow-sm",
+              "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-vf-green",
+            )}
+            aria-label="Enviar mensaje"
+            title="Enviar (⌘/Ctrl + Enter)"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Modals */}
