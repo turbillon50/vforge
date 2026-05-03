@@ -4,6 +4,10 @@ import {
   encryptOperatorSecret,
   vaultSelfTest,
 } from "@/lib/vault/operator-crypto";
+import {
+  requireOperatorAuth,
+  authFailureResponse,
+} from "@/lib/auth/operator-token";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,11 +28,12 @@ interface SecretMetadata {
 /**
  * GET /api/vault/operator-secrets
  *
- * Returns ONLY metadata of all operator secrets. NEVER includes the
- * ciphertext or the plaintext value — that comes from
- * /api/vault/operator-secrets/{id}/value with explicit Anillo 2 intent.
+ * Returns ONLY metadata. Requires operator auth.
  */
-export async function GET() {
+export async function GET(req: Request) {
+  const auth = requireOperatorAuth(req);
+  if (!auth.ok) return authFailureResponse(auth);
+
   const rows = await queryAll<SecretMetadata>(
     `SELECT id::text, name, description, provider, scope,
             created_at, rotated_at, last_used_at
@@ -40,22 +45,26 @@ export async function GET() {
       secrets: rows,
       vault_health: vaultSelfTest(),
     }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
+    },
   );
 }
 
 /**
  * POST /api/vault/operator-secrets
  *
- * Creates (or rotates if name exists) an operator secret. The plaintext
- * value is encrypted with AES-256-GCM and stored as opaque ciphertext.
- * The plaintext leaves the request body and is never persisted.
- *
- * Body: { name, value, description?, provider?, scope? }
- *
- * Anillo 2 — should require operator confirmation in the UI.
+ * Creates (or rotates if name exists) an operator secret. Anillo 2.
+ * Requires operator auth.
  */
 export async function POST(req: Request) {
+  const auth = requireOperatorAuth(req);
+  if (!auth.ok) return authFailureResponse(auth);
+
   let body: {
     name?: string;
     value?: string;

@@ -1,4 +1,8 @@
 import { sql, queryOne } from "@/lib/db/client";
+import {
+  requireOperatorAuth,
+  authFailureResponse,
+} from "@/lib/auth/operator-token";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,12 +13,15 @@ const OPERATOR_USER_ID = "operator_luis";
  * DELETE /api/vault/operator-secrets/{id}
  *
  * Removes an operator secret. Anillo 3 — destructive, irreversible.
- * In future iterations should require 2FA challenge first.
+ * Requires operator auth. Future iteration should add 2FA challenge.
  */
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = requireOperatorAuth(req);
+  if (!auth.ok) return authFailureResponse(auth);
+
   const { id } = await params;
 
   const existing = await queryOne<{ id: string; name: string }>(

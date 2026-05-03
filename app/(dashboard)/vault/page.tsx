@@ -12,8 +12,31 @@ import {
   ShieldCheck,
   ShieldAlert,
   KeyRound,
+  LogIn,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const OPERATOR_TOKEN_KEY = "vforge_operator_token";
+
+function getOperatorToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(OPERATOR_TOKEN_KEY);
+}
+
+function setOperatorToken(value: string) {
+  localStorage.setItem(OPERATOR_TOKEN_KEY, value);
+}
+
+function clearOperatorToken() {
+  localStorage.removeItem(OPERATOR_TOKEN_KEY);
+}
+
+function authedFetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
+  const token = getOperatorToken();
+  const headers = new Headers(init?.headers);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  return fetch(input, { ...init, headers, cache: "no-store" });
+}
 
 interface SecretMetadata {
   id: string;
@@ -35,18 +58,34 @@ export default function VaultPage() {
   const [secrets, setSecrets] = useState<SecretMetadata[]>([]);
   const [health, setHealth] = useState<VaultHealth | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authState, setAuthState] = useState<"checking" | "missing" | "ok" | "invalid">("checking");
   const [showAdd, setShowAdd] = useState(false);
 
   async function load() {
     setLoading(true);
+    if (!getOperatorToken()) {
+      setAuthState("missing");
+      setLoading(false);
+      return;
+    }
     try {
-      const res = await fetch("/api/vault/operator-secrets", { cache: "no-store" });
+      const res = await authedFetch("/api/vault/operator-secrets");
+      if (res.status === 401 || res.status === 403) {
+        setAuthState("invalid");
+        setLoading(false);
+        return;
+      }
       if (!res.ok) throw new Error("fail");
-      const data = (await res.json()) as { secrets: SecretMetadata[]; vault_health: VaultHealth };
+      const data = (await res.json()) as {
+        secrets: SecretMetadata[];
+        vault_health: VaultHealth;
+      };
       setSecrets(data.secrets);
       setHealth(data.vault_health);
+      setAuthState("ok");
     } catch {
       setHealth({ ok: false, error: "fetch failed" });
+      setAuthState("invalid");
     } finally {
       setLoading(false);
     }
@@ -55,6 +94,11 @@ export default function VaultPage() {
   useEffect(() => {
     void load();
   }, []);
+
+  // Show auth setup screen if no token / invalid token
+  if (authState === "missing" || authState === "invalid") {
+    return <OperatorAuthGate state={authState} onUnlock={() => void load()} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -178,9 +222,7 @@ function SecretRow({
     }
     setRevealing(true);
     try {
-      const res = await fetch(`/api/vault/operator-secrets/${secret.id}/value`, {
-        cache: "no-store",
-      });
+      const res = await authedFetch(`/api/vault/operator-secrets/${secret.id}/value`);
       if (!res.ok) throw new Error("fail");
       const data = (await res.json()) as { value: string };
       setRevealed(data.value);
@@ -194,9 +236,7 @@ function SecretRow({
   async function copy() {
     setRevealing(true);
     try {
-      const res = await fetch(`/api/vault/operator-secrets/${secret.id}/value`, {
-        cache: "no-store",
-      });
+      const res = await authedFetch(`/api/vault/operator-secrets/${secret.id}/value`);
       if (!res.ok) throw new Error("fail");
       const data = (await res.json()) as { value: string };
       await navigator.clipboard.writeText(data.value);
@@ -212,7 +252,7 @@ function SecretRow({
   async function doDelete() {
     setDeleting(true);
     try {
-      const res = await fetch(`/api/vault/operator-secrets/${secret.id}`, {
+      const res = await authedFetch(`/api/vault/operator-secrets/${secret.id}`, {
         method: "DELETE",
       });
       if (res.ok) onDelete();
@@ -336,7 +376,7 @@ function AddSecretModal({
     }
     setSubmitting(true);
     try {
-      const res = await fetch("/api/vault/operator-secrets", {
+      const res = await authedFetch("/api/vault/operator-secrets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -454,6 +494,114 @@ function AddSecretModal({
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function OperatorAuthGate({
+  state,
+  onUnlock,
+}: {
+  state: "missing" | "invalid";
+  onUnlock: () => void;
+}) {
+  const [token, setToken] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const trimmed = token.trim();
+    if (!trimmed) {
+      setError("Pega tu Operator Token");
+      return;
+    }
+    setBusy(true);
+    setOperatorToken(trimmed);
+    try {
+      const res = await fetch("/api/vault/operator-secrets", {
+        headers: { Authorization: `Bearer ${trimmed}` },
+        cache: "no-store",
+      });
+      if (res.ok) {
+        onUnlock();
+      } else {
+        clearOperatorToken();
+        setError(
+          res.status === 401 || res.status === 403
+            ? "Token inválido — verifica que sea VFORGE_OPERATOR_TOKEN"
+            : `error ${res.status}`,
+        );
+      }
+    } catch {
+      clearOperatorToken();
+      setError("Error de red");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="max-w-md mx-auto py-8 space-y-6">
+      <header className="space-y-2">
+        <p className="font-mono text-[11px] uppercase tracking-wide text-vf-fg-2">
+          Bóveda · acceso protegido
+        </p>
+        <h1 className="text-2xl font-semibold tracking-tight-vf text-vf-fg flex items-center gap-2">
+          <Lock className="w-6 h-6 text-vf-green" />
+          Configurar acceso
+        </h1>
+        <p className="text-sm text-vf-fg-2">
+          {state === "invalid"
+            ? "El token guardado ya no es válido. Pega el Operator Token actual."
+            : "Pega el VFORGE_OPERATOR_TOKEN para acceder al Vault. Lo guardamos cifrado en el localStorage de este dispositivo."}
+        </p>
+      </header>
+
+      <form onSubmit={submit} className="space-y-3">
+        <div>
+          <label className="block text-xs text-vf-fg-2 mb-1">
+            Operator token (VFORGE_OPERATOR_TOKEN)
+          </label>
+          <input
+            type="password"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            placeholder="64 chars hex"
+            autoComplete="off"
+            className="w-full bg-vf-bg-2 border border-vf-border-1 rounded-md px-3 py-2 text-sm text-vf-fg font-mono placeholder:text-vf-fg-3 focus:outline-none focus:border-vf-border-2"
+          />
+        </div>
+
+        {error && (
+          <p className="text-xs text-vf-error font-mono" role="alert">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-full h-11 rounded-md bg-vf-green text-black text-sm font-semibold disabled:opacity-50 inline-flex items-center justify-center gap-2"
+        >
+          <LogIn className="w-4 h-4" />
+          {busy ? "Verificando…" : "Desbloquear Vault"}
+        </button>
+      </form>
+
+      <div className="text-xs text-vf-fg-2 border-t border-vf-border pt-4 space-y-2">
+        <p className="font-medium text-vf-fg-1">¿De dónde viene el token?</p>
+        <p>
+          Vercel dashboard → proyecto vforge → Settings → Environment Variables
+          → <span className="font-mono text-vf-fg-1">VFORGE_OPERATOR_TOKEN</span>.
+          Es un secret encrypted que Vercel descifra para ti al editarlo.
+        </p>
+        <p className="text-vf-fg-3">
+          Cuando se cablee Clerk en M1, este token se reemplaza por sesión Clerk
+          + recent-reauth.
+        </p>
       </div>
     </div>
   );

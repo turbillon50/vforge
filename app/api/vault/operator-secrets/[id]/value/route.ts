@@ -1,5 +1,9 @@
 import { sql, queryOne } from "@/lib/db/client";
 import { decryptOperatorSecret } from "@/lib/vault/operator-crypto";
+import {
+  requireOperatorAuth,
+  authFailureResponse,
+} from "@/lib/auth/operator-token";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,17 +21,17 @@ interface SecretRow {
 /**
  * GET /api/vault/operator-secrets/{id}/value
  *
- * Decrypts and returns the plaintext value of an operator secret.
- * Used by the /vault UI when the operator clicks "Ver" or "Copiar".
- *
- * Anillo 2 — sensitive read. Updates last_used_at + audit log.
- * In future iterations should require recent re-auth (e.g. password
- * confirmation modal) before returning the plaintext.
+ * Decrypts and returns the plaintext value. Anillo 2 — requires
+ * operator auth. Updates last_used_at + audit log. Future:
+ * recent-reauth challenge before returning plaintext.
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = requireOperatorAuth(req);
+  if (!auth.ok) return authFailureResponse(auth);
+
   const { id } = await params;
 
   const row = await queryOne<SecretRow>(
