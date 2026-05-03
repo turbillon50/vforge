@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Paperclip, Camera, Mic, X } from "lucide-react";
+import { Paperclip, Camera, Mic, X, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   CameraCapture,
@@ -35,6 +35,8 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [showCamera, setShowCamera] = useState(false);
   const [showVoice, setShowVoice] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -91,14 +93,45 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
     setAttachments((prev) => [...prev, att]);
   }
 
-  function handleVoiceCapture(r: VoiceRecorderResult) {
-    const att: ComposerAttachment = {
-      id: makeId(),
-      kind: "audio",
-      label: `Audio ${r.durationSec.toFixed(1)}s`,
-      meta: r.mimeType.split(";")[0],
-    };
-    setAttachments((prev) => [...prev, att]);
+  async function handleVoiceCapture(r: VoiceRecorderResult) {
+    setVoiceError(null);
+    setTranscribing(true);
+    try {
+      const form = new FormData();
+      form.append("audio", r.blob, `voice.${guessExt(r.mimeType)}`);
+      form.append("language", "es");
+      const res = await fetch("/api/forge/transcribe", {
+        method: "POST",
+        body: form,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: "fail" }));
+        setVoiceError(body.error || `Transcripción falló (${res.status})`);
+        return;
+      }
+      const { text } = (await res.json()) as { text: string };
+      const trimmed = text.trim();
+      if (!trimmed) {
+        setVoiceError("No se detectó voz. Intenta de nuevo.");
+        return;
+      }
+      setValue((v) => (v ? `${v} ${trimmed}` : trimmed));
+      // Focus the textarea so the user can edit before sending
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setVoiceError(`Error de red: ${message}`);
+    } finally {
+      setTranscribing(false);
+    }
+  }
+
+  function guessExt(mime: string): string {
+    if (mime.includes("webm")) return "webm";
+    if (mime.includes("mp4") || mime.includes("m4a")) return "m4a";
+    if (mime.includes("mpeg")) return "mp3";
+    if (mime.includes("wav")) return "wav";
+    return "webm";
   }
 
   function removeAttachment(id: string) {
@@ -119,7 +152,11 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    // Cmd/Ctrl + Enter always submits (works on both desktop and mobile
+    // hardware keyboards). Plain Enter inserts a newline so users can
+    // multi-line freely on mobile virtual keyboards. The explicit Send
+    // button is the canonical submit affordance.
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       handleSubmit();
     }
@@ -133,6 +170,38 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
 
   return (
     <div className="sticky bottom-0 bg-vf-bg-1 border-t border-vf-border p-3 pb-safe">
+      {/* Voice transcription status / error banner */}
+      {(transcribing || voiceError) && (
+        <div
+          className={cn(
+            "mb-2 px-3 py-2 rounded-md text-xs font-mono flex items-center gap-2",
+            transcribing
+              ? "bg-vf-bg-2 border border-vf-border-1 text-vf-fg-1"
+              : "bg-vf-bg-2 border border-vf-error/40 text-vf-error",
+          )}
+          role="status"
+        >
+          {transcribing ? (
+            <>
+              <span className="dot-live w-2 h-2 rounded-full bg-vf-green" />
+              Transcribiendo audio…
+            </>
+          ) : (
+            <>
+              <span>⚠</span>
+              {voiceError}
+              <button
+                onClick={() => setVoiceError(null)}
+                className="ml-auto text-vf-fg-2 hover:text-vf-fg"
+                aria-label="Cerrar"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Attachment chips */}
       {attachments.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">
@@ -218,9 +287,10 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Dile a Forge qué hacer…"
+            placeholder="Dile a V qué hacer…  ·  ⌘/Ctrl + Enter para enviar"
             disabled={disabled}
             rows={1}
+            enterKeyHint="enter"
             className={cn(
               "w-full bg-vf-bg-2 border border-vf-border-1 rounded-md",
               "px-4 py-3 text-sm text-vf-fg placeholder:text-vf-fg-2",
@@ -231,20 +301,40 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
           />
         </div>
 
-        {/* Mic button */}
-        <button
-          type="button"
-          onClick={() => setShowVoice(true)}
-          className={cn(
-            "w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full",
-            "bg-vf-green text-black",
-            "hover:bg-vf-green/90 transition-colors duration-150",
-            "voice-button green-glow-sm",
-          )}
-          aria-label="Grabar voz"
-        >
-          <Mic className="w-5 h-5" />
-        </button>
+        {/* Voice + Send buttons */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowVoice(true)}
+            disabled={disabled || transcribing}
+            className={cn(
+              "w-10 h-10 flex items-center justify-center rounded-full",
+              "bg-vf-bg-2 border border-vf-border-1 text-vf-fg-1",
+              "hover:bg-vf-bg-3 hover:text-vf-fg transition-colors duration-150",
+              "disabled:opacity-40 disabled:cursor-not-allowed",
+            )}
+            aria-label="Grabar voz"
+            title="Grabar audio (Whisper transcribe a texto)"
+          >
+            <Mic className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={disabled || (!value.trim() && attachments.length === 0)}
+            className={cn(
+              "w-10 h-10 flex items-center justify-center rounded-full",
+              "bg-vf-green text-black",
+              "hover:bg-vf-green/90 transition-colors duration-150",
+              "voice-button green-glow-sm",
+              "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-vf-green",
+            )}
+            aria-label="Enviar mensaje"
+            title="Enviar (⌘/Ctrl + Enter)"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Modals */}
@@ -258,8 +348,8 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
       )}
       {showVoice && (
         <VoiceRecorder
-          title="Dictar a Forge"
-          hint="Tu mensaje en audio se adjunta como archivo"
+          title="Dictar a V"
+          hint="Tu voz se transcribe con Whisper y aparece en el cuadro de texto para que la edites antes de enviar"
           maxDurationSec={120}
           onCapture={handleVoiceCapture}
           onClose={() => setShowVoice(false)}

@@ -14,6 +14,7 @@ interface RunRequest {
   messages: ChatTurn[];
   sessionId: string;
   userId?: string; // defaults to operator_luis until Clerk lands
+  projectId?: string | null; // optional project focus
 }
 
 const OPERATOR_USER_ID = "operator_luis";
@@ -41,7 +42,9 @@ export async function POST(req: Request) {
     return jsonError("ANTHROPIC_API_KEY not configured", 500);
   }
 
-  const { systemPrompt, config } = await buildSystemPrompt();
+  const { systemPrompt, config } = await buildSystemPrompt({
+    projectId: body.projectId ?? null,
+  });
   const lastUserTurn = messages[messages.length - 1];
 
   // Persist the user turn first
