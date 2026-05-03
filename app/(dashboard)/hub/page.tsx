@@ -1,20 +1,64 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { StatCard } from "@/components/vforge/stat-card";
 import { SectionHeader } from "@/components/vforge/section-header";
-import { ProjectRow } from "@/components/vforge/project-row";
-import { ActivityRow } from "@/components/vforge/activity-row";
-import { PROJECTS, ACTIVITY, HUB_STATS } from "@/lib/mock-data";
 import {
   FolderKanban,
   Rocket,
   Sparkles,
   TrendingUp,
+  Plus,
 } from "lucide-react";
+import Link from "next/link";
+
+interface Stats {
+  total_projects: number;
+  produccion: number;
+  activo: number;
+  en_revision: number;
+  en_pausa: number;
+  archivo: number;
+  pendiente_borrado: number;
+  forge_turns: number;
+  forge_cost_today_usd: number;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  category: string;
+  status: string;
+  github_repo: string | null;
+  vercel_url: string | null;
+}
 
 export default function HubPage() {
-  const recentProjects = PROJECTS.slice(0, 4);
-  const recentActivity = ACTIVITY.slice(0, 3);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    void Promise.all([
+      fetch("/api/stats", { cache: "no-store" }).then((r) =>
+        r.ok ? r.json() : null,
+      ),
+      fetch("/api/projects", { cache: "no-store" }).then((r) =>
+        r.ok ? r.json() : { projects: [] },
+      ),
+    ])
+      .then(([s, p]) => {
+        setStats(s);
+        setProjects(p.projects ?? []);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const subtitle = stats
+    ? stats.total_projects === 0
+      ? "Tu fábrica está en ceros — dale de alta tu primer proyecto"
+      : `${stats.total_projects} proyecto${stats.total_projects === 1 ? "" : "s"} · ${stats.produccion} en producción · ${stats.en_revision} en revisión`
+    : "Cargando…";
 
   return (
     <div className="space-y-8">
@@ -36,7 +80,7 @@ export default function HubPage() {
           className="text-vf-fg-1 stagger-fade-up"
           style={{ animationDelay: "100ms" }}
         >
-          8 proyectos · 6 en producción · 2 en construcción
+          {subtitle}
         </p>
       </header>
 
@@ -45,33 +89,37 @@ export default function HubPage() {
         <StatCard
           icon={FolderKanban}
           label="Proyectos activos"
-          value={HUB_STATS.activeProjects.value}
-          deltaLabel={HUB_STATS.activeProjects.delta}
-          deltaTone={HUB_STATS.activeProjects.tone}
+          value={stats ? stats.produccion + stats.activo : "—"}
+          deltaLabel={
+            stats ? `${stats.total_projects} en total` : "cargando…"
+          }
+          deltaTone="neutral"
           delay={150}
         />
         <StatCard
           icon={Rocket}
-          label="Deploys hoy"
-          value={HUB_STATS.deploysToday.value}
-          deltaLabel={HUB_STATS.deploysToday.delta}
-          deltaTone={HUB_STATS.deploysToday.tone}
+          label="En producción"
+          value={stats ? stats.produccion : "—"}
+          deltaLabel={stats ? "live + dominio" : "cargando…"}
+          deltaTone="positive"
           delay={200}
         />
         <StatCard
           icon={Sparkles}
-          label="Forge runs"
-          value={HUB_STATS.forgeRuns.value}
-          deltaLabel={HUB_STATS.forgeRuns.delta}
-          deltaTone={HUB_STATS.forgeRuns.tone}
+          label="Turnos con V (24h)"
+          value={stats ? stats.forge_turns : "—"}
+          deltaLabel={
+            stats ? `$${stats.forge_cost_today_usd.toFixed(4)} costo` : "cargando…"
+          }
+          deltaTone="positive"
           delay={250}
         />
         <StatCard
           icon={TrendingUp}
-          label="Uptime promedio"
-          value={HUB_STATS.uptime.value}
-          deltaLabel={HUB_STATS.uptime.delta}
-          deltaTone={HUB_STATS.uptime.tone}
+          label="En revisión"
+          value={stats ? stats.en_revision : "—"}
+          deltaLabel={stats ? "necesitan auditoría" : "cargando…"}
+          deltaTone="warning"
           delay={300}
         />
       </section>
@@ -79,35 +127,44 @@ export default function HubPage() {
       {/* Recent Projects */}
       <section>
         <SectionHeader
-          title="Proyectos recientes"
+          title="Proyectos"
           rightCta={{ label: "Ver todos", href: "/projects" }}
         />
-        <div className="divide-y divide-vf-border">
-          {recentProjects.map((project, index) => (
-            <ProjectRow
-              key={project.id}
-              project={project}
-              delay={350 + index * 50}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* Recent Activity */}
-      <section>
-        <SectionHeader
-          title="Actividad reciente"
-          rightCta={{ label: "Ver todo", href: "/activity" }}
-        />
-        <div className="divide-y divide-vf-border/50">
-          {recentActivity.map((item, index) => (
-            <ActivityRow
-              key={item.id}
-              item={item}
-              delay={550 + index * 50}
-            />
-          ))}
-        </div>
+        {!loading && projects.length === 0 ? (
+          <div className="border border-dashed border-vf-border-1 rounded-xl px-6 py-12 text-center space-y-3">
+            <p className="text-vf-fg">Aún no hay proyectos en el tablero.</p>
+            <p className="text-vf-fg-2 text-sm">
+              Da de alta tu primer proyecto para que aparezca aquí.
+            </p>
+            <Link
+              href="/projects"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-vf-green text-black text-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              Dar de alta proyecto
+            </Link>
+          </div>
+        ) : (
+          <div className="divide-y divide-vf-border">
+            {projects.slice(0, 4).map((p) => (
+              <Link
+                key={p.id}
+                href={`/projects/${p.id}`}
+                className="flex items-center justify-between py-3 hover:bg-vf-bg-1 transition-colors px-2 -mx-2 rounded"
+              >
+                <div className="min-w-0">
+                  <div className="text-vf-fg font-medium truncate">{p.name}</div>
+                  <div className="font-mono text-[11px] text-vf-fg-2 truncate">
+                    {p.github_repo ?? "(sin repo)"}
+                  </div>
+                </div>
+                <span className="font-mono text-[10px] uppercase text-vf-fg-2 ml-3 flex-shrink-0">
+                  {p.category}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

@@ -1,109 +1,363 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { ProjectRow } from "@/components/vforge/project-row";
-import { PROJECTS } from "@/lib/mock-data";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Plus, ExternalLink, GitBranch, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type FilterType = "all" | "live" | "warning" | "error" | "v-family" | "v-momentum";
+interface Project {
+  id: string;
+  name: string;
+  category: string;
+  status: string;
+  github_repo: string | null;
+  github_url?: string | null;
+  github_private?: boolean;
+  github_language?: string | null;
+  vercel_url: string | null;
+  domain?: string | null;
+}
 
-const FILTERS: { id: FilterType; label: string }[] = [
-  { id: "all", label: "Todos" },
-  { id: "live", label: "Live" },
-  { id: "warning", label: "Warning" },
-  { id: "error", label: "Error" },
-  { id: "v-family", label: "V-Family" },
-  { id: "v-momentum", label: "V-Momentum" },
+type CategoryFilter =
+  | "all"
+  | "produccion"
+  | "activo"
+  | "en_revision"
+  | "en_pausa"
+  | "archivo"
+  | "pendiente_borrado";
+
+const CATEGORIES: { id: CategoryFilter; label: string; emoji: string }[] = [
+  { id: "all", label: "Todos", emoji: "•" },
+  { id: "produccion", label: "Producción", emoji: "🟢" },
+  { id: "activo", label: "Activo", emoji: "🔵" },
+  { id: "en_revision", label: "En revisión", emoji: "🟡" },
+  { id: "en_pausa", label: "En pausa", emoji: "⏸️" },
+  { id: "archivo", label: "Archivo", emoji: "📦" },
+  { id: "pendiente_borrado", label: "Pendiente borrado", emoji: "🗑️" },
 ];
 
 export default function ProjectsPage() {
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [active, setActive] = useState<CategoryFilter>("all");
+  const [showAddModal, setShowAddModal] = useState(false);
 
-  const filteredProjects = useMemo(() => {
-    switch (activeFilter) {
-      case "live":
-        return PROJECTS.filter((p) => p.status === "live");
-      case "warning":
-        return PROJECTS.filter((p) => p.status === "building");
-      case "error":
-        return PROJECTS.filter((p) => p.status === "error");
-      case "v-family":
-        return PROJECTS.filter((p) => 
-          p.name.toLowerCase().startsWith("v") || p.slug.startsWith("v")
-        );
-      case "v-momentum":
-        return PROJECTS.filter((p) => p.slug === "vmomentum");
-      default:
-        return PROJECTS;
+  async function load() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/projects", { cache: "no-store" });
+      if (!res.ok) throw new Error("fetch failed");
+      const data = (await res.json()) as { projects: Project[] };
+      setProjects(data.projects);
+    } catch {
+      setProjects([]);
+    } finally {
+      setLoading(false);
     }
-  }, [activeFilter]);
+  }
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const filtered = useMemo(
+    () => (active === "all" ? projects : projects.filter((p) => p.category === active)),
+    [projects, active],
+  );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <header className="space-y-1">
-        <p
-          className="font-mono text-[11px] uppercase tracking-wide text-vf-fg-2 stagger-fade-up"
-          style={{ animationDelay: "0ms" }}
-        >
+        <p className="font-mono text-[11px] uppercase tracking-wide text-vf-fg-2">
           Biblioteca
         </p>
-        <h1
-          className="text-2xl md:text-3xl font-semibold tracking-tight-vf text-vf-fg stagger-fade-up"
-          style={{ animationDelay: "50ms" }}
-        >
-          Tus {PROJECTS.length} proyectos
-        </h1>
-        <p
-          className="text-sm text-vf-fg-2 stagger-fade-up"
-          style={{ animationDelay: "100ms" }}
-        >
-          Filtra por estado o familia
+        <div className="flex items-baseline justify-between gap-3">
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight-vf text-vf-fg">
+            {loading
+              ? "Cargando proyectos…"
+              : projects.length === 0
+                ? "Sin proyectos"
+                : `${projects.length} proyecto${projects.length === 1 ? "" : "s"}`}
+          </h1>
+          <button
+            type="button"
+            onClick={() => setShowAddModal(true)}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-vf-green text-black text-sm font-medium flex-shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            Dar de alta
+          </button>
+        </div>
+        <p className="text-sm text-vf-fg-2">
+          Filtra por categoría · da de alta los nuevos manualmente
         </p>
       </header>
 
-      {/* Filter Chips - Horizontal Scrollable */}
-      <div 
-        className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide stagger-fade-up"
-        style={{ animationDelay: "150ms" }}
-      >
-        {FILTERS.map((filter) => (
+      {/* Category chips */}
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+        {CATEGORIES.map((c) => (
           <button
-            key={filter.id}
+            key={c.id}
             type="button"
-            onClick={() => setActiveFilter(filter.id)}
+            onClick={() => setActive(c.id)}
             className={cn(
               "shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-150",
               "min-h-[44px] touch-manipulation",
-              activeFilter === filter.id
+              active === c.id
                 ? "bg-vf-green text-black"
-                : "bg-vf-bg-1 text-vf-fg-1 hover:bg-vf-bg-2 active:bg-vf-bg-2"
+                : "bg-vf-bg-1 text-vf-fg-1 hover:bg-vf-bg-2",
             )}
           >
-            {filter.label}
+            <span className="mr-1.5">{c.emoji}</span>
+            {c.label}
           </button>
         ))}
       </div>
 
-      {/* Project List */}
-      <section className="stagger-fade-up" style={{ animationDelay: "200ms" }}>
-        {filteredProjects.length === 0 ? (
+      {/* List or empty state */}
+      <section>
+        {!loading && projects.length === 0 ? (
+          <EmptyState onAdd={() => setShowAddModal(true)} />
+        ) : !loading && filtered.length === 0 ? (
           <div className="py-12 text-center text-vf-fg-2">
-            No hay proyectos con este filtro
+            No hay proyectos en esta categoría.
           </div>
         ) : (
-          <div className="-mx-4 md:mx-0">
-            {filteredProjects.map((project, index) => (
-              <ProjectRow
-                key={project.id}
-                project={project}
-                delay={250 + index * 40}
-                showBorder={index > 0}
-              />
+          <div className="border-t border-vf-border">
+            {filtered.map((p) => (
+              <Link
+                key={p.id}
+                href={`/projects/${p.id}`}
+                className="flex items-center justify-between py-4 px-4 -mx-4 md:mx-0 hover:bg-vf-bg-1 transition-colors border-b border-vf-border"
+              >
+                <div className="min-w-0 flex-1 pr-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-vf-fg font-medium truncate">{p.name}</span>
+                    {p.github_private && (
+                      <Lock className="w-3 h-3 text-vf-fg-2 flex-shrink-0" />
+                    )}
+                  </div>
+                  <div className="font-mono text-[11px] text-vf-fg-2 truncate flex items-center gap-1.5 mt-0.5">
+                    <GitBranch className="w-3 h-3 flex-shrink-0" />
+                    {p.github_repo ?? "(sin repo)"}
+                    {p.github_language && (
+                      <span className="ml-1 px-1.5 py-0 text-[10px] bg-vf-bg-2 rounded">
+                        {p.github_language}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {p.vercel_url && <ExternalLink className="w-3.5 h-3.5 text-vf-green-quiet" />}
+                  <span className="font-mono text-[10px] uppercase text-vf-fg-2">
+                    {p.category}
+                  </span>
+                </div>
+              </Link>
             ))}
           </div>
         )}
       </section>
+
+      {showAddModal && (
+        <AddProjectModal
+          onClose={() => setShowAddModal(false)}
+          onAdded={() => {
+            setShowAddModal(false);
+            void load();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EmptyState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="border border-dashed border-vf-border-1 rounded-xl px-6 py-16 text-center space-y-4">
+      <div className="text-3xl">📭</div>
+      <div>
+        <h2 className="text-vf-fg font-semibold text-lg">El tablero está limpio</h2>
+        <p className="text-vf-fg-2 text-sm mt-1 max-w-md mx-auto">
+          Da de alta tus proyectos uno por uno. V los irá conociendo conforme
+          los agregues y podrá ayudarte con cada uno.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onAdd}
+        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-vf-green text-black text-sm font-medium"
+      >
+        <Plus className="w-4 h-4" />
+        Dar de alta el primer proyecto
+      </button>
+    </div>
+  );
+}
+
+function AddProjectModal({
+  onClose,
+  onAdded,
+}: {
+  onClose: () => void;
+  onAdded: () => void;
+}) {
+  const [form, setForm] = useState({
+    id: "",
+    name: "",
+    description: "",
+    github_repo: "",
+    vercel_url: "",
+    domain: "",
+    category: "en_revision",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!form.id.trim() || !form.name.trim()) {
+      setError("ID y nombre son requeridos");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          github_repo: form.github_repo || null,
+          vercel_url: form.vercel_url || null,
+          domain: form.domain || null,
+          description: form.description || null,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `error ${res.status}`);
+      }
+      onAdded();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md bg-vf-bg-1 border border-vf-border rounded-xl p-5 space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-lg font-semibold text-vf-fg">Dar de alta proyecto</h2>
+        <form onSubmit={submit} className="space-y-3">
+          <Field
+            label="ID (slug, lowercase, sin espacios)"
+            value={form.id}
+            placeholder="ej. rideme"
+            onChange={(v) => setForm({ ...form, id: v.toLowerCase().replace(/[^a-z0-9_-]/g, "") })}
+          />
+          <Field
+            label="Nombre"
+            value={form.name}
+            placeholder="ej. RideMe"
+            onChange={(v) => setForm({ ...form, name: v })}
+          />
+          <Field
+            label="Descripción (opcional)"
+            value={form.description}
+            placeholder="Plataforma de transportación"
+            onChange={(v) => setForm({ ...form, description: v })}
+          />
+          <Field
+            label="Repo GitHub (turbillon50/...)"
+            value={form.github_repo}
+            placeholder="turbillon50/rideme"
+            onChange={(v) => setForm({ ...form, github_repo: v })}
+          />
+          <Field
+            label="URL deploy Vercel (opcional)"
+            value={form.vercel_url}
+            placeholder="https://..."
+            onChange={(v) => setForm({ ...form, vercel_url: v })}
+          />
+          <Field
+            label="Dominio custom (opcional)"
+            value={form.domain}
+            placeholder="rideme.allglobal.ec"
+            onChange={(v) => setForm({ ...form, domain: v })}
+          />
+          <div>
+            <label className="block text-xs text-vf-fg-2 mb-1">Categoría</label>
+            <select
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              className="w-full bg-vf-bg-2 border border-vf-border-1 rounded-md px-3 py-2 text-sm text-vf-fg focus:outline-none focus:border-vf-border-2"
+            >
+              <option value="produccion">🟢 Producción</option>
+              <option value="activo">🔵 Activo</option>
+              <option value="en_revision">🟡 En revisión</option>
+              <option value="en_pausa">⏸️ En pausa</option>
+              <option value="archivo">📦 Archivo</option>
+            </select>
+          </div>
+
+          {error && (
+            <p className="text-xs text-vf-error font-mono" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 h-11 rounded-md border border-vf-border bg-vf-bg-2 text-vf-fg text-sm font-medium"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 h-11 rounded-md bg-vf-green text-black text-sm font-semibold disabled:opacity-50"
+            >
+              {submitting ? "Guardando…" : "Dar de alta"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-xs text-vf-fg-2 mb-1">{label}</label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-vf-bg-2 border border-vf-border-1 rounded-md px-3 py-2 text-sm text-vf-fg placeholder:text-vf-fg-3 focus:outline-none focus:border-vf-border-2"
+      />
     </div>
   );
 }
