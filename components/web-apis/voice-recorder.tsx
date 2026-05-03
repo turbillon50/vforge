@@ -65,9 +65,9 @@ export function VoiceRecorder({
     analyserRef.current = null;
   }
 
+  // teardown reads refs only; runs once on unmount
   useEffect(() => {
     return teardown;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function startRecording() {
