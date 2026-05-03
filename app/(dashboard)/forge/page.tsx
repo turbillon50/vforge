@@ -67,10 +67,10 @@ export default function ForgePage() {
   useEffect(() => {
     if (typeof window === "undefined" || !scope) return;
     localStorage.setItem(SCOPE_STORAGE_KEY, scope);
-    let sid = sessionStorage.getItem(sessionKeyFor(scope));
+    let sid = localStorage.getItem(sessionKeyFor(scope));
     if (!sid) {
       sid = makeSessionId();
-      sessionStorage.setItem(sessionKeyFor(scope), sid);
+      localStorage.setItem(sessionKeyFor(scope), sid);
     }
     sessionIdRef.current = sid;
 
@@ -115,7 +115,7 @@ export default function ForgePage() {
 
   function newSession() {
     const sid = makeSessionId();
-    sessionStorage.setItem(sessionKeyFor(scope), sid);
+    localStorage.setItem(sessionKeyFor(scope), sid);
     sessionIdRef.current = sid;
     setMessages([welcomeFor(scope)]);
   }

@@ -32,12 +32,19 @@ export async function GET(req: Request) {
     return jsonError("sessionId required", 400);
   }
 
+  // Take the most recent N turns (DESC + LIMIT in subquery), then re-sort
+  // ascending for chronological replay. ASC + LIMIT would return the
+  // earliest turns, dropping recent context once a session exceeds the cap.
   const rows = await queryAll<Turn>(
     `SELECT id::text, role, content, created_at, tokens_in, tokens_out
-       FROM conversations
-       WHERE user_id = $1 AND session_id = $2
-       ORDER BY created_at ASC
-       LIMIT $3`,
+       FROM (
+         SELECT id, role, content, created_at, tokens_in, tokens_out
+           FROM conversations
+           WHERE user_id = $1 AND session_id = $2
+           ORDER BY created_at DESC
+           LIMIT $3
+       ) AS recent
+       ORDER BY created_at ASC`,
     [userId, sessionId, limit],
   );
 
