@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Lock,
   Plus,
@@ -366,6 +366,54 @@ function AddSecretModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showValue, setShowValue] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [extractInfo, setExtractInfo] = useState<string | null>(null);
+  const screenshotInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleScreenshot(file: File) {
+    setExtracting(true);
+    setExtractInfo(null);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await authedFetch("/api/forge/extract-secret", {
+        method: "POST",
+        body: fd,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `error ${res.status}`);
+      }
+      const { extracted } = (await res.json()) as {
+        extracted: {
+          name: string | null;
+          value: string | null;
+          provider: string | null;
+          description: string | null;
+          confidence: "high" | "medium" | "low";
+          notes: string | null;
+        };
+      };
+      setForm((f) => ({
+        name: extracted.name ?? f.name,
+        value: extracted.value ?? f.value,
+        description: extracted.description ?? f.description,
+        provider: extracted.provider ?? f.provider,
+        scope: f.scope,
+      }));
+      const parts: string[] = [];
+      parts.push(`confianza: ${extracted.confidence}`);
+      if (extracted.notes) parts.push(extracted.notes);
+      setExtractInfo(parts.join(" · "));
+      // If value detected, briefly show it so Luis can verify visually
+      if (extracted.value) setShowValue(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setExtracting(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -414,6 +462,50 @@ function AddSecretModal({
             Cifrado AES-256-GCM. Server-side. V lo invoca cuando lo necesite.
           </p>
         </div>
+
+        {/* Screenshot extractor */}
+        <div className="border border-vf-border-1 bg-vf-bg-2 rounded-md p-3 space-y-2">
+          <button
+            type="button"
+            onClick={() => screenshotInputRef.current?.click()}
+            disabled={extracting}
+            className={cn(
+              "w-full inline-flex items-center justify-center gap-2 h-10 rounded-md text-sm font-medium",
+              extracting
+                ? "bg-vf-bg-3 text-vf-fg-2 cursor-wait"
+                : "bg-vf-green text-black hover:bg-vf-green/90",
+            )}
+          >
+            {extracting ? (
+              <>
+                <span className="dot-live w-2 h-2 rounded-full bg-vf-fg" />
+                Extrayendo con OpenAI Vision…
+              </>
+            ) : (
+              <>📷 Pegar / subir screenshot del secret</>
+            )}
+          </button>
+          <input
+            ref={screenshotInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void handleScreenshot(f);
+              e.target.value = "";
+            }}
+          />
+          {extractInfo && (
+            <p className="text-[11px] font-mono text-vf-fg-2">{extractInfo}</p>
+          )}
+          <p className="text-[10px] text-vf-fg-3">
+            Captura desde la cámara del celular o sube una foto. V lo lee, extrae el
+            valor y rellena el form. Verifica antes de guardar.
+          </p>
+        </div>
+
         <form onSubmit={submit} className="space-y-3">
           <Field
             label="Nombre (UPPER_SNAKE_CASE)"
