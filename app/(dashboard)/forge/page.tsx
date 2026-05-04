@@ -67,6 +67,7 @@ export default function ForgePage() {
   const [messages, setMessages] = useState<ChatMessageData[]>([WELCOME_GENERAL]);
   const [streaming, setStreaming] = useState(false);
   const [hydrating, setHydrating] = useState(true);
+  const [savingMemory, setSavingMemory] = useState(false);
   const sessionIdRef = useRef<string>("");
 
   // Load scope from storage and project list on first mount.
@@ -131,10 +132,75 @@ export default function ForgePage() {
   }
 
   function newSession() {
+    // Fire-and-forget recap on the previous session before swapping in
+    // a fresh sessionId. This is what gives V cross-session memory.
+    const previousSessionId = sessionIdRef.current;
+    if (previousSessionId) {
+      void fetch("/api/forge/recap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: previousSessionId,
+          projectId: scope === "general" ? null : scope,
+        }),
+        keepalive: true,
+      }).catch(() => undefined);
+    }
     const sid = makeSessionId();
     localStorage.setItem(sessionKeyFor(scope), sid);
     sessionIdRef.current = sid;
     setMessages([welcomeFor(scope)]);
+  }
+
+  async function saveMemoryNow() {
+    if (!sessionIdRef.current || streaming) return;
+    setSavingMemory(true);
+    try {
+      const res = await fetch("/api/forge/recap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: sessionIdRef.current,
+          projectId: scope === "general" ? null : scope,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        title?: string;
+        reason?: string;
+      };
+      if (data.ok) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `m_${Date.now()}`,
+            role: "forge",
+            content: `_💾 Memoria guardada: **${data.title}**. Estará disponible en futuras sesiones._`,
+          },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `m_${Date.now()}`,
+            role: "forge",
+            content: `_💾 ${data.reason ?? "no se guardó"}_`,
+          },
+        ]);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `m_${Date.now()}`,
+          role: "forge",
+          content: `_⚠ Error guardando memoria: ${message}_`,
+        },
+      ]);
+    } finally {
+      setSavingMemory(false);
+    }
   }
 
   const handleSend = async (
@@ -311,9 +377,18 @@ export default function ForgePage() {
         <div className="flex items-center gap-3 flex-shrink-0">
           <button
             type="button"
+            onClick={saveMemoryNow}
+            disabled={streaming || savingMemory || hydrating}
+            className="text-xs text-vf-fg-2 hover:text-vf-fg transition-colors disabled:opacity-40"
+            title="Guardar la sesión actual en la memoria persistente de V"
+          >
+            {savingMemory ? "Guardando…" : "💾 Memoria"}
+          </button>
+          <button
+            type="button"
             onClick={newSession}
             className="text-xs text-vf-fg-2 hover:text-vf-fg transition-colors"
-            title="Empezar una conversación nueva en este modo"
+            title="Empezar una conversación nueva (guarda recap automáticamente)"
           >
             Nueva
           </button>

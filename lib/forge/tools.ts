@@ -94,6 +94,32 @@ export const TOOLS: Tool[] = [
       properties: {},
     },
   },
+  {
+    name: "memory_save",
+    description:
+      "Guarda un dato concreto en TU memoria persistente para que esté disponible en futuras conversaciones (cualquier sesión, cualquier dispositivo). Úsala cuando Luis te diga 'recuerda que…', 'guarda esto', o cuando notes una preferencia/decisión/dato relevante que valga la pena retener (ej: 'el broker de Break es IBKR'). NO la uses para conversación trivial — solo para datos que aporten contexto en el futuro.",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: {
+          type: "string",
+          description: "Título corto del dato (3-8 palabras)",
+        },
+        content: {
+          type: "string",
+          description:
+            "Contenido completo a recordar (1-2 párrafos máximo)",
+        },
+        tags: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Tags para clasificar la memoria (ej: ['preferencia', 'break', 'broker'])",
+        },
+      },
+      required: ["title", "content"],
+    },
+  },
 ];
 
 export interface ToolExecutionContext {
@@ -250,6 +276,27 @@ async function dispatch(
         ok: true,
         content: JSON.stringify({ total: rows.length, secrets: rows }),
         summary: `${rows.length} secrets`,
+      };
+    }
+    case "memory_save": {
+      const title = requireString(input.title, "title").slice(0, 200);
+      const content = requireString(input.content, "content").slice(0, 4000);
+      const rawTags = Array.isArray(input.tags) ? input.tags : [];
+      const tags = ["memory", ...rawTags.map((t) => String(t).slice(0, 60))];
+      const inserted = (await sql`
+        INSERT INTO knowledge_base (kind, title, content, tags, source, created_by)
+        VALUES (
+          'note', ${title}, ${content},
+          ${tags as unknown as string[]},
+          ${`memory_save:${ctx.sessionId}`},
+          ${ctx.userId}
+        )
+        RETURNING id
+      `) as Array<{ id: string }>;
+      return {
+        ok: true,
+        content: JSON.stringify({ saved: true, id: inserted[0]?.id, title }),
+        summary: `memoria: ${title}`,
       };
     }
     default:
