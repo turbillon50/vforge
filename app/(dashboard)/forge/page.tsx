@@ -27,6 +27,23 @@ function makeSessionId() {
   return `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function toolDisplayName(name: string): string {
+  switch (name) {
+    case "github_list_repos":
+      return "Listando repos de GitHub";
+    case "github_get_repo":
+      return "Cargando detalle del repo";
+    case "github_list_commits":
+      return "Cargando commits";
+    case "github_read_file":
+      return "Leyendo archivo del repo";
+    case "vault_list_secrets":
+      return "Listando secrets del Vault";
+    default:
+      return `Ejecutando ${name}`;
+  }
+}
+
 function sessionKeyFor(scope: string) {
   return SESSION_PREFIX + scope;
 }
@@ -186,6 +203,8 @@ export default function ForgePage() {
           try {
             const evt = JSON.parse(line.slice(6)) as
               | { type: "text"; value: string }
+              | { type: "tool_use_start"; id: string; name: string }
+              | { type: "tool_use_result"; id: string; ok: boolean; summary: string }
               | { type: "done"; tokensIn: number; tokensOut: number; model: string }
               | { type: "error"; message: string };
             if (evt.type === "text") {
@@ -193,6 +212,25 @@ export default function ForgePage() {
                 prev.map((m) =>
                   m.id === assistantId
                     ? { ...m, content: m.content + evt.value }
+                    : m,
+                ),
+              );
+            } else if (evt.type === "tool_use_start") {
+              const marker = `\n\n_🔧 ${toolDisplayName(evt.name)}…_\n\n`;
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantId
+                    ? { ...m, content: m.content + marker }
+                    : m,
+                ),
+              );
+            } else if (evt.type === "tool_use_result") {
+              const icon = evt.ok ? "✓" : "⚠";
+              const marker = `_${icon} ${evt.summary}_\n\n`;
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantId
+                    ? { ...m, content: m.content + marker }
                     : m,
                 ),
               );
