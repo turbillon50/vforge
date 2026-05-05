@@ -39,6 +39,36 @@ function toolDisplayName(name: string): string {
       return "Leyendo archivo del repo";
     case "vault_list_secrets":
       return "Listando secrets del Vault";
+    case "memory_save":
+      return "Guardando en memoria";
+    case "vercel_list_projects":
+      return "Listando proyectos de Vercel";
+    case "vercel_get_project":
+      return "Cargando proyecto de Vercel";
+    case "vercel_create_project":
+      return "Creando proyecto en Vercel";
+    case "vercel_list_deployments":
+      return "Listando deployments";
+    case "vercel_get_deployment":
+      return "Cargando deployment";
+    case "vercel_trigger_deployment":
+      return "Disparando deployment";
+    case "vercel_set_env_var":
+      return "Configurando env var";
+    case "vercel_add_domain":
+      return "Agregando dominio a Vercel";
+    case "vercel_get_domain_config":
+      return "Pidiendo config DNS a Vercel";
+    case "namecom_list_domains":
+      return "Listando dominios de Name.com";
+    case "namecom_get_domain":
+      return "Cargando dominio";
+    case "namecom_list_records":
+      return "Listando registros DNS";
+    case "namecom_upsert_record":
+      return "Configurando registro DNS";
+    case "namecom_delete_record":
+      return "Borrando registro DNS";
     default:
       return `Ejecutando ${name}`;
   }
