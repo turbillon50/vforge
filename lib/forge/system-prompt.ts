@@ -69,6 +69,23 @@ export async function buildSystemPrompt(
      LIMIT 10`,
   );
 
+  // Cross-session memory: last 8 recaps + last 8 manual memories. Tagged
+  // 'session_recap' or 'memory' on a kind='note' row (we keep them on
+  // the same kind to avoid touching the CHECK constraint, and lean on
+  // tags + the partial index for retrieval).
+  const recaps = await queryAll<KnowledgeEntry>(
+    `SELECT kind, title, content, tags FROM knowledge_base
+     WHERE kind = 'note' AND 'session_recap' = ANY(tags)
+     ORDER BY created_at DESC
+     LIMIT 8`,
+  );
+  const memories = await queryAll<KnowledgeEntry>(
+    `SELECT kind, title, content, tags FROM knowledge_base
+     WHERE kind = 'note' AND 'memory' = ANY(tags)
+     ORDER BY created_at DESC
+     LIMIT 8`,
+  );
+
   // Project catalog summary
   const projectSummary = await queryAll<{
     category: string;
@@ -96,6 +113,7 @@ export async function buildSystemPrompt(
   }
 
   const knowledgeSection = formatKnowledge([...coreKnowledge, ...lessons]);
+  const memorySection = formatMemorySection(recaps, memories);
   const projectSection = formatProjects(projectSummary);
   const focusSection = projectFocus
     ? [
@@ -128,6 +146,8 @@ export async function buildSystemPrompt(
     "─────────────────────────────────────────",
     knowledgeSection,
     "",
+    memorySection,
+    "",
     "─────────────────────────────────────────",
     "CATÁLOGO DE PROYECTOS (real, cross-checked GitHub + Vercel)",
     "─────────────────────────────────────────",
@@ -156,6 +176,46 @@ function formatKnowledge(entries: KnowledgeEntry[]): string {
         `[${e.kind}] ${e.title}\n${e.content}\n(tags: ${e.tags.join(", ")})`,
     )
     .join("\n\n");
+}
+
+function formatMemorySection(
+  recaps: KnowledgeEntry[],
+  memories: KnowledgeEntry[],
+): string {
+  const blocks: string[] = [
+    "─────────────────────────────────────────",
+    "MEMORIA CROSS-SESIÓN — RECAPS + DATOS GUARDADOS",
+    "─────────────────────────────────────────",
+  ];
+  if (recaps.length === 0 && memories.length === 0) {
+    blocks.push("(aún no hay recaps ni memorias guardadas)");
+    return blocks.join("\n");
+  }
+  if (memories.length > 0) {
+    blocks.push("Memorias explícitas (lo que Luis pidió que recordaras o tú decidiste guardar con memory_save):");
+    blocks.push(
+      memories
+        .map((m) => `• ${m.title}\n  ${m.content}`)
+        .join("\n\n"),
+    );
+  }
+  if (recaps.length > 0) {
+    if (memories.length > 0) blocks.push("");
+    blocks.push("Recaps de sesiones anteriores (más reciente primero):");
+    blocks.push(
+      recaps
+        .map((r) => `• ${r.title}\n${indent(r.content, "  ")}`)
+        .join("\n\n"),
+    );
+  }
+  return blocks.join("\n");
+}
+
+function indent(text: string, pad: string): string {
+  return text
+    .split("\n")
+    .map((line) => `${pad}${line}`)
+    .join("\n");
 }
 
 function formatProjects(
