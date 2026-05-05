@@ -1,11 +1,17 @@
 /**
  * Tool registry for V (forge brain).
  *
- * Each tool is a small read-only adapter over an existing capability
- * (GitHub via Octokit, Vault metadata via SQL). All tools require an
- * authenticated operator user id passed through the execution context;
- * each call audits a `forge.tool.invoke` event so we can trace what V
- * did during a turn.
+ * Each tool is a small adapter over an existing capability (GitHub
+ * via Octokit, Vault metadata via SQL, Vercel REST API, Name.com REST
+ * API, knowledge_base SQL). All tools require an authenticated
+ * operator user id passed through the execution context; each call
+ * audits a `forge.tool.invoke` event so we can trace what V did
+ * during a turn.
+ *
+ * Privilege rings:
+ *   ring 0  read-only, auto-allowed
+ *   ring 1  write side-effects in operator's own resources, allowed
+ *   ring 2  destructive or expensive — would need confirmation (none yet)
  */
 import type { Tool } from "@anthropic-ai/sdk/resources/messages";
 import { sql } from "@/lib/db/client";
@@ -15,6 +21,24 @@ import {
   listRecentCommits,
   getFileContent,
 } from "@/lib/github/client";
+import {
+  listProjects as vercelListProjects,
+  getProject as vercelGetProject,
+  createProject as vercelCreateProject,
+  listDeployments as vercelListDeployments,
+  getDeployment as vercelGetDeployment,
+  triggerDeployment as vercelTriggerDeployment,
+  setEnvVar as vercelSetEnvVar,
+  addDomain as vercelAddDomain,
+  getDomainConfig as vercelGetDomainConfig,
+} from "@/lib/vercel/client";
+import {
+  listDomains as nameListDomains,
+  getDomain as nameGetDomain,
+  listRecords as nameListRecords,
+  upsertRecord as nameUpsertRecord,
+  deleteRecord as nameDeleteRecord,
+} from "@/lib/namecom/client";
 
 export const TOOLS: Tool[] = [
   {
@@ -118,6 +142,230 @@ export const TOOLS: Tool[] = [
         },
       },
       required: ["title", "content"],
+    },
+  },
+
+  // ─── Vercel ──────────────────────────────────────────────────────
+  {
+    name: "vercel_list_projects",
+    description:
+      "Lista todos los proyectos de Vercel del equipo del operador. Devuelve id, name, framework, rootDirectory, link al repo de GitHub. Úsala cuando Luis pregunte qué hay en Vercel, qué proyectos están desplegados, o quiera ver el inventario.",
+    input_schema: {
+      type: "object",
+      properties: {
+        max: { type: "number", description: "1-200, default 50" },
+      },
+    },
+  },
+  {
+    name: "vercel_get_project",
+    description:
+      "Detalle completo de un proyecto de Vercel (id, framework, root, build/install/output commands, dominio, link a repo). Acepta id (prj_…) o slug.",
+    input_schema: {
+      type: "object",
+      properties: {
+        idOrSlug: { type: "string", description: "Project id (prj_…) o slug" },
+      },
+      required: ["idOrSlug"],
+    },
+  },
+  {
+    name: "vercel_create_project",
+    description:
+      "Crea un proyecto nuevo en Vercel, opcionalmente linkeado a un repo de GitHub. Útil cuando Luis quiere desplegar un repo nuevo (ej. 'V despliega turbillon50/break a Vercel'). El primer deploy se dispara automáticamente cuando hay gitRepository.",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Nombre del proyecto en Vercel" },
+        framework: {
+          type: ["string", "null"],
+          description: "Framework preset: 'vite', 'nextjs', 'remix', 'astro', etc. null para auto-detect.",
+        },
+        rootDirectory: {
+          type: ["string", "null"],
+          description: "Subdirectorio del repo donde está el proyecto (ej. 'apps/web')",
+        },
+        buildCommand: { type: ["string", "null"] },
+        outputDirectory: { type: ["string", "null"] },
+        installCommand: { type: ["string", "null"] },
+        ghRepoFullName: {
+          type: "string",
+          description: "GitHub owner/repo (ej. 'turbillon50/rivones'). Si lo das, se linkea.",
+        },
+      },
+      required: ["name"],
+    },
+  },
+  {
+    name: "vercel_list_deployments",
+    description:
+      "Lista los últimos deployments de un proyecto. Útil para diagnosticar fallos, ver qué deploy está vivo, o checar historial.",
+    input_schema: {
+      type: "object",
+      properties: {
+        projectId: { type: "string", description: "prj_…" },
+        limit: { type: "number", description: "1-50, default 10" },
+      },
+      required: ["projectId"],
+    },
+  },
+  {
+    name: "vercel_get_deployment",
+    description:
+      "Detalle completo de un deployment (URL, estado, errores, build logs link). Acepta id (dpl_…) o URL del deploy.",
+    input_schema: {
+      type: "object",
+      properties: {
+        idOrUrl: { type: "string" },
+      },
+      required: ["idOrUrl"],
+    },
+  },
+  {
+    name: "vercel_trigger_deployment",
+    description:
+      "Dispara un deploy nuevo desde una branch específica de GitHub. Úsala para hacer 'redeploy' o promover una branch a producción.",
+    input_schema: {
+      type: "object",
+      properties: {
+        projectId: { type: "string" },
+        name: { type: "string", description: "Nombre del proyecto Vercel" },
+        ghRepoFullName: { type: "string", description: "owner/repo de GitHub" },
+        branch: { type: "string", description: "branch a desplegar (ej. 'main')" },
+        target: {
+          type: "string",
+          enum: ["production", "preview", "staging"],
+          description: "Default: production",
+        },
+      },
+      required: ["projectId", "name", "ghRepoFullName", "branch"],
+    },
+  },
+  {
+    name: "vercel_set_env_var",
+    description:
+      "Crea o actualiza una variable de entorno en un proyecto Vercel. Útil para meter VITE_CLERK_PUBLISHABLE_KEY, DATABASE_URL, etc. después de crear un proyecto. SIEMPRE encrypted por default.",
+    input_schema: {
+      type: "object",
+      properties: {
+        projectId: { type: "string" },
+        key: { type: "string", description: "Nombre de la env var (ej. VITE_CLERK_PUBLISHABLE_KEY)" },
+        value: { type: "string", description: "Valor (se cifra al guardar)" },
+        target: {
+          type: "array",
+          items: { type: "string", enum: ["production", "preview", "development"] },
+          description: "Entornos donde aplica. Default: ['production', 'preview']",
+        },
+      },
+      required: ["projectId", "key", "value"],
+    },
+  },
+  {
+    name: "vercel_add_domain",
+    description:
+      "Agrega un dominio (apex o subdominio) a un proyecto Vercel. Úsala antes de configurar DNS — devuelve si Vercel ya lo verifica. Para www → apex usa redirect=apexDomain.",
+    input_schema: {
+      type: "object",
+      properties: {
+        projectId: { type: "string" },
+        domain: { type: "string", description: "ej. 'rivones.site' o 'www.rivones.site'" },
+        redirect: {
+          type: "string",
+          description: "Si es subdominio que debe redirigir (ej. www→apex), pon el destino aquí",
+        },
+        redirectStatusCode: {
+          type: "number",
+          description: "301, 302, 307, 308. Default 308",
+        },
+      },
+      required: ["projectId", "domain"],
+    },
+  },
+  {
+    name: "vercel_get_domain_config",
+    description:
+      "Pregunta a Vercel qué registros DNS espera ver para un dominio dado (A target, CNAME target, recommendedIPv4, recommendedCNAME, misconfigured flag). Úsala ANTES de crear records en Name.com.",
+    input_schema: {
+      type: "object",
+      properties: {
+        domain: { type: "string" },
+      },
+      required: ["domain"],
+    },
+  },
+
+  // ─── Name.com ────────────────────────────────────────────────────
+  {
+    name: "namecom_list_domains",
+    description:
+      "Lista los dominios del operador en Name.com (con expireDate, nameservers, etc.). Útil para ver qué dominios hay disponibles para apuntar a deploys.",
+    input_schema: {
+      type: "object",
+      properties: {
+        max: { type: "number", description: "1-500, default 200" },
+      },
+    },
+  },
+  {
+    name: "namecom_get_domain",
+    description:
+      "Detalle de un dominio en Name.com: nameservers, contactos, expiración, autorenew, locked. Devuelve dato sensible (contactos) — solo úsala cuando Luis necesite el dato.",
+    input_schema: {
+      type: "object",
+      properties: { domain: { type: "string" } },
+      required: ["domain"],
+    },
+  },
+  {
+    name: "namecom_list_records",
+    description:
+      "Lista los registros DNS de un dominio en Name.com (id, host, type, answer, ttl). Úsala para auditar DNS o decidir qué upsertear.",
+    input_schema: {
+      type: "object",
+      properties: { domain: { type: "string" } },
+      required: ["domain"],
+    },
+  },
+  {
+    name: "namecom_upsert_record",
+    description:
+      "Crea o reemplaza un registro DNS en Name.com (idempotente: borra cualquier match previo de mismo host+type, luego crea el nuevo). Úsala para apuntar dominios a Vercel: A apex → 216.150.1.1, CNAME www → cname.vercel-dns.com.",
+    input_schema: {
+      type: "object",
+      properties: {
+        domain: { type: "string" },
+        host: {
+          type: "string",
+          description: "subdominio (ej. 'www', 'api'). Vacío o ausente = apex.",
+        },
+        type: {
+          type: "string",
+          enum: ["A", "AAAA", "CNAME", "TXT", "MX", "NS"],
+        },
+        answer: {
+          type: "string",
+          description: "El valor (IP, hostname, texto). CNAMEs aceptan con o sin punto final.",
+        },
+        ttl: { type: "number", description: "Default 300" },
+        priority: {
+          type: "number",
+          description: "Solo para tipo MX",
+        },
+      },
+      required: ["domain", "type", "answer"],
+    },
+  },
+  {
+    name: "namecom_delete_record",
+    description:
+      "Borra un registro DNS por id. Idempotente (no falla si ya no existe).",
+    input_schema: {
+      type: "object",
+      properties: {
+        domain: { type: "string" },
+        recordId: { type: "number" },
+      },
+      required: ["domain", "recordId"],
     },
   },
 ];
@@ -299,6 +547,256 @@ async function dispatch(
         summary: `memoria: ${title}`,
       };
     }
+
+    // ─── Vercel ────────────────────────────────────────────────────
+    case "vercel_list_projects": {
+      const max = clampNumber(input.max, 1, 200, 50);
+      const projects = await vercelListProjects({
+        max,
+        auditUserId: ctx.userId,
+      });
+      const slim = projects.map((p) => ({
+        id: p.id,
+        name: p.name,
+        framework: p.framework,
+        rootDirectory: p.rootDirectory,
+        link: p.link,
+        createdAt: p.createdAt,
+      }));
+      return {
+        ok: true,
+        content: JSON.stringify({ total: slim.length, projects: slim }),
+        summary: `${slim.length} proyectos vercel`,
+      };
+    }
+    case "vercel_get_project": {
+      const idOrSlug = requireString(input.idOrSlug, "idOrSlug");
+      const project = await vercelGetProject(idOrSlug, {
+        auditUserId: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify(project),
+        summary: `proyecto vercel: ${project.name}`,
+      };
+    }
+    case "vercel_create_project": {
+      const name = requireString(input.name, "name");
+      const ghRepoFullName =
+        typeof input.ghRepoFullName === "string"
+          ? input.ghRepoFullName
+          : undefined;
+      const project = await vercelCreateProject(
+        {
+          name,
+          framework: nullableString(input.framework),
+          rootDirectory: nullableString(input.rootDirectory),
+          buildCommand: nullableString(input.buildCommand),
+          outputDirectory: nullableString(input.outputDirectory),
+          installCommand: nullableString(input.installCommand),
+          gitRepository: ghRepoFullName
+            ? { type: "github", repo: ghRepoFullName }
+            : undefined,
+        },
+        { auditUserId: ctx.userId },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify({
+          id: project.id,
+          name: project.name,
+          framework: project.framework,
+          rootDirectory: project.rootDirectory,
+        }),
+        summary: `proyecto vercel creado: ${project.name}`,
+      };
+    }
+    case "vercel_list_deployments": {
+      const projectId = requireString(input.projectId, "projectId");
+      const limit = clampNumber(input.limit, 1, 50, 10);
+      const deployments = await vercelListDeployments(projectId, {
+        limit,
+        auditUserId: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify({ total: deployments.length, deployments }),
+        summary: `${deployments.length} deploys`,
+      };
+    }
+    case "vercel_get_deployment": {
+      const idOrUrl = requireString(input.idOrUrl, "idOrUrl");
+      const deployment = await vercelGetDeployment(idOrUrl, {
+        auditUserId: ctx.userId,
+      });
+      const slim = {
+        id: deployment.id ?? deployment.uid,
+        url: deployment.url,
+        readyState: deployment.readyState,
+        target: deployment.target,
+        meta: deployment.meta,
+        errorMessage: deployment.errorMessage,
+      };
+      return {
+        ok: true,
+        content: JSON.stringify(slim),
+        summary: `deploy ${slim.readyState ?? "?"}: ${slim.url ?? slim.id}`,
+      };
+    }
+    case "vercel_trigger_deployment": {
+      const result = await vercelTriggerDeployment(
+        {
+          projectId: requireString(input.projectId, "projectId"),
+          name: requireString(input.name, "name"),
+          ghRepoFullName: requireString(input.ghRepoFullName, "ghRepoFullName"),
+          branch: requireString(input.branch, "branch"),
+          target:
+            typeof input.target === "string"
+              ? (input.target as "production" | "preview" | "staging")
+              : "production",
+        },
+        { auditUserId: ctx.userId },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify(result),
+        summary: `deploy disparado: ${result.url}`,
+      };
+    }
+    case "vercel_set_env_var": {
+      const target = Array.isArray(input.target)
+        ? (input.target as string[])
+        : ["production", "preview"];
+      const result = await vercelSetEnvVar(
+        requireString(input.projectId, "projectId"),
+        {
+          key: requireString(input.key, "key"),
+          value: requireString(input.value, "value"),
+          target: target.filter((t) =>
+            ["production", "preview", "development"].includes(t),
+          ) as Array<"production" | "preview" | "development">,
+        },
+        { auditUserId: ctx.userId },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify(result),
+        summary: `env ${input.key} → ${target.join("+")}`,
+      };
+    }
+    case "vercel_add_domain": {
+      const result = await vercelAddDomain(
+        requireString(input.projectId, "projectId"),
+        requireString(input.domain, "domain"),
+        {
+          redirect:
+            typeof input.redirect === "string" ? input.redirect : undefined,
+          redirectStatusCode:
+            typeof input.redirectStatusCode === "number"
+              ? input.redirectStatusCode
+              : undefined,
+          auditUserId: ctx.userId,
+        },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify(result),
+        summary: `dominio agregado: ${result.name}${result.verified ? " ✓" : " (pending)"}`,
+      };
+    }
+    case "vercel_get_domain_config": {
+      const config = await vercelGetDomainConfig(
+        requireString(input.domain, "domain"),
+        { auditUserId: ctx.userId },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify(config),
+        summary: `DNS config ${input.domain}: misconfig=${config.misconfigured}`,
+      };
+    }
+
+    // ─── Name.com ──────────────────────────────────────────────────
+    case "namecom_list_domains": {
+      const max = clampNumber(input.max, 1, 500, 200);
+      const domains = await nameListDomains({
+        max,
+        auditUserId: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify({
+          total: domains.length,
+          domains: domains.map((d) => ({
+            domainName: d.domainName,
+            expireDate: d.expireDate,
+            autorenewEnabled: d.autorenewEnabled,
+            locked: d.locked,
+          })),
+        }),
+        summary: `${domains.length} dominios name.com`,
+      };
+    }
+    case "namecom_get_domain": {
+      const domain = await nameGetDomain(
+        requireString(input.domain, "domain"),
+        { auditUserId: ctx.userId },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify(domain),
+        summary: `domain ${domain.domainName}`,
+      };
+    }
+    case "namecom_list_records": {
+      const records = await nameListRecords(
+        requireString(input.domain, "domain"),
+        { auditUserId: ctx.userId },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify({ total: records.length, records }),
+        summary: `${records.length} DNS records`,
+      };
+    }
+    case "namecom_upsert_record": {
+      const created = await nameUpsertRecord(
+        requireString(input.domain, "domain"),
+        {
+          host: typeof input.host === "string" ? input.host : "",
+          type: requireString(input.type, "type") as
+            | "A"
+            | "AAAA"
+            | "CNAME"
+            | "TXT"
+            | "MX"
+            | "NS",
+          answer: requireString(input.answer, "answer"),
+          ttl: typeof input.ttl === "number" ? input.ttl : undefined,
+          priority:
+            typeof input.priority === "number" ? input.priority : undefined,
+        },
+        { auditUserId: ctx.userId },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify(created),
+        summary: `${created.type} ${created.fqdn} → ${created.answer}`,
+      };
+    }
+    case "namecom_delete_record": {
+      const result = await nameDeleteRecord(
+        requireString(input.domain, "domain"),
+        Number(input.recordId),
+        { auditUserId: ctx.userId },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify(result),
+        summary: `record ${input.recordId} borrado`,
+      };
+    }
+
     default:
       return {
         ok: false,
@@ -306,6 +804,11 @@ async function dispatch(
         summary: `unknown tool: ${name}`,
       };
   }
+}
+
+function nullableString(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  return v.length === 0 ? null : v;
 }
 
 function clampNumber(
