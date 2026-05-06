@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChatStream } from "@/components/vforge/chat-stream";
-import { Composer } from "@/components/vforge/composer";
+import { Composer, type ComposerAttachment } from "@/components/vforge/composer";
 import type { ChatMessageData } from "@/components/vforge/chat-message";
 
 const SCOPE_STORAGE_KEY = "vforge_chat_scope"; // 'general' | projectId
@@ -23,8 +23,14 @@ function welcomeForProject(name: string): ChatMessageData {
   };
 }
 
-function makeSessionId() {
-  return `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+function makeSessionId(scope?: string) {
+  const safeScope = (scope ?? "general")
+    .replace(/[^a-zA-Z0-9_-]/g, "-")
+    .slice(0, 40)
+    .toLowerCase() || "general";
+  const rand =
+    Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  return `s_${safeScope}_${rand}`;
 }
 
 function toolDisplayName(name: string): string {
@@ -119,19 +125,46 @@ export default function ForgePage() {
       .catch(() => undefined);
   }, []);
 
-  // Whenever scope changes, resolve its session id and rehydrate history.
+  // Whenever scope changes, resolve its session id from the SERVER and
+  // rehydrate history. Server-side resolution is what lets phone +
+  // computer share the same conversation. localStorage is kept as an
+  // immediate-availability cache (avoids a flash of "Cargando" on cold
+  // navigation), but the server's answer wins.
   useEffect(() => {
     if (typeof window === "undefined" || !scope) return;
     localStorage.setItem(SCOPE_STORAGE_KEY, scope);
-    let sid = localStorage.getItem(sessionKeyFor(scope));
-    if (!sid) {
-      sid = makeSessionId();
-      localStorage.setItem(sessionKeyFor(scope), sid);
+
+    let cancelled = false;
+
+    const cached = localStorage.getItem(sessionKeyFor(scope));
+    if (cached) {
+      sessionIdRef.current = cached;
     }
-    sessionIdRef.current = sid;
 
     setHydrating(true);
-    void hydrate(sid);
+    void (async () => {
+      let sid: string;
+      try {
+        const res = await fetch(
+          `/api/forge/active-session?scope=${encodeURIComponent(scope)}`,
+          { cache: "no-store" },
+        );
+        if (!res.ok) throw new Error(`active-session ${res.status}`);
+        const data = (await res.json()) as { sessionId: string };
+        sid = data.sessionId;
+      } catch {
+        // Server unreachable → fall back to local-only id (offline mode).
+        sid = cached ?? makeSessionId(scope);
+      }
+      if (cancelled) return;
+      localStorage.setItem(sessionKeyFor(scope), sid);
+      sessionIdRef.current = sid;
+      await hydrate(sid);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [scope]);
 
   async function hydrate(sessionId: string) {
@@ -169,9 +202,7 @@ export default function ForgePage() {
     return welcomeForProject(p?.name ?? s);
   }
 
-  function newSession() {
-    // Fire-and-forget recap on the previous session before swapping in
-    // a fresh sessionId. This is what gives V cross-session memory.
+  async function newSession() {
     const previousSessionId = sessionIdRef.current;
     if (previousSessionId) {
       void fetch("/api/forge/recap", {
@@ -184,7 +215,18 @@ export default function ForgePage() {
         keepalive: true,
       }).catch(() => undefined);
     }
-    const sid = makeSessionId();
+    let sid: string;
+    try {
+      const res = await fetch("/api/forge/active-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scope }),
+      });
+      const data = (await res.json()) as { sessionId: string };
+      sid = data.sessionId;
+    } catch {
+      sid = makeSessionId(scope);
+    }
     localStorage.setItem(sessionKeyFor(scope), sid);
     sessionIdRef.current = sid;
     setMessages([welcomeFor(scope)]);
@@ -243,17 +285,28 @@ export default function ForgePage() {
 
   const handleSend = async (
     content: string,
-    attachments?: { id: string; kind: string; label: string; meta: string }[],
+    attachments?: ComposerAttachment[],
   ) => {
     if (streaming) return;
+    const imageAttachments = (attachments ?? []).filter(
+      (a) => a.kind === "image" && a.dataUrl,
+    );
+    const otherAttachments = (attachments ?? []).filter(
+      (a) => a.kind !== "image",
+    );
     const attachmentNote =
-      attachments && attachments.length > 0
-        ? `\n\n📎 ${attachments.length} adjunto${attachments.length === 1 ? "" : "s"}: ${attachments.map((a) => a.label).join(", ")}`
+      otherAttachments.length > 0
+        ? `\n\n📎 ${otherAttachments.length} adjunto${otherAttachments.length === 1 ? "" : "s"}: ${otherAttachments.map((a) => a.label).join(", ")}`
         : "";
     const userTurn: ChatMessageData = {
       id: `u_${Date.now()}`,
       role: "user",
       content: content + attachmentNote,
+      attachments: imageAttachments.map((a) => ({
+        kind: "image",
+        src: a.dataUrl ?? a.previewUrl ?? "",
+        label: a.label,
+      })),
     };
     const assistantId = `a_${Date.now()}`;
     const assistantTurn: ChatMessageData = {
@@ -264,16 +317,55 @@ export default function ForgePage() {
     setMessages((prev) => [...prev, userTurn, assistantTurn]);
     setStreaming(true);
 
-    // Build the Anthropic-compatible chat history (drop UI-only welcome)
-    const history = [
-      ...messages
-        .filter((m) => m.id !== "welcome")
-        .map((m) => ({
-          role: m.role === "forge" ? ("assistant" as const) : ("user" as const),
-          content: m.content,
-        })),
-      { role: "user" as const, content: userTurn.content },
-    ];
+    // Build the Anthropic-compatible chat history (drop UI-only welcome).
+    // Past turns are sent as plain text (no image replay — keeps tokens
+    // sane). Only THIS turn includes the image blocks.
+    const historyText = messages
+      .filter((m) => m.id !== "welcome")
+      .map((m) => ({
+        role: m.role === "forge" ? ("assistant" as const) : ("user" as const),
+        content: m.content,
+      }));
+
+    type StructuredBlock =
+      | { type: "text"; text: string }
+      | {
+          type: "image";
+          source: { type: "base64"; media_type: string; data: string };
+        };
+
+    const currentTurn = imageAttachments.length > 0
+      ? {
+          role: "user" as const,
+          content: [
+            ...imageAttachments.map((att): StructuredBlock => {
+              const dataUrl = att.dataUrl as string;
+              const m = /^data:([^;]+);base64,(.+)$/.exec(dataUrl);
+              return {
+                type: "image" as const,
+                source: {
+                  type: "base64" as const,
+                  media_type: m?.[1] ?? att.mediaType ?? "image/jpeg",
+                  data: m?.[2] ?? "",
+                },
+              };
+            }),
+            ...(content || attachmentNote
+              ? [
+                  {
+                    type: "text" as const,
+                    text: content + attachmentNote,
+                  },
+                ]
+              : []),
+          ] as StructuredBlock[],
+        }
+      : {
+          role: "user" as const,
+          content: userTurn.content,
+        };
+
+    const history = [...historyText, currentTurn];
 
     try {
       const res = await fetch("/api/forge/run", {

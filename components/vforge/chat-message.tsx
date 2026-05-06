@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 import { ForgeOrb } from "@/components/ui/forge-orb";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export type MessageRole = "user" | "forge";
 
@@ -16,6 +18,11 @@ export interface ChatMessageData {
   id: string;
   role: MessageRole;
   content: string;
+  attachments?: Array<{
+    kind: "image";
+    src: string; // data URL or http(s)
+    label?: string;
+  }>;
   steps?: StepItem[];
   actions?: { label: string; variant: "primary" | "ghost" }[];
 }
@@ -25,14 +32,83 @@ interface ChatMessageProps {
   onAction?: (action: string) => void;
 }
 
+/**
+ * Render assistant content as markdown. Raw HTML is intentionally NOT
+ * allowed — react-markdown escapes by default and we don't pass
+ * rehype-raw, so any `<span>` or `<div>` V dumps shows up as plain
+ * text instead of HTML. This prevents the v0-style master prompt
+ * leaking JSX into the chat surface.
+ */
+function MarkdownContent({ children }: { children: string }) {
+  return (
+    <div className="prose prose-invert prose-sm max-w-none vf-prose">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          // Keep external links opening in a new tab
+          a: (props) => (
+            <a
+              {...props}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-vf-green underline underline-offset-2 hover:text-vf-green/80"
+            />
+          ),
+          // Inline code uses theme color
+          code: (props) => {
+            const { children, className, ...rest } = props;
+            const isInline = !className;
+            if (isInline) {
+              return (
+                <code
+                  className="rounded bg-vf-bg-2 border border-vf-border-1 px-1 py-0.5 text-[0.85em] font-mono text-vf-green-quiet"
+                  {...rest}
+                >
+                  {children}
+                </code>
+              );
+            }
+            return (
+              <code className={className} {...rest}>
+                {children}
+              </code>
+            );
+          },
+          pre: (props) => (
+            <pre
+              {...props}
+              className="bg-vf-bg-2 border border-vf-border-1 rounded-md p-3 text-[12px] overflow-x-auto"
+            />
+          ),
+        }}
+      >
+        {children}
+      </ReactMarkdown>
+    </div>
+  );
+}
+
 export function ChatMessage({ message, onAction }: ChatMessageProps) {
   const isUser = message.role === "user";
 
   if (isUser) {
     return (
       <div className="flex justify-end">
-        <div className="bg-vf-bg-3 rounded-lg px-4 py-3 max-w-[80%]">
-          <p className="text-sm text-vf-fg">{message.content}</p>
+        <div className="bg-vf-bg-3 rounded-lg px-4 py-3 max-w-[80%] space-y-2">
+          {message.attachments?.map((att, i) =>
+            att.kind === "image" ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={i}
+                src={att.src}
+                alt={att.label ?? "imagen adjunta"}
+                className="rounded border border-vf-border-1 max-h-64 w-auto object-contain"
+              />
+            ) : null,
+          )}
+          {message.content && (
+            <p className="text-sm text-vf-fg whitespace-pre-wrap">{message.content}</p>
+          )}
         </div>
       </div>
     );
@@ -52,7 +128,7 @@ export function ChatMessage({ message, onAction }: ChatMessageProps) {
 
         {/* Content */}
         <div className="text-sm text-vf-fg space-y-3">
-          <p>{message.content}</p>
+          {message.content && <MarkdownContent>{message.content}</MarkdownContent>}
 
           {/* Steps list */}
           {message.steps && message.steps.length > 0 && (
