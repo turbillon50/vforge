@@ -39,6 +39,8 @@ import {
   upsertRecord as nameUpsertRecord,
   deleteRecord as nameDeleteRecord,
 } from "@/lib/namecom/client";
+import { encryptOperatorSecret } from "@/lib/vault/operator-crypto";
+import { invalidateSecretCache } from "@/lib/vault/get-secret";
 
 export const TOOLS: Tool[] = [
   {
@@ -367,6 +369,59 @@ export const TOOLS: Tool[] = [
       },
       required: ["domain", "recordId"],
     },
+  },
+
+  // ─── Per-project vault ────────────────────────────────────────────
+  {
+    name: "project_secret_save",
+    description:
+      "Guarda un secret cifrado en el vault del proyecto especificado. Úsala cuando Luis te diga 'pa rivones la VITE_CLERK_PUBLISHABLE_KEY es pk_live_…' o cuando le agregues una key específica de un proyecto. NO la uses para keys generales que aplican a todos los proyectos (esas van al vault general como ANTHROPIC_API_KEY, STRIPE_SECRET_KEY, etc.). Si Luis no te dice explícitamente que es de un proyecto, pregunta el scope.",
+    input_schema: {
+      type: "object",
+      properties: {
+        projectId: {
+          type: "string",
+          description: "Slug del proyecto (ej. 'rivones', 'vforge'). Debe existir en la tabla projects.",
+        },
+        name: {
+          type: "string",
+          description: "Nombre UPPER_SNAKE_CASE (ej. VITE_CLERK_PUBLISHABLE_KEY)",
+        },
+        value: { type: "string", description: "Valor en plaintext (se cifra al guardar)" },
+        description: { type: "string" },
+        provider: { type: "string", description: "Proveedor (ej. clerk, stripe, google-maps)" },
+      },
+      required: ["projectId", "name", "value"],
+    },
+  },
+  {
+    name: "project_secret_list",
+    description:
+      "Lista los METADATOS de los secrets de un proyecto (nombre, provider, descripción, fecha de creación). NUNCA devuelve plaintext. Úsala para auditar qué keys tiene un proyecto.",
+    input_schema: {
+      type: "object",
+      properties: { projectId: { type: "string" } },
+      required: ["projectId"],
+    },
+  },
+  {
+    name: "project_secret_delete",
+    description:
+      "Borra un secret específico del vault de un proyecto. Ring 3 (destructivo) — confirma con Luis antes.",
+    input_schema: {
+      type: "object",
+      properties: {
+        projectId: { type: "string" },
+        name: { type: "string" },
+      },
+      required: ["projectId", "name"],
+    },
+  },
+  {
+    name: "projects_sync",
+    description:
+      "Cruza la lista de proyectos de Vercel con los repos de GitHub y los sincroniza a la tabla `projects` de vForge. Usa esta tool cuando Luis pregunte 'qué proyectos tengo' y la tabla esté vacía/desactualizada, o cuando agregue un proyecto nuevo. Idempotente: actualiza existentes, inserta los nuevos, no borra nada.",
+    input_schema: { type: "object", properties: {} },
   },
 ];
 
@@ -797,6 +852,222 @@ async function dispatch(
       };
     }
 
+    // ─── Per-project vault ─────────────────────────────────────────
+    case "project_secret_save": {
+      const projectId = requireString(input.projectId, "projectId");
+      const name = requireString(input.name, "name");
+      const value = requireString(input.value, "value");
+      if (!/^[A-Z][A-Z0-9_]{0,63}$/.test(name)) {
+        throw new Error(
+          "name must be UPPER_SNAKE_CASE ([A-Z][A-Z0-9_]*, max 64)",
+        );
+      }
+      const projExists = (await sql`SELECT id FROM projects WHERE id = ${projectId}`) as Array<{ id: string }>;
+      if (projExists.length === 0) {
+        throw new Error(`project '${projectId}' not in vForge catalog (run projects_sync first?)`);
+      }
+      const enc = encryptOperatorSecret(value);
+      const ciphertextHex = enc.ciphertext.toString("hex");
+      const ivHex = enc.iv.toString("hex");
+      const authTagHex = enc.authTag.toString("hex");
+      const description =
+        typeof input.description === "string" ? input.description : null;
+      const provider =
+        typeof input.provider === "string" ? input.provider : null;
+      const upsert = (await sql`
+        INSERT INTO project_secrets (
+          project_id, name, description, provider,
+          ciphertext, iv, auth_tag
+        ) VALUES (
+          ${projectId}, ${name}, ${description}, ${provider},
+          decode(${ciphertextHex}, 'hex'),
+          decode(${ivHex}, 'hex'),
+          decode(${authTagHex}, 'hex')
+        )
+        ON CONFLICT (project_id, name) DO UPDATE SET
+          description = COALESCE(EXCLUDED.description, project_secrets.description),
+          provider = COALESCE(EXCLUDED.provider, project_secrets.provider),
+          ciphertext = EXCLUDED.ciphertext,
+          iv = EXCLUDED.iv,
+          auth_tag = EXCLUDED.auth_tag,
+          rotated_at = now()
+        RETURNING id, rotated_at
+      `) as Array<{ id: string; rotated_at: string | null }>;
+      invalidateSecretCache(name, projectId);
+      return {
+        ok: true,
+        content: JSON.stringify({
+          id: upsert[0].id,
+          project_id: projectId,
+          name,
+          rotated: !!upsert[0].rotated_at,
+        }),
+        summary: `secret ${name} guardado en ${projectId}`,
+      };
+    }
+    case "project_secret_list": {
+      const projectId = requireString(input.projectId, "projectId");
+      const rows = (await sql`
+        SELECT name, description, provider,
+               created_at, rotated_at, last_used_at
+          FROM project_secrets
+         WHERE project_id = ${projectId}
+         ORDER BY name
+      `) as Array<{
+        name: string;
+        description: string | null;
+        provider: string | null;
+        created_at: Date | string;
+        rotated_at: Date | string | null;
+        last_used_at: Date | string | null;
+      }>;
+      return {
+        ok: true,
+        content: JSON.stringify({
+          project_id: projectId,
+          total: rows.length,
+          secrets: rows,
+        }),
+        summary: `${rows.length} secrets en ${projectId}`,
+      };
+    }
+    case "project_secret_delete": {
+      const projectId = requireString(input.projectId, "projectId");
+      const name = requireString(input.name, "name");
+      const rows = (await sql`
+        DELETE FROM project_secrets
+         WHERE project_id = ${projectId} AND name = ${name}
+        RETURNING id, name
+      `) as Array<{ id: string; name: string }>;
+      if (rows.length === 0) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: "not found" }),
+          summary: `${name} no existía en ${projectId}`,
+        };
+      }
+      invalidateSecretCache(name, projectId);
+      return {
+        ok: true,
+        content: JSON.stringify({
+          deleted: rows[0],
+          project_id: projectId,
+        }),
+        summary: `${name} borrado de ${projectId}`,
+      };
+    }
+    case "projects_sync": {
+      const [vps, ghs] = await Promise.all([
+        vercelListProjects({ auditUserId: ctx.userId, max: 200 }).catch(
+          () => [] as ReturnType<typeof vercelListProjects> extends Promise<infer R> ? R : never,
+        ),
+        listAllUserRepos({ auditUserId: ctx.userId, max: 200 }).catch(
+          () => [],
+        ),
+      ]);
+
+      type Aggregated = {
+        id: string;
+        name: string;
+        description: string | null;
+        github_repo: string | null;
+        github_private: boolean | null;
+        github_default_branch: string | null;
+        github_language: string | null;
+        github_url: string | null;
+        vercel_project_id: string | null;
+        vercel_url: string | null;
+      };
+      const byKey = new Map<string, Aggregated>();
+      for (const repo of (Array.isArray(ghs) ? ghs : [])) {
+        byKey.set(repo.full_name.toLowerCase(), {
+          id: slugify(repo.name),
+          name: repo.name,
+          description: repo.description,
+          github_repo: repo.full_name,
+          github_private: repo.private,
+          github_default_branch: repo.default_branch,
+          github_language: repo.language,
+          github_url: repo.html_url,
+          vercel_project_id: null,
+          vercel_url: null,
+        });
+      }
+      for (const project of (Array.isArray(vps) ? vps : [])) {
+        const link = project.link as
+          | { type?: string; org?: string; repo?: string }
+          | null
+          | undefined;
+        const fullName = link?.org && link?.repo ? `${link.org}/${link.repo}` : null;
+        const key = fullName ? fullName.toLowerCase() : `vercel:${project.name}`;
+        const prev = byKey.get(key);
+        const merged: Aggregated = prev
+          ? {
+              ...prev,
+              vercel_project_id: project.id,
+              vercel_url: prev.vercel_url ?? `https://${project.name}.vercel.app`,
+            }
+          : {
+              id: slugify(project.name),
+              name: project.name,
+              description: null,
+              github_repo: null,
+              github_private: null,
+              github_default_branch: null,
+              github_language: null,
+              github_url: null,
+              vercel_project_id: project.id,
+              vercel_url: `https://${project.name}.vercel.app`,
+            };
+        byKey.set(key, merged);
+      }
+      let inserted = 0;
+      let updated = 0;
+      for (const agg of byKey.values()) {
+        const existing = (await sql`SELECT id FROM projects WHERE id = ${agg.id}`) as Array<{ id: string }>;
+        if (existing.length > 0) {
+          await sql`
+            UPDATE projects SET
+              name = COALESCE(${agg.name}, name),
+              description = COALESCE(${agg.description}, description),
+              github_repo = COALESCE(${agg.github_repo}, github_repo),
+              github_private = COALESCE(${agg.github_private}, github_private),
+              github_default_branch = COALESCE(${agg.github_default_branch}, github_default_branch),
+              github_language = COALESCE(${agg.github_language}, github_language),
+              github_url = COALESCE(${agg.github_url}, github_url),
+              vercel_project_id = COALESCE(${agg.vercel_project_id}, vercel_project_id),
+              vercel_url = COALESCE(${agg.vercel_url}, vercel_url)
+            WHERE id = ${agg.id}
+          `;
+          updated += 1;
+        } else {
+          await sql`
+            INSERT INTO projects (
+              id, name, description,
+              github_repo, github_private, github_default_branch,
+              github_language, github_url,
+              vercel_project_id, vercel_url
+            ) VALUES (
+              ${agg.id}, ${agg.name}, ${agg.description},
+              ${agg.github_repo}, ${agg.github_private}, ${agg.github_default_branch},
+              ${agg.github_language}, ${agg.github_url},
+              ${agg.vercel_project_id}, ${agg.vercel_url}
+            )
+          `;
+          inserted += 1;
+        }
+      }
+      return {
+        ok: true,
+        content: JSON.stringify({
+          inserted,
+          updated,
+          total: byKey.size,
+        }),
+        summary: `proyectos sync: +${inserted} nuevos, ${updated} actualizados`,
+      };
+    }
+
     default:
       return {
         ok: false,
@@ -809,6 +1080,14 @@ async function dispatch(
 function nullableString(v: unknown): string | null {
   if (typeof v !== "string") return null;
   return v.length === 0 ? null : v;
+}
+
+function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
 }
 
 function clampNumber(

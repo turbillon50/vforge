@@ -1,13 +1,14 @@
 /**
- * Server-side helper for V (and any backend code) to invoke an
- * operator secret by name. Reads from operator_secrets table,
- * decrypts on the fly with the AES key derived from
- * VFORGE_MASTER_PEPPER, updates last_used_at, and returns the
- * plaintext.
+ * Server-side helper for V (and any backend code) to invoke a
+ * vault secret by name, with cascade resolution:
  *
- * Falls back to process.env when the secret hasn't been migrated
- * yet — keeps the brain endpoint working during the transition
- * from "all keys in Vercel env" to "all keys in DB cifradas".
+ *    project_secrets (if scope.projectId)
+ *      → operator_secrets (always)
+ *      → process.env (transition fallback)
+ *
+ * Reads from the relevant table, decrypts on the fly with the AES
+ * key derived from VFORGE_MASTER_PEPPER, updates last_used_at, and
+ * returns the plaintext. Each successful read writes an audit event.
  */
 import { queryOne, sql } from "@/lib/db/client";
 import { decryptOperatorSecret } from "./operator-crypto";
@@ -22,21 +23,55 @@ interface SecretRow {
 const VAULT_HIT_CACHE = new Map<string, { value: string; expiresAt: number }>();
 const CACHE_TTL_MS = 60 * 1000; // 60 s in-process cache (per Lambda invocation)
 
+function cacheKey(name: string, projectId: string | null | undefined): string {
+  return projectId ? `p:${projectId}:${name}` : `g:${name}`;
+}
+
+interface GetSecretOptions {
+  auditUserId?: string;
+  /**
+   * If set, look in project_secrets WHERE project_id=projectId AND name=name
+   * BEFORE falling through to operator_secrets. If the value isn't found at
+   * the project scope, the resolution continues with the global vault — so
+   * a project can override a key (e.g. its own VITE_CLERK_PUBLISHABLE_KEY)
+   * without invalidating the shared default.
+   */
+  projectId?: string | null;
+}
+
 /**
- * Returns the plaintext value of an operator secret, looking it up
- * by name. Cached for 60 seconds in-memory per process.
- *
- * Falls back to process.env[name] if no DB row exists.
+ * Returns the plaintext value of a vault secret, with project →
+ * operator → env cascade. Cached for 60 seconds in-memory per process,
+ * keyed on (scope, name) so different projects don't poison each
+ * other's cache.
  */
 export async function getOperatorSecret(
   name: string,
-  options: { auditUserId?: string } = {},
+  options: GetSecretOptions = {},
 ): Promise<string | null> {
-  const cached = VAULT_HIT_CACHE.get(name);
+  const cKey = cacheKey(name, options.projectId);
+  const cached = VAULT_HIT_CACHE.get(cKey);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.value;
   }
 
+  // 1) Project-scoped lookup (if requested)
+  if (options.projectId) {
+    const projectRow = await tryReadProjectSecret(
+      options.projectId,
+      name,
+      options.auditUserId,
+    );
+    if (projectRow) {
+      VAULT_HIT_CACHE.set(cKey, {
+        value: projectRow,
+        expiresAt: Date.now() + CACHE_TTL_MS,
+      });
+      return projectRow;
+    }
+  }
+
+  // 2) Global operator vault
   let row: SecretRow | null = null;
   try {
     row = await queryOne<SecretRow>(
@@ -45,14 +80,14 @@ export async function getOperatorSecret(
       [name],
     );
   } catch {
-    // DB unreachable → degrade to env var
     row = null;
   }
 
   if (!row) {
+    // 3) Env fallback
     const envVal = process.env[name];
     if (envVal) {
-      VAULT_HIT_CACHE.set(name, {
+      VAULT_HIT_CACHE.set(cKey, {
         value: envVal,
         expiresAt: Date.now() + CACHE_TTL_MS,
       });
@@ -69,28 +104,66 @@ export async function getOperatorSecret(
       authTag: Buffer.from(row.auth_tag),
     });
   } catch (err) {
-    // If decryption fails, fall back to env var so the system keeps
-    // working while we diagnose. Log loudly so it's visible.
     console.error("[vault] decrypt failed for", name, err);
     return process.env[name] ?? null;
   }
 
-  // Update last_used_at + audit log (fire-and-forget, don't block the call)
   void Promise.all([
     sql`UPDATE operator_secrets SET last_used_at = now(), last_used_by = ${options.auditUserId ?? null} WHERE id = ${row.id}`,
     sql`
       INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
       VALUES (
         ${options.auditUserId ?? "system"}, 'vault.operator.read', 'operator_secret', ${row.id}, 1,
-        ${JSON.stringify({ name })}::jsonb
+        ${JSON.stringify({ name, scope: "global" })}::jsonb
       )
     `,
   ]).catch(() => undefined);
 
-  VAULT_HIT_CACHE.set(name, {
+  VAULT_HIT_CACHE.set(cKey, {
     value: plaintext,
     expiresAt: Date.now() + CACHE_TTL_MS,
   });
+  return plaintext;
+}
+
+async function tryReadProjectSecret(
+  projectId: string,
+  name: string,
+  auditUserId?: string,
+): Promise<string | null> {
+  let row: SecretRow | null = null;
+  try {
+    row = await queryOne<SecretRow>(
+      `SELECT id::text, ciphertext, iv, auth_tag
+         FROM project_secrets
+        WHERE project_id = $1 AND name = $2`,
+      [projectId, name],
+    );
+  } catch {
+    return null;
+  }
+  if (!row) return null;
+  let plaintext: string;
+  try {
+    plaintext = decryptOperatorSecret({
+      ciphertext: Buffer.from(row.ciphertext),
+      iv: Buffer.from(row.iv),
+      authTag: Buffer.from(row.auth_tag),
+    });
+  } catch (err) {
+    console.error("[vault] decrypt failed for project secret", projectId, name, err);
+    return null;
+  }
+  void Promise.all([
+    sql`UPDATE project_secrets SET last_used_at = now(), last_used_by = ${auditUserId ?? null} WHERE id = ${row.id}`,
+    sql`
+      INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
+      VALUES (
+        ${auditUserId ?? "system"}, 'vault.project.read', 'project_secret', ${row.id}, 1,
+        ${JSON.stringify({ name, project_id: projectId, scope: "project" })}::jsonb
+      )
+    `,
+  ]).catch(() => undefined);
   return plaintext;
 }
 
@@ -99,7 +172,7 @@ export async function getOperatorSecret(
  */
 export async function requireOperatorSecret(
   name: string,
-  options: { auditUserId?: string } = {},
+  options: GetSecretOptions = {},
 ): Promise<string> {
   const value = await getOperatorSecret(name, options);
   if (!value) {
@@ -113,7 +186,13 @@ export async function requireOperatorSecret(
 /**
  * Drop the in-process cache. Useful after rotating a key.
  */
-export function invalidateSecretCache(name?: string): void {
-  if (name) VAULT_HIT_CACHE.delete(name);
-  else VAULT_HIT_CACHE.clear();
+export function invalidateSecretCache(
+  name?: string,
+  projectId?: string | null,
+): void {
+  if (name) {
+    VAULT_HIT_CACHE.delete(cacheKey(name, projectId));
+  } else {
+    VAULT_HIT_CACHE.clear();
+  }
 }

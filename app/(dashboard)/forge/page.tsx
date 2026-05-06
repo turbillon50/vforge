@@ -69,6 +69,14 @@ function toolDisplayName(name: string): string {
       return "Configurando registro DNS";
     case "namecom_delete_record":
       return "Borrando registro DNS";
+    case "project_secret_save":
+      return "Guardando secret del proyecto";
+    case "project_secret_list":
+      return "Listando secrets del proyecto";
+    case "project_secret_delete":
+      return "Borrando secret del proyecto";
+    case "projects_sync":
+      return "Sincronizando proyectos (Vercel + GitHub)";
     default:
       return `Ejecutando ${name}`;
   }
