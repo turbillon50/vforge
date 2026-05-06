@@ -11,9 +11,16 @@ import { getOperatorSecret } from "@/lib/vault/get-secret";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+type StructuredBlock =
+  | { type: "text"; text: string }
+  | {
+      type: "image";
+      source: { type: "base64"; media_type: string; data: string };
+    };
+
 interface ChatTurn {
   role: "user" | "assistant";
-  content: string;
+  content: string | StructuredBlock[];
 }
 
 interface RunRequest {
@@ -57,9 +64,14 @@ export async function POST(req: Request) {
   const lastUserTurn = messages[messages.length - 1];
 
   if (lastUserTurn.role === "user") {
+    // Persist a textual representation of the user turn (image bytes
+    // are not stored in the conversations table — only the surrounding
+    // text plus an optional "[1 imagen adjunta]" marker so rehydration
+    // shows the user posted an image without re-fetching it).
+    const textOnly = stringifyUserTurn(lastUserTurn.content);
     await sql`
       INSERT INTO conversations (user_id, session_id, role, content)
-      VALUES (${userId}, ${sessionId}, 'user', ${lastUserTurn.content})
+      VALUES (${userId}, ${sessionId}, 'user', ${textOnly})
     `;
   }
 
@@ -69,7 +81,7 @@ export async function POST(req: Request) {
   // and tool_result user turns across rounds.
   const conversationMessages: MessageParam[] = messages.map((m) => ({
     role: m.role,
-    content: m.content,
+    content: m.content as MessageParam["content"],
   }));
 
   const encoder = new TextEncoder();
@@ -224,6 +236,26 @@ export async function POST(req: Request) {
       "X-Accel-Buffering": "no",
     },
   });
+}
+
+/**
+ * Reduce a user turn's content (string or block array) to a single
+ * string for persistence. Images are summarized as "[N imagen(es)]"
+ * since we don't store image bytes in the conversations table.
+ */
+function stringifyUserTurn(content: string | StructuredBlock[]): string {
+  if (typeof content === "string") return content;
+  let imageCount = 0;
+  let text = "";
+  for (const b of content) {
+    if (b.type === "image") imageCount += 1;
+    else if (b.type === "text") text += (text ? "\n" : "") + b.text;
+  }
+  if (imageCount > 0) {
+    const tag = `[${imageCount} imagen${imageCount === 1 ? "" : "es"} adjunta${imageCount === 1 ? "" : "s"}]`;
+    return text ? `${text}\n${tag}` : tag;
+  }
+  return text;
 }
 
 function jsonError(message: string, status: number): Response {

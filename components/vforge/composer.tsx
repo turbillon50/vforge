@@ -10,17 +10,30 @@ import {
   type VoiceRecorderResult,
 } from "@/components/web-apis";
 
-interface ComposerAttachment {
+export interface ComposerAttachment {
   id: string;
   kind: "image" | "file" | "audio";
   label: string;
   meta: string;
   previewUrl?: string;
+  /** base64 data URL — required for images so V can actually see them */
+  dataUrl?: string;
+  /** image MIME type (image/jpeg | image/png | image/webp | image/gif) */
+  mediaType?: string;
 }
 
 interface ComposerProps {
   onSend: (message: string, attachments?: ComposerAttachment[]) => void;
   disabled?: boolean;
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }
 
 let attachmentCounter = 0;
@@ -59,7 +72,7 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
           const file = item.getAsFile();
           if (file) {
             e.preventDefault();
-            handleFileAttach(file);
+            void handleFileAttach(file);
             return;
           }
         }
@@ -70,25 +83,31 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
     return () => composer?.removeEventListener("paste", onPaste);
   }, []);
 
-  function handleFileAttach(file: File) {
+  async function handleFileAttach(file: File) {
     const isImage = file.type.startsWith("image/");
+    const dataUrl = isImage ? await readFileAsDataUrl(file) : undefined;
     const att: ComposerAttachment = {
       id: makeId(),
       kind: isImage ? "image" : "file",
       label: file.name || (isImage ? "imagen pegada" : "archivo"),
       meta: `${(file.size / 1024).toFixed(1)} KB · ${file.type || "binario"}`,
-      previewUrl: isImage ? URL.createObjectURL(file) : undefined,
+      previewUrl: isImage ? dataUrl ?? URL.createObjectURL(file) : undefined,
+      dataUrl,
+      mediaType: isImage ? file.type : undefined,
     };
     setAttachments((prev) => [...prev, att]);
   }
 
   function handleCameraCapture(r: CameraCaptureResult) {
+    const mediaType = r.dataUrl.startsWith("data:image/png") ? "image/png" : "image/jpeg";
     const att: ComposerAttachment = {
       id: makeId(),
       kind: "image",
       label: `Foto ${r.width}×${r.height}`,
       meta: `${(r.blob.size / 1024).toFixed(0)} KB · cámara`,
       previewUrl: r.dataUrl,
+      dataUrl: r.dataUrl,
+      mediaType,
     };
     setAttachments((prev) => [...prev, att]);
   }
@@ -272,7 +291,7 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
             onChange={(e) => {
               const files = e.target.files;
               if (files) {
-                Array.from(files).forEach(handleFileAttach);
+                Array.from(files).forEach((f) => void handleFileAttach(f));
                 e.target.value = "";
               }
             }}
