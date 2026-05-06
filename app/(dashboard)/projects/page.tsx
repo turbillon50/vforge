@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus, ExternalLink, GitBranch, Lock } from "lucide-react";
+import { Plus, ExternalLink, GitBranch, Lock, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Project {
@@ -37,11 +37,20 @@ const CATEGORIES: { id: CategoryFilter; label: string; emoji: string }[] = [
   { id: "pendiente_borrado", label: "Pendiente borrado", emoji: "🗑️" },
 ];
 
+const OPERATOR_TOKEN_KEY = "vforge_operator_token";
+
+function getOperatorToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(OPERATOR_TOKEN_KEY);
+}
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState<CategoryFilter>("all");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -54,6 +63,45 @@ export default function ProjectsPage() {
       setProjects([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function sync() {
+    const token = getOperatorToken();
+    if (!token) {
+      setSyncMsg("Necesitas desbloquear el Vault primero (operator token)");
+      setTimeout(() => setSyncMsg(null), 6000);
+      return;
+    }
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const res = await fetch("/api/projects/sync", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json()) as {
+        inserted?: number;
+        updated?: number;
+        total?: number;
+        error?: string;
+        errors?: Array<{ id: string; message: string }>;
+      };
+      if (data.error) {
+        setSyncMsg(`error: ${data.error}`);
+      } else {
+        setSyncMsg(
+          `+${data.inserted ?? 0} nuevos · ${data.updated ?? 0} actualizados · ${data.total ?? 0} total`,
+        );
+        await load();
+      }
+    } catch (err) {
+      setSyncMsg(
+        `error: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setSyncMsg(null), 8000);
     }
   }
 
@@ -80,18 +128,35 @@ export default function ProjectsPage() {
                 ? "Sin proyectos"
                 : `${projects.length} proyecto${projects.length === 1 ? "" : "s"}`}
           </h1>
-          <button
-            type="button"
-            onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-vf-green text-black text-sm font-medium flex-shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            Dar de alta
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={sync}
+              disabled={syncing}
+              title="Cruzar Vercel + GitHub e insertar/actualizar la tabla projects"
+              className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-md bg-vf-bg-2 border border-vf-border-1 text-vf-fg-1 text-xs disabled:opacity-50"
+            >
+              <RefreshCw className={cn("w-3.5 h-3.5", syncing && "animate-spin")} />
+              {syncing ? "Sincronizando…" : "Sincronizar"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-vf-green text-black text-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              Dar de alta
+            </button>
+          </div>
         </div>
         <p className="text-sm text-vf-fg-2">
-          Filtra por categoría · da de alta los nuevos manualmente
+          Filtra por categoría · sincroniza para traer Vercel + GitHub
         </p>
+        {syncMsg && (
+          <div className="text-xs font-mono text-vf-fg-1 bg-vf-bg-2 border border-vf-border-1 rounded-md px-2 py-1.5 mt-1">
+            {syncMsg}
+          </div>
+        )}
       </header>
 
       {/* Category chips */}

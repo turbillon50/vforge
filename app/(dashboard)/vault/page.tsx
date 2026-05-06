@@ -13,6 +13,9 @@ import {
   ShieldAlert,
   KeyRound,
   LogIn,
+  Wrench,
+  Folder,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -54,12 +57,24 @@ interface VaultHealth {
   error?: string;
 }
 
+interface ProjectOption {
+  id: string;
+  name: string;
+  category?: string;
+}
+
 export default function VaultPage() {
+  const [tab, setTab] = useState<"general" | "project">("general");
   const [secrets, setSecrets] = useState<SecretMetadata[]>([]);
+  const [projectSecrets, setProjectSecrets] = useState<SecretMetadata[]>([]);
   const [health, setHealth] = useState<VaultHealth | null>(null);
   const [loading, setLoading] = useState(true);
   const [authState, setAuthState] = useState<"checking" | "missing" | "ok" | "invalid">("checking");
   const [showAdd, setShowAdd] = useState(false);
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [migrating, setMigrating] = useState(false);
+  const [migrateMsg, setMigrateMsg] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -91,41 +106,191 @@ export default function VaultPage() {
     }
   }
 
+  async function loadProjects() {
+    try {
+      const res = await fetch("/api/projects", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as { projects: ProjectOption[] };
+      setProjects(data.projects ?? []);
+      if (data.projects?.length && !selectedProjectId) {
+        setSelectedProjectId(data.projects[0].id);
+      }
+    } catch {
+      /* noop */
+    }
+  }
+
+  async function loadProjectSecrets(projectId: string) {
+    if (!projectId) {
+      setProjectSecrets([]);
+      return;
+    }
+    try {
+      const res = await authedFetch(
+        `/api/vault/project-secrets?projectId=${encodeURIComponent(projectId)}`,
+      );
+      if (!res.ok) {
+        setProjectSecrets([]);
+        return;
+      }
+      const data = (await res.json()) as { secrets: SecretMetadata[] };
+      setProjectSecrets(data.secrets ?? []);
+    } catch {
+      setProjectSecrets([]);
+    }
+  }
+
+  async function applyMigrations() {
+    setMigrating(true);
+    setMigrateMsg(null);
+    try {
+      const res = await authedFetch("/api/admin/migrate", { method: "POST" });
+      const data = (await res.json()) as {
+        results?: Array<{ file: string; status: string; message?: string }>;
+        error?: string;
+      };
+      if (data.error) {
+        setMigrateMsg(`error: ${data.error}`);
+      } else {
+        const applied = (data.results ?? []).filter(
+          (r) => r.status === "applied",
+        );
+        const errors = (data.results ?? []).filter(
+          (r) => r.status === "error",
+        );
+        setMigrateMsg(
+          errors.length > 0
+            ? `error en ${errors.map((e) => e.file).join(", ")}: ${errors[0].message ?? ""}`
+            : applied.length > 0
+              ? `aplicadas ${applied.length}: ${applied.map((a) => a.file).join(", ")}`
+              : "todo al día — nada que aplicar",
+        );
+      }
+    } catch (err) {
+      setMigrateMsg(
+        `error: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    } finally {
+      setMigrating(false);
+      setTimeout(() => setMigrateMsg(null), 8000);
+    }
+  }
+
   useEffect(() => {
     void load();
+    void loadProjects();
   }, []);
+
+  useEffect(() => {
+    if (tab === "project" && selectedProjectId) {
+      void loadProjectSecrets(selectedProjectId);
+    }
+  }, [tab, selectedProjectId]);
 
   // Show auth setup screen if no token / invalid token
   if (authState === "missing" || authState === "invalid") {
     return <OperatorAuthGate state={authState} onUnlock={() => void load()} />;
   }
 
+  const visibleSecrets = tab === "general" ? secrets : projectSecrets;
+
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
+      <header className="space-y-2">
         <p className="font-mono text-[11px] uppercase tracking-wide text-vf-fg-2">
           Bóveda · server-side encrypted
         </p>
         <div className="flex items-baseline justify-between gap-3">
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight-vf text-vf-fg">
-            {loading ? "Cargando…" : `${secrets.length} secreto${secrets.length === 1 ? "" : "s"}`}
+            {loading ? "Cargando…" : `${visibleSecrets.length} secreto${visibleSecrets.length === 1 ? "" : "s"}`}
           </h1>
-          <button
-            type="button"
-            onClick={() => setShowAdd(true)}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-vf-green text-black text-sm font-medium flex-shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            Agregar
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={applyMigrations}
+              disabled={migrating}
+              title="Aplicar migraciones SQL pendientes"
+              className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-md bg-vf-bg-2 border border-vf-border-1 text-vf-fg-1 text-xs disabled:opacity-50"
+            >
+              <Wrench className="w-3.5 h-3.5" />
+              {migrating ? "Migrando…" : "Migrar"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAdd(true)}
+              disabled={tab === "project" && !selectedProjectId}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-vf-green text-black text-sm font-medium disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4" />
+              Agregar
+            </button>
+          </div>
         </div>
         <p className="text-sm text-vf-fg-2">
           Cifradas AES-256-GCM con master pepper · V las invoca automáticamente cuando las necesita
         </p>
+        {migrateMsg && (
+          <div className="text-xs font-mono text-vf-fg-1 bg-vf-bg-2 border border-vf-border-1 rounded-md px-2 py-1.5">
+            {migrateMsg}
+          </div>
+        )}
       </header>
 
+      {/* Tabs */}
+      <div className="flex items-center gap-1 border-b border-vf-border-1">
+        <button
+          type="button"
+          onClick={() => setTab("general")}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-2 text-sm border-b-2 -mb-[1px] transition-colors",
+            tab === "general"
+              ? "border-vf-green text-vf-fg"
+              : "border-transparent text-vf-fg-2 hover:text-vf-fg-1",
+          )}
+        >
+          <Globe className="w-3.5 h-3.5" />
+          General
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("project")}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-2 text-sm border-b-2 -mb-[1px] transition-colors",
+            tab === "project"
+              ? "border-vf-green text-vf-fg"
+              : "border-transparent text-vf-fg-2 hover:text-vf-fg-1",
+          )}
+        >
+          <Folder className="w-3.5 h-3.5" />
+          Por proyecto
+        </button>
+      </div>
+
+      {tab === "project" && (
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-mono uppercase tracking-wide text-vf-fg-2">
+            Proyecto
+          </label>
+          <select
+            value={selectedProjectId}
+            onChange={(e) => setSelectedProjectId(e.target.value)}
+            className="bg-vf-bg-2 border border-vf-border-1 rounded-md px-2 py-1.5 text-sm text-vf-fg max-w-[260px]"
+          >
+            {projects.length === 0 ? (
+              <option value="">(sin proyectos — sincroniza primero)</option>
+            ) : (
+              projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))
+            )}
+          </select>
+        </div>
+      )}
+
       {/* Vault health */}
-      {health && (
+      {health && tab === "general" && (
         <div
           className={cn(
             "flex items-center gap-2 px-3 py-2 rounded-md text-xs font-mono",
@@ -149,16 +314,29 @@ export default function VaultPage() {
       )}
 
       {/* List or empty state */}
-      {!loading && secrets.length === 0 ? (
-        <EmptyState onAdd={() => setShowAdd(true)} />
+      {!loading && visibleSecrets.length === 0 ? (
+        tab === "general" ? (
+          <EmptyState onAdd={() => setShowAdd(true)} />
+        ) : (
+          <ProjectEmptyState
+            hasProject={!!selectedProjectId}
+            onAdd={() => setShowAdd(true)}
+          />
+        )
       ) : (
         <div className="border border-vf-border rounded-xl overflow-hidden bg-vf-bg-1">
-          {secrets.map((s, i) => (
+          {visibleSecrets.map((s, i) => (
             <SecretRow
               key={s.id}
               secret={s}
               isFirst={i === 0}
-              onDelete={load}
+              scope={tab}
+              projectId={tab === "project" ? selectedProjectId : null}
+              onDelete={() =>
+                tab === "general"
+                  ? load()
+                  : loadProjectSecrets(selectedProjectId)
+              }
             />
           ))}
         </div>
@@ -166,12 +344,50 @@ export default function VaultPage() {
 
       {showAdd && (
         <AddSecretModal
+          scope={tab}
+          projectId={tab === "project" ? selectedProjectId : null}
           onClose={() => setShowAdd(false)}
           onAdded={() => {
             setShowAdd(false);
-            void load();
+            if (tab === "general") void load();
+            else void loadProjectSecrets(selectedProjectId);
           }}
         />
+      )}
+    </div>
+  );
+}
+
+function ProjectEmptyState({
+  hasProject,
+  onAdd,
+}: {
+  hasProject: boolean;
+  onAdd: () => void;
+}) {
+  return (
+    <div className="border border-dashed border-vf-border-1 rounded-xl px-6 py-12 text-center space-y-3">
+      <Folder className="w-8 h-8 text-vf-fg-3 mx-auto" />
+      {hasProject ? (
+        <>
+          <p className="text-vf-fg-2 text-sm">
+            Este proyecto aún no tiene secrets propios. Las llaves generales
+            (Anthropic, Stripe, etc.) las hereda del vault General.
+          </p>
+          <button
+            type="button"
+            onClick={onAdd}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-vf-green text-black text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Agregar secret al proyecto
+          </button>
+        </>
+      ) : (
+        <p className="text-vf-fg-2 text-sm">
+          No hay proyectos en el catálogo de vForge. Ve a /projects y dale
+          “Sincronizar” para traer tus repos de GitHub + Vercel.
+        </p>
       )}
     </div>
   );
@@ -203,9 +419,13 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 function SecretRow({
   secret,
   isFirst,
+  scope,
+  projectId,
   onDelete,
 }: {
   secret: SecretMetadata;
+  scope?: "general" | "project";
+  projectId?: string | null;
   isFirst: boolean;
   onDelete: () => void;
 }) {
@@ -215,6 +435,11 @@ function SecretRow({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const apiBase =
+    scope === "project"
+      ? "/api/vault/project-secrets"
+      : "/api/vault/operator-secrets";
+
   async function reveal() {
     if (revealed) {
       setRevealed(null);
@@ -222,7 +447,7 @@ function SecretRow({
     }
     setRevealing(true);
     try {
-      const res = await authedFetch(`/api/vault/operator-secrets/${secret.id}/value`);
+      const res = await authedFetch(`${apiBase}/${secret.id}/value`);
       if (!res.ok) throw new Error("fail");
       const data = (await res.json()) as { value: string };
       setRevealed(data.value);
@@ -236,7 +461,7 @@ function SecretRow({
   async function copy() {
     setRevealing(true);
     try {
-      const res = await authedFetch(`/api/vault/operator-secrets/${secret.id}/value`);
+      const res = await authedFetch(`${apiBase}/${secret.id}/value`);
       if (!res.ok) throw new Error("fail");
       const data = (await res.json()) as { value: string };
       await navigator.clipboard.writeText(data.value);
@@ -252,7 +477,7 @@ function SecretRow({
   async function doDelete() {
     setDeleting(true);
     try {
-      const res = await authedFetch(`/api/vault/operator-secrets/${secret.id}`, {
+      const res = await authedFetch(`${apiBase}/${secret.id}`, {
         method: "DELETE",
       });
       if (res.ok) onDelete();
@@ -261,6 +486,9 @@ function SecretRow({
       setConfirmingDelete(false);
     }
   }
+
+  // projectId is captured by the closure for cache invalidation context.
+  void projectId;
 
   const meta: string[] = [];
   if (secret.provider) meta.push(secret.provider);
@@ -352,9 +580,13 @@ function SecretRow({
 function AddSecretModal({
   onClose,
   onAdded,
+  scope: targetScope,
+  projectId,
 }: {
   onClose: () => void;
   onAdded: () => void;
+  scope?: "general" | "project";
+  projectId?: string | null;
 }) {
   const [form, setForm] = useState({
     name: "",
@@ -424,16 +656,29 @@ function AddSecretModal({
     }
     setSubmitting(true);
     try {
-      const res = await authedFetch("/api/vault/operator-secrets", {
+      const isProject = targetScope === "project";
+      const endpoint = isProject
+        ? "/api/vault/project-secrets"
+        : "/api/vault/operator-secrets";
+      const body = isProject
+        ? {
+            projectId,
+            name: form.name,
+            value: form.value,
+            description: form.description || null,
+            provider: form.provider || null,
+          }
+        : {
+            name: form.name,
+            value: form.value,
+            description: form.description || null,
+            provider: form.provider || null,
+            scope: form.scope || null,
+          };
+      const res = await authedFetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          value: form.value,
-          description: form.description || null,
-          provider: form.provider || null,
-          scope: form.scope || null,
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
