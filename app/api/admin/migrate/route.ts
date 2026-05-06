@@ -115,6 +115,11 @@ export async function POST(req: Request) {
 /**
  * Split SQL on `;` while respecting `DO $$ ... $$;` and quoted strings.
  * Naive but handles our migration style.
+ *
+ * Strips leading comment-only lines from each chunk before evaluating
+ * whether it's "empty" — earlier the first statement was being dropped
+ * whenever the file started with a block comment, since the trimmed
+ * buffer began with "--".
  */
 function splitSql(input: string): string[] {
   const out: string[] = [];
@@ -135,14 +140,26 @@ function splitSql(input: string): string[] {
     }
     buf += ch;
     if (!inDollar && !inSingle && ch === ";") {
-      const trimmed = buf.trim();
-      if (trimmed && !trimmed.startsWith("--")) out.push(trimmed);
+      const meaningful = stripCommentLines(buf);
+      if (meaningful) out.push(buf.trim());
       buf = "";
     }
   }
-  const tail = buf.trim();
-  if (tail && !tail.startsWith("--")) out.push(tail);
+  const meaningfulTail = stripCommentLines(buf);
+  if (meaningfulTail) out.push(buf.trim());
   return out;
+}
+
+/** Remove lines that are pure SQL comments. Returns the remaining content. */
+function stripCommentLines(s: string): string {
+  return s
+    .split("\n")
+    .filter((line) => {
+      const trimmed = line.trim();
+      return trimmed.length > 0 && !trimmed.startsWith("--");
+    })
+    .join("\n")
+    .trim();
 }
 
 function jsonError(message: string, status: number): Response {
