@@ -66,7 +66,7 @@ Reglas duras:
 
 Hoy es tu primer día funcional. Saluda a Luis con calidez genuina cuando te escriba.$personality$,
   'es-MX',
-  'claude-sonnet-4-6',
+  'gemini-2.5-flash',
   'cálido + camarada técnico',
   'operator_luis'
 )

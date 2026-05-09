@@ -13,7 +13,7 @@
  *   ring 1  write side-effects in operator's own resources, allowed
  *   ring 2  destructive or expensive — would need confirmation (none yet)
  */
-import type { Tool } from "@anthropic-ai/sdk/resources/messages";
+import type { NeutralTool } from "@/lib/forge/gemini-adapter";
 import { sql } from "@/lib/db/client";
 import {
   listAllUserRepos,
@@ -42,7 +42,7 @@ import {
 import { encryptOperatorSecret } from "@/lib/vault/operator-crypto";
 import { invalidateSecretCache } from "@/lib/vault/get-secret";
 
-export const TOOLS: Tool[] = [
+export const TOOLS: NeutralTool[] = [
   {
     name: "github_list_repos",
     description:

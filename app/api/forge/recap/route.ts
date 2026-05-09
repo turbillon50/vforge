@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import { sql } from "@/lib/db/client";
 import { getOperatorSecret } from "@/lib/vault/get-secret";
 
@@ -12,7 +12,7 @@ interface RecapRequest {
 }
 
 const OPERATOR_USER_ID = "operator_luis";
-const RECAP_MODEL = "claude-haiku-4-5"; // cheap + fast
+const RECAP_MODEL = "gemini-2.5-flash"; // cheap + fast (tier gratuito amplio)
 const MIN_TURNS_FOR_RECAP = 2; // skip empty/single-turn sessions
 
 /**
@@ -52,10 +52,10 @@ export async function POST(req: Request) {
     );
   }
 
-  const apiKey = await getOperatorSecret("ANTHROPIC_API_KEY", {
+  const apiKey = await getOperatorSecret("GEMINI_API_KEY", {
     auditUserId: userId,
   });
-  if (!apiKey) return jsonError("ANTHROPIC_API_KEY not configured", 500);
+  if (!apiKey) return jsonError("GEMINI_API_KEY not configured", 500);
 
   const transcript = turns
     .map((t) => `${t.role === "user" ? "Luis" : "V"}: ${t.content}`)
@@ -90,16 +90,15 @@ Transcript:
 
 ${transcript}`;
 
-  const anthropic = new Anthropic({ apiKey });
+  const ai = new GoogleGenAI({ apiKey });
   let recapText: string;
   try {
-    const response = await anthropic.messages.create({
+    const response = await ai.models.generateContent({
       model: RECAP_MODEL,
-      max_tokens: 600,
-      messages: [{ role: "user", content: prompt }],
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: { maxOutputTokens: 600 },
     });
-    const block = response.content.find((b) => b.type === "text");
-    recapText = block && block.type === "text" ? block.text.trim() : "";
+    recapText = (response.text ?? "").trim();
   } catch (err) {
     return jsonError(
       `recap generation failed: ${err instanceof Error ? err.message : String(err)}`,

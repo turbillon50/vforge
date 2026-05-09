@@ -1,27 +1,19 @@
-import Anthropic from "@anthropic-ai/sdk";
-import type {
-  MessageParam,
-  ToolResultBlockParam,
-} from "@anthropic-ai/sdk/resources/messages";
+import { GoogleGenAI } from "@google/genai";
 import { sql } from "@/lib/db/client";
 import { buildSystemPrompt } from "@/lib/forge/system-prompt";
 import { TOOLS, executeTool } from "@/lib/forge/tools";
 import { getOperatorSecret } from "@/lib/vault/get-secret";
+import {
+  type ChatTurn,
+  type StructuredBlock,
+  turnsToContents,
+  pushAssistantToolCalls,
+  pushToolResults,
+  streamRound,
+} from "@/lib/forge/gemini-adapter";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type StructuredBlock =
-  | { type: "text"; text: string }
-  | {
-      type: "image";
-      source: { type: "base64"; media_type: string; data: string };
-    };
-
-interface ChatTurn {
-  role: "user" | "assistant";
-  content: string | StructuredBlock[];
-}
 
 interface RunRequest {
   messages: ChatTurn[];
@@ -51,11 +43,11 @@ export async function POST(req: Request) {
     return jsonError("sessionId (string) required", 400);
   }
 
-  const apiKey = await getOperatorSecret("ANTHROPIC_API_KEY", {
+  const apiKey = await getOperatorSecret("GEMINI_API_KEY", {
     auditUserId: userId,
   });
   if (!apiKey) {
-    return jsonError("ANTHROPIC_API_KEY not configured (vault or env)", 500);
+    return jsonError("GEMINI_API_KEY not configured (vault or env)", 500);
   }
 
   const { systemPrompt, config } = await buildSystemPrompt({
@@ -64,10 +56,6 @@ export async function POST(req: Request) {
   const lastUserTurn = messages[messages.length - 1];
 
   if (lastUserTurn.role === "user") {
-    // Persist a textual representation of the user turn (image bytes
-    // are not stored in the conversations table — only the surrounding
-    // text plus an optional "[1 imagen adjunta]" marker so rehydration
-    // shows the user posted an image without re-fetching it).
     const textOnly = stringifyUserTurn(lastUserTurn.content);
     await sql`
       INSERT INTO conversations (user_id, session_id, role, content)
@@ -75,14 +63,10 @@ export async function POST(req: Request) {
     `;
   }
 
-  const anthropic = new Anthropic({ apiKey });
+  const ai = new GoogleGenAI({ apiKey });
 
-  // Working copy of the conversation that grows with assistant turns
-  // and tool_result user turns across rounds.
-  const conversationMessages: MessageParam[] = messages.map((m) => ({
-    role: m.role,
-    content: m.content as MessageParam["content"],
-  }));
+  // Working copy in Gemini Content[] shape.
+  const contents = turnsToContents(messages);
 
   const encoder = new TextEncoder();
 
@@ -97,96 +81,59 @@ export async function POST(req: Request) {
       let assistantTextBuffer = "";
       let totalTokensIn = 0;
       let totalTokensOut = 0;
-      let lastStopReason: string | null = null;
+      let lastFinishReason: string | null = null;
 
       try {
         for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-          const response = anthropic.messages.stream({
+          const result = await streamRound({
+            ai,
             model: config.default_model,
-            max_tokens: 2048,
-            system: systemPrompt,
+            systemInstruction: systemPrompt,
+            contents,
             tools: TOOLS,
-            messages: conversationMessages,
+            send,
           });
 
-          let roundTokensIn = 0;
-          let roundTokensOut = 0;
+          totalTokensIn += result.tokensIn;
+          totalTokensOut += result.tokensOut;
+          lastFinishReason = result.finishReason;
+          assistantTextBuffer += result.text;
 
-          for await (const event of response) {
-            if (event.type === "message_start") {
-              roundTokensIn = event.message.usage?.input_tokens ?? 0;
-            } else if (event.type === "content_block_start") {
-              const block = event.content_block;
-              if (block.type === "tool_use") {
-                send({
-                  type: "tool_use_start",
-                  id: block.id,
-                  name: block.name,
-                });
-              }
-            } else if (event.type === "content_block_delta") {
-              const delta = event.delta;
-              if (delta.type === "text_delta") {
-                assistantTextBuffer += delta.text;
-                send({ type: "text", value: delta.text });
-              }
-            } else if (event.type === "message_delta") {
-              roundTokensOut =
-                event.usage?.output_tokens ?? roundTokensOut;
-            }
-          }
-
-          const finalMessage = await response.finalMessage();
-          totalTokensIn += roundTokensIn;
-          totalTokensOut += roundTokensOut;
-          lastStopReason = finalMessage.stop_reason;
-
-          // Append the assistant turn (with all its blocks) so the next
-          // round sees the tool_use blocks alongside the tool_results.
-          conversationMessages.push({
-            role: "assistant",
-            content: finalMessage.content,
-          });
-
-          if (finalMessage.stop_reason !== "tool_use") {
+          if (result.toolCalls.length === 0) {
+            // Gemini terminó sin pedir tools.
             break;
           }
 
-          // Execute every tool_use block in parallel and collect results.
-          const toolBlocks = finalMessage.content.filter(
-            (b): b is Extract<typeof b, { type: "tool_use" }> =>
-              b.type === "tool_use",
-          );
-          const toolResults: ToolResultBlockParam[] = await Promise.all(
-            toolBlocks.map(async (block) => {
-              const result = await executeTool(
-                block.name,
-                (block.input ?? {}) as Record<string, unknown>,
-                { userId, sessionId },
-              );
+          // Append assistant turn (text + functionCalls) al historial.
+          pushAssistantToolCalls(contents, result.text, result.toolCalls);
+
+          // Ejecutar cada tool en paralelo.
+          const toolResults = await Promise.all(
+            result.toolCalls.map(async (tc) => {
+              const r = await executeTool(tc.name, tc.args, {
+                userId,
+                sessionId,
+              });
               send({
                 type: "tool_use_result",
-                id: block.id,
-                ok: result.ok,
-                summary: result.summary,
+                id: tc.id,
+                ok: r.ok,
+                summary: r.summary,
               });
               return {
-                type: "tool_result",
-                tool_use_id: block.id,
-                content: result.content,
-                is_error: !result.ok,
+                id: tc.id,
+                name: tc.name,
+                content: typeof r.content === "string"
+                  ? r.content
+                  : JSON.stringify(r.content),
+                is_error: !r.ok,
               };
             }),
           );
 
-          conversationMessages.push({
-            role: "user",
-            content: toolResults,
-          });
+          pushToolResults(contents, toolResults);
         }
 
-        // Persist the final assistant text (tool intermediate steps are
-        // not replayed on rehydrate; only the visible answer is stored).
         await sql`
           INSERT INTO conversations (
             user_id, session_id, role, content, model,
@@ -208,7 +155,7 @@ export async function POST(req: Request) {
               tokens_in: totalTokensIn,
               tokens_out: totalTokensOut,
               model: config.default_model,
-              stop_reason: lastStopReason,
+              finish_reason: lastFinishReason,
             })}::jsonb
           )
         `;
@@ -265,19 +212,18 @@ function jsonError(message: string, status: number): Response {
   });
 }
 
+// Pricing por 1M tokens (USD), aproximado al 2026-05.
+// Gemini 2.5 Flash y Pro son los más probables para vForge.
+// Si Luis quiere precio cero, usar gemini-2.5-flash que tiene tier gratuito amplio.
 const PRICING: Record<string, { input: number; output: number }> = {
-  "claude-opus-4-7": { input: 15, output: 75 },
-  "claude-sonnet-4-6": { input: 3, output: 15 },
-  "claude-haiku-4-5": { input: 0.8, output: 4 },
+  "gemini-2.5-pro": { input: 1.25, output: 10 },
+  "gemini-2.5-flash": { input: 0.3, output: 2.5 },
+  "gemini-2.5-flash-lite": { input: 0.1, output: 0.4 },
+  "gemini-2.0-flash": { input: 0.1, output: 0.4 },
 };
 
-function estimateCost(
-  model: string,
-  tokensIn: number,
-  tokensOut: number,
-): number {
-  const p = PRICING[model] ?? { input: 3, output: 15 };
-  const cost =
-    (tokensIn / 1_000_000) * p.input + (tokensOut / 1_000_000) * p.output;
-  return Number(cost.toFixed(6));
+function estimateCost(model: string, tokIn: number, tokOut: number): number {
+  const p = PRICING[model];
+  if (!p) return 0;
+  return (tokIn * p.input + tokOut * p.output) / 1_000_000;
 }
