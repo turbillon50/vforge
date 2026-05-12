@@ -44,6 +44,7 @@
 | [006](./006-operator-paid-billing-mvp.md) | Accepted | Billing en cuenta de operador en MVP, pass-through en v2 |
 | [007](./007-adopt-next-16-tailwind-4.md) | Accepted | Adoptar Next 16 + React 19 + Tailwind 4 (en vez de Next 14 + Tailwind 3.4) |
 | [008](./008-zero-knowledge-vault.md) | Accepted | Zero-Knowledge Vault con Vault Master Password separado del Clerk password |
+| [009](./009-external-service-stack.md) | Accepted | Stack de servicios externos: OpenRouter, E2B, Trigger.dev, Turso, Liveblocks, Polar.sh, Unkey, Resend |
 
 ---
 

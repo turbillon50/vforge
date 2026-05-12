@@ -198,22 +198,61 @@ El frontend que estamos construyendo en v0 ya tiene la cara para todo el cerebro
 
 ## 7. Roadmap a Forge funcional
 
-| Hito | Qué construye | Tiempo |
-|---|---|---|
-| **M0** | Setup Vault real (cifrado AES-256, master key derivation, permission rings) | 3 días |
-| **M1** | Brain endpoint stub: `/api/forge/run` con streaming, conversa con Claude sin tools | 1 día |
-| **M2** | Model registry + routing policy heurística | 1 día |
-| **M3** | Adapter `anthropic-claude` (Sonnet + Opus + Haiku) | 1 día |
-| **M4** | Adapter `anthropic-web-search` → Forge investiga online | 1 día |
-| **M5** | Adapter `claude-code-sdk` → Forge edita el repo (Anillo 1) | 3 días |
-| **M6** | Adapter `openai-image` (gpt-image-1) → Forge propone variantes de logo | 2 días |
-| **M7** | Adapter `vercel-deploy` con confirmación humana → Forge despliega (Anillo 2) | 1 día |
-| **M8** | Adapter `github-octokit` (commits, PRs, issues) | 1 día |
-| **M9** | Audit log persistente + cost tracking, render en `/activity` | 1 día |
-| **M10** | Adapter `openai-whisper` para el botón mic del composer | 0.5 día |
-| **M11** | Routing policy v2: clasificador entrenado con historia | 2 días |
+> Extendido por **ADR-009** (2026-05-12) para incluir el stack de servicios
+> externos. Fase 1 (M0–M10) entrega vForge single-tenant funcional para Luis.
+> Fase 2 (M11–M15) lo convierte en SaaS multi-tenant. Fase 3 (M16+) optimiza.
 
-**Total: ~17 días-persona enfocados** para Forge MVP funcional. Construible en 4 semanas calendario con 1 dev.
+### Fase 1 — MVP single-tenant para Luis
+
+| Hito | Qué construye | Servicios externos | Tiempo |
+|---|---|---|---|
+| **M0** | Setup Vault real (cifrado AES-256, master key derivation, permission rings) | Neon | 3 días |
+| **M1** | Brain endpoint stub: `/api/forge/run` con streaming, conversa con Claude sin tools | — | 1 día |
+| **M2** | Model registry + routing policy heurística | — | 1 día |
+| **M3** | Adapters `anthropic-claude` (Sonnet + Opus + Haiku) + `openrouter-gateway` (Gemini, Mistral, Llama vía OpenRouter para tareas baratas) | OpenRouter | 1.5 días |
+| **M4** | Adapter `anthropic-web-search` → Forge investiga online | — | 1 día |
+| **M5** | Adapters `e2b-microvm` (sandbox) + `claude-code-sdk` (corre dentro de E2B) → Forge edita el repo (Anillo 1) | E2B | 4 días |
+| **M6** | Adapter `openai-image` (gpt-image-1) → Forge propone variantes de logo | — | 2 días |
+| **M7** | Adapter `vercel-deploy` con confirmación humana → Forge despliega (Anillo 2) | — | 1 día |
+| **M8** | Adapter `github-octokit` (commits, PRs, issues — write ops) | — | 1 día |
+| **M9** | Adapter `trigger-bg` (jobs > 60s vía Trigger.dev) + audit log persistente + cost tracking, render en `/activity` | Trigger.dev | 2 días |
+| **M9.5** | Adapter `resend-email` → confirmaciones Ring 2/3 + recaps + alerts de deploys fallidos | Resend | 0.5 día |
+| **M10** | Adapter `openai-whisper` para el botón mic del composer | — | 0.5 día |
+
+**Subtotal Fase 1: ~18 días-persona**. Construible en 4-5 semanas calendario con 1 dev.
+
+### Fase 2 — SaaS multi-tenant para terceros
+
+| Hito | Qué construye | Servicios externos | Tiempo |
+|---|---|---|---|
+| **M11** | Clerk cableado en `/api/forge/run` (reemplaza `OPERATOR_USER_ID` hardcoded). Onboarding wizard con OAuth GitHub + Vercel | Clerk | 3 días |
+| **M12** | Adapter `turso-edge` → DB SQLite per-tenant para session state, routing telemetry, app-level state que vForge genere para clientes | Turso | 2 días |
+| **M13** | Adapter `liveblocks-rooms` → presencia + cursors compartidos en `/forge` y `/projects/[id]` | Liveblocks | 2 días |
+| **M14** | Adapter `polar-billing` → subscriptions + usage-based pass-through (cumple ADR-006). Customer portal embebido | Polar.sh | 3 días |
+| **M15** | Adapter `unkey-keys` → API keys per-cliente (reemplaza `VFORGE_OPERATOR_TOKEN`). Rate limits, scopes, analytics | Unkey | 2 días |
+
+**Subtotal Fase 2: ~12 días-persona**. Construible en 3 semanas calendario con 1 dev.
+
+### Fase 3 — Optimización y madurez
+
+| Hito | Qué construye | Servicios externos | Tiempo |
+|---|---|---|---|
+| **M16** | Routing policy v2: clasificador entrenado con historia de runs exitosos vs fallidos | — | 2 días |
+| **M17** | Cliente MCP genérico → vForge consume servidores MCP de terceros (cada tenant configura los suyos) | — | 3 días |
+| **M18** | Evaluar migración Trigger.dev → Temporal **solo si** los workflows del agente crecen a horas con compensaciones complejas | Temporal (opcional) | 5 días (si aplica) |
+| **M19** | Browserbase si V necesita interactuar con UIs sin API (Squarespace, Wix, etc.) | Browserbase (opcional) | 2 días (si aplica) |
+
+**Subtotal Fase 3: 5-12 días según qué se active.**
+
+### Totales
+
+| Fase | Días-persona | Calendario |
+|---|---|---|
+| Fase 1 (MVP single-tenant) | ~18 | 4-5 semanas |
+| Fase 2 (SaaS multi-tenant) | ~12 | 3 semanas |
+| Fase 3 (madurez) | 5-12 | variable |
+
+**MVP funcional para Luis: ~5 semanas**. Vendible a terceros: **+3 semanas más**.
 
 ---
 
