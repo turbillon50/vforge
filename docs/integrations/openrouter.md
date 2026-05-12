@@ -10,8 +10,9 @@
 - **Rol en vForge:** gateway secundario a LLMs no-Anthropic (Gemini, Mistral, Llama, etc.) para cost optimization y fallback. No reemplaza el adapter Anthropic directo cableado en `app/api/forge/run/route.ts`.
 - **Milestone:** M3 — Fase 1
 - **Anillo:** 0-1 (lectura/razonamiento; sin acción destructiva por sí solo)
-- **Adapter file (futuro):** `lib/forge/adapters/openrouter.ts`
-- **Estado actual:** Pendiente (cuenta no creada) — actualizar cuando el operador la cree
+- **Adapter file:** `lib/forge/adapters/openrouter.ts` ✅
+- **Tool registrada:** `openrouter_query` en `lib/forge/tools.ts`
+- **Estado actual:** ✅ Listo (M3 completado 2026-05-12). Key en vault (`operator_secrets`) y en Vercel env (production + preview + development). Smoke test E2E PASS contra `google/gemini-2.5-flash` y `anthropic/claude-haiku-4.5`.
 
 ---
 
@@ -93,7 +94,7 @@ Endpoints relevantes (todos bajo `https://openrouter.ai/api/v1`):
 ## Estado de env vars en Vercel
 
 ```
-OPENROUTER_API_KEY    encrypted    PENDIENTE — agregar antes de M3
+OPENROUTER_API_KEY    encrypted    production + preview + development  (✅ 2026-05-12)
 ```
 
 ---

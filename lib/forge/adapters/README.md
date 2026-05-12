@@ -28,7 +28,7 @@ All adapters implement `ForgeAdapter<Input, Output>` from
 |---|---|---|---|---|
 | `_contract.ts` | ✅ ready | — | M3 | — |
 | `anthropic.ts` | 🔜 M3 | `anthropic-claude` | M3 | ADR-002, ADR-005 |
-| `openrouter.ts` | 🔜 M3 | `openrouter-gateway` | M3 | ADR-005, ADR-009 |
+| `openrouter.ts` | ✅ ready | `openrouter-gateway` | M3 | ADR-005, ADR-009 |
 | `openai-image.ts` | 🔜 M6 | `openai-image` | M6 | ADR-005 |
 | `e2b-sandbox.ts` | 🔜 M5 | `e2b-microvm` | M5 | ADR-009 |
 | `claude-code-sdk.ts` | 🔜 M5 | `claude-code-sdk` (runs in `e2b-microvm`) | M5 | ADR-002, ADR-009 |

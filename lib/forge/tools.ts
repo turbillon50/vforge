@@ -423,6 +423,35 @@ export const TOOLS: Tool[] = [
       "Cruza la lista de proyectos de Vercel con los repos de GitHub y los sincroniza a la tabla `projects` de vForge. Usa esta tool cuando Luis pregunte 'qué proyectos tengo' y la tabla esté vacía/desactualizada, o cuando agregue un proyecto nuevo. Idempotente: actualiza existentes, inserta los nuevos, no borra nada.",
     input_schema: { type: "object", properties: {} },
   },
+
+  // ─── OpenRouter (ADR-009, M3) ─────────────────────────────────────
+  {
+    name: "openrouter_query",
+    description:
+      "Hace una consulta one-shot a un modelo accesible vía OpenRouter (Gemini, Mistral, Llama, Claude alternativo, etc.). Úsala cuando necesites una clasificación rápida y barata (ej. categorizar un repo, resumir un dump de logs, decidir si un archivo es código vs documentación) y no quieras gastar tokens de Anthropic en ello. NO la uses para conversación con Luis — esa va por el cerebro principal. Devuelve { content, model, tokensIn, tokensOut, costUsd }. Modelos sugeridos: 'google/gemini-2.5-flash' (más barato), 'anthropic/claude-haiku-4.5' (cuando el costo es secundario), 'meta-llama/llama-3.3-70b-instruct' (open-source).",
+    input_schema: {
+      type: "object",
+      properties: {
+        model: {
+          type: "string",
+          description: "Slug del modelo en OpenRouter (ej. 'google/gemini-2.5-flash'). Ver openrouter.ai/models.",
+        },
+        system: {
+          type: "string",
+          description: "System prompt opcional para el modelo.",
+        },
+        prompt: {
+          type: "string",
+          description: "El input del usuario (la pregunta o tarea concreta).",
+        },
+        max_tokens: {
+          type: "number",
+          description: "Tope de tokens de output. Default 512.",
+        },
+      },
+      required: ["model", "prompt"],
+    },
+  },
 ];
 
 export interface ToolExecutionContext {
@@ -1065,6 +1094,53 @@ async function dispatch(
           total: byKey.size,
         }),
         summary: `proyectos sync: +${inserted} nuevos, ${updated} actualizados`,
+      };
+    }
+
+    case "openrouter_query": {
+      const model = requireString(input.model, "model");
+      const prompt = requireString(input.prompt, "prompt");
+      const system =
+        typeof input.system === "string" && input.system.length > 0
+          ? input.system
+          : null;
+      const maxTokens = clampNumber(input.max_tokens, 1, 4096, 512);
+
+      const { openRouterAdapter } = await import("./adapters/openrouter");
+      const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [];
+      if (system) messages.push({ role: "system", content: system });
+      messages.push({ role: "user", content: prompt });
+
+      const result = await openRouterAdapter.execute(
+        { model, messages, maxTokens },
+        {
+          userId: ctx.userId,
+          sessionId: ctx.sessionId,
+          signal: AbortSignal.timeout(60_000),
+          vault: {
+            async getOperatorSecret(name) {
+              const { getOperatorSecret } = await import("@/lib/vault/get-secret");
+              return getOperatorSecret(name, { auditUserId: ctx.userId });
+            },
+            async getProjectSecret(projectId, name) {
+              const { getOperatorSecret } = await import("@/lib/vault/get-secret");
+              return getOperatorSecret(name, { auditUserId: ctx.userId, projectId });
+            },
+          },
+        },
+      );
+
+      return {
+        ok: true,
+        content: JSON.stringify({
+          content: result.content,
+          model: result.model,
+          tokensIn: result.tokensIn,
+          tokensOut: result.tokensOut,
+          costUsd: result.costUsd,
+          finishReason: result.finishReason,
+        }),
+        summary: `${result.model}: ${result.tokensIn}+${result.tokensOut} tok ($${result.costUsd.toFixed(6)})`,
       };
     }
 
