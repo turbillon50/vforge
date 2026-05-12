@@ -1,8 +1,10 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import type {
-  MessageParam,
-  ToolResultBlockParam,
-} from "@anthropic-ai/sdk/resources/messages";
+  ChatCompletionMessageParam,
+  ChatCompletionTool,
+  ChatCompletionContentPart,
+  ChatCompletionMessageFunctionToolCall,
+} from "openai/resources/chat/completions";
 import { sql } from "@/lib/db/client";
 import { buildSystemPrompt } from "@/lib/forge/system-prompt";
 import { TOOLS, executeTool } from "@/lib/forge/tools";
@@ -32,6 +34,15 @@ interface RunRequest {
 
 const OPERATOR_USER_ID = "operator_luis";
 const MAX_TOOL_ROUNDS = 5;
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+
+// Default fallback when the config's model slug is the legacy Anthropic
+// short name and we need to map it to an OpenRouter-style slug.
+const LEGACY_MODEL_MAP: Record<string, string> = {
+  "claude-opus-4-7": "anthropic/claude-opus-4.7",
+  "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
+  "claude-haiku-4-5": "anthropic/claude-haiku-4.5",
+};
 
 export async function POST(req: Request) {
   let body: RunRequest;
@@ -51,18 +62,25 @@ export async function POST(req: Request) {
     return jsonError("sessionId (string) required", 400);
   }
 
-  const apiKey = await getOperatorSecret("ANTHROPIC_API_KEY", {
+  const apiKey = await getOperatorSecret("OPENROUTER_API_KEY", {
     auditUserId: userId,
   });
   if (!apiKey) {
-    return jsonError("ANTHROPIC_API_KEY not configured (vault or env)", 500);
+    return jsonError("OPENROUTER_API_KEY not configured (vault or env)", 500);
   }
 
   const { systemPrompt, config } = await buildSystemPrompt({
     projectId: body.projectId ?? null,
   });
-  const lastUserTurn = messages[messages.length - 1];
 
+  // Resolve the model: prefer OpenRouter-format slugs, fall back via
+  // LEGACY_MODEL_MAP for rows still using the Anthropic short name.
+  const configuredModel = config.default_model;
+  const model =
+    LEGACY_MODEL_MAP[configuredModel] ??
+    (configuredModel.includes("/") ? configuredModel : "anthropic/claude-sonnet-4.6");
+
+  const lastUserTurn = messages[messages.length - 1];
   if (lastUserTurn.role === "user") {
     // Persist a textual representation of the user turn (image bytes
     // are not stored in the conversations table — only the surrounding
@@ -75,16 +93,34 @@ export async function POST(req: Request) {
     `;
   }
 
-  const anthropic = new Anthropic({ apiKey });
+  const openrouter = new OpenAI({
+    apiKey,
+    baseURL: OPENROUTER_BASE_URL,
+    defaultHeaders: {
+      "HTTP-Referer": "https://vforge.site",
+      "X-Title": "vForge",
+    },
+  });
 
-  // Working copy of the conversation that grows with assistant turns
-  // and tool_result user turns across rounds.
-  const conversationMessages: MessageParam[] = messages.map((m) => ({
-    role: m.role,
-    content: m.content as MessageParam["content"],
+  const openaiTools: ChatCompletionTool[] = TOOLS.map((t) => ({
+    type: "function",
+    function: {
+      name: t.name,
+      description: t.description,
+      parameters: t.input_schema as Record<string, unknown>,
+    },
   }));
 
+  // Working copy of the conversation in OpenAI format. We rebuild from
+  // ChatTurn[] (which may have Anthropic-style image blocks from the FE)
+  // and accumulate assistant + tool turns across rounds.
+  const conversationMessages: ChatCompletionMessageParam[] = [
+    { role: "system", content: systemPrompt },
+    ...messages.map(toOpenAIMessage),
+  ];
+
   const encoder = new TextEncoder();
+  let actualModel = model;
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -101,92 +137,143 @@ export async function POST(req: Request) {
 
       try {
         for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-          const response = anthropic.messages.stream({
-            model: config.default_model,
-            max_tokens: 2048,
-            system: systemPrompt,
-            tools: TOOLS,
+          const completion = await openrouter.chat.completions.create({
+            model,
             messages: conversationMessages,
+            tools: openaiTools.length > 0 ? openaiTools : undefined,
+            max_tokens: 2048,
+            stream: true,
+            stream_options: { include_usage: true },
           });
 
-          let roundTokensIn = 0;
-          let roundTokensOut = 0;
+          let roundText = "";
+          let roundFinish: string | null = null;
+          // Tool calls arrive in chunked deltas indexed by `index`; we
+          // accumulate name + arguments per index until the assistant
+          // message ends.
+          const pendingToolCalls = new Map<
+            number,
+            { id?: string; name?: string; argsBuffer: string }
+          >();
 
-          for await (const event of response) {
-            if (event.type === "message_start") {
-              roundTokensIn = event.message.usage?.input_tokens ?? 0;
-            } else if (event.type === "content_block_start") {
-              const block = event.content_block;
-              if (block.type === "tool_use") {
-                send({
-                  type: "tool_use_start",
-                  id: block.id,
-                  name: block.name,
-                });
+          for await (const chunk of completion) {
+            // OpenAI emits an extra chunk with usage info at the end.
+            if (chunk.usage) {
+              totalTokensIn += chunk.usage.prompt_tokens ?? 0;
+              totalTokensOut += chunk.usage.completion_tokens ?? 0;
+            }
+            if (chunk.model) actualModel = chunk.model;
+
+            const choice = chunk.choices?.[0];
+            if (!choice) continue;
+
+            const delta = choice.delta;
+            if (delta.content) {
+              roundText += delta.content;
+              assistantTextBuffer += delta.content;
+              send({ type: "text", value: delta.content });
+            }
+
+            if (delta.tool_calls) {
+              for (const tcDelta of delta.tool_calls) {
+                const idx = tcDelta.index;
+                let entry = pendingToolCalls.get(idx);
+                if (!entry) {
+                  entry = { argsBuffer: "" };
+                  pendingToolCalls.set(idx, entry);
+                }
+                if (tcDelta.id) entry.id = tcDelta.id;
+                if (tcDelta.function?.name) {
+                  entry.name = tcDelta.function.name;
+                  // Surface the tool name to the UI as soon as we know it
+                  // (OpenRouter sends name in the first delta of the tool
+                  // call; arguments stream in subsequent deltas).
+                  if (entry.id) {
+                    send({
+                      type: "tool_use_start",
+                      id: entry.id,
+                      name: entry.name,
+                    });
+                  }
+                }
+                if (tcDelta.function?.arguments) {
+                  entry.argsBuffer += tcDelta.function.arguments;
+                }
               }
-            } else if (event.type === "content_block_delta") {
-              const delta = event.delta;
-              if (delta.type === "text_delta") {
-                assistantTextBuffer += delta.text;
-                send({ type: "text", value: delta.text });
-              }
-            } else if (event.type === "message_delta") {
-              roundTokensOut =
-                event.usage?.output_tokens ?? roundTokensOut;
+            }
+
+            if (choice.finish_reason) {
+              roundFinish = choice.finish_reason;
             }
           }
 
-          const finalMessage = await response.finalMessage();
-          totalTokensIn += roundTokensIn;
-          totalTokensOut += roundTokensOut;
-          lastStopReason = finalMessage.stop_reason;
+          lastStopReason = roundFinish;
 
-          // Append the assistant turn (with all its blocks) so the next
-          // round sees the tool_use blocks alongside the tool_results.
+          // Materialize the assistant message we just streamed and
+          // append it to conversation history before executing tools.
+          const toolCalls: ChatCompletionMessageFunctionToolCall[] = Array.from(
+            pendingToolCalls.entries(),
+          )
+            .sort(([a], [b]) => a - b)
+            .map(([, e]) => {
+              if (!e.id || !e.name) {
+                throw new Error(
+                  `Incomplete tool_call from stream (id=${e.id} name=${e.name})`,
+                );
+              }
+              return {
+                id: e.id,
+                type: "function" as const,
+                function: { name: e.name, arguments: e.argsBuffer || "{}" },
+              };
+            });
+
           conversationMessages.push({
             role: "assistant",
-            content: finalMessage.content,
+            content: roundText || null,
+            ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}),
           });
 
-          if (finalMessage.stop_reason !== "tool_use") {
+          if (toolCalls.length === 0) {
             break;
           }
 
-          // Execute every tool_use block in parallel and collect results.
-          const toolBlocks = finalMessage.content.filter(
-            (b): b is Extract<typeof b, { type: "tool_use" }> =>
-              b.type === "tool_use",
-          );
-          const toolResults: ToolResultBlockParam[] = await Promise.all(
-            toolBlocks.map(async (block) => {
+          // Execute every tool call in parallel and append a `tool` role
+          // message per call. OpenAI / OpenRouter expects one tool
+          // message per tool_call_id, in the same order as the assistant
+          // tool_calls.
+          await Promise.all(
+            toolCalls.map(async (tc) => {
+              let parsedInput: Record<string, unknown> = {};
+              try {
+                parsedInput = tc.function.arguments
+                  ? (JSON.parse(tc.function.arguments) as Record<string, unknown>)
+                  : {};
+              } catch {
+                parsedInput = {};
+              }
               const result = await executeTool(
-                block.name,
-                (block.input ?? {}) as Record<string, unknown>,
+                tc.function.name,
+                parsedInput,
                 { userId, sessionId },
               );
               send({
                 type: "tool_use_result",
-                id: block.id,
+                id: tc.id,
                 ok: result.ok,
                 summary: result.summary,
               });
-              return {
-                type: "tool_result",
-                tool_use_id: block.id,
+              conversationMessages.push({
+                role: "tool",
+                tool_call_id: tc.id,
                 content: result.content,
-                is_error: !result.ok,
-              };
+              });
             }),
           );
-
-          conversationMessages.push({
-            role: "user",
-            content: toolResults,
-          });
         }
 
-        // Persist the final assistant text (tool intermediate steps are
-        // not replayed on rehydrate; only the visible answer is stored).
+        // Persist the final assistant text. Tool intermediate steps
+        // are not replayed on rehydrate; only the visible answer.
         await sql`
           INSERT INTO conversations (
             user_id, session_id, role, content, model,
@@ -194,9 +281,9 @@ export async function POST(req: Request) {
           )
           VALUES (
             ${userId}, ${sessionId}, 'assistant', ${assistantTextBuffer},
-            ${config.default_model},
+            ${actualModel},
             ${totalTokensIn}, ${totalTokensOut},
-            ${estimateCost(config.default_model, totalTokensIn, totalTokensOut)}
+            ${estimateCost(actualModel, totalTokensIn, totalTokensOut)}
           )
         `;
 
@@ -207,7 +294,8 @@ export async function POST(req: Request) {
             ${JSON.stringify({
               tokens_in: totalTokensIn,
               tokens_out: totalTokensOut,
-              model: config.default_model,
+              model: actualModel,
+              provider: "openrouter",
               stop_reason: lastStopReason,
             })}::jsonb
           )
@@ -217,7 +305,7 @@ export async function POST(req: Request) {
           type: "done",
           tokensIn: totalTokensIn,
           tokensOut: totalTokensOut,
-          model: config.default_model,
+          model: actualModel,
         });
         controller.close();
       } catch (err) {
@@ -236,6 +324,36 @@ export async function POST(req: Request) {
       "X-Accel-Buffering": "no",
     },
   });
+}
+
+/**
+ * Convert a FE-supplied ChatTurn to OpenAI's ChatCompletionMessageParam.
+ * The FE still sends Anthropic-style image blocks
+ * ({type:"image", source:{type:"base64", media_type, data}}) so we
+ * remap them to OpenAI's image_url data-URI format here.
+ */
+function toOpenAIMessage(turn: ChatTurn): ChatCompletionMessageParam {
+  if (typeof turn.content === "string") {
+    return { role: turn.role, content: turn.content };
+  }
+  const parts: ChatCompletionContentPart[] = turn.content.map((b) => {
+    if (b.type === "text") return { type: "text", text: b.text };
+    return {
+      type: "image_url",
+      image_url: { url: `data:${b.source.media_type};base64,${b.source.data}` },
+    };
+  });
+  if (turn.role === "assistant") {
+    // OpenAI assistant content doesn't support image parts; flatten to
+    // text-only. Images in assistant turns shouldn't happen in our flow
+    // (FE only attaches them to user turns) but we degrade gracefully.
+    const textOnly = parts
+      .filter((p): p is { type: "text"; text: string } => p.type === "text")
+      .map((p) => p.text)
+      .join("\n");
+    return { role: "assistant", content: textOnly };
+  }
+  return { role: "user", content: parts };
 }
 
 /**
@@ -265,10 +383,17 @@ function jsonError(message: string, status: number): Response {
   });
 }
 
+// OpenRouter pricing per 1M tokens (USD). Used only for the cost_usd
+// column in conversations; real billing happens at OpenRouter. Refresh
+// from https://openrouter.ai/models when adding a model.
 const PRICING: Record<string, { input: number; output: number }> = {
-  "claude-opus-4-7": { input: 15, output: 75 },
-  "claude-sonnet-4-6": { input: 3, output: 15 },
-  "claude-haiku-4-5": { input: 0.8, output: 4 },
+  "anthropic/claude-opus-4.7": { input: 15, output: 75 },
+  "anthropic/claude-sonnet-4.6": { input: 3, output: 15 },
+  "anthropic/claude-haiku-4.5": { input: 0.8, output: 4 },
+  "google/gemini-2.5-flash": { input: 0.075, output: 0.3 },
+  "google/gemini-2.5-pro": { input: 1.25, output: 5 },
+  "meta-llama/llama-3.3-70b-instruct": { input: 0.13, output: 0.4 },
+  "mistralai/mistral-large-2411": { input: 2, output: 6 },
 };
 
 function estimateCost(
@@ -276,7 +401,14 @@ function estimateCost(
   tokensIn: number,
   tokensOut: number,
 ): number {
-  const p = PRICING[model] ?? { input: 3, output: 15 };
+  // OpenRouter sometimes returns a versioned model name in the response
+  // (e.g. "anthropic/claude-4.6-sonnet-20260217"); strip the suffix.
+  const normalized = model.replace(/(-\d{8}|-\d{6}|-\d{4})$/, "");
+  const p =
+    PRICING[normalized] ??
+    PRICING[model] ??
+    // Fall back to Sonnet pricing if we don't know the model.
+    { input: 3, output: 15 };
   const cost =
     (tokensIn / 1_000_000) * p.input + (tokensOut / 1_000_000) * p.output;
   return Number(cost.toFixed(6));
