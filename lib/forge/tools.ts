@@ -2547,16 +2547,21 @@ async function dispatch(
         );
       }
       
-      // Execute the query
+      // Execute the query using Neon's query method (not sql.unsafe which doesn't exist)
       let rows: unknown[] = [];
       let executionSuccess = false;
       let errorMsg: string | null = null;
       
       try {
+        // Use the tagged template for simple queries, or .query() for parameterized
         if (params.length > 0) {
-          rows = await sql.unsafe(sqlQuery, params) as unknown[];
+          // Neon's .query() method for parameterized queries
+          const client = sql as unknown as { query: (q: string, p: unknown[]) => Promise<unknown[]> };
+          rows = await client.query(sqlQuery, params);
         } else {
-          rows = await sql.unsafe(sqlQuery) as unknown[];
+          // For non-parameterized queries, use .query() with empty params
+          const client = sql as unknown as { query: (q: string, p: unknown[]) => Promise<unknown[]> };
+          rows = await client.query(sqlQuery, []);
         }
         executionSuccess = true;
       } catch (dbError) {
