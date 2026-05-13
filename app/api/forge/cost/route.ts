@@ -41,7 +41,11 @@ function resolvePeriod(input: string | null): {
       since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       break;
     case "this_month":
-      since = new Date(now.getUTCFullYear(), now.getUTCMonth(), 1);
+      // Day 1 of the current month at 00:00:00 UTC. The previous form
+      // (new Date(year, month, 1)) used the local-time constructor and
+      // shifted the boundary by the runtime's TZ offset, skewing
+      // month-to-date totals by several hours (Codex P2).
+      since = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
       break;
     case "last_7d":
       since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);

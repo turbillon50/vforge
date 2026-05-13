@@ -245,11 +245,27 @@ export function estimateCostForModel(
 }
 
 /**
+ * Legacy short-name slugs (Anthropic SDK era) → OpenRouter slugs.
+ * Some installs still have system_config.default_model = 'claude-sonnet-4-6'
+ * from the seed migration. Without this map the cascade was starting
+ * with an invalid OR slug and the first call returned a non-recoverable
+ * 4xx, aborting the whole turn (Codex P0).
+ */
+const LEGACY_SLUG_MAP: Record<string, string> = {
+  "claude-opus-4-7": "anthropic/claude-opus-4.7",
+  "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
+  "claude-haiku-4-5": "anthropic/claude-haiku-4.5",
+};
+
+/**
  * Strip OpenRouter's versioned date suffix so registry lookups hit
  * even when the response shape is "anthropic/claude-4.6-sonnet-20260217".
+ * Also maps legacy Anthropic-SDK short names to OR slugs.
  */
 export function normalizeSlug(slug: string): string {
-  // Replace "claude-4.6-sonnet-20260217" → "claude-sonnet-4.6"
+  // Legacy short names from pre-OpenRouter era.
+  if (LEGACY_SLUG_MAP[slug]) return LEGACY_SLUG_MAP[slug];
+  // Versioned OR responses: "claude-4.6-sonnet-20260217" → "claude-sonnet-4.6"
   const m = slug.match(/^anthropic\/claude-(\d+\.\d+)-(opus|sonnet|haiku)/);
   if (m) return `anthropic/claude-${m[2]}-${m[1]}`;
   return slug.replace(/(-\d{8}|-\d{6})$/, "");
