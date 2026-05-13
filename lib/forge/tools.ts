@@ -14,7 +14,7 @@
  *   ring 2  destructive or expensive — would need confirmation (none yet)
  */
 import type { Tool } from "@anthropic-ai/sdk/resources/messages";
-import { sql } from "@/lib/db/client";
+import { sql, queryAll as dbQueryAll } from "@/lib/db/client";
 import {
   listAllUserRepos,
   getRepo,
@@ -2547,25 +2547,13 @@ async function dispatch(
         );
       }
       
-      // Execute the query using Neon's query method (not sql.unsafe which doesn't exist)
+      // Execute the query using the dbQueryAll helper which properly calls getSql().query()
       let rows: unknown[] = [];
-      let executionSuccess = false;
-      let errorMsg: string | null = null;
       
       try {
-        // Use the tagged template for simple queries, or .query() for parameterized
-        if (params.length > 0) {
-          // Neon's .query() method for parameterized queries
-          const client = sql as unknown as { query: (q: string, p: unknown[]) => Promise<unknown[]> };
-          rows = await client.query(sqlQuery, params);
-        } else {
-          // For non-parameterized queries, use .query() with empty params
-          const client = sql as unknown as { query: (q: string, p: unknown[]) => Promise<unknown[]> };
-          rows = await client.query(sqlQuery, []);
-        }
-        executionSuccess = true;
+        rows = await dbQueryAll(sqlQuery, params);
       } catch (dbError) {
-        errorMsg = dbError instanceof Error ? dbError.message : String(dbError);
+        const errorMsg = dbError instanceof Error ? dbError.message : String(dbError);
         throw new Error(`Error ejecutando SQL: ${errorMsg}`);
       }
       
