@@ -744,7 +744,7 @@ async function dispatch(
 
     // ─── GitHub write ────────────────────────────────────────────────
     case "github_create_file": {
-      const owner = requireString(input.owner, "owner");
+      const owner = ownerOrDefault(input.owner);
       const repo = requireString(input.repo, "repo");
       const path = requireString(input.path, "path");
       const content = requireString(input.content, "content");
@@ -770,7 +770,7 @@ async function dispatch(
       };
     }
     case "github_update_file": {
-      const owner = requireString(input.owner, "owner");
+      const owner = ownerOrDefault(input.owner);
       const repo = requireString(input.repo, "repo");
       const path = requireString(input.path, "path");
       const content = requireString(input.content, "content");
@@ -797,7 +797,7 @@ async function dispatch(
       };
     }
     case "github_delete_file": {
-      const owner = requireString(input.owner, "owner");
+      const owner = ownerOrDefault(input.owner);
       const repo = requireString(input.repo, "repo");
       const path = requireString(input.path, "path");
       const message = requireString(input.message, "message");
@@ -823,7 +823,7 @@ async function dispatch(
       };
     }
     case "github_create_branch": {
-      const owner = requireString(input.owner, "owner");
+      const owner = ownerOrDefault(input.owner);
       const repo = requireString(input.repo, "repo");
       const branch = requireString(input.branch, "branch");
       const fromBranch =
@@ -841,7 +841,7 @@ async function dispatch(
       };
     }
     case "github_create_pull_request": {
-      const owner = requireString(input.owner, "owner");
+      const owner = ownerOrDefault(input.owner);
       const repo = requireString(input.repo, "repo");
       const title = requireString(input.title, "title");
       const head = requireString(input.head, "head");
@@ -1564,6 +1564,20 @@ function clampNumber(
   const n = typeof v === "number" ? v : parseInt(String(v ?? ""), 10);
   if (Number.isNaN(n)) return def;
   return Math.min(Math.max(n, min), max);
+}
+
+/**
+ * Default GitHub owner when V invokes a write tool without specifying
+ * one. The single-tenant MVP only operates on Luis's own repos under
+ * 'turbillon50', so an empty owner is almost always V failing to fill
+ * the field rather than a real ambiguity. Replace with the Clerk-bound
+ * owner when M11 lands (multi-tenant).
+ */
+const DEFAULT_GITHUB_OWNER = "turbillon50";
+
+function ownerOrDefault(v: unknown): string {
+  if (typeof v === "string" && v.length > 0) return v;
+  return DEFAULT_GITHUB_OWNER;
 }
 
 function requireString(v: unknown, name: string): string {
