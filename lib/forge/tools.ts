@@ -738,6 +738,63 @@ export const TOOLS: Tool[] = [
       required: ["id", "name", "description", "system_prompt"],
     },
   },
+  {
+    name: "skill_list",
+    description:
+      "Lista todas las skills disponibles en el catalogo (instaladas y no instaladas). Devuelve id, name, description, tags, source, installed_at. Usala cuando Luis pregunte 'que skills tienes' o 'que sabes hacer'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        installed_only: {
+          type: "boolean",
+          description: "Si true, solo muestra skills instaladas. Default false.",
+        },
+      },
+    },
+  },
+  {
+    name: "directive_list",
+    description:
+      "Lista las directivas actuales de V (mantra, directive, preference). El mantra son las directivas LOCKED que definen la identidad core de V y no se pueden modificar. Usala cuando Luis pregunte 'cuales son tus reglas' o cuando V quiera ver su configuracion.",
+    input_schema: {
+      type: "object",
+      properties: {
+        kind: {
+          type: "string",
+          enum: ["mantra", "directive", "preference"],
+          description: "Filtra por tipo de directiva. Sin filtro devuelve todas.",
+        },
+      },
+    },
+  },
+  {
+    name: "directive_add",
+    description:
+      "Agrega una nueva directiva a V. IMPORTANTE: No puedes crear mantras, solo directives o preferences. Usala cuando Luis diga 'recuerda que siempre quiero X' o cuando V quiera programarse una nueva regla.",
+    input_schema: {
+      type: "object",
+      properties: {
+        kind: {
+          type: "string",
+          enum: ["directive", "preference"],
+          description: "Tipo: 'directive' = regla operacional, 'preference' = preferencia suave.",
+        },
+        title: {
+          type: "string",
+          description: "Titulo corto descriptivo.",
+        },
+        content: {
+          type: "string",
+          description: "Contenido completo de la directiva.",
+        },
+        priority: {
+          type: "number",
+          description: "Prioridad (0=maxima, 100=normal). Default 100.",
+        },
+      },
+      required: ["kind", "title", "content"],
+    },
+  },
 
   // ─── OpenRouter (ADR-009, M3) ─────────────────────────────────────
   {
@@ -1826,6 +1883,149 @@ async function dispatch(
           skill: rows[0],
         }),
         summary: `skill: ${rows[0].id}`,
+      };
+    }
+
+    case "skill_list": {
+      const installedOnly = input.installed_only === true;
+      
+      let rows;
+      if (installedOnly) {
+        rows = (await sql`
+          SELECT id, name, description, tags, source, installed_at, ring_max
+          FROM skills
+          WHERE active = true AND installed_at IS NOT NULL
+          ORDER BY installed_at DESC
+        `) as Array<{
+          id: string;
+          name: string;
+          description: string;
+          tags: string[];
+          source: string;
+          installed_at: string | null;
+          ring_max: number;
+        }>;
+      } else {
+        rows = (await sql`
+          SELECT id, name, description, tags, source, installed_at, ring_max
+          FROM skills
+          WHERE active = true
+          ORDER BY name ASC
+        `) as Array<{
+          id: string;
+          name: string;
+          description: string;
+          tags: string[];
+          source: string;
+          installed_at: string | null;
+          ring_max: number;
+        }>;
+      }
+      
+      return {
+        ok: true,
+        content: JSON.stringify({
+          total: rows.length,
+          installed: rows.filter(r => r.installed_at).length,
+          skills: rows.map(r => ({
+            id: r.id,
+            name: r.name,
+            description: r.description,
+            tags: r.tags,
+            source: r.source,
+            installed: !!r.installed_at,
+          })),
+        }),
+        summary: `${rows.length} skills (${rows.filter(r => r.installed_at).length} instaladas)`,
+      };
+    }
+
+    case "directive_list": {
+      const kindFilter = typeof input.kind === "string" ? input.kind : null;
+      
+      let rows;
+      if (kindFilter) {
+        rows = (await sql`
+          SELECT id, kind, title, content, locked, priority, active
+          FROM agent_directives
+          WHERE active = true AND kind = ${kindFilter}
+          ORDER BY priority ASC, created_at ASC
+        `) as Array<{
+          id: string;
+          kind: string;
+          title: string;
+          content: string;
+          locked: boolean;
+          priority: number;
+          active: boolean;
+        }>;
+      } else {
+        rows = (await sql`
+          SELECT id, kind, title, content, locked, priority, active
+          FROM agent_directives
+          WHERE active = true
+          ORDER BY priority ASC, created_at ASC
+        `) as Array<{
+          id: string;
+          kind: string;
+          title: string;
+          content: string;
+          locked: boolean;
+          priority: number;
+          active: boolean;
+        }>;
+      }
+      
+      const byKind = {
+        mantra: rows.filter(r => r.kind === 'mantra'),
+        directive: rows.filter(r => r.kind === 'directive'),
+        preference: rows.filter(r => r.kind === 'preference'),
+      };
+      
+      return {
+        ok: true,
+        content: JSON.stringify({
+          total: rows.length,
+          by_kind: {
+            mantra: byKind.mantra.length,
+            directive: byKind.directive.length,
+            preference: byKind.preference.length,
+          },
+          directives: rows.map(r => ({
+            id: r.id,
+            kind: r.kind,
+            title: r.title,
+            content: r.content,
+            locked: r.locked,
+            priority: r.priority,
+          })),
+        }),
+        summary: `${rows.length} directivas (${byKind.mantra.length} mantra, ${byKind.directive.length} directive, ${byKind.preference.length} preference)`,
+      };
+    }
+
+    case "directive_add": {
+      const kind = requireString(input.kind, "kind");
+      if (kind !== "directive" && kind !== "preference") {
+        throw new Error("Solo puedes crear 'directive' o 'preference', no 'mantra'");
+      }
+      const title = requireString(input.title, "title");
+      const content = requireString(input.content, "content");
+      const priority = typeof input.priority === "number" ? input.priority : 100;
+      
+      const rows = (await sql`
+        INSERT INTO agent_directives (kind, title, content, locked, priority, created_by)
+        VALUES (${kind}, ${title}, ${content}, false, ${priority}, ${ctx.userId})
+        RETURNING id, kind, title, priority
+      `) as Array<{ id: string; kind: string; title: string; priority: number }>;
+      
+      return {
+        ok: true,
+        content: JSON.stringify({
+          created: true,
+          directive: rows[0],
+        }),
+        summary: `directiva creada: ${rows[0].title}`,
       };
     }
 
