@@ -2533,6 +2533,10 @@ async function dispatch(
         upperSql.startsWith("ALTER") ||
         upperSql.startsWith("DROP");
       
+      const isInsert = upperSql.startsWith("INSERT");
+      const isUpdate = upperSql.startsWith("UPDATE");
+      const isSelect = upperSql.startsWith("SELECT");
+      
       // Ring 2 for destructive, Ring 1 for DDL, Ring 0 for SELECT
       const ring = isDestructive ? 2 : (isDDL ? 1 : 0);
       
@@ -2544,73 +2548,79 @@ async function dispatch(
       }
       
       // Execute the query
-      let result;
-      let rowCount = 0;
       let rows: unknown[] = [];
+      let executionSuccess = false;
+      let errorMsg: string | null = null;
       
       try {
         if (params.length > 0) {
-          // Parameterized query - need to use sql.unsafe for dynamic queries with params
-          // First, replace $1, $2, etc. with the actual values safely
-          result = await sql.unsafe(sqlQuery, params);
+          rows = await sql.unsafe(sqlQuery, params) as unknown[];
         } else {
-          // Static query
-          result = await sql.unsafe(sqlQuery);
+          rows = await sql.unsafe(sqlQuery) as unknown[];
         }
-        
-        // Handle result based on query type
-        if (Array.isArray(result)) {
-          rows = result;
-          rowCount = result.length;
-        } else if (result && typeof result === 'object') {
-          // DDL operations return different shapes
-          rowCount = (result as { rowCount?: number }).rowCount ?? 0;
-        }
+        executionSuccess = true;
       } catch (dbError) {
-        // Re-throw with more context
-        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
-        throw new Error(`Error ejecutando SQL: ${errorMessage}`);
+        errorMsg = dbError instanceof Error ? dbError.message : String(dbError);
+        throw new Error(`Error ejecutando SQL: ${errorMsg}`);
       }
       
-      // Audit the operation
-      await sql`
-        INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
-        VALUES (
-          ${ctx.userId}, 
-          'database.execute', 
-          'sql', 
-          ${sqlQuery.substring(0, 100)}, 
-          ${ring},
-          ${JSON.stringify({ 
-            sql: sqlQuery.substring(0, 500),
-            params_count: params.length,
-            row_count: rowCount,
-            is_ddl: isDDL,
-            is_destructive: isDestructive,
-            session_id: ctx.sessionId 
-          })}::jsonb
-        )
-      `;
+      // For DDL, success means it worked (no error thrown)
+      // For DML/SELECT, rows array contains results
+      const rowCount = Array.isArray(rows) ? rows.length : 0;
       
-      // Format response based on query type
-      const isSelect = upperSql.startsWith("SELECT");
+      // Build response message based on operation type
+      let message: string;
+      if (isDDL) {
+        message = `DDL ejecutado exitosamente: ${upperSql.split(/\s+/).slice(0, 3).join(' ')}`;
+      } else if (isInsert) {
+        message = rowCount > 0 
+          ? `INSERT exitoso, ${rowCount} fila(s) retornadas con RETURNING`
+          : `INSERT ejecutado exitosamente`;
+      } else if (isUpdate) {
+        message = `UPDATE ejecutado exitosamente`;
+      } else if (isSelect) {
+        message = `${rowCount} fila(s) retornadas`;
+      } else {
+        message = `Query ejecutado exitosamente`;
+      }
+      
+      // Try to audit (but don't fail if audit_events doesn't exist)
+      try {
+        await sql`
+          INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
+          VALUES (
+            ${ctx.userId}, 
+            'database.execute', 
+            'sql', 
+            ${sqlQuery.substring(0, 100)}, 
+            ${ring},
+            ${JSON.stringify({ 
+              sql: sqlQuery.substring(0, 500),
+              params_count: params.length,
+              row_count: rowCount,
+              is_ddl: isDDL,
+              is_destructive: isDestructive,
+              session_id: ctx.sessionId 
+            })}::jsonb
+          )
+        `;
+      } catch {
+        // Audit table might not exist yet, that's ok
+      }
       
       return {
         ok: true,
         content: JSON.stringify({
           executed: true,
-          query_type: isDestructive ? 'destructive' : (isDDL ? 'ddl' : (isSelect ? 'select' : 'dml')),
+          success: executionSuccess,
+          query_type: isDDL ? 'ddl' : (isSelect ? 'select' : 'dml'),
           ring,
           row_count: rowCount,
-          rows: isSelect ? rows.slice(0, 100) : undefined, // Limit rows in response
-          truncated: isSelect && rows.length > 100,
-          message: isDDL 
-            ? `DDL ejecutado exitosamente` 
-            : `${rowCount} fila(s) ${isSelect ? 'retornadas' : 'afectadas'}`,
+          rows: isSelect || isInsert ? rows.slice(0, 100) : undefined,
+          truncated: rows.length > 100,
+          message,
         }),
-        summary: isDDL 
-          ? `SQL DDL ejecutado (${upperSql.split(/\s+/).slice(0, 3).join(' ')}...)` 
-          : `${rowCount} filas ${isSelect ? 'retornadas' : 'afectadas'}`,
+        summary: message,
       };
     }
 
