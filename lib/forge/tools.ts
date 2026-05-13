@@ -51,6 +51,7 @@ import { encryptOperatorSecret } from "@/lib/vault/operator-crypto";
 import { invalidateSecretCache } from "@/lib/vault/get-secret";
 import { routeFor } from "@/lib/forge/routing";
 import { MODELS } from "@/lib/forge/models";
+import { listAgentConfig, setModelForTask } from "@/lib/forge/agent-config";
 
 export const TOOLS: Tool[] = [
   {
@@ -637,6 +638,104 @@ export const TOOLS: Tool[] = [
           enum: ["today", "24h", "this_month", "last_7d", "last_30d"],
         },
       },
+    },
+  },
+
+  // ─── Self-config (V reconfigura sus propios modelos) ─────────────
+  {
+    name: "agent_config_get",
+    description:
+      "Devuelve la configuración actual de modelos por tipo de tarea. Lo que V está usando ahora mismo para chat-main, code-edit, classification, etc. Úsala cuando Luis pregunte 'qué modelo estás usando' o antes de proponer un cambio para saber el estado actual.",
+    input_schema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "agent_config_set",
+    description:
+      "Cambia el modelo que V usará para un tipo de tarea específico. Aplica al siguiente turno SIN redeploy. Úsala cuando Luis te diga 'usa Haiku para chat', 'cambia clasificación a Gemini Flash', 'para código usa Sonnet'. task_kind debe ser uno de: chat-main, reasoning, code-edit, classification, summarization, extraction. model debe ser un slug válido de OpenRouter (ej. 'anthropic/claude-haiku-4.5', 'google/gemini-2.5-flash').",
+    input_schema: {
+      type: "object",
+      properties: {
+        task_kind: {
+          type: "string",
+          enum: [
+            "chat-main",
+            "reasoning",
+            "code-edit",
+            "classification",
+            "summarization",
+            "extraction",
+          ],
+          description: "Tipo de tarea para la cual cambiar el modelo.",
+        },
+        model: {
+          type: "string",
+          description:
+            "Slug de OpenRouter (ej. 'anthropic/claude-haiku-4.5', 'google/gemini-2.5-flash', 'anthropic/claude-sonnet-4.6').",
+        },
+      },
+      required: ["task_kind", "model"],
+    },
+  },
+  {
+    name: "model_set_default",
+    description:
+      "Atajo para cambiar el modelo principal del chat (task_kind='chat-main'). Equivalente a agent_config_set({task_kind:'chat-main', model: <slug>}). Úsala cuando Luis dice 'V, a partir de ahora usa X para todo'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        model: {
+          type: "string",
+          description:
+            "Slug de OpenRouter del nuevo modelo principal.",
+        },
+      },
+      required: ["model"],
+    },
+  },
+  {
+    name: "skill_create",
+    description:
+      "Crea una nueva habilidad reusable en el catálogo de skills. Úsala cuando Luis te describe un flujo que vale la pena recordar como skill ('cuando te pida X, sigue Y, Z, W') o cuando V identifica un patrón frecuente que merece skill propia. Después de crear, skill_search la encontrará y skill_install la cargará.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Slug único kebab-case (ej. 'deploy-monorepo-vercel').",
+        },
+        name: {
+          type: "string",
+          description: "Nombre corto descriptivo (ej. 'Deploy de monorepo a Vercel').",
+        },
+        description: {
+          type: "string",
+          description: "1-2 líneas de para qué sirve y cuándo activarla.",
+        },
+        system_prompt: {
+          type: "string",
+          description:
+            "Fragment de instrucciones que V leerá al instalar la skill. Debe incluir el flujo paso a paso y reglas.",
+        },
+        required_tools: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Tools que la skill típicamente usa (ej. ['github_create_branch','github_create_file']).",
+        },
+        tags: {
+          type: "array",
+          items: { type: "string" },
+          description: "Tags para búsqueda (ej. ['deploy', 'vercel', 'monorepo']).",
+        },
+        ring_max: {
+          type: "number",
+          description: "Anillo máximo de privilegio. Default 1.",
+        },
+      },
+      required: ["id", "name", "description", "system_prompt"],
     },
   },
 
@@ -1623,6 +1722,110 @@ async function dispatch(
           fallback_events: fallbackRows[0].n,
         }),
         summary: `${period}: $${Number(totals[0].total_usd).toFixed(4)} / ${totals[0].turns} turns / ${fallbackRows[0].n} fallbacks`,
+      };
+    }
+
+    // ─── Self-config (V reconfigura sus propios modelos / skills) ────
+    case "agent_config_get": {
+      const rows = await listAgentConfig();
+      return {
+        ok: true,
+        content: JSON.stringify({
+          total: rows.length,
+          config: rows,
+        }),
+        summary: `${rows.length} task kinds configurados`,
+      };
+    }
+    case "agent_config_set": {
+      const task = requireString(input.task_kind, "task_kind") as
+        | "chat-main"
+        | "reasoning"
+        | "code-edit"
+        | "classification"
+        | "summarization"
+        | "extraction";
+      const model = requireString(input.model, "model");
+      const result = await setModelForTask(task, model, {
+        updatedBy: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify({
+          updated: true,
+          task_kind: result.task_kind,
+          model: result.model,
+          note: "Aplica al siguiente turno (cache 60s). No requiere redeploy.",
+        }),
+        summary: `${result.task_kind} → ${result.model}`,
+      };
+    }
+    case "model_set_default": {
+      const model = requireString(input.model, "model");
+      const result = await setModelForTask("chat-main", model, {
+        updatedBy: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify({
+          updated: true,
+          task_kind: "chat-main",
+          model: result.model,
+        }),
+        summary: `chat-main → ${result.model}`,
+      };
+    }
+    case "skill_create": {
+      const id = requireString(input.id, "id");
+      if (!/^[a-z][a-z0-9-]{2,60}$/.test(id)) {
+        throw new Error(
+          "id must be kebab-case (a-z, 0-9, dash; 3-60 chars; start with letter)",
+        );
+      }
+      const name = requireString(input.name, "name");
+      const description = requireString(input.description, "description");
+      const systemPrompt = requireString(input.system_prompt, "system_prompt");
+      const requiredTools = Array.isArray(input.required_tools)
+        ? (input.required_tools as string[]).filter(
+            (t) => typeof t === "string" && t.length > 0,
+          )
+        : [];
+      const tags = Array.isArray(input.tags)
+        ? (input.tags as string[]).filter(
+            (t) => typeof t === "string" && t.length > 0,
+          )
+        : [];
+      const ringMax =
+        typeof input.ring_max === "number" &&
+        input.ring_max >= 0 &&
+        input.ring_max <= 3
+          ? input.ring_max
+          : 1;
+      const rows = (await sql`
+        INSERT INTO skills (
+          id, name, description, system_prompt, required_tools,
+          ring_max, source, tags, created_by
+        ) VALUES (
+          ${id}, ${name}, ${description}, ${systemPrompt}, ${requiredTools},
+          ${ringMax}, 'user', ${tags}, ${ctx.userId}
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          name = EXCLUDED.name,
+          description = EXCLUDED.description,
+          system_prompt = EXCLUDED.system_prompt,
+          required_tools = EXCLUDED.required_tools,
+          ring_max = EXCLUDED.ring_max,
+          tags = EXCLUDED.tags,
+          updated_at = now()
+        RETURNING id, name, ring_max
+      `) as Array<{ id: string; name: string; ring_max: number }>;
+      return {
+        ok: true,
+        content: JSON.stringify({
+          created: true,
+          skill: rows[0],
+        }),
+        summary: `skill: ${rows[0].id}`,
       };
     }
 
