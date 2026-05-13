@@ -11,6 +11,7 @@ import { TOOLS, executeTool } from "@/lib/forge/tools";
 import { getOperatorSecret } from "@/lib/vault/get-secret";
 import { routeFor } from "@/lib/forge/routing";
 import { estimateCostForModel, MODELS, normalizeSlug } from "@/lib/forge/models";
+import { getModelForTask } from "@/lib/forge/agent-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -67,12 +68,17 @@ export async function POST(req: Request) {
     projectId: body.projectId ?? null,
   });
 
-  // Resolve the model cascade via the routing policy. If the operator
-  // pinned a specific slug in system_config.default_model (and it's in
-  // our registry), we honor it as the primary and let routing.ts supply
-  // its fallback chain. If the slug isn't in the registry, we treat
-  // it as a free-form override and skip cascade.
-  const configuredModel = config.default_model;
+  // Resolve the model cascade.
+  // 1. agent_config DB (V's self-config, migration 007) is the canonical
+  //    answer for chat-main. Luis (or V herself via agent_config_set)
+  //    chooses the model without a code deploy.
+  // 2. system_config.default_model is the legacy override, still respected
+  //    if someone updates it manually.
+  // 3. routeFor falls back to the registry default + cascade.
+  const dbConfiguredModel = await getModelForTask("chat-main").catch(
+    () => null,
+  );
+  const configuredModel = dbConfiguredModel ?? config.default_model;
   const isKnownSlug = !!MODELS[normalizeSlug(configuredModel)];
   const routing = isKnownSlug
     ? routeFor("chat-main", { forceSlug: normalizeSlug(configuredModel) })
