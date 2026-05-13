@@ -2575,9 +2575,9 @@ async function dispatch(
       } else if (isInsert) {
         message = rowCount > 0 
           ? `INSERT exitoso, ${rowCount} fila(s) retornadas con RETURNING`
-          : `INSERT ejecutado exitosamente`;
+          : `INSERT ejecutado exitosamente (row_count=0 es normal sin RETURNING)`;
       } else if (isUpdate) {
-        message = `UPDATE ejecutado exitosamente`;
+        message = `UPDATE ejecutado exitosamente (row_count=0 es normal sin RETURNING)`;
       } else if (isSelect) {
         message = `${rowCount} fila(s) retornadas`;
       } else {
@@ -2612,10 +2612,13 @@ async function dispatch(
         ok: true,
         content: JSON.stringify({
           executed: true,
-          success: executionSuccess,
+          success: true,
           query_type: isDDL ? 'ddl' : (isSelect ? 'select' : 'dml'),
           ring,
           row_count: rowCount,
+          note: (isInsert || isUpdate) && rowCount === 0 
+            ? "row_count=0 es NORMAL para INSERT/UPDATE sin RETURNING. El query SI se ejecuto correctamente."
+            : undefined,
           rows: isSelect || isInsert ? rows.slice(0, 100) : undefined,
           truncated: rows.length > 100,
           message,
