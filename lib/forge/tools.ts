@@ -46,6 +46,8 @@ import {
 } from "@/lib/namecom/client";
 import { encryptOperatorSecret } from "@/lib/vault/operator-crypto";
 import { invalidateSecretCache } from "@/lib/vault/get-secret";
+import { routeFor } from "@/lib/forge/routing";
+import { MODELS } from "@/lib/forge/models";
 
 export const TOOLS: Tool[] = [
   {
@@ -527,6 +529,48 @@ export const TOOLS: Tool[] = [
     description:
       "Cruza la lista de proyectos de Vercel con los repos de GitHub y los sincroniza a la tabla `projects` de vForge. Usa esta tool cuando Luis pregunte 'qué proyectos tengo' y la tabla esté vacía/desactualizada, o cuando agregue un proyecto nuevo. Idempotente: actualiza existentes, inserta los nuevos, no borra nada.",
     input_schema: { type: "object", properties: {} },
+  },
+
+  // ─── Model routing + cost observability (M3.5) ────────────────────
+  {
+    name: "model_recommend",
+    description:
+      "Pregunta al router qué modelo usar para una tarea. Devuelve { primary, cascade, reason }. Úsala antes de invocar openrouter_query para tareas side cuando quieras elegir modelo barato/balanceado consciente. Task kinds: 'chat-main', 'reasoning', 'code-edit', 'classification', 'summarization', 'extraction'. costPreference: 'cheapest' | 'balanced' | 'premium' | 'free-only' (default 'balanced').",
+    input_schema: {
+      type: "object",
+      properties: {
+        task: {
+          type: "string",
+          enum: [
+            "chat-main",
+            "reasoning",
+            "code-edit",
+            "classification",
+            "summarization",
+            "extraction",
+          ],
+        },
+        cost_preference: {
+          type: "string",
+          enum: ["cheapest", "balanced", "premium", "free-only"],
+        },
+      },
+      required: ["task"],
+    },
+  },
+  {
+    name: "forge_cost_report",
+    description:
+      "Reporte de costos de V agregado en una ventana de tiempo. Útil cuando Luis pregunta cuánto vas gastando, qué modelo es más caro, o cuántas veces fallaste y hubo fallback. period: 'today' | '24h' | 'this_month' | 'last_7d' | 'last_30d' (default 'today').",
+    input_schema: {
+      type: "object",
+      properties: {
+        period: {
+          type: "string",
+          enum: ["today", "24h", "this_month", "last_7d", "last_30d"],
+        },
+      },
+    },
   },
 
   // ─── OpenRouter (ADR-009, M3) ─────────────────────────────────────
@@ -1322,6 +1366,123 @@ async function dispatch(
           total: byKey.size,
         }),
         summary: `proyectos sync: +${inserted} nuevos, ${updated} actualizados`,
+      };
+    }
+
+    case "model_recommend": {
+      const task = requireString(input.task, "task") as
+        | "chat-main"
+        | "reasoning"
+        | "code-edit"
+        | "classification"
+        | "summarization"
+        | "extraction";
+      const pref =
+        typeof input.cost_preference === "string"
+          ? (input.cost_preference as
+              | "cheapest"
+              | "balanced"
+              | "premium"
+              | "free-only")
+          : "balanced";
+      const decision = routeFor(task, { costPreference: pref });
+      const primary = MODELS[decision.primary];
+      return {
+        ok: true,
+        content: JSON.stringify({
+          primary: decision.primary,
+          cascade: decision.cascade,
+          reason: decision.reason,
+          primary_info: primary
+            ? {
+                label: primary.label,
+                tier: primary.tier,
+                kind: primary.kind,
+                cost_in_per_M_usd: primary.costInPer1M,
+                cost_out_per_M_usd: primary.costOutPer1M,
+                context_window: primary.contextWindow,
+                supports_tools: primary.supportsTools,
+              }
+            : null,
+        }),
+        summary: `route ${task}/${pref} → ${decision.primary}`,
+      };
+    }
+
+    case "forge_cost_report": {
+      const period =
+        typeof input.period === "string" ? input.period : "today";
+      const now = new Date();
+      let since: Date;
+      switch (period) {
+        case "24h":
+          since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          break;
+        case "this_month":
+          since = new Date(now.getUTCFullYear(), now.getUTCMonth(), 1);
+          break;
+        case "last_7d":
+          since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case "last_30d":
+          since = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case "today":
+        default:
+          since = new Date(
+            Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+          );
+      }
+      const sinceIso = since.toISOString();
+      const totals = (await sql`
+        SELECT
+          COALESCE(SUM(cost_usd), 0)::numeric(12,6) AS total_usd,
+          COUNT(*)::int AS turns,
+          COALESCE(SUM(tokens_in), 0)::int AS tokens_in,
+          COALESCE(SUM(tokens_out), 0)::int AS tokens_out
+        FROM conversations
+        WHERE role = 'assistant' AND created_at >= ${sinceIso}
+      `) as Array<{
+        total_usd: string;
+        turns: number;
+        tokens_in: number;
+        tokens_out: number;
+      }>;
+      const byModel = (await sql`
+        SELECT
+          COALESCE(model, '(unknown)') AS model,
+          COUNT(*)::int AS turns,
+          COALESCE(SUM(cost_usd), 0)::numeric(12,6) AS cost_usd
+        FROM conversations
+        WHERE role = 'assistant' AND created_at >= ${sinceIso}
+        GROUP BY model
+        ORDER BY cost_usd DESC
+        LIMIT 8
+      `) as Array<{ model: string; turns: number; cost_usd: string }>;
+      const fallbackRows = (await sql`
+        SELECT COUNT(*)::int AS n
+        FROM audit_events
+        WHERE action = 'forge.chat.turn'
+          AND created_at >= ${sinceIso}
+          AND jsonb_array_length(COALESCE(payload->'fallbacks', '[]'::jsonb)) > 0
+      `) as Array<{ n: number }>;
+      return {
+        ok: true,
+        content: JSON.stringify({
+          period,
+          since: sinceIso,
+          total_usd: Number(totals[0].total_usd),
+          total_turns: totals[0].turns,
+          total_tokens_in: totals[0].tokens_in,
+          total_tokens_out: totals[0].tokens_out,
+          by_model: byModel.map((m) => ({
+            model: m.model,
+            turns: m.turns,
+            cost_usd: Number(m.cost_usd),
+          })),
+          fallback_events: fallbackRows[0].n,
+        }),
+        summary: `${period}: $${Number(totals[0].total_usd).toFixed(4)} / ${totals[0].turns} turns / ${fallbackRows[0].n} fallbacks`,
       };
     }
 
