@@ -576,3 +576,188 @@ export async function listPullRequests(
     url: pr.html_url,
   }));
 }
+
+// ─── Workflow / Actions ops (M5 alt — GitHub Actions as sandbox) ──────
+
+export interface WorkflowRunSummary {
+  id: number;
+  name: string | null;
+  status: string | null; // queued | in_progress | completed
+  conclusion: string | null; // success | failure | cancelled | skipped | timed_out | null
+  head_branch: string | null;
+  head_sha: string;
+  url: string;
+  created_at: string;
+  updated_at: string;
+  run_started_at: string | null;
+  run_attempt: number;
+}
+
+/**
+ * Dispatch a workflow_dispatch event. The GitHub API doesn't return
+ * the resulting run_id, so we poll the list of recent runs and pick
+ * the newest one for that workflow + branch. Pollable for ~5s before
+ * giving up — the run usually shows up within 2s.
+ */
+export async function dispatchWorkflow(
+  owner: string,
+  repo: string,
+  workflowFile: string,
+  ref: string,
+  inputs: Record<string, string>,
+  options: { auditUserId?: string } = {},
+): Promise<{ run_id: number | null; ref: string; workflow: string }> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+
+  // Capture a high-water-mark BEFORE the dispatch so we only accept
+  // runs created strictly after our request. Without this, a previous
+  // workflow_dispatch on the same branch within the last 30s could be
+  // mis-correlated as ours (Codex P1).
+  const dispatchedAfter = Date.now();
+
+  await octokit.request(
+    "POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches",
+    {
+      owner,
+      repo,
+      workflow_id: workflowFile,
+      ref,
+      inputs,
+    },
+  );
+
+  // Poll for the freshly-created run. GitHub assigns the ID eagerly
+  // but the listing has a small lag; 5s is enough in practice.
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    const { data } = await octokit.request(
+      "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
+      { owner, repo, workflow_id: workflowFile, branch: ref, per_page: 5 },
+    );
+    const fresh = data.workflow_runs.find(
+      (r) =>
+        r.event === "workflow_dispatch" &&
+        new Date(r.created_at).getTime() >= dispatchedAfter,
+    );
+    if (fresh) {
+      return { run_id: fresh.id, ref, workflow: workflowFile };
+    }
+    await new Promise((resolve) => setTimeout(resolve, 800));
+  }
+  return { run_id: null, ref, workflow: workflowFile };
+}
+
+export async function getWorkflowRun(
+  owner: string,
+  repo: string,
+  runId: number,
+  options: { auditUserId?: string } = {},
+): Promise<WorkflowRunSummary> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  const { data } = await octokit.request(
+    "GET /repos/{owner}/{repo}/actions/runs/{run_id}",
+    { owner, repo, run_id: runId },
+  );
+  return {
+    id: data.id,
+    name: data.name ?? null,
+    status: data.status,
+    conclusion: data.conclusion,
+    head_branch: data.head_branch,
+    head_sha: data.head_sha,
+    url: data.html_url,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+    run_started_at: data.run_started_at ?? null,
+    run_attempt: data.run_attempt ?? 1,
+  };
+}
+
+/**
+ * Fetch workflow run logs as readable plain text.
+ *
+ * The run-level `/actions/runs/{id}/logs` endpoint returns a ZIP that
+ * we'd need to decompress (extra dep + buffer mgmt). Instead we use
+ * the per-job endpoint `/actions/jobs/{job_id}/logs` which returns
+ * plain text directly. We concatenate all jobs of the run, prefix
+ * each with a header, and truncate to maxBytes.
+ * (Codex P2 — was returning ZIP-as-utf8 garbage.)
+ */
+export async function getWorkflowRunLogs(
+  owner: string,
+  repo: string,
+  runId: number,
+  options: { auditUserId?: string; maxBytes?: number } = {},
+): Promise<{ text: string; truncated: boolean; size: number; jobs: number }> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  const maxBytes = options.maxBytes ?? 100_000;
+
+  // List jobs of this run.
+  const { data: jobsData } = await octokit.request(
+    "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs",
+    { owner, repo, run_id: runId, per_page: 30 },
+  );
+
+  const parts: string[] = [];
+  let totalSize = 0;
+  for (const job of jobsData.jobs ?? []) {
+    if (totalSize >= maxBytes) break;
+    try {
+      // octokit returns the body as string for this text endpoint.
+      const { data: logBody } = (await octokit.request(
+        "GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs",
+        { owner, repo, job_id: job.id, request: { redirect: "follow" } },
+      )) as unknown as { data: string };
+      const body = typeof logBody === "string" ? logBody : String(logBody);
+      const header = `\n══════ job ${job.id} · ${job.name} · ${job.conclusion ?? job.status} ══════\n`;
+      parts.push(header);
+      parts.push(body);
+      totalSize += header.length + body.length;
+    } catch {
+      // A job may not have logs yet (still queued); skip.
+      parts.push(`\n══════ job ${job.id} · ${job.name} · (logs unavailable) ══════\n`);
+    }
+  }
+
+  const combined = parts.join("");
+  const truncated = combined.length > maxBytes;
+  const text = truncated ? combined.slice(0, maxBytes) : combined;
+  return {
+    text,
+    truncated,
+    size: combined.length,
+    jobs: (jobsData.jobs ?? []).length,
+  };
+}
+
+export async function listRecentWorkflowRuns(
+  owner: string,
+  repo: string,
+  workflowFile: string,
+  options: { branch?: string; perPage?: number; auditUserId?: string } = {},
+): Promise<WorkflowRunSummary[]> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  const { data } = await octokit.request(
+    "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
+    {
+      owner,
+      repo,
+      workflow_id: workflowFile,
+      branch: options.branch,
+      per_page: options.perPage ?? 10,
+    },
+  );
+  return data.workflow_runs.map((r) => ({
+    id: r.id,
+    name: r.name ?? null,
+    status: r.status,
+    conclusion: r.conclusion,
+    head_branch: r.head_branch,
+    head_sha: r.head_sha,
+    url: r.html_url,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+    run_started_at: r.run_started_at ?? null,
+    run_attempt: r.run_attempt ?? 1,
+  }));
+}
