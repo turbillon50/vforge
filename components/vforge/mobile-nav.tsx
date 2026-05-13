@@ -53,15 +53,19 @@ export function MobileNav({ className }: MobileNavProps) {
               onClick={handleTap}
               className={cn(
                 "flex flex-col items-center justify-center",
-                "w-16 h-16 -mt-5 rounded-full",
+                // Smaller central button (was 64×64 with -mt-5). Less
+                // visual weight so the composer remains readable on
+                // mobile when the on-screen keyboard is up.
+                "w-12 h-12 -mt-3 rounded-full",
                 "bg-black",
-                "ring-[3px] ring-vf-green",
-                "shadow-[0_0_20px_rgba(124,255,60,0.4),0_0_40px_rgba(124,255,60,0.2)]",
-                "transition-transform duration-150",
+                "ring-2 ring-vf-green",
+                "shadow-[0_0_14px_rgba(124,255,60,0.35),0_0_28px_rgba(124,255,60,0.18)]",
+                "transition-all duration-150",
                 "active:scale-95 hover:scale-105"
               )}
+              aria-label={item.name}
             >
-              <ForgeOrb size={42} state="idle" glow={false} />
+              <ForgeOrb size={28} state="idle" glow={false} />
             </Link>
           );
         }

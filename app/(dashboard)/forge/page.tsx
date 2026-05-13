@@ -83,6 +83,47 @@ function toolDisplayName(name: string): string {
       return "Borrando secret del proyecto";
     case "projects_sync":
       return "Sincronizando proyectos (Vercel + GitHub)";
+
+    // GitHub write (PR #27)
+    case "github_create_file":
+      return "Creando archivo en el repo";
+    case "github_update_file":
+      return "Actualizando archivo del repo";
+    case "github_delete_file":
+      return "Borrando archivo del repo";
+    case "github_create_branch":
+      return "Creando rama en el repo";
+    case "github_create_pull_request":
+      return "Abriendo Pull Request";
+
+    // GitHub read extra (PR #32)
+    case "github_list_directory":
+      return "Explorando carpeta del repo";
+    case "github_search_code":
+      return "Buscando código en el repo";
+    case "github_list_pull_requests":
+      return "Listando Pull Requests";
+
+    // Routing + cost observability (PR #28)
+    case "model_recommend":
+      return "Eligiendo modelo óptimo";
+    case "forge_cost_report":
+      return "Calculando gasto del mes";
+    case "openrouter_query":
+      return "Consultando OpenRouter";
+
+    // Skills (M16)
+    case "skill_search":
+      return "Buscando skill aplicable";
+    case "skill_install":
+      return "Instalando skill";
+
+    // Subagents (M18)
+    case "spawn_subagent":
+      return "Lanzando subagente en paralelo";
+    case "list_subagent_roles":
+      return "Revisando roles de subagente";
+
     default:
       return `Ejecutando ${name}`;
   }
@@ -112,6 +153,13 @@ export default function ForgePage() {
   const [streaming, setStreaming] = useState(false);
   const [hydrating, setHydrating] = useState(true);
   const [savingMemory, setSavingMemory] = useState(false);
+  /**
+   * Most recent tool V is running. Set on `tool_use_start`, cleared on
+   * matching `tool_use_result` (or when the turn ends). Surfaced as a
+   * live status strip above the composer so Luis can see what V is
+   * doing without scrolling the message inline.
+   */
+  const [currentTool, setCurrentTool] = useState<string | null>(null);
   const sessionIdRef = useRef<string>("");
 
   // Load scope from storage and project list on first mount.
@@ -201,6 +249,59 @@ export default function ForgePage() {
     const p = projects.find((x) => x.id === s);
     return welcomeForProject(p?.name ?? s);
   }
+
+  /**
+   * Cross-device sync (poor man's realtime).
+   * Polls /api/forge/conversations every 5s while the tab is visible
+   * and we're NOT currently streaming locally (would overwrite the
+   * in-flight turn). When the server has more persisted turns than we
+   * have locally, we re-render from server. This makes phone and
+   * laptop converge to the same conversation when both are open.
+   *
+   * Upgrade path: SSE 'conversation_updated' event from the server
+   * (M9.5 with Trigger.dev), or Liveblocks rooms (M13).
+   */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const POLL_MS = 5000;
+    let cancelled = false;
+
+    async function poll() {
+      if (cancelled) return;
+      if (streaming || hydrating) return;
+      if (document.visibilityState !== "visible") return;
+      const sid = sessionIdRef.current;
+      if (!sid) return;
+      try {
+        const res = await fetch(
+          `/api/forge/conversations?sessionId=${encodeURIComponent(sid)}&limit=100`,
+          { cache: "no-store" },
+        );
+        if (!res.ok) return;
+        const { turns } = (await res.json()) as { turns: PersistedTurn[] };
+        const localPersistedCount = messages.filter(
+          (m) => m.id !== "welcome",
+        ).length;
+        if (turns.length > localPersistedCount) {
+          setMessages(
+            turns.map((t) => ({
+              id: t.id,
+              role: t.role === "assistant" ? "forge" : "user",
+              content: t.content,
+            })),
+          );
+        }
+      } catch {
+        /* network blip — try again next tick */
+      }
+    }
+
+    const id = setInterval(poll, POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [streaming, hydrating, messages]);
 
   async function newSession() {
     const previousSessionId = sessionIdRef.current;
@@ -412,25 +513,49 @@ export default function ForgePage() {
                 ),
               );
             } else if (evt.type === "tool_use_start") {
-              const marker = `\n\n_🔧 ${toolDisplayName(evt.name)}…_\n\n`;
+              setCurrentTool(evt.name);
+              // Push a new step (loading) onto the assistant message
+              // instead of inlining the marker into the content. The
+              // ChatMessage component renders steps with explicit icons
+              // (loading orb, ✓ done, ⚠ failed).
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === assistantId
-                    ? { ...m, content: m.content + marker }
+                    ? {
+                        ...m,
+                        steps: [
+                          ...(m.steps ?? []),
+                          {
+                            text: toolDisplayName(evt.name),
+                            status: "loading",
+                          },
+                        ],
+                      }
                     : m,
                 ),
               );
             } else if (evt.type === "tool_use_result") {
-              const icon = evt.ok ? "✓" : "⚠";
-              const marker = `_${icon} ${evt.summary}_\n\n`;
+              setCurrentTool(null);
+              // Mark the most recent loading step as done/failed and
+              // surface the summary returned by the tool.
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantId
-                    ? { ...m, content: m.content + marker }
-                    : m,
-                ),
+                prev.map((m) => {
+                  if (m.id !== assistantId) return m;
+                  const steps = [...(m.steps ?? [])];
+                  for (let i = steps.length - 1; i >= 0; i -= 1) {
+                    if (steps[i].status === "loading") {
+                      steps[i] = {
+                        text: `${steps[i].text} — ${evt.summary}`,
+                        status: evt.ok ? "done" : "failed",
+                      };
+                      break;
+                    }
+                  }
+                  return { ...m, steps };
+                }),
               );
             } else if (evt.type === "error") {
+              setCurrentTool(null);
               appendError(assistantId, evt.message);
             }
           } catch {
@@ -443,6 +568,7 @@ export default function ForgePage() {
       appendError(assistantId, `Error de red: ${message}`);
     } finally {
       setStreaming(false);
+      setCurrentTool(null);
     }
   };
 
@@ -534,6 +660,22 @@ export default function ForgePage() {
       </header>
 
       <ChatStream messages={messages} onAction={handleAction} />
+
+      {/* Live activity strip — shows what V is doing right now (last
+        * tool_use_start) without making Luis scroll to find it inline.
+        * Hidden when idle. Sticky just above the composer. */}
+      {streaming && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="sticky bottom-[88px] md:bottom-[80px] bg-vf-bg-1/95 backdrop-blur-sm border-t border-vf-border px-3 py-2 flex items-center gap-2 text-xs font-mono"
+        >
+          <span className="dot-live w-1.5 h-1.5 rounded-full bg-vf-green flex-shrink-0" />
+          <span className="text-vf-fg-1 truncate">
+            {currentTool ? toolDisplayName(currentTool) + "…" : "V está pensando…"}
+          </span>
+        </div>
+      )}
 
       <Composer onSend={handleSend} disabled={streaming || hydrating} />
     </div>
