@@ -79,6 +79,24 @@ export const MODELS: Record<string, ModelInfo> = {
     contextWindow: 200_000,
     goodFor: ["chat-main", "reasoning", "code-edit", "extraction"],
     fallbackChain: [
+      "anthropic/claude-sonnet-4.5",
+      "anthropic/claude-haiku-4.5",
+      "google/gemini-2.5-pro",
+      "openai/gpt-5",
+      "minimax/minimax-m2.5:free",
+    ],
+  },
+  "anthropic/claude-sonnet-4.5": {
+    slug: "anthropic/claude-sonnet-4.5",
+    label: "Claude Sonnet 4.5",
+    costInPer1M: 3,
+    costOutPer1M: 15,
+    tier: "balanced",
+    kind: "paid",
+    supportsTools: true,
+    contextWindow: 200_000,
+    goodFor: ["chat-main", "reasoning", "code-edit", "extraction"],
+    fallbackChain: [
       "anthropic/claude-haiku-4.5",
       "google/gemini-2.5-pro",
       "openai/gpt-5",
@@ -252,9 +270,16 @@ export function estimateCostForModel(
  * 4xx, aborting the whole turn (Codex P0).
  */
 const LEGACY_SLUG_MAP: Record<string, string> = {
+  // Pre-OpenRouter short names (without 'anthropic/' prefix).
   "claude-opus-4-7": "anthropic/claude-opus-4.7",
   "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
   "claude-haiku-4-5": "anthropic/claude-haiku-4.5",
+  // Same variants WITH the 'anthropic/' prefix and dash instead of dot
+  // (some seeds/clients emit this hybrid form).
+  "anthropic/claude-opus-4-7": "anthropic/claude-opus-4.7",
+  "anthropic/claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
+  "anthropic/claude-sonnet-4-5": "anthropic/claude-sonnet-4.5",
+  "anthropic/claude-haiku-4-5": "anthropic/claude-haiku-4.5",
 };
 
 /**
