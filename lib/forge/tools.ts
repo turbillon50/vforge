@@ -738,6 +738,200 @@ export const TOOLS: Tool[] = [
       required: ["id", "name", "description", "system_prompt"],
     },
   },
+  {
+    name: "skill_list",
+    description:
+      "Lista todas las skills disponibles en el catálogo (instaladas y no instaladas). Devuelve id, name, description, tags, source, installed_at. Úsala cuando Luis pregunte 'qué skills tienes' o 'qué sabes hacer' o para ver qué habilidades puedes activar/desactivar.",
+    input_schema: {
+      type: "object",
+      properties: {
+        installed_only: {
+          type: "boolean",
+          description: "Si true, solo muestra skills instaladas. Default false.",
+        },
+        source: {
+          type: "string",
+          enum: ["system", "user", "learned"],
+          description: "Filtra por origen de la skill.",
+        },
+      },
+    },
+  },
+  {
+    name: "skill_search",
+    description:
+      "Busca skills por nombre, descripción o tags. Úsala cuando Luis pregunte 'tienes algo para X' o 'busca una skill de deploy' o cuando V quiera encontrar una habilidad para una tarea. Devuelve las skills que matchean ordenadas por relevancia.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Texto a buscar en nombre, descripción y tags.",
+        },
+        tags: {
+          type: "array",
+          items: { type: "string" },
+          description: "Filtra skills que tengan TODOS estos tags.",
+        },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "skill_install",
+    description:
+      "Instala/activa una skill para que V la use. Cuando una skill está instalada, su system_prompt se inyecta en el contexto de V en cada turno. Ring 1. Úsala cuando Luis diga 'activa la skill de X' o cuando V decida que necesita una habilidad específica.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "ID de la skill a instalar (kebab-case slug).",
+        },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "skill_uninstall",
+    description:
+      "Desinstala/desactiva una skill. Su system_prompt dejará de inyectarse en el contexto. Ring 1. Úsala cuando Luis diga 'desactiva la skill de X' o cuando V detecte que una skill ya no es necesaria para la tarea actual.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "ID de la skill a desinstalar.",
+        },
+      },
+      required: ["id"],
+    },
+  },
+
+  // ─── Directives (V's self-modifiable brain) ───────────────────────
+  {
+    name: "directive_list",
+    description:
+      "Lista las directivas actuales de V (mantra, directive, preference). El mantra son las directivas LOCKED que definen la identidad core de V y no se pueden modificar. Las directives son reglas operacionales y las preferences son preferencias suaves. Ring 0. Úsala cuando Luis pregunte 'cuáles son tus reglas' o 'qué directivas tienes' o cuando V quiera ver su propia configuración.",
+    input_schema: {
+      type: "object",
+      properties: {
+        kind: {
+          type: "string",
+          enum: ["mantra", "directive", "preference"],
+          description: "Filtra por tipo de directiva. Sin filtro devuelve todas.",
+        },
+        include_locked: {
+          type: "boolean",
+          description: "Si false, excluye las directivas locked (mantra). Default true.",
+        },
+      },
+    },
+  },
+  {
+    name: "directive_add",
+    description:
+      "Agrega una nueva directiva a V. Ring 1. IMPORTANTE: No puedes crear mantras (kind='mantra'), solo directives o preferences. Úsala cuando Luis diga 'recuerda que siempre quiero X' o 'agrega una regla para Y' o cuando V quiera programarse una nueva regla de comportamiento.",
+    input_schema: {
+      type: "object",
+      properties: {
+        kind: {
+          type: "string",
+          enum: ["directive", "preference"],
+          description: "Tipo de directiva. 'directive' = regla operacional, 'preference' = preferencia suave.",
+        },
+        title: {
+          type: "string",
+          description: "Título corto descriptivo (ej. 'Formato de código', 'Estilo de comunicación').",
+        },
+        content: {
+          type: "string",
+          description: "Contenido completo de la directiva. Debe ser claro y accionable.",
+        },
+        priority: {
+          type: "number",
+          description: "Prioridad (0=máxima, 100=normal, 200=baja). Default 100.",
+        },
+      },
+      required: ["kind", "title", "content"],
+    },
+  },
+  {
+    name: "directive_edit",
+    description:
+      "Edita una directiva existente de V. Ring 1. IMPORTANTE: No puedes editar directivas con locked=true (mantras). Úsala cuando Luis diga 'cambia la regla de X' o cuando V quiera actualizar una de sus directivas.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "UUID de la directiva a editar.",
+        },
+        title: {
+          type: "string",
+          description: "Nuevo título (opcional, solo si cambia).",
+        },
+        content: {
+          type: "string",
+          description: "Nuevo contenido (opcional, solo si cambia).",
+        },
+        priority: {
+          type: "number",
+          description: "Nueva prioridad (opcional).",
+        },
+        active: {
+          type: "boolean",
+          description: "Activar/desactivar la directiva sin borrarla.",
+        },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "directive_delete",
+    description:
+      "Elimina permanentemente una directiva de V. Ring 2 (requiere confirmación). IMPORTANTE: No puedes eliminar directivas con locked=true (mantras). Úsala solo cuando Luis explícitamente pida borrar una regla. V no debería auto-borrar sus directivas sin confirmación.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "UUID de la directiva a eliminar.",
+        },
+        confirm: {
+          type: "boolean",
+          description: "Debe ser true para confirmar el borrado. Sin esto, la tool falla.",
+        },
+      },
+      required: ["id", "confirm"],
+    },
+  },
+
+  // ─── Database Direct Access ───────────────────────────────────────
+  {
+    name: "database_execute",
+    description:
+      "Ejecuta SQL arbitrario en la base de datos Neon. Ring 1 para SELECT/INSERT/UPDATE. Ring 2 para DDL (CREATE, ALTER, DROP) y DELETE. Usala para: correr migraciones, crear tablas, insertar datos seed, queries complejas que no tienen tool dedicado. IMPORTANTE: Para operaciones destructivas (DROP, DELETE, TRUNCATE) debes pasar confirm=true. Devuelve las filas afectadas o el resultado del query.",
+    input_schema: {
+      type: "object",
+      properties: {
+        sql: {
+          type: "string",
+          description: "El SQL a ejecutar. Puede ser SELECT, INSERT, UPDATE, DELETE, CREATE TABLE, ALTER TABLE, DROP, etc.",
+        },
+        params: {
+          type: "array",
+          items: { type: "string" },
+          description: "Parametros para queries parametrizados (previene SQL injection). El SQL debe usar $1, $2, etc.",
+        },
+        confirm: {
+          type: "boolean",
+          description: "Requerido para operaciones destructivas (DROP, DELETE, TRUNCATE). Sin esto, la tool falla.",
+        },
+      },
+      required: ["sql"],
+    },
+  },
 
   // ─── OpenRouter (ADR-009, M3) ─────────────────────────────────────
   {
@@ -1826,6 +2020,597 @@ async function dispatch(
           skill: rows[0],
         }),
         summary: `skill: ${rows[0].id}`,
+      };
+    }
+
+    case "skill_list": {
+      const installedOnly = input.installed_only === true;
+      const sourceFilter = typeof input.source === "string" ? input.source : null;
+      
+      let query = sql`
+        SELECT id, name, description, tags, source, active, installed_at, ring_max, created_at
+        FROM skills
+        WHERE active = true
+      `;
+      
+      if (installedOnly) {
+        query = sql`
+          SELECT id, name, description, tags, source, active, installed_at, ring_max, created_at
+          FROM skills
+          WHERE active = true AND installed_at IS NOT NULL
+        `;
+      }
+      
+      if (sourceFilter) {
+        query = sql`
+          SELECT id, name, description, tags, source, active, installed_at, ring_max, created_at
+          FROM skills
+          WHERE active = true AND source = ${sourceFilter}
+          ${installedOnly ? sql`AND installed_at IS NOT NULL` : sql``}
+        `;
+      }
+      
+      const rows = (await query) as Array<{
+        id: string;
+        name: string;
+        description: string;
+        tags: string[];
+        source: string;
+        active: boolean;
+        installed_at: string | null;
+        ring_max: number;
+        created_at: string;
+      }>;
+      
+      return {
+        ok: true,
+        content: JSON.stringify({
+          total: rows.length,
+          installed: rows.filter(r => r.installed_at).length,
+          skills: rows.map(r => ({
+            id: r.id,
+            name: r.name,
+            description: r.description,
+            tags: r.tags,
+            source: r.source,
+            installed: !!r.installed_at,
+            ring_max: r.ring_max,
+          })),
+        }),
+        summary: `${rows.length} skills (${rows.filter(r => r.installed_at).length} instaladas)`,
+      };
+    }
+
+    case "skill_search": {
+      const query = requireString(input.query, "query");
+      const tagFilter = Array.isArray(input.tags)
+        ? (input.tags as string[]).filter(t => typeof t === "string" && t.length > 0)
+        : [];
+      
+      // Search in name, description, and tags using ILIKE
+      const searchPattern = `%${query}%`;
+      
+      let rows;
+      if (tagFilter.length > 0) {
+        rows = (await sql`
+          SELECT id, name, description, tags, source, installed_at, ring_max,
+            CASE
+              WHEN name ILIKE ${searchPattern} THEN 3
+              WHEN description ILIKE ${searchPattern} THEN 2
+              WHEN EXISTS (SELECT 1 FROM unnest(tags) t WHERE t ILIKE ${searchPattern}) THEN 1
+              ELSE 0
+            END as relevance
+          FROM skills
+          WHERE active = true
+            AND tags @> ${tagFilter}
+            AND (
+              name ILIKE ${searchPattern}
+              OR description ILIKE ${searchPattern}
+              OR EXISTS (SELECT 1 FROM unnest(tags) t WHERE t ILIKE ${searchPattern})
+            )
+          ORDER BY relevance DESC, installed_at DESC NULLS LAST
+          LIMIT 20
+        `) as Array<{
+          id: string;
+          name: string;
+          description: string;
+          tags: string[];
+          source: string;
+          installed_at: string | null;
+          ring_max: number;
+          relevance: number;
+        }>;
+      } else {
+        rows = (await sql`
+          SELECT id, name, description, tags, source, installed_at, ring_max,
+            CASE
+              WHEN name ILIKE ${searchPattern} THEN 3
+              WHEN description ILIKE ${searchPattern} THEN 2
+              WHEN EXISTS (SELECT 1 FROM unnest(tags) t WHERE t ILIKE ${searchPattern}) THEN 1
+              ELSE 0
+            END as relevance
+          FROM skills
+          WHERE active = true
+            AND (
+              name ILIKE ${searchPattern}
+              OR description ILIKE ${searchPattern}
+              OR EXISTS (SELECT 1 FROM unnest(tags) t WHERE t ILIKE ${searchPattern})
+            )
+          ORDER BY relevance DESC, installed_at DESC NULLS LAST
+          LIMIT 20
+        `) as Array<{
+          id: string;
+          name: string;
+          description: string;
+          tags: string[];
+          source: string;
+          installed_at: string | null;
+          ring_max: number;
+          relevance: number;
+        }>;
+      }
+      
+      return {
+        ok: true,
+        content: JSON.stringify({
+          query,
+          tag_filter: tagFilter,
+          total: rows.length,
+          skills: rows.map(r => ({
+            id: r.id,
+            name: r.name,
+            description: r.description,
+            tags: r.tags,
+            source: r.source,
+            installed: !!r.installed_at,
+            ring_max: r.ring_max,
+          })),
+        }),
+        summary: `${rows.length} skills para "${query}"`,
+      };
+    }
+
+    case "skill_install": {
+      const id = requireString(input.id, "id");
+      
+      // Verify skill exists and is active
+      const existing = (await sql`
+        SELECT id, name, installed_at FROM skills WHERE id = ${id} AND active = true
+      `) as Array<{ id: string; name: string; installed_at: string | null }>;
+      
+      if (existing.length === 0) {
+        throw new Error(`Skill '${id}' no existe o está desactivada`);
+      }
+      
+      if (existing[0].installed_at) {
+        return {
+          ok: true,
+          content: JSON.stringify({
+            already_installed: true,
+            skill: { id: existing[0].id, name: existing[0].name },
+          }),
+          summary: `skill ${id} ya estaba instalada`,
+        };
+      }
+      
+      // Install the skill
+      await sql`
+        UPDATE skills SET installed_at = now(), updated_at = now() WHERE id = ${id}
+      `;
+      
+      // Audit the installation
+      await sql`
+        INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
+        VALUES (
+          ${ctx.userId}, 'skill.install', 'skill', ${id}, 1,
+          ${JSON.stringify({ skill_id: id, session_id: ctx.sessionId })}::jsonb
+        )
+      `;
+      
+      return {
+        ok: true,
+        content: JSON.stringify({
+          installed: true,
+          skill: { id: existing[0].id, name: existing[0].name },
+          note: "La skill se cargará en el contexto del próximo turno.",
+        }),
+        summary: `skill instalada: ${existing[0].name}`,
+      };
+    }
+
+    case "skill_uninstall": {
+      const id = requireString(input.id, "id");
+      
+      // Verify skill exists
+      const existing = (await sql`
+        SELECT id, name, source, installed_at FROM skills WHERE id = ${id}
+      `) as Array<{ id: string; name: string; source: string; installed_at: string | null }>;
+      
+      if (existing.length === 0) {
+        throw new Error(`Skill '${id}' no existe`);
+      }
+      
+      if (!existing[0].installed_at) {
+        return {
+          ok: true,
+          content: JSON.stringify({
+            already_uninstalled: true,
+            skill: { id: existing[0].id, name: existing[0].name },
+          }),
+          summary: `skill ${id} ya estaba desinstalada`,
+        };
+      }
+      
+      // Uninstall the skill
+      await sql`
+        UPDATE skills SET installed_at = NULL, updated_at = now() WHERE id = ${id}
+      `;
+      
+      // Audit the uninstallation
+      await sql`
+        INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
+        VALUES (
+          ${ctx.userId}, 'skill.uninstall', 'skill', ${id}, 1,
+          ${JSON.stringify({ skill_id: id, session_id: ctx.sessionId })}::jsonb
+        )
+      `;
+      
+      return {
+        ok: true,
+        content: JSON.stringify({
+          uninstalled: true,
+          skill: { id: existing[0].id, name: existing[0].name },
+          note: "La skill dejará de cargarse en el próximo turno.",
+        }),
+        summary: `skill desinstalada: ${existing[0].name}`,
+      };
+    }
+
+    // ─── Directive tools (V's self-modifiable brain) ────────────────
+    case "directive_list": {
+      const kindFilter = typeof input.kind === "string" ? input.kind : null;
+      const includeLocked = input.include_locked !== false;
+      
+      let rows;
+      if (kindFilter && !includeLocked) {
+        rows = (await sql`
+          SELECT id, kind, title, content, locked, priority, active, created_at, updated_at
+          FROM agent_directives
+          WHERE kind = ${kindFilter} AND locked = false
+          ORDER BY priority ASC, created_at ASC
+        `) as Array<{
+          id: string;
+          kind: string;
+          title: string;
+          content: string;
+          locked: boolean;
+          priority: number;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+        }>;
+      } else if (kindFilter) {
+        rows = (await sql`
+          SELECT id, kind, title, content, locked, priority, active, created_at, updated_at
+          FROM agent_directives
+          WHERE kind = ${kindFilter}
+          ORDER BY priority ASC, created_at ASC
+        `) as Array<{
+          id: string;
+          kind: string;
+          title: string;
+          content: string;
+          locked: boolean;
+          priority: number;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+        }>;
+      } else if (!includeLocked) {
+        rows = (await sql`
+          SELECT id, kind, title, content, locked, priority, active, created_at, updated_at
+          FROM agent_directives
+          WHERE locked = false
+          ORDER BY priority ASC, created_at ASC
+        `) as Array<{
+          id: string;
+          kind: string;
+          title: string;
+          content: string;
+          locked: boolean;
+          priority: number;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+        }>;
+      } else {
+        rows = (await sql`
+          SELECT id, kind, title, content, locked, priority, active, created_at, updated_at
+          FROM agent_directives
+          ORDER BY priority ASC, created_at ASC
+        `) as Array<{
+          id: string;
+          kind: string;
+          title: string;
+          content: string;
+          locked: boolean;
+          priority: number;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+        }>;
+      }
+      
+      const byKind = {
+        mantra: rows.filter(r => r.kind === 'mantra'),
+        directive: rows.filter(r => r.kind === 'directive'),
+        preference: rows.filter(r => r.kind === 'preference'),
+      };
+      
+      return {
+        ok: true,
+        content: JSON.stringify({
+          total: rows.length,
+          by_kind: {
+            mantra: byKind.mantra.length,
+            directive: byKind.directive.length,
+            preference: byKind.preference.length,
+          },
+          directives: rows.map(r => ({
+            id: r.id,
+            kind: r.kind,
+            title: r.title,
+            content: r.content,
+            locked: r.locked,
+            priority: r.priority,
+            active: r.active,
+          })),
+        }),
+        summary: `${rows.length} directivas (${byKind.mantra.length} mantra, ${byKind.directive.length} directive, ${byKind.preference.length} preference)`,
+      };
+    }
+
+    case "directive_add": {
+      const kind = requireString(input.kind, "kind");
+      if (kind !== "directive" && kind !== "preference") {
+        throw new Error("Solo puedes crear 'directive' o 'preference', no 'mantra'");
+      }
+      const title = requireString(input.title, "title");
+      const content = requireString(input.content, "content");
+      const priority = typeof input.priority === "number" ? input.priority : 100;
+      
+      const rows = (await sql`
+        INSERT INTO agent_directives (kind, title, content, locked, priority, created_by)
+        VALUES (${kind}, ${title}, ${content}, false, ${priority}, ${ctx.userId})
+        RETURNING id, kind, title, priority
+      `) as Array<{ id: string; kind: string; title: string; priority: number }>;
+      
+      // Audit
+      await sql`
+        INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
+        VALUES (
+          ${ctx.userId}, 'directive.add', 'directive', ${rows[0].id}, 1,
+          ${JSON.stringify({ kind, title, priority, session_id: ctx.sessionId })}::jsonb
+        )
+      `;
+      
+      return {
+        ok: true,
+        content: JSON.stringify({
+          created: true,
+          directive: rows[0],
+          note: "La directiva se cargará en el contexto del próximo turno.",
+        }),
+        summary: `directiva creada: ${rows[0].title}`,
+      };
+    }
+
+    case "directive_edit": {
+      const id = requireString(input.id, "id");
+      
+      // Verify directive exists and is not locked
+      const existing = (await sql`
+        SELECT id, kind, title, locked FROM agent_directives WHERE id = ${id}::uuid
+      `) as Array<{ id: string; kind: string; title: string; locked: boolean }>;
+      
+      if (existing.length === 0) {
+        throw new Error(`Directiva '${id}' no existe`);
+      }
+      
+      if (existing[0].locked) {
+        throw new Error(`No puedes editar la directiva '${existing[0].title}' porque está bloqueada (mantra). Los mantras son inmutables.`);
+      }
+      
+      // Build dynamic update
+      const updates: string[] = [];
+      const values: Record<string, unknown> = { id };
+      
+      if (typeof input.title === "string" && input.title.length > 0) {
+        values.title = input.title;
+      }
+      if (typeof input.content === "string" && input.content.length > 0) {
+        values.content = input.content;
+      }
+      if (typeof input.priority === "number") {
+        values.priority = input.priority;
+      }
+      if (typeof input.active === "boolean") {
+        values.active = input.active;
+      }
+      
+      const rows = (await sql`
+        UPDATE agent_directives SET
+          title = COALESCE(${values.title ?? null}, title),
+          content = COALESCE(${values.content ?? null}, content),
+          priority = COALESCE(${values.priority ?? null}, priority),
+          active = COALESCE(${values.active ?? null}, active),
+          updated_at = now()
+        WHERE id = ${id}::uuid
+        RETURNING id, kind, title, priority, active
+      `) as Array<{ id: string; kind: string; title: string; priority: number; active: boolean }>;
+      
+      // Audit
+      await sql`
+        INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
+        VALUES (
+          ${ctx.userId}, 'directive.edit', 'directive', ${id}, 1,
+          ${JSON.stringify({ changes: values, session_id: ctx.sessionId })}::jsonb
+        )
+      `;
+      
+      return {
+        ok: true,
+        content: JSON.stringify({
+          updated: true,
+          directive: rows[0],
+        }),
+        summary: `directiva editada: ${rows[0].title}`,
+      };
+    }
+
+    case "directive_delete": {
+      const id = requireString(input.id, "id");
+      const confirm = input.confirm === true;
+      
+      if (!confirm) {
+        throw new Error("Debes pasar confirm=true para borrar una directiva. Esto es Ring 2.");
+      }
+      
+      // Verify directive exists and is not locked
+      const existing = (await sql`
+        SELECT id, kind, title, locked FROM agent_directives WHERE id = ${id}::uuid
+      `) as Array<{ id: string; kind: string; title: string; locked: boolean }>;
+      
+      if (existing.length === 0) {
+        throw new Error(`Directiva '${id}' no existe`);
+      }
+      
+      if (existing[0].locked) {
+        throw new Error(`No puedes eliminar la directiva '${existing[0].title}' porque está bloqueada (mantra). Los mantras son inmutables y protegen tu identidad core.`);
+      }
+      
+      // Delete
+      await sql`DELETE FROM agent_directives WHERE id = ${id}::uuid`;
+      
+      // Audit (Ring 2)
+      await sql`
+        INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
+        VALUES (
+          ${ctx.userId}, 'directive.delete', 'directive', ${id}, 2,
+          ${JSON.stringify({ deleted_title: existing[0].title, deleted_kind: existing[0].kind, session_id: ctx.sessionId })}::jsonb
+        )
+      `;
+      
+      return {
+        ok: true,
+        content: JSON.stringify({
+          deleted: true,
+          directive: { id: existing[0].id, title: existing[0].title, kind: existing[0].kind },
+        }),
+        summary: `directiva eliminada: ${existing[0].title}`,
+      };
+    }
+
+    // ─── Database Direct Access ─────────────────────────────────────
+    case "database_execute": {
+      const sqlQuery = requireString(input.sql, "sql");
+      const params = Array.isArray(input.params) ? input.params : [];
+      const confirm = input.confirm === true;
+      
+      // Detect destructive operations
+      const upperSql = sqlQuery.toUpperCase().trim();
+      const isDestructive = 
+        upperSql.startsWith("DROP") ||
+        upperSql.startsWith("DELETE") ||
+        upperSql.startsWith("TRUNCATE") ||
+        upperSql.includes("DROP TABLE") ||
+        upperSql.includes("DROP INDEX") ||
+        upperSql.includes("DROP FUNCTION") ||
+        upperSql.includes("DROP TRIGGER");
+      
+      const isDDL = 
+        upperSql.startsWith("CREATE") ||
+        upperSql.startsWith("ALTER") ||
+        upperSql.startsWith("DROP");
+      
+      // Ring 2 for destructive, Ring 1 for DDL, Ring 0 for SELECT
+      const ring = isDestructive ? 2 : (isDDL ? 1 : 0);
+      
+      if (isDestructive && !confirm) {
+        throw new Error(
+          `Operación destructiva detectada (${upperSql.split(/\s+/)[0]}). ` +
+          `Debes pasar confirm=true para ejecutar. Esto es Ring 2.`
+        );
+      }
+      
+      // Execute the query
+      let result;
+      let rowCount = 0;
+      let rows: unknown[] = [];
+      
+      try {
+        if (params.length > 0) {
+          // Parameterized query - need to use sql.unsafe for dynamic queries with params
+          // First, replace $1, $2, etc. with the actual values safely
+          result = await sql.unsafe(sqlQuery, params);
+        } else {
+          // Static query
+          result = await sql.unsafe(sqlQuery);
+        }
+        
+        // Handle result based on query type
+        if (Array.isArray(result)) {
+          rows = result;
+          rowCount = result.length;
+        } else if (result && typeof result === 'object') {
+          // DDL operations return different shapes
+          rowCount = (result as { rowCount?: number }).rowCount ?? 0;
+        }
+      } catch (dbError) {
+        // Re-throw with more context
+        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+        throw new Error(`Error ejecutando SQL: ${errorMessage}`);
+      }
+      
+      // Audit the operation
+      await sql`
+        INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
+        VALUES (
+          ${ctx.userId}, 
+          'database.execute', 
+          'sql', 
+          ${sqlQuery.substring(0, 100)}, 
+          ${ring},
+          ${JSON.stringify({ 
+            sql: sqlQuery.substring(0, 500),
+            params_count: params.length,
+            row_count: rowCount,
+            is_ddl: isDDL,
+            is_destructive: isDestructive,
+            session_id: ctx.sessionId 
+          })}::jsonb
+        )
+      `;
+      
+      // Format response based on query type
+      const isSelect = upperSql.startsWith("SELECT");
+      
+      return {
+        ok: true,
+        content: JSON.stringify({
+          executed: true,
+          query_type: isDestructive ? 'destructive' : (isDDL ? 'ddl' : (isSelect ? 'select' : 'dml')),
+          ring,
+          row_count: rowCount,
+          rows: isSelect ? rows.slice(0, 100) : undefined, // Limit rows in response
+          truncated: isSelect && rows.length > 100,
+          message: isDDL 
+            ? `DDL ejecutado exitosamente` 
+            : `${rowCount} fila(s) ${isSelect ? 'retornadas' : 'afectadas'}`,
+        }),
+        summary: isDDL 
+          ? `SQL DDL ejecutado (${upperSql.split(/\s+/).slice(0, 3).join(' ')}...)` 
+          : `${rowCount} filas ${isSelect ? 'retornadas' : 'afectadas'}`,
       };
     }
 
