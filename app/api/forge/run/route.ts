@@ -9,6 +9,8 @@ import { sql } from "@/lib/db/client";
 import { buildSystemPrompt } from "@/lib/forge/system-prompt";
 import { TOOLS, executeTool } from "@/lib/forge/tools";
 import { getOperatorSecret } from "@/lib/vault/get-secret";
+import { routeFor } from "@/lib/forge/routing";
+import { estimateCostForModel, MODELS, normalizeSlug } from "@/lib/forge/models";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,14 +37,6 @@ interface RunRequest {
 const OPERATOR_USER_ID = "operator_luis";
 const MAX_TOOL_ROUNDS = 5;
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
-
-// Default fallback when the config's model slug is the legacy Anthropic
-// short name and we need to map it to an OpenRouter-style slug.
-const LEGACY_MODEL_MAP: Record<string, string> = {
-  "claude-opus-4-7": "anthropic/claude-opus-4.7",
-  "claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
-  "claude-haiku-4-5": "anthropic/claude-haiku-4.5",
-};
 
 export async function POST(req: Request) {
   let body: RunRequest;
@@ -73,12 +67,19 @@ export async function POST(req: Request) {
     projectId: body.projectId ?? null,
   });
 
-  // Resolve the model: prefer OpenRouter-format slugs, fall back via
-  // LEGACY_MODEL_MAP for rows still using the Anthropic short name.
+  // Resolve the model cascade via the routing policy. If the operator
+  // pinned a specific slug in system_config.default_model (and it's in
+  // our registry), we honor it as the primary and let routing.ts supply
+  // its fallback chain. If the slug isn't in the registry, we treat
+  // it as a free-form override and skip cascade.
   const configuredModel = config.default_model;
-  const model =
-    LEGACY_MODEL_MAP[configuredModel] ??
-    (configuredModel.includes("/") ? configuredModel : "anthropic/claude-sonnet-4.6");
+  const isKnownSlug = !!MODELS[normalizeSlug(configuredModel)];
+  const routing = isKnownSlug
+    ? routeFor("chat-main", { forceSlug: normalizeSlug(configuredModel) })
+    : routeFor("chat-main");
+  const cascade = isKnownSlug
+    ? routing.cascade
+    : [configuredModel, ...routing.cascade];
 
   const lastUserTurn = messages[messages.length - 1];
   if (lastUserTurn.role === "user") {
@@ -120,7 +121,10 @@ export async function POST(req: Request) {
   ];
 
   const encoder = new TextEncoder();
-  let actualModel = model;
+  let actualModel = cascade[0];
+  let cascadeIdx = 0;
+  const triedSlugs: string[] = [];
+  const fallbackEvents: Array<{ from: string; to: string; status: number | null; reason: string }> = [];
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -137,14 +141,49 @@ export async function POST(req: Request) {
 
       try {
         for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-          const completion = await openrouter.chat.completions.create({
-            model,
-            messages: conversationMessages,
-            tools: openaiTools.length > 0 ? openaiTools : undefined,
-            max_tokens: 2048,
-            stream: true,
-            stream_options: { include_usage: true },
-          });
+          // Try the primary model and cascade through fallbacks on
+          // recoverable errors (402 = balance, 429 = rate limit,
+          // 5xx = provider down). Non-recoverable errors bubble.
+          let completion: Awaited<
+            ReturnType<typeof openrouter.chat.completions.create>
+          > | null = null;
+          while (true) {
+            const currentSlug = cascade[cascadeIdx];
+            if (!triedSlugs.includes(currentSlug)) triedSlugs.push(currentSlug);
+            actualModel = currentSlug;
+            try {
+              completion = await openrouter.chat.completions.create({
+                model: currentSlug,
+                messages: conversationMessages,
+                tools: openaiTools.length > 0 ? openaiTools : undefined,
+                max_tokens: 2048,
+                stream: true,
+                stream_options: { include_usage: true },
+              });
+              break;
+            } catch (err) {
+              const status = errorStatus(err);
+              const recoverable =
+                status === 402 ||
+                status === 429 ||
+                (status !== null && status >= 500 && status <= 599);
+              const hasNext = cascadeIdx + 1 < cascade.length;
+              if (!recoverable || !hasNext) throw err;
+              const next = cascade[cascadeIdx + 1];
+              const reason =
+                err instanceof Error ? err.message.slice(0, 180) : String(err);
+              fallbackEvents.push({ from: currentSlug, to: next, status, reason });
+              send({
+                type: "model_fallback",
+                from: currentSlug,
+                to: next,
+                status,
+                reason,
+              });
+              cascadeIdx += 1;
+            }
+          }
+          if (!completion) throw new Error("completion is null after cascade");
 
           let roundText = "";
           let roundFinish: string | null = null;
@@ -283,7 +322,7 @@ export async function POST(req: Request) {
             ${userId}, ${sessionId}, 'assistant', ${assistantTextBuffer},
             ${actualModel},
             ${totalTokensIn}, ${totalTokensOut},
-            ${estimateCost(actualModel, totalTokensIn, totalTokensOut)}
+            ${estimateCostForModel(actualModel, totalTokensIn, totalTokensOut)}
           )
         `;
 
@@ -297,6 +336,9 @@ export async function POST(req: Request) {
               model: actualModel,
               provider: "openrouter",
               stop_reason: lastStopReason,
+              cascade_tried: triedSlugs,
+              fallbacks: fallbackEvents,
+              routing_reason: routing.reason,
             })}::jsonb
           )
         `;
@@ -383,33 +425,19 @@ function jsonError(message: string, status: number): Response {
   });
 }
 
-// OpenRouter pricing per 1M tokens (USD). Used only for the cost_usd
-// column in conversations; real billing happens at OpenRouter. Refresh
-// from https://openrouter.ai/models when adding a model.
-const PRICING: Record<string, { input: number; output: number }> = {
-  "anthropic/claude-opus-4.7": { input: 15, output: 75 },
-  "anthropic/claude-sonnet-4.6": { input: 3, output: 15 },
-  "anthropic/claude-haiku-4.5": { input: 0.8, output: 4 },
-  "google/gemini-2.5-flash": { input: 0.075, output: 0.3 },
-  "google/gemini-2.5-pro": { input: 1.25, output: 5 },
-  "meta-llama/llama-3.3-70b-instruct": { input: 0.13, output: 0.4 },
-  "mistralai/mistral-large-2411": { input: 2, output: 6 },
-};
-
-function estimateCost(
-  model: string,
-  tokensIn: number,
-  tokensOut: number,
-): number {
-  // OpenRouter sometimes returns a versioned model name in the response
-  // (e.g. "anthropic/claude-4.6-sonnet-20260217"); strip the suffix.
-  const normalized = model.replace(/(-\d{8}|-\d{6}|-\d{4})$/, "");
-  const p =
-    PRICING[normalized] ??
-    PRICING[model] ??
-    // Fall back to Sonnet pricing if we don't know the model.
-    { input: 3, output: 15 };
-  const cost =
-    (tokensIn / 1_000_000) * p.input + (tokensOut / 1_000_000) * p.output;
-  return Number(cost.toFixed(6));
+/**
+ * Best-effort extraction of HTTP status from an OpenAI SDK error.
+ * The SDK throws `APIError` subclasses with a `status` field; for any
+ * other error shape we try to parse the typical "402 ..." prefix.
+ */
+function errorStatus(err: unknown): number | null {
+  if (err && typeof err === "object" && "status" in err) {
+    const s = (err as { status: unknown }).status;
+    if (typeof s === "number") return s;
+  }
+  if (err instanceof Error) {
+    const m = err.message.match(/^\s*(\d{3})\b/);
+    if (m) return Number(m[1]);
+  }
+  return null;
 }
