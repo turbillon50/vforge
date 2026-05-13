@@ -1,0 +1,81 @@
+name: V Sandbox
+
+# On-demand validation sandbox triggered by V (the Forge brain) before
+# opening a PR or after committing to a feature branch. Mirrors the CI
+# checks (type-check + lint + build) but runs explicitly via
+# workflow_dispatch so V can poll for its outcome.
+#
+# How V uses it (lib/forge/tools.ts):
+#   github_run_check(repo, branch, command?)
+#     → POST /repos/{owner}/{repo}/actions/workflows/v-sandbox.yml/dispatches
+#   github_get_check_status(run_id)
+#     → GET /repos/{owner}/{repo}/actions/runs/{run_id}
+#   github_get_check_logs(run_id)
+#     → GET /repos/{owner}/{repo}/actions/runs/{run_id}/logs
+#
+# Default command runs all three checks. V can override with a custom
+# npm script for targeted validation.
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "Comando a ejecutar (npm script). Default: tc+lint+build."
+        required: false
+        default: "default"
+      reason:
+        description: "Por qué V está validando (audit trail)."
+        required: false
+        default: "v-on-demand"
+
+# Each branch's sandbox can run in parallel — we don't cancel previous
+# runs because V might dispatch multiple to compare branches.
+concurrency:
+  group: v-sandbox-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: V validate (${{ github.event.inputs.reason }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout the branch V is testing
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run validation
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: |
+          CMD="${{ github.event.inputs.command }}"
+          if [ "$CMD" = "default" ] || [ -z "$CMD" ]; then
+            echo "→ default: type-check + lint + build"
+            npx tsc --noEmit
+            npm run lint
+            npm run build
+          else
+            echo "→ custom command: $CMD"
+            # Whitelist: only npm scripts and npx tsc are allowed
+            case "$CMD" in
+              "npm run "*|"npx tsc"*|"npm test"*)
+                eval "$CMD"
+                ;;
+              *)
+                echo "ERROR: command not allowed. Only 'npm run X', 'npm test', or 'npx tsc' permitted."
+                exit 1
+                ;;
+            esac
+          fi

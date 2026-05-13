@@ -28,6 +28,10 @@ import {
   listDirectory as ghListDirectory,
   searchCode as ghSearchCode,
   listPullRequests as ghListPullRequests,
+  dispatchWorkflow as ghDispatchWorkflow,
+  getWorkflowRun as ghGetWorkflowRun,
+  getWorkflowRunLogs as ghGetWorkflowRunLogs,
+  listRecentWorkflowRuns as ghListRecentWorkflowRuns,
 } from "@/lib/github/client";
 import {
   listProjects as vercelListProjects,
@@ -793,6 +797,76 @@ export const TOOLS: Tool[] = [
         },
       },
       required: ["kind", "title", "content"],
+    },
+  },
+
+  // ─── Sandbox vía GitHub Actions (M5 alt) ────────────────────────
+  {
+    name: "github_run_check",
+    description:
+      "Dispara una validación on-demand (type-check + lint + build) en GitHub Actions contra la rama indicada. Úsala DESPUÉS de hacer cambios en un repo y ANTES de abrir un PR, para validar que el código compila. Devuelve { run_id, url } — guarda el run_id y consulta el estado con github_get_check_status. El workflow es .github/workflows/v-sandbox.yml (debe existir en el repo). Si Luis no especifica owner, asume 'turbillon50'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string", description: "Default 'turbillon50'." },
+        repo: { type: "string" },
+        branch: {
+          type: "string",
+          description: "Rama a validar (ej. 'claude/fix-X').",
+        },
+        command: {
+          type: "string",
+          description: "Comando npm opcional (ej. 'npm run test'). Default: tc+lint+build.",
+        },
+        reason: {
+          type: "string",
+          description: "Una línea explicando por qué validas (queda en audit).",
+        },
+      },
+      required: ["repo", "branch"],
+    },
+  },
+  {
+    name: "github_get_check_status",
+    description:
+      "Devuelve el estado de una corrida de GitHub Actions. status: queued|in_progress|completed. conclusion (solo si completed): success|failure|cancelled|skipped|timed_out. Úsala en loop con un pequeño delay para esperar el resultado de github_run_check.",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string", description: "Default 'turbillon50'." },
+        repo: { type: "string" },
+        run_id: { type: "number" },
+      },
+      required: ["repo", "run_id"],
+    },
+  },
+  {
+    name: "github_get_check_logs",
+    description:
+      "Devuelve los logs de una corrida fallida de GitHub Actions (truncados a 100KB). Úsala SOLO cuando github_get_check_status devuelve conclusion=failure para entender qué falló. Para corridas exitosas no es necesario.",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string", description: "Default 'turbillon50'." },
+        repo: { type: "string" },
+        run_id: { type: "number" },
+      },
+      required: ["repo", "run_id"],
+    },
+  },
+  {
+    name: "github_list_check_runs",
+    description:
+      "Lista las últimas corridas del workflow v-sandbox en un repo, opcionalmente filtradas por rama. Útil para ver historia de validaciones o encontrar el último run de una rama.",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string", description: "Default 'turbillon50'." },
+        repo: { type: "string" },
+        branch: { type: "string", description: "Filtrar por rama (opcional)." },
+        per_page: { type: "number", description: "1-30, default 10." },
+      },
+      required: ["repo"],
     },
   },
 
@@ -1888,7 +1962,7 @@ async function dispatch(
 
     case "skill_list": {
       const installedOnly = input.installed_only === true;
-      
+
       let rows;
       if (installedOnly) {
         rows = (await sql`
@@ -1921,7 +1995,7 @@ async function dispatch(
           ring_max: number;
         }>;
       }
-      
+
       return {
         ok: true,
         content: JSON.stringify({
@@ -1942,7 +2016,7 @@ async function dispatch(
 
     case "directive_list": {
       const kindFilter = typeof input.kind === "string" ? input.kind : null;
-      
+
       let rows;
       if (kindFilter) {
         rows = (await sql`
@@ -1975,13 +2049,13 @@ async function dispatch(
           active: boolean;
         }>;
       }
-      
+
       const byKind = {
         mantra: rows.filter(r => r.kind === 'mantra'),
         directive: rows.filter(r => r.kind === 'directive'),
         preference: rows.filter(r => r.kind === 'preference'),
       };
-      
+
       return {
         ok: true,
         content: JSON.stringify({
@@ -2012,13 +2086,13 @@ async function dispatch(
       const title = requireString(input.title, "title");
       const content = requireString(input.content, "content");
       const priority = typeof input.priority === "number" ? input.priority : 100;
-      
+
       const rows = (await sql`
         INSERT INTO agent_directives (kind, title, content, locked, priority, created_by)
         VALUES (${kind}, ${title}, ${content}, false, ${priority}, ${ctx.userId})
         RETURNING id, kind, title, priority
       `) as Array<{ id: string; kind: string; title: string; priority: number }>;
-      
+
       return {
         ok: true,
         content: JSON.stringify({
@@ -2026,6 +2100,100 @@ async function dispatch(
           directive: rows[0],
         }),
         summary: `directiva creada: ${rows[0].title}`,
+      };
+    }
+
+    // ─── Sandbox vía GitHub Actions (M5 alt) ───────────────────────
+    case "github_run_check": {
+      const owner = ownerOrDefault(input.owner);
+      const repo = requireString(input.repo, "repo");
+      const branch = requireString(input.branch, "branch");
+      const command =
+        typeof input.command === "string" && input.command.length > 0
+          ? input.command
+          : "default";
+      const reason =
+        typeof input.reason === "string" && input.reason.length > 0
+          ? input.reason
+          : "v-on-demand";
+      const result = await ghDispatchWorkflow(
+        owner,
+        repo,
+        "v-sandbox.yml",
+        branch,
+        { command, reason },
+        { auditUserId: ctx.userId },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify({
+          run_id: result.run_id,
+          ref: result.ref,
+          workflow: result.workflow,
+          note: result.run_id
+            ? "Validación disparada. Usa github_get_check_status para seguir el estado."
+            : "Workflow disparado pero la corrida aún no aparece en la lista. Reintenta github_list_check_runs en unos segundos.",
+        }),
+        summary: `dispatched v-sandbox on ${owner}/${repo}#${branch}${result.run_id ? ` → run ${result.run_id}` : ""}`,
+      };
+    }
+    case "github_get_check_status": {
+      const owner = ownerOrDefault(input.owner);
+      const repo = requireString(input.repo, "repo");
+      const runId = Number(input.run_id);
+      if (!Number.isFinite(runId)) throw new Error("run_id must be a number");
+      const run = await ghGetWorkflowRun(owner, repo, runId, {
+        auditUserId: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify(run),
+        summary: `run ${runId}: ${run.status}${run.conclusion ? ` / ${run.conclusion}` : ""}`,
+      };
+    }
+    case "github_get_check_logs": {
+      const owner = ownerOrDefault(input.owner);
+      const repo = requireString(input.repo, "repo");
+      const runId = Number(input.run_id);
+      if (!Number.isFinite(runId)) throw new Error("run_id must be a number");
+      const logs = await ghGetWorkflowRunLogs(owner, repo, runId, {
+        auditUserId: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify({
+          run_id: runId,
+          size: logs.size,
+          truncated: logs.truncated,
+          text: logs.text,
+        }),
+        summary: `logs for run ${runId} (${logs.size}B${logs.truncated ? ", truncado a 100KB" : ""})`,
+      };
+    }
+    case "github_list_check_runs": {
+      const owner = ownerOrDefault(input.owner);
+      const repo = requireString(input.repo, "repo");
+      const branch =
+        typeof input.branch === "string" && input.branch.length > 0
+          ? input.branch
+          : undefined;
+      const perPage = clampNumber(input.per_page, 1, 30, 10);
+      const runs = await ghListRecentWorkflowRuns(
+        owner,
+        repo,
+        "v-sandbox.yml",
+        { branch, perPage, auditUserId: ctx.userId },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify({
+          owner,
+          repo,
+          branch,
+          total: runs.length,
+          runs,
+        }),
+        summary: `${runs.length} runs de v-sandbox en ${owner}/${repo}${branch ? "#" + branch : ""}`,
       };
     }
 

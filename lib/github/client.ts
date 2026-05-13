@@ -576,3 +576,161 @@ export async function listPullRequests(
     url: pr.html_url,
   }));
 }
+
+// ─── Workflow / Actions ops (M5 alt — GitHub Actions as sandbox) ──────
+
+export interface WorkflowRunSummary {
+  id: number;
+  name: string | null;
+  status: string | null; // queued | in_progress | completed
+  conclusion: string | null; // success | failure | cancelled | skipped | timed_out | null
+  head_branch: string | null;
+  head_sha: string;
+  url: string;
+  created_at: string;
+  updated_at: string;
+  run_started_at: string | null;
+  run_attempt: number;
+}
+
+/**
+ * Dispatch a workflow_dispatch event. The GitHub API doesn't return
+ * the resulting run_id, so we poll the list of recent runs and pick
+ * the newest one for that workflow + branch. Pollable for ~5s before
+ * giving up — the run usually shows up within 2s.
+ */
+export async function dispatchWorkflow(
+  owner: string,
+  repo: string,
+  workflowFile: string,
+  ref: string,
+  inputs: Record<string, string>,
+  options: { auditUserId?: string } = {},
+): Promise<{ run_id: number | null; ref: string; workflow: string }> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  await octokit.request(
+    "POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches",
+    {
+      owner,
+      repo,
+      workflow_id: workflowFile,
+      ref,
+      inputs,
+    },
+  );
+
+  // Poll for the freshly-created run. GitHub assigns IDs eagerly but
+  // the listing has a small lag.
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    const { data } = await octokit.request(
+      "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
+      { owner, repo, workflow_id: workflowFile, branch: ref, per_page: 5 },
+    );
+    const fresh = data.workflow_runs.find(
+      (r) =>
+        r.event === "workflow_dispatch" &&
+        new Date(r.created_at).getTime() > Date.now() - 30_000,
+    );
+    if (fresh) {
+      return { run_id: fresh.id, ref, workflow: workflowFile };
+    }
+    await new Promise((resolve) => setTimeout(resolve, 800));
+  }
+  return { run_id: null, ref, workflow: workflowFile };
+}
+
+export async function getWorkflowRun(
+  owner: string,
+  repo: string,
+  runId: number,
+  options: { auditUserId?: string } = {},
+): Promise<WorkflowRunSummary> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  const { data } = await octokit.request(
+    "GET /repos/{owner}/{repo}/actions/runs/{run_id}",
+    { owner, repo, run_id: runId },
+  );
+  return {
+    id: data.id,
+    name: data.name ?? null,
+    status: data.status,
+    conclusion: data.conclusion,
+    head_branch: data.head_branch,
+    head_sha: data.head_sha,
+    url: data.html_url,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+    run_started_at: data.run_started_at ?? null,
+    run_attempt: data.run_attempt ?? 1,
+  };
+}
+
+/**
+ * Fetch workflow run logs as plain text. GitHub returns a zip; we
+ * extract just the merged log payload by reading the response as
+ * text. Truncates to 100KB to fit V's context budget.
+ */
+export async function getWorkflowRunLogs(
+  owner: string,
+  repo: string,
+  runId: number,
+  options: { auditUserId?: string; maxBytes?: number } = {},
+): Promise<{ text: string; truncated: boolean; size: number }> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  // The /logs endpoint redirects to a signed S3 URL with the zip.
+  // octokit handles the redirect and returns the binary as arraybuffer.
+  const { data } = await octokit.request(
+    "GET /repos/{owner}/{repo}/actions/runs/{run_id}/logs",
+    {
+      owner,
+      repo,
+      run_id: runId,
+      // Tell octokit to NOT auto-parse; we'll read as binary.
+      request: { redirect: "follow" },
+    },
+  );
+  // data is an ArrayBuffer from octokit for binary responses.
+  const buf = Buffer.isBuffer(data) ? data : Buffer.from(data as ArrayBuffer);
+  // The zip is a binary blob — V doesn't need to parse it; we just
+  // hand back the readable text portions if any. Most callers will
+  // prefer the URL to look at the logs in GitHub UI.
+  const max = options.maxBytes ?? 100_000;
+  const truncated = buf.length > max;
+  const slice = truncated ? buf.subarray(0, max) : buf;
+  // Try to extract readable ASCII; fallback to a hint about size.
+  const ascii = slice.toString("utf8").replace(/[\x00-\x08\x0e-\x1f]/g, "");
+  return { text: ascii, truncated, size: buf.length };
+}
+
+export async function listRecentWorkflowRuns(
+  owner: string,
+  repo: string,
+  workflowFile: string,
+  options: { branch?: string; perPage?: number; auditUserId?: string } = {},
+): Promise<WorkflowRunSummary[]> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  const { data } = await octokit.request(
+    "GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs",
+    {
+      owner,
+      repo,
+      workflow_id: workflowFile,
+      branch: options.branch,
+      per_page: options.perPage ?? 10,
+    },
+  );
+  return data.workflow_runs.map((r) => ({
+    id: r.id,
+    name: r.name ?? null,
+    status: r.status,
+    conclusion: r.conclusion,
+    head_branch: r.head_branch,
+    head_sha: r.head_sha,
+    url: r.html_url,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+    run_started_at: r.run_started_at ?? null,
+    run_attempt: r.run_attempt ?? 1,
+  }));
+}
