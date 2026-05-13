@@ -1,38 +1,17 @@
 /**
  * Routing policy v1 — picks an OpenRouter model for a given task.
- *
- * Inputs the router considers:
- *   - task kind (chat-main, classification, etc.)
- *   - cost preference (cheapest | balanced | premium)
- *   - free-tier override (e.g. when balance is low)
- *   - excluded models (e.g. previously failed in this turn)
- *
- * Output: a primary slug + its fallback_chain from the registry. The
- * caller in /api/forge/run iterates the chain when the primary errors.
- *
- * v2 (M11+) will use a classifier trained on past runs vs success. For
- * now, heuristics + the curated TASK_PREFERENCES table are enough.
  */
 import { MODELS, TASK_PREFERENCES, type TaskKind, type ModelKind } from "./models";
 
 export interface RoutingDecision {
   primary: string;
-  /** All slugs to try in order: [primary, ...fallbacks]. */
   cascade: string[];
   reason: string;
 }
 
 export interface RoutingOptions {
-  /**
-   * 'cheapest'  → prefer cheap-tier, fall back to free
-   * 'balanced'  → prefer balanced-tier (Sonnet, Gemini Pro)
-   * 'premium'   → Opus first
-   * 'free-only' → only kind='free'
-   */
   costPreference?: "cheapest" | "balanced" | "premium" | "free-only";
-  /** Slugs to skip (e.g. failed earlier in this round). */
   excludeSlugs?: ReadonlyArray<string>;
-  /** Force a specific model (overrides everything else). */
   forceSlug?: string;
 }
 
@@ -62,7 +41,6 @@ export function routeFor(
   const excluded = new Set(options.excludeSlugs ?? []);
   const pref = options.costPreference ?? "balanced";
 
-  // Filter by costPreference and exclusion.
   const candidates = preferences
     .map((slug) => MODELS[slug])
     .filter((m): m is NonNullable<typeof m> => !!m)
@@ -70,7 +48,6 @@ export function routeFor(
     .filter((m) => kindMatchesPreference(m.kind, m.tier, pref));
 
   if (candidates.length === 0) {
-    // Fall back to any model in TASK_PREFERENCES not excluded, regardless of preference.
     const looser = preferences
       .map((slug) => MODELS[slug])
       .filter((m): m is NonNullable<typeof m> => !!m)
@@ -102,37 +79,56 @@ function kindMatchesPreference(
   if (pref === "free-only") return kind === "free";
   if (pref === "cheapest") return tier === "cheap";
   if (pref === "premium") return tier === "premium" || tier === "balanced";
-  // 'balanced': any tier OK but bias toward balanced when sorting
   return true;
 }
 
 /**
- * Heuristic to detect a low-stakes side task vs the main chat turn.
- * The caller can use this to pick costPreference automatically.
+ * Detecta el tipo de tarea por el contenido del mensaje.
+ * Ruteamos a modelos baratos cuando no necesitamos Sonnet.
  */
 export function inferTaskKind(promptHint: {
   hasTools?: boolean;
   bytesIn: number;
   isFollowUp?: boolean;
+  messageText?: string;
 }): TaskKind {
+  const text = (promptHint.messageText ?? "").toLowerCase();
+
+  // Código → DeepSeek
+  const codeKeywords = ["fix", "bug", "error", "código", "codigo", "función", "funcion",
+    "archivo", "implementa", "crea", "refactoriza", "patch", "component",
+    "function", "class", "import", "export", "deploy", "build"];
+  if (codeKeywords.some((k) => text.includes(k))) return "code-edit";
+
+  // Resumen → Gemini Flash
+  const summarizeKeywords = ["resume", "resumen", "explica", "describe",
+    "qué hace", "que hace", "cuéntame", "cuentame", "summarize", "explain"];
+  if (summarizeKeywords.some((k) => text.includes(k))) return "summarization";
+
+  // Extracción → Gemini Flash
+  const extractKeywords = ["extrae", "lista", "dame", "muéstrame", "muestrame",
+    "cuáles", "cuales", "enumera", "list", "show me", "extract"];
+  if (extractKeywords.some((k) => text.includes(k))) return "extraction";
+
+  // Razonamiento → Sonnet (vale la pena)
+  const reasonKeywords = ["analiza", "arquitectura", "decisión", "decision",
+    "compara", "pros", "contras", "estrategia", "strategy", "analyze"];
+  if (reasonKeywords.some((k) => text.includes(k))) return "reasoning";
+
   // Long context with tools → main chat
   if (promptHint.hasTools && promptHint.bytesIn > 4_000) return "chat-main";
-  // Very short prompt → likely classification or extraction
+
+  // Very short prompt → classification
   if (promptHint.bytesIn < 500) return "classification";
+
   return "chat-main";
 }
 
-/**
- * Compute the rough running-second cost cap suggestion: which tier the
- * caller should pick given a remaining monthly budget.
- *
- * Trivial table for now; v2 can use historical avg-cost-per-turn.
- */
 export function suggestTierForBudget(
   budgetRemainingUsd: number,
 ): NonNullable<RoutingOptions["costPreference"]> {
   if (budgetRemainingUsd <= 0) return "free-only";
   if (budgetRemainingUsd < 1) return "cheapest";
   if (budgetRemainingUsd < 10) return "balanced";
-  return "balanced"; // 'premium' only when caller asks explicitly
+  return "balanced";
 }
