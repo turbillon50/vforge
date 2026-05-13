@@ -78,19 +78,32 @@ export async function setModelForTask(
   const normalized = normalizeSlug(model);
   const isKnown = !!MODELS[normalized];
   if (!isKnown) {
-    // Not in the curated registry — confirm it exists in OpenRouter's
-    // live catalog. This lets V pick any of the 365+ models OpenRouter
-    // exposes (free or paid) without code changes.
     const looksLikeSlug = normalized.includes("/");
     if (!looksLikeSlug) {
       throw new Error(
         `Model '${model}' doesn't look like a slug (expected 'provider/model-name').`,
       );
     }
-    const valid = await isValidOpenRouterSlug(normalized).catch(() => false);
-    if (!valid) {
-      throw new Error(
-        `Model '${normalized}' not found in OpenRouter catalog. Use openrouter_search_models to find a valid slug.`,
+    // Confirm against the OpenRouter live catalog. Distinguish a real
+    // "not found" from a transient catalog error: if OR is unreachable
+    // (network blip, rate limit, outage), we accept the write rather
+    // than block a legitimate slug — runtime fallback will catch a
+    // truly bad slug via 4xx on the next chat turn (Codex P1).
+    try {
+      const found = await isValidOpenRouterSlug(normalized);
+      if (!found) {
+        throw new Error(
+          `Model '${normalized}' not found in OpenRouter catalog. Use openrouter_search_models to find a valid slug.`,
+        );
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      // The "not found" branch above rethrows our own message verbatim;
+      // anything else is a catalog-side failure we shouldn't punish.
+      if (msg.startsWith("Model '")) throw err;
+      // Best-effort: log and proceed.
+      console.warn(
+        `[agent-config] OpenRouter catalog unreachable while validating '${normalized}': ${msg}. Proceeding optimistically.`,
       );
     }
   }

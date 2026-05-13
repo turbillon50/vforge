@@ -26,12 +26,21 @@ export interface OpenRouterModel {
   name: string;
   description?: string;
   context_length?: number;
-  /** USD per token, NOT per 1M. */
+  /** USD per token (or per-unit for non-token fields). */
   pricing: {
     prompt: number;
     completion: number;
+    /** Per-request flat fee (some providers charge a request fee). */
+    request: number;
+    /** Per-image fee for vision models. */
+    image: number;
+    /** Per web-search call (for browsing-enabled models). */
+    web_search: number;
+    /** Per-token surcharge for internal reasoning chains. */
+    internal_reasoning: number;
   };
   supports_tools: boolean;
+  /** True only if EVERY pricing component is 0 — not just prompt+completion. */
   is_free: boolean;
   /** ex. 'anthropic', 'google', 'meta-llama', 'openai', ... */
   provider: string;
@@ -63,23 +72,50 @@ async function fetchFromOpenRouter(): Promise<Map<string, OpenRouterModel>> {
     name?: string;
     description?: string;
     context_length?: number;
-    pricing?: { prompt?: string | number; completion?: string | number };
+    pricing?: {
+      prompt?: string | number;
+      completion?: string | number;
+      request?: string | number;
+      image?: string | number;
+      web_search?: string | number;
+      internal_reasoning?: string | number;
+    };
     supported_parameters?: string[];
     architecture?: { modality?: string; instruct_type?: string };
   }
   const json = (await resp.json()) as { data: RawModel[] };
   const map = new Map<string, OpenRouterModel>();
+  // Helper: any pricing field can arrive as string or number. Coerce
+  // to number and treat NaN as 0. Negative impossible, but clamp.
+  const num = (v: unknown): number => {
+    const n = Number(v ?? 0);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  };
   for (const m of json.data ?? []) {
-    const promptCost = Number(m.pricing?.prompt ?? 0) || 0;
-    const completionCost = Number(m.pricing?.completion ?? 0) || 0;
+    const pricing = {
+      prompt: num(m.pricing?.prompt),
+      completion: num(m.pricing?.completion),
+      request: num(m.pricing?.request),
+      image: num(m.pricing?.image),
+      web_search: num(m.pricing?.web_search),
+      internal_reasoning: num(m.pricing?.internal_reasoning),
+    };
+    // is_free must consider ALL pricing fields — not just prompt+completion.
+    // A model with $0 tokens but $0.01 per-request is NOT free (Codex P2).
+    const isFree =
+      pricing.prompt === 0 &&
+      pricing.completion === 0 &&
+      pricing.request === 0 &&
+      pricing.image === 0 &&
+      pricing.web_search === 0 &&
+      pricing.internal_reasoning === 0;
     const supportsTools = (m.supported_parameters ?? []).includes("tools");
-    const isFree = promptCost === 0 && completionCost === 0;
     map.set(m.id, {
       id: m.id,
       name: m.name ?? m.id,
       description: m.description,
       context_length: m.context_length,
-      pricing: { prompt: promptCost, completion: completionCost },
+      pricing,
       supports_tools: supportsTools,
       is_free: isFree,
       provider: deriveProvider(m.id),
@@ -178,13 +214,16 @@ export async function searchOpenRouterModels(
         m.id.toLowerCase().includes(q) || m.name.toLowerCase().includes(q),
     );
   }
-  // Cheapest first by default.
-  arr.sort(
-    (a, b) =>
-      a.pricing.prompt * 1_000_000 +
-      a.pricing.completion * 1_000_000 -
-      (b.pricing.prompt * 1_000_000 + b.pricing.completion * 1_000_000),
-  );
+  // Cheapest first by default. Sum per-1M-token cost + a flat-fee
+  // surcharge so a model with $0 tokens but $0.01/request doesn't
+  // sort ahead of a genuinely cheap one (Codex P2).
+  const totalUnitCost = (m: OpenRouterModel): number =>
+    m.pricing.prompt * 1_000_000 +
+    m.pricing.completion * 1_000_000 +
+    // Amortize per-request: assume ~1 call per "unit". This is a sort
+    // heuristic only; estimateCostFromCatalog computes the real number.
+    m.pricing.request * 1_000_000;
+  arr.sort((a, b) => totalUnitCost(a) - totalUnitCost(b));
   const limit = filter.limit ?? 25;
   if (limit > 0) arr = arr.slice(0, limit);
   return arr;
@@ -202,8 +241,13 @@ export async function estimateCostFromCatalog(
 ): Promise<number | null> {
   const model = await getOpenRouterModel(slug);
   if (!model) return null;
+  // Per-token + per-request fees. Image / web_search apply only when
+  // those features are used and aren't counted here (V's chat-main
+  // call neither attaches images nor browses inside this code path).
   const cost =
-    tokensIn * model.pricing.prompt + tokensOut * model.pricing.completion;
+    tokensIn * model.pricing.prompt +
+    tokensOut * model.pricing.completion +
+    model.pricing.request;
   return Number(cost.toFixed(6));
 }
 
