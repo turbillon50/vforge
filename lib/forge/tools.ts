@@ -48,6 +48,7 @@ import { encryptOperatorSecret } from "@/lib/vault/operator-crypto";
 import { invalidateSecretCache } from "@/lib/vault/get-secret";
 import { routeFor } from "@/lib/forge/routing";
 import { MODELS } from "@/lib/forge/models";
+import { searchSkills, getSkillBody } from "@/lib/forge/skills";
 
 export const TOOLS: Tool[] = [
   {
@@ -570,6 +571,42 @@ export const TOOLS: Tool[] = [
           enum: ["today", "24h", "this_month", "last_7d", "last_30d"],
         },
       },
+    },
+  },
+
+  // ─── Skills registry (M16) ────────────────────────────────────────
+  {
+    name: "skill_search",
+    description:
+      "Busca habilidades (skills) que V puede aplicar para un tipo de tarea. Cada skill agrupa un fragment de instrucciones + un set de tools recomendadas. Devuelve top_k matches ranked. Úsala ANTES de empezar a operar cuando Luis describa una tarea recurrente (ej. 'arrancar proyecto', 'rescatar repo', 'apuntar dominio', 'clasificar mis repos'). Después, llama skill_install(skill_id) del top match para cargar las instrucciones completas.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Texto libre. Ej. 'rescatar repo roto', 'apuntar dominio a vercel', 'clasificar todos mis repos en masa'.",
+        },
+        top_k: {
+          type: "number",
+          description: "Cuántas habilidades devolver (1-10, default 5)",
+        },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "skill_install",
+    description:
+      "Carga la habilidad completa: system_prompt fragment + lista de tools requeridas + reglas. Llama esto DESPUÉS de skill_search cuando hayas elegido el skill apropiado. La respuesta contiene instrucciones que debes seguir EXACTAMENTE para el resto del turno. Si el ring_max del skill es > 1, confirma con Luis antes de ejecutar acciones destructivas.",
+    input_schema: {
+      type: "object",
+      properties: {
+        skill_id: {
+          type: "string",
+          description: "id devuelto por skill_search (ej. 'repo-rescue', 'github-pr-author').",
+        },
+      },
+      required: ["skill_id"],
     },
   },
 
@@ -1483,6 +1520,60 @@ async function dispatch(
           fallback_events: fallbackRows[0].n,
         }),
         summary: `${period}: $${Number(totals[0].total_usd).toFixed(4)} / ${totals[0].turns} turns / ${fallbackRows[0].n} fallbacks`,
+      };
+    }
+
+    case "skill_search": {
+      const query = requireString(input.query, "query");
+      const topK = clampNumber(input.top_k, 1, 10, 5);
+      const results = await searchSkills(query, topK);
+      return {
+        ok: true,
+        content: JSON.stringify({
+          query,
+          total: results.length,
+          skills: results.map((s) => ({
+            id: s.id,
+            name: s.name,
+            description: s.description,
+            ring_max: s.ring_max,
+            tags: s.tags,
+            required_tools_preview: s.required_tools.slice(0, 5),
+            score: s.score,
+          })),
+        }),
+        summary: results.length
+          ? `${results.length} skills: ${results.map((s) => s.id).join(", ")}`
+          : `no match for "${query}"`,
+      };
+    }
+    case "skill_install": {
+      const skillId = requireString(input.skill_id, "skill_id");
+      const body = await getSkillBody(skillId, {
+        sessionId: ctx.sessionId,
+        userId: ctx.userId,
+      });
+      if (!body) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: `skill '${skillId}' not found` }),
+          summary: `skill ${skillId} not found`,
+        };
+      }
+      return {
+        ok: true,
+        content: JSON.stringify({
+          installed: true,
+          id: body.id,
+          name: body.name,
+          ring_max: body.ring_max,
+          system_prompt: body.system_prompt,
+          required_tools: body.required_tools,
+          examples: body.examples,
+          instructions:
+            "Las instrucciones de este skill ahora aplican al resto de tu turno. Síguelas exactamente, usando las tools listadas en required_tools. Si ring_max es 2+, pide confirmación a Luis antes de ejecutar acciones destructivas.",
+        }),
+        summary: `installed: ${body.id} (${body.name})`,
       };
     }
 
