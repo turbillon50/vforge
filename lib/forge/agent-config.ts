@@ -16,6 +16,7 @@
  */
 import { sql } from "@/lib/db/client";
 import { MODELS, normalizeSlug, type TaskKind } from "./models";
+import { isValidOpenRouterSlug } from "./openrouter-catalog";
 
 interface ConfigRow {
   task_kind: TaskKind;
@@ -76,11 +77,35 @@ export async function setModelForTask(
   }
   const normalized = normalizeSlug(model);
   const isKnown = !!MODELS[normalized];
-  const looksLikeSlug = normalized.includes("/");
-  if (!isKnown && !looksLikeSlug) {
-    throw new Error(
-      `Model '${model}' doesn't look like a valid OpenRouter slug. Expected something like 'anthropic/claude-haiku-4.5' or 'google/gemini-2.5-flash'.`,
-    );
+  if (!isKnown) {
+    const looksLikeSlug = normalized.includes("/");
+    if (!looksLikeSlug) {
+      throw new Error(
+        `Model '${model}' doesn't look like a slug (expected 'provider/model-name').`,
+      );
+    }
+    // Confirm against the OpenRouter live catalog. Distinguish a real
+    // "not found" from a transient catalog error: if OR is unreachable
+    // (network blip, rate limit, outage), we accept the write rather
+    // than block a legitimate slug — runtime fallback will catch a
+    // truly bad slug via 4xx on the next chat turn (Codex P1).
+    try {
+      const found = await isValidOpenRouterSlug(normalized);
+      if (!found) {
+        throw new Error(
+          `Model '${normalized}' not found in OpenRouter catalog. Use openrouter_search_models to find a valid slug.`,
+        );
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      // The "not found" branch above rethrows our own message verbatim;
+      // anything else is a catalog-side failure we shouldn't punish.
+      if (msg.startsWith("Model '")) throw err;
+      // Best-effort: log and proceed.
+      console.warn(
+        `[agent-config] OpenRouter catalog unreachable while validating '${normalized}': ${msg}. Proceeding optimistically.`,
+      );
+    }
   }
   const updatedBy = options.updatedBy ?? "operator_luis";
   const rows = (await sql`
