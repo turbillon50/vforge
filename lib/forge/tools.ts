@@ -49,6 +49,12 @@ import { invalidateSecretCache } from "@/lib/vault/get-secret";
 import { routeFor } from "@/lib/forge/routing";
 import { MODELS } from "@/lib/forge/models";
 import { searchSkills, getSkillBody } from "@/lib/forge/skills";
+import {
+  runSubagent,
+  recordSubagentRun,
+  listSubagentRoles,
+  type SubagentRole,
+} from "@/lib/forge/subagents";
 
 export const TOOLS: Tool[] = [
   {
@@ -101,7 +107,7 @@ export const TOOLS: Tool[] = [
   {
     name: "github_read_file",
     description:
-      "Lee el contenido de un archivo de un repo (README, package.json, configs, etc.). El contenido se trunca a 5KB para no inflar el contexto.",
+      "Lee el contenido de un archivo de un repo (README, package.json, configs, código). Default devuelve hasta 50KB. Si el archivo es más grande, usa offset + max_bytes para paginar. Pide max_bytes hasta 500KB cuando necesites leer todo un archivo grande de una sola vez (ej. tools.ts que pesa 58KB).",
     input_schema: {
       type: "object",
       properties: {
@@ -114,6 +120,14 @@ export const TOOLS: Tool[] = [
         branch: {
           type: "string",
           description: "Branch a leer (default: el default branch del repo)",
+        },
+        max_bytes: {
+          type: "number",
+          description: "Tope de bytes a devolver (1-500000, default 50000). Sube esto si necesitas leer todo un archivo grande.",
+        },
+        offset: {
+          type: "number",
+          description: "Byte offset desde el que empezar a leer (default 0). Úsalo con max_bytes para paginar archivos enormes.",
         },
       },
       required: ["owner", "repo", "path"],
@@ -574,6 +588,51 @@ export const TOOLS: Tool[] = [
     },
   },
 
+  // ─── Subagents in-process (M18 light) ─────────────────────────────
+  {
+    name: "spawn_subagent",
+    description:
+      "Despacha una tarea a un subagente especializado con su propio system prompt + modelo. Útil cuando V quiere descargar trabajo paralelo: clasificar 50 repos con Gemini Flash, revisar 5 archivos con Sonnet, sumarizar 10 docs largos. Llama spawn_subagent N veces en la misma tool round y el dispatcher los ejecuta en paralelo (Promise.all). Cada subagente NO tiene tools propios — V le pasa el contexto necesario en task. Roles disponibles: 'researcher', 'reviewer', 'coder', 'tester', 'categorizer', 'summarizer', 'extractor', 'translator'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        role: {
+          type: "string",
+          enum: [
+            "researcher",
+            "reviewer",
+            "coder",
+            "tester",
+            "categorizer",
+            "summarizer",
+            "extractor",
+            "translator",
+          ],
+          description: "Rol del subagente. Cada uno trae su system prompt y modelo default.",
+        },
+        task: {
+          type: "string",
+          description: "Tarea concreta + todo el contexto que el subagente necesita (texto, código, README, etc.). Incluye el output esperado.",
+        },
+        model: {
+          type: "string",
+          description: "Override del modelo OpenRouter (ej. 'google/gemini-2.5-flash'). Opcional — cada rol trae un default.",
+        },
+        max_tokens: {
+          type: "number",
+          description: "Tope de tokens del output (32-4000). Opcional — cada rol trae un default.",
+        },
+      },
+      required: ["role", "task"],
+    },
+  },
+  {
+    name: "list_subagent_roles",
+    description:
+      "Lista los roles de subagente disponibles con su modelo default y descripción. Úsala cuando no recuerdes los roles exactos antes de spawn_subagent.",
+    input_schema: { type: "object", properties: {} },
+  },
+
   // ─── Skills registry (M16) ────────────────────────────────────────
   {
     name: "skill_search",
@@ -759,23 +818,31 @@ async function dispatch(
         typeof input.branch === "string" && input.branch.length > 0
           ? input.branch
           : undefined;
+      const maxBytes = clampNumber(input.max_bytes, 1, 500_000, 50_000);
+      const offset = clampNumber(input.offset, 0, 50_000_000, 0);
       const file = await getFileContent(owner, repo, path, {
         branch,
         auditUserId: ctx.userId,
       });
-      const MAX_BYTES = 5000;
-      const truncated = file.content.length > MAX_BYTES;
-      const slice = truncated ? file.content.slice(0, MAX_BYTES) : file.content;
+      const total = file.content.length;
+      const end = Math.min(offset + maxBytes, total);
+      const slice = file.content.slice(offset, end);
+      const truncated = end < total;
+      const nextOffset = truncated ? end : null;
       return {
         ok: true,
         content: JSON.stringify({
           path,
           size: file.size,
           sha: file.sha,
+          total_bytes: total,
+          offset,
+          returned_bytes: slice.length,
           truncated,
+          next_offset: nextOffset,
           content: slice,
         }),
-        summary: `${path} (${file.size} B${truncated ? ", truncado a 5KB" : ""})`,
+        summary: `${path} (${file.size} B${truncated ? `, range ${offset}-${end} of ${total}, more available — next_offset=${nextOffset}` : ", full"})`,
       };
     }
 
@@ -1520,6 +1587,55 @@ async function dispatch(
           fallback_events: fallbackRows[0].n,
         }),
         summary: `${period}: $${Number(totals[0].total_usd).toFixed(4)} / ${totals[0].turns} turns / ${fallbackRows[0].n} fallbacks`,
+      };
+    }
+
+    case "spawn_subagent": {
+      const role = requireString(input.role, "role") as SubagentRole;
+      const task = requireString(input.task, "task");
+      const model =
+        typeof input.model === "string" && input.model.length > 0
+          ? input.model
+          : undefined;
+      const maxTokens =
+        typeof input.max_tokens === "number"
+          ? Math.max(32, Math.min(4000, input.max_tokens))
+          : undefined;
+      const result = await runSubagent({
+        role,
+        task,
+        model,
+        maxTokens,
+        userId: ctx.userId,
+        sessionId: ctx.sessionId,
+      });
+      // Fire-and-forget persistence for the cost dashboard.
+      recordSubagentRun(result, {
+        userId: ctx.userId,
+        sessionId: ctx.sessionId,
+        task,
+      }).catch(() => {});
+      return {
+        ok: true,
+        content: JSON.stringify({
+          role: result.role,
+          model: result.model,
+          content: result.content,
+          tokens_in: result.tokens_in,
+          tokens_out: result.tokens_out,
+          cost_usd: result.cost_usd,
+          duration_ms: result.duration_ms,
+          finish_reason: result.finish_reason,
+        }),
+        summary: `${result.role} via ${result.model}: ${result.tokens_in}+${result.tokens_out} tok ($${result.cost_usd.toFixed(6)}, ${result.duration_ms}ms)`,
+      };
+    }
+    case "list_subagent_roles": {
+      const roles = listSubagentRoles();
+      return {
+        ok: true,
+        content: JSON.stringify({ roles }),
+        summary: `${roles.length} subagent roles available`,
       };
     }
 
