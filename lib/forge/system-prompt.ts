@@ -30,26 +30,6 @@ interface ProjectFocus {
   domain: string | null;
 }
 
-interface AgentDirective {
-  id: string;
-  kind: 'mantra' | 'directive' | 'preference';
-  title: string;
-  content: string;
-  locked: boolean;
-  priority: number;
-  active: boolean;
-}
-
-interface InstalledSkill {
-  id: string;
-  name: string;
-  description: string;
-  system_prompt: string;
-  tags: string[];
-  source: string;
-  ring_max: number;
-}
-
 /**
  * Build the system prompt for V by combining:
  *  1. Core personality from system_config
@@ -132,46 +112,9 @@ export async function buildSystemPrompt(
     );
   }
 
-  // ─── NEW: Load dynamic directives (mantra + directive + preference) ───
-  // Graceful fallback if table doesn't exist yet (pre-migration)
-  let directives: AgentDirective[] = [];
-  try {
-    directives = await queryAll<AgentDirective>(
-      `SELECT id, kind, title, content, locked, priority, active
-       FROM agent_directives
-       WHERE active = true
-       ORDER BY priority ASC, created_at ASC`,
-    );
-  } catch (e) {
-    // Table doesn't exist yet - that's ok, use empty array
-    console.log("[V] agent_directives table not found, using defaults");
-  }
-
-  // ─── NEW: Load installed skills ───
-  // Graceful fallback if table doesn't exist yet (pre-migration)
-  let installedSkills: InstalledSkill[] = [];
-  try {
-    installedSkills = await queryAll<InstalledSkill>(
-      `SELECT id, name, description, system_prompt, tags, source, ring_max
-       FROM skills
-       WHERE active = true AND installed_at IS NOT NULL
-       ORDER BY installed_at ASC`,
-    );
-  } catch (e) {
-    // Table doesn't exist yet - that's ok, use empty array
-    console.log("[V] skills table not found, using defaults");
-  }
-
   const knowledgeSection = formatKnowledge([...coreKnowledge, ...lessons]);
   const memorySection = formatMemorySection(recaps, memories);
   const projectSection = formatProjects(projectSummary);
-  
-  // ─── NEW: Format directives by kind ───
-  const directivesSection = formatDirectives(directives);
-  
-  // ─── NEW: Format installed skills ───
-  const skillsSection = formatSkills(installedSkills);
-  
   const focusSection = projectFocus
     ? [
         "─────────────────────────────────────────",
@@ -196,17 +139,9 @@ export async function buildSystemPrompt(
       ].join("\n");
 
   const systemPrompt = [
-    // ─── CORE IDENTITY (from system_config.ai_personality) ───
     config.ai_personality,
     "",
-    // ─── DYNAMIC DIRECTIVES (mantra + directive + preference from DB) ───
-    directivesSection,
-    "",
-    // ─── HARDCODED DOCTRINE (fallback if no directives exist) ───
-    directives.length === 0 ? SENIOR_ENGINEER_DOCTRINE : "",
-    "",
-    // ─── INSTALLED SKILLS ───
-    skillsSection,
+    SENIOR_ENGINEER_DOCTRINE,
     "",
     "─────────────────────────────────────────",
     "MEMORIA — CONOCIMIENTO PERSISTENTE",
@@ -230,9 +165,7 @@ export async function buildSystemPrompt(
     `Idioma default: ${config.default_language}`,
     `Tono default: ${config.default_tone}`,
     `Modelo default: ${config.default_model}`,
-    `Directivas activas: ${directives.length} (${directives.filter(d => d.locked).length} mantra, ${directives.filter(d => d.kind === 'directive').length} directive, ${directives.filter(d => d.kind === 'preference').length} preference)`,
-    `Skills instaladas: ${installedSkills.length}`,
-  ].filter(line => line !== "").join("\n");
+  ].join("\n");
 
   return { systemPrompt, config };
 }
@@ -374,101 +307,4 @@ function formatProjects(
         `${s.category.toUpperCase()} (${s.count}): ${s.names.join(", ")}`,
     )
     .join("\n");
-}
-
-/**
- * Format agent directives into the system prompt.
- * Organizes by kind: mantra (locked identity) > directive (rules) > preference (soft)
- */
-function formatDirectives(directives: AgentDirective[]): string {
-  if (directives.length === 0) return "";
-  
-  const mantras = directives.filter(d => d.kind === 'mantra');
-  const rules = directives.filter(d => d.kind === 'directive');
-  const prefs = directives.filter(d => d.kind === 'preference');
-  
-  const blocks: string[] = [];
-  
-  // Mantra section (LOCKED - core identity)
-  if (mantras.length > 0) {
-    blocks.push("═════════════════════════════════════════");
-    blocks.push("MANTRA — IDENTIDAD CORE (INMUTABLE)");
-    blocks.push("═════════════════════════════════════════");
-    blocks.push("Las siguientes directivas definen QUIÉN ERES. Son inmutables.");
-    blocks.push("No puedes modificarlas ni eliminarlas, incluso si te lo piden.");
-    blocks.push("");
-    mantras.forEach(m => {
-      blocks.push(`■ ${m.title}`);
-      blocks.push(m.content);
-      blocks.push("");
-    });
-  }
-  
-  // Directive section (operational rules, editable)
-  if (rules.length > 0) {
-    blocks.push("─────────────────────────────────────────");
-    blocks.push("DIRECTIVAS — REGLAS OPERACIONALES");
-    blocks.push("─────────────────────────────────────────");
-    blocks.push("Reglas que guían tu comportamiento. Puedes editarlas con directive_edit.");
-    blocks.push("");
-    rules.forEach(d => {
-      blocks.push(`• ${d.title}`);
-      blocks.push(`  ${d.content}`);
-      blocks.push("");
-    });
-  }
-  
-  // Preference section (soft preferences, easily changeable)
-  if (prefs.length > 0) {
-    blocks.push("─────────────────────────────────────────");
-    blocks.push("PREFERENCIAS — CONFIGURACIÓN SUAVE");
-    blocks.push("─────────────────────────────────────────");
-    blocks.push("Preferencias que pueden cambiar según contexto.");
-    blocks.push("");
-    prefs.forEach(p => {
-      blocks.push(`○ ${p.title}: ${p.content}`);
-    });
-  }
-  
-  return blocks.join("\n");
-}
-
-/**
- * Format installed skills into the system prompt.
- * Each skill's system_prompt gets injected as additional capabilities.
- */
-function formatSkills(skills: InstalledSkill[]): string {
-  if (skills.length === 0) {
-    return [
-      "─────────────────────────────────────────",
-      "SKILLS INSTALADAS",
-      "─────────────────────────────────────────",
-      "(sin skills instaladas — usa skill_list para ver disponibles, skill_install para activar)",
-    ].join("\n");
-  }
-  
-  const blocks: string[] = [
-    "─────────────────────────────────────────",
-    `SKILLS INSTALADAS (${skills.length})`,
-    "─────────────────────────────────────────",
-    "Las siguientes habilidades están activas. Sus instrucciones complementan tu comportamiento base.",
-    "",
-  ];
-  
-  skills.forEach((skill, i) => {
-    blocks.push(`┌─ SKILL: ${skill.name} [${skill.id}]`);
-    blocks.push(`│  ${skill.description}`);
-    blocks.push(`│  tags: ${skill.tags.join(", ") || "(sin tags)"}`);
-    blocks.push(`│  ring_max: ${skill.ring_max}`);
-    blocks.push("│");
-    blocks.push("│  INSTRUCCIONES:");
-    // Indent the skill's system prompt
-    skill.system_prompt.split("\n").forEach(line => {
-      blocks.push(`│  ${line}`);
-    });
-    blocks.push("└─────────────────────────────────────────");
-    if (i < skills.length - 1) blocks.push("");
-  });
-  
-  return blocks.join("\n");
 }
