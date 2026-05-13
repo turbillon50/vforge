@@ -25,6 +25,9 @@ import {
   deleteFile as ghDeleteFile,
   createBranch as ghCreateBranch,
   createPullRequest as ghCreatePullRequest,
+  listDirectory as ghListDirectory,
+  searchCode as ghSearchCode,
+  listPullRequests as ghListPullRequests,
 } from "@/lib/github/client";
 import {
   listProjects as vercelListProjects,
@@ -100,11 +103,11 @@ export const TOOLS: Tool[] = [
   {
     name: "github_read_file",
     description:
-      "Lee el contenido de un archivo de un repo (README, package.json, configs, etc.). El contenido se trunca a 5KB para no inflar el contexto.",
+      "Lee el contenido de un archivo de un repo (README, package.json, configs, código fuente). El contenido se trunca a 100KB para no inflar el contexto. Si Luis no especifica owner, asume 'turbillon50'.",
     input_schema: {
       type: "object",
       properties: {
-        owner: { type: "string" },
+        owner: { type: "string", description: "Default 'turbillon50' si no se especifica." },
         repo: { type: "string" },
         path: {
           type: "string",
@@ -115,7 +118,71 @@ export const TOOLS: Tool[] = [
           description: "Branch a leer (default: el default branch del repo)",
         },
       },
-      required: ["owner", "repo", "path"],
+      required: ["repo", "path"],
+    },
+  },
+  {
+    name: "github_list_directory",
+    description:
+      "Lista los archivos y carpetas dentro de un path de un repo SIN descargar el contenido. Devuelve { name, type (file|dir|submodule|symlink), size, path, sha } para cada entrada. Úsala para explorar la estructura de un repo, o antes de leer múltiples archivos para no adivinar paths. Si Luis no especifica owner, asume 'turbillon50'. path='/' o vacío significa la raíz del repo.",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string", description: "Default 'turbillon50' si no se especifica." },
+        repo: { type: "string" },
+        path: {
+          type: "string",
+          description: "Ruta de la carpeta. Default '/' (raíz).",
+        },
+        branch: {
+          type: "string",
+          description: "Branch a listar (default: el default branch del repo).",
+        },
+      },
+      required: ["repo"],
+    },
+  },
+  {
+    name: "github_search_code",
+    description:
+      "Busca texto/código dentro de los archivos de un repo. Devuelve { path, repo, score, fragments } con hasta 3 fragmentos de texto alrededor de cada match. Útil cuando Luis pregunta 'dónde se usa X' o 'qué archivos mencionan Y' sin saber el path exacto. Rate limit GitHub: 30 req/min. Si Luis no especifica owner, asume 'turbillon50'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string", description: "Default 'turbillon50' si no se especifica." },
+        repo: { type: "string" },
+        query: {
+          type: "string",
+          description: "Texto a buscar. Sintaxis de GitHub code search (ej. 'language:ts useEffect').",
+        },
+        per_page: {
+          type: "number",
+          description: "Máximo de hits a devolver (1-50, default 20).",
+        },
+      },
+      required: ["repo", "query"],
+    },
+  },
+  {
+    name: "github_list_pull_requests",
+    description:
+      "Lista los Pull Requests de un repo. Devuelve { number, title, state, draft, head, base, user, created_at, updated_at, url } por PR. Útil para ver qué PRs hay abiertos, quiénes los autoraron, y si están en draft. Si Luis no especifica owner, asume 'turbillon50'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string", description: "Default 'turbillon50' si no se especifica." },
+        repo: { type: "string" },
+        state: {
+          type: "string",
+          enum: ["open", "closed", "all"],
+          description: "Estado de los PRs. Default 'open'.",
+        },
+        per_page: {
+          type: "number",
+          description: "Máximo de PRs a devolver (1-100, default 30).",
+        },
+      },
+      required: ["repo"],
     },
   },
 
@@ -689,7 +756,7 @@ async function dispatch(
       };
     }
     case "github_get_repo": {
-      const owner = requireString(input.owner, "owner");
+      const owner = ownerOrDefault(input.owner);
       const repo = requireString(input.repo, "repo");
       const detail = await getRepo(owner, repo, {
         auditUserId: ctx.userId,
@@ -701,7 +768,7 @@ async function dispatch(
       };
     }
     case "github_list_commits": {
-      const owner = requireString(input.owner, "owner");
+      const owner = ownerOrDefault(input.owner);
       const repo = requireString(input.repo, "repo");
       const limit = clampNumber(input.limit, 1, 50, 20);
       const commits = await listRecentCommits(owner, repo, {
@@ -715,7 +782,7 @@ async function dispatch(
       };
     }
     case "github_read_file": {
-      const owner = requireString(input.owner, "owner");
+      const owner = ownerOrDefault(input.owner);
       const repo = requireString(input.repo, "repo");
       const path = requireString(input.path, "path");
       const branch =
@@ -726,7 +793,7 @@ async function dispatch(
         branch,
         auditUserId: ctx.userId,
       });
-      const MAX_BYTES = 5000;
+      const MAX_BYTES = 100_000;
       const truncated = file.content.length > MAX_BYTES;
       const slice = truncated ? file.content.slice(0, MAX_BYTES) : file.content;
       return {
@@ -738,7 +805,80 @@ async function dispatch(
           truncated,
           content: slice,
         }),
-        summary: `${path} (${file.size} B${truncated ? ", truncado a 5KB" : ""})`,
+        summary: `${path} (${file.size} B${truncated ? ", truncado a 100KB" : ""})`,
+      };
+    }
+    case "github_list_directory": {
+      const owner = ownerOrDefault(input.owner);
+      const repo = requireString(input.repo, "repo");
+      const path =
+        typeof input.path === "string" && input.path.length > 0
+          ? input.path
+          : "/";
+      const branch =
+        typeof input.branch === "string" && input.branch.length > 0
+          ? input.branch
+          : undefined;
+      const entries = await ghListDirectory(owner, repo, path, {
+        branch,
+        auditUserId: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify({
+          owner,
+          repo,
+          path,
+          total: entries.length,
+          entries,
+        }),
+        summary: `${entries.length} en ${owner}/${repo}:${path}`,
+      };
+    }
+    case "github_search_code": {
+      const owner = ownerOrDefault(input.owner);
+      const repo = requireString(input.repo, "repo");
+      const query = requireString(input.query, "query");
+      const perPage = clampNumber(input.per_page, 1, 50, 20);
+      const hits = await ghSearchCode(owner, repo, query, {
+        perPage,
+        auditUserId: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify({
+          owner,
+          repo,
+          query,
+          total: hits.length,
+          hits,
+        }),
+        summary: `${hits.length} hits para "${query.slice(0, 30)}" en ${owner}/${repo}`,
+      };
+    }
+    case "github_list_pull_requests": {
+      const owner = ownerOrDefault(input.owner);
+      const repo = requireString(input.repo, "repo");
+      const state =
+        input.state === "closed" || input.state === "all"
+          ? (input.state as "closed" | "all")
+          : "open";
+      const perPage = clampNumber(input.per_page, 1, 100, 30);
+      const prs = await ghListPullRequests(owner, repo, {
+        state,
+        perPage,
+        auditUserId: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify({
+          owner,
+          repo,
+          state,
+          total: prs.length,
+          pull_requests: prs,
+        }),
+        summary: `${prs.length} PRs ${state} en ${owner}/${repo}`,
       };
     }
 

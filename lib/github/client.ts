@@ -446,3 +446,133 @@ export async function createPullRequest(
     base: data.base.ref,
   };
 }
+
+// ─── Read ops added in claude/expand-capabilities ─────────────────────
+
+export interface DirectoryEntry {
+  name: string;
+  type: "file" | "dir" | "submodule" | "symlink";
+  size: number;
+  path: string;
+  sha: string;
+}
+
+/**
+ * List the contents of a directory in a repo without downloading file
+ * bodies. For files at `path`, the API returns a single object; for
+ * directories, an array. We normalize both to an array.
+ */
+export async function listDirectory(
+  owner: string,
+  repo: string,
+  path: string,
+  options: { branch?: string; auditUserId?: string } = {},
+): Promise<DirectoryEntry[]> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  // The API rejects a leading "/", so strip it; "/" means repo root.
+  const normalizedPath = path === "/" || path === "" ? "" : path.replace(/^\/+/, "");
+  const { data } = await octokit.request(
+    "GET /repos/{owner}/{repo}/contents/{path}",
+    {
+      owner,
+      repo,
+      path: normalizedPath,
+      ref: options.branch,
+    },
+  );
+  const entries = Array.isArray(data) ? data : [data];
+  return entries.map((e) => ({
+    name: e.name,
+    type: e.type as DirectoryEntry["type"],
+    size: e.size ?? 0,
+    path: e.path,
+    sha: e.sha,
+  }));
+}
+
+export interface CodeSearchHit {
+  path: string;
+  repo: string;
+  score: number;
+  /** Up to 3 short text fragments around the match. */
+  fragments: string[];
+}
+
+/**
+ * Search code inside a repo using GitHub's search API. The query goes
+ * to GET /search/code with a `repo:owner/name` qualifier appended so
+ * results stay scoped. Rate-limited at 30 req/min by GitHub.
+ */
+export async function searchCode(
+  owner: string,
+  repo: string,
+  query: string,
+  options: { perPage?: number; auditUserId?: string } = {},
+): Promise<CodeSearchHit[]> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  const q = `${query} repo:${owner}/${repo}`;
+  const { data } = await octokit.request("GET /search/code", {
+    q,
+    per_page: options.perPage ?? 20,
+    headers: {
+      // text-match returns the fragments around each hit
+      accept: "application/vnd.github.text-match+json",
+    },
+  });
+  return (data.items ?? []).map((item) => ({
+    path: item.path,
+    repo: item.repository.full_name,
+    score: item.score,
+    fragments: (item.text_matches ?? [])
+      .slice(0, 3)
+      .map((t) => (t.fragment ?? "").slice(0, 240)),
+  }));
+}
+
+export interface PullRequestSummary {
+  number: number;
+  title: string;
+  state: string;
+  draft: boolean;
+  head: string;
+  base: string;
+  user: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  url: string;
+}
+
+/**
+ * List Pull Requests in a repo, filtered by state.
+ */
+export async function listPullRequests(
+  owner: string,
+  repo: string,
+  options: {
+    state?: "open" | "closed" | "all";
+    perPage?: number;
+    auditUserId?: string;
+  } = {},
+): Promise<PullRequestSummary[]> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  const { data } = await octokit.request("GET /repos/{owner}/{repo}/pulls", {
+    owner,
+    repo,
+    state: options.state ?? "open",
+    per_page: options.perPage ?? 30,
+    sort: "updated",
+    direction: "desc",
+  });
+  return data.map((pr) => ({
+    number: pr.number,
+    title: pr.title,
+    state: pr.state,
+    draft: pr.draft ?? false,
+    head: pr.head.ref,
+    base: pr.base.ref,
+    user: pr.user?.login ?? null,
+    created_at: pr.created_at ?? null,
+    updated_at: pr.updated_at ?? null,
+    url: pr.html_url,
+  }));
+}
