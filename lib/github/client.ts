@@ -730,6 +730,37 @@ export async function getWorkflowRunLogs(
   };
 }
 
+export async function createRepo(
+  input: {
+    name: string;
+    description?: string;
+    private?: boolean;
+    auto_init?: boolean;
+  },
+  options: { auditUserId?: string } = {},
+): Promise<{
+  full_name: string;
+  url: string;
+  clone_url: string;
+  private: boolean;
+  default_branch: string;
+}> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  const { data } = await octokit.request("POST /user/repos", {
+    name: input.name,
+    description: input.description ?? "",
+    private: input.private ?? true,
+    auto_init: input.auto_init ?? true,
+  });
+  return {
+    full_name: data.full_name,
+    url: data.html_url,
+    clone_url: data.clone_url,
+    private: data.private,
+    default_branch: data.default_branch,
+  };
+}
+
 export async function listRecentWorkflowRuns(
   owner: string,
   repo: string,

@@ -32,6 +32,7 @@ import {
   getWorkflowRun as ghGetWorkflowRun,
   getWorkflowRunLogs as ghGetWorkflowRunLogs,
   listRecentWorkflowRuns as ghListRecentWorkflowRuns,
+  createRepo as ghCreateRepo,
 } from "@/lib/github/client";
 import {
   listProjects as vercelListProjects,
@@ -200,6 +201,33 @@ export const TOOLS: Tool[] = [
   // Por AGENTS.md §2: escribir a la rama 'main' es Ring 2 (destructivo
   // potencial sobre prod). El dispatcher rechaza writes a main salvo
   // que el caller pase allow_main=true explícito.
+  {
+    name: "github_create_repo",
+    description:
+      "Crea un repositorio nuevo en la cuenta de GitHub del operador (turbillon50). Por default: privado, con README inicial (auto_init=true). Devuelve { full_name, url, clone_url, default_branch }. Úsala al inicio de un proyecto nuevo antes de crear archivos con github_create_file.",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: "Nombre del repo (slug, ej. 'mi-proyecto'). Sin espacios.",
+        },
+        description: {
+          type: "string",
+          description: "Descripción corta del repo.",
+        },
+        private: {
+          type: "boolean",
+          description: "true = privado (default), false = público.",
+        },
+        auto_init: {
+          type: "boolean",
+          description: "Inicializar con README vacío (default true). Necesario para poder crear archivos de inmediato.",
+        },
+      },
+      required: ["name"],
+    },
+  },
   {
     name: "github_create_file",
     description:
@@ -1263,6 +1291,24 @@ async function dispatch(
     }
 
     // ─── GitHub write ────────────────────────────────────────────────
+    case "github_create_repo": {
+      const name = requireString(input.name, "name");
+      const result = await ghCreateRepo(
+        {
+          name,
+          description: typeof input.description === "string" ? input.description : undefined,
+          private: typeof input.private === "boolean" ? input.private : true,
+          auto_init: typeof input.auto_init === "boolean" ? input.auto_init : true,
+        },
+        { auditUserId: ctx.userId },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify(result),
+        summary: `repo creado: ${result.full_name} (${result.private ? "privado" : "público"})`,
+      };
+    }
+
     case "github_create_file": {
       const owner = ownerOrDefault(input.owner);
       const repo = requireString(input.repo, "repo");
