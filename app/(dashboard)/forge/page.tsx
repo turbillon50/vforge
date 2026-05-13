@@ -250,6 +250,59 @@ export default function ForgePage() {
     return welcomeForProject(p?.name ?? s);
   }
 
+  /**
+   * Cross-device sync (poor man's realtime).
+   * Polls /api/forge/conversations every 5s while the tab is visible
+   * and we're NOT currently streaming locally (would overwrite the
+   * in-flight turn). When the server has more persisted turns than we
+   * have locally, we re-render from server. This makes phone and
+   * laptop converge to the same conversation when both are open.
+   *
+   * Upgrade path: SSE 'conversation_updated' event from the server
+   * (M9.5 with Trigger.dev), or Liveblocks rooms (M13).
+   */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const POLL_MS = 5000;
+    let cancelled = false;
+
+    async function poll() {
+      if (cancelled) return;
+      if (streaming || hydrating) return;
+      if (document.visibilityState !== "visible") return;
+      const sid = sessionIdRef.current;
+      if (!sid) return;
+      try {
+        const res = await fetch(
+          `/api/forge/conversations?sessionId=${encodeURIComponent(sid)}&limit=100`,
+          { cache: "no-store" },
+        );
+        if (!res.ok) return;
+        const { turns } = (await res.json()) as { turns: PersistedTurn[] };
+        const localPersistedCount = messages.filter(
+          (m) => m.id !== "welcome",
+        ).length;
+        if (turns.length > localPersistedCount) {
+          setMessages(
+            turns.map((t) => ({
+              id: t.id,
+              role: t.role === "assistant" ? "forge" : "user",
+              content: t.content,
+            })),
+          );
+        }
+      } catch {
+        /* network blip — try again next tick */
+      }
+    }
+
+    const id = setInterval(poll, POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [streaming, hydrating, messages]);
+
   async function newSession() {
     const previousSessionId = sessionIdRef.current;
     if (previousSessionId) {
@@ -461,24 +514,45 @@ export default function ForgePage() {
               );
             } else if (evt.type === "tool_use_start") {
               setCurrentTool(evt.name);
-              const marker = `\n\n_🔧 ${toolDisplayName(evt.name)}…_\n\n`;
+              // Push a new step (loading) onto the assistant message
+              // instead of inlining the marker into the content. The
+              // ChatMessage component renders steps with explicit icons
+              // (loading orb, ✓ done, ⚠ failed).
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === assistantId
-                    ? { ...m, content: m.content + marker }
+                    ? {
+                        ...m,
+                        steps: [
+                          ...(m.steps ?? []),
+                          {
+                            text: toolDisplayName(evt.name),
+                            status: "loading",
+                          },
+                        ],
+                      }
                     : m,
                 ),
               );
             } else if (evt.type === "tool_use_result") {
               setCurrentTool(null);
-              const icon = evt.ok ? "✓" : "⚠";
-              const marker = `_${icon} ${evt.summary}_\n\n`;
+              // Mark the most recent loading step as done/failed and
+              // surface the summary returned by the tool.
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantId
-                    ? { ...m, content: m.content + marker }
-                    : m,
-                ),
+                prev.map((m) => {
+                  if (m.id !== assistantId) return m;
+                  const steps = [...(m.steps ?? [])];
+                  for (let i = steps.length - 1; i >= 0; i -= 1) {
+                    if (steps[i].status === "loading") {
+                      steps[i] = {
+                        text: `${steps[i].text} — ${evt.summary}`,
+                        status: evt.ok ? "done" : "failed",
+                      };
+                      break;
+                    }
+                  }
+                  return { ...m, steps };
+                }),
               );
             } else if (evt.type === "error") {
               setCurrentTool(null);

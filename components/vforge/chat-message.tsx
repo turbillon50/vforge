@@ -11,7 +11,7 @@ export type MessageRole = "user" | "forge";
 
 export interface StepItem {
   text: string;
-  status: "done" | "pending" | "loading";
+  status: "done" | "pending" | "loading" | "failed";
 }
 
 export interface ChatMessageData {
@@ -130,28 +130,34 @@ export function ChatMessage({ message, onAction }: ChatMessageProps) {
         <div className="text-sm text-vf-fg space-y-3">
           {message.content && <MarkdownContent>{message.content}</MarkdownContent>}
 
-          {/* Steps list */}
+          {/* Steps list — tool calls rendered as visible icon list. */}
           {message.steps && message.steps.length > 0 && (
-            <ul className="space-y-2">
+            <ul className="space-y-1.5 my-2">
               {message.steps.map((step, idx) => (
                 <li key={idx} className="flex items-center gap-2">
                   {step.status === "done" && (
                     <Check className="w-4 h-4 text-vf-green flex-shrink-0" />
                   )}
                   {step.status === "loading" && (
-                    <ForgeOrb size={20} state="loading" glow={false} className="flex-shrink-0 mr-0.5" />
+                    <ForgeOrb size={18} state="loading" glow={false} className="flex-shrink-0" />
                   )}
                   {step.status === "pending" && (
                     <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-vf-fg-2" />
                     </span>
                   )}
+                  {step.status === "failed" && (
+                    <span className="w-4 h-4 flex items-center justify-center flex-shrink-0 text-vf-error font-bold">
+                      ⚠
+                    </span>
+                  )}
                   <span
                     className={cn(
-                      "text-sm",
-                      step.status === "done" && "text-vf-fg",
+                      "text-xs font-mono",
+                      step.status === "done" && "text-vf-fg-1",
                       step.status === "loading" && "text-vf-fg",
-                      step.status === "pending" && "text-vf-fg-2"
+                      step.status === "pending" && "text-vf-fg-2",
+                      step.status === "failed" && "text-vf-error"
                     )}
                   >
                     {step.text}
