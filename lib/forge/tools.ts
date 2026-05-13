@@ -800,6 +800,49 @@ export const TOOLS: Tool[] = [
     },
   },
 
+  {
+    name: "directive_update",
+    description:
+      "Actualiza el título o contenido de una directiva existente (directive o preference). NUNCA puedes modificar mantras (locked=true). Úsala para refinar una regla que ya creaste.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "UUID de la directiva a actualizar.",
+        },
+        title: {
+          type: "string",
+          description: "Nuevo título (opcional).",
+        },
+        content: {
+          type: "string",
+          description: "Nuevo contenido (opcional).",
+        },
+        priority: {
+          type: "number",
+          description: "Nueva prioridad (opcional).",
+        },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "directive_delete",
+    description:
+      "Elimina una directiva (directive o preference). NUNCA puedes eliminar mantras (locked=true). El trigger de la DB rechazará intentos de borrar mantras.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "UUID de la directiva a eliminar.",
+        },
+      },
+      required: ["id"],
+    },
+  },
+
   // ─── Sandbox vía GitHub Actions (M5 alt) ────────────────────────
   {
     name: "github_run_check",
@@ -2100,6 +2143,53 @@ async function dispatch(
           directive: rows[0],
         }),
         summary: `directiva creada: ${rows[0].title}`,
+      };
+    }
+
+    case "directive_update": {
+      const id = requireString(input.id, "id");
+      const updates: Record<string, unknown> = {};
+      if (typeof input.title === "string" && input.title.length > 0)
+        updates.title = input.title;
+      if (typeof input.content === "string" && input.content.length > 0)
+        updates.content = input.content;
+      if (typeof input.priority === "number")
+        updates.priority = input.priority;
+      if (Object.keys(updates).length === 0) {
+        throw new Error("Provide at least one field to update: title, content, or priority.");
+      }
+      // Let the DB trigger reject updates to locked=true rows
+      const rows = (await sql`
+        UPDATE agent_directives
+        SET
+          title      = COALESCE(${updates.title as string | null ?? null}, title),
+          content    = COALESCE(${updates.content as string | null ?? null}, content),
+          priority   = COALESCE(${updates.priority as number | null ?? null}, priority),
+          updated_at = now()
+        WHERE id = ${id} AND active = true
+        RETURNING id, kind, title, locked, priority
+      `) as Array<{ id: string; kind: string; title: string; locked: boolean; priority: number }>;
+      if (rows.length === 0) throw new Error(`Directive '${id}' not found or is inactive.`);
+      return {
+        ok: true,
+        content: JSON.stringify({ updated: true, directive: rows[0] }),
+        summary: `directiva actualizada: ${rows[0].title}`,
+      };
+    }
+
+    case "directive_delete": {
+      const id = requireString(input.id, "id");
+      // DB trigger will raise an exception for locked=true rows
+      const rows = (await sql`
+        DELETE FROM agent_directives
+        WHERE id = ${id}
+        RETURNING id, title, locked
+      `) as Array<{ id: string; title: string; locked: boolean }>;
+      if (rows.length === 0) throw new Error(`Directive '${id}' not found.`);
+      return {
+        ok: true,
+        content: JSON.stringify({ deleted: true, id: rows[0].id, title: rows[0].title }),
+        summary: `directiva eliminada: ${rows[0].title}`,
       };
     }
 
