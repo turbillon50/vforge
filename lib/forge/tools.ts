@@ -231,7 +231,7 @@ export const TOOLS: Tool[] = [
   {
     name: "github_create_file",
     description:
-      "Crea un archivo nuevo en un repo (Ring 1). Falla 422 si el path ya existe — usa github_update_file en ese caso. El contenido se manda en plain UTF-8, la tool lo encodea a base64. Por seguridad RECHAZA escribir a la rama 'main' salvo que pases allow_main=true (Ring 2 — confirmar con Luis). Default branch = 'main' (lo cual obliga a especificar feature branch).",
+      "Crea un archivo nuevo en un repo. Falla 422 si el path ya existe — usa github_update_file en ese caso. El contenido se manda en plain UTF-8, la tool lo encodea a base64. Para escribir a 'main' (Ring 2): PRIMERO pide confirmación a Luis en texto, LUEGO llama con confirmed=true. Default branch = 'main' (obliga a especificar feature branch si no quieres main).",
     input_schema: {
       type: "object",
       properties: {
@@ -240,10 +240,10 @@ export const TOOLS: Tool[] = [
         path: { type: "string", description: "Ruta relativa (ej. 'docs/runbook.md')" },
         content: { type: "string", description: "Contenido en UTF-8 plain (sin base64)" },
         message: { type: "string", description: "Commit message (Conventional Commits preferred)" },
-        branch: { type: "string", description: "Branch destino. Default 'main' (rechazado salvo allow_main)" },
-        allow_main: {
+        branch: { type: "string", description: "Branch destino. Default 'main'. Si es main, requiere confirmed=true." },
+        confirmed: {
           type: "boolean",
-          description: "Set true SOLO si Luis confirmó escribir directo a main. Default false.",
+          description: "REQUERIDO si branch='main'. Set true SOLO después de que Luis confirmó explícitamente escribir a main. Ring 2 — V debe solicitar confirmación primero.",
         },
       },
       required: ["owner", "repo", "path", "content", "message"],
@@ -252,7 +252,7 @@ export const TOOLS: Tool[] = [
   {
     name: "github_update_file",
     description:
-      "Actualiza un archivo existente en un repo (Ring 1). Si no le pasas sha, lo busca con un GET previo. Mismo guard contra rama 'main' que github_create_file.",
+      "Actualiza un archivo existente en un repo. Si no le pasas sha, lo busca con un GET previo. Para escribir a 'main' (Ring 2): PRIMERO pide confirmación a Luis en texto, LUEGO llama con confirmed=true.",
     input_schema: {
       type: "object",
       properties: {
@@ -265,8 +265,11 @@ export const TOOLS: Tool[] = [
           type: "string",
           description: "Blob SHA del archivo. Si no se pasa, se resuelve automáticamente con un GET previo.",
         },
-        branch: { type: "string" },
-        allow_main: { type: "boolean" },
+        branch: { type: "string", description: "Branch destino. Default 'main'. Si es main, requiere confirmed=true." },
+        confirmed: {
+          type: "boolean",
+          description: "REQUERIDO si branch='main'. Set true SOLO después de que Luis confirmó explícitamente escribir a main. Ring 2.",
+        },
       },
       required: ["owner", "repo", "path", "content", "message"],
     },
@@ -287,6 +290,31 @@ export const TOOLS: Tool[] = [
         allow_main: { type: "boolean" },
       },
       required: ["owner", "repo", "path", "message"],
+    },
+  },
+  {
+    name: "github_revert_commit",
+    description:
+      "Revierte un commit específico en una rama (Ring 2 — destructivo). Úsala cuando github_run_check falla en main después de github_create_file/github_update_file. Crea un nuevo commit de revert. Devuelve el SHA del nuevo revert commit.",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string", description: "Default 'turbillon50' si no se especifica." },
+        repo: { type: "string" },
+        sha: {
+          type: "string",
+          description: "SHA del commit a revertir (ej. resultado de github_create_file/update_file)",
+        },
+        branch: {
+          type: "string",
+          description: "Rama en donde está el commit. Default 'main'.",
+        },
+        message: {
+          type: "string",
+          description: "Mensaje del revert commit. Default: 'Revert <sha>'.",
+        },
+      },
+      required: ["repo", "sha"],
     },
   },
   {
@@ -1292,75 +1320,148 @@ async function dispatch(
 
     // ─── GitHub write ────────────────────────────────────────────────
     case "github_create_repo": {
-      const name = requireString(input.name, "name");
-      const result = await ghCreateRepo(
-        {
-          name,
-          description: typeof input.description === "string" ? input.description : undefined,
-          private: typeof input.private === "boolean" ? input.private : true,
-          auto_init: typeof input.auto_init === "boolean" ? input.auto_init : true,
-        },
-        { auditUserId: ctx.userId },
-      );
-      return {
-        ok: true,
-        content: JSON.stringify(result),
-        summary: `repo creado: ${result.full_name} (${result.private ? "privado" : "público"})`,
-      };
+      try {
+        const name = requireString(input.name, "name");
+        const result = await ghCreateRepo(
+          {
+            name,
+            description: typeof input.description === "string" ? input.description : undefined,
+            private: typeof input.private === "boolean" ? input.private : true,
+            auto_init: typeof input.auto_init === "boolean" ? input.auto_init : true,
+          },
+          { auditUserId: ctx.userId },
+        );
+        return {
+          ok: true,
+          content: JSON.stringify(result),
+          summary: `repo creado: ${result.full_name} (${result.private ? "privado" : "público"})`,
+        };
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        return {
+          ok: false,
+          content: JSON.stringify({
+            error: errorMsg,
+            type: err instanceof Error ? err.constructor.name : "Unknown",
+            failureCode: errorMsg.includes("already exists") ? "REPO_EXISTS" : "CREATE_FAILED",
+          }),
+          summary: `❌ github_create_repo falló: ${errorMsg.split('\n')[0]}`,
+        };
+      }
     }
 
     case "github_create_file": {
-      const owner = ownerOrDefault(input.owner);
-      const repo = requireString(input.repo, "repo");
-      const path = requireString(input.path, "path");
-      const content = requireString(input.content, "content");
-      const message = requireString(input.message, "message");
-      const branch =
-        typeof input.branch === "string" && input.branch.length > 0
-          ? input.branch
-          : "main";
-      const allowMain = input.allow_main === true;
-      if (branch === "main" && !allowMain) {
-        throw new Error(
-          "Refusing to create file directly on 'main'. Crea una feature branch (github_create_branch) y commitea ahí, o pasa allow_main=true tras confirmar con Luis (Ring 2).",
-        );
+      try {
+        const owner = ownerOrDefault(input.owner);
+        const repo = requireString(input.repo, "repo");
+        const path = requireString(input.path, "path");
+        const content = requireString(input.content, "content");
+        const message = requireString(input.message, "message");
+        const branch =
+          typeof input.branch === "string" && input.branch.length > 0
+            ? input.branch
+            : "main";
+        const confirmed = input.confirmed === true;
+
+        if (branch === "main" && !confirmed) {
+          return {
+            ok: false,
+            content: JSON.stringify({
+              error: "Ring 2: escribir a main requiere confirmación explícita de Luis primero",
+              instruction: "V: '¿Luis, confirmas que escriba este archivo a main?' Espera confirmación, LUEGO rellamá la tool con confirmed=true.",
+              failureCode: "RING2_NEEDS_CONFIRMATION",
+            }),
+            summary: `❌ ${owner}/${repo}#main:${path} — requiere confirmación de Luis`,
+          };
+        }
+
+        const result = await ghCreateFile(owner, repo, path, content, message, {
+          branch,
+          auditUserId: ctx.userId,
+        });
+
+        const summary = branch === "main"
+          ? `✅ creado ${owner}/${repo}#${branch}:${path} — ⚠️ DEBES ejecutar github_run_check(repo='${repo}', branch='main', reason='validate after create'). Si falla, usa github_revert_commit(sha='${result.commit.sha}').`
+          : `created ${owner}/${repo}#${branch}:${path}`;
+
+        return {
+          ok: true,
+          content: JSON.stringify({
+            ...result,
+            _validation_note: branch === "main"
+              ? `Ring 2 write to main. Commit SHA: ${result.commit.sha}. NEXT: github_run_check then github_revert_commit if needed.`
+              : undefined,
+          }),
+          summary,
+        };
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        return {
+          ok: false,
+          content: JSON.stringify({
+            error: errorMsg,
+            type: err instanceof Error ? err.constructor.name : "Unknown",
+          }),
+          summary: `❌ github_create_file falló: ${errorMsg.split('\n')[0]}`,
+        };
       }
-      const result = await ghCreateFile(owner, repo, path, content, message, {
-        branch,
-        auditUserId: ctx.userId,
-      });
-      return {
-        ok: true,
-        content: JSON.stringify(result),
-        summary: `created ${owner}/${repo}#${branch}:${path}`,
-      };
     }
     case "github_update_file": {
-      const owner = ownerOrDefault(input.owner);
-      const repo = requireString(input.repo, "repo");
-      const path = requireString(input.path, "path");
-      const content = requireString(input.content, "content");
-      const message = requireString(input.message, "message");
-      const branch =
-        typeof input.branch === "string" && input.branch.length > 0
-          ? input.branch
-          : "main";
-      const allowMain = input.allow_main === true;
-      if (branch === "main" && !allowMain) {
-        throw new Error(
-          "Refusing to update file directly on 'main'. Pasa allow_main=true tras confirmar con Luis (Ring 2).",
-        );
+      try {
+        const owner = ownerOrDefault(input.owner);
+        const repo = requireString(input.repo, "repo");
+        const path = requireString(input.path, "path");
+        const content = requireString(input.content, "content");
+        const message = requireString(input.message, "message");
+        const branch =
+          typeof input.branch === "string" && input.branch.length > 0
+            ? input.branch
+            : "main";
+        const confirmed = input.confirmed === true;
+
+        if (branch === "main" && !confirmed) {
+          return {
+            ok: false,
+            content: JSON.stringify({
+              error: "Ring 2: escribir a main requiere confirmación explícita de Luis primero",
+              instruction: "V: '¿Luis, confirmas que actualice este archivo en main?' Espera confirmación, LUEGO rellamá la tool con confirmed=true.",
+              failureCode: "RING2_NEEDS_CONFIRMATION",
+            }),
+            summary: `❌ ${owner}/${repo}#main:${path} — requiere confirmación de Luis`,
+          };
+        }
+
+        const result = await ghUpdateFile(owner, repo, path, content, message, {
+          sha: typeof input.sha === "string" ? input.sha : undefined,
+          branch,
+          auditUserId: ctx.userId,
+        });
+
+        const summary = branch === "main"
+          ? `✅ actualizado ${owner}/${repo}#${branch}:${path} — ⚠️ DEBES ejecutar github_run_check(repo='${repo}', branch='main', reason='validate after update'). Si falla, usa github_revert_commit(sha='${result.commit.sha}').`
+          : `updated ${owner}/${repo}#${branch}:${path}`;
+
+        return {
+          ok: true,
+          content: JSON.stringify({
+            ...result,
+            _validation_note: branch === "main"
+              ? `Ring 2 write to main. Commit SHA: ${result.commit.sha}. NEXT: github_run_check then github_revert_commit if needed.`
+              : undefined,
+          }),
+          summary,
+        };
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        return {
+          ok: false,
+          content: JSON.stringify({
+            error: errorMsg,
+            type: err instanceof Error ? err.constructor.name : "Unknown",
+          }),
+          summary: `❌ github_update_file falló: ${errorMsg.split('\n')[0]}`,
+        };
       }
-      const result = await ghUpdateFile(owner, repo, path, content, message, {
-        sha: typeof input.sha === "string" ? input.sha : undefined,
-        branch,
-        auditUserId: ctx.userId,
-      });
-      return {
-        ok: true,
-        content: JSON.stringify(result),
-        summary: `updated ${owner}/${repo}#${branch}:${path}`,
-      };
     }
     case "github_delete_file": {
       const owner = ownerOrDefault(input.owner);
@@ -1388,6 +1489,52 @@ async function dispatch(
         summary: `deleted ${owner}/${repo}#${branch}:${path}`,
       };
     }
+
+    case "github_revert_commit": {
+      try {
+        const owner = ownerOrDefault(input.owner);
+        const repo = requireString(input.repo, "repo");
+        const sha = requireString(input.sha, "sha");
+        const branch = typeof input.branch === "string" ? input.branch : "main";
+        const message = typeof input.message === "string" ? input.message : `Revert ${sha.slice(0, 7)}`;
+
+        // Import the Octokit client directly
+        const { getGithubClient } = await import("@/lib/github/client");
+        const octokit = await getGithubClient({ auditUserId: ctx.userId });
+
+        const revertResult = await octokit.request(
+          "POST /repos/{owner}/{repo}/commits/{commit_sha}/reverts",
+          {
+            owner,
+            repo,
+            commit_sha: sha,
+            message,
+          }
+        );
+
+        return {
+          ok: true,
+          content: JSON.stringify({
+            reverted_sha: revertResult.data.sha,
+            reverted_message: revertResult.data.commit.message,
+            revert_commit_url: revertResult.data.html_url,
+          }),
+          summary: `✅ revertido ${owner}/${repo}#${branch}: ${sha.slice(0, 7)} → ${revertResult.data.sha.slice(0, 7)}`,
+        };
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        return {
+          ok: false,
+          content: JSON.stringify({
+            error: errorMsg,
+            type: err instanceof Error ? err.constructor.name : "Unknown",
+            failureCode: errorMsg.includes("not found") ? "COMMIT_NOT_FOUND" : "REVERT_FAILED",
+          }),
+          summary: `❌ github_revert_commit falló: ${errorMsg.split('\n')[0]}`,
+        };
+      }
+    }
+
     case "github_create_branch": {
       const owner = ownerOrDefault(input.owner);
       const repo = requireString(input.repo, "repo");
