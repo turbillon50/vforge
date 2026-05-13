@@ -2216,7 +2216,9 @@ async function dispatch(
       if (Object.keys(updates).length === 0) {
         throw new Error("Provide at least one field to update: title, content, or priority.");
       }
-      // Let the DB trigger reject updates to locked=true rows
+      // Reject locked mantras at the application layer (belt) AND rely on the
+      // DB trigger (suspenders). The WHERE locked = false means 0 rows returned
+      // for a locked row, which we detect and turn into a clear error message.
       const rows = (await sql`
         UPDATE agent_directives
         SET
@@ -2224,10 +2226,19 @@ async function dispatch(
           content    = COALESCE(${updates.content as string | null ?? null}, content),
           priority   = COALESCE(${updates.priority as number | null ?? null}, priority),
           updated_at = now()
-        WHERE id = ${id} AND active = true
+        WHERE id = ${id} AND active = true AND locked = false
         RETURNING id, kind, title, locked, priority
       `) as Array<{ id: string; kind: string; title: string; locked: boolean; priority: number }>;
-      if (rows.length === 0) throw new Error(`Directive '${id}' not found or is inactive.`);
+      if (rows.length === 0) {
+        // Distinguish "not found" from "locked"
+        const check = (await sql`
+          SELECT id, locked FROM agent_directives WHERE id = ${id}
+        `) as Array<{ id: string; locked: boolean }>;
+        if (check.length > 0 && check[0].locked) {
+          throw new Error(`Cannot modify locked mantra '${id}'. Mantras are immutable.`);
+        }
+        throw new Error(`Directive '${id}' not found or is inactive.`);
+      }
       return {
         ok: true,
         content: JSON.stringify({ updated: true, directive: rows[0] }),
