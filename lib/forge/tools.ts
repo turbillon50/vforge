@@ -762,6 +762,55 @@ export const TOOLS: Tool[] = [
     },
   },
   {
+    name: "skill_search",
+    description:
+      "Busca skills por nombre, descripción o tags. Útil para ver si ya existe una skill antes de crear una nueva. Devuelve matches ordenados por relevancia.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Texto a buscar en nombre, descripción o tags.",
+        },
+        limit: {
+          type: "number",
+          description: "Máximo de resultados. Default 10.",
+        },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "skill_install",
+    description:
+      "Activa una skill — marca installed_at=now() para que buildSystemPrompt() la inyecte en el contexto de V en el próximo turno. Úsala cuando Luis diga 'activa skill X' o cuando V quiera cargar una skill disponible.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "ID (slug) de la skill a instalar, ej. 'repo-rescue'.",
+        },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "skill_uninstall",
+    description:
+      "Desactiva una skill — pone installed_at=NULL para que deje de inyectarse en el contexto. La skill sigue en el catálogo y se puede re-instalar.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "ID (slug) de la skill a desinstalar.",
+        },
+      },
+      required: ["id"],
+    },
+  },
+  {
     name: "directive_list",
     description:
       "Lista las directivas actuales de V (mantra, directive, preference). El mantra son las directivas LOCKED que definen la identidad core de V y no se pueden modificar. Usala cuando Luis pregunte 'cuales son tus reglas' o cuando V quiera ver su configuracion.",
@@ -802,6 +851,49 @@ export const TOOLS: Tool[] = [
         },
       },
       required: ["kind", "title", "content"],
+    },
+  },
+
+  {
+    name: "directive_update",
+    description:
+      "Actualiza el título o contenido de una directiva existente (directive o preference). NUNCA puedes modificar mantras (locked=true). Úsala para refinar una regla que ya creaste.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "UUID de la directiva a actualizar.",
+        },
+        title: {
+          type: "string",
+          description: "Nuevo título (opcional).",
+        },
+        content: {
+          type: "string",
+          description: "Nuevo contenido (opcional).",
+        },
+        priority: {
+          type: "number",
+          description: "Nueva prioridad (opcional).",
+        },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "directive_delete",
+    description:
+      "Elimina una directiva (directive o preference). NUNCA puedes eliminar mantras (locked=true). El trigger de la DB rechazará intentos de borrar mantras.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "UUID de la directiva a eliminar.",
+        },
+      },
+      required: ["id"],
     },
   },
 
@@ -2072,6 +2164,81 @@ async function dispatch(
       };
     }
 
+    case "skill_search": {
+      const query = requireString(input.query, "query");
+      const limit = clampNumber(input.limit, 1, 50, 10);
+      const q = `%${query.toLowerCase()}%`;
+      const rows = (await sql`
+        SELECT id, name, description, tags, source, installed_at
+        FROM skills
+        WHERE active = true
+          AND (
+            lower(name) LIKE ${q}
+            OR lower(description) LIKE ${q}
+            OR EXISTS (SELECT 1 FROM unnest(tags) t WHERE lower(t) LIKE ${q})
+          )
+        ORDER BY
+          CASE WHEN lower(name) LIKE ${q} THEN 0 ELSE 1 END,
+          name ASC
+        LIMIT ${limit}
+      `) as Array<{
+        id: string;
+        name: string;
+        description: string;
+        tags: string[];
+        source: string;
+        installed_at: string | null;
+      }>;
+      return {
+        ok: true,
+        content: JSON.stringify({
+          query,
+          total: rows.length,
+          skills: rows.map(r => ({
+            id: r.id,
+            name: r.name,
+            description: r.description,
+            tags: r.tags,
+            source: r.source,
+            installed: !!r.installed_at,
+          })),
+        }),
+        summary: `${rows.length} skills matching "${query}"`,
+      };
+    }
+
+    case "skill_install": {
+      const id = requireString(input.id, "id");
+      const rows = (await sql`
+        UPDATE skills
+        SET installed_at = now(), updated_at = now()
+        WHERE id = ${id} AND active = true
+        RETURNING id, name
+      `) as Array<{ id: string; name: string }>;
+      if (rows.length === 0) throw new Error(`Skill '${id}' not found.`);
+      return {
+        ok: true,
+        content: JSON.stringify({ installed: true, id: rows[0].id, name: rows[0].name }),
+        summary: `skill instalada: ${rows[0].name}`,
+      };
+    }
+
+    case "skill_uninstall": {
+      const id = requireString(input.id, "id");
+      const rows = (await sql`
+        UPDATE skills
+        SET installed_at = NULL, updated_at = now()
+        WHERE id = ${id} AND active = true
+        RETURNING id, name
+      `) as Array<{ id: string; name: string }>;
+      if (rows.length === 0) throw new Error(`Skill '${id}' not found.`);
+      return {
+        ok: true,
+        content: JSON.stringify({ uninstalled: true, id: rows[0].id, name: rows[0].name }),
+        summary: `skill desinstalada: ${rows[0].name}`,
+      };
+    }
+
     case "directive_list": {
       const kindFilter = typeof input.kind === "string" ? input.kind : null;
 
@@ -2158,6 +2325,53 @@ async function dispatch(
           directive: rows[0],
         }),
         summary: `directiva creada: ${rows[0].title}`,
+      };
+    }
+
+    case "directive_update": {
+      const id = requireString(input.id, "id");
+      const updates: Record<string, unknown> = {};
+      if (typeof input.title === "string" && input.title.length > 0)
+        updates.title = input.title;
+      if (typeof input.content === "string" && input.content.length > 0)
+        updates.content = input.content;
+      if (typeof input.priority === "number")
+        updates.priority = input.priority;
+      if (Object.keys(updates).length === 0) {
+        throw new Error("Provide at least one field to update: title, content, or priority.");
+      }
+      // Let the DB trigger reject updates to locked=true rows
+      const rows = (await sql`
+        UPDATE agent_directives
+        SET
+          title      = COALESCE(${updates.title as string | null ?? null}, title),
+          content    = COALESCE(${updates.content as string | null ?? null}, content),
+          priority   = COALESCE(${updates.priority as number | null ?? null}, priority),
+          updated_at = now()
+        WHERE id = ${id} AND active = true
+        RETURNING id, kind, title, locked, priority
+      `) as Array<{ id: string; kind: string; title: string; locked: boolean; priority: number }>;
+      if (rows.length === 0) throw new Error(`Directive '${id}' not found or is inactive.`);
+      return {
+        ok: true,
+        content: JSON.stringify({ updated: true, directive: rows[0] }),
+        summary: `directiva actualizada: ${rows[0].title}`,
+      };
+    }
+
+    case "directive_delete": {
+      const id = requireString(input.id, "id");
+      // DB trigger will raise an exception for locked=true rows
+      const rows = (await sql`
+        DELETE FROM agent_directives
+        WHERE id = ${id}
+        RETURNING id, title, locked
+      `) as Array<{ id: string; title: string; locked: boolean }>;
+      if (rows.length === 0) throw new Error(`Directive '${id}' not found.`);
+      return {
+        ok: true,
+        content: JSON.stringify({ deleted: true, id: rows[0].id, title: rows[0].title }),
+        summary: `directiva eliminada: ${rows[0].title}`,
       };
     }
 
