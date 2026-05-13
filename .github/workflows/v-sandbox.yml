@@ -59,23 +59,29 @@ jobs:
       - name: Run validation
         env:
           NEXT_TELEMETRY_DISABLED: "1"
+          # Pass the command via env, not interpolation, so it can't
+          # break out of the literal string. The case below matches
+          # EXACT values from a closed whitelist — no eval, no globbing.
+          # (Codex P1 — eval-injection fix.)
+          CMD: ${{ github.event.inputs.command }}
         run: |
-          CMD="${{ github.event.inputs.command }}"
           if [ "$CMD" = "default" ] || [ -z "$CMD" ]; then
             echo "→ default: type-check + lint + build"
             npx tsc --noEmit
             npm run lint
             npm run build
-          else
-            echo "→ custom command: $CMD"
-            # Whitelist: only npm scripts and npx tsc are allowed
-            case "$CMD" in
-              "npm run "*|"npx tsc"*|"npm test"*)
-                eval "$CMD"
-                ;;
-              *)
-                echo "ERROR: command not allowed. Only 'npm run X', 'npm test', or 'npx tsc' permitted."
-                exit 1
-                ;;
-            esac
+            exit 0
           fi
+          case "$CMD" in
+            "npm run lint")        npm run lint ;;
+            "npm run build")       npm run build ;;
+            "npm run test"|"npm test") npm test ;;
+            "npm run dev")         echo "ERROR: 'npm run dev' is interactive; not allowed here." ; exit 1 ;;
+            "npx tsc --noEmit")    npx tsc --noEmit ;;
+            "npx tsc")             npx tsc --noEmit ;;
+            *)
+              echo "ERROR: command '$CMD' not in whitelist."
+              echo "Allowed: npm run lint | npm run build | npm run test | npx tsc --noEmit | default"
+              exit 1
+              ;;
+          esac

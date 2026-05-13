@@ -608,6 +608,13 @@ export async function dispatchWorkflow(
   options: { auditUserId?: string } = {},
 ): Promise<{ run_id: number | null; ref: string; workflow: string }> {
   const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+
+  // Capture a high-water-mark BEFORE the dispatch so we only accept
+  // runs created strictly after our request. Without this, a previous
+  // workflow_dispatch on the same branch within the last 30s could be
+  // mis-correlated as ours (Codex P1).
+  const dispatchedAfter = Date.now();
+
   await octokit.request(
     "POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches",
     {
@@ -619,8 +626,8 @@ export async function dispatchWorkflow(
     },
   );
 
-  // Poll for the freshly-created run. GitHub assigns IDs eagerly but
-  // the listing has a small lag.
+  // Poll for the freshly-created run. GitHub assigns the ID eagerly
+  // but the listing has a small lag; 5s is enough in practice.
   const deadline = Date.now() + 5_000;
   while (Date.now() < deadline) {
     const { data } = await octokit.request(
@@ -630,7 +637,7 @@ export async function dispatchWorkflow(
     const fresh = data.workflow_runs.find(
       (r) =>
         r.event === "workflow_dispatch" &&
-        new Date(r.created_at).getTime() > Date.now() - 30_000,
+        new Date(r.created_at).getTime() >= dispatchedAfter,
     );
     if (fresh) {
       return { run_id: fresh.id, ref, workflow: workflowFile };
@@ -667,40 +674,60 @@ export async function getWorkflowRun(
 }
 
 /**
- * Fetch workflow run logs as plain text. GitHub returns a zip; we
- * extract just the merged log payload by reading the response as
- * text. Truncates to 100KB to fit V's context budget.
+ * Fetch workflow run logs as readable plain text.
+ *
+ * The run-level `/actions/runs/{id}/logs` endpoint returns a ZIP that
+ * we'd need to decompress (extra dep + buffer mgmt). Instead we use
+ * the per-job endpoint `/actions/jobs/{job_id}/logs` which returns
+ * plain text directly. We concatenate all jobs of the run, prefix
+ * each with a header, and truncate to maxBytes.
+ * (Codex P2 — was returning ZIP-as-utf8 garbage.)
  */
 export async function getWorkflowRunLogs(
   owner: string,
   repo: string,
   runId: number,
   options: { auditUserId?: string; maxBytes?: number } = {},
-): Promise<{ text: string; truncated: boolean; size: number }> {
+): Promise<{ text: string; truncated: boolean; size: number; jobs: number }> {
   const octokit = await getGithubClient({ auditUserId: options.auditUserId });
-  // The /logs endpoint redirects to a signed S3 URL with the zip.
-  // octokit handles the redirect and returns the binary as arraybuffer.
-  const { data } = await octokit.request(
-    "GET /repos/{owner}/{repo}/actions/runs/{run_id}/logs",
-    {
-      owner,
-      repo,
-      run_id: runId,
-      // Tell octokit to NOT auto-parse; we'll read as binary.
-      request: { redirect: "follow" },
-    },
+  const maxBytes = options.maxBytes ?? 100_000;
+
+  // List jobs of this run.
+  const { data: jobsData } = await octokit.request(
+    "GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs",
+    { owner, repo, run_id: runId, per_page: 30 },
   );
-  // data is an ArrayBuffer from octokit for binary responses.
-  const buf = Buffer.isBuffer(data) ? data : Buffer.from(data as ArrayBuffer);
-  // The zip is a binary blob — V doesn't need to parse it; we just
-  // hand back the readable text portions if any. Most callers will
-  // prefer the URL to look at the logs in GitHub UI.
-  const max = options.maxBytes ?? 100_000;
-  const truncated = buf.length > max;
-  const slice = truncated ? buf.subarray(0, max) : buf;
-  // Try to extract readable ASCII; fallback to a hint about size.
-  const ascii = slice.toString("utf8").replace(/[\x00-\x08\x0e-\x1f]/g, "");
-  return { text: ascii, truncated, size: buf.length };
+
+  const parts: string[] = [];
+  let totalSize = 0;
+  for (const job of jobsData.jobs ?? []) {
+    if (totalSize >= maxBytes) break;
+    try {
+      // octokit returns the body as string for this text endpoint.
+      const { data: logBody } = (await octokit.request(
+        "GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs",
+        { owner, repo, job_id: job.id, request: { redirect: "follow" } },
+      )) as unknown as { data: string };
+      const body = typeof logBody === "string" ? logBody : String(logBody);
+      const header = `\n══════ job ${job.id} · ${job.name} · ${job.conclusion ?? job.status} ══════\n`;
+      parts.push(header);
+      parts.push(body);
+      totalSize += header.length + body.length;
+    } catch {
+      // A job may not have logs yet (still queued); skip.
+      parts.push(`\n══════ job ${job.id} · ${job.name} · (logs unavailable) ══════\n`);
+    }
+  }
+
+  const combined = parts.join("");
+  const truncated = combined.length > maxBytes;
+  const text = truncated ? combined.slice(0, maxBytes) : combined;
+  return {
+    text,
+    truncated,
+    size: combined.length,
+    jobs: (jobsData.jobs ?? []).length,
+  };
 }
 
 export async function listRecentWorkflowRuns(

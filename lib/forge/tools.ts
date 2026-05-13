@@ -2163,11 +2163,12 @@ async function dispatch(
         ok: true,
         content: JSON.stringify({
           run_id: runId,
+          jobs: logs.jobs,
           size: logs.size,
           truncated: logs.truncated,
           text: logs.text,
         }),
-        summary: `logs for run ${runId} (${logs.size}B${logs.truncated ? ", truncado a 100KB" : ""})`,
+        summary: `logs run ${runId}: ${logs.jobs} job(s), ${logs.size}B${logs.truncated ? " (truncado 100KB)" : ""}`,
       };
     }
     case "github_list_check_runs": {
