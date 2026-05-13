@@ -133,20 +133,34 @@ export async function buildSystemPrompt(
   }
 
   // ─── NEW: Load dynamic directives (mantra + directive + preference) ───
-  const directives = await queryAll<AgentDirective>(
-    `SELECT id, kind, title, content, locked, priority, active
-     FROM agent_directives
-     WHERE active = true
-     ORDER BY priority ASC, created_at ASC`,
-  );
+  // Graceful fallback if table doesn't exist yet (pre-migration)
+  let directives: AgentDirective[] = [];
+  try {
+    directives = await queryAll<AgentDirective>(
+      `SELECT id, kind, title, content, locked, priority, active
+       FROM agent_directives
+       WHERE active = true
+       ORDER BY priority ASC, created_at ASC`,
+    );
+  } catch (e) {
+    // Table doesn't exist yet - that's ok, use empty array
+    console.log("[V] agent_directives table not found, using defaults");
+  }
 
   // ─── NEW: Load installed skills ───
-  const installedSkills = await queryAll<InstalledSkill>(
-    `SELECT id, name, description, system_prompt, tags, source, ring_max
-     FROM skills
-     WHERE active = true AND installed_at IS NOT NULL
-     ORDER BY installed_at ASC`,
-  );
+  // Graceful fallback if table doesn't exist yet (pre-migration)
+  let installedSkills: InstalledSkill[] = [];
+  try {
+    installedSkills = await queryAll<InstalledSkill>(
+      `SELECT id, name, description, system_prompt, tags, source, ring_max
+       FROM skills
+       WHERE active = true AND installed_at IS NOT NULL
+       ORDER BY installed_at ASC`,
+    );
+  } catch (e) {
+    // Table doesn't exist yet - that's ok, use empty array
+    console.log("[V] skills table not found, using defaults");
+  }
 
   const knowledgeSection = formatKnowledge([...coreKnowledge, ...lessons]);
   const memorySection = formatMemorySection(recaps, memories);
