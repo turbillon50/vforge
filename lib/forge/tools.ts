@@ -20,6 +20,11 @@ import {
   getRepo,
   listRecentCommits,
   getFileContent,
+  createFile as ghCreateFile,
+  updateFile as ghUpdateFile,
+  deleteFile as ghDeleteFile,
+  createBranch as ghCreateBranch,
+  createPullRequest as ghCreatePullRequest,
 } from "@/lib/github/client";
 import {
   listProjects as vercelListProjects,
@@ -111,6 +116,106 @@ export const TOOLS: Tool[] = [
       required: ["owner", "repo", "path"],
     },
   },
+
+  // ─── GitHub write (Ring 1, escrituras en feature branches) ───────────
+  // Por AGENTS.md §2: escribir a la rama 'main' es Ring 2 (destructivo
+  // potencial sobre prod). El dispatcher rechaza writes a main salvo
+  // que el caller pase allow_main=true explícito.
+  {
+    name: "github_create_file",
+    description:
+      "Crea un archivo nuevo en un repo (Ring 1). Falla 422 si el path ya existe — usa github_update_file en ese caso. El contenido se manda en plain UTF-8, la tool lo encodea a base64. Por seguridad RECHAZA escribir a la rama 'main' salvo que pases allow_main=true (Ring 2 — confirmar con Luis). Default branch = 'main' (lo cual obliga a especificar feature branch).",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string" },
+        repo: { type: "string" },
+        path: { type: "string", description: "Ruta relativa (ej. 'docs/runbook.md')" },
+        content: { type: "string", description: "Contenido en UTF-8 plain (sin base64)" },
+        message: { type: "string", description: "Commit message (Conventional Commits preferred)" },
+        branch: { type: "string", description: "Branch destino. Default 'main' (rechazado salvo allow_main)" },
+        allow_main: {
+          type: "boolean",
+          description: "Set true SOLO si Luis confirmó escribir directo a main. Default false.",
+        },
+      },
+      required: ["owner", "repo", "path", "content", "message"],
+    },
+  },
+  {
+    name: "github_update_file",
+    description:
+      "Actualiza un archivo existente en un repo (Ring 1). Si no le pasas sha, lo busca con un GET previo. Mismo guard contra rama 'main' que github_create_file.",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string" },
+        repo: { type: "string" },
+        path: { type: "string" },
+        content: { type: "string", description: "Nuevo contenido completo en UTF-8 plain" },
+        message: { type: "string", description: "Commit message" },
+        sha: {
+          type: "string",
+          description: "Blob SHA del archivo. Si no se pasa, se resuelve automáticamente con un GET previo.",
+        },
+        branch: { type: "string" },
+        allow_main: { type: "boolean" },
+      },
+      required: ["owner", "repo", "path", "content", "message"],
+    },
+  },
+  {
+    name: "github_delete_file",
+    description:
+      "Borra un archivo de un repo (Ring 2 — destructivo). Si no le pasas sha, lo resuelve automáticamente. Confirma con Luis antes; el dispatcher exige allow_main=true para borrar de main.",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string" },
+        repo: { type: "string" },
+        path: { type: "string" },
+        message: { type: "string", description: "Commit message del delete" },
+        sha: { type: "string", description: "Blob SHA. Opcional." },
+        branch: { type: "string" },
+        allow_main: { type: "boolean" },
+      },
+      required: ["owner", "repo", "path", "message"],
+    },
+  },
+  {
+    name: "github_create_branch",
+    description:
+      "Crea una rama nueva en un repo a partir de una rama existente (Ring 1). Resuelve el SHA del head de from_branch internamente. Convención vForge: nombrar como 'claude/<feature>-<id>' o 'forge/<feature>-<id>' (ver AGENTS.md §3).",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string" },
+        repo: { type: "string" },
+        branch: { type: "string", description: "Nombre de la rama nueva (ej. 'claude/add-spec-XYZ')" },
+        from_branch: { type: "string", description: "Branch base. Default 'main'." },
+      },
+      required: ["owner", "repo", "branch"],
+    },
+  },
+  {
+    name: "github_create_pull_request",
+    description:
+      "Abre un Pull Request en un repo (Ring 1). Por default es DRAFT (Luis decide cuándo pasarlo a 'Ready for review' y mergear). El head debe ser una rama que ya exista; usa github_create_branch + github_create_file primero si construyes el cambio desde cero.",
+    input_schema: {
+      type: "object",
+      properties: {
+        owner: { type: "string" },
+        repo: { type: "string" },
+        title: { type: "string", description: "Título del PR (<70 chars)" },
+        body: { type: "string", description: "Markdown completo del PR description" },
+        head: { type: "string", description: "Branch con los cambios" },
+        base: { type: "string", description: "Branch destino. Default 'main'." },
+        draft: { type: "boolean", description: "Default true. Pon false solo si Luis pide directo 'ready'." },
+      },
+      required: ["owner", "repo", "title", "head"],
+    },
+  },
+
   {
     name: "vault_list_secrets",
     description:
@@ -592,6 +697,129 @@ async function dispatch(
         summary: `${path} (${file.size} B${truncated ? ", truncado a 5KB" : ""})`,
       };
     }
+
+    // ─── GitHub write ────────────────────────────────────────────────
+    case "github_create_file": {
+      const owner = requireString(input.owner, "owner");
+      const repo = requireString(input.repo, "repo");
+      const path = requireString(input.path, "path");
+      const content = requireString(input.content, "content");
+      const message = requireString(input.message, "message");
+      const branch =
+        typeof input.branch === "string" && input.branch.length > 0
+          ? input.branch
+          : "main";
+      const allowMain = input.allow_main === true;
+      if (branch === "main" && !allowMain) {
+        throw new Error(
+          "Refusing to create file directly on 'main'. Crea una feature branch (github_create_branch) y commitea ahí, o pasa allow_main=true tras confirmar con Luis (Ring 2).",
+        );
+      }
+      const result = await ghCreateFile(owner, repo, path, content, message, {
+        branch,
+        auditUserId: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify(result),
+        summary: `created ${owner}/${repo}#${branch}:${path}`,
+      };
+    }
+    case "github_update_file": {
+      const owner = requireString(input.owner, "owner");
+      const repo = requireString(input.repo, "repo");
+      const path = requireString(input.path, "path");
+      const content = requireString(input.content, "content");
+      const message = requireString(input.message, "message");
+      const branch =
+        typeof input.branch === "string" && input.branch.length > 0
+          ? input.branch
+          : "main";
+      const allowMain = input.allow_main === true;
+      if (branch === "main" && !allowMain) {
+        throw new Error(
+          "Refusing to update file directly on 'main'. Pasa allow_main=true tras confirmar con Luis (Ring 2).",
+        );
+      }
+      const result = await ghUpdateFile(owner, repo, path, content, message, {
+        sha: typeof input.sha === "string" ? input.sha : undefined,
+        branch,
+        auditUserId: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify(result),
+        summary: `updated ${owner}/${repo}#${branch}:${path}`,
+      };
+    }
+    case "github_delete_file": {
+      const owner = requireString(input.owner, "owner");
+      const repo = requireString(input.repo, "repo");
+      const path = requireString(input.path, "path");
+      const message = requireString(input.message, "message");
+      const branch =
+        typeof input.branch === "string" && input.branch.length > 0
+          ? input.branch
+          : "main";
+      const allowMain = input.allow_main === true;
+      if (branch === "main" && !allowMain) {
+        throw new Error(
+          "Refusing to delete file from 'main'. Esta tool es Ring 2 (destructivo). Pasa allow_main=true SOLO tras confirmar con Luis.",
+        );
+      }
+      const result = await ghDeleteFile(owner, repo, path, message, {
+        sha: typeof input.sha === "string" ? input.sha : undefined,
+        branch,
+        auditUserId: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify(result),
+        summary: `deleted ${owner}/${repo}#${branch}:${path}`,
+      };
+    }
+    case "github_create_branch": {
+      const owner = requireString(input.owner, "owner");
+      const repo = requireString(input.repo, "repo");
+      const branch = requireString(input.branch, "branch");
+      const fromBranch =
+        typeof input.from_branch === "string" && input.from_branch.length > 0
+          ? input.from_branch
+          : "main";
+      const result = await ghCreateBranch(owner, repo, branch, {
+        fromBranch,
+        auditUserId: ctx.userId,
+      });
+      return {
+        ok: true,
+        content: JSON.stringify(result),
+        summary: `branch ${owner}/${repo}#${branch} created from ${fromBranch}`,
+      };
+    }
+    case "github_create_pull_request": {
+      const owner = requireString(input.owner, "owner");
+      const repo = requireString(input.repo, "repo");
+      const title = requireString(input.title, "title");
+      const head = requireString(input.head, "head");
+      const result = await ghCreatePullRequest(
+        owner,
+        repo,
+        {
+          title,
+          body: typeof input.body === "string" ? input.body : undefined,
+          head,
+          base: typeof input.base === "string" ? input.base : "main",
+          draft: input.draft === false ? false : true,
+        },
+        { auditUserId: ctx.userId },
+      );
+      return {
+        ok: true,
+        content: JSON.stringify(result),
+        summary: `PR #${result.number} ${result.draft ? "(draft)" : ""}: ${head} → ${result.base}`,
+      };
+    }
+
     case "vault_list_secrets": {
       const rows = (await sql`
         SELECT name, provider, description, created_at, last_used_at

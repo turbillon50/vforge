@@ -239,3 +239,210 @@ export async function getFileContent(
     encoding: data.encoding,
   };
 }
+
+// ─── Write ops (Ring 1-2) ─────────────────────────────────────────────
+// Per ADR-009 / AGENTS.md, these are gated by branch name in the tool
+// dispatcher: writes to "main" require an explicit override flag,
+// otherwise V is forced to land changes on a feature branch.
+
+export interface FileMutationResult {
+  path: string;
+  sha: string;
+  branch: string;
+  commit_sha: string;
+  commit_url: string;
+}
+
+/**
+ * Create a new file in a repo. Fails with 422 if the path already
+ * exists — the caller should use updateFile in that case.
+ */
+export async function createFile(
+  owner: string,
+  repo: string,
+  path: string,
+  content: string,
+  message: string,
+  options: { branch?: string; auditUserId?: string } = {},
+): Promise<FileMutationResult> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  const { data } = await octokit.request(
+    "PUT /repos/{owner}/{repo}/contents/{path}",
+    {
+      owner,
+      repo,
+      path,
+      message,
+      content: Buffer.from(content, "utf8").toString("base64"),
+      branch: options.branch,
+    },
+  );
+  return {
+    path,
+    sha: data.content?.sha ?? "",
+    branch: options.branch ?? "main",
+    commit_sha: data.commit.sha ?? "",
+    commit_url: data.commit.html_url ?? "",
+  };
+}
+
+/**
+ * Update an existing file. The blob SHA is required by the API; if not
+ * provided, we fetch it with a GET so the caller doesn't have to wire
+ * two calls together.
+ */
+export async function updateFile(
+  owner: string,
+  repo: string,
+  path: string,
+  content: string,
+  message: string,
+  options: { sha?: string; branch?: string; auditUserId?: string } = {},
+): Promise<FileMutationResult> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  let sha = options.sha;
+  if (!sha) {
+    const existing = await getFileContent(owner, repo, path, {
+      branch: options.branch,
+      auditUserId: options.auditUserId,
+    });
+    sha = existing.sha;
+  }
+  const { data } = await octokit.request(
+    "PUT /repos/{owner}/{repo}/contents/{path}",
+    {
+      owner,
+      repo,
+      path,
+      message,
+      content: Buffer.from(content, "utf8").toString("base64"),
+      sha,
+      branch: options.branch,
+    },
+  );
+  return {
+    path,
+    sha: data.content?.sha ?? "",
+    branch: options.branch ?? "main",
+    commit_sha: data.commit.sha ?? "",
+    commit_url: data.commit.html_url ?? "",
+  };
+}
+
+/**
+ * Delete a file. Same SHA-resolution shortcut as updateFile.
+ */
+export async function deleteFile(
+  owner: string,
+  repo: string,
+  path: string,
+  message: string,
+  options: { sha?: string; branch?: string; auditUserId?: string } = {},
+): Promise<{ path: string; branch: string; commit_sha: string; commit_url: string }> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  let sha = options.sha;
+  if (!sha) {
+    const existing = await getFileContent(owner, repo, path, {
+      branch: options.branch,
+      auditUserId: options.auditUserId,
+    });
+    sha = existing.sha;
+  }
+  const { data } = await octokit.request(
+    "DELETE /repos/{owner}/{repo}/contents/{path}",
+    {
+      owner,
+      repo,
+      path,
+      message,
+      sha,
+      branch: options.branch,
+    },
+  );
+  return {
+    path,
+    branch: options.branch ?? "main",
+    commit_sha: data.commit.sha ?? "",
+    commit_url: data.commit.html_url ?? "",
+  };
+}
+
+/**
+ * Create a new branch from an existing one. Resolves the source SHA
+ * with a GET on /git/refs/heads/<from_branch> so the caller can pass
+ * just branch names.
+ */
+export async function createBranch(
+  owner: string,
+  repo: string,
+  branch: string,
+  options: { fromBranch?: string; auditUserId?: string } = {},
+): Promise<{ branch: string; sha: string; ref: string }> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  const fromBranch = options.fromBranch ?? "main";
+  const { data: refData } = await octokit.request(
+    "GET /repos/{owner}/{repo}/git/ref/{ref}",
+    { owner, repo, ref: `heads/${fromBranch}` },
+  );
+  const sourceSha = refData.object.sha;
+  const { data } = await octokit.request(
+    "POST /repos/{owner}/{repo}/git/refs",
+    {
+      owner,
+      repo,
+      ref: `refs/heads/${branch}`,
+      sha: sourceSha,
+    },
+  );
+  return {
+    branch,
+    sha: data.object.sha,
+    ref: data.ref,
+  };
+}
+
+/**
+ * Create a Pull Request. Defaults to draft so V can prepare changes
+ * without requesting review until the human approves.
+ */
+export async function createPullRequest(
+  owner: string,
+  repo: string,
+  input: {
+    title: string;
+    body?: string;
+    head: string;
+    base?: string;
+    draft?: boolean;
+  },
+  options: { auditUserId?: string } = {},
+): Promise<{
+  number: number;
+  url: string;
+  state: string;
+  draft: boolean;
+  head: string;
+  base: string;
+}> {
+  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  const { data } = await octokit.request(
+    "POST /repos/{owner}/{repo}/pulls",
+    {
+      owner,
+      repo,
+      title: input.title,
+      body: input.body,
+      head: input.head,
+      base: input.base ?? "main",
+      draft: input.draft ?? true,
+    },
+  );
+  return {
+    number: data.number,
+    url: data.html_url,
+    state: data.state,
+    draft: data.draft ?? false,
+    head: data.head.ref,
+    base: data.base.ref,
+  };
+}
