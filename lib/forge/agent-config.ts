@@ -16,6 +16,7 @@
  */
 import { sql } from "@/lib/db/client";
 import { MODELS, normalizeSlug, type TaskKind } from "./models";
+import { isValidOpenRouterSlug } from "./openrouter-catalog";
 
 interface ConfigRow {
   task_kind: TaskKind;
@@ -76,11 +77,22 @@ export async function setModelForTask(
   }
   const normalized = normalizeSlug(model);
   const isKnown = !!MODELS[normalized];
-  const looksLikeSlug = normalized.includes("/");
-  if (!isKnown && !looksLikeSlug) {
-    throw new Error(
-      `Model '${model}' doesn't look like a valid OpenRouter slug. Expected something like 'anthropic/claude-haiku-4.5' or 'google/gemini-2.5-flash'.`,
-    );
+  if (!isKnown) {
+    // Not in the curated registry — confirm it exists in OpenRouter's
+    // live catalog. This lets V pick any of the 365+ models OpenRouter
+    // exposes (free or paid) without code changes.
+    const looksLikeSlug = normalized.includes("/");
+    if (!looksLikeSlug) {
+      throw new Error(
+        `Model '${model}' doesn't look like a slug (expected 'provider/model-name').`,
+      );
+    }
+    const valid = await isValidOpenRouterSlug(normalized).catch(() => false);
+    if (!valid) {
+      throw new Error(
+        `Model '${normalized}' not found in OpenRouter catalog. Use openrouter_search_models to find a valid slug.`,
+      );
+    }
   }
   const updatedBy = options.updatedBy ?? "operator_luis";
   const rows = (await sql`

@@ -56,6 +56,11 @@ import { invalidateSecretCache } from "@/lib/vault/get-secret";
 import { routeFor } from "@/lib/forge/routing";
 import { MODELS } from "@/lib/forge/models";
 import { listAgentConfig, setModelForTask } from "@/lib/forge/agent-config";
+import {
+  listAllOpenRouterModels,
+  getOpenRouterModel,
+  searchOpenRouterModels,
+} from "@/lib/forge/openrouter-catalog";
 
 export const TOOLS: Tool[] = [
   {
@@ -867,6 +872,59 @@ export const TOOLS: Tool[] = [
         per_page: { type: "number", description: "1-30, default 10." },
       },
       required: ["repo"],
+    },
+  },
+
+  // ─── OpenRouter catálogo en vivo (365+ modelos) ───────────────────
+  {
+    name: "openrouter_list_models",
+    description:
+      "Lista modelos disponibles en OpenRouter en vivo (cache 15 min). Útil para descubrir qué modelos hay sin estar limitada al registry hardcoded de 9. Devuelve { id, name, provider, context_length, pricing_per_1m, supports_tools, is_free } por modelo. Default: 50 modelos. Pasa provider='anthropic' o 'google' para filtrar.",
+    input_schema: {
+      type: "object",
+      properties: {
+        limit: {
+          type: "number",
+          description: "Cuántos modelos devolver. 0 = todos (~365). Default 50.",
+        },
+        provider: {
+          type: "string",
+          description: "Filtrar por provider (ej. 'anthropic', 'google', 'meta-llama', 'openai', 'deepseek', 'mistralai').",
+        },
+      },
+    },
+  },
+  {
+    name: "openrouter_get_model",
+    description:
+      "Detalle completo de un modelo de OpenRouter por slug. Devuelve descripción, context_length, pricing exacto, supports_tools, is_free. Úsala antes de agent_config_set para confirmar que el slug existe y ver costos reales.",
+    input_schema: {
+      type: "object",
+      properties: {
+        slug: {
+          type: "string",
+          description: "OpenRouter slug (ej. 'deepseek/deepseek-chat', 'anthropic/claude-haiku-4.5').",
+        },
+      },
+      required: ["slug"],
+    },
+  },
+  {
+    name: "openrouter_search_models",
+    description:
+      "Busca modelos en OpenRouter por filtros: free, supports_tools, min_context, max_cost_per_1m_in, max_cost_per_1m_out, provider, query (substring). Ordenado por más barato primero. Úsala para encontrar 'el más barato con tools y context > 100K' o 'todos los free de Google'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        free: { type: "boolean", description: "true = solo gratis; false = solo de paga; omit = todos." },
+        supports_tools: { type: "boolean", description: "true = solo modelos que soportan tool calling." },
+        min_context: { type: "number", description: "Tokens mínimos de contexto (ej. 100000)." },
+        max_cost_per_1m_in: { type: "number", description: "USD máximo por 1M tokens de input." },
+        max_cost_per_1m_out: { type: "number", description: "USD máximo por 1M tokens de output." },
+        provider: { type: "string", description: "Filtrar por provider." },
+        query: { type: "string", description: "Substring en id o name (ej. 'haiku', 'flash')." },
+        limit: { type: "number", description: "Default 25." },
+      },
     },
   },
 
@@ -2195,6 +2253,99 @@ async function dispatch(
           runs,
         }),
         summary: `${runs.length} runs de v-sandbox en ${owner}/${repo}${branch ? "#" + branch : ""}`,
+      };
+    }
+
+    // ─── OpenRouter catálogo en vivo ───────────────────────────────
+    case "openrouter_list_models": {
+      const limit =
+        typeof input.limit === "number" ? input.limit : 50;
+      const provider =
+        typeof input.provider === "string" && input.provider.length > 0
+          ? input.provider
+          : undefined;
+      const models = await listAllOpenRouterModels({ limit, provider });
+      return {
+        ok: true,
+        content: JSON.stringify({
+          total: models.length,
+          models: models.map((m) => ({
+            id: m.id,
+            name: m.name,
+            provider: m.provider,
+            context_length: m.context_length,
+            pricing_per_1m_in: Number((m.pricing.prompt * 1_000_000).toFixed(4)),
+            pricing_per_1m_out: Number((m.pricing.completion * 1_000_000).toFixed(4)),
+            supports_tools: m.supports_tools,
+            is_free: m.is_free,
+          })),
+        }),
+        summary: `${models.length} modelos${provider ? ` de ${provider}` : ""}`,
+      };
+    }
+    case "openrouter_get_model": {
+      const slug = requireString(input.slug, "slug");
+      const model = await getOpenRouterModel(slug);
+      if (!model) {
+        return {
+          ok: false,
+          content: JSON.stringify({
+            error: `Slug '${slug}' no existe en OpenRouter.`,
+          }),
+          summary: `slug '${slug}' no encontrado`,
+        };
+      }
+      return {
+        ok: true,
+        content: JSON.stringify({
+          id: model.id,
+          name: model.name,
+          description: model.description,
+          provider: model.provider,
+          context_length: model.context_length,
+          pricing_per_1m_in: Number((model.pricing.prompt * 1_000_000).toFixed(6)),
+          pricing_per_1m_out: Number((model.pricing.completion * 1_000_000).toFixed(6)),
+          supports_tools: model.supports_tools,
+          is_free: model.is_free,
+          modality: model.modality,
+        }),
+        summary: `${model.id}${model.is_free ? " (free)" : ""}`,
+      };
+    }
+    case "openrouter_search_models": {
+      const filter: Record<string, unknown> = {};
+      if (typeof input.free === "boolean") filter.free = input.free;
+      if (typeof input.supports_tools === "boolean")
+        filter.supports_tools = input.supports_tools;
+      if (typeof input.min_context === "number")
+        filter.min_context = input.min_context;
+      if (typeof input.max_cost_per_1m_in === "number")
+        filter.max_cost_per_1m_in = input.max_cost_per_1m_in;
+      if (typeof input.max_cost_per_1m_out === "number")
+        filter.max_cost_per_1m_out = input.max_cost_per_1m_out;
+      if (typeof input.provider === "string" && input.provider.length > 0)
+        filter.provider = input.provider;
+      if (typeof input.query === "string" && input.query.length > 0)
+        filter.query = input.query;
+      if (typeof input.limit === "number") filter.limit = input.limit;
+      const models = await searchOpenRouterModels(filter);
+      return {
+        ok: true,
+        content: JSON.stringify({
+          total: models.length,
+          filter,
+          models: models.map((m) => ({
+            id: m.id,
+            name: m.name,
+            provider: m.provider,
+            context_length: m.context_length,
+            pricing_per_1m_in: Number((m.pricing.prompt * 1_000_000).toFixed(4)),
+            pricing_per_1m_out: Number((m.pricing.completion * 1_000_000).toFixed(4)),
+            supports_tools: m.supports_tools,
+            is_free: m.is_free,
+          })),
+        }),
+        summary: `${models.length} matches`,
       };
     }
 
