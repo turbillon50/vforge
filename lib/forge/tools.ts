@@ -1458,7 +1458,7 @@ async function dispatch(
         });
 
         const summary = branch === "main"
-          ? `✅ creado ${owner}/${repo}#${branch}:${path} — ⚠️ DEBES ejecutar github_run_check(repo='${repo}', branch='main', reason='validate after create'). Si falla, usa github_revert_commit(sha='${result.commit.sha}').`
+          ? `✅ creado ${owner}/${repo}#${branch}:${path} — ⚠️ DEBES ejecutar github_run_check(repo='${repo}', branch='main', reason='validate after create'). Si falla, usa github_revert_commit(sha='${result.commit_sha}').`
           : `created ${owner}/${repo}#${branch}:${path}`;
 
         return {
@@ -1466,7 +1466,7 @@ async function dispatch(
           content: JSON.stringify({
             ...result,
             _validation_note: branch === "main"
-              ? `Ring 2 write to main. Commit SHA: ${result.commit.sha}. NEXT: github_run_check then github_revert_commit if needed.`
+              ? `Ring 2 write to main. Commit SHA: ${result.commit_sha}. NEXT: github_run_check then github_revert_commit if needed.`
               : undefined,
           }),
           summary,
@@ -1515,7 +1515,7 @@ async function dispatch(
         });
 
         const summary = branch === "main"
-          ? `✅ actualizado ${owner}/${repo}#${branch}:${path} — ⚠️ DEBES ejecutar github_run_check(repo='${repo}', branch='main', reason='validate after update'). Si falla, usa github_revert_commit(sha='${result.commit.sha}').`
+          ? `✅ actualizado ${owner}/${repo}#${branch}:${path} — ⚠️ DEBES ejecutar github_run_check(repo='${repo}', branch='main', reason='validate after update'). Si falla, usa github_revert_commit(sha='${result.commit_sha}').`
           : `updated ${owner}/${repo}#${branch}:${path}`;
 
         return {
@@ -1523,7 +1523,7 @@ async function dispatch(
           content: JSON.stringify({
             ...result,
             _validation_note: branch === "main"
-              ? `Ring 2 write to main. Commit SHA: ${result.commit.sha}. NEXT: github_run_check then github_revert_commit if needed.`
+              ? `Ring 2 write to main. Commit SHA: ${result.commit_sha}. NEXT: github_run_check then github_revert_commit if needed.`
               : undefined,
           }),
           summary,
@@ -1941,7 +1941,7 @@ async function dispatch(
     case "vercel_check_url": {
       try {
         const url = requireString(input.url, "url");
-        const response = await fetch(url, { method: "GET", timeout: 5000 });
+        const response = await fetch(url, { method: "GET" });
         const text = await response.text();
         const preview = text.length > 500 ? text.substring(0, 500) : text;
 
@@ -2039,7 +2039,7 @@ async function dispatch(
         let urlError = null;
         if (deployment.url) {
           try {
-            const urlResponse = await fetch(`https://${deployment.url}`, { timeout: 5000 });
+            const urlResponse = await fetch(`https://${deployment.url}`);
             urlStatus = `✅ ${urlResponse.status}`;
           } catch (err) {
             urlError = err instanceof Error ? err.message : "Connection failed";
