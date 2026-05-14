@@ -596,19 +596,19 @@ export default function ForgePage() {
 
   return (
     <div className="flex flex-col h-full -mx-4 md:-mx-6 -mt-6 -mb-6">
-      <header className="sticky top-0 z-10 bg-vf-bg border-b border-vf-border px-4 py-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <h1 className="text-lg font-semibold tracking-tight-vf text-vf-fg flex-shrink-0">
+      <header className="sticky top-0 z-10 bg-vf-bg border-b border-vf-border px-6 py-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <h1 className="text-xl font-semibold text-vf-fg flex-shrink-0">
             V
           </h1>
           <select
             value={scope}
             onChange={(e) => setScope(e.target.value)}
             disabled={streaming}
-            className="bg-vf-bg-2 border border-vf-border-1 rounded-md px-2 py-1.5 text-sm text-vf-fg focus:outline-none focus:border-vf-border-2 max-w-[180px] truncate"
-            title="Modo de conversación"
+            className="bg-vf-bg-2 border border-vf-border rounded-md px-3 py-2 text-sm text-vf-fg focus:outline-none focus:border-vf-green focus:ring-1 focus:ring-vf-green/20 max-w-xs truncate transition-colors"
+            title="Scope de conversación"
           >
-            <option value="general">🌐 General</option>
+            <option value="general">General</option>
             {(["produccion", "activo", "en_revision", "en_pausa", "archivo"] as const).map((cat) => {
               const items = projectsByCategory[cat] ?? [];
               if (items.length === 0) return null;
@@ -616,10 +616,10 @@ export default function ForgePage() {
                 <optgroup
                   key={cat}
                   label={
-                    cat === "produccion" ? "🟢 Producción" :
-                    cat === "activo" ? "🔵 Activo" :
-                    cat === "en_revision" ? "🟡 En revisión" :
-                    cat === "en_pausa" ? "⏸️ En pausa" : "📦 Archivo"
+                    cat === "produccion" ? "Producción" :
+                    cat === "activo" ? "Activo" :
+                    cat === "en_revision" ? "En revisión" :
+                    cat === "en_pausa" ? "En pausa" : "Archivo"
                   }
                 >
                   {items.map((p) => (
@@ -630,30 +630,30 @@ export default function ForgePage() {
             })}
           </select>
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-6 flex-shrink-0">
           <button
             type="button"
             onClick={saveMemoryNow}
             disabled={streaming || savingMemory || hydrating}
-            className="text-xs text-vf-fg-2 hover:text-vf-fg transition-colors disabled:opacity-40"
-            title="Guardar la sesión actual en la memoria persistente de V"
+            className="text-xs font-medium text-vf-fg-1 hover:text-vf-fg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Guardar sesión en memoria persistente"
           >
-            {savingMemory ? "Guardando…" : "💾 Memoria"}
+            {savingMemory ? "Guardando…" : "Memoria"}
           </button>
           <button
             type="button"
             onClick={newSession}
-            className="text-xs text-vf-fg-2 hover:text-vf-fg transition-colors"
-            title="Empezar una conversación nueva (guarda recap automáticamente)"
+            className="text-xs font-medium text-vf-fg-1 hover:text-vf-fg transition-colors"
+            title="Nueva conversación"
           >
             Nueva
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pl-4 border-l border-vf-border">
             <span
-              className={`w-2 h-2 rounded-full bg-vf-green ${streaming ? "" : "dot-live"}`}
+              className={`w-2 h-2 rounded-full bg-vf-green flex-shrink-0 ${streaming ? "" : "dot-live"}`}
             />
-            <span className="text-sm text-vf-fg-1">
-              {hydrating ? "Cargando…" : streaming ? "Pensando…" : "Listo"}
+            <span className="text-xs font-medium text-vf-fg-1">
+              {hydrating ? "Cargando" : streaming ? "Pensando" : "Listo"}
             </span>
           </div>
         </div>
@@ -661,18 +661,16 @@ export default function ForgePage() {
 
       <ChatStream messages={messages} onAction={handleAction} />
 
-      {/* Live activity strip — shows what V is doing right now (last
-        * tool_use_start) without making Luis scroll to find it inline.
-        * Hidden when idle. Sticky just above the composer. */}
+      {/* Live activity strip */}
       {streaming && (
         <div
           role="status"
           aria-live="polite"
-          className="sticky bottom-[88px] md:bottom-[80px] bg-vf-bg-1/95 backdrop-blur-sm border-t border-vf-border px-3 py-2 flex items-center gap-2 text-xs font-mono"
+          className="sticky bottom-[88px] md:bottom-[80px] bg-vf-bg-2/80 backdrop-blur-md border-t border-vf-border px-6 py-3 flex items-center gap-3 text-xs"
         >
-          <span className="dot-live w-1.5 h-1.5 rounded-full bg-vf-green flex-shrink-0" />
-          <span className="text-vf-fg-1 truncate">
-            {currentTool ? toolDisplayName(currentTool) + "…" : "V está pensando…"}
+          <span className="dot-live w-2 h-2 rounded-full bg-vf-green flex-shrink-0" />
+          <span className="text-vf-fg-1 font-medium truncate">
+            {currentTool ? toolDisplayName(currentTool) : "V está pensando"}
           </span>
         </div>
       )}
