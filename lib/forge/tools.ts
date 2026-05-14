@@ -361,6 +361,34 @@ export const TOOLS: Tool[] = [
     },
   },
   {
+    name: "vault_save",
+    description:
+      "Guarda o rota un secret en el vault global del operador (operator_secrets), cifrado en reposo como la UI de /vault. Úsala cuando Luis te dé explícitamente un valor para una key global (ej. VERCEL_TOKEN, ANTHROPIC_API_KEY). El nombre debe ser UPPER_SNAKE_CASE. Ring 2 — solo con confirmación explícita de Luis. Para keys de un proyecto concreto usa project_secret_save.",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: "UPPER_SNAKE_CASE, ej. VERCEL_TOKEN, ANTHROPIC_API_KEY",
+        },
+        value: {
+          type: "string",
+          description: "Valor plaintext del secret (no lo repitas en el chat después)",
+        },
+        description: { type: "string", description: "Opcional — nota legible" },
+        provider: {
+          type: "string",
+          description: "Opcional — ej. vercel, anthropic, openai",
+        },
+        scope: {
+          type: "string",
+          description: "Opcional — ej. account-wide, project-scoped",
+        },
+      },
+      required: ["name", "value"],
+    },
+  },
+  {
     name: "memory_save",
     description:
       "Guarda un dato concreto en TU memoria persistente para que esté disponible en futuras conversaciones (cualquier sesión, cualquier dispositivo). Úsala cuando Luis te diga 'recuerda que…', 'guarda esto', o cuando notes una preferencia/decisión/dato relevante que valga la pena retener (ej: 'el broker de Break es IBKR'). NO la uses para conversación trivial — solo para datos que aporten contexto en el futuro.",
@@ -1670,6 +1698,62 @@ async function dispatch(
         ok: true,
         content: JSON.stringify({ total: rows.length, secrets: rows }),
         summary: `${rows.length} secrets`,
+      };
+    }
+    case "vault_save": {
+      const name = requireString(input.name, "name").trim();
+      const value = requireString(input.value, "value");
+      if (!/^[A-Z][A-Z0-9_]*$/.test(name)) {
+        throw new Error(
+          "name must be UPPER_SNAKE_CASE (e.g. VERCEL_TOKEN, ANTHROPIC_API_KEY)",
+        );
+      }
+      if (value.length > 16_000) {
+        throw new Error("value too large (max 16 KB)");
+      }
+      const description = nullableString(input.description);
+      const provider = nullableString(input.provider);
+      const scope = nullableString(input.scope);
+      const enc = encryptOperatorSecret(value);
+      const upsert = (await sql`
+        INSERT INTO operator_secrets (
+          name, description, ciphertext, iv, auth_tag, provider, scope, rotated_at
+        )
+        VALUES (
+          ${name}, ${description},
+          ${enc.ciphertext}, ${enc.iv}, ${enc.authTag},
+          ${provider}, ${scope}, NULL
+        )
+        ON CONFLICT (name) DO UPDATE SET
+          description = COALESCE(EXCLUDED.description, operator_secrets.description),
+          ciphertext = EXCLUDED.ciphertext,
+          iv = EXCLUDED.iv,
+          auth_tag = EXCLUDED.auth_tag,
+          provider = COALESCE(EXCLUDED.provider, operator_secrets.provider),
+          scope = COALESCE(EXCLUDED.scope, operator_secrets.scope),
+          rotated_at = now()
+        RETURNING id::text, name
+      `) as Array<{ id: string; name: string }>;
+      await sql`
+        INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
+        VALUES (
+          ${ctx.userId},
+          'vault.operator.write',
+          'operator_secret',
+          ${upsert[0].id},
+          2,
+          ${JSON.stringify({ name, provider, scope })}::jsonb
+        )
+      `;
+      invalidateSecretCache(name);
+      return {
+        ok: true,
+        content: JSON.stringify({
+          saved: true,
+          id: upsert[0].id,
+          name: upsert[0].name,
+        }),
+        summary: `vault: ${name} guardado`,
       };
     }
     case "memory_save": {
@@ -3175,8 +3259,21 @@ function requireString(v: unknown, name: string): string {
 function redactInput(
   input: Record<string, unknown>,
 ): Record<string, unknown> {
+  const fullRedact = new Set([
+    "value",
+    "password",
+    "client_secret",
+    "api_key",
+    "token",
+  ]);
   const safe: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(input)) {
+    const kl = k.toLowerCase();
+    if (fullRedact.has(kl)) {
+      safe[k] =
+        typeof v === "string" && v.length > 0 ? "[REDACTED]" : v;
+      continue;
+    }
     if (typeof v === "string" && v.length > 200) {
       safe[k] = `${v.slice(0, 80)}…(truncated)`;
     } else {

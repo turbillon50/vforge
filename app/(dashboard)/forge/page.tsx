@@ -45,6 +45,8 @@ function toolDisplayName(name: string): string {
       return "Leyendo archivo del repo";
     case "vault_list_secrets":
       return "Listando secrets del Vault";
+    case "vault_save":
+      return "Guardando secret en el Vault";
     case "memory_save":
       return "Guardando en memoria";
     case "vercel_list_projects":
@@ -113,10 +115,16 @@ function toolDisplayName(name: string): string {
       return "Consultando OpenRouter";
 
     // Skills (M16)
+    case "skill_list":
+      return "Listando skills";
+    case "skill_create":
+      return "Creando skill";
     case "skill_search":
       return "Buscando skill aplicable";
     case "skill_install":
       return "Instalando skill";
+    case "skill_uninstall":
+      return "Desinstalando skill";
 
     // Subagents (M18)
     case "spawn_subagent":
