@@ -1,10 +1,10 @@
-import { ChatPage } from '@/components/V/ChatPage';
+import { VLayoutDashboard } from '@/components/V/VLayoutDashboard';
 
 export const metadata = {
-  title: 'V - Agente Autónomo | vForge',
-  description: 'Interfaz conversacional con V, tu asistente autónomo de vForge.',
+  title: 'V - Panel de Control | vForge',
+  description: 'Panel de control para V, tu asistente autónomo. Gestiona proyectos, conexiones y tareas.',
 };
 
 export default function VPage() {
-  return <ChatPage />;
+  return <VLayoutDashboard />;
 }
