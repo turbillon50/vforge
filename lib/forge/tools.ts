@@ -1181,6 +1181,34 @@ export const TOOLS: Tool[] = [
       required: ["projectName"],
     },
   },
+  {
+    name: "http_request",
+    description:
+      "Haz un request HTTP GET, POST, PUT, DELETE a cualquier URL. Devuelve status, headers y body. Úsala para llamar APIs, webhooks, endpoints propios, etc. V la usa para auto-repararse (POST a /api/v-full-repair), llamar APIs externas, etc. Ring 0, auto-allowed.",
+    input_schema: {
+      type: "object",
+      properties: {
+        url: {
+          type: "string",
+          description: "URL completa (ej. 'https://vforge.site/api/v-full-repair')",
+        },
+        method: {
+          type: "string",
+          enum: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+          description: "Método HTTP. Default: GET",
+        },
+        headers: {
+          type: "object",
+          description: "Headers adicionales (ej. {'Authorization': 'Bearer token'})",
+        },
+        body: {
+          type: "string",
+          description: "Body como string (JSON, etc.)",
+        },
+      },
+      required: ["url"],
+    },
+  },
 ];
 
 export interface ToolExecutionContext {
@@ -3180,6 +3208,51 @@ async function dispatch(
         }),
         summary: `${result.model}: ${result.tokensIn}+${result.tokensOut} tok ($${result.costUsd.toFixed(6)})`,
       };
+    }
+
+    case "http_request": {
+      const url = requireString(input.url, "url");
+      const method = (input.method ?? "GET").toUpperCase() as "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+      const headers = (input.headers ?? {}) as Record<string, string>;
+      const body = typeof input.body === "string" ? input.body : undefined;
+
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            ...headers,
+          },
+          ...(body ? { body } : {}),
+        });
+
+        const text = await response.text();
+        let responseBody: unknown;
+        try {
+          responseBody = JSON.parse(text);
+        } catch {
+          responseBody = text;
+        }
+
+        return {
+          ok: response.ok,
+          content: JSON.stringify({
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries()),
+            body: responseBody,
+          }),
+          summary: `${method} ${url}: ${response.status}`,
+        };
+      } catch (e) {
+        return {
+          ok: false,
+          content: JSON.stringify({
+            error: e instanceof Error ? e.message : String(e),
+          }),
+          summary: `${method} ${url}: failed`,
+        };
+      }
     }
 
     default:
