@@ -7,10 +7,13 @@
  *
  * Lazy-initialized so that build-time page-data collection doesn't
  * crash when DATABASE_URL is absent (e.g. in CI without prod env).
+ *
+ * Includes auto-healing: first request triggers database schema initialization.
  */
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 
 let _sql: NeonQueryFunction<false, false> | null = null;
+let _healed = false;
 
 function getSql(): NeonQueryFunction<false, false> {
   if (_sql) return _sql;
@@ -20,6 +23,18 @@ function getSql(): NeonQueryFunction<false, false> {
   }
   _sql = neon(databaseUrl);
   return _sql;
+}
+
+async function ensureHealed(): Promise<void> {
+  if (_healed) return;
+  _healed = true;
+
+  try {
+    const { healDatabase } = await import("./auto-heal");
+    await healDatabase();
+  } catch (e) {
+    console.error("[V] Database healing failed:", e);
+  }
 }
 
 /**
@@ -63,4 +78,12 @@ export async function queryAll<T = Record<string, unknown>>(
 ): Promise<T[]> {
   const rows = (await getSql().query(query, params)) as T[];
   return rows;
+}
+
+/**
+ * Ensure database schema is healed. Safe to call multiple times.
+ * Call from request handlers or middleware to trigger auto-healing.
+ */
+export async function ensureDatabaseHealed(): Promise<void> {
+  return ensureHealed();
 }
