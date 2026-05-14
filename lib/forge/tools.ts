@@ -1104,6 +1104,83 @@ export const TOOLS: Tool[] = [
       required: ["model", "prompt"],
     },
   },
+
+  // ─── Vercel Deployment Diagnostics (Ring 0, auto-recovery) ────────────
+  {
+    name: "vercel_get_deployment_logs",
+    description:
+      "Obtiene los últimos 100 logs/eventos de un deployment de Vercel. Filtra errores primero. Úsala después de un deployment fallido para diagnosticar qué salió mal (build errors, runtime errors, timeout, etc.). Devuelve lista de eventos con timestamp, level, message.",
+    input_schema: {
+      type: "object",
+      properties: {
+        deploymentId: {
+          type: "string",
+          description: "ID del deployment de Vercel (ej. 'dpl_XXX')",
+        },
+      },
+      required: ["deploymentId"],
+    },
+  },
+  {
+    name: "vercel_get_deployment_status",
+    description:
+      "Obtiene el estado actual de un deployment: state (READY/BUILDING/ERROR), url, errorMessage, buildingAt, readyAt. Ring 0, auto-allowed. Usa esto para verificar si un deployment está vivo o bloqueado.",
+    input_schema: {
+      type: "object",
+      properties: {
+        deploymentId: {
+          type: "string",
+          description: "ID del deployment",
+        },
+      },
+      required: ["deploymentId"],
+    },
+  },
+  {
+    name: "vercel_check_url",
+    description:
+      "Verifica que una URL deployada esté respondiendo correctamente. Hace fetch() y devuelve: HTTP status, headers importantes, primeros 500 caracteres del body. Úsala para validar que el deployment llegó a producción.",
+    input_schema: {
+      type: "object",
+      properties: {
+        url: {
+          type: "string",
+          description: "URL completa del deployment (ej. 'https://project.vercel.app')",
+        },
+      },
+      required: ["url"],
+    },
+  },
+  {
+    name: "vercel_get_deployment_by_project",
+    description:
+      "Obtiene el deployment más reciente de un proyecto específico por nombre. Ring 0, auto-allowed. Devuelve deployment details para poder usar con otros tools de diagnóstico.",
+    input_schema: {
+      type: "object",
+      properties: {
+        projectName: {
+          type: "string",
+          description: "Nombre del proyecto en Vercel (ej. 'my-app')",
+        },
+      },
+      required: ["projectName"],
+    },
+  },
+  {
+    name: "vercel_diagnose_deployment",
+    description:
+      "Tool compuesta: ejecuta diagnóstico COMPLETO de un deployment. Llama en secuencia: status → logs → URL check. Devuelve reporte ejecutivo: '✅ OK' o '❌ PROBLEMA: [X], LOG ERROR: [Y], SUGERENCIA: [Z]'. FORGE y TANIT usan esto automáticamente cuando aparece error en deploy. Ring 0.",
+    input_schema: {
+      type: "object",
+      properties: {
+        projectName: {
+          type: "string",
+          description: "Nombre del proyecto en Vercel",
+        },
+      },
+      required: ["projectName"],
+    },
+  },
 ];
 
 export interface ToolExecutionContext {
@@ -1783,6 +1860,228 @@ async function dispatch(
         content: JSON.stringify(config),
         summary: `DNS config ${input.domain}: misconfig=${config.misconfigured}`,
       };
+    }
+
+    // ─── Vercel Deployment Diagnostics ────────────────────────────
+    case "vercel_get_deployment_logs": {
+      try {
+        const deploymentId = requireString(input.deploymentId, "deploymentId");
+        const response = await fetch(`https://api.vercel.com/v1/deployments/${deploymentId}/events`, {
+          headers: {
+            "Authorization": `Bearer ${process.env.VERCEL_TOKEN}`,
+          },
+        });
+        const events = (await response.json()) as Array<{
+          id: string;
+          timestamp: number;
+          type: string;
+          text: string;
+          payload?: Record<string, unknown>;
+        }>;
+
+        // Filtra errores primero
+        const errors = events.filter((e) => e.type === "error" || e.text.toLowerCase().includes("error"));
+        const sorted = errors.length > 0 ? errors : events;
+        const last100 = sorted.slice(0, 100);
+
+        return {
+          ok: true,
+          content: JSON.stringify({
+            deploymentId,
+            totalEvents: events.length,
+            errorCount: errors.length,
+            lastLogs: last100.map((e) => ({
+              timestamp: new Date(e.timestamp).toISOString(),
+              type: e.type,
+              text: e.text,
+            })),
+          }),
+          summary: `Deployment ${deploymentId}: ${errors.length} errores en ${events.length} eventos totales`,
+        };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return {
+          ok: false,
+          content: JSON.stringify({ error: msg }),
+          summary: `❌ Error obteniendo logs: ${msg.split('\n')[0]}`,
+        };
+      }
+    }
+
+    case "vercel_get_deployment_status": {
+      try {
+        const deploymentId = requireString(input.deploymentId, "deploymentId");
+        const deployment = await vercelGetDeployment(deploymentId, {
+          auditUserId: ctx.userId,
+        });
+
+        return {
+          ok: true,
+          content: JSON.stringify({
+            deploymentId,
+            state: deployment.readyState,
+            url: deployment.url,
+            errorMessage: deployment.errorMessage,
+            buildingAt: deployment.buildingAt,
+            readyAt: deployment.readyAt,
+            target: deployment.target,
+          }),
+          summary: `Deploy ${deploymentId}: estado=${deployment.readyState}${deployment.url ? ` (${deployment.url})` : ""}${deployment.errorMessage ? ` ⚠️ ${deployment.errorMessage}` : ""}`,
+        };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return {
+          ok: false,
+          content: JSON.stringify({ error: msg }),
+          summary: `❌ Error obteniendo status: ${msg.split('\n')[0]}`,
+        };
+      }
+    }
+
+    case "vercel_check_url": {
+      try {
+        const url = requireString(input.url, "url");
+        const response = await fetch(url, { method: "GET", timeout: 5000 });
+        const text = await response.text();
+        const preview = text.length > 500 ? text.substring(0, 500) : text;
+
+        return {
+          ok: true,
+          content: JSON.stringify({
+            url,
+            status: response.status,
+            headers: {
+              contentType: response.headers.get("content-type"),
+              contentLength: response.headers.get("content-length"),
+              cacheControl: response.headers.get("cache-control"),
+            },
+            preview,
+            statusText: response.statusText,
+          }),
+          summary: `✅ URL ${url} respondió con ${response.status} ${response.statusText}`,
+        };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return {
+          ok: false,
+          content: JSON.stringify({ error: msg, url: input.url }),
+          summary: `❌ URL no responde: ${msg.split('\n')[0]}`,
+        };
+      }
+    }
+
+    case "vercel_get_deployment_by_project": {
+      try {
+        const projectName = requireString(input.projectName, "projectName");
+        const response = await fetch(
+          `https://api.vercel.com/v9/deployments?app=${projectName}&limit=1`,
+          {
+            headers: { "Authorization": `Bearer ${process.env.VERCEL_TOKEN}` },
+          }
+        );
+        const data = (await response.json()) as { deployments: Array<{ id: string; [key: string]: unknown }> };
+        const deployment = data.deployments?.[0];
+
+        if (!deployment) {
+          return {
+            ok: false,
+            content: JSON.stringify({ error: "No deployments found for project" }),
+            summary: `❌ No deployment encontrado para ${projectName}`,
+          };
+        }
+
+        return {
+          ok: true,
+          content: JSON.stringify(deployment),
+          summary: `Deployment más reciente: ${deployment.id}`,
+        };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return {
+          ok: false,
+          content: JSON.stringify({ error: msg }),
+          summary: `❌ Error: ${msg.split('\n')[0]}`,
+        };
+      }
+    }
+
+    case "vercel_diagnose_deployment": {
+      try {
+        const projectName = requireString(input.projectName, "projectName");
+
+        // Paso 1: Obtener deployment más reciente
+        const deployResponse = await fetch(
+          `https://api.vercel.com/v9/deployments?app=${projectName}&limit=1`,
+          {
+            headers: { "Authorization": `Bearer ${process.env.VERCEL_TOKEN}` },
+          }
+        );
+        const deployData = (await deployResponse.json()) as { deployments: Array<{ id: string; url: string; readyState: string; errorMessage?: string }> };
+        const deployment = deployData.deployments?.[0];
+
+        if (!deployment) {
+          return {
+            ok: false,
+            content: JSON.stringify({ error: "No deployment found" }),
+            summary: `❌ No deployment encontrado para ${projectName}`,
+          };
+        }
+
+        // Paso 2: Obtener logs
+        const logsResponse = await fetch(`https://api.vercel.com/v1/deployments/${deployment.id}/events`, {
+          headers: { "Authorization": `Bearer ${process.env.VERCEL_TOKEN}` },
+        });
+        const events = (await logsResponse.json()) as Array<{ type: string; text: string }>;
+        const errors = events.filter((e) => e.type === "error" || e.text.toLowerCase().includes("error"));
+
+        // Paso 3: Verificar URL
+        let urlStatus = "⏳ No verificado";
+        let urlError = null;
+        if (deployment.url) {
+          try {
+            const urlResponse = await fetch(`https://${deployment.url}`, { timeout: 5000 });
+            urlStatus = `✅ ${urlResponse.status}`;
+          } catch (err) {
+            urlError = err instanceof Error ? err.message : "Connection failed";
+            urlStatus = `❌ ${urlError}`;
+          }
+        }
+
+        const isHealthy = deployment.readyState === "READY" && errors.length === 0 && !urlError;
+
+        return {
+          ok: true,
+          content: JSON.stringify({
+            projectName,
+            deploymentId: deployment.id,
+            summary: isHealthy ? "✅ DEPLOYMENT HEALTHY" : "❌ DEPLOYMENT HAS ISSUES",
+            details: {
+              deploymentState: deployment.readyState,
+              errorMessage: deployment.errorMessage || null,
+              buildErrors: errors.length,
+              urlStatus,
+              url: deployment.url,
+            },
+            suggestion: isHealthy
+              ? "Deploy está en vivo y respondiendo correctamente."
+              : errors.length > 0
+              ? `Hay ${errors.length} errores en los logs. Revisa el output del build.`
+              : urlError
+              ? `URL no responde: ${urlError}. Verifica la aplicación.`
+              : "Estado desconocido.",
+          }),
+          summary: isHealthy
+            ? `✅ ${projectName}: HEALTHY (${deployment.id})`
+            : `❌ ${projectName}: ISSUES - ${errors.length} build errors, URL: ${urlStatus}`,
+        };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return {
+          ok: false,
+          content: JSON.stringify({ error: msg }),
+          summary: `❌ Diagnóstico falló: ${msg.split('\n')[0]}`,
+        };
+      }
     }
 
     // ─── Name.com ──────────────────────────────────────────────────
