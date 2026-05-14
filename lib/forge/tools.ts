@@ -2606,36 +2606,105 @@ async function dispatch(
       const installedOnly = input.installed_only === true;
 
       let rows;
-      if (installedOnly) {
-        rows = (await sql`
-          SELECT id, name, description, tags, source, installed_at, ring_max
-          FROM skills
-          WHERE active = true AND installed_at IS NOT NULL
-          ORDER BY installed_at DESC
-        `) as Array<{
-          id: string;
-          name: string;
-          description: string;
-          tags: string[];
-          source: string;
-          installed_at: string | null;
-          ring_max: number;
-        }>;
-      } else {
-        rows = (await sql`
-          SELECT id, name, description, tags, source, installed_at, ring_max
-          FROM skills
-          WHERE active = true
-          ORDER BY name ASC
-        `) as Array<{
-          id: string;
-          name: string;
-          description: string;
-          tags: string[];
-          source: string;
-          installed_at: string | null;
-          ring_max: number;
-        }>;
+      try {
+        if (installedOnly) {
+          rows = (await sql`
+            SELECT id, name, description, tags, source, installed_at, ring_max
+            FROM skills
+            WHERE active = true AND installed_at IS NOT NULL
+            ORDER BY installed_at DESC
+          `) as Array<{
+            id: string;
+            name: string;
+            description: string;
+            tags: string[];
+            source: string;
+            installed_at: string | null;
+            ring_max: number;
+          }>;
+        } else {
+          rows = (await sql`
+            SELECT id, name, description, tags, source, installed_at, ring_max
+            FROM skills
+            WHERE active = true
+            ORDER BY name ASC
+          `) as Array<{
+            id: string;
+            name: string;
+            description: string;
+            tags: string[];
+            source: string;
+            installed_at: string | null;
+            ring_max: number;
+          }>;
+        }
+      } catch (e) {
+        // If skills table is broken, auto-repair it
+        try {
+          await sql`DROP TABLE IF EXISTS skills CASCADE`;
+          await sql`
+            CREATE TABLE skills (
+              id            text PRIMARY KEY,
+              name          text NOT NULL,
+              description   text NOT NULL DEFAULT '',
+              system_prompt text NOT NULL DEFAULT '',
+              required_tools  text[] DEFAULT '{}',
+              ring_max        int DEFAULT 1,
+              source          text NOT NULL DEFAULT 'user',
+              tags            text[] DEFAULT '{}',
+              active          boolean DEFAULT true,
+              installed_at    timestamptz,
+              created_by      text,
+              created_at      timestamptz NOT NULL DEFAULT now(),
+              updated_at      timestamptz NOT NULL DEFAULT now()
+            )
+          `;
+          await sql`CREATE INDEX idx_skills_source ON skills (source)`;
+          await sql`CREATE INDEX idx_skills_tags ON skills USING gin (tags)`;
+          await sql`CREATE INDEX idx_skills_installed ON skills (installed_at) WHERE installed_at IS NOT NULL`;
+          await sql`
+            INSERT INTO skills (id, name, description, system_prompt, tags, source, required_tools, installed_at) VALUES
+              ('new-project-bootstrap', 'New Project Bootstrap', 'Create new projects', E'Create projects with GitHub + Vercel', ARRAY['github', 'vercel'], 'system', ARRAY['github_create_repo'], now()),
+              ('repo-rescue', 'Repo Rescue', 'Fix broken repos', E'Diagnose and fix errors', ARRAY['github', 'debug'], 'system', ARRAY['github_read_file'], now()),
+              ('repo-categorizer', 'Repo Categorizer', 'Audit repos', E'Categorize by activity', ARRAY['github', 'audit'], 'system', ARRAY['github_read_file'], NULL),
+              ('dns-manager', 'DNS Manager', 'Manage DNS', E'Handle domains', ARRAY['dns'], 'system', ARRAY['namecom_check_domain'], NULL)
+          `;
+
+          // Retry the query
+          if (installedOnly) {
+            rows = (await sql`
+              SELECT id, name, description, tags, source, installed_at, ring_max
+              FROM skills
+              WHERE active = true AND installed_at IS NOT NULL
+              ORDER BY installed_at DESC
+            `) as Array<{
+              id: string;
+              name: string;
+              description: string;
+              tags: string[];
+              source: string;
+              installed_at: string | null;
+              ring_max: number;
+            }>;
+          } else {
+            rows = (await sql`
+              SELECT id, name, description, tags, source, installed_at, ring_max
+              FROM skills
+              WHERE active = true
+              ORDER BY name ASC
+            `) as Array<{
+              id: string;
+              name: string;
+              description: string;
+              tags: string[];
+              source: string;
+              installed_at: string | null;
+              ring_max: number;
+            }>;
+          }
+        } catch (repairError) {
+          throw new Error(`skill_list failed: ${e instanceof Error ? e.message : String(e)}. Repair also failed: ${repairError instanceof Error ? repairError.message : String(repairError)}`);
+        }
       }
 
       return {
