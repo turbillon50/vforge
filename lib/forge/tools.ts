@@ -1209,7 +1209,51 @@ export const TOOLS: Tool[] = [
       required: ["url"],
     },
   },
+  {
+    name: "vault_save",
+    description:
+      "Guarda un secreto en el vault. Úsala para guardar API keys, tokens, contraseñas, credenciales, cualquier dato sensible. Ring 0, auto-allowed. V puede guardar y recuperar secretos sin restricciones.",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: "Nombre del secreto (ej. 'github_token', 'api_key_openai')",
+        },
+        value: {
+          type: "string",
+          description: "Valor del secreto (token, password, key, etc.)",
+        },
+      },
+      required: ["name", "value"],
+    },
+  },
+  {
+    name: "vault_load",
+    description:
+      "Carga un secreto del vault por nombre. Ring 0, auto-allowed. V puede leer cualquier secreto guardado.",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: "Nombre del secreto a cargar",
+        },
+      },
+      required: ["name"],
+    },
+  },
+  {
+    name: "vault_list_secrets",
+    description:
+      "Lista todos los secretos guardados en el vault (solo nombres, no valores). Ring 0, auto-allowed. V puede ver qué secretos tiene guardados.",
+    input_schema: {
+      type: "object",
+      properties: {},
+    },
+  },
 ];
+
 
 export interface ToolExecutionContext {
   userId: string;
@@ -3251,6 +3295,84 @@ async function dispatch(
             error: e instanceof Error ? e.message : String(e),
           }),
           summary: `${method} ${url}: failed`,
+        };
+      }
+    }
+
+    case "vault_save": {
+      const name = requireString(input.name, "name");
+      const value = requireString(input.value, "value");
+
+      try {
+        await sql`
+          INSERT INTO vault_operator_secrets (id, name, value)
+          VALUES (${`secret_${Date.now()}_${Math.random().toString(36).slice(2)}`}, ${name}, ${value})
+          ON CONFLICT (name) DO UPDATE SET value = EXCLUDED.value, updated_at = now()
+        `;
+
+        return {
+          ok: true,
+          content: JSON.stringify({ saved: true, name }),
+          summary: `secreto guardado: ${name}`,
+        };
+      } catch (e) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: e instanceof Error ? e.message : String(e) }),
+          summary: `error guardando secreto: ${name}`,
+        };
+      }
+    }
+
+    case "vault_load": {
+      const name = requireString(input.name, "name");
+
+      try {
+        const result = (await sql`
+          SELECT value FROM vault_operator_secrets WHERE name = ${name}
+        `) as Array<{ value: string }>;
+
+        if (result.length === 0) {
+          return {
+            ok: false,
+            content: JSON.stringify({ error: `Secret not found: ${name}` }),
+            summary: `secreto no encontrado: ${name}`,
+          };
+        }
+
+        return {
+          ok: true,
+          content: JSON.stringify({ value: result[0].value }),
+          summary: `secreto cargado: ${name}`,
+        };
+      } catch (e) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: e instanceof Error ? e.message : String(e) }),
+          summary: `error cargando secreto: ${name}`,
+        };
+      }
+    }
+
+    case "vault_list_secrets": {
+      try {
+        const result = (await sql`
+          SELECT name FROM vault_operator_secrets ORDER BY created_at DESC
+        `) as Array<{ name: string }>;
+
+        return {
+          ok: true,
+          content: JSON.stringify({
+            secrets: result.map((r) => r.name),
+            count: result.length,
+          }),
+          summary: `${result.length} secretos en el vault`,
+        };
+      } catch (e) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: e instanceof Error ? e.message : String(e) }),
+          summary: `error listando secretos`,
         };
       }
     }
