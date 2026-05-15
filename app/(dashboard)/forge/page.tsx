@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChatStream } from "@/components/vforge/chat-stream";
 import { Composer, type ComposerAttachment } from "@/components/vforge/composer";
 import type { ChatMessageData } from "@/components/vforge/chat-message";
+import { ProjectSwitcher } from "@/components/vforge/project-switcher";
 
 const SCOPE_STORAGE_KEY = "vforge_chat_scope"; // 'general' | projectId
 const SESSION_PREFIX = "vforge_session_id_";
@@ -148,6 +149,10 @@ interface ProjectOption {
 
 export default function ForgePage() {
   const [scope, setScope] = useState<string>("general");
+  const [newProjectName, setNewProjectName] = useState("");
+  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [creatingProject, setCreatingProject] = useState(false);
+
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [messages, setMessages] = useState<ChatMessageData[]>([WELCOME_GENERAL]);
   const [streaming, setStreaming] = useState(false);
@@ -582,7 +587,28 @@ export default function ForgePage() {
     );
   }
 
-  const handleAction = (action: string) => {
+  async function createNewProject() {
+    if (!newProjectName.trim()) return;
+    try {
+      setCreatingProject(true);
+      const res = await fetch("/api/forge/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newProjectName }),
+      });
+      if (res.ok) {
+        const project = await res.json();
+        setScope(project.id);
+        setNewProjectName("");
+        setShowNewProjectModal(false);
+      }
+    } catch (err) {
+      console.error("Failed to create project:", err);
+    } finally {
+      setCreatingProject(false);
+    }
+  }
+
     void handleSend(action.toLowerCase());
   };
 
@@ -675,7 +701,37 @@ export default function ForgePage() {
         </div>
       )}
 
-      <Composer onSend={handleSend} disabled={streaming || hydrating} />
+      {showNewProjectModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-vf-bg border border-vf-border rounded-lg p-6 max-w-sm w-full mx-4">
+            <h2 className="text-lg font-semibold text-vf-fg mb-4">Nuevo Proyecto</h2>
+            <input
+              type="text"
+              placeholder="Nombre del proyecto"
+              value={newProjectName}
+              onChange={(e) => setNewProjectName(e.target.value)}
+              className="w-full px-3 py-2 bg-vf-bg-2 border border-vf-border rounded text-vf-fg text-sm mb-4 focus:outline-none focus:border-vf-green"
+              onKeyDown={(e) => e.key === "Enter" && createNewProject()}
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setShowNewProjectModal(false)}
+                className="px-4 py-2 text-sm text-vf-fg-1 hover:bg-vf-bg-2 rounded transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={createNewProject}
+                disabled={creatingProject || !newProjectName.trim()}
+                className="px-4 py-2 text-sm bg-vf-green text-vf-bg rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {creatingProject ? "Creando..." : "Crear"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

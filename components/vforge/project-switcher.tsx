@@ -1,115 +1,114 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { ChevronDown, FolderPlus } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-
-interface ProjectSwitcherProps {
-  className?: string;
-}
+import { Plus, ChevronDown, Folder } from "lucide-react";
 
 interface Project {
   id: string;
   name: string;
-  category: string;
-  github_repo: string | null;
+  description: string;
+  created_at: string;
 }
 
-export function ProjectSwitcher({ className }: ProjectSwitcherProps) {
+interface ProjectSwitcherProps {
+  currentProjectId?: string;
+  onProjectSelect: (projectId: string) => void;
+  onNewProject: () => void;
+}
+
+export function ProjectSwitcher({
+  currentProjectId,
+  onProjectSelect,
+  onNewProject,
+}: ProjectSwitcherProps) {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(true);
 
   useEffect(() => {
-    void fetch("/api/projects", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : { projects: [] }))
-      .then((d: { projects: Project[] }) => {
-        setProjects(d.projects);
-        if (d.projects.length > 0) setSelectedId(d.projects[0].id);
-      })
-      .catch(() => undefined);
+    loadProjects();
   }, []);
 
-  const selected = projects.find((p) => p.id === selectedId) ?? null;
+  async function loadProjects() {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/forge/projects");
+      if (res.ok) {
+        const { projects } = await res.json();
+        setProjects(projects);
+      }
+    } catch (err) {
+      console.error("Failed to load projects:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const currentProject = projects.find((p) => p.id === currentProjectId);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          className={cn(
-            "flex items-center gap-2 px-2 py-1.5 rounded-md",
-            "bg-vf-bg-1 border border-vf-border",
-            "hover:bg-vf-bg-2 transition-colors duration-150",
-            "min-h-[36px]",
-            className,
-          )}
-        >
-          <span className="font-mono text-[11px] text-vf-fg-2 px-1.5 py-0.5 rounded bg-vf-bg-2 border border-vf-border-1">
-            {selected ? selected.id.slice(0, 2).toUpperCase() : "—"}
-          </span>
-          <span className="text-sm text-vf-fg hidden sm:inline max-w-[120px] truncate">
-            {selected?.name ?? "Sin proyectos"}
-          </span>
-          <ChevronDown className="w-3 h-3 text-vf-fg-2" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-64 bg-vf-bg-1 border-vf-border"
-      >
-        {projects.length === 0 ? (
-          <DropdownMenuItem asChild>
-            <Link
-              href="/projects"
-              className="flex items-center gap-3 px-3 py-2 cursor-pointer"
-            >
-              <FolderPlus className="w-4 h-4 text-vf-green" />
-              <div className="text-sm text-vf-fg">Dar de alta el primero</div>
-            </Link>
-          </DropdownMenuItem>
-        ) : (
-          <>
-            {projects.map((project) => (
-              <DropdownMenuItem key={project.id} asChild>
-                <Link
-                  href={`/projects/${project.id}`}
-                  onClick={() => setSelectedId(project.id)}
-                  className="flex items-center gap-3 px-3 py-2 cursor-pointer"
-                >
-                  <span className="font-mono text-[10px] text-vf-fg-2 px-1.5 py-0.5 rounded bg-vf-bg-2 flex-shrink-0">
-                    {project.id.slice(0, 2).toUpperCase()}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-vf-fg truncate">
-                      {project.name}
-                    </div>
-                    <div className="text-xs text-vf-fg-2 font-mono truncate">
-                      {project.github_repo ?? "(sin repo)"}
-                    </div>
-                  </div>
-                </Link>
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link
-                href="/projects"
-                className="flex items-center gap-3 px-3 py-2 cursor-pointer text-vf-green-quiet"
-              >
-                <FolderPlus className="w-4 h-4" />
-                <span className="text-sm">Dar de alta otro</span>
-              </Link>
-            </DropdownMenuItem>
-          </>
+    <div className="flex flex-col bg-slate-900 border-r border-slate-700 min-h-screen w-64">
+      {/* Header */}
+      <div className="p-4 border-b border-slate-700">
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition"
+          >
+            <Folder size={16} />
+            Proyectos
+            <ChevronDown
+              size={16}
+              className={`transition ${expanded ? "rotate-180" : ""}`}
+            />
+          </button>
+          <button
+            onClick={onNewProject}
+            className="p-1 hover:bg-slate-700 rounded transition"
+            title="Nuevo proyecto"
+          >
+            <Plus size={16} className="text-slate-400 hover:text-white" />
+          </button>
+        </div>
+
+        {currentProject && (
+          <div className="text-xs text-slate-400 truncate">
+            {currentProject.name}
+          </div>
         )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </div>
+
+      {/* Projects List */}
+      {expanded && (
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          {loading ? (
+            <div className="text-xs text-slate-500 p-2">Cargando...</div>
+          ) : projects.length === 0 ? (
+            <div className="text-xs text-slate-500 p-2">
+              Sin proyectos. Crea uno nuevo.
+            </div>
+          ) : (
+            projects.map((project) => (
+              <button
+                key={project.id}
+                onClick={() => onProjectSelect(project.id)}
+                className={`w-full text-left px-3 py-2 rounded text-sm transition ${
+                  project.id === currentProjectId
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-300 hover:bg-slate-800"
+                }`}
+              >
+                <div className="font-medium truncate">{project.name}</div>
+                {project.description && (
+                  <div className="text-xs opacity-75 truncate">
+                    {project.description}
+                  </div>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
   );
 }

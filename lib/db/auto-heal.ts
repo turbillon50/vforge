@@ -214,6 +214,45 @@ async function ensureSemanticMemory(): Promise<void> {
   }
 }
 
+async function ensureProjectsTable(): Promise<void> {
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS projects (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name text NOT NULL,
+        description text DEFAULT '',
+        repo_url text,
+        vercel_project_id text,
+        owner_id text NOT NULL DEFAULT 'operator_luis',
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+  } catch {
+    // Table already exists
+  }
+
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_projects_owner ON projects (owner_id)`;
+  } catch {
+    // Index already exists
+  }
+}
+
+async function ensureProjectIdColumns(): Promise<void> {
+  try {
+    await sql.query(`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS project_id uuid`);
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    await sql.query(`ALTER TABLE conversations ADD CONSTRAINT fk_conversations_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE`);
+  } catch {
+    // Constraint already exists or table missing
+  }
+}
+
 /**
  * Heal the database schema. Runs once per process.
  * Call this from api routes or middleware that execute early.
@@ -229,6 +268,8 @@ export async function healDatabase(): Promise<void> {
     await ensureSeedSkills();
     await ensureOtherTables();
     await ensureSemanticMemory();
+    await ensureProjectsTable();
+    await ensureProjectIdColumns();
   } catch (e) {
     // Silently fail - don't crash the app if database healing fails
     console.error("[V auto-heal] Database healing failed:", e);
