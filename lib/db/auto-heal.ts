@@ -181,6 +181,39 @@ async function ensureOtherTables(): Promise<void> {
   }
 }
 
+async function ensureSemanticMemory(): Promise<void> {
+  try {
+    await sql`CREATE EXTENSION IF NOT EXISTS vector`;
+  } catch {
+    // Extension might not be available
+  }
+
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS semantic_memory (
+        id text PRIMARY KEY,
+        content text NOT NULL,
+        embedding vector(1536),
+        category text NOT NULL,
+        metadata jsonb DEFAULT '{}',
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+  } catch {
+    // Table already exists
+  }
+
+  try {
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_semantic_memory_category
+      ON semantic_memory (category)
+    `;
+  } catch {
+    // Index already exists
+  }
+}
+
 /**
  * Heal the database schema. Runs once per process.
  * Call this from api routes or middleware that execute early.
@@ -195,6 +228,7 @@ export async function healDatabase(): Promise<void> {
     await ensureSkillsIndexes();
     await ensureSeedSkills();
     await ensureOtherTables();
+    await ensureSemanticMemory();
   } catch (e) {
     // Silently fail - don't crash the app if database healing fails
     console.error("[V auto-heal] Database healing failed:", e);
