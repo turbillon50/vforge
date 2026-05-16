@@ -14,7 +14,7 @@ export async function GET() {
   // Ensure database is healed before checking
   await ensureDatabaseHealed();
 
-  const checks: Record<string, boolean | string> = {};
+  const checks: Record<string, boolean | string | number> = {};
 
   // Check skills table
   try {

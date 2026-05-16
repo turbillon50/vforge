@@ -3280,7 +3280,7 @@ async function dispatch(
 
     case "http_request": {
       const url = requireString(input.url, "url");
-      const method = (input.method ?? "GET").toUpperCase() as "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+      const method = (typeof input.method === "string" ? input.method : "GET").toUpperCase() as "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
       const headers = (input.headers ?? {}) as Record<string, string>;
       const body = typeof input.body === "string" ? input.body : undefined;
 
