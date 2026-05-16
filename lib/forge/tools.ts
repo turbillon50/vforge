@@ -41,6 +41,7 @@ import {
 } from "@/lib/namecom/client";
 import { encryptOperatorSecret } from "@/lib/vault/operator-crypto";
 import { invalidateSecretCache } from "@/lib/vault/get-secret";
+import { callVServer } from "@/lib/forge/v-server";
 
 export const TOOLS: NeutralTool[] = [
   {
@@ -422,6 +423,70 @@ export const TOOLS: NeutralTool[] = [
     description:
       "Cruza la lista de proyectos de Vercel con los repos de GitHub y los sincroniza a la tabla `projects` de vForge. Usa esta tool cuando Luis pregunte 'qué proyectos tengo' y la tabla esté vacía/desactualizada, o cuando agregue un proyecto nuevo. Idempotente: actualiza existentes, inserta los nuevos, no borra nada.",
     input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "remote_execution",
+    description:
+      "Ejecuta código Python o JavaScript en el servidor Hetzner de V (178.105.135.26) y devuelve stdout, stderr y returncode. Úsala cuando necesites probar un snippet, validar lógica, consultar una API externa, procesar datos, o verificar que algo funciona antes de meterlo a un repo. NO ejecutes código destructivo aquí — el servidor es de Luis. Timeout 30s.",
+    input_schema: {
+      type: "object",
+      properties: {
+        code: {
+          type: "string",
+          description: "Código a ejecutar. Para Python usa sintaxis Python 3; para Node usa sintaxis JS moderna.",
+        },
+        language: {
+          type: "string",
+          enum: ["python", "node"],
+          description: "Lenguaje del código. Default 'python'.",
+        },
+      },
+      required: ["code"],
+    },
+  },
+  {
+    name: "browser_control",
+    description:
+      "Controla un navegador headless (Playwright) en el servidor de V para automatizar la web: tomar screenshots, navegar a URLs, extraer texto, hacer clicks. Úsala para verificar que una app que deployaste se ve bien, scrapear datos, o probar flujos UI. (Nota: endpoint /browser puede no estar implementado todavía en api.py — si devuelve 404, repórtalo a Luis para que el servidor lo agregue.)",
+    input_schema: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          enum: ["screenshot", "navigate", "extract_text", "click", "type"],
+          description: "Qué hacer: screenshot tomar foto, navigate ir a URL, extract_text leer contenido, click presionar elemento, type escribir en input.",
+        },
+        url: { type: "string", description: "URL objetivo (requerido para screenshot/navigate/extract_text)" },
+        selector: { type: "string", description: "Selector CSS del elemento (requerido para click/type)" },
+        text: { type: "string", description: "Texto a escribir (requerido para type)" },
+        wait_ms: { type: "number", description: "Esperar N ms tras la acción antes de capturar resultado (default 500)" },
+      },
+      required: ["action"],
+    },
+  },
+  {
+    name: "image_generation",
+    description:
+      "Genera una imagen vía Stable Diffusion en el servidor de V. Úsala cuando una app o landing necesite hero images, ilustraciones, logos preliminares. Devuelve la imagen como base64 o URL temporal. (Nota: endpoint /generate-image puede no estar implementado todavía — si 404, repórtalo a Luis.)",
+    input_schema: {
+      type: "object",
+      properties: {
+        prompt: {
+          type: "string",
+          description: "Descripción de la imagen en inglés (Stable Diffusion rinde mejor en inglés). Sé específico: estilo, composición, colores, iluminación.",
+        },
+        size: {
+          type: "string",
+          enum: ["512x512", "768x768", "1024x1024"],
+          description: "Tamaño de salida. Default 512x512 (más rápido).",
+        },
+        negative_prompt: {
+          type: "string",
+          description: "Qué evitar en la imagen (ej. 'blurry, low quality, watermark'). Opcional.",
+        },
+      },
+      required: ["prompt"],
+    },
   },
 ];
 
@@ -1065,6 +1130,78 @@ async function dispatch(
           total: byKey.size,
         }),
         summary: `proyectos sync: +${inserted} nuevos, ${updated} actualizados`,
+      };
+    }
+
+    case "remote_execution": {
+      const code = requireString(input.code, "code");
+      const language = (input.language === "node" ? "node" : "python") as
+        | "python"
+        | "node";
+      const res = await callVServer("/execute", { code, language });
+      if (!res.ok) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: res.error, status: res.status, body: res.body }),
+          summary: `remote_execution falló: ${res.error}`,
+        };
+      }
+      const body = (res.body ?? {}) as {
+        stdout?: string;
+        stderr?: string;
+        returncode?: number;
+        error?: string;
+      };
+      const okRun = (body.returncode ?? 0) === 0 && !body.error;
+      const summary = okRun
+        ? `${language} OK (${(body.stdout ?? "").length} chars stdout)`
+        : `${language} exit=${body.returncode ?? "?"} ${(body.stderr ?? body.error ?? "").slice(0, 60)}`;
+      return {
+        ok: okRun,
+        content: JSON.stringify(body),
+        summary,
+      };
+    }
+    case "browser_control": {
+      const action = requireString(input.action, "action");
+      const payload: Record<string, unknown> = { action };
+      if (typeof input.url === "string") payload.url = input.url;
+      if (typeof input.selector === "string") payload.selector = input.selector;
+      if (typeof input.text === "string") payload.text = input.text;
+      if (typeof input.wait_ms === "number") payload.wait_ms = input.wait_ms;
+      const res = await callVServer("/browser", payload, { timeoutMs: 60_000 });
+      if (!res.ok) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: res.error, status: res.status, body: res.body }),
+          summary: `browser_control falló: ${res.error}`,
+        };
+      }
+      return {
+        ok: true,
+        content: JSON.stringify(res.body),
+        summary: `browser ${action} OK`,
+      };
+    }
+    case "image_generation": {
+      const prompt = requireString(input.prompt, "prompt");
+      const size = typeof input.size === "string" ? input.size : "512x512";
+      const payload: Record<string, unknown> = { prompt, size };
+      if (typeof input.negative_prompt === "string") {
+        payload.negative_prompt = input.negative_prompt;
+      }
+      const res = await callVServer("/generate-image", payload, { timeoutMs: 120_000 });
+      if (!res.ok) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: res.error, status: res.status, body: res.body }),
+          summary: `image_generation falló: ${res.error}`,
+        };
+      }
+      return {
+        ok: true,
+        content: JSON.stringify(res.body),
+        summary: `imagen generada ${size}`,
       };
     }
 
