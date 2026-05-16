@@ -57,6 +57,7 @@ import { invalidateSecretCache } from "@/lib/vault/get-secret";
 import { routeFor } from "@/lib/forge/routing";
 import { MODELS } from "@/lib/forge/models";
 import { listAgentConfig, setModelForTask } from "@/lib/forge/agent-config";
+import { callVServer } from "@/lib/forge/v-server";
 import {
   listAllOpenRouterModels,
   getOpenRouterModel,
@@ -1207,6 +1208,73 @@ export const TOOLS: Tool[] = [
         },
       },
       required: ["url"],
+    },
+  },
+  {
+    name: "remote_execution",
+    description:
+      "Ejecuta código Python o JavaScript en el servidor Hetzner de V (178.105.135.26) y devuelve stdout, stderr y returncode. Úsala cuando necesites probar un snippet, validar lógica, consultar una API externa, procesar datos, o verificar que algo funciona antes de meterlo a un repo. NO ejecutes código destructivo aquí — el servidor es de Luis. Timeout 30s.",
+    input_schema: {
+      type: "object",
+      properties: {
+        code: { type: "string", description: "Código a ejecutar. Para Python usa sintaxis Python 3; para Node usa sintaxis JS moderna." },
+        language: { type: "string", enum: ["python", "node"], description: "Lenguaje del código. Default 'python'." },
+      },
+      required: ["code"],
+    },
+  },
+  {
+    name: "browser_control",
+    description:
+      "Controla un navegador headless (Playwright) en el servidor de V. Acciones: goto, click, type, screenshot, get_html, get_text, describe_element, execute_script. Soporta wait_for_selector para esperar elementos antes de actuar. Úsala para verificar UI de deploys, web scraping/OSINT, automatización de formularios. (Nota: endpoint /browser puede no estar implementado todavía en api.py — si 404, repórtalo a Luis para que el servidor lo agregue.)",
+    input_schema: {
+      type: "object",
+      properties: {
+        action: { type: "string", enum: ["goto", "click", "type", "screenshot", "get_html", "get_text", "describe_element", "execute_script"], description: "Qué hacer en el navegador." },
+        url: { type: "string", description: "URL a navegar (requerido si action='goto')" },
+        selector: { type: "string", description: "Selector CSS o XPath del elemento" },
+        text_to_type: { type: "string", description: "Texto a escribir (requerido si action='type')" },
+        script: { type: "string", description: "JavaScript a ejecutar (requerido si action='execute_script')" },
+        wait_for_selector: { type: "string", description: "Esperar a que este selector aparezca antes de la acción (hasta 10s)" },
+        return_screenshot_base64: { type: "boolean", description: "Si true, también devuelve screenshot base64. Default false." },
+        wait_ms: { type: "number", description: "Esperar N ms tras la acción (default 500)" },
+      },
+      required: ["action"],
+    },
+  },
+  {
+    name: "image_generation",
+    description:
+      "Genera una imagen vía OpenRouter (Gemini Image / FLUX / Recraft) en el servidor de V. Default: google/gemini-3.1-flash-image-preview ('Nano Banana') con generación + edición + multi-turn. ~$0.014/imagen 1024x1024 contra el saldo OpenRouter de Luis. Úsala para hero images, ilustraciones, logos preliminares. (Nota: endpoint /generate-image puede no estar implementado todavía en api.py — si 404, repórtalo a Luis.)",
+    input_schema: {
+      type: "object",
+      properties: {
+        prompt: { type: "string", description: "Descripción de la imagen, preferentemente en inglés. Sé específico: estilo, composición, colores, iluminación, mood." },
+        size: { type: "string", enum: ["512x512", "768x768", "1024x1024"], description: "Tamaño de salida. Default 1024x1024." },
+        negative_prompt: { type: "string", description: "Qué evitar (ej. 'blurry, watermark'). Se inyecta como 'Avoid: ...'." },
+        model: { type: "string", description: "ID del modelo OpenRouter. Default: google/gemini-3.1-flash-image-preview. Alternativas: black-forest-labs/flux.2-pro, sourceful/riverflow-v2-standard-preview." },
+      },
+      required: ["prompt"],
+    },
+  },
+  {
+    name: "ssh_command_executor",
+    description:
+      "Ejecuta un comando shell en un servidor remoto vía SSH. Esencial para gestión de infraestructura, deploy de microservicios, automatización de tareas en Linux. Soporta password o llave privada, sudo opcional, timeout configurable. Las credenciales NUNCA se loguean (audit las redacta). RING 2 — destructivo: un comando mal puesto puede tumbar un servidor. SIEMPRE PIDE CONFIRMACIÓN A LUIS antes de ejecutar — primero describe el comando y por qué, espera el 'sí', LUEGO rellama con confirmed=true. (Nota: endpoint /ssh-execute puede no estar implementado todavía en api.py — si 404, repórtalo a Luis.)",
+    input_schema: {
+      type: "object",
+      properties: {
+        host: { type: "string", description: "IP o hostname del servidor remoto" },
+        command: { type: "string", description: "Comando shell a ejecutar" },
+        username: { type: "string", description: "Usuario SSH. Default 'root'." },
+        password: { type: "string", description: "Password SSH (alternativa a private_key). Se redacta del audit log." },
+        private_key: { type: "string", description: "Contenido de llave privada SSH en PEM. Se redacta del audit log." },
+        sudo: { type: "boolean", description: "Anteponer 'sudo' al comando. Default false." },
+        port: { type: "number", description: "Puerto SSH. Default 22." },
+        timeout_seconds: { type: "number", description: "Timeout en segundos (1-300). Default 60." },
+        confirmed: { type: "boolean", description: "DEBE ser true para que el comando se ejecute (gate ring 2). Primero describe el comando a Luis en texto, espera 'sí' explícito, LUEGO rellama con confirmed=true." },
+      },
+      required: ["host", "command"],
     },
   },
 ];
@@ -3212,7 +3280,7 @@ async function dispatch(
 
     case "http_request": {
       const url = requireString(input.url, "url");
-      const method = (input.method ?? "GET").toUpperCase() as "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+      const method = (typeof input.method === "string" ? input.method : "GET").toUpperCase() as "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
       const headers = (input.headers ?? {}) as Record<string, string>;
       const body = typeof input.body === "string" ? input.body : undefined;
 
@@ -3253,6 +3321,102 @@ async function dispatch(
           summary: `${method} ${url}: failed`,
         };
       }
+    }
+    case "remote_execution": {
+      const code = requireString(input.code, "code");
+      const language = (input.language === "node" ? "node" : "python") as "python" | "node";
+      const res = await callVServer("/execute", { code, language });
+      if (!res.ok) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: res.error, status: res.status, body: res.body }),
+          summary: `remote_execution falló: ${res.error}`,
+        };
+      }
+      const body = (res.body ?? {}) as { stdout?: string; stderr?: string; returncode?: number; error?: string };
+      const okRun = (body.returncode ?? 0) === 0 && !body.error;
+      const summary = okRun
+        ? `${language} OK (${(body.stdout ?? "").length} chars stdout)`
+        : `${language} exit=${body.returncode ?? "?"} ${(body.stderr ?? body.error ?? "").slice(0, 60)}`;
+      return { ok: okRun, content: JSON.stringify(body), summary };
+    }
+    case "browser_control": {
+      const action = requireString(input.action, "action");
+      const payload: Record<string, unknown> = { action };
+      if (typeof input.url === "string") payload.url = input.url;
+      if (typeof input.selector === "string") payload.selector = input.selector;
+      if (typeof input.text_to_type === "string") payload.text_to_type = input.text_to_type;
+      if (typeof input.script === "string") payload.script = input.script;
+      if (typeof input.wait_for_selector === "string") payload.wait_for_selector = input.wait_for_selector;
+      if (typeof input.return_screenshot_base64 === "boolean") payload.return_screenshot_base64 = input.return_screenshot_base64;
+      if (typeof input.wait_ms === "number") payload.wait_ms = input.wait_ms;
+      const res = await callVServer("/browser", payload, { timeoutMs: 60_000 });
+      if (!res.ok) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: res.error, status: res.status, body: res.body }),
+          summary: `browser_control falló: ${res.error}`,
+        };
+      }
+      return { ok: true, content: JSON.stringify(res.body), summary: `browser ${action} OK` };
+    }
+    case "image_generation": {
+      const prompt = requireString(input.prompt, "prompt");
+      const size = typeof input.size === "string" ? input.size : "1024x1024";
+      const payload: Record<string, unknown> = { prompt, size };
+      if (typeof input.negative_prompt === "string") payload.negative_prompt = input.negative_prompt;
+      if (typeof input.model === "string") payload.model = input.model;
+      const res = await callVServer("/generate-image", payload, { timeoutMs: 120_000 });
+      if (!res.ok) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: res.error, status: res.status, body: res.body }),
+          summary: `image_generation falló: ${res.error}`,
+        };
+      }
+      const body = (res.body ?? {}) as { model?: string };
+      const modelUsed = body.model ?? (typeof input.model === "string" ? input.model : "gemini-image");
+      return { ok: true, content: JSON.stringify(res.body), summary: `imagen ${size} (${modelUsed})` };
+    }
+    case "ssh_command_executor": {
+      const host = requireString(input.host, "host");
+      const command = requireString(input.command, "command");
+      const confirmed = input.confirmed === true;
+      if (!confirmed) {
+        return {
+          ok: false,
+          content: JSON.stringify({
+            error: "Ring 2: ejecutar SSH en un servidor remoto requiere confirmación explícita de Luis primero",
+            instruction: `V: describe a Luis qué comando vas a correr ("voy a ejecutar 'X' en host Y porque Z"). Espera su 'sí' explícito. LUEGO rellamá la tool con confirmed=true.`,
+            failureCode: "RING2_NEEDS_CONFIRMATION",
+            host,
+            command,
+          }),
+          summary: `ssh ${host}: necesita confirmación de Luis primero`,
+        };
+      }
+      const payload: Record<string, unknown> = { host, command };
+      if (typeof input.username === "string") payload.username = input.username;
+      if (typeof input.password === "string") payload.password = input.password;
+      if (typeof input.private_key === "string") payload.private_key = input.private_key;
+      if (typeof input.sudo === "boolean") payload.sudo = input.sudo;
+      if (typeof input.port === "number") payload.port = input.port;
+      const timeoutSeconds = clampNumber(input.timeout_seconds, 1, 300, 60);
+      payload.timeout_seconds = timeoutSeconds;
+      const res = await callVServer("/ssh-execute", payload, { timeoutMs: (timeoutSeconds + 15) * 1000 });
+      if (!res.ok) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: res.error, status: res.status, body: res.body }),
+          summary: `ssh ${host} falló: ${res.error}`,
+        };
+      }
+      const body = (res.body ?? {}) as { stdout?: string; stderr?: string; return_code?: number; error?: string };
+      const okRun = (body.return_code ?? 0) === 0 && !body.error;
+      const summary = okRun
+        ? `ssh ${host} OK (exit=${body.return_code ?? 0})`
+        : `ssh ${host} exit=${body.return_code ?? "?"} ${(body.stderr ?? body.error ?? "").slice(0, 60)}`;
+      return { ok: okRun, content: JSON.stringify(body), summary };
     }
 
     default:
@@ -3312,14 +3476,30 @@ function requireString(v: unknown, name: string): string {
 /**
  * Strip values that might leak secrets if logged. Tool inputs for the
  * Tier-1 read-only set are safe (owner/repo/path), but we keep this
- * defensive.
+ * defensive. Campos sensibles (password, private_key, tokens) se
+ * reemplazan por "[REDACTED]" SIEMPRE — el audit guarda solo evidencia
+ * de que se invocó la tool, no la credencial.
  */
+const SENSITIVE_KEYS = new Set([
+  "password",
+  "private_key",
+  "privateKey",
+  "secret",
+  "token",
+  "api_key",
+  "apiKey",
+  "auth",
+  "authorization",
+]);
+
 function redactInput(
   input: Record<string, unknown>,
 ): Record<string, unknown> {
   const safe: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(input)) {
-    if (typeof v === "string" && v.length > 200) {
+    if (SENSITIVE_KEYS.has(k) && typeof v === "string" && v.length > 0) {
+      safe[k] = `[REDACTED ${v.length} chars]`;
+    } else if (typeof v === "string" && v.length > 200) {
       safe[k] = `${v.slice(0, 80)}…(truncated)`;
     } else {
       safe[k] = v;
