@@ -1,171 +1,90 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { StatCard } from "@/components/vforge/stat-card";
-import { SectionHeader } from "@/components/vforge/section-header";
-import {
-  FolderKanban,
-  Rocket,
-  Sparkles,
-  TrendingUp,
-  Plus,
-} from "lucide-react";
+import { motion } from "framer-motion";
+import { FolderKanban, Sparkles, Lock, Boxes, Eye, Search, Plus } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
-interface Stats {
-  total_projects: number;
-  produccion: number;
-  activo: number;
-  en_revision: number;
-  en_pausa: number;
-  archivo: number;
-  pendiente_borrado: number;
-  forge_turns: number;
-  forge_cost_today_usd: number;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  category: string;
-  status: string;
-  github_repo: string | null;
-  vercel_url: string | null;
-}
+const osApps = [
+  { id: "projects", name: "Proyectos", icon: FolderKanban, color: "bg-blue-500/20 text-blue-500", href: "/projects" },
+  { id: "vault", name: "Bóveda V", icon: Lock, color: "bg-amber-500/20 text-amber-500", href: "/vault" },
+  { id: "modules", name: "Módulos", icon: Boxes, color: "bg-purple-500/20 text-purple-500", href: "/modules" },
+  { id: "hunter", name: "Repo Hunt", icon: Search, color: "bg-emerald-500/20 text-emerald-500", href: "/hunter" },
+  { id: "vision", name: "Repo Vision", icon: Eye, color: "bg-indigo-500/20 text-indigo-500", href: "/vision" },
+  { id: "forge", name: "Forge AI", icon: Sparkles, color: "bg-vf-green/20 text-vf-green", href: "/forge" },
+];
 
 export default function HubPage() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    void Promise.all([
-      fetch("/api/stats", { cache: "no-store" }).then((r) =>
-        r.ok ? r.json() : null,
-      ),
-      fetch("/api/projects", { cache: "no-store" }).then((r) =>
-        r.ok ? r.json() : { projects: [] },
-      ),
-    ])
-      .then(([s, p]) => {
-        setStats(s);
-        setProjects(p.projects ?? []);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const subtitle = stats
-    ? stats.total_projects === 0
-      ? "Tu fábrica está en ceros — dale de alta tu primer proyecto"
-      : `${stats.total_projects} proyecto${stats.total_projects === 1 ? "" : "s"} · ${stats.produccion} en producción · ${stats.en_revision} en revisión`
-    : "Cargando…";
+  const [folders, setFolders] = useState([
+    { id: "f1", name: "Ecosistema Castores", apps: 3 },
+    { id: "f2", name: "Fractal Core", apps: 2 },
+  ]);
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <header className="space-y-2">
-        <p
-          className="font-mono text-[11px] uppercase tracking-wide text-vf-fg-2 stagger-fade-up"
-          style={{ animationDelay: "0ms" }}
-        >
-          Buenos días, Luis
-        </p>
-        <h1
-          className="text-3xl md:text-4xl font-semibold tracking-tight-vf text-vf-fg stagger-fade-up"
-          style={{ animationDelay: "50ms" }}
-        >
-          Tu fábrica
-        </h1>
-        <p
-          className="text-vf-fg-1 stagger-fade-up"
-          style={{ animationDelay: "100ms" }}
-        >
-          {subtitle}
-        </p>
+    <div className="h-full flex flex-col items-center justify-start pt-10 pb-24 px-6 relative">
+      <header className="w-full mb-12 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-vf-fg">vForge OS</h1>
+          <p className="text-sm text-vf-fg-2">Sistema Operativo Anillo 0</p>
+        </div>
+        <div className="text-right">
+          <div className="text-xs font-mono text-vf-green animate-pulse">V EN LÍNEA</div>
+        </div>
       </header>
 
-      {/* Stats Grid */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          icon={FolderKanban}
-          label="Proyectos activos"
-          value={stats ? stats.produccion + stats.activo : "—"}
-          deltaLabel={
-            stats ? `${stats.total_projects} en total` : "cargando…"
-          }
-          deltaTone="neutral"
-          delay={150}
-        />
-        <StatCard
-          icon={Rocket}
-          label="En producción"
-          value={stats ? stats.produccion : "—"}
-          deltaLabel={stats ? "live + dominio" : "cargando…"}
-          deltaTone="positive"
-          delay={200}
-        />
-        <StatCard
-          icon={Sparkles}
-          label="Turnos con V (24h)"
-          value={stats ? stats.forge_turns : "—"}
-          deltaLabel={
-            stats ? `$${stats.forge_cost_today_usd.toFixed(4)} costo` : "cargando…"
-          }
-          deltaTone="positive"
-          delay={250}
-        />
-        <StatCard
-          icon={TrendingUp}
-          label="En revisión"
-          value={stats ? stats.en_revision : "—"}
-          deltaLabel={stats ? "necesitan auditoría" : "cargando…"}
-          deltaTone="warning"
-          delay={300}
-        />
-      </section>
-
-      {/* Recent Projects */}
-      <section>
-        <SectionHeader
-          title="Proyectos"
-          rightCta={{ label: "Ver todos", href: "/projects" }}
-        />
-        {!loading && projects.length === 0 ? (
-          <div className="border border-dashed border-vf-border-1 rounded-xl px-6 py-12 text-center space-y-3">
-            <p className="text-vf-fg">Aún no hay proyectos en el tablero.</p>
-            <p className="text-vf-fg-2 text-sm">
-              Da de alta tu primer proyecto para que aparezca aquí.
-            </p>
-            <Link
-              href="/projects"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-vf-green text-black text-sm font-medium"
+      {/* iOS App Grid */}
+      <div className="w-full max-w-md grid grid-cols-4 gap-x-4 gap-y-8">
+        {/* Render Apps */}
+        {osApps.map((app, index) => (
+          <Link key={app.id} href={app.href} className="flex flex-col items-center gap-2 group">
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: index * 0.05, type: "spring", stiffness: 300 }}
+              className={cn(
+                "w-16 h-16 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/10 shadow-lg transition-transform group-hover:scale-105 active:scale-95",
+                app.color,
+                "bg-gradient-to-br from-white/5 to-transparent"
+              )}
             >
-              <Plus className="w-4 h-4" />
-              Dar de alta proyecto
-            </Link>
-          </div>
-        ) : (
-          <div className="divide-y divide-vf-border">
-            {projects.slice(0, 4).map((p) => (
-              <Link
-                key={p.id}
-                href={`/projects/${p.id}`}
-                className="flex items-center justify-between py-3 hover:bg-vf-bg-1 transition-colors px-2 -mx-2 rounded"
-              >
-                <div className="min-w-0">
-                  <div className="text-vf-fg font-medium truncate">{p.name}</div>
-                  <div className="font-mono text-[11px] text-vf-fg-2 truncate">
-                    {p.github_repo ?? "(sin repo)"}
-                  </div>
-                </div>
-                <span className="font-mono text-[10px] uppercase text-vf-fg-2 ml-3 flex-shrink-0">
-                  {p.category}
-                </span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+              <app.icon className="w-7 h-7 drop-shadow-md" />
+            </motion.div>
+            <span className="text-[11px] font-medium text-vf-fg-1 tracking-wide">{app.name}</span>
+          </Link>
+        ))}
+
+        {/* Render Folders (Workspaces) */}
+        {folders.map((folder, index) => (
+          <button key={folder.id} className="flex flex-col items-center gap-2 group">
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: (osApps.length + index) * 0.05, type: "spring", stiffness: 300 }}
+              className="w-16 h-16 rounded-2xl bg-vf-bg-2/50 backdrop-blur-md border border-white/5 shadow-inner p-2 grid grid-cols-2 gap-1 content-start transition-transform group-hover:scale-105 active:scale-95"
+            >
+              <div className="w-full h-full bg-blue-500/40 rounded-sm" />
+              <div className="w-full h-full bg-amber-500/40 rounded-sm" />
+              <div className="w-full h-full bg-vf-green/40 rounded-sm" />
+            </motion.div>
+            <span className="text-[11px] font-medium text-vf-fg-1 tracking-wide">{folder.name}</span>
+          </button>
+        ))}
+
+        {/* Add Folder Button */}
+        <button className="flex flex-col items-center gap-2 group">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: (osApps.length + folders.length) * 0.05, type: "spring", stiffness: 300 }}
+            className="w-16 h-16 rounded-2xl bg-transparent border-2 border-dashed border-vf-border-1 flex items-center justify-center transition-transform group-hover:scale-105 active:scale-95 text-vf-fg-2 hover:text-vf-fg"
+          >
+            <Plus className="w-6 h-6" />
+          </motion.div>
+          <span className="text-[11px] font-medium text-vf-fg-2 tracking-wide">Crear</span>
+        </button>
+      </div>
+
     </div>
   );
 }

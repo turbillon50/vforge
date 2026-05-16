@@ -21,9 +21,10 @@ const navItems = [
 
 interface MobileNavProps {
   className?: string;
+  onOrbClick?: () => void;
 }
 
-export function MobileNav({ className }: MobileNavProps) {
+export function MobileNav({ className, onOrbClick }: MobileNavProps) {
   const pathname = usePathname();
 
   const handleTap = () => {
@@ -47,15 +48,14 @@ export function MobileNav({ className }: MobileNavProps) {
 
         if (item.isCenter) {
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={handleTap}
+            <button
+              key="orb"
+              onClick={() => {
+                handleTap();
+                if (onOrbClick) onOrbClick();
+              }}
               className={cn(
                 "flex flex-col items-center justify-center",
-                // Smaller central button (was 64×64 with -mt-5). Less
-                // visual weight so the composer remains readable on
-                // mobile when the on-screen keyboard is up.
                 "w-12 h-12 -mt-3 rounded-full",
                 "bg-black",
                 "ring-2 ring-vf-green",
@@ -63,10 +63,10 @@ export function MobileNav({ className }: MobileNavProps) {
                 "transition-all duration-150",
                 "active:scale-95 hover:scale-105"
               )}
-              aria-label={item.name}
+              aria-label="V"
             >
               <ForgeOrb size={28} state="idle" glow={false} />
-            </Link>
+            </button>
           );
         }
 

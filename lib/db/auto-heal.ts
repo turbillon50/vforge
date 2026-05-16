@@ -141,6 +141,35 @@ async function ensureOtherTables(): Promise<void> {
 
   try {
     await sql`
+      CREATE TABLE IF NOT EXISTS vforge_workspaces (
+        id text PRIMARY KEY,
+        name text NOT NULL,
+        description text,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+  } catch {
+    // Table already exists
+  }
+
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS vforge_threads (
+        id text PRIMARY KEY,
+        workspace_id text,
+        title text NOT NULL,
+        messages jsonb NOT NULL DEFAULT '[]',
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+  } catch {
+    // Table already exists
+  }
+
+  try {
+    await sql`
       CREATE TABLE IF NOT EXISTS vault_operator_secrets (
         id       text PRIMARY KEY,
         name     text NOT NULL UNIQUE,
