@@ -37,7 +37,7 @@ export function MobileNav({ className }: MobileNavProps) {
       className={cn(
         "md:hidden fixed bottom-0 left-0 right-0 z-40",
         "h-16 px-2 flex items-center justify-around",
-        "bg-vf-bg/95 backdrop-blur-sm border-t border-vf-border",
+        "bg-vf-bg/60 backdrop-blur-xl border-t border-vf-border/50",
         "pb-safe",
         className
       )}

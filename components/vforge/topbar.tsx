@@ -18,7 +18,7 @@ export function Topbar({ onMenuClick, className }: TopbarProps) {
       className={cn(
         "md:hidden fixed top-0 left-0 right-0 z-40",
         "h-14 px-4 flex items-center justify-between",
-        "bg-vf-bg/95 backdrop-blur-sm border-b border-vf-border",
+        "bg-vf-bg/60 backdrop-blur-xl border-b border-vf-border/50",
         className
       )}
     >

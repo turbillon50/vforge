@@ -18,8 +18,22 @@ interface ChatContainerProps {
   className?: string;
 }
 
-const MessageBubble = ({ message }: { message: Message }) => {
+const MessageBubble = ({ message, isLastMessage }: { message: Message, isLastMessage?: boolean }) => {
   const isV = message.role === 'v';
+  const [displayedContent, setDisplayedContent] = useState(
+    isV && isLastMessage ? '' : message.content
+  );
+
+  useEffect(() => {
+    if (isV && isLastMessage && displayedContent.length < message.content.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedContent(message.content.slice(0, displayedContent.length + 2));
+      }, 10);
+      return () => clearTimeout(timeout);
+    } else if (!isLastMessage && displayedContent !== message.content) {
+      setDisplayedContent(message.content);
+    }
+  }, [displayedContent, message.content, isV, isLastMessage]);
 
   return (
     <motion.div
@@ -47,7 +61,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
       >
         {/* Simple markdown-like rendering */}
         <div className="whitespace-pre-wrap break-words">
-          {message.content.split('\n').map((line, i) => {
+          {displayedContent.split('\n').map((line, i) => {
             // Code block detection
             if (line.startsWith('```')) {
               return null;
@@ -153,8 +167,12 @@ export const ChatContainer = ({
           </motion.div>
         ) : (
           <AnimatePresence>
-            {messages.map((message) => (
-              <MessageBubble key={message.id} message={message} />
+            {messages.map((message, idx) => (
+              <MessageBubble 
+                key={message.id} 
+                message={message} 
+                isLastMessage={idx === messages.length - 1} 
+              />
             ))}
           </AnimatePresence>
         )}
