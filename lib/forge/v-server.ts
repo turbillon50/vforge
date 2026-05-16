@@ -34,10 +34,19 @@ export async function callVServer(
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  // Si V_SERVER_TOKEN está definido en este lado, mandarlo como header
+  // X-V-Token. El Flask del Hetzner valida ese header cuando su propia
+  // env var V_SERVER_TOKEN está activa — sin esto, las requests darían
+  // 401 una vez activado el auth en el servidor.
+  const token = process.env.V_SERVER_TOKEN;
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token && token.length > 0) {
+    headers["X-V-Token"] = token;
+  }
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(body),
       signal: controller.signal,
     });

@@ -126,7 +126,7 @@ V puede llamar `image_generation({prompt: "...", model: "black-forest-labs/flux.
 
 ### Auth
 
-Si pones `V_SERVER_TOKEN`, todas las requests (menos `/health`) requieren header `X-V-Token: <ese-valor>`. La tool TypeScript en `lib/forge/v-server.ts` necesitará una pequeña edición para mandar ese header.
+Si pones `V_SERVER_TOKEN`, todas las requests (menos `/health`) requieren header `X-V-Token: <ese-valor>`. La tool TypeScript en `lib/forge/v-server.ts` ya lee `V_SERVER_TOKEN` del entorno de vForge y lo manda como `X-V-Token` automáticamente. **Para que jale**: pon el mismo valor en ambos lados (`V_SERVER_TOKEN` en el systemd unit del Hetzner Y en las env vars de Vercel/vForge).
 
 ## Seguridad pendiente (NO para producción todavía)
 

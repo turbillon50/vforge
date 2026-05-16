@@ -193,6 +193,8 @@ def browser_action():
                 if wait_for_selector:
                     page.wait_for_selector(wait_for_selector, timeout=10000)
                 if action == "goto":
+                    if not url:
+                        return jsonify({"error": "goto requiere url"}), 400
                     result["result"] = f"navegado a {url}"
                 elif action == "click":
                     if not selector:

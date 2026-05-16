@@ -1260,7 +1260,7 @@ export const TOOLS: Tool[] = [
   {
     name: "ssh_command_executor",
     description:
-      "Ejecuta un comando shell en un servidor remoto vía SSH. Esencial para gestión de infraestructura, deploy de microservicios, automatización de tareas en Linux. Soporta password o llave privada, sudo opcional, timeout configurable. Las credenciales NUNCA se loguean (audit las redacta). RING 2 — destructivo: un comando mal puesto puede tumbar un servidor. Antes de mandar destructivos (rm, shutdown, dd, mkfs, drop database), describe a Luis qué vas a hacer y por qué. (Nota: endpoint /ssh-execute puede no estar implementado todavía en api.py — si 404, repórtalo a Luis.)",
+      "Ejecuta un comando shell en un servidor remoto vía SSH. Esencial para gestión de infraestructura, deploy de microservicios, automatización de tareas en Linux. Soporta password o llave privada, sudo opcional, timeout configurable. Las credenciales NUNCA se loguean (audit las redacta). RING 2 — destructivo: un comando mal puesto puede tumbar un servidor. SIEMPRE PIDE CONFIRMACIÓN A LUIS antes de ejecutar — primero describe el comando y por qué, espera el 'sí', LUEGO rellama con confirmed=true. (Nota: endpoint /ssh-execute puede no estar implementado todavía en api.py — si 404, repórtalo a Luis.)",
     input_schema: {
       type: "object",
       properties: {
@@ -1272,6 +1272,7 @@ export const TOOLS: Tool[] = [
         sudo: { type: "boolean", description: "Anteponer 'sudo' al comando. Default false." },
         port: { type: "number", description: "Puerto SSH. Default 22." },
         timeout_seconds: { type: "number", description: "Timeout en segundos (1-300). Default 60." },
+        confirmed: { type: "boolean", description: "DEBE ser true para que el comando se ejecute (gate ring 2). Primero describe el comando a Luis en texto, espera 'sí' explícito, LUEGO rellama con confirmed=true." },
       },
       required: ["host", "command"],
     },
@@ -3380,6 +3381,20 @@ async function dispatch(
     case "ssh_command_executor": {
       const host = requireString(input.host, "host");
       const command = requireString(input.command, "command");
+      const confirmed = input.confirmed === true;
+      if (!confirmed) {
+        return {
+          ok: false,
+          content: JSON.stringify({
+            error: "Ring 2: ejecutar SSH en un servidor remoto requiere confirmación explícita de Luis primero",
+            instruction: `V: describe a Luis qué comando vas a correr ("voy a ejecutar 'X' en host Y porque Z"). Espera su 'sí' explícito. LUEGO rellamá la tool con confirmed=true.`,
+            failureCode: "RING2_NEEDS_CONFIRMATION",
+            host,
+            command,
+          }),
+          summary: `ssh ${host}: necesita confirmación de Luis primero`,
+        };
+      }
       const payload: Record<string, unknown> = { host, command };
       if (typeof input.username === "string") payload.username = input.username;
       if (typeof input.password === "string") payload.password = input.password;
