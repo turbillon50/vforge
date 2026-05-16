@@ -470,22 +470,26 @@ export const TOOLS: NeutralTool[] = [
   {
     name: "image_generation",
     description:
-      "Genera una imagen vía Stable Diffusion en el servidor de V. Úsala cuando una app o landing necesite hero images, ilustraciones, logos preliminares. Devuelve la imagen como base64 o URL temporal. (Nota: endpoint /generate-image puede no estar implementado todavía — si 404, repórtalo a Luis.)",
+      "Genera una imagen vía OpenRouter (Gemini Image / FLUX / Recraft) en el servidor de V. Default model: google/gemini-3.1-flash-image-preview ('Nano Banana') — soporta generación + edición + multi-turn. Úsala para hero images, ilustraciones, logos preliminares, mockups. Devuelve PNG en base64. ~$0.014 por imagen 1024x1024 contra el saldo de OpenRouter de Luis. (Nota: el endpoint /generate-image puede no estar implementado todavía en api.py — si 404, repórtalo a Luis.)",
     input_schema: {
       type: "object",
       properties: {
         prompt: {
           type: "string",
-          description: "Descripción de la imagen en inglés (Stable Diffusion rinde mejor en inglés). Sé específico: estilo, composición, colores, iluminación.",
+          description: "Descripción de la imagen, preferentemente en inglés (los modelos rinden mejor en inglés). Sé específico: estilo, composición, colores, iluminación, lente, mood. Ejemplo: 'professional food photography, espresso in white ceramic cup on dark wood, morning light from left, shallow depth of field, 35mm, hyperreal'.",
         },
         size: {
           type: "string",
           enum: ["512x512", "768x768", "1024x1024"],
-          description: "Tamaño de salida. Default 512x512 (más rápido).",
+          description: "Tamaño de salida. Default 1024x1024 (calidad). 512x512 si quieres ahorrar.",
         },
         negative_prompt: {
           type: "string",
-          description: "Qué evitar en la imagen (ej. 'blurry, low quality, watermark'). Opcional.",
+          description: "Qué evitar en la imagen (ej. 'blurry, low quality, watermark, text artifacts'). Se inyecta al prompt como 'Avoid: ...'. Opcional.",
+        },
+        model: {
+          type: "string",
+          description: "ID del modelo OpenRouter. Default: google/gemini-3.1-flash-image-preview. Alternativas: black-forest-labs/flux.2-pro (realismo extremo), sourceful/riverflow-v2-standard-preview (rápido).",
         },
       },
       required: ["prompt"],
@@ -1210,10 +1214,13 @@ async function dispatch(
     }
     case "image_generation": {
       const prompt = requireString(input.prompt, "prompt");
-      const size = typeof input.size === "string" ? input.size : "512x512";
+      const size = typeof input.size === "string" ? input.size : "1024x1024";
       const payload: Record<string, unknown> = { prompt, size };
       if (typeof input.negative_prompt === "string") {
         payload.negative_prompt = input.negative_prompt;
+      }
+      if (typeof input.model === "string") {
+        payload.model = input.model;
       }
       const res = await callVServer("/generate-image", payload, { timeoutMs: 120_000 });
       if (!res.ok) {
@@ -1223,10 +1230,12 @@ async function dispatch(
           summary: `image_generation falló: ${res.error}`,
         };
       }
+      const body = (res.body ?? {}) as { model?: string };
+      const modelUsed = body.model ?? (typeof input.model === "string" ? input.model : "gemini-image");
       return {
         ok: true,
         content: JSON.stringify(res.body),
-        summary: `imagen generada ${size}`,
+        summary: `imagen generada ${size} (${modelUsed})`,
       };
     }
     case "ssh_command_executor": {

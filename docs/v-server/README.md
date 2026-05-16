@@ -105,11 +105,26 @@ Y poner:
 
 ```
 [Service]
-Environment="STABILITY_API_KEY=sk-..."
+Environment="OPENROUTER_API_KEY=sk-or-v1-..."
 Environment="V_SERVER_TOKEN=algun-token-largo-y-secreto"
 ```
 
 Después `systemctl daemon-reload && systemctl restart v-server`.
+
+`OPENROUTER_API_KEY` es la misma key que Luis ya usa para Tanit — se puede reutilizar tal cual.
+
+### Modelos de imagen soportados
+
+El endpoint `/generate-image` acepta un parámetro opcional `model` para elegir. Default: `google/gemini-3.1-flash-image-preview` ("Nano Banana") — state of the art, soporta multi-turn y edición.
+
+Otros modelos populares vía OpenRouter:
+- `google/gemini-3.1-flash-image-preview` — calidad top, ~$0.014/MP, multi-turn, edición
+- `black-forest-labs/flux.2-pro` — realismo extremo, ~$0.014/MP
+- `sourceful/riverflow-v2-standard-preview` — alternativa rápida
+
+V puede llamar `image_generation({prompt: "...", model: "black-forest-labs/flux.2-pro"})` para usar FLUX en vez del default.
+
+### Auth
 
 Si pones `V_SERVER_TOKEN`, todas las requests (menos `/health`) requieren header `X-V-Token: <ese-valor>`. La tool TypeScript en `lib/forge/v-server.ts` necesitará una pequeña edición para mandar ese header.
 
