@@ -1,0 +1,77 @@
+/**
+ * Helper para hablar con el servidor Flask de V en Hetzner.
+ *
+ * El servidor expone endpoints de "manos" que V usa para ejecutar código
+ * real, controlar navegadores y generar imágenes. Vive en la IP fija del
+ * Hetzner (configurable via env var V_SERVER_URL).
+ *
+ *   /execute         → corre código Python/Node, devuelve stdout/stderr
+ *   /browser         → Playwright (pendiente de implementar en api.py)
+ *   /generate-image  → Generación de imágenes (pendiente)
+ *   /ssh-execute     → SSH a server remoto vía paramiko (pendiente)
+ *
+ * Si el endpoint no existe aún (404) o el server está caído, devolvemos
+ * un error claro para que V lo reporte a Luis sin pretender que jaló.
+ */
+
+const DEFAULT_URL = "http://178.105.135.26:5000";
+const DEFAULT_TIMEOUT_MS = 35_000;
+
+export interface VServerResponse {
+  ok: boolean;
+  status: number;
+  body: unknown;
+  error?: string;
+}
+
+export async function callVServer(
+  path: string,
+  body: Record<string, unknown>,
+  opts: { timeoutMs?: number } = {},
+): Promise<VServerResponse> {
+  const base = process.env.V_SERVER_URL || DEFAULT_URL;
+  const url = `${base.replace(/\/$/, "")}${path}`;
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    const text = await res.text();
+    let parsed: unknown;
+    try {
+      parsed = text.length > 0 ? JSON.parse(text) : null;
+    } catch {
+      parsed = text;
+    }
+    if (!res.ok) {
+      return {
+        ok: false,
+        status: res.status,
+        body: parsed,
+        error:
+          res.status === 404
+            ? `endpoint ${path} no existe aún en el servidor (falta implementar en api.py)`
+            : `server respondió ${res.status}`,
+      };
+    }
+    return { ok: true, status: res.status, body: parsed };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const isAbort = err instanceof Error && err.name === "AbortError";
+    return {
+      ok: false,
+      status: 0,
+      body: null,
+      error: isAbort
+        ? `timeout tras ${timeoutMs}ms — el servidor no respondió`
+        : `no se pudo conectar al servidor (${message}). ¿Está vivo http://178.105.135.26:5000/health?`,
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
