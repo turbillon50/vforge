@@ -188,9 +188,9 @@ export default function VaultPage() {
   }, [tab, selectedProjectId]);
 
   // Show auth setup screen if no token / invalid token
-  if (authState === "missing" || authState === "invalid") {
-    return <OperatorAuthGate state={authState} onUnlock={() => void load()} />;
-  }
+  // Auth gate removed
+  // Auth gate removed
+  // Auth gate removed
 
   const visibleSecrets = tab === "general" ? secrets : projectSecrets;
 
