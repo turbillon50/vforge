@@ -447,19 +447,22 @@ export const TOOLS: NeutralTool[] = [
   {
     name: "browser_control",
     description:
-      "Controla un navegador headless (Playwright) en el servidor de V para automatizar la web: tomar screenshots, navegar a URLs, extraer texto, hacer clicks. Úsala para verificar que una app que deployaste se ve bien, scrapear datos, o probar flujos UI. (Nota: endpoint /browser puede no estar implementado todavía en api.py — si devuelve 404, repórtalo a Luis para que el servidor lo agregue.)",
+      "Controla un navegador headless (Playwright) en el servidor de V. Acciones: goto (navegar), click, type (escribir), screenshot, get_html (HTML completo), get_text (texto extraído), describe_element (descripción visual con Gemini Vision), execute_script (inyectar JS). Soporta wait_for_selector para esperar elementos antes de actuar. Úsala para verificar UI de deploys, web scraping/OSINT, automatización de formularios. (Nota: endpoint /browser puede no estar implementado todavía en api.py — si devuelve 404, repórtalo a Luis para que el servidor lo agregue.)",
     input_schema: {
       type: "object",
       properties: {
         action: {
           type: "string",
-          enum: ["screenshot", "navigate", "extract_text", "click", "type"],
-          description: "Qué hacer: screenshot tomar foto, navigate ir a URL, extract_text leer contenido, click presionar elemento, type escribir en input.",
+          enum: ["goto", "click", "type", "screenshot", "get_html", "get_text", "describe_element", "execute_script"],
+          description: "Qué hacer en el navegador. goto navega a URL; click/type interactúan con elemento; screenshot/get_html/get_text capturan estado; describe_element usa visión para describir; execute_script inyecta JS arbitrario.",
         },
-        url: { type: "string", description: "URL objetivo (requerido para screenshot/navigate/extract_text)" },
-        selector: { type: "string", description: "Selector CSS del elemento (requerido para click/type)" },
-        text: { type: "string", description: "Texto a escribir (requerido para type)" },
-        wait_ms: { type: "number", description: "Esperar N ms tras la acción antes de capturar resultado (default 500)" },
+        url: { type: "string", description: "URL a navegar (requerido si action='goto')" },
+        selector: { type: "string", description: "Selector CSS o XPath del elemento (requerido para click/type/describe_element)" },
+        text_to_type: { type: "string", description: "Texto a escribir (requerido si action='type')" },
+        script: { type: "string", description: "JavaScript a ejecutar en la página (requerido si action='execute_script')" },
+        wait_for_selector: { type: "string", description: "Esperar a que este selector aparezca antes de ejecutar la acción (opcional, hasta 10s)" },
+        return_screenshot_base64: { type: "boolean", description: "Si true, también devuelve screenshot base64 además del resultado de la acción (útil para verificar). Default false." },
+        wait_ms: { type: "number", description: "Esperar N ms tras la acción (default 500)" },
       },
       required: ["action"],
     },
@@ -486,6 +489,25 @@ export const TOOLS: NeutralTool[] = [
         },
       },
       required: ["prompt"],
+    },
+  },
+  {
+    name: "ssh_command_executor",
+    description:
+      "Ejecuta un comando shell en un servidor remoto vía SSH. Esencial para gestión de infraestructura, deploy de microservicios, automatización de tareas en máquinas Linux. Soporta autenticación por password o llave privada SSH, sudo opcional, timeout configurable. Las credenciales NUNCA se loguean (audit las redacta automáticamente). RING 2 — destructivo: puede borrar archivos, matar procesos, cambiar configs. Usa con cuidado y reporta a Luis qué comando ejecutarás antes de mandar destructivos (rm, shutdown, dd, etc.). (Nota: endpoint /ssh-execute puede no estar implementado todavía en api.py — si 404, repórtalo a Luis.)",
+    input_schema: {
+      type: "object",
+      properties: {
+        host: { type: "string", description: "IP o hostname del servidor remoto (ej. '178.105.135.26' o 'mi-server.example.com')" },
+        command: { type: "string", description: "Comando shell a ejecutar. Ej. 'ls -la /home', 'systemctl status nginx', 'apt update'." },
+        username: { type: "string", description: "Usuario SSH. Default 'root'." },
+        password: { type: "string", description: "Password SSH (alternativa a private_key). Se redacta del audit log." },
+        private_key: { type: "string", description: "Contenido completo de llave privada SSH en formato PEM (alternativa a password). Se redacta del audit log." },
+        sudo: { type: "boolean", description: "Anteponer 'sudo' al comando. Default false." },
+        port: { type: "number", description: "Puerto SSH. Default 22." },
+        timeout_seconds: { type: "number", description: "Timeout del comando en segundos (1-300). Default 60." },
+      },
+      required: ["host", "command"],
     },
   },
 ];
@@ -1167,7 +1189,10 @@ async function dispatch(
       const payload: Record<string, unknown> = { action };
       if (typeof input.url === "string") payload.url = input.url;
       if (typeof input.selector === "string") payload.selector = input.selector;
-      if (typeof input.text === "string") payload.text = input.text;
+      if (typeof input.text_to_type === "string") payload.text_to_type = input.text_to_type;
+      if (typeof input.script === "string") payload.script = input.script;
+      if (typeof input.wait_for_selector === "string") payload.wait_for_selector = input.wait_for_selector;
+      if (typeof input.return_screenshot_base64 === "boolean") payload.return_screenshot_base64 = input.return_screenshot_base64;
       if (typeof input.wait_ms === "number") payload.wait_ms = input.wait_ms;
       const res = await callVServer("/browser", payload, { timeoutMs: 60_000 });
       if (!res.ok) {
@@ -1202,6 +1227,43 @@ async function dispatch(
         ok: true,
         content: JSON.stringify(res.body),
         summary: `imagen generada ${size}`,
+      };
+    }
+    case "ssh_command_executor": {
+      const host = requireString(input.host, "host");
+      const command = requireString(input.command, "command");
+      const payload: Record<string, unknown> = { host, command };
+      if (typeof input.username === "string") payload.username = input.username;
+      if (typeof input.password === "string") payload.password = input.password;
+      if (typeof input.private_key === "string") payload.private_key = input.private_key;
+      if (typeof input.sudo === "boolean") payload.sudo = input.sudo;
+      if (typeof input.port === "number") payload.port = input.port;
+      const timeoutSeconds = clampNumber(input.timeout_seconds, 1, 300, 60);
+      payload.timeout_seconds = timeoutSeconds;
+      const res = await callVServer("/ssh-execute", payload, {
+        timeoutMs: (timeoutSeconds + 15) * 1000,
+      });
+      if (!res.ok) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: res.error, status: res.status, body: res.body }),
+          summary: `ssh ${host} falló: ${res.error}`,
+        };
+      }
+      const body = (res.body ?? {}) as {
+        stdout?: string;
+        stderr?: string;
+        return_code?: number;
+        error?: string;
+      };
+      const okRun = (body.return_code ?? 0) === 0 && !body.error;
+      const summary = okRun
+        ? `ssh ${host} OK (exit=${body.return_code ?? 0})`
+        : `ssh ${host} exit=${body.return_code ?? "?"} ${(body.stderr ?? body.error ?? "").slice(0, 60)}`;
+      return {
+        ok: okRun,
+        content: JSON.stringify(body),
+        summary,
       };
     }
 
@@ -1248,14 +1310,30 @@ function requireString(v: unknown, name: string): string {
 /**
  * Strip values that might leak secrets if logged. Tool inputs for the
  * Tier-1 read-only set are safe (owner/repo/path), but we keep this
- * defensive.
+ * defensive. Campos sensibles (password, private_key, tokens) se
+ * reemplazan por "[REDACTED]" SIEMPRE — el audit guarda solo evidencia
+ * de que se invocó la tool, no la credencial.
  */
+const SENSITIVE_KEYS = new Set([
+  "password",
+  "private_key",
+  "privateKey",
+  "secret",
+  "token",
+  "api_key",
+  "apiKey",
+  "auth",
+  "authorization",
+]);
+
 function redactInput(
   input: Record<string, unknown>,
 ): Record<string, unknown> {
   const safe: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(input)) {
-    if (typeof v === "string" && v.length > 200) {
+    if (SENSITIVE_KEYS.has(k) && typeof v === "string" && v.length > 0) {
+      safe[k] = `[REDACTED ${v.length} chars]`;
+    } else if (typeof v === "string" && v.length > 200) {
       safe[k] = `${v.slice(0, 80)}…(truncated)`;
     } else {
       safe[k] = v;
