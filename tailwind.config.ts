@@ -2,7 +2,13 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   darkMode: ["selector", '[data-theme="dark"]'],
-  content: ["./src/**/*.{ts,tsx,js,jsx,mdx}"],
+  // vforge does NOT use src/ — files live at repo root.
+  content: [
+    "./app/**/*.{ts,tsx,js,jsx,mdx}",
+    "./components/**/*.{ts,tsx,js,jsx,mdx}",
+    "./i18n/**/*.{ts,tsx,js,jsx,mdx}",
+    "./lib/**/*.{ts,tsx,js,jsx,mdx}",
+  ],
   theme: {
     extend: {
       colors: {
