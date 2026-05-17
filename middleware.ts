@@ -1,26 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-import { ensureDatabaseHealed } from "@/lib/db/client";
+import { clerkMiddleware } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  // Auto-heal database on every request (idempotent, runs once per process)
-  // Run in background to not block the request
-  if (process.env.NODE_ENV === "production") {
-    ensureDatabaseHealed().catch((e) => {
-      console.error("[V middleware] Database healing failed:", e);
-    });
-  }
+const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
-  return NextResponse.next();
-}
+// Clerk se inicializa cuando hay keys (para que /sign-in y /sign-up
+// rendericen los componentes oficiales), pero NO protege rutas: el
+// backend de V usa operator_luis hardcoded hasta que aterrice M11
+// (Clerk-backed auth real cableada al user_id en BD). Bloquear /app
+// sin que vaya cableado al user_id solo nos deja afuera del producto
+// sin agregar seguridad real. Cuando Clerk se conecte al user_id en
+// BD, recuperamos la protección con auth.protect() aquí.
+export default hasClerk
+  ? clerkMiddleware(async () => {
+      // pass-through; no auth.protect() yet
+    })
+  : () => NextResponse.next();
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next|.*\\..*).*)",
+    "/(api|trpc)(.*)",
   ],
 };
