@@ -1,22 +1,8 @@
-"use client";
-
-import { motion } from "framer-motion";
-
+// Pass-through template. The page transition animation lives in
+// `components/vforge/app-shell.tsx` (the OS-style viewport). Running a
+// second motion layer here caused double-animation on every route change
+// — visibly janky on mobile and could leave pages stuck off-screen if
+// the spring was interrupted mid-flight.
 export default function Template({ children }: { children: React.ReactNode }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 15, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -15, scale: 0.98 }}
-      transition={{ 
-        type: "spring", 
-        stiffness: 300, 
-        damping: 30, 
-        mass: 1 
-      }}
-      className="h-full w-full"
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className="h-full w-full">{children}</div>;
 }

@@ -95,10 +95,10 @@ export function AppShell({ children }: AppShellProps) {
             {!isHome && (
               <motion.div
                 key={pathname}
-                initial={{ y: "100%", opacity: 0, scale: 0.95 }}
-                animate={{ y: 0, opacity: 1, scale: 1 }}
-                exit={{ y: "100%", opacity: 0, scale: 0.95 }}
-                transition={{ type: "spring", damping: 28, stiffness: 220 }}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 12 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
                 className={cn(
                   "absolute inset-x-2 top-2 bottom-16 md:inset-x-8 md:top-6 md:bottom-24 max-w-5xl mx-auto",
                   "bg-vf-bg/80 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)]",
@@ -128,10 +128,10 @@ export function AppShell({ children }: AppShellProps) {
             {isHome && (
               <motion.div
                 key="home-desktop"
-                initial={{ opacity: 0, scale: 1.05 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.4 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className="absolute inset-0 overflow-y-auto flex items-center justify-center"
               >
                 <div className="w-full max-w-6xl h-full flex flex-col items-center justify-start">

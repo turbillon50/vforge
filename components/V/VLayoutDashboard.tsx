@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { ChatPage } from './ChatPage';
 
 interface Project {
   id: string;
@@ -316,32 +317,10 @@ export const VLayoutDashboard = () => {
           </div>
         </div>
 
-        {/* Chat Area (placeholder) */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-6xl mb-4">💬</div>
-            <h3 className="text-xl font-semibold text-vf-fg-1 mb-2">
-              Chat con V
-            </h3>
-            <p className="text-vf-fg-2 max-w-md">
-              Aquí irá la interfaz de chat integrada. V está lista para trabajar
-              en {selectedProject.name}
-            </p>
-          </div>
-        </div>
-
-        {/* Composer (placeholder) */}
-        <div className="border-t border-vf-border bg-vf-bg-1 px-8 py-6">
-          <div className="flex gap-3">
-            <input
-              type="text"
-              placeholder="Dile a V qué hacer..."
-              className="flex-1 bg-vf-bg-2 border border-vf-border rounded-xl px-4 py-3 text-vf-fg-1 placeholder:text-vf-fg-3 focus:outline-none focus:border-vf-green/50"
-            />
-            <button className="px-6 py-3 bg-vf-green/20 border border-vf-green/50 text-vf-green rounded-xl hover:bg-vf-green/30 transition-colors font-medium">
-              Enviar
-            </button>
-          </div>
+        {/* Real V chat — streams from /api/forge/run with full system prompt,
+            tools, skills and memory. */}
+        <div className="flex-1 min-h-0">
+          <ChatPage />
         </div>
       </div>
     </div>
