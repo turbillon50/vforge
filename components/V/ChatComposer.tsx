@@ -89,7 +89,9 @@ export const ChatComposer = ({
           <Paperclip size={20} />
         </motion.button>
 
-        {/* Textarea */}
+        {/* Textarea — mobile-tuned: 16px font prevents iOS zoom, touch-action
+            manipulation kills the 300ms tap delay, enterKeyHint promotes
+            "send" on the soft keyboard. */}
         <textarea
           ref={textareaRef}
           value={value}
@@ -99,14 +101,21 @@ export const ChatComposer = ({
           onKeyDown={handleKeyDown}
           disabled={isLoading}
           placeholder={placeholder}
+          autoComplete="off"
+          autoCorrect="on"
+          autoCapitalize="sentences"
+          spellCheck
+          enterKeyHint="send"
+          inputMode="text"
           className={cn(
             'flex-1 max-h-[200px] bg-transparent',
             'text-vf-fg-1 placeholder:text-vf-fg-3',
             'outline-none resize-none',
-            'font-normal text-sm leading-relaxed',
+            'font-normal leading-relaxed',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             'scrollbar-thin scrollbar-thumb-vf-border scrollbar-track-transparent'
           )}
+          style={{ touchAction: 'manipulation', fontSize: 16 }}
           rows={1}
         />
 
