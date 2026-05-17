@@ -229,6 +229,16 @@ export type Dictionary = {
     body: string;
     sections: { title: string; body: string }[];
     open: string;
+    tabs: {
+      profile: string;
+      plan: string;
+      billing: string;
+      invoices: string;
+      notifications: string;
+      appearance: string;
+      security: string;
+      api: string;
+    };
   };
   not_found: { code: string; title: string; body: string; back: string; open_workspace: string };
   offline: { title: string; body: string; open_shell: string };
@@ -662,6 +672,16 @@ export const es: Dictionary = {
       { title: "Facturación", body: "Plan, facturas y asientos." },
     ],
     open: "Abrir",
+    tabs: {
+      profile: "Perfil",
+      plan: "Plan",
+      billing: "Pagos",
+      invoices: "Invoices",
+      notifications: "Notificaciones",
+      appearance: "Apariencia",
+      security: "Seguridad",
+      api: "API & dominios",
+    },
   },
   not_found: {
     code: "404 · deriva",
@@ -1100,6 +1120,16 @@ export const en: Dictionary = {
       { title: "Billing", body: "Plan, invoices and seats." },
     ],
     open: "Open",
+    tabs: {
+      profile: "Profile",
+      plan: "Plan",
+      billing: "Billing",
+      invoices: "Invoices",
+      notifications: "Notifications",
+      appearance: "Appearance",
+      security: "Security",
+      api: "API & domains",
+    },
   },
   not_found: {
     code: "404 · drift",

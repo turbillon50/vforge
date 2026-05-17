@@ -30,15 +30,15 @@ type SectionId =
   | "security"
   | "api";
 
-const SECTIONS: { id: SectionId; label: string; icon: typeof User }[] = [
-  { id: "profile", label: "Perfil", icon: User },
-  { id: "plan", label: "Plan", icon: ShieldCheck },
-  { id: "billing", label: "Pagos", icon: CreditCard },
-  { id: "invoices", label: "Invoices", icon: Receipt },
-  { id: "notifications", label: "Notificaciones", icon: Bell },
-  { id: "appearance", label: "Apariencia", icon: Palette },
-  { id: "security", label: "Seguridad", icon: KeyRound },
-  { id: "api", label: "API & dominios", icon: Globe2 },
+const SECTIONS: { id: SectionId; icon: typeof User }[] = [
+  { id: "profile", icon: User },
+  { id: "plan", icon: ShieldCheck },
+  { id: "billing", icon: CreditCard },
+  { id: "invoices", icon: Receipt },
+  { id: "notifications", icon: Bell },
+  { id: "appearance", icon: Palette },
+  { id: "security", icon: KeyRound },
+  { id: "api", icon: Globe2 },
 ];
 
 export default function SettingsPage() {
@@ -69,7 +69,7 @@ export default function SettingsPage() {
                 )}
               >
                 <s.icon size={14} />
-                <span>{s.label}</span>
+                <span>{t.settings.tabs[s.id]}</span>
               </button>
             ))}
           </nav>
