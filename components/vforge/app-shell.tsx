@@ -1,29 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Sidebar } from "./sidebar";
-import { Topbar } from "./topbar";
 import { MobileNav } from "./mobile-nav";
 import { Drawer } from "./drawer";
 import { MultichatDrawer } from "@/components/V/MultichatDrawer";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { FolderKanban, Lock, Boxes, Search, Eye, Sparkles, ChevronLeft } from "lucide-react";
-import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 
 interface AppShellProps {
   children: React.ReactNode;
 }
-
-const backgroundApps = [
-  { id: "projects", name: "Proyectos", icon: FolderKanban, color: "bg-blue-500/20 text-blue-500" },
-  { id: "vault", name: "Bóveda V", icon: Lock, color: "bg-amber-500/20 text-amber-500" },
-  { id: "modules", name: "Módulos", icon: Boxes, color: "bg-purple-500/20 text-purple-500" },
-  { id: "hunter", name: "Repo Hunt", icon: Search, color: "bg-emerald-500/20 text-emerald-500" },
-  { id: "vision", name: "Repo Vision", icon: Eye, color: "bg-indigo-500/20 text-indigo-500" },
-  { id: "forge", name: "Forge AI", icon: Sparkles, color: "bg-vf-green/20 text-vf-green" },
-];
 
 export function AppShell({ children }: AppShellProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -34,76 +22,104 @@ export function AppShell({ children }: AppShellProps) {
   const isHome = pathname === "/hub";
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden flex select-none">
-      {/* Desktop Sidebar */}
-      <Sidebar />
+    <div className="min-h-screen bg-neutral-950 relative overflow-hidden flex select-none text-white font-sans w-full">
+      
+      {/* Immersive Cinematic Wallpaper (glowing ambient orbs) */}
+      <div 
+        className="absolute inset-0 z-0 overflow-hidden pointer-events-none"
+        style={{ background: "radial-gradient(circle at center, #15102a 0%, #03000a 100%)" }}
+      >
+        {/* Ambient Orb 1 */}
+        <motion.div 
+          animate={{
+            x: [0, 40, -20, 0],
+            y: [0, -30, 20, 0],
+            scale: [1, 1.1, 0.9, 1],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-violet-600/25 blur-[120px]"
+        />
+        {/* Ambient Orb 2 */}
+        <motion.div 
+          animate={{
+            x: [0, -50, 30, 0],
+            y: [0, 40, -30, 0],
+            scale: [1, 0.9, 1.1, 1],
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-1/2 left-1/3 w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[150px]"
+        />
+        {/* Ambient Orb 3 */}
+        <motion.div 
+          animate={{
+            x: [0, 30, -30, 0],
+            y: [0, 50, 20, 0],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute -bottom-20 -right-20 w-96 h-96 rounded-full bg-vf-green/15 blur-[100px]"
+        />
+      </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen relative md:ml-[220px] lg:ml-[240px]">
-        {/* Mobile Topbar */}
-        <Topbar onMenuClick={() => setIsDrawerOpen(true)} />
-
-        {/* Mobile Drawer */}
-        <Drawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
-
-        {/* The Desktop OS Layer (Always in the background) */}
-        <div 
-          className={cn(
-            "absolute inset-0 z-0 flex flex-col items-center justify-start pt-20 px-6 transition-all duration-500",
-            isHome ? "opacity-100 scale-100 blur-0" : "opacity-40 scale-95 blur-md pointer-events-none"
-          )}
-        >
-          <div className="w-full max-w-md text-left mb-12">
-            <h1 className="text-2xl font-semibold tracking-tight text-white/90">vForge OS</h1>
-            <p className="text-xs text-white/50">Sistema Operativo Anillo 0</p>
+      {/* Main OS Viewport (Always full-screen for absolute immersion) */}
+      <div className="flex-1 flex flex-col min-h-screen w-full relative z-10">
+        
+        {/* Glassmorphic Top Status Bar (Clean and modern like macOS/iOS) */}
+        <header className="h-12 w-full border-b border-white/5 bg-white/[0.02] backdrop-blur-md px-6 flex items-center justify-between z-30 select-none">
+          <div className="flex items-center gap-4">
+            <span className="text-xs font-semibold tracking-wider text-white/90 font-mono">vForge OS</span>
+            <div className="flex items-center gap-1.5 bg-vf-green/10 px-2 py-0.5 rounded-full border border-vf-green/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-vf-green animate-pulse" />
+              <span className="text-[9px] font-bold text-vf-green tracking-wider uppercase font-mono">Anillo 0</span>
+            </div>
           </div>
-
-          <div className="w-full max-w-md grid grid-cols-4 gap-x-4 gap-y-8">
-            {backgroundApps.map((app) => (
-              <div key={app.id} className="flex flex-col items-center gap-2">
-                <div className={cn(
-                  "w-16 h-16 rounded-2xl flex items-center justify-center border border-white/10 shadow-lg bg-gradient-to-br from-white/5 to-transparent",
-                  app.color
-                )}>
-                  <app.icon className="w-7 h-7" />
-                </div>
-                <span className="text-[11px] font-medium text-white/60">{app.name}</span>
-              </div>
-            ))}
+          <div className="flex items-center gap-3 text-xs text-white/40 font-mono">
+            <span>v1.2.0</span>
           </div>
-        </div>
+        </header>
 
-        {/* Active Window Layer (iPhone Multitasking App View) */}
-        <div className="flex-1 relative z-10">
+        {/* Desktop Viewport Wrapper */}
+        <div className="flex-1 relative w-full h-full flex items-center justify-center p-4 md:p-8">
           <AnimatePresence mode="wait">
             {!isHome && (
               <motion.div
                 key={pathname}
-                initial={{ y: "100%", borderRadius: "40px" }}
-                animate={{ y: 0, borderRadius: "24px" }}
-                exit={{ y: "100%", borderRadius: "40px" }}
-                transition={{ type: "spring", damping: 30, stiffness: 250 }}
+                initial={{ y: "100%", opacity: 0, scale: 0.95 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: "100%", opacity: 0, scale: 0.95 }}
+                transition={{ type: "spring", damping: 28, stiffness: 220 }}
                 className={cn(
-                  "absolute inset-x-2 top-4 bottom-2 md:inset-4",
-                  "bg-vf-bg/85 backdrop-blur-3xl border border-white/10 shadow-2xl",
+                  "absolute inset-x-2 top-2 bottom-16 md:inset-x-8 md:top-6 md:bottom-24 max-w-5xl mx-auto",
+                  "bg-vf-bg/80 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)]",
                   "flex flex-col overflow-hidden"
                 )}
               >
-                {/* iOS Window Header / Grabber */}
-                <div className="h-12 flex items-center justify-between px-4 border-b border-white/5 bg-white/5">
+                {/* App Navigation Header */}
+                <div className="h-14 flex items-center justify-between px-6 border-b border-white/5 bg-white/[0.03]">
                   <button 
                     onClick={() => router.push("/hub")}
-                    className="flex items-center gap-1 text-xs font-medium text-vf-green hover:opacity-80 transition-opacity"
+                    className="flex items-center gap-2 text-xs font-semibold text-vf-green hover:text-white transition-colors py-1.5 px-3 rounded-xl bg-white/5 border border-white/10 active:scale-95"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    <span>Home</span>
+                    <span>Regresar</span>
                   </button>
-                  <div className="w-12 h-1 bg-white/20 rounded-full" /> {/* Grab Bar */}
-                  <div className="w-16" /> {/* Spacer */}
+                  <div className="w-16 h-1.5 bg-white/20 rounded-full" />
+                  <div className="w-24" />
                 </div>
 
-                {/* App Content */}
-                <div className="flex-1 overflow-y-auto px-5 py-6">
+                {/* Content Inside Active App */}
+                <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-thin scrollbar-thumb-white/10">
                   {children}
                 </div>
               </motion.div>
@@ -111,13 +127,14 @@ export function AppShell({ children }: AppShellProps) {
 
             {isHome && (
               <motion.div
-                key="home-content"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 overflow-y-auto pt-14 pb-20 md:pt-0 md:pb-0"
+                key="home-desktop"
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4 }}
+                className="absolute inset-0 overflow-y-auto flex items-center justify-center"
               >
-                <div className="max-w-6xl mx-auto px-5 md:px-8 py-6 md:py-8 h-full">
+                <div className="w-full max-w-6xl h-full flex flex-col items-center justify-start">
                   {children}
                 </div>
               </motion.div>
@@ -125,11 +142,13 @@ export function AppShell({ children }: AppShellProps) {
           </AnimatePresence>
         </div>
 
-        {/* Mobile Bottom Nav */}
-        <MobileNav onOrbClick={() => setIsMultichatOpen(true)} />
+        {/* Global Bottom OS Navigation & Dock */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 pb-safe">
+          <MobileNav onOrbClick={() => setIsMultichatOpen(true)} />
+        </div>
       </div>
 
-      {/* V Multichat OS Level Drawer */}
+      {/* Multichat Panel */}
       <MultichatDrawer isOpen={isMultichatOpen} onClose={() => setIsMultichatOpen(false)} />
     </div>
   );
