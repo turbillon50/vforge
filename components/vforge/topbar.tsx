@@ -44,7 +44,7 @@ export function Topbar({ onMenuClick, className }: TopbarProps) {
 
       <button
         type="button"
-        onClick={openV}
+        onClick={() => openV()}
         aria-label="Abrir chat con V"
         className="h-9 px-3 flex items-center gap-2 rounded-md bg-vf-green/10 border border-vf-green/30 text-vf-green hover:bg-vf-green/20 active:bg-vf-green/30 transition-colors"
         style={{ touchAction: "manipulation" }}

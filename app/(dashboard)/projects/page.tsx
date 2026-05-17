@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus, ExternalLink, GitBranch, Lock, RefreshCw } from "lucide-react";
+import { Plus, ExternalLink, GitBranch, Lock, RefreshCw, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { openV } from "@/components/V/VDock";
 
 interface Project {
   id: string;
@@ -191,14 +192,18 @@ export default function ProjectsPage() {
         ) : (
           <div className="border-t border-vf-border">
             {filtered.map((p) => (
-              <Link
+              <div
                 key={p.id}
-                href={`/projects/${p.id}`}
-                className="flex items-center justify-between py-4 px-4 -mx-4 md:mx-0 hover:bg-vf-bg-1 transition-colors border-b border-vf-border"
+                className="flex items-center gap-3 py-4 px-4 -mx-4 md:mx-0 hover:bg-vf-bg-1 transition-colors border-b border-vf-border"
               >
-                <div className="min-w-0 flex-1 pr-3">
+                <Link
+                  href={`/projects/${p.id}`}
+                  className="min-w-0 flex-1 pr-3 block group"
+                >
                   <div className="flex items-center gap-2">
-                    <span className="text-vf-fg font-medium truncate">{p.name}</span>
+                    <span className="text-vf-fg font-medium truncate group-hover:underline">
+                      {p.name}
+                    </span>
                     {p.github_private && (
                       <Lock className="w-3 h-3 text-vf-fg-2 flex-shrink-0" />
                     )}
@@ -212,14 +217,34 @@ export default function ProjectsPage() {
                       </span>
                     )}
                   </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {p.vercel_url && <ExternalLink className="w-3.5 h-3.5 text-vf-green-quiet" />}
-                  <span className="font-mono text-[10px] uppercase text-vf-fg-2">
+                </Link>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {p.vercel_url && (
+                    <ExternalLink className="w-3.5 h-3.5 text-vf-green-quiet" />
+                  )}
+                  <span className="font-mono text-[10px] uppercase text-vf-fg-2 mr-1">
                     {p.category}
                   </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openV({
+                        label: "PROYECTO",
+                        value: `${p.name} · ${p.github_repo ?? "sin repo"}`,
+                        prompt: `Cuéntame el estado actual de ${p.name} (repo ${p.github_repo ?? "n/a"}, deploy ${p.vercel_url ?? "n/a"}, categoría ${p.category}). ¿Algo que necesite atención?`,
+                      });
+                    }}
+                    title="Preguntar a V sobre este proyecto"
+                    aria-label="Preguntar a V"
+                    className="inline-flex items-center gap-1 h-8 px-2 rounded text-vf-green hover:bg-vf-green/10 transition-colors"
+                    style={{ touchAction: "manipulation" }}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline text-xs font-medium">V</span>
+                  </button>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}

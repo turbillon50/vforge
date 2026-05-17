@@ -5,24 +5,31 @@ import { ChevronRight, X, Sparkles, Maximize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatPage } from "./ChatPage";
 
-interface VDockProps {
-  /** Optional context to surface to V (current route, project, etc.) — for now display only */
-  context?: { label: string; value: string } | null;
-}
-
 const STORAGE_KEY = "v_dock_collapsed";
+/** sessionStorage key — picked up by ChatPage on mount/on open. */
+export const V_PENDING_PROMPT_KEY = "v_pending_prompt";
+
+interface VContext {
+  label: string;
+  value: string;
+}
 
 /**
  * VDock — V always present, never hidden in a sidebar item.
  *
  * Desktop: anchored right column (380px expanded, 56px collapsed).
  * Mobile: hidden by default; opened as a fullscreen sheet via the
- * topbar V button.
+ * topbar V button (or `openV()` from anywhere).
+ *
+ * Context-aware: when a card calls `openV({ label, value, prompt })`,
+ * the header surfaces the context strip and ChatPage auto-sends the
+ * prompt as the next user turn.
  */
-export function VDock({ context }: VDockProps) {
+export function VDock() {
   const [collapsed, setCollapsed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [context, setContext] = useState<VContext | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -40,9 +47,19 @@ export function VDock({ context }: VDockProps) {
     }
   }, [collapsed, hydrated]);
 
-  // Listen for global "open V" events from the mobile topbar button.
+  // Listen for global "open V" events. Detail may carry context to
+  // surface in the header strip.
   useEffect(() => {
-    const handler = () => setMobileOpen(true);
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as
+        | { label?: string; value?: string }
+        | undefined;
+      setMobileOpen(true);
+      setCollapsed(false);
+      if (detail?.label && detail?.value) {
+        setContext({ label: detail.label, value: detail.value });
+      }
+    };
     window.addEventListener("vforge:open-v", handler);
     return () => window.removeEventListener("vforge:open-v", handler);
   }, []);
@@ -105,11 +122,22 @@ export function VDock({ context }: VDockProps) {
 
             {/* Context strip */}
             {context && (
-              <div className="px-4 py-2 border-b border-vf-border bg-vf-bg-1/40">
-                <div className="font-mono text-[10px] uppercase tracking-wider text-vf-fg-2">
-                  {context.label}
+              <div className="px-4 py-2 border-b border-vf-border bg-vf-bg-1/40 flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-vf-fg-2">
+                    {context.label}
+                  </div>
+                  <div className="text-xs text-vf-fg-1 truncate">
+                    {context.value}
+                  </div>
                 </div>
-                <div className="text-xs text-vf-fg-1 truncate">{context.value}</div>
+                <button
+                  onClick={() => setContext(null)}
+                  className="p-1 -m-1 rounded text-vf-fg-2 hover:text-vf-fg hover:bg-vf-bg-2"
+                  aria-label="Quitar contexto"
+                >
+                  <X className="w-3 h-3" />
+                </button>
               </div>
             )}
 
@@ -121,7 +149,7 @@ export function VDock({ context }: VDockProps) {
         )}
       </aside>
 
-      {/* Mobile fullscreen sheet — controlled by global event from topbar */}
+      {/* Mobile fullscreen sheet — controlled by global event from topbar / cards */}
       {mobileOpen && (
         <div
           className="lg:hidden fixed inset-0 z-50 bg-vf-bg flex flex-col"
@@ -143,11 +171,22 @@ export function VDock({ context }: VDockProps) {
             </button>
           </div>
           {context && (
-            <div className="px-4 py-2 border-b border-vf-border bg-vf-bg-1/40 flex-shrink-0">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-vf-fg-2">
-                {context.label}
+            <div className="px-4 py-2 border-b border-vf-border bg-vf-bg-1/40 flex items-start justify-between gap-2 flex-shrink-0">
+              <div className="min-w-0 flex-1">
+                <div className="font-mono text-[10px] uppercase tracking-wider text-vf-fg-2">
+                  {context.label}
+                </div>
+                <div className="text-xs text-vf-fg-1 truncate">
+                  {context.value}
+                </div>
               </div>
-              <div className="text-xs text-vf-fg-1 truncate">{context.value}</div>
+              <button
+                onClick={() => setContext(null)}
+                className="p-1 -m-1 rounded text-vf-fg-2 hover:text-vf-fg hover:bg-vf-bg-2"
+                aria-label="Quitar contexto"
+              >
+                <X className="w-3 h-3" />
+              </button>
             </div>
           )}
           <div className="flex-1 min-h-0">
@@ -159,9 +198,29 @@ export function VDock({ context }: VDockProps) {
   );
 }
 
-/** Helper for any component to open V on mobile. */
-export function openV() {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("vforge:open-v"));
+/**
+ * Open V from anywhere in the app. If `context.prompt` is provided,
+ * ChatPage will auto-send it as the next user turn.
+ */
+export function openV(opts?: {
+  label?: string;
+  value?: string;
+  prompt?: string;
+}) {
+  if (typeof window === "undefined") return;
+  if (opts?.prompt) {
+    try {
+      window.sessionStorage.setItem(
+        V_PENDING_PROMPT_KEY,
+        JSON.stringify({ prompt: opts.prompt, ts: Date.now() }),
+      );
+    } catch {
+      // ignore
+    }
   }
+  const detail = {
+    label: opts?.label,
+    value: opts?.value,
+  };
+  window.dispatchEvent(new CustomEvent("vforge:open-v", { detail }));
 }
