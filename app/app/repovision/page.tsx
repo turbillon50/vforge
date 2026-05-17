@@ -1,57 +1,47 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/workspace/PageHeader";
-import { ArrowRight, CheckCircle2, CircleDot, GitBranch, GitCommit, GitPullRequest } from "lucide-react";
-import { useT, interpolate } from "@/i18n/AppProviders";
+import { GitBranch, Lock, Star } from "lucide-react";
+import { useT } from "@/i18n/AppProviders";
 
-type Repo = {
+interface Repo {
+  full_name: string;
   name: string;
-  description: string;
-  env: "production" | "preview" | "staging";
-  branch: string;
-  build: "ok" | "running" | "failed";
-  lastDeploy: string;
-  commits: { msg: string; author: string; time: string }[];
-};
+  private: boolean;
+  description: string | null;
+  language: string | null;
+  stars: number;
+  default_branch: string;
+  pushed_at: string;
+  html_url: string;
+}
+
+function timeAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+  if (days >= 1) return `${days}d`;
+  const hours = Math.floor(ms / (1000 * 60 * 60));
+  if (hours >= 1) return `${hours}h`;
+  return "ahora";
+}
 
 export default function RepoVisionPage() {
   const t = useT();
-  const repos: Repo[] = [
-    {
-      name: "orion-web",
-      description: "PWA cliente · Next.js · Tailwind",
-      env: "production",
-      branch: "main",
-      build: "ok",
-      lastDeploy: "12m",
-      commits: [
-        { msg: "feat: stripe checkout component", author: "V", time: "12m" },
-        { msg: "chore: bump @clerk/nextjs", author: "V", time: "1h" },
-        { msg: "design: cinematic hero", author: "you", time: "3h" },
-      ],
-    },
-    {
-      name: "orion-api",
-      description: "REST API · Node · Postgres",
-      env: "preview",
-      branch: "feat/bookings",
-      build: "running",
-      lastDeploy: "4m",
-      commits: [
-        { msg: "feat: bookings endpoint", author: "V", time: "4m" },
-        { msg: "db: bookings migration", author: "V", time: "5m" },
-      ],
-    },
-    {
-      name: "orion-jobs",
-      description: "Background queues · Cron · Webhooks",
-      env: "staging",
-      branch: "main",
-      build: "ok",
-      lastDeploy: "2h",
-      commits: [{ msg: "feat: nightly backup", author: "V", time: "2h" }],
-    },
-  ];
+  const [repos, setRepos] = useState<Repo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/github/repos", { cache: "no-store" })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((d: { repos: Repo[] }) => setRepos(d.repos ?? []))
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <>
@@ -59,102 +49,82 @@ export default function RepoVisionPage() {
         eyebrow={t.repovision.eyebrow}
         title={t.repovision.title}
         description={t.repovision.body}
-        actions={
-          <>
-            <button className="btn-ghost">{t.repovision.cta_connect}</button>
-            <button className="btn-primary">{t.repovision.cta_refactor}</button>
-          </>
-        }
       />
 
-      <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 md:p-8 xl:grid-cols-3">
-        {repos.map((r) => (
-          <article
-            key={r.name}
-            className="rounded-xl border border-app bg-tint-1 p-5 transition hover:border-violet-500/30"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="font-display text-lg font-semibold tracking-tight">{r.name}</h3>
-                <p className="text-sm text-on-surface-variant">{r.description}</p>
-              </div>
-              <EnvBadge env={r.env} />
-            </div>
+      <div className="px-5 py-6 md:px-8">
+        {error && (
+          <div className="mb-4 rounded-md border border-error-crimson/30 bg-error-crimson/5 px-4 py-3 text-sm text-error-crimson">
+            ⚠ {error}
+          </div>
+        )}
 
-            <div className="mt-5 flex flex-wrap items-center gap-2 text-[12px] text-on-surface-variant">
-              <span className="chip"><GitBranch size={11} /> {r.branch}</span>
-              <BuildBadge state={r.build} />
-              <span className="chip">{interpolate(t.repovision.last_deploy, { time: r.lastDeploy })}</span>
-            </div>
+        {loading && (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-[120px] rounded-xl border border-app bg-tint-1/40 animate-pulse"
+              />
+            ))}
+          </div>
+        )}
 
-            <div className="mt-5">
-              <p className="label-caps mb-2 text-muted">{t.repovision.recent_commits}</p>
-              <ul className="space-y-2 text-[13px]">
-                {r.commits.map((c) => (
-                  <li key={c.msg} className="flex items-start gap-2">
-                    <GitCommit size={13} className="mt-0.5 text-on-surface-variant" />
-                    <div className="flex-1">
-                      <p className="text-on-surface">{c.msg}</p>
-                      <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
-                        {c.author} · {c.time}
+        {!loading && repos.length === 0 && !error && (
+          <div className="rounded-xl border border-app bg-tint-1 p-10 text-center text-on-surface-variant">
+            <GitBranch className="mx-auto mb-3 text-violet-300" size={24} />
+            <p className="font-display text-lg">No hay repos cargados</p>
+            <p className="mt-2 text-sm">
+              Verifica que el GITHUB_TOKEN esté configurado en el vault.
+            </p>
+          </div>
+        )}
+
+        {!loading && repos.length > 0 && (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {repos.map((r) => (
+              <a
+                key={r.full_name}
+                href={r.html_url}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-xl border border-app bg-tint-1 p-4 transition hover:border-violet-500/30"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <GitBranch size={14} className="text-violet-300 shrink-0" />
+                      <p className="font-display font-semibold text-on-surface truncate">
+                        {r.name}
                       </p>
+                      {r.private && (
+                        <Lock size={11} className="text-muted shrink-0" />
+                      )}
                     </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="mt-5 flex items-center justify-between border-t border-app pt-4">
-              <div className="flex items-center gap-2 text-on-surface-variant">
-                <GitPullRequest size={14} />
-                <span className="font-mono text-[11px] uppercase tracking-widest">
-                  {interpolate(t.repovision.open_prs, { count: 2 })}
-                </span>
-              </div>
-              <button className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest text-cyber-cyan hover:text-cyan-400">
-                {t.repovision.open} <ArrowRight size={12} />
-              </button>
-            </div>
-          </article>
-        ))}
+                    <p className="mt-1 font-mono text-[11px] uppercase tracking-widest text-muted truncate">
+                      {r.full_name}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 font-mono text-[11px] text-muted shrink-0">
+                    <Star size={11} /> {r.stars}
+                  </div>
+                </div>
+                {r.description && (
+                  <p className="mt-3 text-sm text-on-surface-variant line-clamp-2">
+                    {r.description}
+                  </p>
+                )}
+                <div className="mt-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-muted">
+                  {r.language && (
+                    <span className="text-cyber-cyan">{r.language}</span>
+                  )}
+                  <span>· {r.default_branch}</span>
+                  <span>· push {timeAgo(r.pushed_at)}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     </>
-  );
-}
-
-function EnvBadge({ env }: { env: "production" | "preview" | "staging" }) {
-  const t = useT();
-  const map: Record<typeof env, string> = {
-    production: "bg-success-emerald/10 text-success-emerald ring-success-emerald/30",
-    preview: "bg-cyan-400/10 text-cyber-cyan ring-cyan-400/30",
-    staging: "bg-violet-500/10 text-violet-300 ring-violet-500/30",
-  };
-  const labels: Record<typeof env, string> = {
-    production: t.common.status_live,
-    preview: t.common.status_preview,
-    staging: "staging",
-  };
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest ring-1 ${map[env]}`}
-    >
-      ● {labels[env]}
-    </span>
-  );
-}
-
-function BuildBadge({ state }: { state: "ok" | "running" | "failed" }) {
-  const t = useT();
-  if (state === "running")
-    return (
-      <span className="chip text-cyber-cyan">
-        <CircleDot size={11} className="animate-pulse" /> {t.common.status_building}
-      </span>
-    );
-  if (state === "failed") return <span className="chip text-error-crimson">● {t.common.status_failed}</span>;
-  return (
-    <span className="chip text-success-emerald">
-      <CheckCircle2 size={11} /> {t.common.status_ready}
-    </span>
   );
 }

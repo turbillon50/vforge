@@ -1,19 +1,43 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/workspace/PageHeader";
-import { Activity, CheckCircle2, CircleDot, Rocket, Timer, XCircle } from "lucide-react";
+import { CheckCircle2, CircleDot, ExternalLink, Rocket } from "lucide-react";
 import { useT } from "@/i18n/AppProviders";
+
+interface Project {
+  id: string;
+  name: string;
+  category: string;
+  status: string;
+  github_repo: string | null;
+  vercel_url: string | null;
+  domain?: string | null;
+}
+
+type DeployStatus = "ready" | "preview" | "draft";
+
+function statusOf(p: Project): DeployStatus {
+  if (p.category === "produccion") return "ready";
+  if (p.category === "activo" || p.category === "en_revision") return "preview";
+  return "draft";
+}
 
 export default function DeploymentsPage() {
   const t = useT();
-  const deploys = [
-    { id: "dpl_84z", project: "orion-web", env: "production", commit: "feat: stripe checkout", status: "ready", duration: "42s", time: "12m" },
-    { id: "dpl_83p", project: "orion-api", env: "preview", commit: "feat: bookings endpoint", status: "building", duration: "—", time: "4m" },
-    { id: "dpl_82s", project: "orion-web", env: "preview", commit: "design: cinematic hero", status: "ready", duration: "38s", time: "3h" },
-    { id: "dpl_81n", project: "orion-jobs", env: "production", commit: "feat: nightly backup", status: "ready", duration: "27s", time: "1d" },
-    { id: "dpl_80c", project: "orion-api", env: "production", commit: "fix: rate limit", status: "failed", duration: "1m 12s", time: "1d" },
-  ];
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/projects", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { projects: [] }))
+      .then((d: { projects: Project[] }) =>
+        setProjects((d.projects ?? []).filter((p) => p.vercel_url)),
+      )
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <>
@@ -22,92 +46,106 @@ export default function DeploymentsPage() {
         title={t.deployments.title}
         description={t.deployments.body}
         actions={
-          <>
-            <button className="btn-ghost">{t.deployments.open_vercel}</button>
-            <button className="btn-primary"><Rocket size={13} /> {t.deployments.promote}</button>
-          </>
+          <button className="btn-primary">
+            <Rocket size={13} /> {t.deployments.open_vercel}
+          </button>
         }
       />
 
-      <div className="grid grid-cols-1 gap-3 px-5 pt-6 md:grid-cols-4 md:px-8">
-        <StatCard icon={Activity} label={t.deployments.stats.healthy} value="99.98%" tone="emerald" />
-        <StatCard icon={Timer} label={t.deployments.stats.avg_build} value="38s" tone="cyan" />
-        <StatCard icon={CheckCircle2} label={t.deployments.stats.released_today} value="7" tone="violet" />
-        <StatCard icon={XCircle} label={t.deployments.stats.failed_7d} value="1" tone="crimson" />
-      </div>
-
       <div className="px-5 py-6 md:px-8">
-        <div className="overflow-hidden rounded-xl border border-app">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-tint-1 text-on-surface-variant">
-              <tr className="font-mono text-[11px] uppercase tracking-widest">
-                <th className="px-4 py-3">{t.deployments.table.deploy}</th>
-                <th className="px-4 py-3">{t.deployments.table.project}</th>
-                <th className="px-4 py-3">{t.deployments.table.env}</th>
-                <th className="px-4 py-3">{t.deployments.table.commit}</th>
-                <th className="px-4 py-3">{t.deployments.table.build}</th>
-                <th className="px-4 py-3">{t.deployments.table.status}</th>
-                <th className="px-4 py-3">{t.deployments.table.when}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deploys.map((d) => (
-                <tr key={d.id} className="border-t border-app hover:bg-tint-1">
-                  <td className="px-4 py-3 font-mono text-[12px] text-on-surface-variant">{d.id}</td>
-                  <td className="px-4 py-3 text-on-surface">{d.project}</td>
-                  <td className="px-4 py-3">
-                    <span className={d.env === "production" ? "chip text-success-emerald" : "chip text-cyber-cyan"}>
-                      ● {d.env === "production" ? t.common.status_live : t.common.status_preview}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-on-surface">{d.commit}</td>
-                  <td className="px-4 py-3 font-mono text-[12px] text-on-surface-variant">{d.duration}</td>
-                  <td className="px-4 py-3">
-                    {d.status === "ready" && (
-                      <span className="chip text-success-emerald">
-                        <CheckCircle2 size={11} /> {t.common.status_ready}
-                      </span>
-                    )}
-                    {d.status === "building" && (
-                      <span className="chip text-cyber-cyan">
-                        <CircleDot size={11} className="animate-pulse" /> {t.common.status_building}
-                      </span>
-                    )}
-                    {d.status === "failed" && <span className="chip text-error-crimson">● {t.common.status_failed}</span>}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-[12px] text-muted">{d.time}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {error && (
+          <div className="mb-4 rounded-md border border-error-crimson/30 bg-error-crimson/5 px-4 py-3 text-sm text-error-crimson">
+            ⚠ {error}
+          </div>
+        )}
+
+        {loading && (
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-[70px] rounded-xl border border-app bg-tint-1/40 animate-pulse"
+              />
+            ))}
+          </div>
+        )}
+
+        {!loading && projects.length === 0 && (
+          <div className="rounded-xl border border-app bg-tint-1 p-10 text-center text-on-surface-variant">
+            <Rocket className="mx-auto mb-3 text-cyber-cyan" size={24} />
+            <p className="font-display text-lg">Ningún proyecto desplegado todavía</p>
+            <p className="mt-2 text-sm">
+              Cuando V despliegue un proyecto en Vercel, aparece aquí con
+              dominio y estado en vivo.
+            </p>
+          </div>
+        )}
+
+        {!loading && projects.length > 0 && (
+          <div className="rounded-xl border border-app">
+            <div className="grid grid-cols-12 items-center gap-3 border-b border-app bg-tint-1 px-4 py-2">
+              <span className="col-span-5 label-caps text-muted">proyecto</span>
+              <span className="col-span-3 label-caps text-muted">dominio</span>
+              <span className="col-span-2 label-caps text-muted">estado</span>
+              <span className="col-span-2 label-caps text-muted text-right">
+                acción
+              </span>
+            </div>
+            <ul>
+              {projects.map((p) => {
+                const status = statusOf(p);
+                const host =
+                  p.domain ?? (p.vercel_url ?? "").replace(/^https?:\/\//, "");
+                return (
+                  <li
+                    key={p.id}
+                    className="grid grid-cols-12 items-center gap-3 border-b border-app px-4 py-3 last:border-0 hover:bg-tint-1"
+                  >
+                    <div className="col-span-5 min-w-0">
+                      <p className="font-display font-semibold text-on-surface truncate">
+                        {p.name}
+                      </p>
+                      <p className="font-mono text-[11px] uppercase tracking-widest text-muted truncate">
+                        {p.github_repo ?? "sin repo"}
+                      </p>
+                    </div>
+                    <div className="col-span-3 font-mono text-[12px] text-on-surface-variant truncate">
+                      {host}
+                    </div>
+                    <div className="col-span-2">
+                      {status === "ready" && (
+                        <span className="chip text-success-emerald">
+                          <CheckCircle2 size={11} /> live
+                        </span>
+                      )}
+                      {status === "preview" && (
+                        <span className="chip text-cyber-cyan">
+                          <CircleDot size={11} className="animate-pulse" /> preview
+                        </span>
+                      )}
+                      {status === "draft" && (
+                        <span className="chip text-muted">
+                          <CircleDot size={11} /> draft
+                        </span>
+                      )}
+                    </div>
+                    <div className="col-span-2 text-right">
+                      <a
+                        href={p.vercel_url!}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 rounded-md border border-app px-2.5 py-1.5 text-[12px] text-on-surface-variant hover:bg-tint-2 hover:text-on-surface"
+                      >
+                        <ExternalLink size={11} /> abrir
+                      </a>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
       </div>
     </>
-  );
-}
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  tone: "emerald" | "cyan" | "violet" | "crimson";
-}) {
-  const m = {
-    emerald: "text-success-emerald",
-    cyan: "text-cyber-cyan",
-    violet: "text-violet-300",
-    crimson: "text-error-crimson",
-  };
-  return (
-    <div className="rounded-xl border border-app bg-tint-1 p-4">
-      <Icon size={14} className={`${m[tone]} opacity-90`} />
-      <p className="label-caps mt-2 text-muted">{label}</p>
-      <p className={`font-display text-2xl font-semibold ${m[tone]}`}>{value}</p>
-    </div>
   );
 }
