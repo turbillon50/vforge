@@ -1,10 +1,7 @@
-import { VLayoutDashboard } from '@/components/V/VLayoutDashboard';
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: 'V - Panel de Control | vForge',
-  description: 'Panel de control para V, tu asistente autónomo. Gestiona proyectos, conexiones y tareas.',
-};
-
+// /v ahora vive como página independiente, pero el chat principal con V
+// es /hub. Redirigimos para evitar dos chats compitiendo.
 export default function VPage() {
-  return <VLayoutDashboard />;
+  redirect("/hub");
 }
