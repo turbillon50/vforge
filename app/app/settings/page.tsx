@@ -1,34 +1,405 @@
 "use client";
 
+import { useState } from "react";
+import {
+  User,
+  CreditCard,
+  Receipt,
+  Bell,
+  Palette,
+  ShieldCheck,
+  KeyRound,
+  Globe2,
+  Download,
+  ExternalLink,
+  Check,
+} from "lucide-react";
 import { PageHeader } from "@/components/workspace/PageHeader";
-import { Bell, CreditCard, KeyRound, Palette, ShieldCheck, Users } from "lucide-react";
+import { ThemeToggle } from "@/components/controls/ThemeToggle";
+import { LocaleToggle } from "@/components/controls/LocaleToggle";
+import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
 
-const icons = [Users, Palette, Bell, ShieldCheck, KeyRound, CreditCard];
+type SectionId =
+  | "profile"
+  | "plan"
+  | "billing"
+  | "invoices"
+  | "notifications"
+  | "appearance"
+  | "security"
+  | "api";
+
+const SECTIONS: { id: SectionId; label: string; icon: typeof User }[] = [
+  { id: "profile", label: "Perfil", icon: User },
+  { id: "plan", label: "Plan", icon: ShieldCheck },
+  { id: "billing", label: "Pagos", icon: CreditCard },
+  { id: "invoices", label: "Invoices", icon: Receipt },
+  { id: "notifications", label: "Notificaciones", icon: Bell },
+  { id: "appearance", label: "Apariencia", icon: Palette },
+  { id: "security", label: "Seguridad", icon: KeyRound },
+  { id: "api", label: "API & dominios", icon: Globe2 },
+];
 
 export default function SettingsPage() {
   const t = useT();
-  const sections = t.settings.sections.map((s, i) => ({ icon: icons[i], ...s }));
+  const [active, setActive] = useState<SectionId>("profile");
+
   return (
     <>
-      <PageHeader eyebrow={t.settings.eyebrow} title={t.settings.title} description={t.settings.body} />
-      <div className="grid grid-cols-1 gap-3 p-5 md:grid-cols-2 md:p-8 xl:grid-cols-3">
-        {sections.map((s) => (
-          <article
-            key={s.title}
-            className="rounded-xl border border-app bg-tint-1 p-5 transition hover:border-violet-500/30"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/10 text-violet-300 ring-1 ring-violet-500/20">
-                <s.icon size={18} />
-              </div>
-              <h3 className="font-display text-base font-semibold">{s.title}</h3>
-            </div>
-            <p className="mt-3 text-sm text-on-surface-variant">{s.body}</p>
-            <button className="btn-ghost mt-5 !px-3 !py-1.5 text-[10px]">{t.settings.open}</button>
-          </article>
-        ))}
+      <PageHeader
+        eyebrow={t.settings.eyebrow}
+        title={t.settings.title}
+        description={t.settings.body}
+      />
+
+      <div className="grid grid-cols-1 gap-6 px-5 py-6 md:grid-cols-[220px_1fr] md:px-8">
+        {/* Tabs */}
+        <aside className="md:sticky md:top-4 md:self-start">
+          <nav className="flex flex-row gap-1 overflow-x-auto md:flex-col">
+            {SECTIONS.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setActive(s.id)}
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition shrink-0",
+                  active === s.id
+                    ? "bg-violet-500/15 text-violet-300 ring-1 ring-violet-500/30"
+                    : "text-on-surface-variant hover:bg-tint-2 hover:text-on-surface",
+                )}
+              >
+                <s.icon size={14} />
+                <span>{s.label}</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Panel */}
+        <section className="min-w-0">
+          {active === "profile" && <ProfilePanel />}
+          {active === "plan" && <PlanPanel />}
+          {active === "billing" && <BillingPanel />}
+          {active === "invoices" && <InvoicesPanel />}
+          {active === "notifications" && <NotificationsPanel />}
+          {active === "appearance" && <AppearancePanel />}
+          {active === "security" && <SecurityPanel />}
+          {active === "api" && <ApiPanel />}
+        </section>
       </div>
     </>
+  );
+}
+
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-4 rounded-xl border border-app bg-tint-1 p-5">
+      <h3 className="font-display text-sm font-semibold text-on-surface">{title}</h3>
+      <div className="mt-4">{children}</div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  placeholder,
+}: {
+  label: string;
+  value?: string;
+  placeholder?: string;
+}) {
+  return (
+    <div className="mb-3">
+      <label className="label-caps mb-1.5 block text-muted">{label}</label>
+      <input
+        type="text"
+        defaultValue={value ?? ""}
+        placeholder={placeholder ?? ""}
+        className="w-full rounded-md border border-app bg-void px-3 py-2 text-sm text-on-surface placeholder:text-muted focus:border-violet-500/40 focus:outline-none"
+        style={{ fontSize: 16, touchAction: "manipulation" }}
+      />
+    </div>
+  );
+}
+
+function Toggle({ label, defaultChecked = false }: { label: string; defaultChecked?: boolean }) {
+  return (
+    <label className="mb-3 flex cursor-pointer items-center justify-between gap-3 rounded-md border border-app bg-void px-3 py-2.5 hover:border-app-strong">
+      <span className="text-sm text-on-surface">{label}</span>
+      <input type="checkbox" defaultChecked={defaultChecked} className="h-4 w-4 accent-violet-500" />
+    </label>
+  );
+}
+
+function ProfilePanel() {
+  return (
+    <>
+      <Card title="Tu identidad como operador">
+        <div className="mb-4 flex items-center gap-4">
+          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400" />
+          <div>
+            <p className="font-display text-lg font-semibold text-on-surface">
+              Luis de la Torre Herrera
+            </p>
+            <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
+              operator_luis · turbillon50
+            </p>
+          </div>
+        </div>
+        <Field label="Nombre" value="Luis de la Torre Herrera" />
+        <Field label="Email" placeholder="luis@allglobal.ec" />
+        <Field label="Usuario GitHub" value="turbillon50" />
+        <button className="btn-primary mt-2 !px-4 !py-2">Guardar cambios</button>
+      </Card>
+
+      <Card title="Empresa">
+        <Field label="Razón social" value="All Global Holding LLC / MIRMAR EMPRESAS S.A. de C.V." />
+        <Field label="País fiscal" value="México · Estados Unidos" />
+      </Card>
+    </>
+  );
+}
+
+function PlanPanel() {
+  const plans = [
+    { name: "Solo", price: "$0", desc: "Para arrancar tu primer proyecto.", current: false },
+    { name: "Studio", price: "$29/mes", desc: "Hasta 10 proyectos, V dedicada.", current: true },
+    { name: "Forge", price: "$99/mes", desc: "Proyectos ilimitados, sub-agentes, prioridad.", current: false },
+  ];
+  return (
+    <>
+      <Card title="Plan actual">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          {plans.map((p) => (
+            <div
+              key={p.name}
+              className={cn(
+                "rounded-xl border p-4",
+                p.current
+                  ? "border-violet-500/40 bg-violet-500/5"
+                  : "border-app bg-tint-1",
+              )}
+            >
+              <div className="flex items-start justify-between">
+                <h4 className="font-display text-base font-semibold">{p.name}</h4>
+                {p.current && (
+                  <span className="chip text-violet-300">
+                    <Check size={11} /> activo
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 font-display text-xl font-semibold text-on-surface">
+                {p.price}
+              </p>
+              <p className="mt-2 text-[12px] text-on-surface-variant">{p.desc}</p>
+              {!p.current && (
+                <button className="btn-ghost mt-3 !px-3 !py-1.5 text-[11px]">
+                  Cambiar a {p.name}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card title="Uso este mes">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Stat label="Proyectos" value="—" />
+          <Stat label="Tokens V" value="—" />
+          <Stat label="Deploys" value="—" />
+          <Stat label="Sub-agentes" value="—" />
+        </div>
+        <p className="mt-3 text-[11px] text-muted">
+          Cuando V conecte el contador real, estos valores se actualizan en vivo.
+        </p>
+      </Card>
+    </>
+  );
+}
+
+function BillingPanel() {
+  return (
+    <>
+      <Card title="Método de pago">
+        <div className="rounded-md border border-app bg-void p-4">
+          <p className="text-sm text-on-surface">No hay tarjeta registrada.</p>
+          <p className="mt-1 text-[12px] text-on-surface-variant">
+            Cuando habilitemos Stripe en producción, podrás agregar tu método de pago aquí.
+          </p>
+          <button className="btn-primary mt-3 !px-3 !py-1.5 text-[12px]">
+            <CreditCard size={13} /> Agregar tarjeta
+          </button>
+        </div>
+      </Card>
+
+      <Card title="Dirección de facturación">
+        <Field label="Razón social" placeholder="All Global Holding LLC" />
+        <Field label="RFC / Tax ID" placeholder="—" />
+        <Field label="Dirección" placeholder="Calle, número, colonia" />
+        <Field label="Ciudad" placeholder="" />
+        <Field label="País" placeholder="México" />
+        <button className="btn-ghost mt-2 !px-3 !py-1.5 text-[12px]">Guardar</button>
+      </Card>
+    </>
+  );
+}
+
+function InvoicesPanel() {
+  const invoices: { id: string; date: string; amount: string; status: "paid" | "due" }[] = [];
+
+  return (
+    <Card title="Historial de facturas">
+      {invoices.length === 0 ? (
+        <div className="rounded-md border border-app bg-void p-6 text-center">
+          <Receipt className="mx-auto mb-2 text-violet-300" size={20} />
+          <p className="text-sm text-on-surface">Aún no hay facturas emitidas</p>
+          <p className="mt-1 text-[12px] text-on-surface-variant">
+            Cuando empieces a operar en plan pago, tus facturas aparecen aquí en
+            PDF + opción a descargar.
+          </p>
+        </div>
+      ) : (
+        <ul>
+          {invoices.map((inv) => (
+            <li
+              key={inv.id}
+              className="flex items-center justify-between gap-3 border-b border-app py-3 last:border-0"
+            >
+              <div>
+                <p className="font-mono text-[13px] text-on-surface">{inv.id}</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
+                  {inv.date}
+                </p>
+              </div>
+              <span className="font-display font-semibold text-on-surface">
+                {inv.amount}
+              </span>
+              <span
+                className={
+                  inv.status === "paid"
+                    ? "chip text-success-emerald"
+                    : "chip text-cyber-cyan"
+                }
+              >
+                {inv.status}
+              </span>
+              <button className="rounded-md border border-app p-2 text-on-surface-variant hover:bg-tint-2 hover:text-on-surface">
+                <Download size={13} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+function NotificationsPanel() {
+  return (
+    <Card title="Notificaciones">
+      <Toggle label="V terminó una tarea importante" defaultChecked />
+      <Toggle label="Build de producción falló" defaultChecked />
+      <Toggle label="Deploy completado" />
+      <Toggle label="Secreto a punto de expirar" defaultChecked />
+      <Toggle label="Resumen semanal por email" />
+      <Toggle label="Push del navegador" />
+    </Card>
+  );
+}
+
+function AppearancePanel() {
+  return (
+    <>
+      <Card title="Tema">
+        <p className="mb-3 text-[12px] text-on-surface-variant">
+          Cambia entre modo día y noche. Se guarda en tu navegador.
+        </p>
+        <ThemeToggle />
+      </Card>
+
+      <Card title="Idioma">
+        <p className="mb-3 text-[12px] text-on-surface-variant">
+          Selecciona el idioma de la interfaz.
+        </p>
+        <LocaleToggle />
+      </Card>
+    </>
+  );
+}
+
+function SecurityPanel() {
+  return (
+    <>
+      <Card title="Operator token (vault)">
+        <p className="mb-3 text-[12px] text-on-surface-variant">
+          Token Bearer para desbloquear la bóveda de secretos en este navegador.
+          Cuando aterrice Clerk con cableado real al user_id, este token migra
+          a sesión Clerk.
+        </p>
+        <div className="rounded-md border border-app bg-void p-3 font-mono text-[11px] text-on-surface-variant">
+          Configurado vía /app/secrets → Unlock vault
+        </div>
+      </Card>
+
+      <Card title="Sesiones activas">
+        <p className="text-[12px] text-on-surface-variant">
+          Hoy la sesión se identifica con operator_luis hardcoded. Próximamente:
+          lista de devices con timestamps + revoke individual.
+        </p>
+      </Card>
+
+      <Card title="Two-factor authentication">
+        <p className="text-[12px] text-on-surface-variant">
+          Llegará junto con Clerk (M11). Hoy V respeta los gates Ring 2/3 y
+          PROTECTED_CORE_FILES sin necesidad de 2FA adicional.
+        </p>
+      </Card>
+    </>
+  );
+}
+
+function ApiPanel() {
+  return (
+    <>
+      <Card title="Dominios conectados">
+        <ul className="space-y-2">
+          <li className="flex items-center justify-between rounded-md border border-app bg-void px-3 py-2">
+            <span className="font-mono text-[13px] text-on-surface">vforge.site</span>
+            <span className="chip text-success-emerald">activo</span>
+          </li>
+        </ul>
+        <button className="btn-ghost mt-3 !px-3 !py-1.5 text-[12px]">
+          <Globe2 size={13} /> Conectar dominio
+        </button>
+      </Card>
+
+      <Card title="API & integraciones">
+        <p className="mb-3 text-[12px] text-on-surface-variant">
+          Las claves de tus integraciones viven encriptadas en{" "}
+          <a href="/app/secrets" className="text-cyber-cyan hover:underline">
+            /app/secrets
+          </a>{" "}
+          (AES-256-GCM). V las usa para operar sin que tengas que copiarlas.
+        </p>
+        <a
+          href="https://github.com/turbillon50/vforge/blob/main/docs/backend-contract.md"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 text-sm text-cyber-cyan hover:underline"
+        >
+          <ExternalLink size={13} /> Contrato del backend (docs)
+        </a>
+      </Card>
+    </>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-app bg-void p-3">
+      <p className="label-caps text-muted">{label}</p>
+      <p className="mt-1 font-display text-lg font-semibold text-on-surface">{value}</p>
+    </div>
   );
 }
