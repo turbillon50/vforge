@@ -11,7 +11,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   FolderKanban,
-  Sparkles,
   Activity,
   Eye,
   Search,
@@ -21,13 +20,15 @@ import {
   Settings,
 } from "lucide-react";
 
+// Note: "Forge AI" / V isn't in this drawer — V is the central
+// element, accessed from the topbar button (mobile) or right dock
+// (desktop). This drawer mirrors the desktop sidebar nav.
 const navSections = [
   {
     label: "CONTROL",
     items: [
       { name: "Hub", href: "/hub", icon: LayoutDashboard },
       { name: "Proyectos", href: "/projects", icon: FolderKanban },
-      { name: "Forge AI", href: "/forge", icon: Sparkles },
       { name: "Actividad", href: "/activity", icon: Activity },
     ],
   },
