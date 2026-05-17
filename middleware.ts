@@ -1,26 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
-import { ensureDatabaseHealed } from "@/lib/db/client";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  // Auto-heal database on every request (idempotent, runs once per process)
-  // Run in background to not block the request
-  if (process.env.NODE_ENV === "production") {
-    ensureDatabaseHealed().catch((e) => {
-      console.error("[V middleware] Database healing failed:", e);
-    });
-  }
+const isProtectedRoute = createRouteMatcher(["/app(.*)", "/onboarding(.*)"]);
 
-  return NextResponse.next();
-}
+const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
+export default hasClerk
+  ? clerkMiddleware(async (auth, req) => {
+      if (isProtectedRoute(req)) await auth.protect();
+    })
+  : () => NextResponse.next();
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next|.*\\..*).*)",
+    "/(api|trpc)(.*)",
   ],
 };
