@@ -19,7 +19,7 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isHome = pathname === "/hub";
+  const isHome = pathname ? (pathname.replace(/\/$/, "") === "/hub" || pathname === "/") : false;
 
   return (
     <div className="min-h-screen bg-neutral-950 relative overflow-hidden flex select-none text-white font-sans w-full">
