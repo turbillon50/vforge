@@ -60,26 +60,27 @@ export function HeaderV3({ sidebarOpen, onToggleSidebar }: HeaderV3Props) {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
-        {/* V status — live dot */}
-        <div className="hidden md:flex items-center gap-2 h-8 px-3 rounded-md bg-vf-green/8 border border-vf-green/25">
+        {/* Subtle V status — small live dot, no loud badge */}
+        <div
+          className="hidden md:flex items-center gap-2 text-xs text-vf-fg-1"
+          title="V está en línea"
+        >
           <span className="w-1.5 h-1.5 rounded-full bg-vf-green animate-pulse" />
-          <span className="text-xs font-semibold text-vf-green tracking-wide">
-            V · live
+          <span className="font-mono uppercase tracking-wider text-[10px]">
+            V · en línea
           </span>
         </div>
         <Link
           href="/hub"
           aria-label="Ir al chat con V"
           className={cn(
-            "md:hidden h-8 px-2.5 flex items-center gap-1.5 rounded-md",
-            "bg-vf-green/10 border border-vf-green/30 text-vf-green",
-            "hover:bg-vf-green/20 transition-colors",
+            "md:hidden h-8 w-8 flex items-center justify-center rounded-md",
+            "text-vf-fg-1 hover:text-vf-fg hover:bg-vf-bg-1 transition-colors relative",
           )}
           style={{ touchAction: "manipulation" }}
         >
-          <Sparkles className="w-3 h-3" />
-          <span className="text-xs font-semibold">V</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-vf-green animate-pulse" />
+          <Sparkles className="w-4 h-4" strokeWidth={1.75} />
+          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-vf-green animate-pulse" />
         </Link>
       </div>
     </header>

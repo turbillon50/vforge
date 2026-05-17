@@ -15,6 +15,7 @@ import {
   Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 type Tab = "sessions" | "projects" | "tools";
 
@@ -133,7 +134,7 @@ export function SidebarV3({ onItemClick }: SidebarV3Props) {
       </div>
 
       {/* Footer */}
-      <div className="border-t border-vf-border p-2 flex-shrink-0">
+      <div className="border-t border-vf-border p-2 flex-shrink-0 space-y-0.5">
         <Link
           href="/settings"
           onClick={onItemClick}
@@ -147,6 +148,7 @@ export function SidebarV3({ onItemClick }: SidebarV3Props) {
           <Settings className="w-4 h-4" strokeWidth={1.75} />
           <span>Configuración</span>
         </Link>
+        <ThemeToggle variant="row" />
       </div>
     </div>
   );

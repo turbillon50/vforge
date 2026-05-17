@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { Sparkles, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ComposerV3 } from "./composer";
+import { ForgeOrb } from "@/components/ui/forge-orb";
 
 interface Message {
   id: string;
@@ -17,7 +18,11 @@ interface ChatV3Props {
   contextLabel?: string | null;
 }
 
-const SESSION_KEY = "v_chat_session_id";
+// SAME key as /forge classic chat uses (vforge_session_id_general).
+// This is the unification fix: V keeps her memory because both routes
+// resolve to the same session_id on the server.
+const SCOPE = "general";
+const SESSION_KEY = `vforge_session_id_${SCOPE}`;
 
 function getOrCreateSessionId(): string {
   if (typeof window === "undefined") return `v_${Date.now()}`;
@@ -69,37 +74,68 @@ export function ChatV3({ contextLabel = null }: ChatV3Props) {
     messagesRef.current = messages;
   }, [messages]);
 
-  // Mount: hydrate session id + history from server.
+  // Mount: resolve sessionId from server (same source as /forge classic),
+  // fall back to localStorage if offline. Then rehydrate history.
   useEffect(() => {
-    const sid = getOrCreateSessionId();
-    sessionIdRef.current = sid;
-
     const ctrl = new AbortController();
-    fetch(
-      `/api/forge/conversations?sessionId=${encodeURIComponent(sid)}&limit=100`,
-      { cache: "no-store", signal: ctrl.signal },
-    )
-      .then((r) => (r.ok ? r.json() : { turns: [] }))
-      .then((data: { turns: HistoryTurn[] }) => {
-        const hydrated: Message[] = (data.turns ?? [])
-          .filter((t) => t.role === "user" || t.role === "assistant")
-          .map((t) => ({
-            id: t.id,
-            role: t.role === "assistant" ? "v" : "user",
-            content: t.content,
-            ts: new Date(t.created_at).getTime(),
-          }));
-        setMessages(hydrated);
-      })
-      .catch((err) => {
-        if (err?.name === "AbortError") return;
-        setHydrateError(
-          "No pude cargar tu historial con V (memoria server-side intacta — solo es la vista).",
+
+    async function init() {
+      // 1. Try server's canonical session id for this scope (so /hub
+      //    and /forge always see the same conversation, regardless of
+      //    which device/browser the user is on).
+      let sid: string | null = null;
+      try {
+        const res = await fetch(
+          `/api/forge/active-session?scope=${SCOPE}`,
+          { cache: "no-store", signal: ctrl.signal },
         );
-      })
-      .finally(() => {
+        if (res.ok) {
+          const data = (await res.json()) as { sessionId?: string };
+          if (data?.sessionId) sid = data.sessionId;
+        }
+      } catch {
+        // server unreachable → fall back below
+      }
+      if (!sid) {
+        sid = getOrCreateSessionId();
+      } else {
+        try {
+          window.localStorage.setItem(SESSION_KEY, sid);
+        } catch {
+          // ignore
+        }
+      }
+      sessionIdRef.current = sid;
+
+      // 2. Rehydrate conversation from /api/forge/conversations.
+      try {
+        const res = await fetch(
+          `/api/forge/conversations?sessionId=${encodeURIComponent(sid)}&limit=100`,
+          { cache: "no-store", signal: ctrl.signal },
+        );
+        if (res.ok) {
+          const data = (await res.json()) as { turns: HistoryTurn[] };
+          const hydrated: Message[] = (data.turns ?? [])
+            .filter((t) => t.role === "user" || t.role === "assistant")
+            .map((t) => ({
+              id: t.id,
+              role: t.role === "assistant" ? "v" : "user",
+              content: t.content,
+              ts: new Date(t.created_at).getTime(),
+            }));
+          setMessages(hydrated);
+        }
+      } catch (err) {
+        if ((err as { name?: string })?.name === "AbortError") return;
+        setHydrateError(
+          "No pude cargar tu historial con V (su memoria server-side está intacta — es solo la vista).",
+        );
+      } finally {
         setIsHydrating(false);
-      });
+      }
+    }
+
+    void init();
 
     return () => {
       ctrl.abort();
@@ -309,19 +345,19 @@ function MessageBubble({
       <div className="flex items-center gap-2">
         {isV ? (
           <>
-            <div className="w-5 h-5 rounded bg-vf-green/15 border border-vf-green/40 flex items-center justify-center">
-              <span className="text-[10px] font-bold text-vf-green leading-none">
-                V
-              </span>
+            <div className="w-6 h-6 flex items-center justify-center">
+              <ForgeOrb
+                size={20}
+                state={isStreaming ? "thinking" : "idle"}
+                glow={false}
+                ariaLabel="V"
+              />
             </div>
             <span className="text-xs font-semibold text-vf-fg">V</span>
-            {isStreaming && (
-              <span className="w-1.5 h-1.5 rounded-full bg-vf-green animate-pulse ml-1" />
-            )}
           </>
         ) : (
           <>
-            <div className="w-5 h-5 rounded bg-vf-bg-2 border border-vf-border flex items-center justify-center">
+            <div className="w-6 h-6 rounded bg-vf-bg-2 border border-vf-border flex items-center justify-center">
               <span className="text-[10px] font-bold text-vf-fg-1 leading-none">
                 L
               </span>
@@ -333,7 +369,7 @@ function MessageBubble({
       <div
         className={cn(
           "text-sm leading-relaxed whitespace-pre-wrap break-words",
-          "pl-7", // align with avatar
+          "pl-8", // align with avatar
           isV ? "text-vf-fg" : "text-vf-fg-1",
         )}
       >
