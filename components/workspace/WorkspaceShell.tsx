@@ -41,7 +41,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="flex min-h-dvh bg-void">
+    <div className="flex h-dvh overflow-hidden bg-void">
       <aside className="sticky top-0 hidden h-dvh w-[260px] shrink-0 flex-col border-r border-app bg-ink md:flex">
         <div className="flex items-center justify-between px-5 py-5">
           <Link href="/app"><VWordmark /></Link>
@@ -106,9 +106,9 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col h-dvh">
         <TopBar />
-        <div className="pb-24 md:pb-0">{children}</div>
+        <div className="flex-1 min-h-0 overflow-y-auto pb-24 md:pb-0">{children}</div>
         <MobileNav pathname={pathname || ""} />
       </div>
     </div>
