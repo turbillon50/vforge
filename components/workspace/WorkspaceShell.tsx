@@ -174,6 +174,9 @@ function Breadcrumbs() {
 
 function MobileNav({ pathname }: { pathname: string }) {
   const t = useT();
+  // En /app/chat la barra estorba — V ES el contexto, no necesitas un
+  // botón "V" para ir donde ya estás. Más pantalla para conversar.
+  if (pathname.startsWith("/app/chat")) return null;
   const mobileNav = [
     { href: "/app/chat", label: t.workspace.mobile_labels.b, icon: MessagesSquare },
     { href: "/app/deployments", label: t.workspace.mobile_labels.deploy, icon: Activity },
