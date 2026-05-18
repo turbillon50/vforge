@@ -183,7 +183,7 @@ function MobileNav({ pathname }: { pathname: string }) {
   ];
   return (
     <nav
-      className="fixed inset-x-3 z-40 mx-auto flex max-w-[420px] items-center justify-between gap-1 rounded-2xl border border-app-strong bg-ink/95 px-2 py-1.5 shadow-elev backdrop-blur-xl md:hidden"
+      className="vf-mobile-nav fixed inset-x-3 z-40 mx-auto flex max-w-[420px] items-center justify-between gap-1 rounded-2xl border border-app-strong bg-ink/95 px-2 py-1.5 shadow-elev backdrop-blur-xl md:hidden"
       style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
     >
       {mobileNav.map((i) => {

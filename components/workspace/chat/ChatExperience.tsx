@@ -23,14 +23,31 @@ import {
 import { useT } from "@/i18n/AppProviders";
 
 type Action = { label: string; status: "done" | "running" | "queued" };
+type Attachment = {
+  /** original filename for UI */
+  name: string;
+  /** data URL preview (image only) */
+  preview: string | null;
+  /** base64 payload (without data:image/...;base64, prefix) */
+  base64: string;
+  /** mime-type (image/png, image/jpeg, etc.) */
+  mediaType: string;
+};
 type Msg = {
   id: string;
   role: "user" | "b";
   text: string;
   actions?: Action[];
+  /** image dataURL shown inline in the bubble for user uploads */
+  image?: string;
 };
 
 const SCOPE_KEY = "vforge_chat_scope";
+
+/** Anthropic-style content blocks that /api/forge/run accepts for vision. */
+type StructuredBlock =
+  | { type: "text"; text: string }
+  | { type: "image"; source: { type: "base64"; media_type: string; data: string } };
 
 type SSEEvent =
   | { type: "text"; value: string }
@@ -45,6 +62,24 @@ interface HistoryTurn {
   role: "user" | "assistant" | "system" | "tool";
   content: string;
   created_at: string;
+}
+
+/** Toggle body.keyboard-open class when the mobile soft keyboard is up. */
+function useKeyboardBodyClass() {
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    const onResize = () => {
+      const open = window.innerHeight - vv.height > 150;
+      document.body.classList.toggle("keyboard-open", open);
+    };
+    vv.addEventListener("resize", onResize);
+    onResize();
+    return () => {
+      vv.removeEventListener("resize", onResize);
+      document.body.classList.remove("keyboard-open");
+    };
+  }, []);
 }
 
 interface Project {
@@ -70,10 +105,13 @@ export function ChatExperience() {
   const [scope, setScope] = useState<string>("general");
   const [projects, setProjects] = useState<Project[]>([]);
   const [scopeMenuOpen, setScopeMenuOpen] = useState(false);
+  const [attachment, setAttachment] = useState<Attachment | null>(null);
   const sessionIdRef = useRef<string>("");
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<Msg[]>(messages);
   const scrollerRef = useRef<HTMLDivElement>(null);
+
+  useKeyboardBodyClass();
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -177,22 +215,44 @@ export function ChatExperience() {
   const send = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
-      if (!trimmed || pending) return;
+      // Permitir enviar solo con attachment (vision-only)
+      if ((!trimmed && !attachment) || pending) return;
 
-      const userMsg: Msg = { id: `u_${Date.now()}`, role: "user", text: trimmed };
+      const att = attachment;
+      const userMsg: Msg = {
+        id: `u_${Date.now()}`,
+        role: "user",
+        text: trimmed,
+        image: att?.preview ?? undefined,
+      };
       const aId = `b_${Date.now()}`;
       const aMsg: Msg = { id: aId, role: "b", text: "" };
       setMessages((m) => [...m, userMsg, aMsg]);
       setInput("");
+      setAttachment(null);
       setPending(true);
 
-      const history = messagesRef.current
-        .filter((m) => m.id !== "intro" && m.id !== aId)
-        .map((m) => ({
-          role: m.role === "b" ? ("assistant" as const) : ("user" as const),
-          content: m.text,
-        }));
-      history.push({ role: "user", content: trimmed });
+      // Historia previa como text-only (no replay de imágenes — costo).
+      const history: { role: "user" | "assistant"; content: string | StructuredBlock[] }[] =
+        messagesRef.current
+          .filter((m) => m.id !== "intro" && m.id !== aId)
+          .map((m) => ({
+            role: m.role === "b" ? ("assistant" as const) : ("user" as const),
+            content: m.text,
+          }));
+
+      // Turno actual: si hay imagen, content es array Anthropic-style con
+      // image block + text block. Si no, string plano.
+      const currentContent: string | StructuredBlock[] = att
+        ? [
+            {
+              type: "image" as const,
+              source: { type: "base64" as const, media_type: att.mediaType, data: att.base64 },
+            },
+            ...(trimmed ? [{ type: "text" as const, text: trimmed }] : []),
+          ]
+        : trimmed;
+      history.push({ role: "user", content: currentContent });
 
       abortRef.current?.abort();
       const ctrl = new AbortController();
@@ -265,7 +325,7 @@ export function ChatExperience() {
         setPending(false);
       }
     },
-    [pending, scope],
+    [pending, scope, attachment],
   );
 
   const stop = useCallback(() => {
@@ -434,10 +494,11 @@ export function ChatExperience() {
         </div>
       </div>
 
-      {/* Composer FIJO — flex-shrink-0 + safe-area + mobile-nav clearance */}
+      {/* Composer FIJO — flex-shrink-0. El padding-bottom respeta el
+          MobileNav (76px) salvo cuando el teclado mobile está abierto
+          (body.keyboard-open lo reduce a la safe-area sola). */}
       <div
-        className="flex-shrink-0 border-t border-app bg-void/95 backdrop-blur-xl"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 76px)" }}
+        className="vf-composer-pad flex-shrink-0 border-t border-app bg-void/95 backdrop-blur-xl"
       >
         <div className="mx-auto max-w-3xl px-3 pt-2.5 sm:px-4 sm:pt-4 md:px-10 md:pb-2">
           {/* Quick prompts: scroll horizontal en mobile (1 línea), wrap en desktop */}
@@ -465,6 +526,8 @@ export function ChatExperience() {
             placeholder={t.chat.placeholder}
             sendLabel={t.chat.send}
             hint={t.chat.shift_enter_hint}
+            attachment={attachment}
+            setAttachment={setAttachment}
           />
         </div>
       </div>
@@ -481,6 +544,8 @@ interface ComposerProps {
   placeholder: string;
   sendLabel: string;
   hint: string;
+  attachment: Attachment | null;
+  setAttachment: (a: Attachment | null) => void;
 }
 
 function Composer({
@@ -492,6 +557,8 @@ function Composer({
   placeholder,
   sendLabel,
   hint,
+  attachment,
+  setAttachment,
 }: ComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -499,7 +566,6 @@ function Composer({
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [recError, setRecError] = useState<string | null>(null);
-  const [attachment, setAttachment] = useState<{ name: string; preview: string | null } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -577,14 +643,26 @@ function Composer({
   function handleFile(files: FileList | null) {
     const file = files?.[0];
     if (!file) return;
-    if (file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = () =>
-        setAttachment({ name: file.name, preview: reader.result as string });
-      reader.readAsDataURL(file);
-    } else {
-      setAttachment({ name: file.name, preview: null });
+    if (!file.type.startsWith("image/")) {
+      setRecError("Por ahora solo imágenes. PDF/texto pronto.");
+      return;
     }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const m = /^data:([^;]+);base64,(.+)$/.exec(dataUrl);
+      if (!m) {
+        setRecError("No pude leer la imagen");
+        return;
+      }
+      setAttachment({
+        name: file.name,
+        preview: dataUrl,
+        mediaType: m[1] || "image/jpeg",
+        base64: m[2],
+      });
+    };
+    reader.readAsDataURL(file);
   }
 
   function clearAttachment() {
@@ -740,13 +818,11 @@ function Composer({
               <Square size={13} /> Detener
             </button>
           ) : (
-            // Send disabled si no hay texto. Adjuntos hoy son solo UI
-            // (preview + ✕); el envío al payload de /api/forge/run con
-            // image blocks es trabajo M-next. Antes habilitar con solo
-            // attachment era un no-op confuso (Codex P2).
+            // Send se habilita si hay texto O imagen — V responde con
+            // visión via blocks Anthropic-style en /api/forge/run.
             <button
               type="submit"
-              disabled={!input.trim()}
+              disabled={!input.trim() && !attachment}
               className="btn-primary !px-4 !py-2 disabled:opacity-50"
             >
               {sendLabel} <ArrowUp size={13} />
@@ -776,7 +852,15 @@ function MessageBubble({ msg }: { msg: Msg }) {
             : "border-app-strong bg-tint-1 text-on-surface-variant"
         }`}
       >
-        <p>{msg.text}</p>
+        {msg.image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={msg.image}
+            alt="adjunto"
+            className="mb-2 max-h-64 w-full rounded-lg border border-app object-cover"
+          />
+        )}
+        {msg.text && <p>{msg.text}</p>}
         {msg.actions && (
           <ul className="mt-3 space-y-2 rounded-lg border border-app-strong bg-tint-2 p-3 text-[13px]">
             {msg.actions.map((a) => (
