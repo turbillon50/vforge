@@ -507,22 +507,26 @@ export function ChatExperience() {
       <div
         className="vf-composer-pad flex-shrink-0 border-t border-app bg-void/95 backdrop-blur-xl"
       >
-        <div className="mx-auto max-w-3xl px-3 pt-2.5 sm:px-4 sm:pt-4 md:px-10 md:pb-2">
-          {/* Quick prompts: scroll horizontal en mobile (1 línea), wrap en desktop */}
-          <div className="mb-2 -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:flex-wrap sm:px-0 sm:pb-0 no-scrollbar">
-            {quickPrompts.map((q) => (
-              <button
-                key={q.label}
-                onClick={() => send(q.label)}
-                disabled={pending}
-                className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-app bg-tint-1 px-3 py-1 text-[11px] text-on-surface-variant transition hover:border-violet-500/30 hover:bg-violet-500/[0.05] hover:text-violet-300 disabled:opacity-50"
-                style={{ touchAction: "manipulation" }}
-              >
-                {q.icon && <q.icon size={11} />}
-                {q.label}
-              </button>
-            ))}
-          </div>
+        <div className="mx-auto max-w-3xl px-3 pt-2 sm:px-4 sm:pt-3 md:px-10 md:pb-2">
+          {/* Quick prompts: solo visibles cuando el chat está vacío para
+              no comer espacio durante conversación. Mobile-only: scroll
+              horizontal en 1 línea; desktop: wrap normal. */}
+          {messages.length <= 1 && (
+            <div className="mb-2 -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:flex-wrap sm:px-0 sm:pb-0 no-scrollbar">
+              {quickPrompts.map((q) => (
+                <button
+                  key={q.label}
+                  onClick={() => send(q.label)}
+                  disabled={pending}
+                  className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-app bg-tint-1 px-3 py-1 text-[11px] text-on-surface-variant transition hover:border-violet-500/30 hover:bg-violet-500/[0.05] hover:text-violet-300 disabled:opacity-50"
+                  style={{ touchAction: "manipulation" }}
+                >
+                  {q.icon && <q.icon size={11} />}
+                  {q.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <Composer
             input={input}
@@ -739,33 +743,12 @@ function Composer({
         className="glass relative overflow-hidden rounded-2xl"
       >
         <div className="pointer-events-none absolute inset-0 -z-10 opacity-50 [background:radial-gradient(120%_60%_at_50%_0%,rgba(139,92,246,0.18),transparent_70%)]" />
-        <textarea
-          ref={textareaRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          rows={3}
-          placeholder={placeholder}
-          className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-[16px] text-on-surface placeholder:text-muted focus:outline-none"
-          style={{
-            touchAction: "manipulation",
-            minHeight: 120, // chat de primer nivel: composer grande por default
-          }}
-          autoComplete="off"
-          autoCorrect="on"
-          autoCapitalize="sentences"
-          spellCheck
-          enterKeyHint="send"
-          inputMode="text"
-          disabled={transcribing}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              if (!pending) onSend();
-            }
-          }}
-        />
-        <div className="flex items-center justify-between border-t border-app px-2 py-2">
-          <div className="flex items-center gap-0.5 text-on-surface-variant">
+
+        {/* Composer compacto WhatsApp-style: una sola fila con botones al
+            lado del textarea (no debajo). Textarea rows=1, auto-grow
+            hasta 160px. Total altura mínima ~52px vs 200px antes. */}
+        <div className="flex items-end gap-1 px-2 py-2">
+          <div className="flex items-center gap-0.5 pb-1 text-on-surface-variant">
             {/* Adjuntar archivo */}
             <input
               ref={fileInputRef}
@@ -777,7 +760,7 @@ function Composer({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="rounded-md p-2 hover:bg-tint-2"
+              className="rounded-md p-1.5 hover:bg-tint-2"
               aria-label="Adjuntar archivo"
               style={{ touchAction: "manipulation" }}
             >
@@ -796,7 +779,7 @@ function Composer({
             <button
               type="button"
               onClick={() => cameraInputRef.current?.click()}
-              className="rounded-md p-2 hover:bg-tint-2"
+              className="rounded-md p-1.5 hover:bg-tint-2"
               aria-label="Foto"
               style={{ touchAction: "manipulation" }}
             >
@@ -808,7 +791,7 @@ function Composer({
               type="button"
               onClick={recording ? stopRecording : startRecording}
               disabled={transcribing}
-              className={`rounded-md p-2 transition-colors ${
+              className={`rounded-md p-1.5 transition-colors ${
                 recording
                   ? "bg-error-crimson/15 text-error-crimson animate-pulse"
                   : transcribing
@@ -820,30 +803,56 @@ function Composer({
             >
               <Mic size={15} />
             </button>
-
-            <span className="ml-2 hidden font-mono text-[11px] uppercase tracking-[0.18em] text-muted sm:inline">
-              {recording ? "Grabando…" : transcribing ? "Transcribiendo…" : hint}
-            </span>
           </div>
+
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            rows={1}
+            placeholder={
+              recording ? "Grabando…" : transcribing ? "Transcribiendo…" : placeholder
+            }
+            className="flex-1 resize-none bg-transparent px-2 py-2 text-[16px] text-on-surface placeholder:text-muted focus:outline-none"
+            style={{
+              touchAction: "manipulation",
+              minHeight: 40,
+              maxHeight: 160,
+            }}
+            autoComplete="off"
+            autoCorrect="on"
+            autoCapitalize="sentences"
+            spellCheck
+            enterKeyHint="send"
+            inputMode="text"
+            disabled={transcribing}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (!pending) onSend();
+              }
+            }}
+          />
 
           {pending ? (
             <button
               type="button"
               onClick={onStop}
-              className="btn-ghost !px-4 !py-2"
+              className="rounded-md bg-vf-fg p-2 text-vf-bg hover:opacity-90"
               aria-label="Detener"
+              style={{ touchAction: "manipulation" }}
             >
-              <Square size={13} /> Detener
+              <Square size={14} className="fill-current" />
             </button>
           ) : (
-            // Send se habilita si hay texto O imagen — V responde con
-            // visión via blocks Anthropic-style en /api/forge/run.
             <button
               type="submit"
               disabled={!input.trim() && !attachment}
-              className="btn-primary !px-4 !py-2 disabled:opacity-50"
+              aria-label={sendLabel}
+              className="rounded-md bg-gradient-to-br from-violet-500 to-cyan-400 p-2 text-on-surface disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ touchAction: "manipulation" }}
             >
-              {sendLabel} <ArrowUp size={13} />
+              <ArrowUp size={15} strokeWidth={2.5} />
             </button>
           )}
         </div>
