@@ -123,10 +123,24 @@ export default function SecretsPage() {
 
           {!hasToken && (
             <div className="p-8 text-center text-on-surface-variant">
-              <Lock className="mx-auto mb-3 text-violet-300" size={24} />
-              <p className="font-display text-lg">Vault bloqueada</p>
-              <p className="mt-1 text-sm">
-                Necesitas tu operator token para ver los secretos. Tocalo arriba.
+              <Lock className="mx-auto mb-3 text-violet-300" size={28} />
+              <p className="font-display text-lg text-on-surface">Vault bloqueada</p>
+              <p className="mt-2 text-sm max-w-md mx-auto leading-relaxed">
+                Tus secretos viven encriptados (AES-256-GCM) en Neon. Para
+                verlos en este navegador necesitas el operator token —
+                el mismo que <span className="font-mono text-cyber-cyan">V</span> usa
+                para Ring 1+ writes.
+              </p>
+              <button
+                onClick={unlock}
+                className="btn-primary mt-5 inline-flex"
+                style={{ touchAction: "manipulation" }}
+              >
+                <KeyRound size={13} /> Unlock vault
+              </button>
+              <p className="mt-4 text-[11px] text-muted">
+                El token vive en la env var <span className="font-mono">OPERATOR_AUTH_TOKEN</span>{" "}
+                de Vercel. Pégalo cuando se abra el prompt.
               </p>
             </div>
           )}
