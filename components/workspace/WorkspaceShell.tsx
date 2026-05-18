@@ -108,7 +108,16 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col h-dvh">
         <TopBar />
-        <div className="flex-1 min-h-0 overflow-y-auto pb-24 md:pb-0">{children}</div>
+        <div
+          className={cn(
+            "flex-1 min-h-0 pb-24 md:pb-0",
+            // En /app/chat el contenido gestiona su propio scroll interno.
+            // En las demás rutas el main scrollea normal cuando crece.
+            pathname?.startsWith("/app/chat") ? "overflow-hidden" : "overflow-y-auto",
+          )}
+        >
+          {children}
+        </div>
         <MobileNav pathname={pathname || ""} />
       </div>
     </div>

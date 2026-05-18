@@ -16,6 +16,9 @@ import {
   Plus,
   GitBranch,
   MessageSquare,
+  Mic,
+  Camera,
+  X,
 } from "lucide-react";
 import { useT } from "@/i18n/AppProviders";
 
@@ -449,62 +452,301 @@ export function ChatExperience() {
             ))}
           </div>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              send(input);
-            }}
-            className="glass relative overflow-hidden rounded-2xl"
-          >
-            <div className="pointer-events-none absolute inset-0 -z-10 opacity-50 [background:radial-gradient(120%_60%_at_50%_0%,rgba(139,92,246,0.18),transparent_70%)]" />
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              rows={1}
-              placeholder={t.chat.placeholder}
-              className="w-full resize-none bg-transparent px-4 py-3 text-[16px] text-on-surface placeholder:text-muted focus:outline-none sm:rows-2"
-              style={{ touchAction: "manipulation", minHeight: 56 }}
-              autoComplete="off"
-              autoCorrect="on"
-              autoCapitalize="sentences"
-              spellCheck
-              enterKeyHint="send"
-              inputMode="text"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  send(input);
-                }
-              }}
-            />
-            <div className="flex items-center justify-between border-t border-app px-3 py-2">
-              <div className="flex items-center gap-1 text-on-surface-variant">
-                <button type="button" className="rounded-md p-2 hover:bg-tint-2">
-                  <Paperclip size={14} />
-                </button>
-                <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
-                  {t.chat.shift_enter_hint}
-                </span>
-              </div>
-              {pending ? (
-                <button
-                  type="button"
-                  onClick={stop}
-                  className="btn-ghost !px-4 !py-2"
-                  aria-label="Detener"
-                >
-                  <Square size={13} /> Detener
-                </button>
-              ) : (
-                <button type="submit" className="btn-primary !px-4 !py-2">
-                  {t.chat.send} <ArrowUp size={13} />
-                </button>
-              )}
-            </div>
-          </form>
+          <Composer
+            input={input}
+            setInput={setInput}
+            pending={pending}
+            onSend={() => send(input)}
+            onStop={stop}
+            placeholder={t.chat.placeholder}
+            sendLabel={t.chat.send}
+            hint={t.chat.shift_enter_hint}
+          />
         </div>
       </div>
     </div>
+  );
+}
+
+interface ComposerProps {
+  input: string;
+  setInput: (v: string) => void;
+  pending: boolean;
+  onSend: () => void;
+  onStop: () => void;
+  placeholder: string;
+  sendLabel: string;
+  hint: string;
+}
+
+function Composer({
+  input,
+  setInput,
+  pending,
+  onSend,
+  onStop,
+  placeholder,
+  sendLabel,
+  hint,
+}: ComposerProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [recError, setRecError] = useState<string | null>(null);
+  const [attachment, setAttachment] = useState<{ name: string; preview: string | null } | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  // Auto-grow textarea hasta ~50% del viewport
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    const scroll = el.scrollHeight;
+    const max = typeof window !== "undefined" ? Math.floor(window.innerHeight * 0.4) : 320;
+    el.style.height = Math.min(scroll, max) + "px";
+  }, [input]);
+
+  async function startRecording() {
+    setRecError(null);
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setRecError("Tu navegador no soporta grabación de audio");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/mp4")
+          ? "audio/mp4"
+          : "";
+      const mr = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType || "audio/webm" });
+        await transcribe(blob);
+      };
+      mediaRecorderRef.current = mr;
+      mr.start();
+      setRecording(true);
+    } catch (err) {
+      setRecError(err instanceof Error ? err.message : "No pude acceder al micrófono");
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop();
+    }
+    setRecording(false);
+  }
+
+  async function transcribe(blob: Blob) {
+    setTranscribing(true);
+    try {
+      const form = new FormData();
+      form.append("audio", blob, "voice.webm");
+      const res = await fetch("/api/forge/transcribe", { method: "POST", body: form });
+      if (!res.ok) {
+        const err = await res.text().catch(() => "");
+        setRecError(`Transcripción falló (${res.status}): ${err.slice(0, 120)}`);
+        return;
+      }
+      const data = (await res.json()) as { text?: string };
+      if (data?.text) {
+        setInput(input ? `${input} ${data.text}` : data.text);
+        textareaRef.current?.focus();
+      }
+    } catch (err) {
+      setRecError(err instanceof Error ? err.message : "Error al transcribir");
+    } finally {
+      setTranscribing(false);
+    }
+  }
+
+  function handleFile(files: FileList | null) {
+    const file = files?.[0];
+    if (!file) return;
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = () =>
+        setAttachment({ name: file.name, preview: reader.result as string });
+      reader.readAsDataURL(file);
+    } else {
+      setAttachment({ name: file.name, preview: null });
+    }
+  }
+
+  function clearAttachment() {
+    setAttachment(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+  }
+
+  return (
+    <>
+      {(recError || attachment) && (
+        <div className="mb-2 space-y-1.5">
+          {recError && (
+            <div className="rounded-md border border-error-crimson/30 bg-error-crimson/5 px-3 py-2 text-[12px] text-error-crimson">
+              ⚠ {recError}
+              <button
+                onClick={() => setRecError(null)}
+                className="float-right text-error-crimson/70 hover:text-error-crimson"
+                aria-label="Cerrar error"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
+          {attachment && (
+            <div className="flex items-center gap-2 rounded-md border border-app bg-tint-1 px-3 py-2">
+              {attachment.preview ? (
+                <img
+                  src={attachment.preview}
+                  alt={attachment.name}
+                  className="h-10 w-10 rounded object-cover"
+                />
+              ) : (
+                <Paperclip size={14} className="text-violet-300" />
+              )}
+              <span className="flex-1 truncate text-[12px] text-on-surface-variant">
+                {attachment.name}
+              </span>
+              <button
+                onClick={clearAttachment}
+                className="rounded p-1 text-muted hover:bg-tint-2 hover:text-on-surface"
+                aria-label="Quitar adjunto"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!pending) onSend();
+        }}
+        className="glass relative overflow-hidden rounded-2xl"
+      >
+        <div className="pointer-events-none absolute inset-0 -z-10 opacity-50 [background:radial-gradient(120%_60%_at_50%_0%,rgba(139,92,246,0.18),transparent_70%)]" />
+        <textarea
+          ref={textareaRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          rows={3}
+          placeholder={placeholder}
+          className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-[16px] text-on-surface placeholder:text-muted focus:outline-none"
+          style={{
+            touchAction: "manipulation",
+            minHeight: 120, // chat de primer nivel: composer grande por default
+          }}
+          autoComplete="off"
+          autoCorrect="on"
+          autoCapitalize="sentences"
+          spellCheck
+          enterKeyHint="send"
+          inputMode="text"
+          disabled={transcribing}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              if (!pending) onSend();
+            }
+          }}
+        />
+        <div className="flex items-center justify-between border-t border-app px-2 py-2">
+          <div className="flex items-center gap-0.5 text-on-surface-variant">
+            {/* Adjuntar archivo */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,application/pdf,text/*"
+              hidden
+              onChange={(e) => handleFile(e.target.files)}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="rounded-md p-2 hover:bg-tint-2"
+              aria-label="Adjuntar archivo"
+              style={{ touchAction: "manipulation" }}
+            >
+              <Paperclip size={15} />
+            </button>
+
+            {/* Cámara — capture environment para abrir cámara directa en mobile */}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              hidden
+              onChange={(e) => handleFile(e.target.files)}
+            />
+            <button
+              type="button"
+              onClick={() => cameraInputRef.current?.click()}
+              className="rounded-md p-2 hover:bg-tint-2"
+              aria-label="Foto"
+              style={{ touchAction: "manipulation" }}
+            >
+              <Camera size={15} />
+            </button>
+
+            {/* Micrófono — graba audio y transcribe via Whisper */}
+            <button
+              type="button"
+              onClick={recording ? stopRecording : startRecording}
+              disabled={transcribing}
+              className={`rounded-md p-2 transition-colors ${
+                recording
+                  ? "bg-error-crimson/15 text-error-crimson animate-pulse"
+                  : transcribing
+                    ? "text-cyber-cyan animate-pulse"
+                    : "hover:bg-tint-2"
+              }`}
+              aria-label={recording ? "Detener grabación" : "Grabar voz"}
+              style={{ touchAction: "manipulation" }}
+            >
+              <Mic size={15} />
+            </button>
+
+            <span className="ml-2 hidden font-mono text-[11px] uppercase tracking-[0.18em] text-muted sm:inline">
+              {recording ? "Grabando…" : transcribing ? "Transcribiendo…" : hint}
+            </span>
+          </div>
+
+          {pending ? (
+            <button
+              type="button"
+              onClick={onStop}
+              className="btn-ghost !px-4 !py-2"
+              aria-label="Detener"
+            >
+              <Square size={13} /> Detener
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!input.trim() && !attachment}
+              className="btn-primary !px-4 !py-2 disabled:opacity-50"
+            >
+              {sendLabel} <ArrowUp size={13} />
+            </button>
+          )}
+        </div>
+      </form>
+    </>
   );
 }
 
