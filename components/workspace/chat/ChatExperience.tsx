@@ -736,10 +736,10 @@ function Composer({
               <Square size={13} /> Detener
             </button>
           ) : (
-            {/* Send queda disabled si no hay texto. Los adjuntos viven sólo
-                en la UI hasta que el payload de /api/forge/run acepte
-                images blocks (TODO M-next). Sin eso, habilitar send con
-                solo attachment era un no-op confuso (Codex P2). */}
+            // Send disabled si no hay texto. Adjuntos hoy son solo UI
+            // (preview + ✕); el envío al payload de /api/forge/run con
+            // image blocks es trabajo M-next. Antes habilitar con solo
+            // attachment era un no-op confuso (Codex P2).
             <button
               type="submit"
               disabled={!input.trim()}
