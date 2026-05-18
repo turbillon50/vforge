@@ -444,9 +444,13 @@ export function ChatExperience() {
         </div>
       </div>
 
-      {/* Messages scroller — el ÚNICO que scrollea */}
+      {/* Messages scroller — el ÚNICO que scrollea. Wrapper interno
+          usa justify-end para que el contenido quede pegado al composer
+          (chat-style: vacío al inicio = poco scroll; mucha conversación
+          empuja al usuario arriba). Antes flotaba pegado arriba dejando
+          medio viewport vacío. */}
       <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto px-3 py-3 md:px-10 md:py-5">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto flex min-h-full max-w-3xl flex-col justify-end">
           {/* Operator header — solo visible cuando el chat está vacío (más
               espacio para mensajes cuando ya hay conversación). */}
           {messages.length <= 1 && (

@@ -1,5 +1,7 @@
 // VForge minimal service worker — offline shell + network-first for documents
-const VERSION = "vforge-v1";
+// Bump VERSION on every deploy where you want forced cache invalidation
+// (Luis: "se ve de la verga todavía" → asset cache pegado).
+const VERSION = "vforge-v3-2026-05-18";
 const SHELL = ["/", "/app/chat", "/offline"];
 
 self.addEventListener("install", (event) => {
@@ -20,7 +22,12 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // Network-first for navigations
+  // NUNCA cachear /api/* — siempre red (los datos reales son críticos)
+  if (url.pathname.startsWith("/api/")) {
+    return;
+  }
+
+  // Network-first para HTML/navigation — siempre intenta versión nueva
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req)
@@ -34,17 +41,16 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for static assets
+  // Stale-while-revalidate para assets estáticos — sirve del cache pero
+  // refresca en background para que la próxima vez sea versión nueva.
   event.respondWith(
     caches.match(req).then((cached) => {
-      return (
-        cached ||
-        fetch(req).then((res) => {
-          const copy = res.clone();
-          caches.open(VERSION).then((c) => c.put(req, copy));
-          return res;
-        })
-      );
+      const networkPromise = fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(VERSION).then((c) => c.put(req, copy));
+        return res;
+      });
+      return cached || networkPromise;
     })
   );
 });

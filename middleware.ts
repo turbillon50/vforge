@@ -1,25 +1,16 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-
-const isProtectedRoute = createRouteMatcher([
-  "/app(.*)",
-  "/onboarding(.*)",
-]);
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
-// Cuando Clerk tiene keys configuradas (producción), protege /app y
-// /onboarding — no entra cualquiera, hay que loguearse vía /sign-in o
-// /sign-up. En previews sin keys, el middleware pasa todo para no
-// bloquear el desarrollo.
-//
-// Nota: el backend de V todavía usa operator_luis hardcoded en
-// `lib/forge/run/route.ts`. Mientras tanto, Clerk solo es el guard
-// frontend. Cuando M11 aterrice, mapearemos el Clerk user.id al user_id
-// real en BD para que V identifique a cada operador en serio.
+// Clerk se inicializa para que /sign-in y /sign-up rendericen los
+// componentes oficiales con las keys, pero NO protege rutas. Hasta que
+// M11 cable Clerk.user.id al user_id real en BD, bloquear /app solo
+// nos deja afuera del producto. Cuando aterrice esa pieza, reactivamos
+// auth.protect() aquí.
 export default hasClerk
-  ? clerkMiddleware(async (auth, req) => {
-      if (isProtectedRoute(req)) await auth.protect();
+  ? clerkMiddleware(async () => {
+      // pass-through; no auth.protect() yet
     })
   : () => NextResponse.next();
 
