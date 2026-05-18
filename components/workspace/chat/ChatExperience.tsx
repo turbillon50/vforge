@@ -736,9 +736,13 @@ function Composer({
               <Square size={13} /> Detener
             </button>
           ) : (
+            {/* Send queda disabled si no hay texto. Los adjuntos viven sólo
+                en la UI hasta que el payload de /api/forge/run acepte
+                images blocks (TODO M-next). Sin eso, habilitar send con
+                solo attachment era un no-op confuso (Codex P2). */}
             <button
               type="submit"
-              disabled={!input.trim() && !attachment}
+              disabled={!input.trim()}
               className="btn-primary !px-4 !py-2 disabled:opacity-50"
             >
               {sendLabel} <ArrowUp size={13} />
