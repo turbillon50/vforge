@@ -569,6 +569,17 @@ function Composer({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
+  // Cuando el attachment se limpia (por send o ✕), también resetear el
+  // value del <input type="file"> — sin esto, seleccionar el mismo
+  // archivo no dispara onChange y el usuario no puede re-adjuntar
+  // la misma imagen para reintentar (Codex P2 #r3256189940).
+  useEffect(() => {
+    if (!attachment) {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
+    }
+  }, [attachment]);
+
   // Auto-grow textarea hasta ~50% del viewport
   useEffect(() => {
     const el = textareaRef.current;
