@@ -263,7 +263,7 @@ img, svg, video, canvas {
    - Reduce el padding-bottom del composer a solo safe-area
    ============================================ */
 .vf-composer-pad {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 76px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 62px);
 }
 body.keyboard-open .vf-composer-pad {
   padding-bottom: env(safe-area-inset-bottom, 0px);
