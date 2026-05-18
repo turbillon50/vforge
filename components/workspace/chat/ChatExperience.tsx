@@ -430,16 +430,17 @@ export function ChatExperience() {
       {/* Composer FIJO — flex-shrink-0 + safe-area + mobile-nav clearance */}
       <div
         className="flex-shrink-0 border-t border-app bg-void/95 backdrop-blur-xl"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 76px)" }}
       >
-        <div className="mx-auto max-w-3xl px-3 pt-3 sm:px-4 sm:pt-4 md:px-10 md:pb-2">
-          <div className="mb-2 flex flex-wrap gap-1.5">
+        <div className="mx-auto max-w-3xl px-3 pt-2.5 sm:px-4 sm:pt-4 md:px-10 md:pb-2">
+          {/* Quick prompts: scroll horizontal en mobile (1 línea), wrap en desktop */}
+          <div className="mb-2 -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:flex-wrap sm:px-0 sm:pb-0 no-scrollbar">
             {quickPrompts.map((q) => (
               <button
                 key={q.label}
                 onClick={() => send(q.label)}
                 disabled={pending}
-                className="group inline-flex items-center gap-1.5 rounded-full border border-app bg-tint-1 px-3 py-1 text-[11px] text-on-surface-variant transition hover:border-violet-500/30 hover:bg-violet-500/[0.05] hover:text-violet-300 disabled:opacity-50"
+                className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-app bg-tint-1 px-3 py-1 text-[11px] text-on-surface-variant transition hover:border-violet-500/30 hover:bg-violet-500/[0.05] hover:text-violet-300 disabled:opacity-50"
                 style={{ touchAction: "manipulation" }}
               >
                 {q.icon && <q.icon size={11} />}
@@ -459,10 +460,10 @@ export function ChatExperience() {
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              rows={2}
+              rows={1}
               placeholder={t.chat.placeholder}
-              className="w-full resize-none bg-transparent px-4 py-3 text-[16px] text-on-surface placeholder:text-muted focus:outline-none"
-              style={{ touchAction: "manipulation" }}
+              className="w-full resize-none bg-transparent px-4 py-3 text-[16px] text-on-surface placeholder:text-muted focus:outline-none sm:rows-2"
+              style={{ touchAction: "manipulation", minHeight: 56 }}
               autoComplete="off"
               autoCorrect="on"
               autoCapitalize="sentences"
