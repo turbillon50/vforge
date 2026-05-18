@@ -507,7 +507,7 @@ export function ChatExperience() {
       <div
         className="vf-composer-pad flex-shrink-0 border-t border-app bg-void/95 backdrop-blur-xl"
       >
-        <div className="mx-auto max-w-3xl px-3 pt-2 sm:px-4 sm:pt-3 md:px-10 md:pb-2">
+        <div className="mx-auto max-w-3xl px-2 pt-1 sm:px-4 sm:pt-2 md:px-10 md:pb-1">
           {/* Quick prompts: solo visibles cuando el chat está vacío para
               no comer espacio durante conversación. Mobile-only: scroll
               horizontal en 1 línea; desktop: wrap normal. */}
@@ -745,10 +745,9 @@ function Composer({
         <div className="pointer-events-none absolute inset-0 -z-10 opacity-50 [background:radial-gradient(120%_60%_at_50%_0%,rgba(139,92,246,0.18),transparent_70%)]" />
 
         {/* Composer compacto WhatsApp-style: una sola fila con botones al
-            lado del textarea (no debajo). Textarea rows=1, auto-grow
-            hasta 160px. Total altura mínima ~52px vs 200px antes. */}
-        <div className="flex items-end gap-1 px-2 py-2">
-          <div className="flex items-center gap-0.5 pb-1 text-on-surface-variant">
+            lado del textarea. Padding mínimo, ingeniería alemana. */}
+        <div className="flex items-end gap-0.5 px-1.5 py-1.5">
+          <div className="flex items-center gap-0 pb-0.5 text-on-surface-variant">
             {/* Adjuntar archivo */}
             <input
               ref={fileInputRef}
@@ -764,7 +763,7 @@ function Composer({
               aria-label="Adjuntar archivo"
               style={{ touchAction: "manipulation" }}
             >
-              <Paperclip size={15} />
+              <Paperclip size={14} />
             </button>
 
             {/* Cámara — capture environment para abrir cámara directa en mobile */}
@@ -783,7 +782,7 @@ function Composer({
               aria-label="Foto"
               style={{ touchAction: "manipulation" }}
             >
-              <Camera size={15} />
+              <Camera size={14} />
             </button>
 
             {/* Micrófono — graba audio y transcribe via Whisper */}
@@ -801,7 +800,7 @@ function Composer({
               aria-label={recording ? "Detener grabación" : "Grabar voz"}
               style={{ touchAction: "manipulation" }}
             >
-              <Mic size={15} />
+              <Mic size={14} />
             </button>
           </div>
 
@@ -813,10 +812,10 @@ function Composer({
             placeholder={
               recording ? "Grabando…" : transcribing ? "Transcribiendo…" : placeholder
             }
-            className="flex-1 resize-none bg-transparent px-2 py-2 text-[16px] text-on-surface placeholder:text-muted focus:outline-none"
+            className="flex-1 resize-none bg-transparent px-1.5 py-1.5 text-[16px] text-on-surface placeholder:text-muted focus:outline-none"
             style={{
               touchAction: "manipulation",
-              minHeight: 40,
+              minHeight: 36,
               maxHeight: 160,
             }}
             autoComplete="off"
@@ -838,21 +837,21 @@ function Composer({
             <button
               type="button"
               onClick={onStop}
-              className="rounded-md bg-vf-fg p-2 text-vf-bg hover:opacity-90"
+              className="rounded-md bg-vf-fg p-1.5 text-vf-bg hover:opacity-90"
               aria-label="Detener"
               style={{ touchAction: "manipulation" }}
             >
-              <Square size={14} className="fill-current" />
+              <Square size={13} className="fill-current" />
             </button>
           ) : (
             <button
               type="submit"
               disabled={!input.trim() && !attachment}
               aria-label={sendLabel}
-              className="rounded-md bg-gradient-to-br from-violet-500 to-cyan-400 p-2 text-on-surface disabled:opacity-40 disabled:cursor-not-allowed"
+              className="rounded-md bg-gradient-to-br from-violet-500 to-cyan-400 p-1.5 text-on-surface disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ touchAction: "manipulation" }}
             >
-              <ArrowUp size={15} strokeWidth={2.5} />
+              <ArrowUp size={14} strokeWidth={2.5} />
             </button>
           )}
         </div>
