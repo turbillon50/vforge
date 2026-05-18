@@ -385,22 +385,26 @@ export function ChatExperience() {
       </div>
 
       {/* Messages scroller — el ÚNICO que scrollea */}
-      <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-6 md:px-10">
+      <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto px-3 py-3 md:px-10 md:py-5">
         <div className="mx-auto max-w-3xl">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="relative h-9 w-9 rounded-full bg-violet-500/10 ring-1 ring-violet-500/30">
-              <div className="absolute inset-0 animate-pulse-soft rounded-full bg-violet-500/20" />
-              <div className="absolute inset-2 rounded-full bg-gradient-to-br from-violet-400 to-cyan-400" />
+          {/* Operator header — solo visible cuando el chat está vacío (más
+              espacio para mensajes cuando ya hay conversación). */}
+          {messages.length <= 1 && (
+            <div className="mb-4 flex items-center gap-3 md:mb-6">
+              <div className="relative h-9 w-9 rounded-full bg-violet-500/10 ring-1 ring-violet-500/30">
+                <div className="absolute inset-0 animate-pulse-soft rounded-full bg-violet-500/20" />
+                <div className="absolute inset-2 rounded-full bg-gradient-to-br from-violet-400 to-cyan-400" />
+              </div>
+              <div>
+                <p className="font-display text-lg font-semibold tracking-tight">
+                  {t.common.label_b}
+                </p>
+                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+                  {t.chat.operator_label} · {currentScope.label}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-display text-lg font-semibold tracking-tight">
-                {t.common.label_b}
-              </p>
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
-                {t.chat.operator_label} · {currentScope.label}
-              </p>
-            </div>
-          </div>
+          )}
 
           {isHydrating && (
             <div className="mb-6 text-center">
@@ -410,7 +414,7 @@ export function ChatExperience() {
             </div>
           )}
 
-          <div className="space-y-5">
+          <div className="space-y-3 md:space-y-4">
             <AnimatePresence initial={false}>
               {messages.map((m) => (
                 <MessageBubble key={m.id} msg={m} />
