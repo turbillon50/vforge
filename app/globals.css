@@ -254,3 +254,20 @@ img, svg, video, canvas {
     border-color: rgb(var(--color-border-strong));
   }
 }
+
+/* ============================================
+   Mobile soft keyboard handling
+   El hook useKeyboardBodyClass (en ChatExperience) agrega body.keyboard-open
+   cuando visualViewport detecta el teclado mobile. Esto:
+   - Esconde el MobileNav (libera ~80px verticales)
+   - Reduce el padding-bottom del composer a solo safe-area
+   ============================================ */
+.vf-composer-pad {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 76px);
+}
+body.keyboard-open .vf-composer-pad {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+body.keyboard-open .vf-mobile-nav {
+  display: none;
+}
