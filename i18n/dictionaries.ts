@@ -548,10 +548,10 @@ export const es: Dictionary = {
     send: "Enviar",
     thinking: "V está pensando…",
     quick_prompts: [
-      "Crear un SaaS para reservas",
-      "Añadir Stripe a 'Orion Studio'",
-      "Rotar todos los secretos en producción",
-      "Conectar el dominio forge.app",
+      "Lista mis proyectos en producción",
+      "¿Qué deploys he hecho hoy?",
+      "¿Cuánto llevo gastado este mes?",
+      "Audit de la última hora",
     ],
     b_response_text:
       "Entendido. Estoy trazando un plan y encolando las acciones. Te pediré aprobación para cualquier cosa que toque producción.",
@@ -996,10 +996,10 @@ export const en: Dictionary = {
     send: "Send",
     thinking: "V is thinking…",
     quick_prompts: [
-      "Create a SaaS for bookings",
-      "Add Stripe to ‘Orion Studio’",
-      "Rotate all secrets in production",
-      "Connect domain forge.app",
+      "List my projects in production",
+      "What deploys did I run today?",
+      "How much have I spent this month?",
+      "Audit log from the last hour",
     ],
     b_response_text:
       "On it. Drafting a plan and queueing the actions. You’ll be asked to approve anything that touches production.",
