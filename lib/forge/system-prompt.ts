@@ -60,7 +60,7 @@ interface InstalledSkill {
  *  6. Optional: focused project context when conversation is project-scoped
  */
 export async function buildSystemPrompt(
-  options: { projectId?: string | null } = {},
+  options: { projectId?: string | null; userId?: string | null } = {},
 ): Promise<{
   systemPrompt: string;
   config: SystemConfig;
@@ -74,36 +74,58 @@ export async function buildSystemPrompt(
     throw new Error("system_config not found — did you run the seed migration?");
   }
 
+  // Tenant filter. When `userId` is provided, every personal-data query is
+  // scoped to that user via `AND user_id = $N`. When it's null/undefined
+  // (legacy callers), the queries run unfiltered — preserving today's
+  // behavior so V keeps loading exactly what she loaded before this change.
+  const tenantId = options.userId ?? null;
+  const tenantParams = tenantId ? [tenantId] : [];
+
   // Always-on knowledge: operator + organization + method + ADRs
   const coreKnowledge = await queryAll<KnowledgeEntry>(
-    `SELECT kind, title, content, tags FROM knowledge_base
-     WHERE kind IN ('operator_profile', 'organization', 'method', 'preference')
-     ORDER BY kind, created_at`,
+    tenantId
+      ? `SELECT kind, title, content, tags FROM knowledge_base
+         WHERE user_id = $1 AND kind IN ('operator_profile', 'organization', 'method', 'preference')
+         ORDER BY kind, created_at`
+      : `SELECT kind, title, content, tags FROM knowledge_base
+         WHERE kind IN ('operator_profile', 'organization', 'method', 'preference')
+         ORDER BY kind, created_at`,
+    tenantParams,
   );
 
   // Recent lessons (max 10)
   const lessons = await queryAll<KnowledgeEntry>(
-    `SELECT kind, title, content, tags FROM knowledge_base
-     WHERE kind = 'lesson'
-     ORDER BY created_at DESC
-     LIMIT 10`,
+    tenantId
+      ? `SELECT kind, title, content, tags FROM knowledge_base
+         WHERE user_id = $1 AND kind = 'lesson'
+         ORDER BY created_at DESC LIMIT 10`
+      : `SELECT kind, title, content, tags FROM knowledge_base
+         WHERE kind = 'lesson'
+         ORDER BY created_at DESC LIMIT 10`,
+    tenantParams,
   );
 
   // Cross-session memory: last 8 recaps + last 8 manual memories. Tagged
-  // 'session_recap' or 'memory' on a kind='note' row (we keep them on
-  // the same kind to avoid touching the CHECK constraint, and lean on
-  // tags + the partial index for retrieval).
+  // 'session_recap' or 'memory' on a kind='note' row.
   const recaps = await queryAll<KnowledgeEntry>(
-    `SELECT kind, title, content, tags FROM knowledge_base
-     WHERE kind = 'note' AND 'session_recap' = ANY(tags)
-     ORDER BY created_at DESC
-     LIMIT 8`,
+    tenantId
+      ? `SELECT kind, title, content, tags FROM knowledge_base
+         WHERE user_id = $1 AND kind = 'note' AND 'session_recap' = ANY(tags)
+         ORDER BY created_at DESC LIMIT 8`
+      : `SELECT kind, title, content, tags FROM knowledge_base
+         WHERE kind = 'note' AND 'session_recap' = ANY(tags)
+         ORDER BY created_at DESC LIMIT 8`,
+    tenantParams,
   );
   const memories = await queryAll<KnowledgeEntry>(
-    `SELECT kind, title, content, tags FROM knowledge_base
-     WHERE kind = 'note' AND 'memory' = ANY(tags)
-     ORDER BY created_at DESC
-     LIMIT 8`,
+    tenantId
+      ? `SELECT kind, title, content, tags FROM knowledge_base
+         WHERE user_id = $1 AND kind = 'note' AND 'memory' = ANY(tags)
+         ORDER BY created_at DESC LIMIT 8`
+      : `SELECT kind, title, content, tags FROM knowledge_base
+         WHERE kind = 'note' AND 'memory' = ANY(tags)
+         ORDER BY created_at DESC LIMIT 8`,
+    tenantParams,
   );
 
   // Project catalog summary
@@ -112,53 +134,71 @@ export async function buildSystemPrompt(
     count: number;
     names: string[];
   }>(
-    `SELECT category,
-            COUNT(*)::int AS count,
-            ARRAY_AGG(name ORDER BY name) AS names
-     FROM projects
-     GROUP BY category
-     ORDER BY category`,
+    tenantId
+      ? `SELECT category, COUNT(*)::int AS count, ARRAY_AGG(name ORDER BY name) AS names
+         FROM projects WHERE user_id = $1
+         GROUP BY category ORDER BY category`
+      : `SELECT category, COUNT(*)::int AS count, ARRAY_AGG(name ORDER BY name) AS names
+         FROM projects
+         GROUP BY category ORDER BY category`,
+    tenantParams,
   );
 
-  // Optional focused project context
+  // Optional focused project context (still scoped by tenant when provided)
   let projectFocus: ProjectFocus | null = null;
   if (options.projectId) {
-    projectFocus = await queryOne<ProjectFocus>(
-      `SELECT id, name, description, category, status,
-              github_repo, github_url, github_private, github_language,
-              vercel_url, domain
-         FROM projects WHERE id = $1`,
-      [options.projectId],
-    );
+    projectFocus = tenantId
+      ? await queryOne<ProjectFocus>(
+          `SELECT id, name, description, category, status,
+                  github_repo, github_url, github_private, github_language,
+                  vercel_url, domain
+             FROM projects WHERE id = $1 AND user_id = $2`,
+          [options.projectId, tenantId],
+        )
+      : await queryOne<ProjectFocus>(
+          `SELECT id, name, description, category, status,
+                  github_repo, github_url, github_private, github_language,
+                  vercel_url, domain
+             FROM projects WHERE id = $1`,
+          [options.projectId],
+        );
   }
 
-  // ─── NEW: Load dynamic directives (mantra + directive + preference) ───
-  // Graceful fallback if table doesn't exist yet (pre-migration)
+  // ─── Dynamic directives (mantra + directive + preference) ───
   let directives: AgentDirective[] = [];
   try {
     directives = await queryAll<AgentDirective>(
-      `SELECT id, kind, title, content, locked, priority, active
-       FROM agent_directives
-       WHERE active = true
-       ORDER BY priority ASC, created_at ASC`,
+      tenantId
+        ? `SELECT id, kind, title, content, locked, priority, active
+           FROM agent_directives
+           WHERE user_id = $1 AND active = true
+           ORDER BY priority ASC, created_at ASC`
+        : `SELECT id, kind, title, content, locked, priority, active
+           FROM agent_directives
+           WHERE active = true
+           ORDER BY priority ASC, created_at ASC`,
+      tenantParams,
     );
   } catch (e) {
-    // Table doesn't exist yet - that's ok, use empty array
     console.log("[V] agent_directives table not found, using defaults");
   }
 
-  // ─── NEW: Load installed skills ───
-  // Graceful fallback if table doesn't exist yet (pre-migration)
+  // ─── Installed skills ───
   let installedSkills: InstalledSkill[] = [];
   try {
     installedSkills = await queryAll<InstalledSkill>(
-      `SELECT id, name, description, system_prompt, tags, source, ring_max
-       FROM skills
-       WHERE active = true AND installed_at IS NOT NULL
-       ORDER BY installed_at ASC`,
+      tenantId
+        ? `SELECT id, name, description, system_prompt, tags, source, ring_max
+           FROM skills
+           WHERE user_id = $1 AND active = true AND installed_at IS NOT NULL
+           ORDER BY installed_at ASC`
+        : `SELECT id, name, description, system_prompt, tags, source, ring_max
+           FROM skills
+           WHERE active = true AND installed_at IS NOT NULL
+           ORDER BY installed_at ASC`,
+      tenantParams,
     );
   } catch (e) {
-    // Table doesn't exist yet - that's ok, use empty array
     console.log("[V] skills table not found, using defaults");
   }
 

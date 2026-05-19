@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { ChatContainer, Message } from './ChatContainer';
+import { ChatContainer, type Message } from './ChatContainer';
 import { ChatComposer } from './ChatComposer';
+import { createTypewriter } from '@/lib/chat/typewriter';
+import type { ThinkingPhase } from './VThinking';
+import type { TraceEntry } from './ProcessTrace';
 
 const SESSION_KEY = 'v_chat_session_id';
 
@@ -32,9 +35,11 @@ type SSEEvent =
 export const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [phase, setPhase] = useState<ThinkingPhase>('thinking');
   const sessionIdRef = useRef<string>(`v_${Date.now()}`);
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<Message[]>(messages);
+  const typewriterRef = useRef<ReturnType<typeof createTypewriter> | null>(null);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -42,10 +47,17 @@ export const ChatPage = () => {
 
   useEffect(() => {
     sessionIdRef.current = getOrCreateSessionId();
-    const ctrl = abortRef;
     return () => {
-      ctrl.current?.abort();
+      abortRef.current?.abort();
+      typewriterRef.current?.cancel();
     };
+  }, []);
+
+  const handleStop = useCallback(() => {
+    abortRef.current?.abort();
+    typewriterRef.current?.flush();
+    typewriterRef.current = null;
+    setIsLoading(false);
   }, []);
 
   const handleSubmit = useCallback(async (content: string) => {
@@ -61,9 +73,11 @@ export const ChatPage = () => {
       role: 'v',
       content: '',
       timestamp: new Date(),
+      traces: [],
     };
     setMessages((prev) => [...prev, userMessage, assistantMessage]);
     setIsLoading(true);
+    setPhase('thinking');
 
     const history = messagesRef.current.map((m) => ({
       role: m.role === 'v' ? ('assistant' as const) : ('user' as const),
@@ -74,6 +88,33 @@ export const ChatPage = () => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+
+    // Typewriter feeds the assistant message at humanlike pace.
+    typewriterRef.current?.cancel();
+    typewriterRef.current = createTypewriter({
+      onChunk: (text) => {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId ? { ...m, content: m.content + text } : m,
+          ),
+        );
+      },
+    });
+    const typewriter = typewriterRef.current;
+
+    const appendTrace = (entry: TraceEntry | ((prev: TraceEntry[]) => TraceEntry[])) => {
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (m.id !== assistantId) return m;
+          const prevTraces = m.traces ?? [];
+          const nextTraces =
+            typeof entry === 'function' ? entry(prevTraces) : [...prevTraces, entry];
+          return { ...m, traces: nextTraces };
+        }),
+      );
+    };
+
+    let hasSeenText = false;
 
     try {
       const res = await fetch('/api/forge/run', {
@@ -113,14 +154,34 @@ export const ChatPage = () => {
           try {
             const evt = JSON.parse(line.slice(6)) as SSEEvent;
             if (evt.type === 'text') {
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantId
-                    ? { ...m, content: m.content + evt.value }
-                    : m,
+              if (!hasSeenText) {
+                hasSeenText = true;
+                setPhase('writing');
+              }
+              typewriter.push(evt.value);
+            } else if (evt.type === 'tool_use_start') {
+              setPhase('reasoning');
+              appendTrace({
+                id: evt.id,
+                tool: evt.name,
+                status: 'running',
+              });
+            } else if (evt.type === 'tool_use_result') {
+              appendTrace((prev) =>
+                prev.map((t) =>
+                  t.id === evt.id
+                    ? {
+                        ...t,
+                        status: evt.ok ? 'ok' : 'error',
+                        summary: evt.summary?.slice(0, 120),
+                      }
+                    : t,
                 ),
               );
+            } else if (evt.type === 'done') {
+              setPhase('finalizing');
             } else if (evt.type === 'error') {
+              typewriter.flush();
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === assistantId
@@ -129,16 +190,18 @@ export const ChatPage = () => {
                 ),
               );
             }
-            // tool_use_start / tool_use_result / model_fallback / done
-            // are not surfaced in this minimal UI — text is what carries
-            // V's voice. The /forge route renders the full tool ribbon.
+            // model_fallback is intentionally not surfaced — the user only
+            // cares that V responded, not which provider tier served it.
           } catch {
             // skip malformed event
           }
         }
       }
+
+      await typewriter.complete();
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return;
+      typewriter.flush();
       const msg = err instanceof Error ? err.message : String(err);
       setMessages((prev) =>
         prev.map((m) =>
@@ -147,13 +210,19 @@ export const ChatPage = () => {
       );
     } finally {
       setIsLoading(false);
+      typewriterRef.current = null;
     }
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-vf-bg-0">
-      <ChatContainer messages={messages} isLoading={isLoading} className="flex-1" />
-      <ChatComposer onSubmit={handleSubmit} isLoading={isLoading} />
+    <div className="flex flex-col h-full min-h-0 bg-vf-bg-0">
+      <ChatContainer
+        messages={messages}
+        isLoading={isLoading}
+        phase={phase}
+        className="flex-1 min-h-0"
+      />
+      <ChatComposer onSubmit={handleSubmit} isLoading={isLoading} onStop={handleStop} />
     </div>
   );
 };

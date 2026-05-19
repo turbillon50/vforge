@@ -2,11 +2,12 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Paperclip, Mic } from 'lucide-react';
+import { Send, Paperclip, Mic, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ChatComposerProps {
   onSubmit: (message: string) => void;
+  onStop?: () => void;
   isLoading?: boolean;
   placeholder?: string;
   className?: string;
@@ -14,6 +15,7 @@ interface ChatComposerProps {
 
 export const ChatComposer = ({
   onSubmit,
+  onStop,
   isLoading = false,
   placeholder = 'Envía un mensaje a V...',
   className,
@@ -131,22 +133,39 @@ export const ChatComposer = ({
           <Mic size={20} />
         </motion.button>
 
-        {/* Send Button */}
-        <motion.button
-          type="submit"
-          disabled={!hasContent || isLoading}
-          whileHover={hasContent && !isLoading ? { scale: 1.05 } : {}}
-          whileTap={hasContent && !isLoading ? { scale: 0.95 } : {}}
-          className={cn(
-            'flex-shrink-0 p-2 rounded-lg transition-all duration-300',
-            hasContent && !isLoading
-              ? 'bg-vf-green/20 text-vf-green hover:bg-vf-green/30 cursor-pointer'
-              : 'bg-transparent text-vf-fg-3 cursor-not-allowed'
-          )}
-          title={hasContent ? 'Enviar mensaje (Enter)' : 'Escribe un mensaje para enviar'}
-        >
-          <Send size={20} />
-        </motion.button>
+        {/* Send / Stop Button */}
+        {isLoading && onStop ? (
+          <motion.button
+            type="button"
+            onClick={onStop}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={cn(
+              'flex-shrink-0 p-2 rounded-lg transition-all duration-300',
+              'bg-vf-error/15 text-vf-error hover:bg-vf-error/25 cursor-pointer',
+            )}
+            title="Detener respuesta"
+            aria-label="Stop"
+          >
+            <Square size={16} fill="currentColor" />
+          </motion.button>
+        ) : (
+          <motion.button
+            type="submit"
+            disabled={!hasContent || isLoading}
+            whileHover={hasContent && !isLoading ? { scale: 1.05 } : {}}
+            whileTap={hasContent && !isLoading ? { scale: 0.95 } : {}}
+            className={cn(
+              'flex-shrink-0 p-2 rounded-lg transition-all duration-300',
+              hasContent && !isLoading
+                ? 'bg-vf-green/20 text-vf-green hover:bg-vf-green/30 cursor-pointer'
+                : 'bg-transparent text-vf-fg-3 cursor-not-allowed',
+            )}
+            title={hasContent ? 'Enviar mensaje (Enter)' : 'Escribe un mensaje para enviar'}
+          >
+            <Send size={20} />
+          </motion.button>
+        )}
       </motion.div>
 
       {/* Helper Text */}

@@ -210,6 +210,88 @@ async function ensureOtherTables(): Promise<void> {
   }
 }
 
+async function ensureMultiTenantColumns(): Promise<void> {
+  // M011 — Multi-tenant: add user_id columns with default 'operator_luis' so
+  // existing data stays attached to Luis. Idempotent: ADD COLUMN IF NOT EXISTS
+  // is a no-op on subsequent runs.
+  const tables: Array<{ table: string; indexes: string[] }> = [
+    {
+      table: 'knowledge_base',
+      indexes: [
+        'CREATE INDEX IF NOT EXISTS idx_knowledge_user_kind ON knowledge_base (user_id, kind)',
+        'CREATE INDEX IF NOT EXISTS idx_knowledge_user_created ON knowledge_base (user_id, created_at DESC)',
+      ],
+    },
+    {
+      table: 'projects',
+      indexes: [
+        'CREATE INDEX IF NOT EXISTS idx_projects_user_category ON projects (user_id, category)',
+        'CREATE INDEX IF NOT EXISTS idx_projects_user_status ON projects (user_id, status)',
+      ],
+    },
+    {
+      table: 'agent_directives',
+      indexes: [
+        'CREATE INDEX IF NOT EXISTS idx_directives_user_active ON agent_directives (user_id, active, priority)',
+      ],
+    },
+    {
+      table: 'skills',
+      indexes: [
+        'CREATE INDEX IF NOT EXISTS idx_skills_user_active ON skills (user_id, active)',
+      ],
+    },
+    {
+      table: 'agent_config',
+      indexes: ['CREATE INDEX IF NOT EXISTS idx_agent_config_user ON agent_config (user_id)'],
+    },
+  ];
+
+  for (const { table, indexes } of tables) {
+    try {
+      const existsRows = (await sql.query(
+        `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = $1) AS exists`,
+        [table],
+      )) as Array<{ exists: boolean }>;
+      if (!existsRows?.[0]?.exists) continue;
+
+      await sql.query(
+        `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS user_id text NOT NULL DEFAULT 'operator_luis'`,
+      );
+      await sql.query(
+        `UPDATE ${table} SET user_id = 'operator_luis' WHERE user_id IS NULL`,
+      );
+      // Add FK in a separate try so existing tables without users still pass.
+      try {
+        await sql.query(
+          `ALTER TABLE ${table}
+             ADD CONSTRAINT ${table}_user_id_fkey
+             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`,
+        );
+      } catch {
+        // FK already exists or users table missing — non-fatal.
+      }
+      for (const idx of indexes) {
+        try {
+          await sql.query(idx);
+        } catch {
+          // Index already exists
+        }
+      }
+    } catch {
+      // Table missing or healing not possible — skip silently.
+    }
+  }
+
+  try {
+    await sql.query(
+      `INSERT INTO schema_migrations (version) VALUES ('011_multi_tenant') ON CONFLICT (version) DO NOTHING`,
+    );
+  } catch {
+    // schema_migrations may not exist yet on a brand new DB
+  }
+}
+
 async function ensureSemanticMemory(): Promise<void> {
   try {
     await sql`CREATE EXTENSION IF NOT EXISTS vector`;
@@ -257,6 +339,7 @@ export async function healDatabase(): Promise<void> {
     await ensureSkillsIndexes();
     await ensureSeedSkills();
     await ensureOtherTables();
+    await ensureMultiTenantColumns();
     await ensureSemanticMemory();
   } catch (e) {
     // Silently fail - don't crash the app if database healing fails
