@@ -21,6 +21,10 @@ import {
   X,
 } from "lucide-react";
 import { useT } from "@/i18n/AppProviders";
+import { createTypewriter, type Typewriter } from "@/lib/chat/typewriter";
+import { MessageBody } from "./MessageBody";
+import { ProcessTrace, type TraceEntry } from "./ProcessTrace";
+import { VThinking, type ThinkingPhase } from "./VThinking";
 
 type Action = { label: string; status: "done" | "running" | "queued" };
 type Attachment = {
@@ -40,6 +44,8 @@ type Msg = {
   actions?: Action[];
   /** image dataURL shown inline in the bubble for user uploads */
   image?: string;
+  /** tool calls observed during this assistant turn (Claude-Code-style trace) */
+  traces?: TraceEntry[];
 };
 
 const SCOPE_KEY = "vforge_chat_scope";
@@ -106,10 +112,13 @@ export function ChatExperience() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [scopeMenuOpen, setScopeMenuOpen] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
+  const [phase, setPhase] = useState<ThinkingPhase>("thinking");
+  const [streamingId, setStreamingId] = useState<string | null>(null);
   const sessionIdRef = useRef<string>("");
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<Msg[]>(messages);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const typewriterRef = useRef<Typewriter | null>(null);
 
   useKeyboardBodyClass();
 
@@ -226,11 +235,41 @@ export function ChatExperience() {
         image: att?.preview ?? undefined,
       };
       const aId = `b_${Date.now()}`;
-      const aMsg: Msg = { id: aId, role: "b", text: "" };
+      const aMsg: Msg = { id: aId, role: "b", text: "", traces: [] };
       setMessages((m) => [...m, userMsg, aMsg]);
       setInput("");
       setAttachment(null);
       setPending(true);
+      setPhase("thinking");
+      setStreamingId(aId);
+
+      // Typewriter: encola los deltas del SSE y los suelta a velocidad
+      // humana (~55 chars/seg con pausa en puntuación). Sustituye al
+      // setMessages directo que hacía aparecer todo de golpe.
+      typewriterRef.current?.cancel();
+      typewriterRef.current = createTypewriter({
+        onChunk: (chunk) => {
+          setMessages((p) =>
+            p.map((m) => (m.id === aId ? { ...m, text: m.text + chunk } : m)),
+          );
+        },
+      });
+      const typewriter = typewriterRef.current;
+
+      const appendTrace = (
+        entry: TraceEntry | ((prev: TraceEntry[]) => TraceEntry[]),
+      ) => {
+        setMessages((p) =>
+          p.map((m) => {
+            if (m.id !== aId) return m;
+            const prev = m.traces ?? [];
+            const next = typeof entry === "function" ? entry(prev) : [...prev, entry];
+            return { ...m, traces: next };
+          }),
+        );
+      };
+
+      let sawText = false;
 
       // Historia previa como text-only (no replay de imágenes — costo).
       const history: { role: "user" | "assistant"; content: string | StructuredBlock[] }[] =
@@ -294,12 +333,34 @@ export function ChatExperience() {
             try {
               const evt = JSON.parse(line.slice(6)) as SSEEvent;
               if (evt.type === "text") {
-                setMessages((p) =>
-                  p.map((m) =>
-                    m.id === aId ? { ...m, text: m.text + evt.value } : m,
+                if (!sawText) {
+                  sawText = true;
+                  setPhase("writing");
+                }
+                typewriter.push(evt.value);
+              } else if (evt.type === "tool_use_start") {
+                setPhase("reasoning");
+                appendTrace({
+                  id: evt.id,
+                  tool: evt.name,
+                  status: "running",
+                });
+              } else if (evt.type === "tool_use_result") {
+                appendTrace((prev) =>
+                  prev.map((tr) =>
+                    tr.id === evt.id
+                      ? {
+                          ...tr,
+                          status: evt.ok ? "ok" : "error",
+                          summary: evt.summary?.slice(0, 120),
+                        }
+                      : tr,
                   ),
                 );
+              } else if (evt.type === "done") {
+                setPhase("finalizing");
               } else if (evt.type === "error") {
+                typewriter.flush();
                 setMessages((p) =>
                   p.map((m) =>
                     m.id === aId
@@ -308,13 +369,16 @@ export function ChatExperience() {
                   ),
                 );
               }
+              // model_fallback no se surface — al usuario solo le importa que V responda.
             } catch {
               // skip
             }
           }
         }
+        await typewriter.complete();
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
+        typewriter.flush();
         const msg = err instanceof Error ? err.message : String(err);
         setMessages((p) =>
           p.map((m) =>
@@ -323,6 +387,8 @@ export function ChatExperience() {
         );
       } finally {
         setPending(false);
+        setStreamingId(null);
+        typewriterRef.current = null;
       }
     },
     [pending, scope, attachment],
@@ -330,7 +396,10 @@ export function ChatExperience() {
 
   const stop = useCallback(() => {
     abortRef.current?.abort();
+    typewriterRef.current?.flush();
+    typewriterRef.current = null;
     setPending(false);
+    setStreamingId(null);
   }, []);
 
   // Start fresh chat for current scope
@@ -484,19 +553,24 @@ export function ChatExperience() {
           <div className="space-y-3 md:space-y-4">
             <AnimatePresence initial={false}>
               {messages.map((m) => (
-                <MessageBubble key={m.id} msg={m} />
+                <MessageBubble
+                  key={m.id}
+                  msg={m}
+                  isStreaming={m.id === streamingId}
+                />
               ))}
             </AnimatePresence>
-            {pending && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-2 text-sm text-on-surface-variant"
-              >
-                <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-cyber-cyan" />
-                <span>{t.chat.thinking}</span>
-              </motion.div>
-            )}
+            {pending &&
+              (() => {
+                // Mostrar VThinking cuando aún no hay texto del asistente
+                // (la burbuja vacía + cursor se muestra ya dentro de
+                // MessageBubble una vez que arranca el typewriter).
+                const last = streamingId
+                  ? messages.find((m) => m.id === streamingId)
+                  : null;
+                if (last && last.text.length > 0) return null;
+                return <VThinking phase={phase} />;
+              })()}
           </div>
         </div>
       </div>
@@ -860,7 +934,7 @@ function Composer({
   );
 }
 
-function MessageBubble({ msg }: { msg: Msg }) {
+function MessageBubble({ msg, isStreaming }: { msg: Msg; isStreaming?: boolean }) {
   const isB = msg.role === "b";
   return (
     <motion.div
@@ -871,11 +945,23 @@ function MessageBubble({ msg }: { msg: Msg }) {
       {isB && (
         <p className="mb-1 ml-1 font-mono text-[10px] uppercase tracking-[0.2em] text-violet-300">V</p>
       )}
+
+      {/* Tool traces (Reading, Writing, ...) sobre la burbuja, finos y tenues */}
+      {isB && msg.traces && msg.traces.length > 0 && (
+        <div className="mb-1.5 ml-1 flex flex-col gap-0.5">
+          <AnimatePresence initial={false}>
+            {msg.traces.map((tr) => (
+              <ProcessTrace key={tr.id} entry={tr} />
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
+
       <div
-        className={`rounded-2xl border px-4 py-3 text-[14.5px] leading-relaxed whitespace-pre-wrap break-words ${
+        className={`rounded-2xl border px-4 py-3 break-words ${
           isB
-            ? "border-violet-500/20 bg-violet-500/[0.06] text-on-surface"
-            : "border-app-strong bg-tint-1 text-on-surface-variant"
+            ? "border-violet-500/20 bg-violet-500/[0.06]"
+            : "border-app-strong bg-tint-1 text-[14.5px] leading-relaxed whitespace-pre-wrap text-on-surface-variant"
         }`}
       >
         {msg.image && (
@@ -886,7 +972,18 @@ function MessageBubble({ msg }: { msg: Msg }) {
             className="mb-2 max-h-64 w-full rounded-lg border border-app object-cover"
           />
         )}
-        {msg.text && <p>{msg.text}</p>}
+        {isB ? (
+          msg.text ? (
+            <>
+              <MessageBody content={msg.text} />
+              {isStreaming && <Cursor />}
+            </>
+          ) : isStreaming ? (
+            <Cursor inline />
+          ) : null
+        ) : (
+          msg.text && <p>{msg.text}</p>
+        )}
         {msg.actions && (
           <ul className="mt-3 space-y-2 rounded-lg border border-app-strong bg-tint-2 p-3 text-[13px]">
             {msg.actions.map((a) => (
@@ -905,5 +1002,18 @@ function MessageBubble({ msg }: { msg: Msg }) {
         )}
       </div>
     </motion.div>
+  );
+}
+
+function Cursor({ inline }: { inline?: boolean }) {
+  return (
+    <motion.span
+      aria-hidden
+      className={`inline-block align-baseline w-[2px] ${
+        inline ? "h-[14px]" : "h-[1em]"
+      } bg-violet-300/80 ml-0.5 -mb-[1px] rounded-[1px]`}
+      animate={{ opacity: [1, 0.2, 1] }}
+      transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+    />
   );
 }
