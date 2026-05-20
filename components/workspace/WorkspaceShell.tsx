@@ -107,16 +107,16 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col h-dvh">
+      <div className="flex min-w-0 max-w-full flex-1 flex-col h-dvh overflow-x-hidden">
         <TopBar />
         <div
           className={cn(
-            "flex-1 min-h-0",
+            "flex-1 min-h-0 min-w-0 max-w-full overflow-x-hidden",
             // Chat manages its own bottom clearance via .vf-composer-pad — no
             // pb-24 here or we get a double-reserve gap. Other routes need pb-24
             // mobile to clear the floating MobileNav.
             pathname?.startsWith("/app/chat")
-              ? "overflow-hidden"
+              ? "overflow-y-hidden"
               : "overflow-y-auto pb-24 md:pb-0",
           )}
         >
@@ -134,13 +134,15 @@ function TopBar() {
       className="sticky top-0 z-30 border-b border-app bg-void/85 backdrop-blur-xl"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      <div className="flex items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 md:px-8">
-        <div className="flex items-center gap-2 text-on-surface-variant md:hidden">
+      <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 md:px-8">
+        <div className="flex shrink-0 items-center gap-2 text-on-surface-variant md:hidden">
           <VMark size={20} />
           <span className="font-display text-sm font-semibold tracking-tight text-on-surface">VForge</span>
         </div>
-        <Breadcrumbs />
-        <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <Breadcrumbs />
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           <LocaleToggle compact />
           <ThemeToggle compact />
           <button
