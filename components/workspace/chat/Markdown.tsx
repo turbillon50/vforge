@@ -20,18 +20,22 @@ function CodeBlock({ inline, className, children }: {
   className?: string;
   children: React.ReactNode;
 }) {
-  const text = String(children ?? "").replace(/\n$/, "");
+  const raw = String(children ?? "");
+  const text = raw.replace(/\n$/, "");
   const [copied, setCopied] = useState(false);
 
   // react-markdown v10 ya NO pasa `inline`. Heurística robusta: es
-  // inline si NO tiene className de lenguaje Y el texto no contiene
-  // saltos de línea. Los fenced blocks SIEMPRE terminan con \n (el
-  // tokenizer de remark añade uno), los inline ` ` jamás llevan \n.
+  // inline si NO tiene className de lenguaje Y el texto crudo no
+  // contiene saltos de línea. Los fenced blocks SIEMPRE traen al
+  // menos un \n del tokenizer de remark (incluso si la línea trimmed
+  // queda en blanco), los inline ` ` jamás llevan \n. Cuidado: hay
+  // que revisar el `raw` ANTES del trim, si no un fence de una sola
+  // línea sin lenguaje (```\nhello\n```) pasaría como inline.
   const looksInline =
     inline === true ||
     (inline === undefined &&
       !/^language-/.test(className ?? "") &&
-      !/\n/.test(text));
+      !/\n/.test(raw));
 
   if (looksInline) {
     return (
