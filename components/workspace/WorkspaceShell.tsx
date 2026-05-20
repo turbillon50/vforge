@@ -110,10 +110,13 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         <TopBar />
         <div
           className={cn(
-            "flex-1 min-h-0 pb-24 md:pb-0",
-            // En /app/chat el contenido gestiona su propio scroll interno.
-            // En las demás rutas el main scrollea normal cuando crece.
-            pathname?.startsWith("/app/chat") ? "overflow-hidden" : "overflow-y-auto",
+            "flex-1 min-h-0",
+            // Chat manages its own bottom clearance via .vf-composer-pad — no
+            // pb-24 here or we get a double-reserve gap. Other routes need pb-24
+            // mobile to clear the floating MobileNav.
+            pathname?.startsWith("/app/chat")
+              ? "overflow-hidden"
+              : "overflow-y-auto pb-24 md:pb-0",
           )}
         >
           {children}
@@ -160,14 +163,30 @@ function TopBar() {
 function Breadcrumbs() {
   const pathname = usePathname() || "";
   const parts = pathname.split("/").filter(Boolean);
+  // Prefix "VForge" so users always see brand root even on mobile.
+  const trail = ["VForge", ...parts];
   return (
-    <nav className="flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
-      {parts.map((p, i) => (
-        <span key={p + i} className="flex items-center gap-1">
-          <span className={i === parts.length - 1 ? "text-on-surface" : ""}>{p}</span>
-          {i < parts.length - 1 && <ChevronRight size={11} />}
-        </span>
-      ))}
+    <nav
+      aria-label="ruta"
+      className="flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.18em]"
+    >
+      {trail.map((p, i) => {
+        const isLast = i === trail.length - 1;
+        return (
+          <span key={p + i} className="flex items-center gap-1">
+            <span
+              className={
+                isLast
+                  ? "bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-semibold text-transparent"
+                  : "text-muted"
+              }
+            >
+              {p}
+            </span>
+            {!isLast && <ChevronRight size={11} className="text-muted/50" />}
+          </span>
+        );
+      })}
     </nav>
   );
 }
@@ -187,8 +206,12 @@ function MobileNav({ pathname }: { pathname: string }) {
   ];
   return (
     <nav
-      className="vf-mobile-nav fixed inset-x-3 z-40 mx-auto flex max-w-[420px] items-center justify-between gap-1 rounded-2xl border border-app-strong bg-ink/95 px-2 py-1 shadow-elev backdrop-blur-xl md:hidden"
-      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
+      aria-label="navegación principal"
+      className="vf-mobile-nav glass-strong fixed inset-x-3 z-40 mx-auto flex max-w-[460px] items-stretch justify-between gap-0.5 overflow-hidden rounded-2xl px-1 shadow-elev md:hidden"
+      style={{
+        bottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)",
+        minHeight: 56,
+      }}
     >
       {mobileNav.map((i) => {
         const active = pathname.startsWith(i.href);
@@ -196,13 +219,44 @@ function MobileNav({ pathname }: { pathname: string }) {
           <Link
             key={i.href}
             href={i.href}
+            aria-current={active ? "page" : undefined}
             className={cn(
-              "flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-2 transition",
-              active ? "bg-violet-500/15 text-violet-300" : "text-on-surface-variant"
+              "group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-[0.94]",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400",
+              active ? "text-violet-300" : "text-on-surface-variant",
             )}
           >
-            <i.icon size={16} />
-            <span className="font-mono text-[10px] uppercase tracking-widest">{i.label}</span>
+            {active && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-3 -bottom-0.5 top-1 -z-10 rounded-xl opacity-60"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at center, rgba(139,92,246,0.45), rgba(34,211,238,0.25) 55%, transparent 75%)",
+                  filter: "blur(8px)",
+                }}
+              />
+            )}
+            <i.icon
+              size={18}
+              strokeWidth={active ? 2.4 : 2}
+              className={cn(
+                "transition",
+                active
+                  ? "text-violet-300 drop-shadow-[0_0_8px_rgba(139,92,246,0.65)]"
+                  : "group-hover:text-on-surface",
+              )}
+            />
+            <span
+              className={cn(
+                "font-mono text-[10px] uppercase tracking-widest transition",
+                active
+                  ? "bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-semibold text-transparent"
+                  : "",
+              )}
+            >
+              {i.label}
+            </span>
           </Link>
         );
       })}

@@ -19,8 +19,13 @@ import {
   Mic,
   Camera,
   X,
+  Check,
+  Copy,
 } from "lucide-react";
 import { useT } from "@/i18n/AppProviders";
+import { Markdown } from "./Markdown";
+import { ThinkingIndicator, VOrb } from "./ThinkingIndicator";
+import { useSmoothStream, usePrefersReducedMotion } from "./useSmoothStream";
 
 type Action = { label: string; status: "done" | "running" | "queued" };
 type Attachment = {
@@ -110,6 +115,13 @@ export function ChatExperience() {
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<Msg[]>(messages);
   const scrollerRef = useRef<HTMLDivElement>(null);
+
+  // ID of the assistant message currently streaming; null when idle.
+  // The smooth-stream hook owns the live text while this is set, and the
+  // <StreamingBubble> mounts in its place inside the messages list.
+  const [streamingId, setStreamingId] = useState<string | null>(null);
+  const reducedMotion = usePrefersReducedMotion();
+  const smooth = useSmoothStream({ immediate: reducedMotion });
 
   useKeyboardBodyClass();
 
@@ -231,6 +243,10 @@ export function ChatExperience() {
       setInput("");
       setAttachment(null);
       setPending(true);
+      // Wire the smooth-stream to this assistant message.
+      smooth.reset();
+      setStreamingId(aId);
+      let assembled = "";
 
       // Historia previa como text-only (no replay de imágenes — costo).
       const history: { role: "user" | "assistant"; content: string | StructuredBlock[] }[] =
@@ -271,13 +287,8 @@ export function ChatExperience() {
         });
         if (!res.ok || !res.body) {
           const err = await res.text().catch(() => "");
-          setMessages((p) =>
-            p.map((m) =>
-              m.id === aId
-                ? { ...m, text: `⚠ Error (${res.status}): ${err.slice(0, 200)}` }
-                : m,
-            ),
-          );
+          assembled = `⚠ Error (${res.status}): ${err.slice(0, 200)}`;
+          smooth.push(assembled);
           return;
         }
         const reader = res.body.getReader();
@@ -294,19 +305,12 @@ export function ChatExperience() {
             try {
               const evt = JSON.parse(line.slice(6)) as SSEEvent;
               if (evt.type === "text") {
-                setMessages((p) =>
-                  p.map((m) =>
-                    m.id === aId ? { ...m, text: m.text + evt.value } : m,
-                  ),
-                );
+                assembled += evt.value;
+                smooth.push(evt.value);
               } else if (evt.type === "error") {
-                setMessages((p) =>
-                  p.map((m) =>
-                    m.id === aId
-                      ? { ...m, text: m.text + `\n\n⚠ ${evt.message}` }
-                      : m,
-                  ),
-                );
+                const tail = `\n\n⚠ ${evt.message}`;
+                assembled += tail;
+                smooth.push(tail);
               }
             } catch {
               // skip
@@ -314,23 +318,39 @@ export function ChatExperience() {
           }
         }
       } catch (err) {
-        if (err instanceof Error && err.name === "AbortError") return;
+        if (err instanceof Error && err.name === "AbortError") {
+          // Commit whatever we've already shown so it persists in history.
+          smooth.flush();
+          setMessages((p) =>
+            p.map((m) => (m.id === aId ? { ...m, text: assembled } : m)),
+          );
+          setStreamingId(null);
+          return;
+        }
         const msg = err instanceof Error ? err.message : String(err);
-        setMessages((p) =>
-          p.map((m) =>
-            m.id === aId ? { ...m, text: `⚠ Error de red: ${msg}` } : m,
-          ),
-        );
+        const tail = assembled
+          ? `\n\n⚠ Error de red: ${msg}`
+          : `⚠ Error de red: ${msg}`;
+        assembled += tail;
+        smooth.push(tail);
       } finally {
+        // Final commit: flush any remaining buffered chars, then promote the
+        // assembled text into the message so it's part of the persistent list.
+        smooth.flush();
+        setMessages((p) =>
+          p.map((m) => (m.id === aId ? { ...m, text: assembled } : m)),
+        );
+        setStreamingId(null);
         setPending(false);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [pending, scope, attachment],
   );
 
   const stop = useCallback(() => {
     abortRef.current?.abort();
-    setPending(false);
+    // The send() catch will commit assembled text + clear streamingId.
   }, []);
 
   // Start fresh chat for current scope
@@ -457,16 +477,13 @@ export function ChatExperience() {
           {/* Operator header — solo visible cuando el chat está vacío (más
               espacio para mensajes cuando ya hay conversación). */}
           {messages.length <= 1 && (
-            <div className="mb-4 flex items-center gap-3 md:mb-6">
-              <div className="relative h-9 w-9 rounded-full bg-violet-500/10 ring-1 ring-violet-500/30">
-                <div className="absolute inset-0 animate-pulse-soft rounded-full bg-violet-500/20" />
-                <div className="absolute inset-2 rounded-full bg-gradient-to-br from-violet-400 to-cyan-400" />
-              </div>
+            <div className="mb-5 flex flex-col items-center gap-3 py-4 text-center md:mb-8 md:py-8">
+              <VOrb size={56} />
               <div>
-                <p className="font-display text-lg font-semibold tracking-tight">
-                  {t.common.label_b}
+                <p className="bg-gradient-to-r from-violet-300 via-violet-200 to-cyan-300 bg-clip-text font-display text-2xl font-semibold tracking-tight text-transparent md:text-3xl">
+                  Hola, soy {t.common.label_b}.
                 </p>
-                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+                <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
                   {t.chat.operator_label} · {currentScope.label}
                 </p>
               </div>
@@ -481,22 +498,20 @@ export function ChatExperience() {
             </div>
           )}
 
-          <div className="space-y-3 md:space-y-4">
+          <div className="space-y-4 md:space-y-5">
             <AnimatePresence initial={false}>
-              {messages.map((m) => (
-                <MessageBubble key={m.id} msg={m} />
-              ))}
+              {messages.map((m) =>
+                m.id === streamingId ? (
+                  <StreamingBubble
+                    key={m.id}
+                    text={smooth.displayed}
+                    image={m.image}
+                  />
+                ) : (
+                  <MessageBubble key={m.id} msg={m} />
+                ),
+              )}
             </AnimatePresence>
-            {pending && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-2 text-sm text-on-surface-variant"
-              >
-                <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-cyber-cyan" />
-                <span>{t.chat.thinking}</span>
-              </motion.div>
-            )}
           </div>
         </div>
       </div>
@@ -512,16 +527,17 @@ export function ChatExperience() {
               no comer espacio durante conversación. Mobile-only: scroll
               horizontal en 1 línea; desktop: wrap normal. */}
           {messages.length <= 1 && (
-            <div className="mb-2 -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:flex-wrap sm:px-0 sm:pb-0 no-scrollbar">
+            <div className="mb-2 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:flex-wrap sm:px-0 sm:pb-0 no-scrollbar">
               {quickPrompts.map((q) => (
                 <button
                   key={q.label}
-                  onClick={() => send(q.label)}
+                  onClick={() => setInput(q.label)}
                   disabled={pending}
-                  className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-app bg-tint-1 px-3 py-1 text-[11px] text-on-surface-variant transition hover:border-violet-500/30 hover:bg-violet-500/[0.05] hover:text-violet-300 disabled:opacity-50"
+                  className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-violet-500/20 bg-violet-500/[0.04] px-3 py-1.5 text-[12px] text-on-surface-variant transition hover:border-violet-500/40 hover:bg-violet-500/[0.08] hover:text-violet-200 active:scale-95 disabled:opacity-50"
                   style={{ touchAction: "manipulation" }}
+                  aria-label={`Usar prompt: ${q.label}`}
                 >
-                  {q.icon && <q.icon size={11} />}
+                  {q.icon && <q.icon size={12} className="text-violet-300" />}
                   {q.label}
                 </button>
               ))}
@@ -862,48 +878,117 @@ function Composer({
 
 function MessageBubble({ msg }: { msg: Msg }) {
   const isB = msg.role === "b";
+  if (isB) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="group/msg flex w-full gap-3"
+      >
+        <VOrb size={26} />
+        <div className="min-w-0 flex-1">
+          {msg.image && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={msg.image}
+              alt="adjunto"
+              className="mb-2 max-h-64 w-full rounded-lg border border-app object-cover"
+            />
+          )}
+          {msg.text && <Markdown text={msg.text} />}
+          {msg.actions && (
+            <ul className="mt-3 space-y-2 rounded-lg border border-violet-500/15 bg-violet-500/[0.04] p-3 text-[13px]">
+              {msg.actions.map((a) => (
+                <li key={a.label} className="flex items-center gap-2 text-on-surface">
+                  {a.status === "done" ? (
+                    <CheckCircle2 size={14} className="text-success-emerald" />
+                  ) : a.status === "running" ? (
+                    <CircleDot size={14} className="animate-pulse text-cyber-cyan" />
+                  ) : (
+                    <CircleDot size={14} className="text-muted" />
+                  )}
+                  <span className={a.status === "queued" ? "text-on-surface-variant" : ""}>{a.label}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {msg.text && msg.id !== "intro" && <AssistantActions text={msg.text} />}
+        </div>
+      </motion.div>
+    );
+  }
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`max-w-[88%] ${isB ? "mr-auto" : "ml-auto"}`}
+      className="flex w-full justify-end"
     >
-      {isB && (
-        <p className="mb-1 ml-1 font-mono text-[10px] uppercase tracking-[0.2em] text-violet-300">V</p>
-      )}
-      <div
-        className={`rounded-2xl border px-4 py-3 text-[14.5px] leading-relaxed whitespace-pre-wrap break-words ${
-          isB
-            ? "border-violet-500/20 bg-violet-500/[0.06] text-on-surface"
-            : "border-app-strong bg-tint-1 text-on-surface-variant"
-        }`}
-      >
+      <div className="max-w-[85%] rounded-2xl rounded-br-md bg-gradient-to-br from-violet-500 to-cyan-500 px-4 py-2.5 text-[15px] leading-relaxed text-white shadow-glow-violet">
         {msg.image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={msg.image}
             alt="adjunto"
-            className="mb-2 max-h-64 w-full rounded-lg border border-app object-cover"
+            className="mb-2 max-h-64 w-full rounded-lg border border-white/20 object-cover"
           />
         )}
-        {msg.text && <p>{msg.text}</p>}
-        {msg.actions && (
-          <ul className="mt-3 space-y-2 rounded-lg border border-app-strong bg-tint-2 p-3 text-[13px]">
-            {msg.actions.map((a) => (
-              <li key={a.label} className="flex items-center gap-2 text-on-surface">
-                {a.status === "done" ? (
-                  <CheckCircle2 size={14} className="text-success-emerald" />
-                ) : a.status === "running" ? (
-                  <CircleDot size={14} className="animate-pulse text-cyber-cyan" />
-                ) : (
-                  <CircleDot size={14} className="text-muted" />
-                )}
-                <span className={a.status === "queued" ? "text-on-surface-variant" : ""}>{a.label}</span>
-              </li>
-            ))}
-          </ul>
+        {msg.text && (
+          <p className="whitespace-pre-wrap break-words">{msg.text}</p>
         )}
       </div>
     </motion.div>
+  );
+}
+
+function StreamingBubble({ text, image }: { text: string; image?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex w-full gap-3"
+    >
+      <VOrb size={26} />
+      <div className="min-w-0 flex-1">
+        {image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image}
+            alt="adjunto"
+            className="mb-2 max-h-64 w-full rounded-lg border border-app object-cover"
+          />
+        )}
+        {text.length === 0 ? (
+          <ThinkingIndicator />
+        ) : (
+          <Markdown text={text} streaming />
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function AssistantActions({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  async function onCopy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1400);
+    } catch {
+      // ignore
+    }
+  }
+  return (
+    <div className="mt-2 hidden items-center gap-1 opacity-60 transition-opacity duration-200 sm:flex sm:hover:opacity-100">
+      <button
+        type="button"
+        onClick={onCopy}
+        className="flex items-center gap-1 rounded-md border border-app bg-tint-1 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300"
+        aria-label={copied ? "Copiado" : "Copiar respuesta"}
+      >
+        {copied ? <Check size={11} /> : <Copy size={11} />}
+        <span>{copied ? "Copiado" : "Copy"}</span>
+      </button>
+    </div>
   );
 }
