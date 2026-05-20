@@ -181,12 +181,13 @@ export function ChatExperience() {
     );
   }, [t.chat.intro]);
 
-  // Autoscroll
+  // Autoscroll instantáneo — el smooth de 300ms causaba que el usuario
+  // no viera el thinking indicator inmediatamente al enviar y se
+  // preguntara si V estaba haciendo algo.
   useEffect(() => {
-    scrollerRef.current?.scrollTo({
-      top: scrollerRef.current.scrollHeight,
-      behavior: "smooth",
-    });
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
   }, [messages]);
 
   // Load projects + initial scope
