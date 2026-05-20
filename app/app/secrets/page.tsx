@@ -2,16 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/workspace/PageHeader";
-import { KeyRound, Lock, ShieldCheck } from "lucide-react";
+import { Check, Copy, KeyRound, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { useT } from "@/i18n/AppProviders";
 
 interface OperatorSecret {
   id: string;
-  key: string;
-  source: string | null;
+  name: string;
+  description: string | null;
+  provider: string | null;
   scope: string | null;
   created_at: string;
   rotated_at: string | null;
+  last_used_at: string | null;
 }
 
 const OPERATOR_TOKEN_KEY = "vforge_operator_token";
@@ -33,6 +35,9 @@ export default function SecretsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasToken, setHasToken] = useState(false);
+  const [revealingId, setRevealingId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [rowError, setRowError] = useState<{ id: string; msg: string } | null>(null);
 
   function load() {
     if (typeof window === "undefined") return;
@@ -48,8 +53,14 @@ export default function SecretsPage() {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     })
-      .then((r) => {
-        if (r.status === 401) throw new Error("Token inválido. Vuelve a unlock.");
+      .then(async (r) => {
+        if (r.status === 401) throw new Error("Falta el header de autorización.");
+        if (r.status === 403) throw new Error("Token inválido. Vuelve a unlock.");
+        if (r.status === 503) {
+          throw new Error(
+            "El server no tiene VFORGE_OPERATOR_TOKEN configurado.",
+          );
+        }
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
@@ -63,7 +74,9 @@ export default function SecretsPage() {
   }, []);
 
   function unlock() {
-    const token = window.prompt("Pega tu operator token:");
+    const raw = window.prompt("Pega tu VFORGE_OPERATOR_TOKEN:");
+    if (!raw) return;
+    const token = raw.trim();
     if (!token) return;
     window.localStorage.setItem(OPERATOR_TOKEN_KEY, token);
     load();
@@ -73,6 +86,42 @@ export default function SecretsPage() {
     window.localStorage.removeItem(OPERATOR_TOKEN_KEY);
     setSecrets([]);
     setHasToken(false);
+  }
+
+  async function revealAndCopy(id: string) {
+    if (revealingId) return;
+    const token = window.localStorage.getItem(OPERATOR_TOKEN_KEY);
+    if (!token) {
+      setRowError({ id, msg: "Vault bloqueada." });
+      return;
+    }
+    setRevealingId(id);
+    setRowError(null);
+    try {
+      const r = await fetch(`/api/vault/operator-secrets/${id}/value`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({}));
+        throw new Error(body.error || `HTTP ${r.status}`);
+      }
+      const { value } = (await r.json()) as { value: string };
+      try {
+        await navigator.clipboard.writeText(value);
+      } catch {
+        throw new Error("Clipboard bloqueado por el navegador.");
+      }
+      setCopiedId(id);
+      setTimeout(() => setCopiedId((cur) => (cur === id ? null : cur)), 1800);
+    } catch (err) {
+      setRowError({
+        id,
+        msg: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setRevealingId(null);
+    }
   }
 
   return (
@@ -139,7 +188,7 @@ export default function SecretsPage() {
                 <KeyRound size={13} /> Unlock vault
               </button>
               <p className="mt-4 text-[11px] text-muted">
-                El token vive en la env var <span className="font-mono">OPERATOR_AUTH_TOKEN</span>{" "}
+                El token vive en la env var <span className="font-mono">VFORGE_OPERATOR_TOKEN</span>{" "}
                 de Vercel. Pégalo cuando se abra el prompt.
               </p>
             </div>
@@ -163,30 +212,64 @@ export default function SecretsPage() {
 
           {hasToken && !loading && secrets.length > 0 && (
             <ul>
-              {secrets.map((s) => (
-                <li
-                  key={s.id}
-                  className="grid grid-cols-12 items-center gap-3 border-b border-app px-4 py-3 last:border-0 hover:bg-tint-1"
-                >
-                  <div className="col-span-12 md:col-span-5 flex items-center gap-3 min-w-0">
-                    <Lock size={14} className="text-violet-300 shrink-0" />
-                    <span className="font-mono text-[13px] text-on-surface truncate">
-                      {s.key}
-                    </span>
-                  </div>
-                  <div className="col-span-4 md:col-span-2">
-                    <span className="chip text-success-emerald">● vault</span>
-                  </div>
-                  <div className="col-span-4 md:col-span-2 text-[12px] text-on-surface-variant truncate">
-                    {s.source ?? s.scope ?? "—"}
-                  </div>
-                  <div className="col-span-4 md:col-span-3 font-mono text-[11px] uppercase tracking-widest text-muted text-right">
-                    {s.rotated_at
-                      ? `rotada ${timeAgo(s.rotated_at)}`
-                      : `creada ${timeAgo(s.created_at)}`}
-                  </div>
-                </li>
-              ))}
+              {secrets.map((s) => {
+                const isCopied = copiedId === s.id;
+                const isLoading = revealingId === s.id;
+                const err = rowError?.id === s.id ? rowError.msg : null;
+                return (
+                  <li
+                    key={s.id}
+                    className="grid grid-cols-12 items-center gap-3 border-b border-app px-4 py-3 last:border-0 hover:bg-tint-1"
+                  >
+                    <div className="col-span-12 md:col-span-5 flex items-center gap-3 min-w-0">
+                      <Lock size={14} className="text-violet-300 shrink-0" />
+                      <span className="font-mono text-[13px] text-on-surface truncate">
+                        {s.name}
+                      </span>
+                    </div>
+                    <div className="col-span-3 md:col-span-2">
+                      <span className="chip text-success-emerald">● vault</span>
+                    </div>
+                    <div className="col-span-5 md:col-span-2 text-[12px] text-on-surface-variant truncate">
+                      {s.provider ?? s.scope ?? "—"}
+                    </div>
+                    <div className="col-span-12 md:col-span-3 flex items-center justify-end gap-2">
+                      <span className="font-mono text-[11px] uppercase tracking-widest text-muted">
+                        {s.rotated_at
+                          ? `rotada ${timeAgo(s.rotated_at)}`
+                          : `creada ${timeAgo(s.created_at)}`}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => revealAndCopy(s.id)}
+                        disabled={isLoading}
+                        aria-label={
+                          isCopied ? "Copiado" : `Copiar valor de ${s.name}`
+                        }
+                        className={
+                          isCopied
+                            ? "flex h-7 items-center gap-1 rounded-md border border-success-emerald/40 bg-success-emerald/10 px-2 font-mono text-[10px] uppercase tracking-widest text-success-emerald"
+                            : "flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1 px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300 disabled:opacity-50"
+                        }
+                      >
+                        {isLoading ? (
+                          <Loader2 size={11} className="animate-spin" />
+                        ) : isCopied ? (
+                          <Check size={11} />
+                        ) : (
+                          <Copy size={11} />
+                        )}
+                        <span>{isCopied ? "Copiado" : "Copy"}</span>
+                      </button>
+                    </div>
+                    {err && (
+                      <div className="col-span-12 -mt-1 text-right text-[11px] text-error-crimson">
+                        ⚠ {err}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

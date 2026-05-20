@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { VMark, VWordmark } from "@/components/brand/VMark";
 import {
   Activity,
@@ -227,26 +228,43 @@ function MobileNav({ pathname }: { pathname: string }) {
             )}
           >
             {active && (
-              <span
+              <motion.span
                 aria-hidden
-                className="pointer-events-none absolute inset-x-3 -bottom-0.5 top-1 -z-10 rounded-xl opacity-60"
+                layoutId="vf-nav-halo"
+                transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                className="pointer-events-none absolute inset-x-3 -bottom-0.5 top-1 -z-10 rounded-xl"
                 style={{
                   background:
-                    "radial-gradient(ellipse at center, rgba(139,92,246,0.45), rgba(34,211,238,0.25) 55%, transparent 75%)",
+                    "radial-gradient(ellipse at center, rgba(139,92,246,0.5), rgba(34,211,238,0.28) 55%, transparent 75%)",
                   filter: "blur(8px)",
+                  opacity: 0.7,
                 }}
               />
             )}
-            <i.icon
-              size={18}
-              strokeWidth={active ? 2.4 : 2}
-              className={cn(
-                "transition",
+            <motion.span
+              className="inline-flex items-center justify-center"
+              animate={
                 active
-                  ? "text-violet-300 drop-shadow-[0_0_8px_rgba(139,92,246,0.65)]"
-                  : "group-hover:text-on-surface",
-              )}
-            />
+                  ? { scale: [1, 1.08, 1] }
+                  : { scale: 1 }
+              }
+              transition={
+                active
+                  ? { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
+                  : { duration: 0.18 }
+              }
+            >
+              <i.icon
+                size={18}
+                strokeWidth={active ? 2.4 : 2}
+                className={cn(
+                  "transition",
+                  active
+                    ? "text-violet-300 drop-shadow-[0_0_8px_rgba(139,92,246,0.65)]"
+                    : "group-hover:text-on-surface",
+                )}
+              />
+            </motion.span>
             <span
               className={cn(
                 "font-mono text-[10px] uppercase tracking-widest transition",
