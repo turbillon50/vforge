@@ -1046,9 +1046,10 @@ function StreamingBubble({ text, image }: { text: string; image?: string }) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       className="flex w-full min-w-0 gap-3"
+      style={{ contain: "layout style" }}
     >
       <VOrb size={26} />
-      <div className="min-w-0 flex-1 overflow-hidden">
+      <div className="min-w-0 flex-1 overflow-hidden" style={{ contain: "layout style" }}>
         {image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
