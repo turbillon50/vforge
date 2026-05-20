@@ -23,7 +23,17 @@ function CodeBlock({ inline, className, children }: {
   const text = String(children ?? "").replace(/\n$/, "");
   const [copied, setCopied] = useState(false);
 
-  if (inline) {
+  // react-markdown v10 ya NO pasa `inline`. Heurística robusta: es
+  // inline si NO tiene className de lenguaje Y el texto no contiene
+  // saltos de línea. Los fenced blocks SIEMPRE terminan con \n (el
+  // tokenizer de remark añade uno), los inline ` ` jamás llevan \n.
+  const looksInline =
+    inline === true ||
+    (inline === undefined &&
+      !/^language-/.test(className ?? "") &&
+      !/\n/.test(text));
+
+  if (looksInline) {
     return (
       <code className="rounded-[5px] border border-violet-500/25 bg-violet-500/[0.1] px-1.5 py-px font-mono text-[0.88em] text-violet-300">
         {children}
@@ -59,7 +69,7 @@ function CodeBlock({ inline, className, children }: {
           <span className="hidden sm:inline">{copied ? "Copiado" : "Copy"}</span>
         </button>
       </div>
-      <pre className="m-0 overflow-x-auto px-3 py-2.5 font-mono text-[13px] leading-relaxed text-on-surface">
+      <pre className="m-0 overflow-x-auto whitespace-pre-wrap break-words px-3 py-2.5 font-mono text-[13px] leading-relaxed text-on-surface select-text">
         <code className={className}>{text}</code>
       </pre>
     </div>
