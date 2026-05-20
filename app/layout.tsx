@@ -38,6 +38,11 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Cuando el teclado soft aparece, redimensiona el VIEWPORT en vez de
+  // overlay (iOS 16+ / Chrome Android). Esto hace que `h-dvh` y los
+  // layouts flex shrinken correctamente, manteniendo el composer
+  // pegado arriba del teclado sin necesidad de hacks JS.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

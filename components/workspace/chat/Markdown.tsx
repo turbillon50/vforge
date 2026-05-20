@@ -94,40 +94,40 @@ const components: Components = {
     </a>
   ),
   ul: ({ children }) => (
-    <ul className="my-2 ml-1 list-disc space-y-1 pl-4 marker:text-violet-400">{children}</ul>
+    <ul className="vf-md-block my-2.5 ml-0 list-disc space-y-1.5 pl-5 marker:text-violet-400/80">{children}</ul>
   ),
   ol: ({ children }) => (
-    <ol className="my-2 ml-1 list-decimal space-y-1 pl-5 marker:text-violet-400">{children}</ol>
+    <ol className="vf-md-block my-2.5 ml-0 list-decimal space-y-1.5 pl-5 marker:text-violet-400/80">{children}</ol>
   ),
-  li: ({ children }) => <li className="pl-1 leading-relaxed">{children}</li>,
+  li: ({ children }) => <li className="vf-md-block pl-1 leading-[1.65]">{children}</li>,
   h1: ({ children }) => (
-    <h1 className="mt-4 mb-2 font-display text-[1.15rem] font-semibold tracking-tight text-on-surface">
+    <h1 className="vf-md-block mt-5 mb-2.5 font-display text-[1.2rem] font-semibold leading-tight tracking-[-0.01em] text-on-surface">
       {children}
     </h1>
   ),
   h2: ({ children }) => (
-    <h2 className="mt-3 mb-1.5 font-display text-[1.05rem] font-semibold tracking-tight text-on-surface">
+    <h2 className="vf-md-block mt-4 mb-2 font-display text-[1.08rem] font-semibold leading-tight tracking-[-0.01em] text-on-surface">
       {children}
     </h2>
   ),
   h3: ({ children }) => (
-    <h3 className="mt-3 mb-1 font-display text-[0.98rem] font-semibold tracking-tight text-on-surface">
+    <h3 className="vf-md-block mt-3.5 mb-1.5 font-display text-[0.98rem] font-semibold leading-snug tracking-[-0.005em] text-on-surface">
       {children}
     </h3>
   ),
-  p: ({ children }) => <p className="my-1.5 leading-relaxed">{children}</p>,
+  p: ({ children }) => <p className="vf-md-block my-2 leading-[1.65]">{children}</p>,
   blockquote: ({ children }) => (
-    <blockquote className="my-2 border-l-2 border-violet-400/60 bg-violet-500/[0.04] py-1 pl-3 italic text-on-surface-variant">
+    <blockquote className="vf-md-block my-3 border-l-2 border-violet-400/60 bg-violet-500/[0.04] py-1.5 pl-3 italic text-on-surface-variant">
       {children}
     </blockquote>
   ),
-  hr: () => <hr className="my-3 border-0 border-t border-violet-500/15" />,
+  hr: () => <hr className="my-4 border-0 border-t border-violet-500/15" />,
   strong: ({ children }) => (
     <strong className="font-semibold text-on-surface">{children}</strong>
   ),
   em: ({ children }) => <em className="text-on-surface-variant">{children}</em>,
   table: ({ children }) => (
-    <div className="my-2 overflow-x-auto rounded-lg border border-app">
+    <div className="my-3 max-w-full overflow-x-auto rounded-lg border border-app">
       <table className="w-full border-collapse text-left text-[13px]">{children}</table>
     </div>
   ),
@@ -153,7 +153,10 @@ function MarkdownInner({ text, streaming }: MarkdownProps) {
   const rehype = useMemo(() => [[rehypeSanitize, sanitizeSchema]] as const, []);
 
   return (
-    <div className="vf-md text-[15px] leading-relaxed text-on-surface">
+    <div
+      className="vf-md min-w-0 max-w-full font-sans text-[15px] font-normal leading-[1.65] tracking-[-0.005em] text-on-surface sm:text-[16px]"
+      style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
+    >
       <ReactMarkdown
         remarkPlugins={plugins}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

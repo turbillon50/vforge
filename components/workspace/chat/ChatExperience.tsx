@@ -181,12 +181,13 @@ export function ChatExperience() {
     );
   }, [t.chat.intro]);
 
-  // Autoscroll
+  // Autoscroll instantáneo — el smooth de 300ms causaba que el usuario
+  // no viera el thinking indicator inmediatamente al enviar y se
+  // preguntara si V estaba haciendo algo.
   useEffect(() => {
-    scrollerRef.current?.scrollTo({
-      top: scrollerRef.current.scrollHeight,
-      behavior: "smooth",
-    });
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
   }, [messages]);
 
   // Load projects + initial scope
@@ -545,9 +546,9 @@ export function ChatExperience() {
           patrón estándar de chat (WhatsApp/Claude/ChatGPT). */}
       <div
         ref={scrollerRef}
-        className="flex-1 min-h-0 overflow-y-auto flex flex-col-reverse"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col-reverse"
       >
-        <div className="mx-auto w-full max-w-3xl px-3 py-3 md:px-10 md:py-5">
+        <div className="mx-auto w-full max-w-3xl overflow-x-hidden px-3 py-3 md:px-10 md:py-5">
           {/* Operator header — solo visible cuando el chat está vacío (más
               espacio para mensajes cuando ya hay conversación). */}
           {messages.length <= 1 && (
@@ -971,10 +972,10 @@ function MessageBubble({
       <motion.div
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        className="group/msg flex w-full gap-3"
+        className="group/msg flex w-full min-w-0 gap-3"
       >
         <VOrb size={26} />
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 overflow-hidden">
           {msg.image && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -1015,9 +1016,9 @@ function MessageBubble({
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex w-full justify-end"
+      className="flex w-full min-w-0 justify-end"
     >
-      <div className="max-w-[85%] rounded-2xl rounded-br-md bg-gradient-to-br from-violet-500 to-cyan-500 px-4 py-2.5 text-[15px] leading-relaxed text-white shadow-glow-violet">
+      <div className="max-w-[82%] min-w-0 rounded-2xl rounded-br-md bg-gradient-to-br from-violet-500 to-cyan-500 px-4 py-2.5 font-sans text-[15px] font-normal leading-[1.55] tracking-[-0.005em] text-white shadow-glow-violet sm:text-[16px]">
         {msg.image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -1027,7 +1028,12 @@ function MessageBubble({
           />
         )}
         {msg.text && (
-          <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+          <p
+            className="whitespace-pre-wrap"
+            style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
+          >
+            {msg.text}
+          </p>
         )}
       </div>
     </motion.div>
@@ -1039,10 +1045,10 @@ function StreamingBubble({ text, image }: { text: string; image?: string }) {
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex w-full gap-3"
+      className="flex w-full min-w-0 gap-3"
     >
       <VOrb size={26} />
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 overflow-hidden">
         {image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
