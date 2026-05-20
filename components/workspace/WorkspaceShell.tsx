@@ -110,10 +110,13 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         <TopBar />
         <div
           className={cn(
-            "flex-1 min-h-0 pb-24 md:pb-0",
-            // En /app/chat el contenido gestiona su propio scroll interno.
-            // En las demás rutas el main scrollea normal cuando crece.
-            pathname?.startsWith("/app/chat") ? "overflow-hidden" : "overflow-y-auto",
+            "flex-1 min-h-0",
+            // Chat manages its own bottom clearance via .vf-composer-pad — no
+            // pb-24 here or we get a double-reserve gap. Other routes need pb-24
+            // mobile to clear the floating MobileNav.
+            pathname?.startsWith("/app/chat")
+              ? "overflow-hidden"
+              : "overflow-y-auto pb-24 md:pb-0",
           )}
         >
           {children}

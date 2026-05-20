@@ -262,8 +262,16 @@ img, svg, video, canvas {
    - Esconde el MobileNav (libera ~80px verticales)
    - Reduce el padding-bottom del composer a solo safe-area
    ============================================ */
+/* MobileNav: floats at bottom: safe-area + 10px, height 56px → total reach
+   from viewport bottom = safe-area + 66px. We add 10px breathing room. */
 .vf-composer-pad {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 62px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 76px);
+}
+@media (min-width: 768px) {
+  /* Desktop has the sidebar instead of MobileNav — no clearance needed. */
+  .vf-composer-pad {
+    padding-bottom: 8px;
+  }
 }
 body.keyboard-open .vf-composer-pad {
   padding-bottom: env(safe-area-inset-bottom, 0px);

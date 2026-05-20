@@ -979,7 +979,7 @@ function AssistantActions({ text }: { text: string }) {
     }
   }
   return (
-    <div className="mt-2 flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover/msg:opacity-100 sm:opacity-60 sm:hover:opacity-100">
+    <div className="mt-2 hidden items-center gap-1 opacity-60 transition-opacity duration-200 sm:flex sm:hover:opacity-100">
       <button
         type="button"
         onClick={onCopy}
