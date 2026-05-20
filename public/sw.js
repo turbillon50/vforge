@@ -1,7 +1,7 @@
 // VForge minimal service worker — offline shell + network-first for documents
 // Bump VERSION on every deploy where you want forced cache invalidation
 // (Luis: "se ve de la verga todavía" → asset cache pegado).
-const VERSION = "vforge-v6-2026-05-20-stable";
+const VERSION = "vforge-v7-2026-05-20-multichat";
 const SHELL = ["/", "/app/chat", "/offline"];
 
 self.addEventListener("install", (event) => {

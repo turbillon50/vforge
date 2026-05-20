@@ -51,6 +51,7 @@ type Msg = {
 };
 
 const SCOPE_KEY = "vforge_chat_scope";
+const OPEN_SCOPES_KEY = "vforge_chat_open_scopes";
 
 /** Anthropic-style content blocks that /api/forge/run accepts for vision. */
 type StructuredBlock =
@@ -151,6 +152,10 @@ export function ChatExperience() {
   const [pending, setPending] = useState(false);
   const [isHydrating, setIsHydrating] = useState(true);
   const [scope, setScope] = useState<string>("general");
+  // Lista de chats abiertos como tabs. Cada uno es un scope (general
+  // o id de proyecto). Persiste en localStorage para que cuando Luis
+  // vuelva a la app vea sus tabs activas.
+  const [openScopes, setOpenScopes] = useState<string[]>(["general"]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [scopeMenuOpen, setScopeMenuOpen] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
@@ -190,16 +195,58 @@ export function ChatExperience() {
     el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
   }, [messages]);
 
-  // Load projects + initial scope
+  // Load projects + initial scope + open tabs
   useEffect(() => {
     if (typeof window === "undefined") return;
     const saved = window.localStorage.getItem(SCOPE_KEY) ?? "general";
     setScope(saved);
+    try {
+      const savedTabs = window.localStorage.getItem(OPEN_SCOPES_KEY);
+      if (savedTabs) {
+        const parsed = JSON.parse(savedTabs) as string[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setOpenScopes(parsed.includes(saved) ? parsed : [saved, ...parsed]);
+        } else {
+          setOpenScopes([saved]);
+        }
+      } else {
+        setOpenScopes([saved]);
+      }
+    } catch {
+      setOpenScopes([saved]);
+    }
     fetch("/api/projects", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : { projects: [] }))
       .then((d: { projects: Project[] }) => setProjects(d.projects ?? []))
       .catch(() => undefined);
   }, []);
+
+  // Persist openScopes
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(OPEN_SCOPES_KEY, JSON.stringify(openScopes));
+    } catch {
+      // ignore
+    }
+  }, [openScopes]);
+
+  // Ensure the active scope is always among the open tabs.
+  useEffect(() => {
+    if (!scope) return;
+    setOpenScopes((prev) => (prev.includes(scope) ? prev : [...prev, scope]));
+  }, [scope]);
+
+  function closeTab(tabScope: string) {
+    if (tabScope === "general" && openScopes.length === 1) return;
+    const filtered = openScopes.filter((s) => s !== tabScope);
+    const next = filtered.length === 0 ? ["general"] : filtered;
+    setOpenScopes(next);
+    // Si cerramos la activa, switch a la primera restante.
+    if (tabScope === scope) {
+      setScope(next[0]);
+    }
+  }
 
   // Resolve session + rehydrate whenever scope changes
   useEffect(() => {
@@ -462,24 +509,64 @@ export function ChatExperience() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Chat scope bar — sticky top, no scroll mueve esto */}
+      {/* Chat tabs bar — múltiples conversaciones abiertas a la vez */}
       <div className="flex-shrink-0 border-b border-app bg-void/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-2.5 md:px-10">
-          {/* Scope selector */}
-          <div className="relative">
+        <div className="mx-auto flex max-w-3xl items-center gap-1 overflow-x-auto px-2 py-1.5 md:px-8 no-scrollbar">
+          {openScopes.map((tabId) => {
+            const opt = scopeOptions.find((o) => o.id === tabId);
+            if (!opt) return null;
+            const active = tabId === scope;
+            const closable = !(tabId === "general" && openScopes.length === 1);
+            return (
+              <div
+                key={tabId}
+                className={
+                  active
+                    ? "group flex shrink-0 items-center gap-1.5 rounded-md border border-violet-500/40 bg-violet-500/10 pl-2.5 pr-1 py-1 text-sm text-violet-300"
+                    : "group flex shrink-0 items-center gap-1.5 rounded-md border border-app bg-tint-1 pl-2.5 pr-1 py-1 text-sm text-on-surface-variant hover:border-app-strong hover:text-on-surface"
+                }
+              >
+                <button
+                  type="button"
+                  onClick={() => setScope(tabId)}
+                  className="flex items-center gap-1.5"
+                  style={{ touchAction: "manipulation" }}
+                >
+                  {tabId === "general" ? (
+                    <MessageSquare size={12} />
+                  ) : (
+                    <GitBranch size={12} />
+                  )}
+                  <span className="max-w-[120px] truncate font-medium">
+                    {opt.label}
+                  </span>
+                </button>
+                {closable && (
+                  <button
+                    type="button"
+                    onClick={() => closeTab(tabId)}
+                    aria-label={`Cerrar tab ${opt.label}`}
+                    className="ml-0.5 rounded p-0.5 text-muted opacity-60 hover:bg-tint-2 hover:text-on-surface hover:opacity-100"
+                    style={{ touchAction: "manipulation" }}
+                  >
+                    <X size={11} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+
+          {/* "+" abre dropdown para elegir qué proyecto abrir como nuevo tab */}
+          <div className="relative shrink-0">
             <button
               type="button"
               onClick={() => setScopeMenuOpen((v) => !v)}
-              className="flex items-center gap-2 rounded-md border border-app bg-tint-1 px-3 py-1.5 text-sm text-on-surface hover:border-app-strong"
+              aria-label="Abrir nuevo chat"
+              title="Abrir otro proyecto en nuevo tab"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-app bg-tint-1 text-on-surface-variant hover:border-violet-500/30 hover:text-violet-300"
               style={{ touchAction: "manipulation" }}
             >
-              {scope === "general" ? (
-                <MessageSquare size={13} className="text-violet-300" />
-              ) : (
-                <GitBranch size={13} className="text-cyber-cyan" />
-              )}
-              <span className="font-medium">{currentScope.label}</span>
-              <ChevronDown size={12} className="text-muted" />
+              <Plus size={14} />
             </button>
             {scopeMenuOpen && (
               <>
@@ -487,53 +574,72 @@ export function ChatExperience() {
                   className="fixed inset-0 z-30"
                   onClick={() => setScopeMenuOpen(false)}
                 />
-                <div className="absolute left-0 top-full z-40 mt-1 max-h-[60vh] w-[260px] overflow-y-auto rounded-md border border-app bg-ink shadow-elev">
-                  {scopeOptions.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => {
-                        setScope(opt.id);
-                        setScopeMenuOpen(false);
-                      }}
-                      className={`flex w-full items-start gap-2 border-b border-app/40 px-3 py-2.5 text-left text-sm last:border-0 hover:bg-tint-1 ${
-                        opt.id === scope ? "bg-tint-1 text-violet-300" : "text-on-surface"
-                      }`}
-                    >
-                      {opt.id === "general" ? (
-                        <MessageSquare size={13} className="mt-0.5 shrink-0 text-violet-300" />
-                      ) : (
-                        <GitBranch size={13} className="mt-0.5 shrink-0 text-cyber-cyan" />
-                      )}
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{opt.label}</p>
-                        {opt.repo && (
-                          <p className="truncate font-mono text-[10px] uppercase tracking-widest text-muted">
-                            {opt.repo}
-                          </p>
+                <div className="absolute right-0 top-full z-40 mt-1 max-h-[60vh] w-[280px] overflow-y-auto rounded-md border border-app bg-ink shadow-elev">
+                  <p className="border-b border-app/40 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted">
+                    Abrir como nuevo tab
+                  </p>
+                  {scopeOptions.map((opt) => {
+                    const alreadyOpen = openScopes.includes(opt.id);
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => {
+                          if (!alreadyOpen) {
+                            setOpenScopes((prev) => [...prev, opt.id]);
+                          }
+                          setScope(opt.id);
+                          setScopeMenuOpen(false);
+                        }}
+                        className={`flex w-full items-start gap-2 border-b border-app/40 px-3 py-2.5 text-left text-sm last:border-0 hover:bg-tint-1 ${
+                          alreadyOpen
+                            ? "text-muted"
+                            : "text-on-surface"
+                        }`}
+                      >
+                        {opt.id === "general" ? (
+                          <MessageSquare size={13} className="mt-0.5 shrink-0 text-violet-300" />
+                        ) : (
+                          <GitBranch size={13} className="mt-0.5 shrink-0 text-cyber-cyan" />
                         )}
-                      </div>
-                    </button>
-                  ))}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium">{opt.label}</p>
+                          {opt.repo && (
+                            <p className="truncate font-mono text-[10px] uppercase tracking-widest text-muted">
+                              {opt.repo}
+                            </p>
+                          )}
+                        </div>
+                        {alreadyOpen && (
+                          <span className="font-mono text-[9px] uppercase tracking-widest text-muted">
+                            abierto
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </>
             )}
           </div>
 
-          {/* New chat */}
+          {/* "Nueva sesión en este chat" — limpia historia del scope activo */}
           <button
             type="button"
             onClick={newChat}
             disabled={pending}
-            title="Nueva sesión en este scope"
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-app bg-tint-1 text-on-surface-variant hover:border-app-strong hover:text-on-surface disabled:opacity-50"
+            title="Nueva sesión en este chat (borra historia local)"
+            className="ml-auto flex h-8 items-center gap-1 rounded-md border border-app bg-tint-1 px-2 text-on-surface-variant hover:border-app-strong hover:text-on-surface disabled:opacity-50 shrink-0"
             style={{ touchAction: "manipulation" }}
           >
-            <Plus size={14} />
+            <Sparkles size={12} />
+            <span className="font-mono text-[10px] uppercase tracking-widest">
+              Reset
+            </span>
           </button>
 
-          <div className="ml-auto flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
-            <span className="hidden sm:inline">V</span>
+          <div className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted sm:flex shrink-0">
+            <span>V</span>
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success-emerald" />
           </div>
         </div>
