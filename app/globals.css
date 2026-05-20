@@ -116,6 +116,15 @@ body > * {
   max-width: 100vw;
 }
 
+/* Defensa absoluta del chat: cualquier elemento dentro de un mensaje
+   markdown SIEMPRE rompe palabras largas, jamás empuja el contenedor.
+   Exceptúa <pre> y <code> que tienen su propio overflow-x-auto. */
+.vf-md *:not(pre):not(code) {
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+}
+
 html {
   /* Respeta safe-area en iOS (notch, home indicator) */
   --safe-top: env(safe-area-inset-top, 0px);
