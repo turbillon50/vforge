@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowUp,
@@ -195,11 +196,28 @@ export function ChatExperience() {
     el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
   }, [messages]);
 
-  // Load projects + initial scope + open tabs
+  // Deep-link params: /app/chat?project=ID&q=TEXTO
+  // Cuando RepoVision (u otra página) linkea aquí con un proyecto y
+  // prompt sugerido, lo aplicamos automáticamente: abrir el tab del
+  // proyecto y pre-llenar el input.
+  const searchParams = useSearchParams();
+  const deepLinkProject = searchParams?.get("project") || null;
+  const deepLinkQuery = searchParams?.get("q") || null;
+
+  // Load projects + initial scope + open tabs (+ deep-link override)
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const saved = window.localStorage.getItem(SCOPE_KEY) ?? "general";
+    // El query param `project` tiene PRIORIDAD sobre el scope guardado
+    // — si Luis viene de un link "Preguntar a V" sobre castores,
+    // saltamos al tab de castores aunque su último scope fuera otro.
+    const saved =
+      (deepLinkProject && deepLinkProject.length > 0
+        ? deepLinkProject
+        : window.localStorage.getItem(SCOPE_KEY)) ?? "general";
     setScope(saved);
+    if (deepLinkQuery) {
+      setInput(deepLinkQuery);
+    }
     try {
       const savedTabs = window.localStorage.getItem(OPEN_SCOPES_KEY);
       if (savedTabs) {
@@ -219,6 +237,9 @@ export function ChatExperience() {
       .then((r) => (r.ok ? r.json() : { projects: [] }))
       .then((d: { projects: Project[] }) => setProjects(d.projects ?? []))
       .catch(() => undefined);
+    // Mount-only: el deep-link se aplica una sola vez al cargar. Si el
+    // usuario navega después, no queremos re-pisar su scope actual.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Persist openScopes

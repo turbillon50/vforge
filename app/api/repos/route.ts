@@ -1,5 +1,9 @@
 import { listAllUserRepos } from "@/lib/github/client";
 import { queryAll } from "@/lib/db/client";
+import {
+  requireOperatorAuth,
+  authFailureResponse,
+} from "@/lib/auth/operator-token";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,17 +53,20 @@ interface EnrichedRepo {
  *
  * Devuelve la lista de repos de GitHub del operador, enriquecida con
  * info de integraciones (cuáles están tracked en la DB, cuáles tienen
- * Vercel/dominio, etc). Pensado para alimentar la página /app/repos
- * donde Luis ve TODO su parque de repos y qué hay conectado a cada uno.
+ * Vercel/dominio, etc). Pensado para alimentar /app/repovision donde
+ * Luis ve TODO su parque de repos y qué hay conectado a cada uno.
  *
- * No requiere auth porque la sesión es single-user (operator_luis).
- * Cuando entre Clerk multi-tenant, esto pasará a leer el token de
- * GitHub del usuario en sesión.
+ * REQUIERE operator auth (Bearer token) — la lista de repos incluye
+ * privados + integraciones internas (Vercel projects, dominios), no
+ * puede ser pública.
  */
-export async function GET() {
+export async function GET(req: Request) {
+  const auth = requireOperatorAuth(req);
+  if (!auth.ok) return authFailureResponse(auth);
+
   let repos;
   try {
-    repos = await listAllUserRepos({ max: 200, auditUserId: "operator_luis" });
+    repos = await listAllUserRepos({ max: 200, auditUserId: auth.userId });
   } catch (err) {
     return new Response(
       JSON.stringify({

@@ -9,6 +9,7 @@ import {
   ExternalLink,
   GitBranch,
   Globe2,
+  KeyRound,
   Lock,
   Rocket,
   Search,
@@ -17,6 +18,8 @@ import {
   Unlock,
   Zap,
 } from "lucide-react";
+
+const OPERATOR_TOKEN_KEY = "vforge_operator_token";
 
 interface RepoIntegrations {
   tracked: boolean;
@@ -64,10 +67,21 @@ export default function RepoVisionPage() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
+  const [hasToken, setHasToken] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/repos", { cache: "no-store" })
+  function loadRepos(token: string) {
+    setLoading(true);
+    setError(null);
+    fetch("/api/repos", {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    })
       .then((r) => {
+        if (r.status === 401) throw new Error("Falta el header de autorización.");
+        if (r.status === 403) throw new Error("Token inválido. Vuelve a unlock.");
+        if (r.status === 503) {
+          throw new Error("El server no tiene VFORGE_OPERATOR_TOKEN configurado.");
+        }
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
@@ -77,7 +91,28 @@ export default function RepoVisionPage() {
       })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const token = window.localStorage.getItem(OPERATOR_TOKEN_KEY);
+    setHasToken(Boolean(token));
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    loadRepos(token);
   }, []);
+
+  function unlock() {
+    const raw = window.prompt("Pega tu VFORGE_OPERATOR_TOKEN:");
+    if (!raw) return;
+    const token = raw.trim();
+    if (!token) return;
+    window.localStorage.setItem(OPERATOR_TOKEN_KEY, token);
+    setHasToken(true);
+    loadRepos(token);
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -103,12 +138,36 @@ export default function RepoVisionPage() {
         title="Tus repositorios"
         description="Todo lo que tienes en GitHub y a qué está conectado en VForge."
         actions={
-          <Link href="/app/chat" className="btn-primary">
-            <Sparkles size={13} /> Pedir a V
-          </Link>
+          <>
+            {!hasToken ? (
+              <button onClick={unlock} className="btn-primary">
+                <KeyRound size={13} /> Unlock
+              </button>
+            ) : (
+              <Link href="/app/chat" className="btn-primary">
+                <Sparkles size={13} /> Pedir a V
+              </Link>
+            )}
+          </>
         }
       />
 
+      {!hasToken && (
+        <div className="mx-auto max-w-md p-10 text-center text-on-surface-variant">
+          <Lock className="mx-auto mb-3 text-violet-300" size={28} />
+          <p className="font-display text-lg text-on-surface">RepoVision bloqueado</p>
+          <p className="mt-2 text-sm max-w-md mx-auto leading-relaxed">
+            El listado de repos incluye privados y datos de integración.
+            Necesitas el operator token para verlo.
+          </p>
+          <button onClick={unlock} className="btn-primary mt-5 inline-flex">
+            <KeyRound size={13} /> Unlock
+          </button>
+        </div>
+      )}
+
+      {hasToken && (
+      <>
       <div className="grid grid-cols-2 gap-3 px-5 pt-6 md:grid-cols-4 md:px-8">
         <Stat label="Total repos" value={String(repos.length)} tone="violet" />
         <Stat
@@ -194,6 +253,8 @@ export default function RepoVisionPage() {
           <RepoCard key={r.full_name} repo={r} />
         ))}
       </div>
+      </>
+      )}
     </>
   );
 }
