@@ -25,7 +25,7 @@ function CodeBlock({ inline, className, children }: {
 
   if (inline) {
     return (
-      <code className="rounded-[5px] border border-violet-500/20 bg-violet-500/[0.08] px-1.5 py-px font-mono text-[0.88em] text-violet-200">
+      <code className="rounded-[5px] border border-violet-500/25 bg-violet-500/[0.1] px-1.5 py-px font-mono text-[0.88em] text-violet-300">
         {children}
       </code>
     );
@@ -44,7 +44,7 @@ function CodeBlock({ inline, className, children }: {
   }
 
   return (
-    <div className="vf-md-codewrap group relative my-3 overflow-hidden rounded-lg border border-violet-500/20 bg-ink/80">
+    <div className="vf-md-codewrap group relative my-3 overflow-hidden rounded-lg border border-violet-500/25 bg-tint-3">
       <div className="flex items-center justify-between gap-2 border-b border-violet-500/15 bg-tint-1 px-3 py-1.5">
         <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
           {lang || "code"}

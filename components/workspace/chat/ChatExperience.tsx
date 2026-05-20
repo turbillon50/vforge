@@ -21,6 +21,9 @@ import {
   X,
   Check,
   Copy,
+  RefreshCw,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import { useT } from "@/i18n/AppProviders";
 import { Markdown } from "./Markdown";
@@ -98,6 +101,46 @@ interface ScopeOption {
   id: string;
   label: string;
   repo?: string;
+}
+
+/**
+ * Re-escribe los mensajes de error que llegan del backend a algo amigable
+ * para el usuario, ocultando nombres de proveedores (OpenRouter, Anthropic,
+ * etc.) y mapeando códigos HTTP comunes a frases en español.
+ */
+function sanitizeError(raw: string, status?: number): string {
+  const r = (raw || "").toString();
+  const s = r.toLowerCase();
+  const code = status ?? (r.match(/\b(4\d\d|5\d\d)\b/)?.[1] ? Number(r.match(/\b(4\d\d|5\d\d)\b/)![1]) : undefined);
+
+  if (code === 429 || /rate.?limit|too many requests|saturad/.test(s)) {
+    return "Servicio temporalmente saturado. Espera un momento y reintenta.";
+  }
+  if (code === 402 || /insufficient|credit|saldo|payment required|balance/.test(s)) {
+    return "Saldo agotado. Recarga el balance para seguir.";
+  }
+  if (code === 401 || code === 403 || /unauthor|forbidden|api key/.test(s)) {
+    return "Problema de autenticación. Revisa la configuración.";
+  }
+  if (code === 404) {
+    return "Recurso no encontrado.";
+  }
+  if (code === 408 || /timeout|timed out|deadline/.test(s)) {
+    return "Se acabó el tiempo de respuesta. Reintenta.";
+  }
+  if ((code && code >= 500) || /server error|internal error|bad gateway|unavailable/.test(s)) {
+    return "V tuvo un hipo del lado del servidor. Reintenta en un momento.";
+  }
+  if (/provider returned|upstream|model error/.test(s)) {
+    return "El modelo no respondió. Reintenta.";
+  }
+  // Fallback: limpia nombres de proveedores y devuelve el resto recortado.
+  const cleaned = r
+    .replace(/openrouter/gi, "el proveedor")
+    .replace(/anthropic/gi, "el proveedor")
+    .replace(/openai/gi, "el proveedor")
+    .trim();
+  return cleaned.length > 0 ? cleaned : "Algo salió mal. Reintenta.";
 }
 
 export function ChatExperience() {
@@ -287,7 +330,7 @@ export function ChatExperience() {
         });
         if (!res.ok || !res.body) {
           const err = await res.text().catch(() => "");
-          assembled = `⚠ Error (${res.status}): ${err.slice(0, 200)}`;
+          assembled = `⚠ ${sanitizeError(err, res.status)}`;
           smooth.push(assembled);
           return;
         }
@@ -308,7 +351,7 @@ export function ChatExperience() {
                 assembled += evt.value;
                 smooth.push(evt.value);
               } else if (evt.type === "error") {
-                const tail = `\n\n⚠ ${evt.message}`;
+                const tail = `\n\n⚠ ${sanitizeError(evt.message)}`;
                 assembled += tail;
                 smooth.push(tail);
               }
@@ -328,9 +371,10 @@ export function ChatExperience() {
           return;
         }
         const msg = err instanceof Error ? err.message : String(err);
+        const friendly = sanitizeError(msg);
         const tail = assembled
-          ? `\n\n⚠ Error de red: ${msg}`
-          : `⚠ Error de red: ${msg}`;
+          ? `\n\n⚠ ${friendly}`
+          : `⚠ ${friendly}`;
         assembled += tail;
         smooth.push(tail);
       } finally {
@@ -352,6 +396,36 @@ export function ChatExperience() {
     abortRef.current?.abort();
     // The send() catch will commit assembled text + clear streamingId.
   }, []);
+
+  // Regenera la respuesta de un mensaje del asistente: encuentra el último
+  // turno de usuario antes del mensaje asistente indicado, recorta esa
+  // respuesta del historial y vuelve a llamar a send() con el mismo texto.
+  // No toca lógica de V — solo re-ejecuta la misma request.
+  const regenerate = useCallback(
+    (assistantId: string) => {
+      if (pending) return;
+      const list = messagesRef.current;
+      const idx = list.findIndex((m) => m.id === assistantId);
+      if (idx < 0) return;
+      // Busca el último user msg antes del asistente.
+      let userIdx = -1;
+      for (let i = idx - 1; i >= 0; i--) {
+        if (list[i].role === "user") {
+          userIdx = i;
+          break;
+        }
+      }
+      if (userIdx < 0) return;
+      const userText = list[userIdx].text;
+      // Quita TODO desde el user msg (inclusive) hasta el final — send()
+      // volverá a empujar el user msg y un nuevo placeholder asistente.
+      setMessages((p) => p.slice(0, userIdx));
+      // Encola el send para el próximo tick así el slice se aplica primero.
+      setTimeout(() => void send(userText), 0);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pending],
+  );
 
   // Start fresh chat for current scope
   const newChat = useCallback(async () => {
@@ -480,7 +554,7 @@ export function ChatExperience() {
             <div className="mb-5 flex flex-col items-center gap-3 py-4 text-center md:mb-8 md:py-8">
               <VOrb size={56} />
               <div>
-                <p className="bg-gradient-to-r from-violet-300 via-violet-200 to-cyan-300 bg-clip-text font-display text-2xl font-semibold tracking-tight text-transparent md:text-3xl">
+                <p className="bg-gradient-to-r from-violet-500 via-violet-400 to-cyan-400 bg-clip-text font-display text-2xl font-semibold tracking-tight text-transparent md:text-3xl">
                   Hola, soy {t.common.label_b}.
                 </p>
                 <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
@@ -508,7 +582,15 @@ export function ChatExperience() {
                     image={m.image}
                   />
                 ) : (
-                  <MessageBubble key={m.id} msg={m} />
+                  <MessageBubble
+                    key={m.id}
+                    msg={m}
+                    onRegenerate={
+                      m.role === "b" && m.id !== "intro" && !pending
+                        ? () => regenerate(m.id)
+                        : undefined
+                    }
+                  />
                 ),
               )}
             </AnimatePresence>
@@ -876,7 +958,13 @@ function Composer({
   );
 }
 
-function MessageBubble({ msg }: { msg: Msg }) {
+function MessageBubble({
+  msg,
+  onRegenerate,
+}: {
+  msg: Msg;
+  onRegenerate?: () => void;
+}) {
   const isB = msg.role === "b";
   if (isB) {
     return (
@@ -912,7 +1000,13 @@ function MessageBubble({ msg }: { msg: Msg }) {
               ))}
             </ul>
           )}
-          {msg.text && msg.id !== "intro" && <AssistantActions text={msg.text} />}
+          {msg.text && msg.id !== "intro" && (
+            <AssistantActions
+              messageId={msg.id}
+              text={msg.text}
+              onRegenerate={onRegenerate}
+            />
+          )}
         </div>
       </motion.div>
     );
@@ -967,8 +1061,48 @@ function StreamingBubble({ text, image }: { text: string; image?: string }) {
   );
 }
 
-function AssistantActions({ text }: { text: string }) {
+const FEEDBACK_KEY = "vforge_chat_feedback";
+
+function readFeedback(messageId: string): "up" | "down" | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(FEEDBACK_KEY);
+    const map = raw ? (JSON.parse(raw) as Record<string, "up" | "down">) : {};
+    return map[messageId] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function writeFeedback(messageId: string, value: "up" | "down" | null) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.localStorage.getItem(FEEDBACK_KEY);
+    const map = raw ? (JSON.parse(raw) as Record<string, "up" | "down">) : {};
+    if (value === null) delete map[messageId];
+    else map[messageId] = value;
+    window.localStorage.setItem(FEEDBACK_KEY, JSON.stringify(map));
+  } catch {
+    // ignore quota / parse
+  }
+}
+
+function AssistantActions({
+  messageId,
+  text,
+  onRegenerate,
+}: {
+  messageId: string;
+  text: string;
+  onRegenerate?: () => void;
+}) {
   const [copied, setCopied] = useState(false);
+  const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
+
+  useEffect(() => {
+    setFeedback(readFeedback(messageId));
+  }, [messageId]);
+
   async function onCopy() {
     try {
       await navigator.clipboard.writeText(text);
@@ -978,16 +1112,64 @@ function AssistantActions({ text }: { text: string }) {
       // ignore
     }
   }
+
+  function setVote(value: "up" | "down") {
+    const next = feedback === value ? null : value;
+    setFeedback(next);
+    writeFeedback(messageId, next);
+  }
+
+  const btn =
+    "flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1 px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300";
+
   return (
-    <div className="mt-2 hidden items-center gap-1 opacity-60 transition-opacity duration-200 sm:flex sm:hover:opacity-100">
+    <div className="mt-2 hidden items-center gap-1 opacity-70 transition-opacity duration-200 sm:flex sm:hover:opacity-100">
       <button
         type="button"
         onClick={onCopy}
-        className="flex items-center gap-1 rounded-md border border-app bg-tint-1 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300"
+        className={btn}
         aria-label={copied ? "Copiado" : "Copiar respuesta"}
       >
         {copied ? <Check size={11} /> : <Copy size={11} />}
         <span>{copied ? "Copiado" : "Copy"}</span>
+      </button>
+      {onRegenerate && (
+        <button
+          type="button"
+          onClick={onRegenerate}
+          className={btn}
+          aria-label="Regenerar respuesta"
+          title="Regenerar"
+        >
+          <RefreshCw size={11} />
+          <span>Regen</span>
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => setVote("up")}
+        className={
+          feedback === "up"
+            ? "flex h-7 items-center justify-center rounded-md border border-violet-500/40 bg-violet-500/10 px-2 text-violet-300"
+            : "flex h-7 items-center justify-center rounded-md border border-app bg-tint-1 px-2 text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300"
+        }
+        aria-label={feedback === "up" ? "Quitar pulgar arriba" : "Pulgar arriba"}
+        aria-pressed={feedback === "up"}
+      >
+        <ThumbsUp size={11} />
+      </button>
+      <button
+        type="button"
+        onClick={() => setVote("down")}
+        className={
+          feedback === "down"
+            ? "flex h-7 items-center justify-center rounded-md border border-error-crimson/40 bg-error-crimson/10 px-2 text-error-crimson"
+            : "flex h-7 items-center justify-center rounded-md border border-app bg-tint-1 px-2 text-on-surface-variant transition hover:border-error-crimson/30 hover:text-error-crimson"
+        }
+        aria-label={feedback === "down" ? "Quitar pulgar abajo" : "Pulgar abajo"}
+        aria-pressed={feedback === "down"}
+      >
+        <ThumbsDown size={11} />
       </button>
     </div>
   );
