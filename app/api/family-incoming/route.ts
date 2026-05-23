@@ -34,7 +34,7 @@ async function ackToFamily(
 ): Promise<void> {
   if (!ackUrl) return;
   const token = process.env.FAMILY_AGENT_TOKEN ?? "";
-  const handle = process.env.FAMILY_AGENT_HANDLE ?? "vforge";
+  const handle = process.env.FAMILY_AGENT_HANDLE ?? "forge";
   try {
     await fetch(ackUrl, {
       method: "POST",
@@ -52,6 +52,28 @@ async function ackToFamily(
   } catch {
     // best-effort
   }
+}
+
+// Fire-and-forget: ask vForge himself (via internal endpoint) to react to this
+// message. We don't await it — we want family-incoming to ACK fast, and the
+// response posting happens in its own lambda invocation.
+function triggerSelfResponse(payload: {
+  messageId: string;
+  channel: string;
+  sender: string;
+  content: string;
+  replyTo: string | null;
+}): void {
+  const token = process.env.FAMILY_AGENT_TOKEN ?? "";
+  if (!token) return;
+  const base = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "https://vforge.site";
+  void fetch(`${base}/api/forge/family-respond`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ ...payload, internalToken: token }),
+  }).catch(() => undefined);
 }
 
 export async function POST(req: NextRequest) {
@@ -98,6 +120,11 @@ export async function POST(req: NextRequest) {
 
     const externalRef = `family_messages:${rows[0]!.id}`;
     if (ackUrl) void ackToFamily(ackUrl, messageId, externalRef);
+
+    // Fire-and-forget: vForge reacts to the message in his own voice.
+    // Doesn't block the ACK back to family.
+    triggerSelfResponse({ messageId, channel, sender, content, replyTo });
+
     return Response.json({ ok: true, externalRef });
   } catch (e) {
     const errorMsg = e instanceof Error ? e.message : "unknown error";
@@ -109,7 +136,7 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   return Response.json({
     configured: Boolean(process.env.FAMILY_AGENT_TOKEN),
-    handle: process.env.FAMILY_AGENT_HANDLE ?? "vforge",
+    handle: process.env.FAMILY_AGENT_HANDLE ?? "forge",
     baseUrl: process.env.FAMILY_BASE_URL ?? "https://family.vercel.app",
   });
 }
