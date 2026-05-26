@@ -6,12 +6,14 @@
  * Hetzner (configurable via env var V_SERVER_URL).
  *
  *   /execute         → corre código Python/Node, devuelve stdout/stderr
- *   /browser         → Playwright (pendiente de implementar en api.py)
- *   /generate-image  → Generación de imágenes (pendiente)
- *   /ssh-execute     → SSH a server remoto vía paramiko (pendiente)
+ *   /browser         → Playwright (goto, click, type, evaluate, screenshot)
+ *   /generate-image  → generación vía OpenRouter / Gemini / FLUX
+ *   /ssh-execute     → SSH a server remoto vía paramiko
  *
- * Si el endpoint no existe aún (404) o el server está caído, devolvemos
- * un error claro para que V lo reporte a Luis sin pretender que jaló.
+ * Todos los endpoints están implementados en docs/v-server/api.py. Si
+ * uno devuelve 404, el server en Hetzner no está actualizado — hay que
+ * redesplegar api.py. Devolvemos error claro para que V lo reporte a
+ * Luis sin pretender que jaló.
  */
 
 const DEFAULT_URL = "http://178.105.135.26:5000";
