@@ -1218,7 +1218,7 @@ export const TOOLS: Tool[] = [
   {
     name: "browser_control",
     description:
-      "Controla un navegador headless (Playwright) en el servidor de V. Acciones: goto, click, type, screenshot, get_html, get_text, describe_element, execute_script. Soporta wait_for_selector para esperar elementos antes de actuar. Úsala para verificar UI de deploys, web scraping/OSINT, automatización de formularios. (Nota: endpoint /browser puede no estar implementado todavía en api.py — si 404, repórtalo a Luis para que el servidor lo agregue.)",
+      "Controla un navegador headless (Playwright) en el servidor de V. Acciones: goto, click, type, screenshot, get_html, get_text, describe_element, execute_script. Soporta wait_for_selector para esperar elementos antes de actuar. Úsala para verificar UI de deploys, web scraping/OSINT, automatización de formularios. Si devuelve 404 el server del Hetzner está desactualizado — repórtaselo a Luis.",
     input_schema: {
       type: "object",
       properties: {
@@ -1237,7 +1237,7 @@ export const TOOLS: Tool[] = [
   {
     name: "image_generation",
     description:
-      "Genera una imagen vía OpenRouter (Gemini Image / FLUX / Recraft) en el servidor de V. Default: google/gemini-3.1-flash-image-preview ('Nano Banana') con generación + edición + multi-turn. ~$0.014/imagen 1024x1024 contra el saldo OpenRouter de Luis. Úsala para hero images, ilustraciones, logos preliminares. (Nota: endpoint /generate-image puede no estar implementado todavía en api.py — si 404, repórtalo a Luis.)",
+      "Genera una imagen vía OpenRouter (Gemini Image / FLUX / Recraft) en el servidor de V. Default: google/gemini-3.1-flash-image-preview ('Nano Banana') con generación + edición + multi-turn. ~$0.014/imagen 1024x1024 contra el saldo OpenRouter de Luis. Úsala para hero images, ilustraciones, logos preliminares. Si devuelve 404 el server del Hetzner está desactualizado — repórtaselo a Luis.",
     input_schema: {
       type: "object",
       properties: {
