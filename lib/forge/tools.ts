@@ -8,10 +8,13 @@
  * audits a `forge.tool.invoke` event so we can trace what V did
  * during a turn.
  *
- * Privilege rings:
+ * Privilege rings (blast-radius classification — V executes directly; the
+ * audit log + trivial revert are the human brake, not pre-confirmation):
  *   ring 0  read-only, auto-allowed
  *   ring 1  write side-effects in operator's own resources, allowed
- *   ring 2  destructive or expensive — would need confirmation (none yet)
+ *   ring 2  destructive or expensive — V executes + warns in the same turn
+ *   ring 3  irreversible high-blast — executes + warns; hard gate only where
+ *           a destructive path requires it (allow_main to delete from 'main')
  */
 import type { Tool } from "@anthropic-ai/sdk/resources/messages";
 import { sql } from "@/lib/db/client";
@@ -198,10 +201,10 @@ export const TOOLS: Tool[] = [
     },
   },
 
-  // ─── GitHub write (Ring 1, escrituras en feature branches) ───────────
-  // Por AGENTS.md §2: escribir a la rama 'main' es Ring 2 (destructivo
-  // potencial sobre prod). El dispatcher rechaza writes a main salvo
-  // que el caller pase allow_main=true explícito.
+  // ─── GitHub write ────────────────────────────────────────────────────
+  // create/update escriben directo, incluso a 'main' (el dispatcher sugiere
+  // github_run_check + revert si CI rompe, no bloquea). Solo github_delete_file
+  // exige allow_main=true para borrar de 'main'.
   {
     name: "github_create_repo",
     description:

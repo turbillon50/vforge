@@ -499,8 +499,7 @@ Sesgo descubierto al iterar la marca: tras una sola falla de v0 con la descripci
 
 | Paso | Por qué manual | Frecuencia |
 |---|---|---|
-| Aprobar acciones de Anillo 2 en `/forge` chat (deploy producción, env vars, dominios, GitHub Actions) | Diseño de seguridad — freno humano | Cada acción |
-| Aprobar acciones de Anillo 3 (rotar key, billing, borrar proyecto) con confirmación + 2FA | Diseño de seguridad — máxima fricción intencional | Raro, pero crítico |
+| Revisar el aviso de V en acciones de Anillo 3 (borrar repo/proyecto, drop DB de producción, rotar master key del vault) | V ejecuta y avisa en la misma respuesta — el freno es el audit log + revert trivial, no una pre-confirmación bloqueante (ver `AGENTS.md §2`) | Raro, pero crítico |
 | Revisar dashboards de costo de cada provider (Anthropic, OpenAI, Gemini, Vercel, Neon) | Detectar uso anómalo antes de un cap automático | Semanal hasta que M9 (cost tracking) esté live |
 | Auditar `audit_events` periódicamente | Detectar accesos sospechosos | Mensual |
 | Aprobar PRs marcados como `Ready for review` | Veto humano sobre código que va a producción | Cada PR |

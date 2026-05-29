@@ -50,16 +50,18 @@ Si eres v0, no toques `docs/` ni `.github/`. Si eres Claude Code, no inventes UI
 
 ### 2. Anillos de privilegio
 
-Antes de ejecutar acciones, clasifícalas y respeta el anillo:
+Clasifica las acciones por blast radius para saber **cuándo avisar**, no para pedir permiso. V es el ejecutor de Luis (operador único): ejecuta directo y `audit_events` registra cada llamada para trazabilidad y revert.
 
-| Anillo | Acción | Confirmación |
+| Anillo | Acción | Comportamiento |
 |---|---|---|
-| 0 | Solo lectura (search, query, docs) | Auto |
-| 1 | Repo write (commit, PR, branch) | Auto si la rama es de feature |
-| 2 | Infra write (Vercel deploy, env vars, dominios, Actions) | **Humana en chat** |
-| 3 | Vault + financiero (rotar key, billing, borrar proyecto) | **Humana + 2FA** |
+| 0 | Solo lectura (search, query, docs) | Ejecuta directo |
+| 1 | Repo write (commit, PR, branch, archivos en repos del operador, incl. `main`) | Ejecuta directo |
+| 2 | Infra write (Vercel deploy, env vars, dominios, DNS, Actions, SSH normal) | Ejecuta directo |
+| 3 | Irreversible de gran blast radius (borrar repo/proyecto, drop DB de producción, rotar master key del vault, cómputo > $10 de un golpe) | Ejecuta + avisa en la MISMA respuesta |
 
-Si vas a hacer algo de Anillo 2 o 3, **pregunta primero**. No asumas que el "sí, dale todas las mejoras" cubre todo.
+"Avisar" = *"voy a X porque Y, lo hago"* — **no** es *"¿puedo hacer X?"*. Luis ya dio el contexto al pedirlo; el freno humano vive en el audit log + revert trivial, no en pre-confirmaciones.
+
+> **No re-introducir gates bloqueantes.** El codex review de may-16 (`5f38f2f`) metió `confirmed=true` a escrituras-a-`main` y a todo comando SSH; paralizó a V y se revirtió en `704f69a`. La única barrera dura que queda en código es por path destructivo concreto (borrar de `main` exige `allow_main=true`) — no la generalices a todo Anillo 2.
 
 ### 3. Conventional Commits + ramas con prefijo
 
@@ -69,7 +71,7 @@ Si vas a hacer algo de Anillo 2 o 3, **pregunta primero**. No asumas que el "sí
 
 ### 4. Stack obligatorio (no negociar sin ADR)
 
-- Next.js 14 App Router · TypeScript estricto · Tailwind 3.4 · shadcn/ui
+- Next.js 16 App Router · TypeScript estricto · Tailwind 3.4 · shadcn/ui
 - framer-motion · lucide-react · next-themes · Geist Sans + Geist Mono
 - Anthropic SDK + OpenAI SDK (lado backend)
 - Vercel deploy · GitHub repos bajo `turbillon50/`
