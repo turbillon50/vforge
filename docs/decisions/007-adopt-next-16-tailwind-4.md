@@ -1,9 +1,11 @@
-# ADR-007: Adoptar Next.js 16 + React 19 + Tailwind 4 (en vez de Next 14 + Tailwind 3.4)
+# ADR-007: Adoptar Next.js 16 + React 19 (Tailwind quedó en 3.4 — ver corrección)
 
-- **Estado:** Accepted
+- **Estado:** Accepted (parte Tailwind 4 corregida 2026-05-29 — ver nota)
 - **Fecha:** 2026-05-02
 - **Decisores:** Luis, Claude Code
 - **Contexto técnico:** Frontend MVP de vForge, post-handoff de v0.dev
+
+> **Corrección (2026-05-29):** la parte de **Tailwind 4** de este ADR **no quedó vigente**. El repo corre **Tailwind 3.4** (`tailwindcss@^3.4.17`, `app/globals.css` con `@tailwind base/components/utilities`, `tailwind.config.ts` presente). La migración a v4 nunca se completó o se revirtió; se eliminó un `postcss.config.mjs` huérfano que apuntaba al plugin v4 (`@tailwindcss/postcss`, ni siquiera instalado). **Next 16 + React 19 + npm siguen vigentes.** El razonamiento de abajo sobre Tailwind 4 se conserva como registro histórico de la intención original.
 
 ## Contexto
 
@@ -65,4 +67,4 @@ Frente a este drift hay dos caminos: (a) degradar a Next 14 / Tailwind 3.4 para 
 
 - Actualizar `docs/playbook.md` §3 (stack obligatorio) en el siguiente commit doc (o aceptar que el ADR es la fuente de verdad y el playbook se beneficia con un nota referencial).
 - En proyectos futuros, **escribir el brief con stack mínimo (LTS conocidas)** pero declarar explícitamente que **adoptar el default de v0 es aceptable y preferible** salvo justificación arquitectónica.
-- Cualquier proyecto vForge nuevo que arranque hoy nace con Next 16 + Tailwind 4 por default. Si un cliente requiere LTS, abrir un ADR específico del proyecto.
+- Cualquier proyecto vForge nuevo que arranque hoy nace con Next 16 + Tailwind 3.4 por default (ver corrección arriba). Si un cliente requiere LTS, abrir un ADR específico del proyecto.

@@ -64,7 +64,7 @@ Formato commits:  Conventional Commits (feat:, fix:, docs:, refactor:)
 Package manager:  npm (package-lock.json en repo)
 ```
 
-> **Nota histórica:** el brief original especificaba Next 14 + Tailwind 3.4. v0 entregó Next 16 + Tailwind 4 y se adoptó como default. Razón en [`ADR-007`](./decisions/007-adopt-next-16-tailwind-4.md). Para proyectos nuevos, este es el stack base.
+> **Nota histórica:** el brief original especificaba Next 14 + Tailwind 3.4. v0 entregó Next 16 + Tailwind 4; se adoptó **Next 16 + React 19**, pero el repo quedó en **Tailwind 3.4** (la migración a v4 no se completó — ver corrección en [`ADR-007`](./decisions/007-adopt-next-16-tailwind-4.md)). Para proyectos nuevos, ese es el stack base.
 
 **Nunca:** MUI, Chakra, Mantine, styled-components, emotion, iconos genéricos infantiles, pnpm (incompatible con CI actual).
 
