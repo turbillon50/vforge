@@ -24,7 +24,7 @@ Forge es el agente IA que orquesta la fábrica vForge.
 - **Cara visible al usuario:** la mascota `<ForgeOrb>` y la pantalla `/forge` (chat).
 - **Cerebro real:** servicio backend (Next API route en Edge Runtime) que recibe el input, **planea, enruta cada paso al modelo/herramienta correctos, y ejecuta**.
 - **Capacidades:** habla con Claude (Anthropic) para razonar y codear, llama a OpenAI para imagen y voz, ejecuta código vía el Anthropic Agent SDK + Claude Code, despliega vía Vercel API, modifica repos vía GitHub API, busca en web vía la tool de Anthropic.
-- **Control literal:** tiene API keys (cifradas en Vault) de todos los proveedores y permisos para ejecutar acciones destructivas (con confirmación humana en el rango sensible).
+- **Control literal:** tiene API keys (cifradas en Vault) de todos los proveedores y permisos para ejecutar acciones destructivas (con aviso humano en el rango irreversible; el freno es el audit log + revert, no una pre-confirmación — ver §4 y ADR-010).
 
 El patrón que estamos manualmente operando — *Luis pide → modelo planea → Claude Code ejecuta → v0 visualiza → Vercel despliega* — es lo que Forge automatiza cuando esté terminado.
 
@@ -113,16 +113,16 @@ V2 entrenará un clasificador con la historia de runs exitosos vs fallidos.
 
 ## 4. Anillos de privilegio (literal control)
 
-Cada acción del cerebro tiene un anillo de seguridad. Las acciones de Anillo 2 y 3 **requieren confirmación explícita del usuario** vía botones inline en el chat ("Procede" / "Editar plan").
+Cada acción del cerebro se clasifica por **blast radius** — para saber cuándo *avisar*, no para pedir permiso. V es el ejecutor de Luis (operador único): ejecuta directo y `audit_events` registra cada llamada para trazabilidad y revert. El modelo de gates de pre-confirmación se intentó (codex review may-16, `5f38f2f`) y se revirtió por paralizar a V (`704f69a`); ver [`ADR-010`](./decisions/010-execute-first-doctrine.md) y `AGENTS.md §2`.
 
-| Anillo | Privilegio | Ejemplos | Confirmación |
+| Anillo | Privilegio | Ejemplos | Comportamiento |
 |---|---|---|---|
-| **0** | Solo lectura | Web search, model registry query, lectura de repo | Automática |
-| **1** | Repo write | git commit, abrir PR, push a rama de feature | Automática |
-| **2** | Infra write | Vercel deploy, env vars, cambio de dominio, GitHub Action edit | **Humana** |
-| **3** | Vault + financiero | Rotar key, agregar key, billing, borrar proyecto | **Humana + 2FA** |
+| **0** | Solo lectura | Web search, model registry query, lectura de repo | Ejecuta directo |
+| **1** | Repo write | git commit, abrir PR, push, escrituras a `main` | Ejecuta directo |
+| **2** | Infra write | Vercel deploy, env vars, cambio de dominio, GitHub Action edit, SSH normal | Ejecuta directo |
+| **3** | Irreversible de gran blast radius | drop DB de producción, rotar master key, borrar repo/proyecto, cómputo > $10 de un golpe | Ejecuta + avisa en la misma respuesta |
 
-> Esto es lo que evita que Forge haga algo destructivo sin OK explícito. La regla maestra: **el agente puede proponer cualquier cosa, ejecutar solo lo de Anillo 0–1 sin preguntar.**
+> La regla maestra: **V ejecuta; el freno humano vive en el audit log + revert trivial, no en pre-confirmaciones.** Única barrera dura en código: `allow_main=true` para borrar de `main`.
 
 ---
 
@@ -134,7 +134,7 @@ El frontend que estamos construyendo en v0 ya tiene la cara para todo el cerebro
 |---|---|---|
 | `<ForgeOrb>` mascota | Indicador visual de estado del brain (`idle`/`loading`/`happy`/`error`) | Front listo |
 | `/forge` chat | Stream UI del brain endpoint | Front listo |
-| Botones "Procede" / "Editar plan" | UI de confirmación para Anillo 2/3 | Front listo |
+| Botones "Procede" / "Editar plan" | UI de plan/edición inline (ya no es gate bloqueante — ver ADR-010) | Front listo |
 | `/vault` | Vault adapter — keychain de las API keys | Front mock; backend pendiente |
 | `/activity` | Render del audit log | Front mock; backend pendiente |
 | `/modules` (Repo Vision, Hunter, Scout, Health Monitor) | Cada módulo = una tool/adapter expuesta como UI | Front mock; cada uno necesita su adapter |
@@ -176,7 +176,7 @@ El frontend que estamos construyendo en v0 ya tiene la cara para todo el cerebro
 
 **Razón:** UX más natural. El plan es solo otro stream message, no una pantalla aparte.
 
-**Trade-off:** harder to undo; necesitamos que cada paso sea reversible o que las acciones de Anillo 2+ sigan requiriendo confirmación.
+**Trade-off:** harder to undo; necesitamos que cada paso sea reversible (git revert, vercel rollback) y que el audit log registre todo para poder deshacer.
 
 ### ADR-005: Multi-modelo desde el día uno
 
@@ -213,10 +213,10 @@ El frontend que estamos construyendo en v0 ya tiene la cara para todo el cerebro
 | **M4** | Adapter `anthropic-web-search` → Forge investiga online | — | 1 día |
 | **M5** | Adapters `e2b-microvm` (sandbox) + `claude-code-sdk` (corre dentro de E2B) → Forge edita el repo (Anillo 1) | E2B | 4 días |
 | **M6** | Adapter `openai-image` (gpt-image-1) → Forge propone variantes de logo | — | 2 días |
-| **M7** | Adapter `vercel-deploy` con confirmación humana → Forge despliega (Anillo 2) | — | 1 día |
+| **M7** | Adapter `vercel-deploy` → Forge despliega directo (Anillo 2; ver ADR-010) | — | 1 día |
 | **M8** | Adapter `github-octokit` (commits, PRs, issues — write ops) | — | 1 día |
 | **M9** | Adapter `trigger-bg` (jobs > 60s vía Trigger.dev) + audit log persistente + cost tracking, render en `/activity` | Trigger.dev | 2 días |
-| **M9.5** | Adapter `resend-email` → confirmaciones Ring 2/3 + recaps + alerts de deploys fallidos | Resend | 0.5 día |
+| **M9.5** | Adapter `resend-email` → avisos de acciones Anillo 3 + recaps + alerts de deploys fallidos | Resend | 0.5 día |
 | **M10** | Adapter `openai-whisper` para el botón mic del composer | — | 0.5 día |
 
 **Subtotal Fase 1: ~18 días-persona**. Construible en 4-5 semanas calendario con 1 dev.
@@ -261,7 +261,7 @@ El frontend que estamos construyendo en v0 ya tiene la cara para todo el cerebro
 | Riesgo | Mitigación |
 |---|---|
 | **Costo de API runaway** | Cost cap por usuario y por proyecto, parado automático al rebasar; alerta en `/activity` |
-| **Acción destructiva sin OK** | Anillos 2 y 3 SIEMPRE requieren confirmación humana; tests unitarios sobre el routing policy |
+| **Acción destructiva sin OK** | V avisa en la misma respuesta antes de acciones Anillo 3 irreversibles; `allow_main` para borrar de `main`; audit log + revert trivial como backstop (ver ADR-010) |
 | **Master key perdida** | 3 backup codes generados al setup + recovery email firmado con timestamps |
 | **Modelo retired sin aviso** | Model registry con `deprecated: true` + fallback automático al modelo más cercano |
 | **Provider downtime** | Adapter con retry exponencial, circuit breaker, fallback a otro proveedor para tareas no-críticas |

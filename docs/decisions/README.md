@@ -39,12 +39,13 @@
 | [001](./001-self-hosted-brain.md) | Accepted | Brain self-hosted en Next API Route |
 | [002](./002-claude-code-via-agent-sdk.md) | Accepted | Ejecución de código vía Anthropic Agent SDK + Claude Code |
 | [003](./003-server-side-encrypted-keys.md) | Accepted | API keys server-side cifradas en Vault (AES-256-GCM) |
-| [004](./004-stream-first-ux.md) | Accepted | Stream-first en el chat de Forge, plan visible en línea |
+| [004](./004-stream-first-ux.md) | Accepted | Stream-first en el chat de Forge, plan visible en línea (gate de confirmación Anillo 2/3 superseded por 010) |
 | [005](./005-multi-model-from-day-one.md) | Accepted | Multi-modelo desde el día uno (Anthropic + OpenAI mínimo) |
 | [006](./006-operator-paid-billing-mvp.md) | Accepted | Billing en cuenta de operador en MVP, pass-through en v2 |
-| [007](./007-adopt-next-16-tailwind-4.md) | Accepted | Adoptar Next 16 + React 19 + Tailwind 4 (en vez de Next 14 + Tailwind 3.4) |
+| [007](./007-adopt-next-16-tailwind-4.md) | Accepted (Tailwind corregido) | Adoptar Next 16 + React 19; Tailwind quedó en 3.4 (la migración v4 no se completó — ver corrección 2026-05-29) |
 | [008](./008-zero-knowledge-vault.md) | Accepted | Zero-Knowledge Vault con Vault Master Password separado del Clerk password |
 | [009](./009-external-service-stack.md) | Accepted | Stack de servicios externos: OpenRouter, E2B, Trigger.dev, Turso, Liveblocks, Polar.sh, Unkey, Resend |
+| [010](./010-execute-first-doctrine.md) | Accepted | V ejecuta directo — sin gates de pre-confirmación; anillos = clasificación de blast radius (supersede en parte ADR-004) |
 
 ---
 

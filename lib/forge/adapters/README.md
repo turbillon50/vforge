@@ -14,9 +14,10 @@ All adapters implement `ForgeAdapter<Input, Output>` from
 1. **Never** read `process.env` directly. Use `ctx.vault.getOperatorSecret(...)`
    or `ctx.vault.getProjectSecret(...)`. Local dev falls through to env via
    `lib/vault/get-secret.ts`.
-2. **Never** make a destructive call (Ring 2/3) without surfacing a confirmation
-   step. The brain's tool loop handles that — your job is to declare your
-   `ring` correctly.
+2. **Declare your `ring` correctly** — it's blast-radius *classification*, not a
+   gate. The brain executes directly and logs every call to `audit_events`; it
+   only surfaces an *aviso* (not a confirmation prompt) for Anillo 3 irreversible
+   actions. Don't build pre-confirmation gates into adapters — see ADR-010.
 3. **Emit progress** for anything that takes >500ms. The SSE stream needs the
    feedback to keep the chat alive.
 4. **Return normalized errors** via `AdapterError(adapter, message, cause)` so

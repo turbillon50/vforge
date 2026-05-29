@@ -351,8 +351,9 @@ function SecurityPanel() {
 
       <Card title="Two-factor authentication">
         <p className="text-[12px] text-on-surface-variant">
-          Llegará junto con Clerk (M11). Hoy V respeta los gates Ring 2/3 y
-          PROTECTED_CORE_FILES sin necesidad de 2FA adicional.
+          Llegará junto con Clerk (M11). Hoy V ejecuta directo y el audit log
+          registra cada acción; las irreversibles las avisa en el chat. Sin 2FA
+          adicional todavía.
         </p>
       </Card>
     </>

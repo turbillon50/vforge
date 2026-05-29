@@ -64,7 +64,7 @@ Formato commits:  Conventional Commits (feat:, fix:, docs:, refactor:)
 Package manager:  npm (package-lock.json en repo)
 ```
 
-> **Nota histórica:** el brief original especificaba Next 14 + Tailwind 3.4. v0 entregó Next 16 + Tailwind 4 y se adoptó como default. Razón en [`ADR-007`](./decisions/007-adopt-next-16-tailwind-4.md). Para proyectos nuevos, este es el stack base.
+> **Nota histórica:** el brief original especificaba Next 14 + Tailwind 3.4. v0 entregó Next 16 + Tailwind 4; se adoptó **Next 16 + React 19**, pero el repo quedó en **Tailwind 3.4** (la migración a v4 no se completó — ver corrección en [`ADR-007`](./decisions/007-adopt-next-16-tailwind-4.md)). Para proyectos nuevos, ese es el stack base.
 
 **Nunca:** MUI, Chakra, Mantine, styled-components, emotion, iconos genéricos infantiles, pnpm (incompatible con CI actual).
 
@@ -416,7 +416,7 @@ Cuando le dijimos a v0 *"crea una mascota orb verde con dos ojitos"*, sustituyó
 
 ### 9.4 Confiar en los defaults de v0 — no pelear con su scaffold
 
-v0 ya usa Next 14 + shadcn + Tailwind. Forzarlo a otra cosa cuesta horas y rompe su preview. Para stacks distintos (Vite, Astro), no uses v0 — escribe el código a mano o con Cursor.
+v0 ya usa Next 16 + shadcn + Tailwind. Forzarlo a otra cosa cuesta horas y rompe su preview. Para stacks distintos (Vite, Astro), no uses v0 — escribe el código a mano o con Cursor.
 
 ### 9.5 Inline script para evitar flash de tema
 
@@ -499,8 +499,7 @@ Sesgo descubierto al iterar la marca: tras una sola falla de v0 con la descripci
 
 | Paso | Por qué manual | Frecuencia |
 |---|---|---|
-| Aprobar acciones de Anillo 2 en `/forge` chat (deploy producción, env vars, dominios, GitHub Actions) | Diseño de seguridad — freno humano | Cada acción |
-| Aprobar acciones de Anillo 3 (rotar key, billing, borrar proyecto) con confirmación + 2FA | Diseño de seguridad — máxima fricción intencional | Raro, pero crítico |
+| Revisar el aviso de V en acciones de Anillo 3 (borrar repo/proyecto, drop DB de producción, rotar master key del vault) | V ejecuta y avisa en la misma respuesta — el freno es el audit log + revert trivial, no una pre-confirmación bloqueante (ver `AGENTS.md §2`) | Raro, pero crítico |
 | Revisar dashboards de costo de cada provider (Anthropic, OpenAI, Gemini, Vercel, Neon) | Detectar uso anómalo antes de un cap automático | Semanal hasta que M9 (cost tracking) esté live |
 | Auditar `audit_events` periódicamente | Detectar accesos sospechosos | Mensual |
 | Aprobar PRs marcados como `Ready for review` | Veto humano sobre código que va a producción | Cada PR |

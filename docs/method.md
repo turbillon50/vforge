@@ -54,7 +54,7 @@ Package manager:  npm
 
 | Agente | Su rol | Cuándo entra |
 |---|---|---|
-| **Luis (humano)** | Director de producto, decisiones, criterio visual, aprueba acciones de Anillo 2/3 | Siempre |
+| **Luis (humano)** | Director de producto, decisiones, criterio visual, revisa avisos de Anillo 3 y audita el log | Siempre |
 | **ChatGPT image gen** | Mockups, logos, mascotas | Concepción visual |
 | **Claude planner** (claude.ai) | Sistemas, briefs, prompts maestros | Inicio del proyecto |
 | **Claude Code** (este agente) | Repo, git, GitHub, docs, prompts refinados, integraciones, código | Capa 3 — todo lo no-visual |
@@ -96,7 +96,7 @@ CAPA 3 — Código directo en el repo (Claude Code)
 | **6. Handoff** | Hace `Sync to GitHub` desde v0 | Anillo 1 técnico (botón v0) |
 | **7. Integraciones** | **Genera tokens scope-limited** y los manda al chat | Anthropic/Claude policies + estándar de seguridad |
 | **M0 — Vault** | Crea su Vault Master Password + descarga backup codes | Zero-knowledge: Claude jamás ve la clave |
-| **M2/M3 cerebro** | Aprueba acciones de Anillo 2/3 en chat con botón "Procede" | Compliance + freno humano |
+| **M2/M3 cerebro** | Revisa los avisos de Anillo 3 que V emite al ejecutar | Trazabilidad — audit log + revert (ver ADR-010) |
 | **Producción** | Decide cuándo abrir registro a clientes externos | Decisión de negocio |
 
 **Lo que NUNCA hace Luis manualmente** (todo automatizado por Claude Code o Forge AI):
@@ -167,7 +167,7 @@ Algunas tareas las bloquean Anthropic policies o limitaciones técnicas. **No es
 | **Generar API tokens** en Vercel, Name.com, Neon, Clerk, Anthropic, OpenAI, etc. | Cada provider exige login en su dashboard | Operador genera con scope mínimo, los pega en chat |
 | **Comprar dominios** | Compromiso financiero | Operador compra en Name.com (~$3-25/año) |
 | **Pagar plans de Vercel/Neon/Clerk** cuando Free se queda corto | Compromiso financiero | Operador upgrade desde dashboard |
-| **Aprobar acciones de Anillo 2/3** en `/forge` chat | Diseño de seguridad | Operador da clic "Procede" |
+| **Revisar avisos de Anillo 3** en `/forge` chat | Trazabilidad — V ejecuta + avisa, el freno es el audit log (ver ADR-010) | Operador lee el aviso; revert si hace falta |
 | **Crear su Vault Master Password** | Zero-knowledge — Claude jamás ve la clave | Operador la teclea en cliente |
 | **Guardar backup codes** del Vault | Zero-knowledge — single source of truth physical | Operador los descarga, los imprime, los guarda |
 | **Conectar el primer dominio satélite en Clerk dashboard** | Política de Clerk requiere consola | Operador hace 5 clicks una vez por proyecto |
