@@ -416,7 +416,7 @@ Cuando le dijimos a v0 *"crea una mascota orb verde con dos ojitos"*, sustituyó
 
 ### 9.4 Confiar en los defaults de v0 — no pelear con su scaffold
 
-v0 ya usa Next 14 + shadcn + Tailwind. Forzarlo a otra cosa cuesta horas y rompe su preview. Para stacks distintos (Vite, Astro), no uses v0 — escribe el código a mano o con Cursor.
+v0 ya usa Next 16 + shadcn + Tailwind. Forzarlo a otra cosa cuesta horas y rompe su preview. Para stacks distintos (Vite, Astro), no uses v0 — escribe el código a mano o con Cursor.
 
 ### 9.5 Inline script para evitar flash de tema
 

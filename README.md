@@ -25,11 +25,11 @@ By Luis Humberto de la Torre Herrera · All Global Holding LLC / MIRMAR EMPRESAS
 
 `claude/vforge-frontend-mvp-A4BrL`
 
-Scaffold base de Next.js 14 (TypeScript estricto + Tailwind + App Router) listo para recibir el código exportado de **v0.dev**. Una vez generado en v0, se hará `Sync to GitHub` apuntando a esta rama.
+Scaffold base de Next.js 16 (TypeScript estricto + Tailwind + App Router) listo para recibir el código exportado de **v0.dev**. Una vez generado en v0, se hará `Sync to GitHub` apuntando a esta rama.
 
 ## Stack
 
-- Next.js 14 (App Router)
+- Next.js 16 (App Router)
 - TypeScript estricto
 - Tailwind CSS 3.4
 - shadcn/ui (se agrega cuando v0 genere)

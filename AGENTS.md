@@ -6,7 +6,7 @@
 
 ## ¿Qué es vForge?
 
-Una fábrica de aplicaciones operada por Luis Humberto de la Torre Herrera (All Global Holding LLC / MIRMAR EMPRESAS S.A. de C.V.). El objetivo final: que el agente **Forge AI** dentro de la app orqueste a otros agentes para construir, desplegar y mantener aplicaciones de Luis con confirmación humana en las acciones sensibles.
+Una fábrica de aplicaciones operada por Luis Humberto de la Torre Herrera (All Global Holding LLC / MIRMAR EMPRESAS S.A. de C.V.). El objetivo final: que el agente **Forge AI** dentro de la app orqueste a otros agentes para construir, desplegar y mantener aplicaciones de Luis — ejecutando directo y avisando (no pidiendo permiso) en las acciones irreversibles de gran blast radius (ver §2).
 
 Este repo es el código de la app vForge (la fábrica) y, por dogfooding, también es el primer proyecto que la fábrica construye.
 
@@ -26,7 +26,7 @@ Este repo es el código de la app vForge (la fábrica) y, por dogfooding, tambi�
 
 | Agente | Su rol | Cuándo entra |
 |---|---|---|
-| **Luis (humano)** | Director de producto, decisiones finales, criterio visual, aprueba acciones de Anillo 2/3 | Siempre. Es el operador. |
+| **Luis (humano)** | Director de producto, decisiones finales, criterio visual, revisa avisos de Anillo 3 y audita el log | Siempre. Es el operador. |
 | **ChatGPT image gen** (manual, vía Luis) | Generación de mockups y referencias visuales (logos, mascotas) | Cuando se necesita una imagen original |
 | **Claude Planner** (claude.ai, manual) | Sistemas thinking, briefs largos, prompts maestros, prosa de planning | Al inicio de cada proyecto, cuando haga falta replanteamiento |
 | **Claude Code** (este agente) | Edición de repo, git ops, GitHub, docs, prompts refinados, audits, configs, CI | Capa 3 del playbook. Cualquier cosa que sea código no-UI |
@@ -109,7 +109,7 @@ Pegando prompt de `docs/v0-prompt.md` o lenguaje natural. v0 genera. Sync a GitH
 v0 sincroniza a la rama `v0-sync`. Luis avisa en chat. Claude Code hace `git fetch origin v0-sync`, audit, merge curado a la rama de feature.
 
 ### Claude Code → Forge AI (futuro)
-Cuando Forge AI esté funcional, leerá `AGENTS.md` y `architecture.md`, conocerá su rol, y podrá ejecutar capas 1–3 con confirmación humana en Anillos 2/3.
+Cuando Forge AI esté funcional, leerá `AGENTS.md` y `architecture.md`, conocerá su rol, y podrá ejecutar capas 1–3 directo, avisando (no pidiendo permiso) en Anillo 3 — ver §2.
 
 ---
 

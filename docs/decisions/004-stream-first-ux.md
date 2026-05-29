@@ -5,6 +5,8 @@
 - **Decisores:** Luis, Claude Code
 - **Contexto técnico:** UX del chat `/forge` y orquestación de pasos
 
+> **Nota (2026-05-29):** la parte de "pausar el stream y esperar confirmación humana para Anillo 2/3" quedó **superseded por [ADR-010](./010-execute-first-doctrine.md)**: V ejecuta directo y avisa en la misma respuesta. El resto de este ADR (stream-first, plan inline) sigue vigente.
+
 ## Contexto
 
 Cuando Forge ejecuta una tarea multi-paso (ej. "cambia el logo del Castores"), hay dos paradigmas de UX posibles:

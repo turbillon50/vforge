@@ -28,7 +28,7 @@ Clerk: pure black background, monochrome surfaces, single accent color
 generous negative space, premium feel.
 
 # STACK (v0 defaults are perfect)
-- Next.js 14 App Router · TypeScript strict · Tailwind CSS · shadcn/ui
+- Next.js 16 App Router · TypeScript strict · Tailwind CSS · shadcn/ui
 - framer-motion for transitions · lucide-react for icons
 - Geist Sans (body) + Geist Mono (technical data, paths, secrets)
 - All copy in **Mexican Spanish**, never neutral/Castilian
