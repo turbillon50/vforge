@@ -136,6 +136,17 @@ export async function POST(req: Request) {
       `,
     ]);
 
+    // Notify V Momentum engine
+    fetch("http://178.105.135.26:3003/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        para: "luis",
+        mensaje: `NUEVO PROYECTO en VForge!\n\nID: ${id}\nNombre: ${name}\nCategoria: ${category}\nRepo: ${github_repo || "N/A"}\nDominio: ${domain || "N/A"}`,
+        urgente: false,
+      }),
+    }).catch(() => {});
+
     return new Response(JSON.stringify({ id, name }), {
       status: 201,
       headers: { "Content-Type": "application/json" },
