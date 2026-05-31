@@ -127,9 +127,9 @@ function buildNodes(rawNodes: Omit<GraphNode, "ox"|"oy"|"oz"|"_sx"|"_sy"|"_d"|"_
   const nodes: GraphNode[] = [];
 
   vercelRaw.forEach((n, i) => {
-    const pos = fibonacci3D(i, vercelRaw.length, SPHERE_IN);
+    const { x: ox, y: oy, z: oz } = fibonacci3D(i, vercelRaw.length, SPHERE_IN);
     const node: GraphNode = {
-      ...n, ...pos,
+      ...n, ox, oy, oz,
       _sx: 0, _sy: 0, _d: 1, _sr: 8, _rz: 0,
       r: n.data.ghRepo ? 9 : 7,
       color: nodeColor(n),
@@ -139,9 +139,9 @@ function buildNodes(rawNodes: Omit<GraphNode, "ox"|"oy"|"oz"|"_sx"|"_sy"|"_d"|"_
   });
 
   githubRaw.forEach((n, i) => {
-    const pos = fibonacci3D(i, githubRaw.length, SPHERE_OUT);
+    const { x: ox, y: oy, z: oz } = fibonacci3D(i, githubRaw.length, SPHERE_OUT);
     const node: GraphNode = {
-      ...n, ...pos,
+      ...n, ox, oy, oz,
       _sx: 0, _sy: 0, _d: 1, _sr: 6, _rz: 0,
       r: 5.5,
       color: nodeColor(n),
