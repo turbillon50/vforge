@@ -8,13 +8,10 @@
  * audits a `forge.tool.invoke` event so we can trace what V did
  * during a turn.
  *
- * Privilege rings (blast-radius classification — V executes directly; the
- * audit log + trivial revert are the human brake, not pre-confirmation):
+ * Privilege rings:
  *   ring 0  read-only, auto-allowed
  *   ring 1  write side-effects in operator's own resources, allowed
- *   ring 2  destructive or expensive — V executes + warns in the same turn
- *   ring 3  irreversible high-blast — executes + warns; hard gate only where
- *           a destructive path requires it (allow_main to delete from 'main')
+ *   ring 2  destructive or expensive — would need confirmation (none yet)
  */
 import type { Tool } from "@anthropic-ai/sdk/resources/messages";
 import { sql } from "@/lib/db/client";
@@ -201,10 +198,10 @@ export const TOOLS: Tool[] = [
     },
   },
 
-  // ─── GitHub write ────────────────────────────────────────────────────
-  // create/update escriben directo, incluso a 'main' (el dispatcher sugiere
-  // github_run_check + revert si CI rompe, no bloquea). Solo github_delete_file
-  // exige allow_main=true para borrar de 'main'.
+  // ─── GitHub write (Ring 1, escrituras en feature branches) ───────────
+  // Por AGENTS.md §2: escribir a la rama 'main' es Ring 2 (destructivo
+  // potencial sobre prod). El dispatcher rechaza writes a main salvo
+  // que el caller pase allow_main=true explícito.
   {
     name: "github_create_repo",
     description:
@@ -235,7 +232,7 @@ export const TOOLS: Tool[] = [
   {
     name: "github_create_file",
     description:
-      "Crea un archivo nuevo en un repo. Falla 422 si el path ya existe — usa github_update_file en ese caso. El contenido se manda en plain UTF-8, la tool lo encodea a base64. Default branch = 'main'. Después de escribir a main conviene correr github_run_check para validar CI; si rompe, revierte con github_revert_commit.",
+      "Crea un archivo nuevo en un repo. Falla 422 si el path ya existe — usa github_update_file en ese caso. El contenido se manda en plain UTF-8, la tool lo encodea a base64. Para escribir a 'main' (Ring 2): PRIMERO pide confirmación a Luis en texto, LUEGO llama con confirmed=true. Default branch = 'main' (obliga a especificar feature branch si no quieres main).",
     input_schema: {
       type: "object",
       properties: {
@@ -244,7 +241,11 @@ export const TOOLS: Tool[] = [
         path: { type: "string", description: "Ruta relativa (ej. 'docs/runbook.md')" },
         content: { type: "string", description: "Contenido en UTF-8 plain (sin base64)" },
         message: { type: "string", description: "Commit message (Conventional Commits preferred)" },
-        branch: { type: "string", description: "Branch destino. Default 'main'." },
+        branch: { type: "string", description: "Branch destino. Default 'main'. Si es main, requiere confirmed=true." },
+        confirmed: {
+          type: "boolean",
+          description: "REQUERIDO si branch='main'. Set true SOLO después de que Luis confirmó explícitamente escribir a main. Ring 2 — V debe solicitar confirmación primero.",
+        },
       },
       required: ["owner", "repo", "path", "content", "message"],
     },
@@ -252,7 +253,7 @@ export const TOOLS: Tool[] = [
   {
     name: "github_update_file",
     description:
-      "Actualiza un archivo existente en un repo. Si no le pasas sha, lo busca con un GET previo. Después de actualizar main conviene correr github_run_check para validar CI; si rompe, revierte con github_revert_commit.",
+      "Actualiza un archivo existente en un repo. Si no le pasas sha, lo busca con un GET previo. Para escribir a 'main' (Ring 2): PRIMERO pide confirmación a Luis en texto, LUEGO llama con confirmed=true.",
     input_schema: {
       type: "object",
       properties: {
@@ -265,7 +266,11 @@ export const TOOLS: Tool[] = [
           type: "string",
           description: "Blob SHA del archivo. Si no se pasa, se resuelve automáticamente con un GET previo.",
         },
-        branch: { type: "string", description: "Branch destino. Default 'main'." },
+        branch: { type: "string", description: "Branch destino. Default 'main'. Si es main, requiere confirmed=true." },
+        confirmed: {
+          type: "boolean",
+          description: "REQUERIDO si branch='main'. Set true SOLO después de que Luis confirmó explícitamente escribir a main. Ring 2.",
+        },
       },
       required: ["owner", "repo", "path", "content", "message"],
     },
@@ -1221,7 +1226,7 @@ export const TOOLS: Tool[] = [
   {
     name: "browser_control",
     description:
-      "Controla un navegador headless (Playwright) en el servidor de V. Acciones: goto, click, type, screenshot, get_html, get_text, describe_element, execute_script. Soporta wait_for_selector para esperar elementos antes de actuar. Úsala para verificar UI de deploys, web scraping/OSINT, automatización de formularios. Si devuelve 404 el server del Hetzner está desactualizado — repórtaselo a Luis.",
+      "Controla un navegador headless (Playwright) en el servidor de V. Acciones: goto, click, type, screenshot, get_html, get_text, describe_element, execute_script. Soporta wait_for_selector para esperar elementos antes de actuar. Úsala para verificar UI de deploys, web scraping/OSINT, automatización de formularios. (Nota: endpoint /browser puede no estar implementado todavía en api.py — si 404, repórtalo a Luis para que el servidor lo agregue.)",
     input_schema: {
       type: "object",
       properties: {
@@ -1240,7 +1245,7 @@ export const TOOLS: Tool[] = [
   {
     name: "image_generation",
     description:
-      "Genera una imagen vía OpenRouter (Gemini Image / FLUX / Recraft) en el servidor de V. Default: google/gemini-3.1-flash-image-preview ('Nano Banana') con generación + edición + multi-turn. ~$0.014/imagen 1024x1024 contra el saldo OpenRouter de Luis. Úsala para hero images, ilustraciones, logos preliminares. Si devuelve 404 el server del Hetzner está desactualizado — repórtaselo a Luis.",
+      "Genera una imagen vía OpenRouter (Gemini Image / FLUX / Recraft) en el servidor de V. Default: google/gemini-3.1-flash-image-preview ('Nano Banana') con generación + edición + multi-turn. ~$0.014/imagen 1024x1024 contra el saldo OpenRouter de Luis. Úsala para hero images, ilustraciones, logos preliminares. (Nota: endpoint /generate-image puede no estar implementado todavía en api.py — si 404, repórtalo a Luis.)",
     input_schema: {
       type: "object",
       properties: {
@@ -1255,7 +1260,7 @@ export const TOOLS: Tool[] = [
   {
     name: "ssh_command_executor",
     description:
-      "Ejecuta un comando shell en un servidor remoto vía SSH. Para gestión de infraestructura, deploy, automatización de tareas Linux. Soporta password o llave privada, sudo opcional, timeout configurable. Las credenciales NUNCA se loguean (audit las redacta). Ejecuta directo lo que Luis te pida. Para comandos genuinamente destructivos en producción (rm -rf, shutdown, drop database, dd, mkfs) describe en la misma respuesta qué vas a hacer y ejecuta — no pares a preguntar a menos que Luis lo pida.",
+      "Ejecuta un comando shell en un servidor remoto vía SSH. Esencial para gestión de infraestructura, deploy de microservicios, automatización de tareas en Linux. Soporta password o llave privada, sudo opcional, timeout configurable. Las credenciales NUNCA se loguean (audit las redacta). RING 2 — destructivo: un comando mal puesto puede tumbar un servidor. SIEMPRE PIDE CONFIRMACIÓN A LUIS antes de ejecutar — primero describe el comando y por qué, espera el 'sí', LUEGO rellama con confirmed=true. (Nota: endpoint /ssh-execute puede no estar implementado todavía en api.py — si 404, repórtalo a Luis.)",
     input_schema: {
       type: "object",
       properties: {
@@ -1267,6 +1272,7 @@ export const TOOLS: Tool[] = [
         sudo: { type: "boolean", description: "Anteponer 'sudo' al comando. Default false." },
         port: { type: "number", description: "Puerto SSH. Default 22." },
         timeout_seconds: { type: "number", description: "Timeout en segundos (1-300). Default 60." },
+        confirmed: { type: "boolean", description: "DEBE ser true para que el comando se ejecute (gate ring 2). Primero describe el comando a Luis en texto, espera 'sí' explícito, LUEGO rellama con confirmed=true." },
       },
       required: ["host", "command"],
     },
@@ -1286,6 +1292,75 @@ export interface ToolExecutionResult {
   summary: string;
 }
 
+type AutonomyMode = "observe" | "build" | "operate" | "root";
+
+const AUTONOMY_RANK: Record<AutonomyMode, number> = {
+  observe: 0,
+  build: 1,
+  operate: 2,
+  root: 3,
+};
+
+function getAutonomyMode(): AutonomyMode {
+  const raw = (process.env.VFORGE_AUTONOMY_MODE ?? "build").toLowerCase();
+  if (raw === "observe" || raw === "build" || raw === "operate" || raw === "root") {
+    return raw;
+  }
+  return "build";
+}
+
+function requiredModeForTool(name: string): AutonomyMode {
+  if (
+    name.includes("delete") ||
+    name.includes("revert") ||
+    name === "ssh_command_executor" ||
+    name === "remote_execution"
+  ) {
+    return "root";
+  }
+  if (
+    name.startsWith("vercel_") ||
+    name.startsWith("namecom_") ||
+    name.startsWith("project_secret_") ||
+    name === "http_request" ||
+    name === "browser_control" ||
+    name === "image_generation" ||
+    name === "github_run_check"
+  ) {
+    return "operate";
+  }
+  if (
+    name.startsWith("github_create") ||
+    name.startsWith("github_update") ||
+    name.startsWith("skill_") ||
+    name.startsWith("directive_") ||
+    name === "memory_save" ||
+    name === "agent_config_set"
+  ) {
+    return "build";
+  }
+  return "observe";
+}
+
+function checkAutonomy(name: string): ToolExecutionResult | null {
+  const current = getAutonomyMode();
+  const required = requiredModeForTool(name);
+  if (AUTONOMY_RANK[current] >= AUTONOMY_RANK[required]) return null;
+  return {
+    ok: false,
+    content: JSON.stringify({
+      error: "capability blocked by VFORGE_AUTONOMY_MODE",
+      tool: name,
+      currentMode: current,
+      requiredMode: required,
+      modes: ["observe", "build", "operate", "root"],
+      instruction:
+        "Set VFORGE_AUTONOMY_MODE to the required mode in the server environment, then retry.",
+    }),
+    summary: `${name} requiere modo ${required} (actual: ${current})`,
+  };
+}
+
 export async function executeTool(
   name: string,
   input: Record<string, unknown>,
@@ -1294,7 +1369,7 @@ export async function executeTool(
   const startedAt = Date.now();
   let result: ToolExecutionResult;
   try {
-    result = await dispatch(name, input, ctx);
+    result = checkAutonomy(name) ?? await dispatch(name, input, ctx);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     result = {
@@ -1528,6 +1603,19 @@ async function dispatch(
           typeof input.branch === "string" && input.branch.length > 0
             ? input.branch
             : "main";
+        const confirmed = input.confirmed === true;
+
+        if (branch === "main" && !confirmed) {
+          return {
+            ok: false,
+            content: JSON.stringify({
+              error: "Ring 2: escribir a main requiere confirmación explícita de Luis primero",
+              instruction: "V: '¿Luis, confirmas que escriba este archivo a main?' Espera confirmación, LUEGO rellamá la tool con confirmed=true.",
+              failureCode: "RING2_NEEDS_CONFIRMATION",
+            }),
+            summary: `❌ ${owner}/${repo}#main:${path} — requiere confirmación de Luis`,
+          };
+        }
 
         const result = await ghCreateFile(owner, repo, path, content, message, {
           branch,
@@ -1535,7 +1623,7 @@ async function dispatch(
         });
 
         const summary = branch === "main"
-          ? `✅ creado ${owner}/${repo}#${branch}:${path} — sugerencia: github_run_check(repo='${repo}', branch='main') para validar CI; si falla, github_revert_commit(sha='${result.commit_sha}').`
+          ? `✅ creado ${owner}/${repo}#${branch}:${path} — ⚠️ DEBES ejecutar github_run_check(repo='${repo}', branch='main', reason='validate after create'). Si falla, usa github_revert_commit(sha='${result.commit_sha}').`
           : `created ${owner}/${repo}#${branch}:${path}`;
 
         return {
@@ -1543,7 +1631,7 @@ async function dispatch(
           content: JSON.stringify({
             ...result,
             _validation_note: branch === "main"
-              ? `Wrote to main. Commit SHA: ${result.commit_sha}. Sugerencia: github_run_check, y revert si CI rompe.`
+              ? `Ring 2 write to main. Commit SHA: ${result.commit_sha}. NEXT: github_run_check then github_revert_commit if needed.`
               : undefined,
           }),
           summary,
@@ -1571,6 +1659,19 @@ async function dispatch(
           typeof input.branch === "string" && input.branch.length > 0
             ? input.branch
             : "main";
+        const confirmed = input.confirmed === true;
+
+        if (branch === "main" && !confirmed) {
+          return {
+            ok: false,
+            content: JSON.stringify({
+              error: "Ring 2: escribir a main requiere confirmación explícita de Luis primero",
+              instruction: "V: '¿Luis, confirmas que actualice este archivo en main?' Espera confirmación, LUEGO rellamá la tool con confirmed=true.",
+              failureCode: "RING2_NEEDS_CONFIRMATION",
+            }),
+            summary: `❌ ${owner}/${repo}#main:${path} — requiere confirmación de Luis`,
+          };
+        }
 
         const result = await ghUpdateFile(owner, repo, path, content, message, {
           sha: typeof input.sha === "string" ? input.sha : undefined,
@@ -1579,7 +1680,7 @@ async function dispatch(
         });
 
         const summary = branch === "main"
-          ? `✅ actualizado ${owner}/${repo}#${branch}:${path} — sugerencia: github_run_check(repo='${repo}', branch='main') para validar CI; si falla, github_revert_commit(sha='${result.commit_sha}').`
+          ? `✅ actualizado ${owner}/${repo}#${branch}:${path} — ⚠️ DEBES ejecutar github_run_check(repo='${repo}', branch='main', reason='validate after update'). Si falla, usa github_revert_commit(sha='${result.commit_sha}').`
           : `updated ${owner}/${repo}#${branch}:${path}`;
 
         return {
@@ -1587,7 +1688,7 @@ async function dispatch(
           content: JSON.stringify({
             ...result,
             _validation_note: branch === "main"
-              ? `Updated main. Commit SHA: ${result.commit_sha}. Sugerencia: github_run_check, y revert si CI rompe.`
+              ? `Ring 2 write to main. Commit SHA: ${result.commit_sha}. NEXT: github_run_check then github_revert_commit if needed.`
               : undefined,
           }),
           summary,
@@ -3349,6 +3450,20 @@ async function dispatch(
     case "ssh_command_executor": {
       const host = requireString(input.host, "host");
       const command = requireString(input.command, "command");
+      const confirmed = input.confirmed === true;
+      if (!confirmed) {
+        return {
+          ok: false,
+          content: JSON.stringify({
+            error: "Ring 2: ejecutar SSH en un servidor remoto requiere confirmación explícita de Luis primero",
+            instruction: `V: describe a Luis qué comando vas a correr ("voy a ejecutar 'X' en host Y porque Z"). Espera su 'sí' explícito. LUEGO rellamá la tool con confirmed=true.`,
+            failureCode: "RING2_NEEDS_CONFIRMATION",
+            host,
+            command,
+          }),
+          summary: `ssh ${host}: necesita confirmación de Luis primero`,
+        };
+      }
       const payload: Record<string, unknown> = { host, command };
       if (typeof input.username === "string") payload.username = input.username;
       if (typeof input.password === "string") payload.password = input.password;
