@@ -48,7 +48,6 @@ interface GraphNode {
 interface GraphEdge { s: string; t: string }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const OPERATOR_TOKEN_KEY = "vforge_operator_token";
 const FOV = 680;
 const SPHERE_IN  = 200;
 const SPHERE_OUT = 360;
@@ -188,16 +187,9 @@ export function ProjectGraph() {
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
   useEffect(() => {
-    const token = typeof window !== "undefined"
-      ? window.localStorage.getItem(OPERATOR_TOKEN_KEY) ?? ""
-      : "";
-
     setLoadMsg("Cargando proyectos…");
 
-    fetch("/api/graph/data", {
-      cache: "no-store",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    fetch("/api/graph/data", { cache: "no-store" })
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status} — revisa que el operator token esté configurado`);
         return r.json() as Promise<{ nodes: typeof state.current.nodes; edges: GraphEdge[]; stats: typeof stats }>;
