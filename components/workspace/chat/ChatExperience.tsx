@@ -289,6 +289,16 @@ export function ChatExperience() {
       smooth.reset();
       setStreamingId(aId);
       let assembled = "";
+      let reasoningOpen = false;
+      const visibleDelta = (value: string) => {
+        const cleaned = stripReasoningDelta(value, {
+          isOpen: reasoningOpen,
+          setOpen: (next) => {
+            reasoningOpen = next;
+          },
+        });
+        return cleaned;
+      };
 
       // Historia previa como text-only (no replay de imágenes — costo).
       const history: { role: "user" | "assistant"; content: string | StructuredBlock[] }[] =
@@ -347,8 +357,10 @@ export function ChatExperience() {
             try {
               const evt = JSON.parse(line.slice(6)) as SSEEvent;
               if (evt.type === "text") {
-                assembled += evt.value;
-                smooth.push(evt.value);
+                const visible = visibleDelta(evt.value);
+                if (!visible) continue;
+                assembled += visible;
+                smooth.push(visible);
               } else if (evt.type === "error") {
                 const tail = `\n\n⚠ ${sanitizeError(evt.message)}`;
                 assembled += tail;
@@ -1083,6 +1095,38 @@ function writeFeedback(messageId: string, value: "up" | "down" | null) {
   } catch {
     // ignore quota / parse
   }
+}
+
+function stripReasoningDelta(
+  value: string,
+  state: { isOpen: boolean; setOpen: (next: boolean) => void },
+): string {
+  let text = value;
+  let out = "";
+
+  while (text.length > 0) {
+    if (state.isOpen) {
+      const end = text.search(/<\/(?:think|thinking|reasoning)>/i);
+      if (end === -1) return out;
+      text = text.slice(end).replace(/^<\/(?:think|thinking|reasoning)>/i, "");
+      state.setOpen(false);
+      continue;
+    }
+
+    const start = text.search(/<(?:think|thinking|reasoning)>/i);
+    if (start === -1) {
+      out += text;
+      break;
+    }
+    out += text.slice(0, start);
+    text = text.slice(start).replace(/^<(?:think|thinking|reasoning)>/i, "");
+    state.setOpen(true);
+  }
+
+  return out
+    .split("\n")
+    .filter((line) => !/^\s*(pensando|proceso|razonamiento|chain of thought|thoughts?)\s*:/i.test(line))
+    .join("\n");
 }
 
 function AssistantActions({

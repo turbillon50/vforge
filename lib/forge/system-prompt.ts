@@ -1,4 +1,10 @@
 import { queryAll, queryOne } from "@/lib/db/client";
+import {
+  getFileContent,
+  getRepo,
+  getRepoTree,
+  listRecentCommits,
+} from "@/lib/github/client";
 
 interface SystemConfig {
   ai_name: string;
@@ -25,9 +31,17 @@ interface ProjectFocus {
   github_repo: string | null;
   github_url: string | null;
   github_private: boolean;
+  github_default_branch: string | null;
   github_language: string | null;
   vercel_url: string | null;
   domain: string | null;
+}
+
+interface RepoFocusContext {
+  detail: string;
+  tree: string;
+  files: string;
+  commits: string;
 }
 
 interface AgentDirective {
@@ -125,12 +139,16 @@ export async function buildSystemPrompt(
   if (options.projectId) {
     projectFocus = await queryOne<ProjectFocus>(
       `SELECT id, name, description, category, status,
-              github_repo, github_url, github_private, github_language,
+              github_repo, github_url, github_private, github_default_branch, github_language,
               vercel_url, domain
          FROM projects WHERE id = $1`,
       [options.projectId],
     );
   }
+
+  const repoFocusContext = projectFocus
+    ? await buildRepoFocusContext(projectFocus)
+    : null;
 
   // ─── NEW: Load dynamic directives (mantra + directive + preference) ───
   // Graceful fallback if table doesn't exist yet (pre-migration)
@@ -142,7 +160,7 @@ export async function buildSystemPrompt(
        WHERE active = true
        ORDER BY priority ASC, created_at ASC`,
     );
-  } catch (e) {
+  } catch {
     // Table doesn't exist yet - that's ok, use empty array
     console.log("[V] agent_directives table not found, using defaults");
   }
@@ -157,7 +175,7 @@ export async function buildSystemPrompt(
        WHERE active = true AND installed_at IS NOT NULL
        ORDER BY installed_at ASC`,
     );
-  } catch (e) {
+  } catch {
     // Table doesn't exist yet - that's ok, use empty array
     console.log("[V] skills table not found, using defaults");
   }
@@ -182,9 +200,27 @@ export async function buildSystemPrompt(
         `categoría:    ${projectFocus.category}`,
         `estado:       ${projectFocus.status}`,
         `repo:         ${projectFocus.github_repo ?? "—"}${projectFocus.github_private ? " (privado)" : ""}`,
+        `branch:       ${projectFocus.github_default_branch ?? "—"}`,
         `lenguaje:     ${projectFocus.github_language ?? "—"}`,
         `URL deploy:   ${projectFocus.vercel_url ?? "—"}`,
         `dominio:      ${projectFocus.domain ?? "—"}`,
+        "",
+        repoFocusContext
+          ? [
+              "CONTEXTO REAL DEL REPO",
+              repoFocusContext.detail,
+              "",
+              "Estructura raiz:",
+              repoFocusContext.tree,
+              "",
+              "Archivos clave:",
+              repoFocusContext.files,
+              "",
+              "Commits recientes:",
+              repoFocusContext.commits,
+              "",
+            ].join("\n")
+          : "Contexto real del repo: no disponible. Si Luis pregunta algo tecnico del repo, usa las tools de GitHub antes de responder.",
         "",
         `Esta conversación está enfocada en este proyecto. Cuando Luis pregunte algo sin especificar proyecto, asume que se refiere a ${projectFocus.name}. Si Luis cambia explícitamente de tema, sigue el flujo natural.`,
       ].join("\n")
@@ -222,6 +258,8 @@ export async function buildSystemPrompt(
     "",
     focusSection,
     "",
+    RESPONSE_STYLE_DOCTRINE,
+    "",
     "─────────────────────────────────────────",
     "CONFIGURACIÓN ACTUAL",
     "─────────────────────────────────────────",
@@ -235,6 +273,120 @@ export async function buildSystemPrompt(
   ].filter(line => line !== "").join("\n");
 
   return { systemPrompt, config };
+}
+
+const RESPONSE_STYLE_DOCTRINE = `─────────────────────────────────────────
+ESTILO DE RESPUESTA VISIBLE
+─────────────────────────────────────────
+- Responde como chat: fluido, claro y elegante.
+- No muestres razonamiento interno, borradores, cadenas de pensamiento, trazas de herramientas, JSON de tool calls, ni pasos mentales.
+- No escribas "pensando", "analizando", "proceso", "voy a razonar", "chain of thought", ni narraciones internas.
+- Si estas ejecutando tools, espera el resultado y entrega solo la conclusion util. Si hace falta, resume en una linea lo que hiciste.
+- Cuando el chat esta enfocado en un repo, usa el contexto real del repo antes de hablar. Si falta un archivo concreto, usa GitHub tools para leerlo.
+- Para Luis, prioriza respuesta directa: que paso, que haras/hiciste, resultado, siguiente paso solo si aporta.`;
+
+async function buildRepoFocusContext(
+  project: ProjectFocus,
+): Promise<RepoFocusContext | null> {
+  if (!project.github_repo) return null;
+  const parsed = parseGithubFullName(project.github_repo);
+  if (!parsed) return null;
+
+  const branch = project.github_default_branch ?? undefined;
+  try {
+    const [repo, tree, commits, files] = await Promise.all([
+      getRepo(parsed.owner, parsed.repo, { auditUserId: "operator_luis" }),
+      getRepoTree(parsed.owner, parsed.repo, {
+        branch,
+        recursive: false,
+        auditUserId: "operator_luis",
+      }).catch(() => []),
+      listRecentCommits(parsed.owner, parsed.repo, {
+        limit: 6,
+        auditUserId: "operator_luis",
+      }).catch(() => []),
+      readKeyRepoFiles(parsed.owner, parsed.repo, branch),
+    ]);
+
+    return {
+      detail: [
+        `repo: ${repo.full_name}`,
+        `descripcion: ${repo.description ?? "(sin descripcion)"}`,
+        `lenguaje principal: ${repo.language ?? "desconocido"}`,
+        `default branch: ${repo.default_branch}`,
+        `ultima actividad: ${repo.pushed_at ?? repo.updated_at ?? "desconocida"}`,
+        `topics: ${repo.topics.length ? repo.topics.join(", ") : "(sin topics)"}`,
+      ].join("\n"),
+      tree: tree.length
+        ? tree
+            .slice(0, 60)
+            .map((n) => `${n.type === "tree" ? "dir " : "file"} ${n.path}`)
+            .join("\n")
+        : "(no pude leer el arbol raiz)",
+      files: files.length
+        ? files.map((f) => `--- ${f.path} ---\n${f.content}`).join("\n\n")
+        : "(no encontre README/package/config principal)",
+      commits: commits.length
+        ? commits
+            .map((c) => `${c.sha.slice(0, 7)} ${c.date ?? ""} ${c.message}`)
+            .join("\n")
+        : "(sin commits recientes disponibles)",
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function readKeyRepoFiles(
+  owner: string,
+  repo: string,
+  branch?: string,
+): Promise<Array<{ path: string; content: string }>> {
+  const candidates = [
+    "README.md",
+    "readme.md",
+    "package.json",
+    "pnpm-workspace.yaml",
+    "turbo.json",
+    "next.config.ts",
+    "next.config.js",
+    "vite.config.ts",
+    "src/main.tsx",
+    "app/page.tsx",
+  ];
+  const results = await Promise.all(
+    candidates.map(async (path) => {
+      try {
+        const file = await getFileContent(owner, repo, path, {
+          branch,
+          auditUserId: "operator_luis",
+        });
+        return {
+          path,
+          content: truncateForPrompt(file.content, path.endsWith(".json") ? 2500 : 3500),
+        };
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return results.filter((r): r is { path: string; content: string } => r !== null);
+}
+
+function parseGithubFullName(fullName: string): { owner: string; repo: string } | null {
+  const cleaned = fullName
+    .trim()
+    .replace(/^https:\/\/github\.com\//i, "")
+    .replace(/\.git$/i, "");
+  const [owner, repo] = cleaned.split("/");
+  if (!owner || !repo) return null;
+  return { owner, repo };
+}
+
+function truncateForPrompt(value: string, max: number): string {
+  const clean = value.replace(/\r\n/g, "\n").trim();
+  if (clean.length <= max) return clean;
+  return `${clean.slice(0, max)}\n...[truncado]`;
 }
 
 /**
@@ -259,13 +411,15 @@ EJECUTA, NO ORIENTES
 
 CUERPO EN HETZNER (servidor propio de V)
 - IP fija: 178.105.135.26 — puerto 5000 — Flask blindado con systemd.
-- Endpoints vivos: /health, /execute (Python/Node), /browser (Playwright), /generate-image (OpenRouter/Gemini/FLUX), /ssh-execute (paramiko). Úsalos.
-- Si un endpoint devuelve 404 es que el server del Hetzner está desactualizado — repórtaselo a Luis (necesita redeploy de api.py). NO inventes que jaló.
+- Endpoints disponibles: /health (siempre vivo), /execute (Python/Node).
+- Endpoints pendientes (devuelven 404 hasta que el servidor los agregue): /browser (Playwright), /generate-image (OpenRouter), /ssh-execute (paramiko).
+- Si una tool del servidor falla con "endpoint no existe aún", repórtalo a Luis claramente — NO inventes que jaló.
 - El servidor es laboratorio, no producción: puedes correr cualquier cosa NO destructiva. Nada de rm -rf, nada de tocar /etc.
 
 SSH A SERVIDORES REMOTOS (ssh_command_executor)
-- Ejecuta directo lo que Luis te pida. Para tareas normales (ls, cat, systemctl status, apt list, deploy, mover archivos) no pares a preguntar.
-- Para comandos genuinamente destructivos en producción (rm -rf, shutdown, drop database, dd, mkfs) describe qué vas a hacer en la misma respuesta y ejecuta — no esperes "sí" explícito a menos que Luis lo pida.
+- Es RING 2 — destructivo. Un comando mal puesto puede tumbar un servidor.
+- Antes de mandar comandos destructivos (rm, shutdown, dd, mkfs, drop database), describe a Luis qué vas a hacer y por qué. Luego ejecuta.
+- Para tareas inocuas (ls, cat, systemctl status, apt list) ejecuta directo.
 - Las credenciales (password, private_key) viven en el vault de Luis. Pídeselas por nombre o úsalas de la sesión activa. NUNCA pegues credenciales en chat.
 - Si una conexión SSH falla por timeout o auth: reporta el error literal, no inventes que jaló.
 - Logs: el audit guarda host + comando + resultado, pero redacta password/private_key automáticamente.
@@ -295,12 +449,11 @@ ERRORES → ROOT CAUSE
 - No agregues fallbacks para casos imposibles.
 - Si un build falla: lee el log, identifica la línea, propón el fix exacto.
 
-EJECUTA — LUIS ES TU OPERADOR ÚNICO
-- No pidas permiso para llamar tools. Llámalas.
-- Listar, leer, crear deploys, agregar DNS records, set env vars, escribir/editar archivos en repos del operador, hacer SSH para tareas normales: ejecuta directo.
-- Solo avisa antes (en la MISMA respuesta, sin parar) cuando vayas a hacer algo verdaderamente irreversible de gran blast radius: borrar repos enteros, drop database de producción, rotar la master key del vault, o ejecutar algo que cueste > $10 USD de cómputo de un golpe.
-- "Avisar" = "voy a X porque Y, lo hago." NO es "¿puedo hacer X?". Luis ya te dio el contexto al pedirlo.
-- El audit log graba todo. Si Luis necesita revertir, el revert es trivial.
+CONFIRMACIONES SOLO PARA RING 2+
+- Ring 0 (read): ejecuta directo.
+- Ring 1 (write en recursos del operador): ejecuta y reporta.
+- Ring 2 (destructivo, costoso, afecta a terceros): pregunta antes.
+- No pidas permiso para listar repos, leer archivos, crear deploys nuevos.
 
 RECUERDA
 - Cuando Luis te diga "recuerda que…" → llama memory_save.
