@@ -181,14 +181,12 @@ export function ChatExperience() {
     );
   }, [t.chat.intro]);
 
-  // Autoscroll instantáneo — el smooth de 300ms causaba que el usuario
-  // no viera el thinking indicator inmediatamente al enviar y se
-  // preguntara si V estaba haciendo algo.
+  // Autoscroll instantaneo: V debe sentirse como chat, no como documento.
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
-  }, [messages]);
+  }, [messages, smooth.displayed]);
 
   // Load projects + initial scope
   useEffect(() => {
@@ -462,15 +460,14 @@ export function ChatExperience() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Chat scope bar — sticky top, no scroll mueve esto */}
-      <div className="flex-shrink-0 border-b border-app bg-void/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-2.5 md:px-10">
+      <div className="flex-shrink-0 border-b border-app bg-void/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 py-2 md:px-8">
           {/* Scope selector */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setScopeMenuOpen((v) => !v)}
-              className="flex items-center gap-2 rounded-md border border-app bg-tint-1 px-3 py-1.5 text-sm text-on-surface hover:border-app-strong"
+              className="flex h-8 items-center gap-2 rounded-full border border-app bg-tint-1 px-3 text-sm text-on-surface hover:border-app-strong"
               style={{ touchAction: "manipulation" }}
             >
               {scope === "general" ? (
@@ -526,7 +523,7 @@ export function ChatExperience() {
             onClick={newChat}
             disabled={pending}
             title="Nueva sesión en este scope"
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-app bg-tint-1 text-on-surface-variant hover:border-app-strong hover:text-on-surface disabled:opacity-50"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-app bg-tint-1 text-on-surface-variant hover:border-app-strong hover:text-on-surface disabled:opacity-50"
             style={{ touchAction: "manipulation" }}
           >
             <Plus size={14} />
@@ -539,26 +536,23 @@ export function ChatExperience() {
         </div>
       </div>
 
-      {/* Messages scroller — flex-col-reverse hace que el scroll empiece
-          anclado al BOTTOM. Pocos mensajes → quedan pegados al composer.
-          Muchos → el scroll funciona normal. El wrapper interno mantiene
-          el orden cronológico real (sin invertir messages[]). Este es el
-          patrón estándar de chat (WhatsApp/Claude/ChatGPT). */}
       <div
         ref={scrollerRef}
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col-reverse"
+        className="flex min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
       >
-        <div className="mx-auto w-full max-w-3xl overflow-x-hidden px-3 py-3 md:px-10 md:py-5">
-          {/* Operator header — solo visible cuando el chat está vacío (más
-              espacio para mensajes cuando ya hay conversación). */}
+        <div
+          className={`mx-auto flex min-h-full w-full max-w-3xl flex-col overflow-x-hidden px-3 py-4 md:px-8 md:py-6 ${
+            messages.length <= 4 ? "justify-end" : ""
+          }`}
+        >
           {messages.length <= 1 && (
-            <div className="mb-5 flex flex-col items-center gap-3 py-4 text-center md:mb-8 md:py-8">
-              <VOrb size={56} />
+            <div className="mb-4 flex items-center gap-3 rounded-2xl border border-app bg-surface/35 px-4 py-3">
+              <VOrb size={34} />
               <div>
-                <p className="bg-gradient-to-r from-violet-500 via-violet-400 to-cyan-400 bg-clip-text font-display text-2xl font-semibold tracking-tight text-transparent md:text-3xl">
+                <p className="bg-gradient-to-r from-violet-500 via-violet-400 to-cyan-400 bg-clip-text font-display text-lg font-semibold tracking-tight text-transparent">
                   Hola, soy {t.common.label_b}.
                 </p>
-                <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+                <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
                   {t.chat.operator_label} · {currentScope.label}
                 </p>
               </div>
@@ -599,16 +593,10 @@ export function ChatExperience() {
         </div>
       </div>
 
-      {/* Composer FIJO — flex-shrink-0. El padding-bottom respeta el
-          MobileNav (76px) salvo cuando el teclado mobile está abierto
-          (body.keyboard-open lo reduce a la safe-area sola). */}
       <div
         className="vf-composer-pad flex-shrink-0 border-t border-app bg-void/95 backdrop-blur-xl"
       >
-        <div className="mx-auto max-w-3xl px-2 pt-1 sm:px-4 sm:pt-2 md:px-10 md:pb-1">
-          {/* Quick prompts: solo visibles cuando el chat está vacío para
-              no comer espacio durante conversación. Mobile-only: scroll
-              horizontal en 1 línea; desktop: wrap normal. */}
+        <div className="mx-auto max-w-3xl px-3 pb-2 pt-2 sm:px-4 md:px-8">
           {messages.length <= 1 && (
             <div className="mb-2 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:flex-wrap sm:px-0 sm:pb-0 no-scrollbar">
               {quickPrompts.map((q) => (
@@ -839,14 +827,10 @@ function Composer({
           e.preventDefault();
           if (!pending) onSend();
         }}
-        className="glass relative overflow-hidden rounded-2xl"
+        className="relative overflow-hidden rounded-2xl border border-app bg-surface/90 shadow-elev"
       >
-        <div className="pointer-events-none absolute inset-0 -z-10 opacity-50 [background:radial-gradient(120%_60%_at_50%_0%,rgba(139,92,246,0.18),transparent_70%)]" />
-
-        {/* Composer compacto WhatsApp-style: una sola fila con botones al
-            lado del textarea. Padding mínimo, ingeniería alemana. */}
-        <div className="flex items-end gap-0.5 px-1.5 py-1.5">
-          <div className="flex items-center gap-0 pb-0.5 text-on-surface-variant">
+        <div className="flex items-end gap-2 px-2 py-2">
+          <div className="flex items-center gap-1 pb-0.5 text-on-surface-variant">
             {/* Adjuntar archivo */}
             <input
               ref={fileInputRef}
@@ -858,11 +842,11 @@ function Composer({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="rounded-md p-1.5 hover:bg-tint-2"
+              className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-tint-2"
               aria-label="Adjuntar archivo"
               style={{ touchAction: "manipulation" }}
             >
-              <Paperclip size={14} />
+              <Paperclip size={16} />
             </button>
 
             {/* Cámara — capture environment para abrir cámara directa en mobile */}
@@ -877,11 +861,11 @@ function Composer({
             <button
               type="button"
               onClick={() => cameraInputRef.current?.click()}
-              className="rounded-md p-1.5 hover:bg-tint-2"
+              className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-tint-2"
               aria-label="Foto"
               style={{ touchAction: "manipulation" }}
             >
-              <Camera size={14} />
+              <Camera size={16} />
             </button>
 
             {/* Micrófono — graba audio y transcribe via Whisper */}
@@ -889,7 +873,7 @@ function Composer({
               type="button"
               onClick={recording ? stopRecording : startRecording}
               disabled={transcribing}
-              className={`rounded-md p-1.5 transition-colors ${
+              className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
                 recording
                   ? "bg-error-crimson/15 text-error-crimson animate-pulse"
                   : transcribing
@@ -899,7 +883,7 @@ function Composer({
               aria-label={recording ? "Detener grabación" : "Grabar voz"}
               style={{ touchAction: "manipulation" }}
             >
-              <Mic size={14} />
+              <Mic size={16} />
             </button>
           </div>
 
@@ -911,10 +895,10 @@ function Composer({
             placeholder={
               recording ? "Grabando…" : transcribing ? "Transcribiendo…" : placeholder
             }
-            className="flex-1 resize-none bg-transparent px-1.5 py-1.5 text-[16px] text-on-surface placeholder:text-muted focus:outline-none"
+            className="flex-1 resize-none bg-transparent px-1.5 py-2 text-[16px] leading-6 text-on-surface placeholder:text-muted focus:outline-none"
             style={{
               touchAction: "manipulation",
-              minHeight: 36,
+              minHeight: 44,
               maxHeight: 160,
             }}
             autoComplete="off"
@@ -936,21 +920,21 @@ function Composer({
             <button
               type="button"
               onClick={onStop}
-              className="rounded-md bg-vf-fg p-1.5 text-vf-bg hover:opacity-90"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-vf-fg text-vf-bg hover:opacity-90"
               aria-label="Detener"
               style={{ touchAction: "manipulation" }}
             >
-              <Square size={13} className="fill-current" />
+              <Square size={15} className="fill-current" />
             </button>
           ) : (
             <button
               type="submit"
               disabled={!input.trim() && !attachment}
               aria-label={sendLabel}
-              className="rounded-md bg-gradient-to-br from-violet-500 to-cyan-400 p-1.5 text-on-surface disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-on-surface disabled:cursor-not-allowed disabled:opacity-40"
               style={{ touchAction: "manipulation" }}
             >
-              <ArrowUp size={14} strokeWidth={2.5} />
+              <ArrowUp size={17} strokeWidth={2.5} />
             </button>
           )}
         </div>
@@ -972,10 +956,12 @@ function MessageBubble({
       <motion.div
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        className="group/msg flex w-full min-w-0 gap-3"
+        className="group/msg flex w-full min-w-0 items-start gap-3"
       >
-        <VOrb size={26} />
-        <div className="min-w-0 flex-1 overflow-hidden">
+        <div className="pt-1">
+          <VOrb size={24} />
+        </div>
+        <div className="min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md border border-app bg-surface/75 px-4 py-3 shadow-sm">
           {msg.image && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -1018,7 +1004,7 @@ function MessageBubble({
       animate={{ opacity: 1, y: 0 }}
       className="flex w-full min-w-0 justify-end"
     >
-      <div className="max-w-[82%] min-w-0 rounded-2xl rounded-br-md bg-gradient-to-br from-violet-500 to-cyan-500 px-4 py-2.5 font-sans text-[15px] font-normal leading-[1.55] tracking-[-0.005em] text-white shadow-glow-violet sm:text-[16px]">
+      <div className="max-w-[82%] min-w-0 rounded-2xl rounded-br-md bg-gradient-to-br from-violet-500 to-cyan-500 px-4 py-2.5 font-sans text-[15px] font-normal leading-[1.55] text-white shadow-glow-violet sm:text-[16px]">
         {msg.image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -1045,11 +1031,16 @@ function StreamingBubble({ text, image }: { text: string; image?: string }) {
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex w-full min-w-0 gap-3"
+      className="flex w-full min-w-0 items-start gap-3"
       style={{ contain: "layout style" }}
     >
-      <VOrb size={26} />
-      <div className="min-w-0 flex-1 overflow-hidden" style={{ contain: "layout style" }}>
+      <div className="pt-1">
+        <VOrb size={24} />
+      </div>
+      <div
+        className="min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md border border-app bg-surface/75 px-4 py-3 shadow-sm"
+        style={{ contain: "layout style" }}
+      >
         {image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
