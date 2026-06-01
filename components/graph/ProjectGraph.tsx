@@ -218,11 +218,8 @@ export function ProjectGraph() {
     const ctx = canvas.getContext("2d")!;
 
     const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const w = canvas.offsetWidth, h = canvas.offsetHeight;
-      canvas.width  = Math.round(w * dpr);
-      canvas.height = Math.round(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
     };
     resize();
     window.addEventListener("resize", resize);
