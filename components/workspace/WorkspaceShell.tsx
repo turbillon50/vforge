@@ -117,7 +117,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
             // mobile to clear the floating MobileNav.
             pathname?.startsWith("/app/chat")
               ? "overflow-y-hidden"
-              : "overflow-y-auto pb-24 md:pb-0",
+              : "overflow-y-auto pb-24 md:pb-0 flex flex-col",
           )}
         >
           {children}

@@ -1,5 +1,7 @@
 "use client";
 
+const OPERATOR_TOKEN_KEY = "vforge_operator_token";
+
 /**
  * ProjectGraph
  * 3-D canvas graph — Vercel + GitHub projects.
@@ -635,7 +637,7 @@ export function ProjectGraph() {
 
       {/* Filters */}
       {!loading && (
-        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 flex-wrap justify-center max-w-[90vw]">
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 flex-wrap justify-center max-w-[90vw]">
           {FILTERS.map(f => (
             <button
               key={f.key}
@@ -654,7 +656,7 @@ export function ProjectGraph() {
 
       {/* Search */}
       {!loading && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -668,7 +670,7 @@ export function ProjectGraph() {
 
       {/* Stats */}
       {!loading && (
-        <div className="absolute bottom-4 right-4 z-20 text-right flex flex-col gap-1">
+        <div className="absolute bottom-10 right-4 z-20 text-right flex flex-col gap-1">
           <p className="font-mono text-[10px]" style={{ color:"#223344" }}>Vercel <b style={{ color:"#334466" }}>{stats.vercel}</b></p>
           <p className="font-mono text-[10px]" style={{ color:"#223344" }}>GitHub <b style={{ color:"#334466" }}>{stats.github}</b></p>
           <p className="font-mono text-[10px]" style={{ color:"#223344" }}>Inservibles <b style={{ color:"#ff6633" }}>{stats.dead}</b></p>

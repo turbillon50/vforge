@@ -33,6 +33,10 @@ const config: Config = {
         "cyan-400": "var(--color-cyan-400)",
         "electric-blue": "var(--color-electric-blue)",
         "cyber-cyan": "var(--color-cyan-400)",
+        // tint as theme colors so opacity modifier (bg-tint-1/40) works
+        "tint-1": "rgb(var(--tint-1) / <alpha-value>)",
+        "tint-2": "rgb(var(--tint-2) / <alpha-value>)",
+        "tint-3": "rgb(var(--tint-3) / <alpha-value>)",
         "success-emerald": "var(--color-success-emerald)",
         "error-crimson": "var(--color-error-crimson)",
 

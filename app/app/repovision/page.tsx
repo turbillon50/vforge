@@ -6,13 +6,15 @@ import { ProjectGraph } from "@/components/graph/ProjectGraph";
 import { GitBranch, Lock, Star, LayoutGrid, Workflow } from "lucide-react";
 import { useT } from "@/i18n/AppProviders";
 
+const OPERATOR_TOKEN_KEY = "vforge_operator_token";
+
 interface Repo {
   full_name: string;
   name: string;
   private: boolean;
   description: string | null;
   language: string | null;
-  stars: number;
+  stargazers_count: number;
   default_branch: string;
   pushed_at: string;
   html_url: string;
@@ -36,13 +38,20 @@ export default function RepoVisionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Only fetch repos when in grid view
   useEffect(() => {
     if (view !== "grid") return;
     setLoading(true);
-    fetch("/api/github/repos", { cache: "no-store" })
+    setError(null);
+    const token =
+      typeof window !== "undefined"
+        ? (window.localStorage.getItem(OPERATOR_TOKEN_KEY) ?? "")
+        : "";
+    fetch("/api/github/repos", {
+      cache: "no-store",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status} — configura el operator token en Secretos`);
         return r.json();
       })
       .then((d: { repos: Repo[] }) => setRepos(d.repos ?? []))
@@ -57,8 +66,13 @@ export default function RepoVisionPage() {
         title={t.repovision.title}
         description={t.repovision.body}
         actions={
-          <div className="flex items-center gap-1 rounded-lg p-1"
-               style={{ background: "rgba(30,111,255,0.06)", border: "1px solid rgba(30,111,255,0.15)" }}>
+          <div
+            className="flex items-center gap-1 rounded-lg p-1"
+            style={{
+              background: "rgba(30,111,255,0.06)",
+              border: "1px solid rgba(30,111,255,0.15)",
+            }}
+          >
             <ViewBtn
               active={view === "grid"}
               onClick={() => setView("grid")}
@@ -75,14 +89,14 @@ export default function RepoVisionPage() {
         }
       />
 
-      {/* ── 3D Graph view ─────────────────────────────────────────────── */}
+      {/* Graph 3D — flex-1 so it fills remaining space in the scroll column */}
       {view === "graph" && (
-        <div className="w-full" style={{ height: "calc(100vh - 120px)" }}>
+        <div className="flex-1 min-h-0 mx-0" style={{ minHeight: 400 }}>
           <ProjectGraph />
         </div>
       )}
 
-      {/* ── Grid view ─────────────────────────────────────────────────── */}
+      {/* Grid view */}
       {view === "grid" && (
         <div className="px-5 py-6 md:px-8">
           {error && (
@@ -96,7 +110,8 @@ export default function RepoVisionPage() {
               {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-[120px] rounded-xl border border-app bg-tint-1/40 animate-pulse"
+                  className="h-[120px] rounded-xl border border-app animate-pulse"
+                  style={{ background: "rgba(var(--tint-1), 0.4)" }}
                 />
               ))}
             </div>
@@ -107,7 +122,7 @@ export default function RepoVisionPage() {
               <GitBranch className="mx-auto mb-3 text-violet-300" size={24} />
               <p className="font-display text-lg">No hay repos cargados</p>
               <p className="mt-2 text-sm">
-                Verifica que el GITHUB_TOKEN esté configurado en el vault.
+                Verifica que el operator token esté configurado en Secretos.
               </p>
             </div>
           )}
@@ -138,7 +153,7 @@ export default function RepoVisionPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-1 font-mono text-[11px] text-muted shrink-0">
-                      <Star size={11} /> {r.stars}
+                      <Star size={11} /> {r.stargazers_count}
                     </div>
                   </div>
                   {r.description && (
