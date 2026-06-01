@@ -218,8 +218,11 @@ export function ProjectGraph() {
     const ctx = canvas.getContext("2d")!;
 
     const resize = () => {
-      canvas.width  = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.offsetWidth, h = canvas.offsetHeight;
+      canvas.width  = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
     window.addEventListener("resize", resize);
@@ -272,6 +275,27 @@ export function ProjectGraph() {
     canvas.addEventListener("mousemove", onMove);
     canvas.addEventListener("mouseup",   onUp);
     canvas.addEventListener("wheel",     onWheel, { passive: false });
+
+    // Touch support for mobile
+    const toMouse = (t: Touch, rect: DOMRect) => ({ clientX: t.clientX, clientY: t.clientY });
+    const onTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      const t = e.touches[0]; if (!t) return;
+      onDown({ clientX: t.clientX, clientY: t.clientY } as MouseEvent);
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      const t = e.touches[0]; if (!t) return;
+      onMove({ clientX: t.clientX, clientY: t.clientY } as MouseEvent);
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      const t = e.changedTouches[0]; if (!t) return;
+      onUp({ clientX: t.clientX, clientY: t.clientY } as MouseEvent);
+    };
+    canvas.addEventListener("touchstart",  onTouchStart,  { passive: false });
+    canvas.addEventListener("touchmove",   onTouchMove,   { passive: false });
+    canvas.addEventListener("touchend",    onTouchEnd,    { passive: false });
 
     const draw = () => {
       const s     = state.current;
@@ -404,10 +428,13 @@ export function ProjectGraph() {
     return () => {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", resize);
-      canvas.removeEventListener("mousedown", onDown);
-      canvas.removeEventListener("mousemove", onMove);
-      canvas.removeEventListener("mouseup",   onUp);
-      canvas.removeEventListener("wheel",     onWheel);
+      canvas.removeEventListener("mousedown",  onDown);
+      canvas.removeEventListener("mousemove",  onMove);
+      canvas.removeEventListener("mouseup",    onUp);
+      canvas.removeEventListener("wheel",      onWheel);
+      canvas.removeEventListener("touchstart", onTouchStart);
+      canvas.removeEventListener("touchmove",  onTouchMove);
+      canvas.removeEventListener("touchend",   onTouchEnd);
     };
   }, [loading]);
 
