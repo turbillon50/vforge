@@ -14,6 +14,7 @@ import {
   KeyRound,
   Layers,
   LifeBuoy,
+  Map,
   MessagesSquare,
   Search,
   Settings,
@@ -32,6 +33,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const nav = [
     { href: "/app/chat", label: t.workspace.nav.chat, icon: MessagesSquare, kbd: "C" },
     { href: "/app/repovision", label: t.workspace.nav.repovision, icon: GitBranch, kbd: "R" },
+    { href: "/app/blueprint", label: "Blueprint", icon: Map, kbd: "B" },
     { href: "/app/deployments", label: t.workspace.nav.deployments, icon: Activity, kbd: "D" },
     { href: "/app/marketplace", label: t.workspace.nav.marketplace, icon: Layers, kbd: "M" },
     { href: "/app/integrations", label: t.workspace.nav.integrations, icon: Boxes, kbd: "I" },

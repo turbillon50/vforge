@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vForge — Blueprint del Flujo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0d14; --surface:#121826; --surface2:#171f30; --border:#242d40;
+    --text:#e7ecf6; --muted:#8b95a8; --accent:#4f7cf7; --accent-soft:rgba(79,124,247,.12);
+    --silver:#c8cfdc; --green:#34d39a; --amber:#f6b73c; --violet:#a98bff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+    padding:32px 24px 48px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#7aa0ff);
+    display:grid;place-items:center;font-weight:800;color:#0a0d14;font-size:20px}
+  h1{font-size:26px;font-weight:800;letter-spacing:-.3px}
+  .sub{color:var(--muted);font-size:13px;margin-top:2px}
+  .tag{font-size:11px;color:var(--accent);background:var(--accent-soft);border:1px solid rgba(79,124,247,.3);
+    padding:5px 11px;border-radius:999px;font-weight:600;white-space:nowrap}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:22px 0}
+
+  .lanes{display:flex;flex-direction:column;gap:14px}
+  .stage{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px;position:relative}
+  .stage .hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .num{width:24px;height:24px;border-radius:7px;background:var(--accent-soft);color:var(--accent);
+    font-weight:800;font-size:13px;display:grid;place-items:center;border:1px solid rgba(79,124,247,.3)}
+  .hd h2{font-size:15px;font-weight:700;letter-spacing:.2px}
+  .hd .hint{color:var(--muted);font-size:12px;margin-left:auto;font-weight:500}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .chip{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:10px 13px;
+    font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;min-width:0}
+  .chip small{display:block;color:var(--muted);font-weight:500;font-size:11px;margin-top:1px}
+  .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .d-acc{background:var(--accent)} .d-grn{background:var(--green)} .d-amb{background:var(--amber)} .d-vio{background:var(--violet)} .d-sil{background:var(--silver)}
+  .arrow{text-align:center;color:var(--border);font-size:18px;line-height:1;margin:-4px 0}
+
+  /* fork */
+  .fork{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .branch{border-radius:16px;padding:16px 18px;border:1px solid var(--border)}
+  .branch.demo{background:linear-gradient(180deg,rgba(52,211,154,.07),var(--surface));border-color:rgba(52,211,154,.3)}
+  .branch.app{background:linear-gradient(180deg,rgba(79,124,247,.07),var(--surface));border-color:rgba(79,124,247,.3)}
+  .branch h3{font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .branch .lead{font-size:12px;color:var(--muted);margin-bottom:11px}
+  .branch ul{list-style:none;display:flex;flex-direction:column;gap:7px}
+  .branch li{font-size:12.5px;color:var(--text);padding-left:16px;position:relative}
+  .branch li::before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%}
+  .branch.demo li::before{background:var(--green)} .branch.app li::before{background:var(--accent)}
+  .skill{font-family:ui-monospace,monospace;font-size:11px;background:rgba(255,255,255,.05);padding:1px 6px;border-radius:5px;border:1px solid var(--border)}
+
+  /* agents */
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .agent{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px}
+  .agent .nm{font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:7px}
+  .agent .ro{color:var(--muted);font-size:11.5px;margin:5px 0 9px}
+  .badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;letter-spacing:.3px}
+  .b-live{background:rgba(52,211,154,.15);color:var(--green);border:1px solid rgba(52,211,154,.35)}
+  .b-soon{background:rgba(246,183,60,.13);color:var(--amber);border:1px solid rgba(246,183,60,.3)}
+
+  /* connectors strip */
+  .strip{background:var(--surface);border:1px dashed var(--border);border-radius:14px;padding:14px 18px}
+  .strip .row{gap:8px}
+  .conn{font-size:12px;font-weight:600;color:var(--silver);background:var(--surface2);border:1px solid var(--border);padding:7px 11px;border-radius:9px}
+
+  .sec-label{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:24px 0 10px}
+  .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .role{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+  .role .t{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .role .v{font-size:14px;font-weight:700;margin-top:5px}
+  .role .v small{display:block;color:var(--muted);font-weight:500;font-size:12px;margin-top:2px}
+  footer{margin-top:26px;text-align:center;color:var(--muted);font-size:12px}
+  footer b{color:var(--text)}
+  @media(max-width:720px){.fork,.grid4,.roles{grid-template-columns:1fr}.grid4{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="logo">V</div>
+      <div>
+        <h1>vForge — Blueprint del Flujo</h1>
+        <div class="sub">La fábrica de apps como sistema · de la idea al cierre, sin desorden</div>
+      </div>
+    </div>
+    <span class="tag">SaaS · motor #1 dentro de vForge</span>
+  </header>
+
+  <div class="rule"></div>
+
+  <div class="lanes">
+
+    <!-- 1 ENTRADAS -->
+    <div class="stage">
+      <div class="hd"><span class="num">1</span><h2>ENTRADAS</h2><span class="hint">de dónde llega el lead</span></div>
+      <div class="row">
+        <div class="chip"><span class="dot d-acc"></span>WhatsApp<small>goosip · Baileys</small></div>
+        <div class="chip"><span class="dot d-acc"></span>Llamada de voz<small>Valentina (ElevenLabs)</small></div>
+        <div class="chip"><span class="dot d-acc"></span>Email / Web<small>formularios, JotForm</small></div>
+      </div>
+    </div>
+    <div class="arrow">▼</div>
+
+    <!-- 2 CAPTURA -->
+    <div class="stage">
+      <div class="hd"><span class="num">2</span><h2>CAPTURA &amp; CALIFICACIÓN</h2><span class="hint">recibe, escucha, califica</span></div>
+      <div class="row">
+        <div class="chip"><span class="dot d-acc"></span>n8n webhook<small>dispara el flujo</small></div>
+        <div class="chip"><span class="dot d-grn"></span>Valentina<small>empatía + datos del negocio</small></div>
+        <div class="chip"><span class="dot d-sil"></span>Lead → Airtable<small>queda registrado</small></div>
+      </div>
+    </div>
+    <div class="arrow">▼</div>
+
+    <!-- 3 BRIEF -->
+    <div class="stage">
+      <div class="hd"><span class="num">3</span><h2>PROCESAMIENTO IA → BRIEF</h2><span class="hint">barato y rápido</span></div>
+      <div class="row">
+        <div class="chip"><span class="dot d-acc"></span>Claude (AI Hub)<small>analiza la idea</small></div>
+        <div class="chip"><span class="dot d-acc"></span>Brief vendible<small>nombre · stack · precio MXN</small></div>
+        <div class="chip"><span class="dot d-acc"></span>Mensaje de cierre<small>listo para el cliente</small></div>
+      </div>
+    </div>
+    <div class="arrow">▼</div>
+
+    <!-- 4 GATE -->
+    <div class="stage" style="border-color:rgba(246,183,60,.4);background:linear-gradient(180deg,rgba(246,183,60,.07),var(--surface))">
+      <div class="hd"><span class="num" style="background:rgba(246,183,60,.15);color:var(--amber);border-color:rgba(246,183,60,.35)">4</span><h2>GATE DE APROBACIÓN — LUIS</h2><span class="hint">nada se manda ni se construye sin tu "aprobar"</span></div>
+      <div class="row">
+        <div class="chip"><span class="dot d-amb"></span>Borrador "pendiente"<small>te llega 1 aviso</small></div>
+        <div class="chip"><span class="dot d-amb"></span>Tú decides<small>aprobar / ajustar / descartar</small></div>
+        <div class="chip"><span class="dot d-amb"></span>Corta los "demos al por mayor"<small>solo se construye lo aprobado</small></div>
+      </div>
+    </div>
+    <div class="arrow">▼</div>
+
+    <!-- 5 FORK demo vs app -->
+    <div class="sec-label">5 · ¿Qué se construye? — DEMO ≠ APP</div>
+    <div class="fork">
+      <div class="branch demo">
+        <h3><span class="dot d-grn"></span>DEMO — para vender</h3>
+        <div class="lead">Súper ágil, puro visual, imposible de romper. Para que el prospecto diga "¿cuánto cuesta?".</div>
+        <ul>
+          <li>Sin backend, sin DB, sin auth, sin pagos</li>
+          <li>Datos hardcodeados, navegable, 3 modos</li>
+          <li>Deploy en minutos · calidad visual #1</li>
+          <li>Motor: <span class="skill">demo-screens</span></li>
+        </ul>
+      </div>
+      <div class="branch app">
+        <h3><span class="dot d-acc"></span>APP — para construir</h3>
+        <div class="lead">El producto real, ya contratado. Auth, DB y pagos de verdad.</div>
+        <ul>
+          <li>Next.js + Clerk + Neon + Stripe/MP</li>
+          <li>Integraciones reales por API/MCP</li>
+          <li>Deploy productivo + dominio</li>
+          <li>Motor: <span class="skill">demo-pwa-builder</span> / build real</li>
+        </ul>
+      </div>
+    </div>
+    <div class="arrow">▼</div>
+
+    <!-- 6 CONSTRUCCION -->
+    <div class="stage">
+      <div class="hd"><span class="num">6</span><h2>CONSTRUCCIÓN (cuando aprobaste)</h2><span class="hint">el worker arma todo solo</span></div>
+      <div class="row">
+        <div class="chip"><span class="dot d-vio"></span>Stitch<small>set completo de pantallas</small></div>
+        <div class="chip"><span class="dot d-vio"></span>Worker arma repo<small>GitHub + export</small></div>
+        <div class="chip"><span class="dot d-vio"></span>Claude Code<small>skill se activa sola</small></div>
+        <div class="chip"><span class="dot d-vio"></span>Vercel<small>preview navegable</small></div>
+      </div>
+    </div>
+    <div class="arrow">▼</div>
+
+    <!-- 7 SALIDAS -->
+    <div class="stage">
+      <div class="hd"><span class="num">7</span><h2>ENTREGA &amp; SALIDAS</h2><span class="hint">tras tu aprobación final</span></div>
+      <div class="row">
+        <div class="chip"><span class="dot d-grn"></span>WhatsApp al cliente<small>demo + guion de venta</small></div>
+        <div class="chip"><span class="dot d-grn"></span>Link de preview<small>Vercel</small></div>
+        <div class="chip"><span class="dot d-sil"></span>Airtable / Dashboard<small>estado del proyecto</small></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- AGENTES -->
+  <div class="sec-label">Agentes del sistema</div>
+  <div class="grid4">
+    <div class="agent">
+      <div class="nm"><span class="dot d-grn"></span>Valentina</div>
+      <div class="ro">Recepción / ventas · voz + WhatsApp</div>
+      <span class="badge b-live">VIVO</span>
+    </div>
+    <div class="agent">
+      <div class="nm"><span class="dot d-amb"></span>Abogado</div>
+      <div class="ro">NDA al inicio o contrato según el caso</div>
+      <span class="badge b-soon">PRÓXIMO</span>
+    </div>
+    <div class="agent">
+      <div class="nm"><span class="dot d-amb"></span>Logística</div>
+      <div class="ro">Seguimiento de entregas y pagos</div>
+      <span class="badge b-soon">PRÓXIMO</span>
+    </div>
+    <div class="agent">
+      <div class="nm"><span class="dot d-amb"></span>QA</div>
+      <div class="ro">Evalúa la calidad del producto</div>
+      <span class="badge b-soon">PRÓXIMO</span>
+    </div>
+  </div>
+
+  <!-- ROLES -->
+  <div class="sec-label">Quién hace qué</div>
+  <div class="roles">
+    <div class="role"><div class="t">Quién vende</div><div class="v">Valentina + Jimmy<small>recepción, califica y cierra</small></div></div>
+    <div class="role"><div class="t">Quién levanta</div><div class="v">Worker + Claude Code<small>Stitch → repo → demo/app</small></div></div>
+    <div class="role"><div class="t">Quién entrega</div><div class="v">Hub + Logística<small>preview, contrato, seguimiento</small></div></div>
+  </div>
+
+  <!-- CONNECTORS -->
+  <div class="sec-label">Capa de conectores (API / MCP)</div>
+  <div class="strip">
+    <div class="row">
+      <span class="conn">n8n</span><span class="conn">Airtable</span><span class="conn">ElevenLabs</span>
+      <span class="conn">Twilio</span><span class="conn">Stitch</span><span class="conn">GitHub</span>
+      <span class="conn">Vercel</span><span class="conn">Neon</span><span class="conn">Stripe / MP</span>
+      <span class="conn">Clerk</span><span class="conn">Resend</span><span class="conn">Gemini</span>
+    </div>
+  </div>
+
+  <footer>
+    Todo corre en <b>Hetzner</b> y se controla desde <b>vForge</b> — hoy tu centro de mando, mañana el SaaS donde cualquiera arma <b>apps, integraciones y su propio flujo</b>.
+  </footer>
+
+</div>
+</body>
+</html>
