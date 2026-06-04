@@ -258,8 +258,6 @@ export async function buildSystemPrompt(
     "",
     focusSection,
     "",
-    RESPONSE_STYLE_DOCTRINE,
-    "",
     "─────────────────────────────────────────",
     "CONFIGURACIÓN ACTUAL",
     "─────────────────────────────────────────",
@@ -270,6 +268,10 @@ export async function buildSystemPrompt(
     `Modelo default: ${config.default_model}`,
     `Directivas activas: ${directives.length} (${directives.filter(d => d.locked).length} mantra, ${directives.filter(d => d.kind === 'directive').length} directive, ${directives.filter(d => d.kind === 'preference').length} preference)`,
     `Skills instaladas: ${installedSkills.length}`,
+    "",
+    // El estilo visible va AL FINAL: es lo último que el modelo lee
+    // antes de responder, donde más peso tiene en producción.
+    RESPONSE_STYLE_DOCTRINE,
   ].filter(line => line !== "").join("\n");
 
   return { systemPrompt, config };
