@@ -1,16 +1,27 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
-// Clerk se inicializa para que /sign-in y /sign-up rendericen los
-// componentes oficiales con las keys, pero NO protege rutas. Hasta que
-// M11 cable Clerk.user.id al user_id real en BD, bloquear /app solo
-// nos deja afuera del producto. Cuando aterrice esa pieza, reactivamos
-// auth.protect() aquí.
+// Rutas privadas: requieren login. Todo lo demas (landing, /sign-in,
+// /sign-up, /glossary) queda publico.
+const isProtected = createRouteMatcher([
+  "/app(.*)",
+  "/api/cockpit(.*)",
+  "/api/projects(.*)",
+  "/api/graph(.*)",
+  "/api/github(.*)",
+  "/api/stats(.*)",
+  "/api/forge(.*)",
+  "/api/vault(.*)",
+  "/api/admin(.*)",
+]);
+
 export default hasClerk
-  ? clerkMiddleware(async () => {
-      // pass-through; no auth.protect() yet
+  ? clerkMiddleware(async (auth, req) => {
+      if (isProtected(req)) {
+        await auth.protect();
+      }
     })
   : () => NextResponse.next();
 
