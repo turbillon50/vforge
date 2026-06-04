@@ -52,6 +52,31 @@ type Msg = {
 
 const SCOPE_KEY = "vforge_chat_scope";
 
+const LOCAL_SESSION_KEY = "vforge_local_session";
+
+function rememberLocalSession(scope: string, sid: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.localStorage.getItem(LOCAL_SESSION_KEY);
+    const map = raw ? (JSON.parse(raw) as Record<string, { sid: string; at: number }>) : {};
+    map[scope] = { sid, at: Date.now() };
+    window.localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(map));
+  } catch {
+    // ignore
+  }
+}
+
+function recallLocalSession(scope: string): { sid: string; at: number } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(LOCAL_SESSION_KEY);
+    const map = raw ? (JSON.parse(raw) as Record<string, { sid: string; at: number }>) : {};
+    return map[scope] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Anthropic-style content blocks that /api/forge/run accepts for vision. */
 type StructuredBlock =
   | { type: "text"; text: string }
@@ -216,17 +241,25 @@ export function ChatExperience() {
 
     async function init(s: string) {
       let sid = "";
+      let serverLastAt = 0;
       try {
         const res = await fetch(
           `/api/forge/active-session?scope=${encodeURIComponent(s)}`,
           { cache: "no-store", signal: ctrl.signal },
         );
         if (res.ok) {
-          const data = (await res.json()) as { sessionId?: string };
+          const data = (await res.json()) as { sessionId?: string; last_at?: string };
           if (data?.sessionId) sid = data.sessionId;
+          if (data?.last_at) serverLastAt = Date.parse(data.last_at) || 0;
         }
       } catch {
         // ignore
+      }
+      // Si el usuario abrió un hilo nuevo en este dispositivo (newChat) y el
+      // server aún no lo conoce (no hay rows), gana el local más reciente.
+      const local = recallLocalSession(s);
+      if (local && local.sid !== sid && local.at > serverLastAt) {
+        sid = local.sid;
       }
       if (!sid) {
         sid = `s_${s}_${Date.now().toString(36)}`;
@@ -441,7 +474,20 @@ export function ChatExperience() {
 
   // Start fresh chat for current scope
   const newChat = useCallback(async () => {
-    if (pending) return;
+    // Si hay un stream en curso lo cortamos: cambiar de hilo siempre responde.
+    abortRef.current?.abort();
+    setPending(false);
+    setStreamingId(null);
+
+    // Reset optimista INMEDIATO con un id local válido — la UI nunca se
+    // queda muda aunque el server tarde o falle.
+    const localSid = `s_${scope}_${Date.now().toString(36)}${Math.random()
+      .toString(36)
+      .slice(2, 8)}`;
+    sessionIdRef.current = localSid;
+    setMessages([{ id: "intro", role: "b", text: t.chat.intro }]);
+    rememberLocalSession(scope, localSid);
+
     try {
       const res = await fetch("/api/forge/active-session", {
         method: "POST",
@@ -450,15 +496,17 @@ export function ChatExperience() {
       });
       if (res.ok) {
         const data = (await res.json()) as { sessionId?: string };
-        if (data?.sessionId) {
+        // Solo adoptamos el id del server si el usuario aún no escribió nada.
+        if (data?.sessionId && sessionIdRef.current === localSid) {
           sessionIdRef.current = data.sessionId;
-          setMessages([{ id: "intro", role: "b", text: t.chat.intro }]);
+          rememberLocalSession(scope, data.sessionId);
         }
       }
     } catch {
-      // ignore
+      // best-effort; el id local ya funciona
     }
-  }, [pending, scope, t.chat.intro]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scope, t.chat.intro]);
 
   const scopeOptions: ScopeOption[] = [
     { id: "general", label: "General" },
@@ -840,6 +888,7 @@ function Composer({
           e.preventDefault();
           if (!pending) onSend();
         }}
+        data-vorb-avoid
         className="relative overflow-hidden rounded-2xl border border-app bg-surface/90 shadow-elev"
       >
         <div className="flex items-end gap-2 px-2 py-2">
