@@ -1,10 +1,7 @@
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { Hero } from "@/components/marketing/Hero";
-import { Problem } from "@/components/marketing/Problem";
-import { Capabilities } from "@/components/marketing/Capabilities";
-import { HowItWorks } from "@/components/marketing/HowItWorks";
-import { WorkspacePreview } from "@/components/marketing/WorkspacePreview";
+import { Metodo } from "@/components/marketing/Metodo";
 import { CTA } from "@/components/marketing/CTA";
 
 export default function HomePage() {
@@ -13,10 +10,7 @@ export default function HomePage() {
       <MarketingHeader />
       <main>
         <Hero />
-        <Problem />
-        <Capabilities />
-        <HowItWorks />
-        <WorkspacePreview />
+        <Metodo />
         <CTA />
       </main>
       <MarketingFooter />
