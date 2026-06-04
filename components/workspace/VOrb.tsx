@@ -13,6 +13,35 @@ const ITEMS = [
   { label: "Proyectos", Icon: Boxes, href: "/app/projects" },
 ];
 
+const ORB = 56; // h-14 w-14
+const GAP = 12;
+
+/**
+ * Devuelve una posición que no se encime con ningún [data-vorb-avoid]
+ * visible. Si hay colisión, sube el orb justo encima del elemento.
+ */
+function avoidCollision(p: { x: number; y: number }): { x: number; y: number } {
+  if (typeof window === "undefined") return p;
+  let { x, y } = p;
+  x = Math.max(8, Math.min(window.innerWidth - ORB - 8, x));
+  y = Math.max(8, Math.min(window.innerHeight - ORB - 8, y));
+  const els = document.querySelectorAll<HTMLElement>("[data-vorb-avoid]");
+  for (const el of Array.from(els)) {
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+    const overlaps =
+      x < r.right + GAP &&
+      x + ORB > r.left - GAP &&
+      y < r.bottom + GAP &&
+      y + ORB > r.top - GAP;
+    if (overlaps) {
+      // Reubicar justo encima del elemento, conservando el lado (izq/der).
+      y = Math.max(8, r.top - ORB - GAP);
+    }
+  }
+  return { x, y };
+}
+
 export function VOrb() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -22,10 +51,34 @@ export function VOrb() {
   useEffect(() => {
     try {
       const s = localStorage.getItem("vorb_pos");
-      if (s) { setPos(JSON.parse(s)); return; }
+      if (s) { setPos(avoidCollision(JSON.parse(s))); return; }
     } catch {}
-    setPos({ x: window.innerWidth - 78, y: window.innerHeight - 120 });
+    setPos(avoidCollision({ x: window.innerWidth - 78, y: window.innerHeight - 120 }));
   }, []);
+
+  // Auto-reposición: si el orb tapa un elemento marcado [data-vorb-avoid]
+  // (p. ej. el composer del chat con su botón de enviar), se reubica arriba.
+  useEffect(() => {
+    if (pos.x < 0) return;
+    let raf = 0;
+    const check = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        if (drag.current) return; // no pelear con el usuario mientras arrastra
+        const np = avoidCollision(pos);
+        if (np.x !== pos.x || np.y !== pos.y) setPos(np);
+      });
+    };
+    check();
+    const obs = new MutationObserver(check);
+    obs.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("resize", check);
+    return () => {
+      cancelAnimationFrame(raf);
+      obs.disconnect();
+      window.removeEventListener("resize", check);
+    };
+  }, [pos]);
 
   function down(e: React.PointerEvent) {
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
@@ -45,7 +98,7 @@ export function VOrb() {
     if (!d.moved) { setOpen((o) => !o); }
     else {
       const snapX = pos.x + 28 < window.innerWidth / 2 ? 12 : window.innerWidth - 68;
-      const np = { x: snapX, y: pos.y };
+      const np = avoidCollision({ x: snapX, y: pos.y });
       setPos(np);
       try { localStorage.setItem("vorb_pos", JSON.stringify(np)); } catch {}
     }
