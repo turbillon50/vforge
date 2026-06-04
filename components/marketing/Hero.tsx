@@ -18,8 +18,8 @@ export function Hero() {
           transition={{ duration: 6, ease: "easeOut" }}
           className="h-full w-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-void/55 via-void/35 to-void" />
-        <div className="absolute inset-0 bg-gradient-to-r from-void/85 via-void/20 to-void/55" />
+        <div className="absolute inset-0 bg-gradient-to-b from-void/70 via-void/55 to-void" />
+        <div className="absolute inset-0 bg-gradient-to-r from-void/95 via-void/45 to-void/70" />
       </div>
 
       <div className="relative mx-auto w-full max-w-container px-5 py-24 md:px-margin-desktop">
