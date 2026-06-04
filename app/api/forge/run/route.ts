@@ -31,7 +31,6 @@ interface ChatTurn {
 interface RunRequest {
   messages: ChatTurn[];
   sessionId: string;
-  userId?: string; // defaults to operator_luis until Clerk lands
   projectId?: string | null;
 }
 
@@ -48,7 +47,10 @@ export async function POST(req: Request) {
   }
 
   const { messages, sessionId } = body;
-  const userId = body.userId ?? OPERATOR_USER_ID;
+  // El middleware ya garantiza que solo el owner llega aquí; V es
+  // single-user, así que el historial vive bajo el id canónico del
+  // operador. Nunca confiamos en un userId del cliente.
+  const userId = OPERATOR_USER_ID;
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return jsonError("messages array required and non-empty", 400);
