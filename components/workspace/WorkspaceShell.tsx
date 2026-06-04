@@ -15,6 +15,7 @@ import {
   Layers,
   LifeBuoy,
   Map,
+  LayoutDashboard,
   MessagesSquare,
   Search,
   Settings,
@@ -31,6 +32,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const t = useT();
   const pathname = usePathname();
   const nav = [
+    { href: "/app/cockpit", label: "Centro de Mando", icon: LayoutDashboard, kbd: "1" },
     { href: "/app/chat", label: t.workspace.nav.chat, icon: MessagesSquare, kbd: "C" },
     { href: "/app/repovision", label: t.workspace.nav.repovision, icon: GitBranch, kbd: "R" },
     { href: "/app/blueprint", label: "Blueprint", icon: Map, kbd: "B" },
