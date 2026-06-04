@@ -33,7 +33,7 @@ export function MarketingHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className="font-mono text-[12px] uppercase tracking-[0.18em] text-on-surface-variant transition hover:text-on-surface"
+              className="text-[15px] font-medium text-on-surface-variant transition hover:text-on-surface"
             >
               {item.label}
             </Link>

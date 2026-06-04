@@ -74,18 +74,19 @@ export function VOrb() {
             ))}
           </div>
         )}
+        <span aria-hidden className="pointer-events-none absolute left-0 top-0 h-14 w-14 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400" style={{ animation: "vorbPulse 2.4s ease-in-out infinite" }} />
         <button
           onPointerDown={down}
           onPointerMove={move}
           onPointerUp={up}
           aria-label="V"
           style={{ touchAction: "none" }}
-          className="flex h-14 w-14 cursor-grab items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 text-white shadow-[0_8px_30px_rgba(139,92,246,0.5)] transition active:scale-95"
+          className="relative flex h-14 w-14 cursor-grab items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 text-white shadow-[0_8px_30px_rgba(139,92,246,0.5)] transition active:scale-95"
         >
           {open ? <X size={22} /> : <span className="font-display text-2xl font-bold">V</span>}
         </button>
       </div>
-      <style>{"@keyframes vorbIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}"}</style>
+      <style>{"@keyframes vorbIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes vorbPulse{0%,100%{transform:scale(1);opacity:.45}50%{transform:scale(1.5);opacity:0}}"}</style>
     </>
   );
 }
