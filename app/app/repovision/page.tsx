@@ -6,7 +6,6 @@ import { ProjectGraph } from "@/components/graph/ProjectGraph";
 import { GitBranch, Lock, Star, LayoutGrid, Workflow } from "lucide-react";
 import { useT } from "@/i18n/AppProviders";
 
-const OPERATOR_TOKEN_KEY = "vforge_operator_token";
 
 interface Repo {
   full_name: string;
@@ -42,16 +41,9 @@ export default function RepoVisionPage() {
     if (view !== "grid") return;
     setLoading(true);
     setError(null);
-    const token =
-      typeof window !== "undefined"
-        ? (window.localStorage.getItem(OPERATOR_TOKEN_KEY) ?? "")
-        : "";
-    fetch("/api/github/repos", {
-      cache: "no-store",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    fetch("/api/github/repos", { cache: "no-store" })
       .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status} — configura el operator token en Secretos`);
+        if (!r.ok) throw new Error(`No se pudieron cargar los repos (HTTP ${r.status})`);
         return r.json();
       })
       .then((d: { repos: Repo[] }) => setRepos(d.repos ?? []))
@@ -122,7 +114,7 @@ export default function RepoVisionPage() {
               <GitBranch className="mx-auto mb-3 text-violet-300" size={24} />
               <p className="font-display text-lg">No hay repos cargados</p>
               <p className="mt-2 text-sm">
-                Verifica que el operator token esté configurado en Secretos.
+                Conéctate y vuelve a intentar, o revisa tu GitHub en Integraciones.
               </p>
             </div>
           )}
