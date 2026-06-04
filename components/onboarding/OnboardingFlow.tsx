@@ -54,6 +54,18 @@ export function OnboardingFlow() {
   const goNext = () => setStep(order[Math.min(stepIndex + 1, order.length - 1)]);
   const goBack = () => setStep(order[Math.max(stepIndex - 1, 0)]);
 
+  const connectService = async (id: string) => {
+    if (connected[id]) { setConnected((p) => ({ ...p, [id]: false })); return; }
+    const key = window.prompt(`Pega tu llave de ${id} — la validamos en vivo contra el servicio:`);
+    if (!key) return;
+    try {
+      const r = await fetch("/api/onboarding/connect", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ service: id, key }) });
+      const d = await r.json();
+      if (d.ok) { setConnected((p) => ({ ...p, [id]: true })); window.alert(`Conectado ${d.account ? "como " + d.account : ""} ✓`); }
+      else { window.alert(`No se pudo conectar: ${d.error || "llave inválida"}`); }
+    } catch { window.alert("Error de conexión, intenta de nuevo."); }
+  };
+
   return (
     <div className="relative z-10 mx-auto flex min-h-dvh max-w-3xl flex-col px-5 py-10 md:px-0">
       <div className="mb-8 flex items-center justify-between">
@@ -99,7 +111,7 @@ export function OnboardingFlow() {
           {step === "connect" && (
             <Connect
               connected={connected}
-              onToggle={(id) => setConnected((p) => ({ ...p, [id]: !p[id] }))}
+              onToggle={connectService}
             />
           )}
 
