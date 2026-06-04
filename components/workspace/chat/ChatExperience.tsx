@@ -185,7 +185,8 @@ export function ChatExperience() {
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+    const toBottom = () => el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+    requestAnimationFrame(() => { toBottom(); requestAnimationFrame(toBottom); });
   }, [messages, smooth.displayed]);
 
   // Load projects + initial scope
