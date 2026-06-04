@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
+import { VOrb } from "./VOrb";
 
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const t = useT();
@@ -161,6 +162,7 @@ function TopBar() {
             </span>
           </div>
         </div>
+      <VOrb />
       </div>
     </header>
   );
