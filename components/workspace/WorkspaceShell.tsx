@@ -42,7 +42,6 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
     { href: "/app/secrets", label: t.workspace.nav.secrets, icon: ShieldCheck, kbd: "S" },
     { href: "/app/projects", label: t.workspace.nav.projects, icon: Workflow, kbd: "P" },
     { href: "/app/activity", label: t.workspace.nav.activity, icon: Bell, kbd: "A" },
-    { href: "/app/hub", label: t.workspace.nav.hub, icon: Globe2, kbd: "H" },
   ];
 
   return (

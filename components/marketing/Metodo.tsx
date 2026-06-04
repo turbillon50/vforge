@@ -16,7 +16,7 @@ export function Metodo() {
       <div className="mx-auto max-w-container px-5 md:px-margin-desktop">
         <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="mb-14 max-w-2xl">
           <p className="label-caps mb-4 text-cyber-cyan">Como funciona</p>
-          <h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-off-white md:text-5xl">
+          <h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-on-surface md:text-5xl">
             Un agente. Tu mundo conectado. <span className="bg-gradient-to-r from-violet-300 to-cyan-300 bg-clip-text text-transparent">Tres pasos.</span>
           </h2>
         </motion.div>
@@ -24,7 +24,7 @@ export function Metodo() {
           {steps.map((s, i) => (
             <motion.div key={s.n} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }} className="bg-void p-8">
               <span className="font-mono text-sm text-violet-300">{s.n}</span>
-              <h3 className="mt-4 font-display text-xl font-semibold text-off-white">{s.t}</h3>
+              <h3 className="mt-4 font-display text-xl font-semibold text-on-surface">{s.t}</h3>
               <p className="mt-3 text-[15px] leading-relaxed text-on-surface-variant">{s.d}</p>
             </motion.div>
           ))}
