@@ -50,14 +50,14 @@ export function Hero() {
           </p>
 
           <div className="mt-10 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
-            <Link href="/app/chat" className="btn-primary group justify-center !px-7 !py-3.5 text-[15px]">
+            <Link href="/sign-up" className="btn-primary group justify-center !px-7 !py-3.5 text-[15px]">
               <MessagesSquare size={15} />
-              Hablar con V
+              Empieza gratis
               <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
             </Link>
-            <Link href="/glossary" className="btn-ghost justify-center !px-7 !py-3.5 text-[15px]">
+            <Link href="/sign-in" className="btn-ghost justify-center !px-7 !py-3.5 text-[15px]">
               <Sparkles size={14} />
-              {t.marketing.hero_cta_secondary}
+              Iniciar sesión
             </Link>
           </div>
 
