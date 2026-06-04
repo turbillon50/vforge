@@ -116,3 +116,23 @@ Cuando Forge AI esté funcional, leerá `AGENTS.md` y `architecture.md`, conocer
 ## ¿No sabes qué eres ni qué hacer?
 
 Si llegaste aquí sin contexto y no sabes qué agente eres ni qué te tocaría hacer, **detente y pregunta a Luis** vía chat o issue. Mejor un turno extra de aclaración que una acción equivocada.
+
+
+---
+
+## ACTUALIZACION (gate de calidad + demo != app)
+
+**Boot:** todos los agentes cargan `GET http://178.105.135.26/brain/file/boot-context.md` al arrancar (fuente de verdad unica).
+
+**Regla dura — REVIEW antes de "hecho":**
+Ningun trabajo se declara terminado sin pasar el supervisor:
+```
+node /root/agents/supervisor/review.js <repo> "<tarea>"   # --full para compilar
+```
+Solo lo que sale **APROBADO** cuenta. Skill: `code-review`.
+
+**Demo != App (evita sobre-construir):**
+- **APPS reales** -> DB real o estados vacios. CERO mock hardcodeado.
+- **DEMOS** (skill `demo-screens`) -> datos hardcodeados OK, SIN backend/DB/auth/pagos.
+
+**Seguridad:** el secret de `/brain/exec` NO va en archivos publicos. `/brain/file` no sirve codigo ni credenciales y `/brain/exec` solo acepta IPs permitidas.
