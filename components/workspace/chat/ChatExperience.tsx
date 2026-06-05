@@ -483,10 +483,10 @@ export function ChatExperience() {
         const armStall = () => {
           if (stallTimerRef.current) clearTimeout(stallTimerRef.current);
           stallTimerRef.current = setTimeout(() => {
-            // Stream estancado (red caída en móvil): cortamos para que el
-            // usuario vea el error + retry en vez de un spinner infinito.
+            // Solo cortamos ante un silencio LARGO de red real (no para una
+            // respuesta lenta por tool-use server-side). 120s = margen amplio.
             ctrl.abort();
-          }, 35_000);
+          }, 120_000);
         };
         armStall();
         while (true) {
