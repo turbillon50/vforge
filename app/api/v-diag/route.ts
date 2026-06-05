@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       report.set_model = await setModelForTask(
         body.set_model.task as Parameters<typeof setModelForTask>[0],
         body.set_model.model,
-        { updatedBy: "v-diag" },
+        { updatedBy: "operator_luis" },
       );
     } catch (e) {
       report.set_model = { error: String(e) };
