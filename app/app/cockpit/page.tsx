@@ -7,6 +7,16 @@ import { GitBranch, Workflow, Boxes, CircleCheck, Plus, Cpu, ArrowUpRight } from
 
 type Item = { id: number; kind: string; text: string; done?: boolean };
 type Data = { services?: Record<string, string>; pending?: any[]; items?: Item[] };
+type PortfolioProject = {
+  project_id: string; client_name: string; status: string;
+  total_mxn: number; paid_mxn: number; debe: number;
+  next_milestone: string | null; updated_at: string;
+  last_activity: { title: string; created_at: string } | null;
+};
+type Portfolio = { projects: PortfolioProject[]; totals: { total: number; paid: number; debe: number } };
+
+const mxn = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
+const fecha = (s: string) => new Date(s).toLocaleDateString("es-MX", { day: "numeric", month: "short" });
 
 const NICE: Record<string, string> = {
   "vmomentum-hub": "Hub IA", "stitch-worker": "Stitch worker",
@@ -16,12 +26,16 @@ const NICE: Record<string, string> = {
 export default function CockpitPage() {
   const [d, setD] = useState<Data>({});
   const [val, setVal] = useState("");
+  const [cartera, setCartera] = useState<Portfolio | null>(null);
   const [note, setNote] = useState("");
 
   const load = () =>
     fetch("/api/cockpit", { cache: "no-store" }).then((r) => r.json()).then(setD).catch(() => {});
+  const loadCartera = () =>
+    fetch("/api/forge/portfolio", { cache: "no-store" }).then((r) => r.json()).then(setCartera).catch(() => {});
   useEffect(() => {
     load();
+    loadCartera();
     const t = setInterval(load, 15000);
     return () => clearInterval(t);
   }, []);
@@ -117,6 +131,47 @@ export default function CockpitPage() {
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Escribe una nota..." className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-on-surface outline-none focus:border-violet-400" />
             <button type="submit" className="flex w-11 items-center justify-center rounded-xl bg-violet-500 text-white transition active:scale-95"><Plus size={18} /></button>
           </form>
+        </div>
+
+        <div className="glass rounded-2xl border border-white/10 p-5 md:col-span-3">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <p className="label-caps text-cyber-cyan">Cartera de clientes</p>
+            {cartera && (
+              <p className="text-[12px] text-muted">
+                Total {mxn(cartera.totals.total)} · Pagado <span className="text-emerald-300">{mxn(cartera.totals.paid)}</span> · Debe <span className="text-amber-300">{mxn(cartera.totals.debe)}</span>
+              </p>
+            )}
+          </div>
+          {!cartera && <p className="py-2 text-sm text-muted">Cargando...</p>}
+          {cartera && cartera.projects.length === 0 && <p className="py-2 text-sm text-muted">Sin clientes registrados</p>}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {cartera?.projects.map((p) => {
+              const pct = p.total_mxn > 0 ? Math.min(100, Math.round((p.paid_mxn / p.total_mxn) * 100)) : 0;
+              return (
+                <div key={p.project_id} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium text-on-surface">{p.client_name}</p>
+                    <span className="chip text-[10px] text-violet-300">{p.status}</span>
+                  </div>
+                  <div className="mt-3">
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-emerald-300">{mxn(p.paid_mxn)} pagado</span>
+                      <span className="text-amber-300">{mxn(p.debe)} debe</span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                      <div className="h-full rounded-full bg-emerald-400" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  {p.next_milestone && (
+                    <p className="mt-3 text-[12px] text-muted">Siguiente: <span className="text-on-surface">{p.next_milestone}</span></p>
+                  )}
+                  {p.last_activity && (
+                    <p className="mt-1 text-[11px] text-muted">{p.last_activity.title} · {fecha(p.last_activity.created_at)}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="md:col-span-3">
