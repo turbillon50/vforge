@@ -17,6 +17,7 @@ const isProtected = createRouteMatcher([
   "/app(.*)",
   "/api/connect(.*)",
   "/api/integrations(.*)",
+  "/api/mcp/token(.*)",
   "/api/auth/neon(.*)",
   "/api/auth/stripe(.*)",
   "/workspace(.*)",

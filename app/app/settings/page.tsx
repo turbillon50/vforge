@@ -91,10 +91,67 @@ export default function SettingsPage() {
           {active === "appearance" && <AppearancePanel />}
           {active === "security" && <SecurityPanel />}
           {active === "api" && <ApiPanel />}
+          <McpCard />
           <MoreToolsCard />
         </section>
       </div>
     </>
+  );
+}
+
+function McpCard() {
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const url = "https://vforge.site/api/mcp";
+  async function gen() {
+    setLoading(true);
+    try {
+      const r = await fetch("/api/mcp/token", { method: "POST" });
+      const d = await r.json();
+      if (d.token) setToken(d.token);
+    } finally {
+      setLoading(false);
+    }
+  }
+  const config = token
+    ? JSON.stringify({ name: "VForge", url, headers: { Authorization: `Bearer ${token}` } }, null, 2)
+    : "";
+  return (
+    <Card title="VForge MCP">
+      <p className="text-[13px] leading-relaxed text-on-surface-variant">
+        Conecta v0, Claude o Cursor a VForge por MCP. Genera tu token (se muestra una sola vez),
+        pégalo en tu cliente y usa el método de VForge desde ahí.
+      </p>
+      {!token ? (
+        <button
+          type="button"
+          onClick={gen}
+          disabled={loading}
+          className="mt-4 flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-5 text-[14px] font-medium text-white shadow-glow-violet transition active:scale-[0.98] disabled:opacity-50"
+        >
+          {loading ? "Generando…" : "Generar token MCP"}
+        </button>
+      ) : (
+        <div className="mt-4 space-y-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-wide text-muted">URL del servidor</p>
+            <code className="mt-1 block rounded-lg border border-app bg-tint-1 px-3 py-2 font-mono text-[12px] text-on-surface">{url}</code>
+          </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-wide text-muted">Tu token (guárdalo ahora, no se vuelve a mostrar)</p>
+            <code className="mt-1 block break-all rounded-lg border border-violet-400/30 bg-violet-500/[0.06] px-3 py-2 font-mono text-[12px] text-violet-200">{token}</code>
+          </div>
+          <button
+            type="button"
+            onClick={() => { navigator.clipboard.writeText(config); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+            className="flex h-11 items-center justify-center rounded-xl border border-app bg-tint-1 px-5 text-[14px] text-on-surface transition active:scale-[0.98] hover:border-app-strong"
+          >
+            {copied ? "Copiado ✓" : "Copiar config para v0"}
+          </button>
+        </div>
+      )}
+    </Card>
   );
 }
 
