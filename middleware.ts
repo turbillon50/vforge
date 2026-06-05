@@ -16,6 +16,7 @@ const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 const isProtected = createRouteMatcher([
   "/app(.*)",
   "/api/connect(.*)",
+  "/api/integrations(.*)",
   "/api/auth/neon(.*)",
   "/api/auth/stripe(.*)",
   "/workspace(.*)",

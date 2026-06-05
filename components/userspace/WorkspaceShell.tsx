@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { MessageSquare, Workflow } from "lucide-react";
 import AssistantChat from "@/components/userspace/AssistantChat";
 import BlueprintCanvas from "@/components/userspace/BlueprintCanvas";
+import IntegrationPlan from "@/components/userspace/IntegrationPlan";
 import type { WorkspaceScope } from "@/lib/workspace/db";
 
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -16,7 +17,7 @@ export default function WorkspaceShell({ scope }: { scope: WorkspaceScope }) {
   const [tab, setTab] = useState<"chat" | "blueprint">("chat");
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       {/* Tabs solo en móvil */}
       <div className="flex gap-2 px-4 pb-3 lg:hidden">
         <TabButton
@@ -58,6 +59,17 @@ export default function WorkspaceShell({ scope }: { scope: WorkspaceScope }) {
             className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"
           />
           <BlueprintCanvas scope={scope} />
+        </motion.section>
+      </div>
+
+      <div className="px-4 pb-6 lg:px-6">
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: EASE, delay: 0.12 }}
+          className="overflow-hidden rounded-3xl border border-app bg-surface shadow-elev"
+        >
+          <IntegrationPlan />
         </motion.section>
       </div>
     </div>

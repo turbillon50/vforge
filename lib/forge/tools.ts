@@ -69,6 +69,12 @@ import {
   getOpenRouterModel,
   searchOpenRouterModels,
 } from "@/lib/forge/openrouter-catalog";
+import {
+  getPlan as integrationGetPlan,
+  setItemStatus as integrationSetItemStatus,
+  refreshConnectedStatus as integrationRefreshStatus,
+  type ItemStatus as IntegrationItemStatus,
+} from "@/lib/integrations/plan-db";
 
 export const TOOLS: Tool[] = [
   {
@@ -1410,6 +1416,35 @@ required: ["repo", "sha"],
         projectId: { type: "string", description: "Id de proyecto (opcional)." },
       },
       required: ["agent", "task"],
+    },
+  },
+  {
+    name: "integration_plan_get",
+    description:
+      "Devuelve el plan de conexiones del usuario actual (los servicios recomendados para su app) con su progreso (cuántos lleva conectados). Úsala para decirle cosas como \"vas 2 de 5\" o saber qué le falta conectar.",
+    input_schema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "integration_plan_update",
+    description:
+      "Actualiza el estado de un servicio en el plan de conexiones del usuario (pending, connected o skipped). Úsala cuando el usuario confirme que ya conectó o que quiere saltar un servicio.",
+    input_schema: {
+      type: "object",
+      properties: {
+        serviceId: {
+          type: "string",
+          description: "Id del servicio (github, vercel, domain, stripe, neon, resend, clerk, twilio, google_maps).",
+        },
+        status: {
+          type: "string",
+          enum: ["pending", "connected", "skipped"],
+          description: "Nuevo estado del servicio.",
+        },
+      },
+      required: ["serviceId", "status"],
     },
   },
 ];
@@ -3783,6 +3818,38 @@ async function dispatch(
         projectId: typeof input.projectId === "string" ? input.projectId : undefined,
       });
       return { ok: true, content: JSON.stringify(res), summary: `tarea -> ${agent}` };
+    }
+
+    case "integration_plan_get": {
+      await integrationRefreshStatus(ctx.userId);
+      const items = await integrationGetPlan(ctx.userId);
+      const sorted = [...items].sort((a, b) => a.order - b.order);
+      const total = sorted.length;
+      const done = sorted.filter((i) => i.status === "connected").length;
+      return {
+        ok: true,
+        content: JSON.stringify({ items: sorted, progress: { done, total } }),
+        summary: `plan de conexiones: ${done}/${total}`,
+      };
+    }
+
+    case "integration_plan_update": {
+      const serviceId = String(input.serviceId || "");
+      const status = String(input.status || "") as IntegrationItemStatus;
+      if (!serviceId || !["pending", "connected", "skipped"].includes(status)) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: "serviceId y status válidos requeridos" }),
+          summary: "integration_plan_update: parámetros inválidos",
+        };
+      }
+      const items = await integrationSetItemStatus(ctx.userId, serviceId, status);
+      const done = items.filter((i) => i.status === "connected").length;
+      return {
+        ok: true,
+        content: JSON.stringify({ ok: true, items, progress: { done, total: items.length } }),
+        summary: `${serviceId} -> ${status}`,
+      };
     }
 
     default:
