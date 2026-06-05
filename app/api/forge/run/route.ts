@@ -185,6 +185,12 @@ export async function POST(req: Request) {
       let lastStopReason: string | null = null;
       // El UI muestra discreto qué modelo responde: nunca más dudar quién escribe.
       send({ type: "meta", model: actualModel });
+      // BUILDER (v0-sin-v0): cuando la tool `design_version` se ejecute en
+      // un round y devuelva {buildId, versionId, n, preview_url}, aquí se
+      // emitirá send({ type: "version", buildId, versionId, n, summary })
+      // justo después del tool_use_result correspondiente, para que el chat
+      // pinte la VersionCard inline. La lógica de modelo NO cambia: solo
+      // falta el cerebro con saldo para que Claude llame la tool.
 
       try {
         for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {

@@ -1277,6 +1277,44 @@ export const TOOLS: Tool[] = [
       required: ["host", "command"],
     },
   },
+  {
+    name: "design_version",
+    description:
+      "Guarda una versión de diseño generada por V para un build (modo v0-sin-v0). Crea el build si no existe (por project_name del operador) y agrega la versión con sus archivos. Devuelve versionId, n y preview_url para que el chat muestre la VersionCard con preview inline. Úsala cada vez que generes/iteres el código de una app o UI pedida por Luis.",
+    input_schema: {
+      type: "object",
+      properties: {
+        project_name: { type: "string", description: "Nombre del proyecto/app (estable entre iteraciones para versionar el mismo build)" },
+        summary: { type: "string", description: "Resumen corto de qué tiene esta versión (1 línea)" },
+        files: {
+          type: "array",
+          description: "Archivos de la versión",
+          items: {
+            type: "object",
+            properties: {
+              path: { type: "string", description: "Ruta relativa (ej. index.html, app/page.tsx)" },
+              content: { type: "string", description: "Contenido completo del archivo" },
+            },
+            required: ["path", "content"],
+          },
+        },
+      },
+      required: ["project_name", "summary", "files"],
+    },
+  },
+  {
+    name: "taste_remember",
+    description:
+      "Guarda una preferencia estética/de gusto durable de Luis en la memoria de cuenta (v_user_memory). Úsala cuando Luis exprese qué le gusta o no de un diseño (colores, tipografía, densidad, mood) para que las próximas versiones nazcan con su gusto.",
+    input_schema: {
+      type: "object",
+      properties: {
+        key: { type: "string", description: "Clave corta (ej. estetica.colores, estetica.tipografia)" },
+        value: { type: "string", description: "La preferencia, en una frase" },
+      },
+      required: ["key", "value"],
+    },
+  },
 ];
 
 export interface ToolExecutionContext {
@@ -3486,6 +3524,56 @@ async function dispatch(
         ? `ssh ${host} OK (exit=${body.return_code ?? 0})`
         : `ssh ${host} exit=${body.return_code ?? "?"} ${(body.stderr ?? body.error ?? "").slice(0, 60)}`;
       return { ok: okRun, content: JSON.stringify(body), summary };
+    }
+
+    case "design_version": {
+      const projectName = requireString(input.project_name, "project_name");
+      const summary = requireString(input.summary, "summary");
+      const rawFiles = Array.isArray(input.files) ? input.files : [];
+      const files = rawFiles
+        .filter(
+          (f): f is { path: string; content: string } =>
+            !!f &&
+            typeof (f as { path?: unknown }).path === "string" &&
+            typeof (f as { content?: unknown }).content === "string",
+        )
+        .map((f) => ({ path: f.path, content: f.content }));
+      if (files.length === 0) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: "files vacío: manda al menos un archivo {path, content}" }),
+          summary: "design_version sin archivos",
+        };
+      }
+      const builder = await import("@/lib/builder/db");
+      const existing = await builder.findBuildByName(ctx.userId, projectName);
+      const build =
+        existing ?? (await builder.createBuild(ctx.userId, projectName));
+      const version = await builder.addVersion(build.id, summary, files);
+      const previewUrl = `/api/builder/preview/${version.id}`;
+      return {
+        ok: true,
+        content: JSON.stringify({
+          buildId: build.id,
+          versionId: version.id,
+          n: version.n,
+          preview_url: previewUrl,
+          // Cuando run/route.ts emita send({type:'version',...}) la UI
+          // pintará la VersionCard; mientras, V puede compartir el link.
+        }),
+        summary: `versión ${version.n} de ${projectName} guardada`,
+      };
+    }
+    case "taste_remember": {
+      const key = requireString(input.key, "key");
+      const value = requireString(input.value, "value");
+      const { saveUserMemory } = await import("@/lib/forge/user-memory");
+      await saveUserMemory(ctx.userId, key, value.slice(0, 2000));
+      return {
+        ok: true,
+        content: JSON.stringify({ saved: true, key }),
+        summary: `gusto guardado: ${key}`,
+      };
     }
 
     default:

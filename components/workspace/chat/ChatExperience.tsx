@@ -32,6 +32,7 @@ import Link from "next/link";
 import { useT } from "@/i18n/AppProviders";
 import { VPresence } from "@/components/brand/VPresence";
 import { Markdown } from "./Markdown";
+import VersionCard from "./VersionCard";
 import { ThinkingIndicator, VOrb } from "./ThinkingIndicator";
 import { useSmoothStream, usePrefersReducedMotion } from "./useSmoothStream";
 
@@ -53,6 +54,8 @@ type Msg = {
   actions?: Action[];
   /** image dataURL shown inline in the bubble for user uploads */
   image?: string;
+  /** referencia a una versión del builder: pinta <VersionCard/> */
+  versionRef?: { buildId: string; versionId: string; n: number; summary: string };
 };
 
 const SCOPE_KEY = "vforge_chat_scope";
@@ -112,6 +115,7 @@ type SSEEvent =
   | { type: "model_fallback"; from: string; to: string; status: number | null; reason: string }
   | { type: "done"; tokensIn: number; tokensOut: number; model: string }
   | { type: "meta"; model: string; fallback?: boolean }
+  | { type: "version"; buildId: string; versionId: string; n: number; summary: string }
   | { type: "error"; message: string };
 
 interface ChatSession {
@@ -204,6 +208,7 @@ export function ChatExperience() {
   const intro: Msg = { id: "intro", role: "b", text: t.chat.intro };
   const [messages, setMessages] = useState<Msg[]>([intro]);
   const [input, setInput] = useState("");
+  const [composerFocusTick, setComposerFocusTick] = useState(0);
   const [pending, setPending] = useState(false);
   const [isHydrating, setIsHydrating] = useState(true);
   const [scope, setScope] = useState<string>("general");
@@ -436,6 +441,26 @@ export function ChatExperience() {
                 if (!visible) continue;
                 assembled += visible;
                 smooth.push(visible);
+              } else if (evt.type === "version") {
+                // V generó una versión: insertamos un mensaje especial
+                // con versionRef ANTES del placeholder en streaming para
+                // que la VersionCard aparezca como parte del hilo.
+                const vMsg: Msg = {
+                  id: `ver_${evt.versionId}`,
+                  role: "b",
+                  text: "",
+                  versionRef: {
+                    buildId: evt.buildId,
+                    versionId: evt.versionId,
+                    n: evt.n,
+                    summary: evt.summary,
+                  },
+                };
+                setMessages((p) => {
+                  const i = p.findIndex((m) => m.id === aId);
+                  if (i < 0) return [...p, vMsg];
+                  return [...p.slice(0, i), vMsg, ...p.slice(i)];
+                });
               } else if (evt.type === "error") {
                 const tail = `\n\n⚠ ${sanitizeError(evt.message)}`;
                 assembled += tail;
@@ -818,6 +843,10 @@ export function ChatExperience() {
                         ? () => regenerate(m.id)
                         : undefined
                     }
+                    onVersionChangeRequest={(prefix) => {
+                      setInput(prefix);
+                      setComposerFocusTick((n) => n + 1);
+                    }}
                   />
                 ),
               )}
@@ -911,6 +940,7 @@ export function ChatExperience() {
           <Composer
             input={input}
             setInput={setInput}
+            focusTick={composerFocusTick}
             pending={pending}
             onSend={() => send(input)}
             onStop={stop}
@@ -939,6 +969,8 @@ export function ChatExperience() {
 interface ComposerProps {
   input: string;
   setInput: (v: string) => void;
+  /** Cuando cambia, el textarea recibe focus (ej. "Cambia esto" de una VersionCard). */
+  focusTick?: number;
   pending: boolean;
   onSend: () => void;
   onStop: () => void;
@@ -952,6 +984,7 @@ interface ComposerProps {
 function Composer({
   input,
   setInput,
+  focusTick,
   pending,
   onSend,
   onStop,
@@ -969,6 +1002,17 @@ function Composer({
   const [recError, setRecError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  // "Cambia esto" de una VersionCard: enfoca el composer con el prefijo
+  // ya puesto y el cursor al final.
+  useEffect(() => {
+    if (!focusTick) return;
+    const el = textareaRef.current;
+    if (!el) return;
+    el.focus();
+    const len = el.value.length;
+    el.setSelectionRange(len, len);
+  }, [focusTick]);
 
   // Cuando el attachment se limpia (por send o ✕), también resetear el
   // value del <input type="file"> — sin esto, seleccionar el mismo
@@ -1241,9 +1285,11 @@ function Composer({
 function MessageBubble({
   msg,
   onRegenerate,
+  onVersionChangeRequest,
 }: {
   msg: Msg;
   onRegenerate?: () => void;
+  onVersionChangeRequest?: (prefix: string) => void;
 }) {
   const isB = msg.role === "b";
   if (isB) {
@@ -1266,6 +1312,15 @@ function MessageBubble({
             />
           )}
           {msg.text && <Markdown text={msg.text} />}
+          {msg.versionRef && (
+            <VersionCard
+              buildId={msg.versionRef.buildId}
+              versionId={msg.versionRef.versionId}
+              n={msg.versionRef.n}
+              summary={msg.versionRef.summary}
+              onChangeRequest={onVersionChangeRequest}
+            />
+          )}
           {msg.actions && (
             <ul className="mt-3 space-y-2 rounded-lg border border-violet-500/15 bg-violet-500/[0.04] p-3 text-[13px]">
               {msg.actions.map((a) => (
