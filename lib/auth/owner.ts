@@ -9,7 +9,7 @@
  */
 export const OWNER_EMAILS: string[] = (
   process.env.VFORGE_OWNER_EMAILS ??
-  "turbillon50@gmail.com,dluisdelatorre@gmail.com"
+  "turbillon50@gmail.com,dluisdelatorre@gmail.com,luisdelator@vmomentums.info"
 )
   .toLowerCase()
   .split(",")
