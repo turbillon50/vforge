@@ -19,6 +19,7 @@ import { UserButton, useUser } from "@clerk/nextjs";
 import { useClerkAppearance } from "@/lib/clerk-appearance";
 import { Home, Users } from "lucide-react";
 import { VPresence } from "@/components/brand/VPresence";
+import { VOrb } from "./VOrb";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
@@ -131,6 +132,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
         {!pathname?.startsWith("/app/chat") && <MobileNav pathname={pathname || ""} />}
+        <VOrb />
       </div>
     </div>
   );
