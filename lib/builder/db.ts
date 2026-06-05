@@ -88,6 +88,14 @@ export async function createBuild(
   return rows[0];
 }
 
+export async function setBuildStatus(
+  buildId: string,
+  status: string,
+): Promise<void> {
+  await ensureTables();
+  await sql`UPDATE vforge_builds SET status = ${status}, updated_at = now() WHERE id = ${buildId}`;
+}
+
 export async function getBuild(buildId: string): Promise<Build | null> {
   await ensureTables();
   return queryOne<Build>(`SELECT * FROM vforge_builds WHERE id = $1`, [

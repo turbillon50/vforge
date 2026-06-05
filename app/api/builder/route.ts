@@ -10,6 +10,8 @@
  */
 import { auth } from "@clerk/nextjs/server";
 import {
+  createBuild,
+  setBuildStatus,
   getBuild,
   listVersions,
   getVersion,
@@ -44,11 +46,20 @@ export async function GET(req: Request) {
 }
 
 interface BuilderAction {
-  action: "feedback" | "like" | "approve";
+  action:
+    | "feedback"
+    | "like"
+    | "approve"
+    | "scaffold-request"
+    | "deploy-request";
   versionId?: string;
   buildId?: string;
   n?: number;
   feedback?: string;
+  /** scaffold-request: nombre del repo; deploy-request: opcional */
+  name?: string | null;
+  /** scope del chat desde el que se pidió (proyecto o "general") */
+  scope?: string | null;
 }
 
 export async function POST(req: Request) {
@@ -95,6 +106,23 @@ export async function POST(req: Request) {
       // El pipeline real (repo GitHub + deploy Vercel) llega después;
       // por ahora dejamos el build aprobado y avisamos al cliente.
       return Response.json({ ok: true, build, next: "ship-pending" });
+    }
+    case "scaffold-request":
+    case "deploy-request": {
+      // Plumbing del pipeline: registramos la intención en vforge_builds
+      // con status queued-* y devolvemos { queued: true }. Cuando el
+      // pipeline repo+vercel exista, estos rows se procesan.
+      const isScaffold = body.action === "scaffold-request";
+      const projectName =
+        (typeof body.name === "string" && body.name.trim()) ||
+        (typeof body.scope === "string" && body.scope !== "general" && body.scope) ||
+        "sin-nombre";
+      const build = await createBuild(uid, projectName);
+      await setBuildStatus(
+        build.id,
+        isScaffold ? "queued-scaffold" : "queued-deploy",
+      );
+      return Response.json({ queued: true, buildId: build.id });
     }
     default:
       return jsonError("unknown action", 400);

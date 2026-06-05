@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   User,
   CreditCard,
@@ -12,6 +13,12 @@ import {
   Globe2,
   Download,
   ExternalLink,
+  ChevronRight,
+  LayoutDashboard,
+  Map,
+  Layers,
+  Boxes,
+  Bell as BellIcon,
   Check,
 } from "lucide-react";
 import { PageHeader } from "@/components/workspace/PageHeader";
@@ -85,6 +92,7 @@ export default function SettingsPage() {
           {active === "appearance" && <AppearancePanel />}
           {active === "security" && <SecurityPanel />}
           {active === "api" && <ApiPanel />}
+          <MoreToolsCard />
         </section>
       </div>
     </>
@@ -402,5 +410,35 @@ function Stat({ label, value }: { label: string; value: string }) {
       <p className="label-caps text-muted">{label}</p>
       <p className="mt-1 font-display text-lg font-semibold text-on-surface">{value}</p>
     </div>
+  );
+}
+
+
+function MoreToolsCard() {
+  const tools = [
+    { href: "/app/cockpit", label: "Centro de Mando", icon: LayoutDashboard },
+    { href: "/app/blueprint", label: "Blueprint", icon: Map },
+    { href: "/app/marketplace", label: "Marketplace", icon: Layers },
+    { href: "/app/integrations", label: "Integraciones", icon: Boxes },
+    { href: "/app/secrets", label: "Bóveda", icon: ShieldCheck },
+    { href: "/app/activity", label: "Actividad", icon: BellIcon },
+  ];
+  return (
+    <Card title="Más herramientas">
+      <div className="-mx-2">
+        {tools.map((tool) => (
+          <Link
+            key={tool.href}
+            href={tool.href}
+            className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface"
+            style={{ minHeight: 44, touchAction: "manipulation" }}
+          >
+            <tool.icon size={15} className="text-violet-300" />
+            <span className="flex-1">{tool.label}</span>
+            <ChevronRight size={13} className="text-muted" />
+          </Link>
+        ))}
+      </div>
+    </Card>
   );
 }

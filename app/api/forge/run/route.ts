@@ -19,6 +19,12 @@ import {
   extractMemoryBlocks,
   memoryPromptSection,
 } from "@/lib/forge/user-memory";
+import {
+  recall,
+  rememberTurn,
+  formatRecallSection,
+} from "@/lib/forge/semantic-recall";
+import Anthropic from "@anthropic-ai/sdk";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -96,7 +102,19 @@ export async function POST(req: Request) {
   });
   // Memoria por cuenta (independiente de la sesion de chat).
   const userMemories = await getUserMemories(memoryUserId);
-  const systemPrompt = basePrompt + memoryPromptSection(userMemories);
+  // Memoria semántica: recuerdos relevantes al último turno del usuario.
+  // Silencioso ante fallo — recall() nunca lanza.
+  const lastUserText = stringifyUserTurn(
+    messages[messages.length - 1]?.content ?? "",
+  );
+  const recallHits =
+    messages[messages.length - 1]?.role === "user" && lastUserText
+      ? await recall(lastUserText, 6)
+      : [];
+  const systemPrompt =
+    basePrompt +
+    memoryPromptSection(userMemories) +
+    formatRecallSection(recallHits, 0.25);
 
   // Resolve the model cascade.
   // 1. agent_config DB (V's self-config, migration 007) is the canonical
@@ -137,6 +155,10 @@ export async function POST(req: Request) {
     } catch (e) {
       console.error("conversations insert failed (no tumba el chat):", e);
     }
+    // Memoria semántica del turno user (fire-and-forget).
+    rememberTurn({ role: "user", content: textOnly, sessionId }).catch(
+      () => undefined,
+    );
   }
 
   const openrouter = new OpenAI({
@@ -390,6 +412,13 @@ export async function POST(req: Request) {
           )
         `;
 
+        // Memoria semántica de la respuesta (fire-and-forget).
+        rememberTurn({
+          role: "assistant",
+          content: assistantVisible,
+          sessionId,
+        }).catch(() => undefined);
+
         await sql`
           INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
           VALUES (
@@ -415,6 +444,24 @@ export async function POST(req: Request) {
         });
         controller.close();
       } catch (err) {
+        // Cascade OpenRouter agotado (o error irrecuperable): último
+        // recurso, cerebro directo Anthropic (sin tools, más robusto).
+        try {
+          const handled = await runAnthropicDirect({
+            systemPrompt,
+            turns: trimmedMessages,
+            send,
+            sessionId,
+            userId,
+            memoryUserId,
+          });
+          if (handled) {
+            controller.close();
+            return;
+          }
+        } catch (e2) {
+          console.error("[V] fallback Anthropic directo falló:", e2);
+        }
         const message = err instanceof Error ? err.message : String(err);
         send({ type: "error", message });
         controller.close();
@@ -430,6 +477,96 @@ export async function POST(req: Request) {
       "X-Accel-Buffering": "no",
     },
   });
+}
+
+/**
+ * Vía de emergencia: habla con Claude DIRECTO (sin OpenRouter, sin tools).
+ * Devuelve true si pudo responder; false si no hay key o falla antes de
+ * emitir nada útil. Emite los mismos eventos SSE {meta|text|done}.
+ */
+async function runAnthropicDirect(args: {
+  systemPrompt: string;
+  turns: ChatTurn[];
+  send: (event: Record<string, unknown>) => void;
+  sessionId: string;
+  userId: string;
+  memoryUserId: string;
+}): Promise<boolean> {
+  const { systemPrompt, turns, send, sessionId, userId, memoryUserId } = args;
+  const anthropicKey = await getOperatorSecret("ANTHROPIC_API_KEY", {
+    auditUserId: userId,
+  });
+  if (!anthropicKey) return false;
+
+  const client = new Anthropic({ apiKey: anthropicKey });
+  const model = "claude-sonnet-4-6";
+
+  // Los turnos del FE ya vienen con bloques estilo Anthropic
+  // (text / image base64) — se pasan casi tal cual.
+  const anthMessages = turns.map((t) => ({
+    role: t.role,
+    content:
+      typeof t.content === "string"
+        ? t.content
+        : t.role === "assistant"
+          ? t.content
+              .filter((b): b is { type: "text"; text: string } => b.type === "text")
+              .map((b) => b.text)
+              .join("\n")
+          : t.content,
+  })) as Anthropic.MessageParam[];
+
+  send({ type: "meta", model: "anthropic/claude-sonnet-4.6 (directo)", fallback: true });
+
+  let assistantTextBuffer = "";
+  let tokensIn = 0;
+  let tokensOut = 0;
+
+  const stream = client.messages.stream({
+    model,
+    system: systemPrompt,
+    messages: anthMessages,
+    max_tokens: 2048,
+  });
+
+  stream.on("text", (delta) => {
+    assistantTextBuffer += delta;
+    send({ type: "text", value: delta });
+  });
+
+  const final = await stream.finalMessage();
+  tokensIn = final.usage?.input_tokens ?? 0;
+  tokensOut = final.usage?.output_tokens ?? 0;
+
+  // Misma post-pista que la vía normal: memorias <memory> + persistencia.
+  const { cleaned: assistantVisible, memories: newMemories } =
+    extractMemoryBlocks(assistantTextBuffer);
+  for (const m of newMemories) {
+    await saveUserMemory(memoryUserId, m.key, m.value).catch(() => undefined);
+  }
+
+  try {
+    await sql`
+      INSERT INTO conversations (
+        user_id, session_id, role, content, model, tokens_in, tokens_out, cost_usd
+      )
+      VALUES (
+        ${userId}, ${sessionId}, 'assistant', ${assistantVisible},
+        ${"anthropic/claude-sonnet-4.6 (directo)"}, ${tokensIn}, ${tokensOut}, NULL
+      )
+    `;
+  } catch (e) {
+    console.error("conversations insert (directo) failed:", e);
+  }
+
+  rememberTurn({
+    role: "assistant",
+    content: assistantVisible,
+    sessionId,
+  }).catch(() => undefined);
+
+  send({ type: "done", tokensIn, tokensOut, model: "anthropic/claude-sonnet-4.6 (directo)" });
+  return true;
 }
 
 /**

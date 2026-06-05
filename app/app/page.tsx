@@ -1,10 +1,6 @@
-import { currentUser } from "@clerk/nextjs/server";
-import { HomeExperience } from "@/components/workspace/home/HomeExperience";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default async function AppHome() {
-  const user = await currentUser().catch(() => null);
-  const name = user?.firstName || user?.username || "Luis";
-  return <HomeExperience name={name} />;
+// La conversación es el centro de VForge: /app aterriza directo en el chat.
+export default function AppRoot() {
+  redirect("/app/chat");
 }

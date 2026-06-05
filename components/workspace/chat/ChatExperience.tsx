@@ -19,6 +19,7 @@ import {
   Plus,
   History,
   GitBranch,
+  Rocket,
   MessageSquare,
   Mic,
   X,
@@ -215,6 +216,39 @@ export function ChatExperience() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [scopeMenuOpen, setScopeMenuOpen] = useState(false);
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
+  const [repoMenuOpen, setRepoMenuOpen] = useState(false);
+  const [deployMenuOpen, setDeployMenuOpen] = useState(false);
+  const [repoFormOpen, setRepoFormOpen] = useState(false);
+  const [repoName, setRepoName] = useState("");
+  const [builderBusy, setBuilderBusy] = useState(false);
+  const [builderNote, setBuilderNote] = useState<string | null>(null);
+
+  const sendBuilderRequest = useCallback(
+    async (action: "scaffold-request" | "deploy-request", name?: string) => {
+      setBuilderBusy(true);
+      setBuilderNote(null);
+      try {
+        const res = await fetch("/api/builder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action, name: name ?? null, scope }),
+        });
+        const data = (await res.json().catch(() => ({}))) as { queued?: boolean };
+        setBuilderNote(
+          data?.queued
+            ? action === "scaffold-request"
+              ? "Repositorio en cola. V lo creará en cuanto el pipeline esté listo."
+              : "Despliegue en cola. V lo enviará a Vercel en cuanto el pipeline esté listo."
+            : "No se pudo encolar. Reintenta.",
+        );
+      } catch {
+        setBuilderNote("No se pudo encolar. Reintenta.");
+      } finally {
+        setBuilderBusy(false);
+      }
+    },
+    [scope],
+  );
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -665,7 +699,7 @@ export function ChatExperience() {
         <div className="mx-auto flex h-12 max-w-3xl items-center gap-1 px-2 sm:px-3 md:px-8">
           {/* Volver (solo móvil) */}
           <Link
-            href="/app"
+            href="/app/home"
             aria-label="Volver a inicio"
             className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface md:hidden"
             style={{ touchAction: "manipulation" }}
@@ -737,6 +771,136 @@ export function ChatExperience() {
             )}
           </div>
 
+          {/* Repo (GitHub) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setRepoMenuOpen((v) => !v);
+                setDeployMenuOpen(false);
+                setHeaderMenuOpen(false);
+              }}
+              aria-label="Repositorio"
+              aria-haspopup="menu"
+              aria-expanded={repoMenuOpen}
+              className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface"
+              style={{ touchAction: "manipulation" }}
+            >
+              <GitBranch size={17} />
+            </button>
+            {repoMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => {
+                    setRepoMenuOpen(false);
+                    setRepoFormOpen(false);
+                    setBuilderNote(null);
+                  }}
+                />
+                <div className="absolute right-0 top-full z-40 mt-1 w-[240px] overflow-hidden rounded-xl border border-app bg-ink shadow-elev backdrop-blur-xl">
+                  {!repoFormOpen ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setRepoFormOpen(true)}
+                        className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
+                      >
+                        <Plus size={14} className="text-violet-300" /> Crear repositorio…
+                      </button>
+                      {currentScope.repo && (
+                        <a
+                          href={`https://github.com/${currentScope.repo}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => setRepoMenuOpen(false)}
+                          className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
+                        >
+                          <GitBranch size={14} className="text-cyber-cyan" /> Ver en GitHub
+                        </a>
+                      )}
+                    </>
+                  ) : (
+                    <div className="p-3">
+                      <p className="mb-2 text-[12px] text-muted">Nombre del repositorio</p>
+                      <input
+                        type="text"
+                        value={repoName}
+                        onChange={(e) => setRepoName(e.target.value)}
+                        placeholder="mi-proyecto"
+                        className="mb-2 w-full rounded-md border border-app bg-void px-3 py-2 text-sm text-on-surface placeholder:text-muted focus:border-violet-500/40 focus:outline-none"
+                        style={{ fontSize: 16, touchAction: "manipulation" }}
+                      />
+                      <button
+                        type="button"
+                        disabled={builderBusy || !repoName.trim()}
+                        onClick={() => void sendBuilderRequest("scaffold-request", repoName.trim())}
+                        className="w-full rounded-md bg-violet-500/20 px-3 py-2 text-sm font-medium text-violet-300 ring-1 ring-violet-500/30 transition hover:bg-violet-500/30 disabled:opacity-50"
+                        style={{ minHeight: 44, touchAction: "manipulation" }}
+                      >
+                        {builderBusy ? "Encolando…" : "Crear"}
+                      </button>
+                      {builderNote && (
+                        <p className="mt-2 text-[12px] text-muted">{builderNote}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Deploy (Vercel) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setDeployMenuOpen((v) => !v);
+                setRepoMenuOpen(false);
+                setHeaderMenuOpen(false);
+              }}
+              aria-label="Despliegue"
+              aria-haspopup="menu"
+              aria-expanded={deployMenuOpen}
+              className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface"
+              style={{ touchAction: "manipulation" }}
+            >
+              <Rocket size={17} />
+            </button>
+            {deployMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => {
+                    setDeployMenuOpen(false);
+                    setBuilderNote(null);
+                  }}
+                />
+                <div className="absolute right-0 top-full z-40 mt-1 w-[230px] overflow-hidden rounded-xl border border-app bg-ink shadow-elev backdrop-blur-xl">
+                  <button
+                    type="button"
+                    disabled={builderBusy}
+                    onClick={() => void sendBuilderRequest("deploy-request")}
+                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1 disabled:opacity-50"
+                  >
+                    <Rocket size={14} className="text-violet-300" />
+                    {builderBusy ? "Encolando…" : "Deploy a Vercel…"}
+                  </button>
+                  <Link
+                    href="/app/deployments"
+                    onClick={() => setDeployMenuOpen(false)}
+                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
+                  >
+                    <Globe2 size={14} className="text-cyber-cyan" /> Ver deployments
+                  </Link>
+                  {builderNote && (
+                    <p className="px-3 pb-2.5 text-[12px] text-muted">{builderNote}</p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Menú ··· */}
           <div className="relative">
             <button
@@ -779,7 +943,7 @@ export function ChatExperience() {
                     <History size={14} className="text-cyber-cyan" /> Hilos
                   </button>
                   <Link
-                    href="/app"
+                    href="/app/home"
                     onClick={() => setHeaderMenuOpen(false)}
                     className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
                   >

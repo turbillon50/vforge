@@ -7,20 +7,12 @@ import { VMark, VWordmark } from "@/components/brand/VMark";
 import {
   Activity,
   Bell,
-  Boxes,
   ChevronRight,
   GitBranch,
-  Globe2,
-  KeyRound,
-  Layers,
   LifeBuoy,
-  Map,
-  LayoutDashboard,
   MessagesSquare,
   Search,
   Settings,
-  ShieldCheck,
-  Sparkles,
   Workflow,
 } from "lucide-react";
 import { UserButton, useUser } from "@clerk/nextjs";
@@ -31,23 +23,18 @@ import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
-import { VOrb } from "./VOrb";
 
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const t = useT();
   const pathname = usePathname();
   const nav = [
-    { href: "/app", label: "Inicio", icon: Home, kbd: "H", exact: true },
-    { href: "/app/cockpit", label: "Centro de Mando", icon: LayoutDashboard, kbd: "1" },
-    { href: "/app/chat", label: t.workspace.nav.chat, icon: MessagesSquare, kbd: "C" },
+    { href: "/app/chat", label: "Conversación", icon: MessagesSquare, kbd: "C" },
     { href: "/app/repovision", label: t.workspace.nav.repovision, icon: GitBranch, kbd: "R" },
-    { href: "/app/blueprint", label: "Blueprint", icon: Map, kbd: "B" },
     { href: "/app/deployments", label: t.workspace.nav.deployments, icon: Activity, kbd: "D" },
-    { href: "/app/marketplace", label: t.workspace.nav.marketplace, icon: Layers, kbd: "M" },
-    { href: "/app/integrations", label: t.workspace.nav.integrations, icon: Boxes, kbd: "I" },
-    { href: "/app/secrets", label: t.workspace.nav.secrets, icon: ShieldCheck, kbd: "S" },
     { href: "/app/projects", label: t.workspace.nav.projects, icon: Workflow, kbd: "P" },
-    { href: "/app/activity", label: t.workspace.nav.activity, icon: Bell, kbd: "A" },
+  ];
+  const navBottom = [
+    { href: "/app/home", label: "Inicio", icon: Home, kbd: "H", exact: true },
     { href: "/app/admin", label: "Usuarios", icon: Users, kbd: "U" },
   ];
 
@@ -95,6 +82,24 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="border-t border-app p-3">
+          {navBottom.map((item) => {
+            const active = item.exact ? pathname === item.href : pathname?.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition",
+                  active
+                    ? "bg-violet-500/15 text-violet-300 ring-1 ring-violet-500/30"
+                    : "text-on-surface-variant hover:bg-tint-2 hover:text-on-surface"
+                )}
+              >
+                <item.icon size={15} className={active ? "text-cyber-cyan" : ""} />
+                <span className="flex-1">{item.label}</span>
+              </Link>
+            );
+          })}
           <Link
             href="/app/settings"
             className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-on-surface-variant hover:bg-tint-2 hover:text-on-surface"
@@ -169,7 +174,6 @@ function TopBar({ hiddenOnMobile = false }: { hiddenOnMobile?: boolean }) {
             </span>
           </div>
         </div>
-      <VOrb />
       </div>
     </header>
   );
@@ -213,10 +217,9 @@ function MobileNav({ pathname }: { pathname: string }) {
   // Deploy / Alertas. Cuando el teclado mobile está abierto, la clase
   // body.keyboard-open lo oculta automáticamente (CSS en globals.css).
   const mobileNav = [
-    { href: "/app", label: "Inicio", icon: Home, exact: true },
+    { href: "/app/chat", label: "Chat", icon: MessagesSquare, orb: true },
     { href: "/app/projects", label: t.workspace.mobile_labels.projects, icon: Workflow },
-    { href: "/app/chat", label: "V", icon: MessagesSquare, center: true },
-    { href: "/app/activity", label: t.workspace.mobile_labels.alerts, icon: Bell },
+    { href: "/app/deployments", label: "Despliegues", icon: Activity },
     { href: "/app/settings", label: "Ajustes", icon: Settings },
   ];
   return (
@@ -233,16 +236,29 @@ function MobileNav({ pathname }: { pathname: string }) {
         const active = (i as { exact?: boolean }).exact
           ? pathname === i.href
           : pathname.startsWith(i.href);
-        if ((i as { center?: boolean }).center) {
+        if ((i as { orb?: boolean }).orb) {
           return (
             <Link
               key={i.href}
               href={i.href}
               aria-label="Hablar con V"
               aria-current={active ? "page" : undefined}
-              className="flex flex-1 items-center justify-center transition active:scale-95"
+              className={cn(
+                "flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-[0.94]",
+                active ? "text-violet-300" : "text-on-surface-variant",
+              )}
             >
-              <VPresence size={42} breathing={active} />
+              <VPresence size={28} breathing={active} />
+              <span
+                className={cn(
+                  "text-[10px] font-medium",
+                  active
+                    ? "bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-semibold text-transparent"
+                    : "",
+                )}
+              >
+                {i.label}
+              </span>
             </Link>
           );
         }
