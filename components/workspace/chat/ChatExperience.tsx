@@ -14,6 +14,7 @@ import {
   Square,
   ChevronDown,
   Plus,
+  History,
   GitBranch,
   MessageSquare,
   Mic,
@@ -89,6 +90,13 @@ type SSEEvent =
   | { type: "model_fallback"; from: string; to: string; status: number | null; reason: string }
   | { type: "done"; tokensIn: number; tokensOut: number; model: string }
   | { type: "error"; message: string };
+
+interface ChatSession {
+  session_id: string;
+  title: string;
+  last_at: string;
+  count: number;
+}
 
 interface HistoryTurn {
   id: string;
@@ -179,6 +187,9 @@ export function ChatExperience() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [scopeMenuOpen, setScopeMenuOpen] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
+  const [sessionsOpen, setSessionsOpen] = useState(false);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
   const sessionIdRef = useRef<string>("");
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<Msg[]>(messages);
@@ -426,8 +437,13 @@ export function ChatExperience() {
         // Final commit: flush any remaining buffered chars, then promote the
         // assembled text into the message so it's part of the persistent list.
         smooth.flush();
+        // Los bloques <memory> son internos (memoria de cuenta) — no se muestran.
+        const visibleText = assembled
+          .replace(/<memory\s+key="[^"]*"\s*>[\s\S]*?<\/memory>/g, "")
+          .replace(/\n{3,}/g, "\n\n")
+          .trimEnd();
         setMessages((p) =>
-          p.map((m) => (m.id === aId ? { ...m, text: assembled } : m)),
+          p.map((m) => (m.id === aId ? { ...m, text: visibleText } : m)),
         );
         setStreamingId(null);
         setPending(false);
@@ -507,6 +523,72 @@ export function ChatExperience() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scope, t.chat.intro]);
+
+  // ---- Multi-chat: lista de sesiones + cambio de sesion ----
+  const loadSessions = useCallback(async () => {
+    setSessionsLoading(true);
+    try {
+      const res = await fetch("/api/forge/sessions?limit=30", { cache: "no-store" });
+      if (res.ok) {
+        const data = (await res.json()) as { sessions: ChatSession[] };
+        setSessions(data.sessions ?? []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, []);
+
+  const openSessions = useCallback(() => {
+    setSessionsOpen(true);
+    void loadSessions();
+  }, [loadSessions]);
+
+  const switchSession = useCallback(
+    async (sid: string) => {
+      if (pending || sid === sessionIdRef.current) {
+        setSessionsOpen(false);
+        return;
+      }
+      setSessionsOpen(false);
+      setIsHydrating(true);
+      sessionIdRef.current = sid;
+      try {
+        const res = await fetch(
+          `/api/forge/conversations?sessionId=${encodeURIComponent(sid)}&limit=100`,
+          { cache: "no-store" },
+        );
+        if (res.ok) {
+          const data = (await res.json()) as { turns: HistoryTurn[] };
+          const hydrated: Msg[] = (data.turns ?? [])
+            .filter((tn) => tn.role === "user" || tn.role === "assistant")
+            .map((tn) => ({
+              id: tn.id,
+              role: tn.role === "assistant" ? "b" : "user",
+              text: tn.content,
+            }));
+          setMessages(
+            hydrated.length > 0
+              ? hydrated
+              : [{ id: "intro", role: "b", text: t.chat.intro }],
+          );
+        }
+      } catch {
+        // keep current
+      } finally {
+        setIsHydrating(false);
+      }
+    },
+    [pending, t.chat.intro],
+  );
+
+  const startNewSession = useCallback(() => {
+    if (pending) return;
+    setSessionsOpen(false);
+    sessionIdRef.current = `s_${scope}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    setMessages([{ id: "intro", role: "b", text: t.chat.intro }]);
+  }, [pending, scope, t.chat.intro]);
 
   const scopeOptions: ScopeOption[] = [
     { id: "general", label: "General" },
@@ -590,6 +672,17 @@ export function ChatExperience() {
             <Plus size={14} />
           </button>
 
+          {/* Historial de chats */}
+          <button
+            type="button"
+            onClick={openSessions}
+            title="Tus chats"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-app bg-tint-1 text-on-surface-variant hover:border-app-strong hover:text-on-surface"
+            style={{ touchAction: "manipulation" }}
+          >
+            <History size={14} />
+          </button>
+
           <div className="ml-auto flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
             <span className="hidden sm:inline">V</span>
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success-emerald" />
@@ -653,6 +746,66 @@ export function ChatExperience() {
           </div>
         </div>
       </div>
+
+      {/* Drawer de sesiones (multi-chat) */}
+      {sessionsOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-[2px]"
+            onClick={() => setSessionsOpen(false)}
+          />
+          <div className="fixed inset-y-0 right-0 z-[71] flex w-[88vw] max-w-sm flex-col border-l border-white/15 bg-[#0b0716]/85 shadow-[0_0_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <p className="font-display text-sm font-semibold text-white">Tus chats</p>
+              <button
+                type="button"
+                onClick={() => setSessionsOpen(false)}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+              >
+                <X size={15} />
+              </button>
+            </div>
+            <div className="px-3 pt-3">
+              <button
+                type="button"
+                onClick={startNewSession}
+                disabled={pending}
+                className="flex w-full items-center gap-2 rounded-xl border border-violet-400/50 bg-violet-500/25 px-3 py-2.5 text-sm font-medium text-white transition hover:bg-violet-500/35 disabled:opacity-50"
+              >
+                <Plus size={15} className="text-cyan-300" />
+                Nuevo chat
+              </button>
+            </div>
+            <div className="mt-2 flex-1 overflow-y-auto px-3 pb-4">
+              {sessionsLoading && (
+                <p className="px-2 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-white/50">
+                  Cargando chats…
+                </p>
+              )}
+              {!sessionsLoading && sessions.length === 0 && (
+                <p className="px-2 py-3 text-sm text-white/50">Sin chats todavía.</p>
+              )}
+              {sessions.map((sess) => (
+                <button
+                  key={sess.session_id}
+                  type="button"
+                  onClick={() => void switchSession(sess.session_id)}
+                  className={`mt-1.5 flex w-full flex-col gap-0.5 rounded-xl border px-3 py-2.5 text-left transition ${
+                    sess.session_id === sessionIdRef.current
+                      ? "border-violet-400/50 bg-violet-500/20 text-white"
+                      : "border-transparent bg-white/[0.05] text-white/85 hover:bg-white/[0.12] hover:text-white"
+                  }`}
+                >
+                  <span className="truncate text-sm font-medium">{sess.title}</span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45">
+                    {new Date(sess.last_at).toLocaleString("es-MX", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })} · {sess.count} msgs
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       <div
         className="vf-composer-pad flex-shrink-0 border-t border-app bg-void/95 backdrop-blur-xl"

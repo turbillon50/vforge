@@ -12,6 +12,13 @@ import { getOperatorSecret } from "@/lib/vault/get-secret";
 import { routeFor } from "@/lib/forge/routing";
 import { estimateCostForModel, MODELS, normalizeSlug } from "@/lib/forge/models";
 import { getModelForTask } from "@/lib/forge/agent-config";
+import { auth } from "@clerk/nextjs/server";
+import {
+  getUserMemories,
+  saveUserMemory,
+  extractMemoryBlocks,
+  memoryPromptSection,
+} from "@/lib/forge/user-memory";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,7 +57,14 @@ export async function POST(req: Request) {
   // El middleware ya garantiza que solo el owner llega aquí; V es
   // single-user, así que el historial vive bajo el id canónico del
   // operador. Nunca confiamos en un userId del cliente.
-  const userId = OPERATOR_USER_ID;
+  // Si hay sesion Clerk, el historial y la memoria viven bajo ese id.
+  let userId = OPERATOR_USER_ID;
+  try {
+    const a = await auth();
+    if (a?.userId) userId = a.userId;
+  } catch {
+    // sin Clerk -> operador
+  }
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return jsonError("messages array required and non-empty", 400);
@@ -66,9 +80,12 @@ export async function POST(req: Request) {
     return jsonError("OPENROUTER_API_KEY not configured (vault or env)", 500);
   }
 
-  const { systemPrompt, config } = await buildSystemPrompt({
+  const { systemPrompt: basePrompt, config } = await buildSystemPrompt({
     projectId: body.projectId ?? null,
   });
+  // Memoria por cuenta (independiente de la sesion de chat).
+  const userMemories = await getUserMemories(userId);
+  const systemPrompt = basePrompt + memoryPromptSection(userMemories);
 
   // Resolve the model cascade.
   // 1. agent_config DB (V's self-config, migration 007) is the canonical
@@ -319,6 +336,15 @@ export async function POST(req: Request) {
           );
         }
 
+        // Extrae bloques <memory> emitidos por el modelo (datos durables
+        // del usuario) y guardalos en v_user_memory; no se muestran ni
+        // se persisten en la conversacion.
+        const { cleaned: assistantVisible, memories: newMemories } =
+          extractMemoryBlocks(assistantTextBuffer);
+        for (const m of newMemories) {
+          await saveUserMemory(userId, m.key, m.value);
+        }
+
         // Persist the final assistant text. Tool intermediate steps
         // are not replayed on rehydrate; only the visible answer.
         await sql`
@@ -327,7 +353,7 @@ export async function POST(req: Request) {
             tokens_in, tokens_out, cost_usd
           )
           VALUES (
-            ${userId}, ${sessionId}, 'assistant', ${assistantTextBuffer},
+            ${userId}, ${sessionId}, 'assistant', ${assistantVisible},
             ${actualModel},
             ${totalTokensIn}, ${totalTokensOut},
             ${estimateCostForModel(actualModel, totalTokensIn, totalTokensOut)}

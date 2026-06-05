@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessagesSquare, LayoutDashboard, GitBranch, Workflow, Cpu, Boxes, X } from "lucide-react";
+import { MessagesSquare, LayoutDashboard, GitBranch, Workflow, Cpu, Boxes } from "lucide-react";
 
 const ITEMS = [
   { label: "Hablar con V", Icon: MessagesSquare, href: "/app/chat", primary: true },
@@ -13,35 +13,6 @@ const ITEMS = [
   { label: "Proyectos", Icon: Boxes, href: "/app/projects" },
 ];
 
-const ORB = 56; // h-14 w-14
-const GAP = 12;
-
-/**
- * Devuelve una posición que no se encime con ningún [data-vorb-avoid]
- * visible. Si hay colisión, sube el orb justo encima del elemento.
- */
-function avoidCollision(p: { x: number; y: number }): { x: number; y: number } {
-  if (typeof window === "undefined") return p;
-  let { x, y } = p;
-  x = Math.max(8, Math.min(window.innerWidth - ORB - 8, x));
-  y = Math.max(8, Math.min(window.innerHeight - ORB - 8, y));
-  const els = document.querySelectorAll<HTMLElement>("[data-vorb-avoid]");
-  for (const el of Array.from(els)) {
-    const r = el.getBoundingClientRect();
-    if (r.width === 0 || r.height === 0) continue;
-    const overlaps =
-      x < r.right + GAP &&
-      x + ORB > r.left - GAP &&
-      y < r.bottom + GAP &&
-      y + ORB > r.top - GAP;
-    if (overlaps) {
-      // Reubicar justo encima del elemento, conservando el lado (izq/der).
-      y = Math.max(8, r.top - ORB - GAP);
-    }
-  }
-  return { x, y };
-}
-
 export function VOrb() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -51,34 +22,10 @@ export function VOrb() {
   useEffect(() => {
     try {
       const s = localStorage.getItem("vorb_pos");
-      if (s) { setPos(avoidCollision(JSON.parse(s))); return; }
+      if (s) { setPos(JSON.parse(s)); return; }
     } catch {}
-    setPos(avoidCollision({ x: window.innerWidth - 78, y: window.innerHeight - 120 }));
+    setPos({ x: window.innerWidth - 78, y: window.innerHeight - 120 });
   }, []);
-
-  // Auto-reposición: si el orb tapa un elemento marcado [data-vorb-avoid]
-  // (p. ej. el composer del chat con su botón de enviar), se reubica arriba.
-  useEffect(() => {
-    if (pos.x < 0) return;
-    let raf = 0;
-    const check = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        if (drag.current) return; // no pelear con el usuario mientras arrastra
-        const np = avoidCollision(pos);
-        if (np.x !== pos.x || np.y !== pos.y) setPos(np);
-      });
-    };
-    check();
-    const obs = new MutationObserver(check);
-    obs.observe(document.body, { childList: true, subtree: true });
-    window.addEventListener("resize", check);
-    return () => {
-      cancelAnimationFrame(raf);
-      obs.disconnect();
-      window.removeEventListener("resize", check);
-    };
-  }, [pos]);
 
   function down(e: React.PointerEvent) {
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
@@ -98,7 +45,7 @@ export function VOrb() {
     if (!d.moved) { setOpen((o) => !o); }
     else {
       const snapX = pos.x + 28 < window.innerWidth / 2 ? 12 : window.innerWidth - 68;
-      const np = avoidCollision({ x: snapX, y: pos.y });
+      const np = { x: snapX, y: pos.y };
       setPos(np);
       try { localStorage.setItem("vorb_pos", JSON.stringify(np)); } catch {}
     }
@@ -110,16 +57,16 @@ export function VOrb() {
 
   return (
     <>
-      {open && <div onClick={() => setOpen(false)} className="fixed inset-0 z-[60]" aria-hidden />}
+      {open && <div onClick={() => setOpen(false)} className="fixed inset-0 z-[60] bg-black/30 backdrop-blur-[2px]" aria-hidden />}
       <div style={{ left: pos.x, top: pos.y }} className="fixed z-[61] select-none">
         {open && (
-          <div className={"absolute bottom-[68px] flex w-56 flex-col gap-2 " + (onLeft ? "left-0" : "right-0")}>
+          <div className={"absolute bottom-[72px] flex w-60 flex-col gap-1.5 rounded-2xl border border-white/15 bg-[#0b0716]/80 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl " + (onLeft ? "left-0" : "right-0")}>
             {ITEMS.map((it, i) => (
               <button
                 key={it.label}
                 onClick={() => { setOpen(false); router.push(it.href); }}
-                style={{ animation: "vorbIn .2s " + i * 0.03 + "s both" }}
-                className={"flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm backdrop-blur-xl transition " + (it.primary ? "border-violet-400/40 bg-violet-500/20 text-white" : "border-white/10 bg-white/10 text-on-surface hover:bg-white/20")}
+                style={{ animation: "vorbIn .22s " + i * 0.03 + "s both" }}
+                className={"flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition " + (it.primary ? "border-violet-400/50 bg-violet-500/25 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]" : "border-transparent bg-white/[0.06] text-white/90 hover:bg-white/[0.14] hover:text-white")}
               >
                 <it.Icon size={16} className={it.primary ? "text-cyan-300" : "text-violet-300"} />
                 {it.label}
@@ -127,19 +74,39 @@ export function VOrb() {
             ))}
           </div>
         )}
-        <span aria-hidden className="pointer-events-none absolute left-0 top-0 h-14 w-14 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400" style={{ animation: "vorbPulse 2.4s ease-in-out infinite" }} />
+
+        {/* Esfera de energia de V: gradiente conico animado + capas de glow */}
         <button
           onPointerDown={down}
           onPointerMove={move}
           onPointerUp={up}
           aria-label="V"
           style={{ touchAction: "none" }}
-          className="relative flex h-14 w-14 cursor-grab items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 text-white shadow-[0_8px_30px_rgba(139,92,246,0.5)] transition active:scale-95"
+          className={"vorb-sphere relative h-14 w-14 cursor-grab rounded-full transition active:scale-95 " + (open ? "vorb-open" : "")}
         >
-          {open ? <X size={22} /> : <span className="font-display text-2xl font-bold">V</span>}
+          <span aria-hidden className="vorb-halo" />
+          <span aria-hidden className="vorb-ring" />
+          <span aria-hidden className="vorb-core" />
+          <span aria-hidden className="vorb-flare" />
+          <span aria-hidden className="vorb-spark" />
         </button>
       </div>
-      <style>{"@keyframes vorbIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes vorbPulse{0%,100%{transform:scale(1);opacity:.45}50%{transform:scale(1.5);opacity:0}}"}</style>
+      <style>{`
+@keyframes vorbIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes vorbSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes vorbBreath{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.25);opacity:.9}}
+@keyframes vorbHue{0%,100%{filter:hue-rotate(0deg) saturate(1.1)}40%{filter:hue-rotate(-28deg) saturate(1.35)}70%{filter:hue-rotate(18deg) saturate(1.2)}}
+@keyframes vorbFlare{0%,100%{opacity:.15;transform:translate(-18%,-18%) scale(.8)}45%{opacity:.75;transform:translate(-8%,-10%) scale(1.05)}60%{opacity:.35}}
+@keyframes vorbSpark{0%,86%,100%{opacity:0;transform:scale(.6) rotate(0deg)}90%{opacity:.95;transform:scale(1.15) rotate(20deg)}94%{opacity:.2;transform:scale(.9) rotate(35deg)}}
+.vorb-sphere{box-shadow:0 10px 40px rgba(124,58,237,.55),0 0 0 1px rgba(255,255,255,.08) inset}
+.vorb-halo{position:absolute;inset:-10px;border-radius:9999px;background:radial-gradient(circle,rgba(124,58,237,.45),rgba(34,211,238,.18) 55%,transparent 72%);filter:blur(8px);animation:vorbBreath 3.2s ease-in-out infinite;pointer-events:none}
+.vorb-ring{position:absolute;inset:0;border-radius:9999px;background:conic-gradient(from 0deg,#7c3aed,#22d3ee,#a78bfa,#ffffff,#7c3aed);animation:vorbSpin 6s linear infinite,vorbHue 7s ease-in-out infinite;pointer-events:none}
+.vorb-core{position:absolute;inset:3px;border-radius:9999px;background:radial-gradient(circle at 35% 30%,#c4b5fd 0%,#7c3aed 38%,#3b0f7e 75%,#150528 100%);animation:vorbHue 9s ease-in-out infinite;pointer-events:none}
+.vorb-flare{position:absolute;inset:6px;border-radius:9999px;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.95),rgba(165,243,252,.35) 35%,transparent 60%);mix-blend-mode:screen;animation:vorbFlare 4.5s ease-in-out infinite;pointer-events:none}
+.vorb-spark{position:absolute;inset:10px;border-radius:9999px;background:radial-gradient(circle at 68% 62%,rgba(255,255,255,.9),rgba(34,211,238,.4) 30%,transparent 55%);mix-blend-mode:screen;animation:vorbSpark 5.8s ease-in-out infinite;pointer-events:none}
+.vorb-open .vorb-ring{animation-duration:2.2s,7s}
+.vorb-open .vorb-halo{animation-duration:1.6s}
+      `}</style>
     </>
   );
 }
