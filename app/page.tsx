@@ -1,3 +1,5 @@
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { Hero } from "@/components/marketing/Hero";
@@ -5,7 +7,15 @@ import { Metodo } from "@/components/marketing/Metodo";
 import { Integraciones } from "@/components/marketing/Integraciones";
 import { CTA } from "@/components/marketing/CTA";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  // Usuario con sesión NO ve marketing: va directo a su casa.
+  // El middleware decide owner (/app) vs usuario normal (/workspace).
+  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    const { userId } = await auth();
+    if (userId) redirect("/app");
+  }
   return (
     <>
       <MarketingHeader />

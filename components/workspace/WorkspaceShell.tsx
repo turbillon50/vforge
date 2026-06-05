@@ -23,6 +23,8 @@ import {
   Sparkles,
   Workflow,
 } from "lucide-react";
+import { UserButton, useUser } from "@clerk/nextjs";
+import { Home, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
@@ -33,6 +35,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const t = useT();
   const pathname = usePathname();
   const nav = [
+    { href: "/app", label: "Inicio", icon: Home, kbd: "H", exact: true },
     { href: "/app/cockpit", label: "Centro de Mando", icon: LayoutDashboard, kbd: "1" },
     { href: "/app/chat", label: t.workspace.nav.chat, icon: MessagesSquare, kbd: "C" },
     { href: "/app/repovision", label: t.workspace.nav.repovision, icon: GitBranch, kbd: "R" },
@@ -43,6 +46,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
     { href: "/app/secrets", label: t.workspace.nav.secrets, icon: ShieldCheck, kbd: "S" },
     { href: "/app/projects", label: t.workspace.nav.projects, icon: Workflow, kbd: "P" },
     { href: "/app/activity", label: t.workspace.nav.activity, icon: Bell, kbd: "A" },
+    { href: "/app/admin", label: "Usuarios", icon: Users, kbd: "U" },
   ];
 
   return (
@@ -64,7 +68,9 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         <nav className="mt-4 flex-1 overflow-y-auto px-3 no-scrollbar">
           <p className="label-caps mb-2 px-2 text-muted">{t.workspace.workspace_label}</p>
           {nav.map((item) => {
-            const active = pathname?.startsWith(item.href);
+            const active = (item as { exact?: boolean }).exact
+              ? pathname === item.href
+              : pathname?.startsWith(item.href);
             return (
               <Link
                 key={item.href}
@@ -133,6 +139,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 }
 
 function TopBar() {
+  const { user } = useUser();
   return (
     <header
       className="sticky top-0 z-30 border-b border-app bg-void/85 backdrop-blur-xl"
@@ -155,10 +162,13 @@ function TopBar() {
           >
             <Bell size={15} />
           </button>
-          <div className="hidden items-center gap-2 rounded-full border border-app-strong bg-tint-1 py-1 pl-1 pr-3 md:flex">
-            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400" />
-            <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-on-surface">
-              you
+          <div className="flex items-center gap-2 rounded-full border border-app-strong bg-tint-1 py-1 pl-1 pr-2 md:pr-3">
+            <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "h-7 w-7" } }} />
+            <span className="hidden max-w-[120px] truncate text-[13px] font-medium text-on-surface md:inline">
+              {user?.firstName ?? user?.username ?? ""}
+            </span>
+            <span className="hidden rounded-full bg-violet-500/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-violet-300 ring-1 ring-violet-500/30 md:inline">
+              Owner
             </span>
           </div>
         </div>
@@ -206,23 +216,47 @@ function MobileNav({ pathname }: { pathname: string }) {
   // Deploy / Alertas. Cuando el teclado mobile está abierto, la clase
   // body.keyboard-open lo oculta automáticamente (CSS en globals.css).
   const mobileNav = [
-    { href: "/app/chat", label: t.workspace.mobile_labels.b, icon: MessagesSquare },
-    { href: "/app/deployments", label: t.workspace.mobile_labels.deploy, icon: Activity },
+    { href: "/app", label: "Inicio", icon: Home, exact: true },
     { href: "/app/projects", label: t.workspace.mobile_labels.projects, icon: Workflow },
-    { href: "/app/secrets", label: t.workspace.mobile_labels.vault, icon: KeyRound },
+    { href: "/app/chat", label: "V", icon: MessagesSquare, center: true },
     { href: "/app/activity", label: t.workspace.mobile_labels.alerts, icon: Bell },
+    { href: "/app/settings", label: "Ajustes", icon: Settings },
   ];
   return (
     <nav
       aria-label="navegación principal"
-      className="vf-mobile-nav glass-strong fixed inset-x-3 z-40 mx-auto flex max-w-[460px] items-stretch justify-between gap-0.5 overflow-hidden rounded-2xl px-1 shadow-elev md:hidden"
+      className="vf-mobile-nav glass-strong fixed inset-x-3 z-40 mx-auto flex max-w-[460px] items-stretch justify-between gap-0.5 rounded-2xl px-1 shadow-elev md:hidden"
       style={{
         bottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)",
         minHeight: 56,
       }}
     >
       {mobileNav.map((i) => {
-        const active = pathname.startsWith(i.href);
+        const active = (i as { exact?: boolean }).exact
+          ? pathname === i.href
+          : pathname.startsWith(i.href);
+        if ((i as { center?: boolean }).center) {
+          return (
+            <Link
+              key={i.href}
+              href={i.href}
+              aria-label="Hablar con V"
+              aria-current={active ? "page" : undefined}
+              className="relative -mt-5 flex flex-col items-center justify-start"
+            >
+              <span
+                className={cn(
+                  "flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 font-display text-2xl font-bold text-white transition active:scale-95",
+                  active
+                    ? "shadow-[0_10px_36px_rgba(139,92,246,0.65)]"
+                    : "shadow-[0_8px_28px_rgba(139,92,246,0.45)]",
+                )}
+              >
+                V
+              </span>
+            </Link>
+          );
+        }
         return (
           <Link
             key={i.href}
