@@ -16,6 +16,10 @@ export function ClerkShell({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
       publishableKey={pk}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/app/chat"
+      signUpFallbackRedirectUrl="/onboarding"
       appearance={{
         baseTheme: dark,
         variables: {

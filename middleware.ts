@@ -67,7 +67,7 @@ async function resolveOwner(userId: string): Promise<boolean> {
 export default hasClerk
   ? clerkMiddleware(async (auth, req) => {
       if (!isProtected(req)) return;
-      const { userId, sessionClaims, redirectToSignIn } = await auth();
+      const { userId, sessionClaims } = await auth();
       const isApi = req.nextUrl.pathname.startsWith("/api");
 
       if (!userId) {
@@ -77,10 +77,13 @@ export default hasClerk
             headers: { "Content-Type": "application/json" },
           });
         }
-        // redirectToSignIn() de Clerk maneja el handshake/refresh de token
-        // correctamente (a diferencia de un redirect manual, que podía
-        // dejar al usuario en un bucle /app ↔ /sign-in).
-        return redirectToSignIn();
+        // SIEMPRE a la página /sign-in PROPIA de la app (NUNCA al Account
+        // Portal hosteado accounts.vforge.site, que rinde en blanco en móvil
+        // y causaba el bucle). Conservamos el destino para volver tras login.
+        const signIn = new URL("/sign-in", req.url);
+        const dest = req.nextUrl.pathname + req.nextUrl.search;
+        if (dest && dest !== "/sign-in") signIn.searchParams.set("redirect_url", dest);
+        return NextResponse.redirect(signIn);
       }
 
       if (isOwnerOnly(req)) {
