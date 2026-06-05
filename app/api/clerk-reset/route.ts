@@ -1,30 +1,34 @@
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/clerk-reset — rompe la colisión de cookies de instancias Clerk:
- * expira TODAS las cookies de sesión Clerk (con y sin sufijo) y manda a
- * /sign-in para una sesión limpia. Útil cuando el server no ve la sesión
- * aunque el cliente cree estar logueado (bucle /app ↔ /sign-in).
+ * GET /api/clerk-reset — rompe la colisión de cookies Clerk (instancias
+ * múltiples). Expira TODAS las cookies de sesión Clerk en sus dos variantes
+ * (host-only en vforge.site y dominio padre .vforge.site) y manda a /sign-in.
  */
-export async function GET(req: Request) {
-  const jar = await cookies();
-  const all = jar.getAll();
-  for (const c of all) {
-    if (/^__session|^__client_uat|^__clerk|^__refresh/.test(c.name)) {
-      // Expira en este host y en el dominio padre .vforge.site
-      jar.set(c.name, "", { maxAge: 0, path: "/" });
-    }
-  }
+export async function GET() {
   const site = process.env.NEXT_PUBLIC_SITE_URL || "https://vforge.site";
-  const res = Response.redirect(`${site}/sign-in?reset=1`, 302);
-  // Refuerzo: cabeceras Set-Cookie para el dominio padre (.vforge.site)
-  const names = ["__session", "__client_uat", "__session_3G0LOQfI", "__client_uat_3G0LOQfI"];
-  const headers = new Headers(res.headers);
-  for (const n of names) {
-    headers.append("Set-Cookie", `${n}=; Path=/; Domain=.vforge.site; Max-Age=0; Secure; SameSite=Lax`);
+  const res = NextResponse.redirect(`${site}/sign-in?reset=1`, 302);
+
+  const jar = await cookies();
+  const names = new Set<string>();
+  for (const c of jar.getAll()) {
+    if (/^__session|^__client_uat|^__clerk|^__refresh/.test(c.name)) names.add(c.name);
   }
-  return new Response(null, { status: 302, headers });
+  // Por si alguna no llegó en este request, incluimos las conocidas.
+  ["__session", "__client_uat", "__session_3G0LOQfI", "__client_uat_3G0LOQfI", "clerk_active_context"].forEach((n) => names.add(n));
+
+  for (const name of names) {
+    // host-only
+    res.cookies.set(name, "", { maxAge: 0, path: "/" });
+    // dominio padre
+    res.headers.append(
+      "Set-Cookie",
+      `${name}=; Path=/; Domain=.vforge.site; Max-Age=0; Secure; SameSite=Lax`,
+    );
+  }
+  return res;
 }
