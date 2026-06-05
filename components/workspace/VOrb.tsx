@@ -105,9 +105,9 @@ export function VOrb() {
     drag.current = null;
   }
 
-  // En el chat móvil V ya vive en la barra y como avatar — el orb flotante
-  // solo tapa el composer. Fuera.
-  if (isMobile && pathname?.startsWith("/app/chat")) return null;
+  // El manifiesto: la conversación manda. Dentro del chat el orb no
+  // aparece (la V ya vive ahí); en el resto de la app vive con su menú.
+  if (pathname?.startsWith("/app/chat")) return null;
   if (pos.x < 0) return null;
   const onLeft = pos.x + 28 < (typeof window !== "undefined" ? window.innerWidth / 2 : 200);
 

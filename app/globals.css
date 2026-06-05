@@ -288,7 +288,9 @@ img, svg, video, canvas {
 /* MobileNav: floats at bottom: safe-area + 10px, height 56px → total reach
    from viewport bottom = safe-area + 66px. We add 10px breathing room. */
 .vf-composer-pad {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 70px);
+  /* El chat ya no convive con la barra inferior en móvil: el composer
+     se pega al safe-area. Cero banda muerta. */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
 }
 @media (min-width: 768px) {
   /* Desktop has the sidebar instead of MobileNav — no clearance needed. */

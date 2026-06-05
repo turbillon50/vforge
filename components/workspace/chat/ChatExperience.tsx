@@ -1339,7 +1339,7 @@ function Composer({
           if (!pending) onSend();
         }}
         data-vorb-avoid
-        className="relative overflow-hidden rounded-2xl border border-app bg-surface/90 shadow-elev"
+        className="group/composer relative overflow-hidden rounded-2xl border border-app bg-surface/70 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_12px_40px_rgba(0,0,0,0.25)] backdrop-blur-2xl transition-all duration-300 focus-within:border-violet-400/40 focus-within:shadow-[0_1px_0_rgba(255,255,255,0.08)_inset,0_0_0_1px_rgba(139,92,246,0.25),0_12px_44px_rgba(139,92,246,0.18)]"
       >
         <div className="flex items-end gap-1.5 px-2 py-2 sm:gap-2">
           <div className="flex items-center gap-0.5 pb-0.5 text-on-surface-variant sm:gap-1">
@@ -1434,7 +1434,11 @@ function Composer({
               type="submit"
               disabled={!input.trim() && !attachment}
               aria-label={sendLabel}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-on-surface disabled:cursor-not-allowed disabled:opacity-40"
+              className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-white transition-all duration-200 active:scale-90 disabled:cursor-not-allowed disabled:opacity-35 disabled:saturate-50 ${
+                input.trim() || attachment
+                  ? "scale-100 shadow-[0_4px_18px_rgba(139,92,246,0.55)] hover:shadow-[0_4px_24px_rgba(139,92,246,0.75)]"
+                  : "scale-95"
+              }`}
               style={{ touchAction: "manipulation" }}
             >
               <ArrowUp size={17} strokeWidth={2.5} />
