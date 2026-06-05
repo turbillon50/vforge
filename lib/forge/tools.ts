@@ -53,7 +53,7 @@ import {
   deleteRecord as nameDeleteRecord,
 } from "@/lib/namecom/client";
 import { encryptOperatorSecret } from "@/lib/vault/operator-crypto";
-import { invalidateSecretCache } from "@/lib/vault/get-secret";
+import { invalidateSecretCache, getOperatorSecret } from "@/lib/vault/get-secret";
 import { routeFor } from "@/lib/forge/routing";
 import { MODELS } from "@/lib/forge/models";
 import { listAgentConfig, setModelForTask } from "@/lib/forge/agent-config";
@@ -2252,7 +2252,7 @@ async function dispatch(
         const deploymentId = requireString(input.deploymentId, "deploymentId");
         const response = await fetch(`https://api.vercel.com/v1/deployments/${deploymentId}/events`, {
           headers: {
-            "Authorization": `Bearer ${process.env.VERCEL_TOKEN}`,
+            "Authorization": `Bearer ${await getOperatorSecret("VERCEL_TOKEN", { auditUserId: ctx.userId })}`,
           },
         });
         const events = (await response.json()) as Array<{
@@ -2360,7 +2360,7 @@ async function dispatch(
         const response = await fetch(
           `https://api.vercel.com/v9/deployments?app=${projectName}&limit=1`,
           {
-            headers: { "Authorization": `Bearer ${process.env.VERCEL_TOKEN}` },
+            headers: { "Authorization": `Bearer ${await getOperatorSecret("VERCEL_TOKEN", { auditUserId: ctx.userId })}` },
           }
         );
         const data = (await response.json()) as { deployments: Array<{ id: string; [key: string]: unknown }> };
@@ -2397,7 +2397,7 @@ async function dispatch(
         const deployResponse = await fetch(
           `https://api.vercel.com/v9/deployments?app=${projectName}&limit=1`,
           {
-            headers: { "Authorization": `Bearer ${process.env.VERCEL_TOKEN}` },
+            headers: { "Authorization": `Bearer ${await getOperatorSecret("VERCEL_TOKEN", { auditUserId: ctx.userId })}` },
           }
         );
         const deployData = (await deployResponse.json()) as { deployments: Array<{ id: string; url: string; readyState: string; errorMessage?: string }> };
@@ -2413,7 +2413,7 @@ async function dispatch(
 
         // Paso 2: Obtener logs
         const logsResponse = await fetch(`https://api.vercel.com/v1/deployments/${deployment.id}/events`, {
-          headers: { "Authorization": `Bearer ${process.env.VERCEL_TOKEN}` },
+          headers: { "Authorization": `Bearer ${await getOperatorSecret("VERCEL_TOKEN", { auditUserId: ctx.userId })}` },
         });
         const events = (await logsResponse.json()) as Array<{ type: string; text: string }>;
         const errors = events.filter((e) => e.type === "error" || e.text.toLowerCase().includes("error"));
