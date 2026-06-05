@@ -16,7 +16,7 @@
  * Luis sin pretender que jaló.
  */
 
-const DEFAULT_URL = "http://178.105.135.26:5000";
+const DEFAULT_URL = "http://178.105.135.26/v-server";
 const DEFAULT_TIMEOUT_MS = 35_000;
 
 export interface VServerResponse {
