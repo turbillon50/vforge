@@ -26,6 +26,7 @@ const isProtected = createRouteMatcher([
   "/api/vault(.*)",
   "/api/admin(.*)",
   "/api/workspace(.*)",
+  "/api/v/bridge(.*)",
 ]);
 
 // Rutas exclusivas del owner (Luis): V, su cockpit y sus productos.
@@ -40,6 +41,7 @@ const isOwnerOnly = createRouteMatcher([
   "/api/vault(.*)",
   "/api/admin(.*)",
   "/api/projects(.*)",
+  "/api/v/bridge(.*)",
 ]);
 
 async function resolveOwner(userId: string): Promise<boolean> {

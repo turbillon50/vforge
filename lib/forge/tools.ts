@@ -59,6 +59,12 @@ import { MODELS } from "@/lib/forge/models";
 import { listAgentConfig, setModelForTask } from "@/lib/forge/agent-config";
 import { callVServer } from "@/lib/forge/v-server";
 import {
+  getBridgeStatus,
+  approvePending,
+  rejectPending,
+  dispatchBridgeTask,
+} from "@/lib/forge/bridge";
+import {
   listAllOpenRouterModels,
   getOpenRouterModel,
   searchOpenRouterModels,
@@ -1315,6 +1321,56 @@ export const TOOLS: Tool[] = [
       required: ["key", "value"],
     },
   },
+  {
+    name: "hub_pending_status",
+    description:
+      "Consulta el puente del hub de agentes (Hetzner): pendientes de aprobación QA, estado de agentes y cola del pipeline. Úsala cuando Luis pregunte qué hay pendiente en la operación o antes de aprobar/rechazar.",
+    input_schema: { type: "object", properties: {}, required: [] },
+  },
+  {
+    name: "hub_approve",
+    description:
+      "Aprueba un pendiente del hub de agentes por id (lo viste antes con hub_pending_status). Devuelve la respuesta del hub.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "Id del pendiente a aprobar." },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "hub_reject",
+    description:
+      "Rechaza un pendiente del hub de agentes por id, con motivo en español claro para el agente que lo produjo.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "Id del pendiente a rechazar." },
+        motivo: { type: "string", description: "Motivo del rechazo." },
+      },
+      required: ["id", "motivo"],
+    },
+  },
+  {
+    name: "hub_dispatch_task",
+    description:
+      "Ordena una tarea nueva a un agente del hub (abogado, logistica, qa, valentina). Úsala cuando Luis pida delegar trabajo a la operación.",
+    input_schema: {
+      type: "object",
+      properties: {
+        agent: {
+          type: "string",
+          enum: ["abogado", "logistica", "qa", "valentina"],
+          description: "Agente destino.",
+        },
+        task: { type: "string", description: "Descripción de la tarea." },
+        context: { type: "string", description: "Contexto adicional (opcional)." },
+        projectId: { type: "string", description: "Id de proyecto (opcional)." },
+      },
+      required: ["agent", "task"],
+    },
+  },
 ];
 
 export interface ToolExecutionContext {
@@ -1363,7 +1419,8 @@ function requiredModeForTool(name: string): AutonomyMode {
     name === "http_request" ||
     name === "browser_control" ||
     name === "image_generation" ||
-    name === "github_run_check"
+    name === "github_run_check" ||
+    name.startsWith("hub_")
   ) {
     return "operate";
   }
@@ -3574,6 +3631,43 @@ async function dispatch(
         content: JSON.stringify({ saved: true, key }),
         summary: `gusto guardado: ${key}`,
       };
+    }
+
+    case "hub_pending_status": {
+      const status = await getBridgeStatus();
+      return {
+        ok: true,
+        content: JSON.stringify(status),
+        summary: `${status.pending?.length ?? 0} pendientes, cola: ${status.pipeline?.queued ?? 0}`,
+      };
+    }
+
+    case "hub_approve": {
+      const id = String(input.id ?? "");
+      if (!id) throw new Error("id requerido");
+      const res = await approvePending(id);
+      return { ok: true, content: JSON.stringify(res), summary: `aprobado ${id}` };
+    }
+
+    case "hub_reject": {
+      const id = String(input.id ?? "");
+      const motivo = String(input.motivo ?? "sin motivo");
+      if (!id) throw new Error("id requerido");
+      const res = await rejectPending(id, motivo);
+      return { ok: true, content: JSON.stringify(res), summary: `rechazado ${id}` };
+    }
+
+    case "hub_dispatch_task": {
+      const agent = String(input.agent ?? "");
+      const task = String(input.task ?? "");
+      if (!agent || !task) throw new Error("agent y task requeridos");
+      const res = await dispatchBridgeTask({
+        agent,
+        task,
+        context: typeof input.context === "string" ? input.context : undefined,
+        projectId: typeof input.projectId === "string" ? input.projectId : undefined,
+      });
+      return { ok: true, content: JSON.stringify(res), summary: `tarea -> ${agent}` };
     }
 
     default:

@@ -13,6 +13,7 @@ import { routeFor } from "@/lib/forge/routing";
 import { estimateCostForModel, MODELS, normalizeSlug } from "@/lib/forge/models";
 import { getModelForTask } from "@/lib/forge/agent-config";
 import { auth } from "@clerk/nextjs/server";
+import { getBridgeStatus, bridgeConfigured } from "@/lib/forge/bridge";
 import {
   getUserMemories,
   saveUserMemory,
@@ -116,6 +117,39 @@ export async function POST(req: Request) {
     memoryPromptSection(userMemories) +
     formatRecallSection(recallHits, 0.25);
 
+  // Estado del puente de agentes (hub Hetzner). Best-effort: si el hub
+  // no responde en 4s, V opera sin ese bloque. Solo el owner llega aquí
+  // (middleware), así que no se filtra nada a terceros.
+  let bridgeSection = "";
+  if (bridgeConfigured()) {
+    try {
+      const st = await Promise.race([
+        getBridgeStatus(),
+        new Promise<never>((_, rej) =>
+          setTimeout(() => rej(new Error("timeout")), 4000),
+        ),
+      ]);
+      const pend = st.pending ?? [];
+      const lines = pend
+        .slice(0, 10)
+        .map(
+          (pItem) =>
+            `- [${pItem.id}] ${pItem.agent} · ${pItem.type}: ${pItem.title}`,
+        )
+        .join("\n");
+      bridgeSection =
+        `\n\n## Operación VForge ahora mismo\n` +
+        `Pendientes de aprobación: ${pend.length}. Cola del pipeline: ${st.pipeline?.queued ?? 0}.\n` +
+        (lines ? lines + "\n" : "") +
+        `Tienes herramientas reales para operar el puente: hub_pending_status, hub_approve, hub_reject, hub_dispatch_task ` +
+        `(agentes: abogado, logistica, qa, valentina). Si hay pendientes, anúncialos con tu estilo — claros y con criterio, nunca JSON crudo — ` +
+        `y pregunta a Luis si aprueba, rechaza (con motivo) o delega algo nuevo.`;
+    } catch {
+      // hub fuera de línea: V sigue normal
+    }
+  }
+  const finalSystemPrompt = systemPrompt + bridgeSection;
+
   // Resolve the model cascade.
   // 1. agent_config DB (V's self-config, migration 007) is the canonical
   //    answer for chat-main. Luis (or V herself via agent_config_set)
@@ -183,7 +217,7 @@ export async function POST(req: Request) {
   // ChatTurn[] (which may have Anthropic-style image blocks from the FE)
   // and accumulate assistant + tool turns across rounds.
   const conversationMessages: ChatCompletionMessageParam[] = [
-    { role: "system", content: systemPrompt },
+    { role: "system", content: finalSystemPrompt },
     ...trimmedMessages.map(toOpenAIMessage),
   ];
 
