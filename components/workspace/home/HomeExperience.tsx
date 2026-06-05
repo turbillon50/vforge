@@ -51,7 +51,7 @@ export function HomeExperience({ name }: { name: string }) {
   }, []);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-5 pb-28 pt-10 md:px-8 md:pt-16">
+    <main className="home-aurora grain mx-auto w-full max-w-5xl px-5 pb-28 pt-10 md:px-8 md:pt-16">
       {/* Saludo — tipografía gigante, limpia, sin cajas */}
       <motion.header
         initial={{ opacity: 0, y: 14 }}
@@ -61,7 +61,7 @@ export function HomeExperience({ name }: { name: string }) {
         <p className="text-base text-on-surface-variant md:text-lg">
           {greeting()}, {name}.
         </p>
-        <h1 className="mt-1 font-display text-4xl font-semibold leading-[1.05] tracking-tight text-on-surface md:text-6xl">
+        <h1 className="mt-1 font-display text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.03em] text-on-surface md:text-7xl">
           Tu fábrica está
           <br />
           <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
@@ -79,7 +79,7 @@ export function HomeExperience({ name }: { name: string }) {
       >
         <Link
           href="/app/chat"
-          className="group relative block overflow-hidden rounded-3xl border border-app bg-gradient-to-b from-violet-500/[0.07] via-surface/60 to-surface/80 px-6 py-10 backdrop-blur-xl transition hover:border-violet-400/30 md:px-12 md:py-14"
+          className="surface-deep group relative block overflow-hidden rounded-3xl border border-app bg-gradient-to-b from-violet-500/[0.07] via-surface/60 to-surface/80 px-6 py-10 backdrop-blur-xl transition hover:border-violet-400/30 md:px-12 md:py-14"
         >
           <div
             aria-hidden
@@ -112,7 +112,7 @@ export function HomeExperience({ name }: { name: string }) {
 
       {/* Accesos — fila deslizable estilo Apple TV */}
       <section className="mt-12 md:mt-16">
-        <h3 className="font-display text-lg font-semibold tracking-tight text-on-surface md:text-xl">
+        <h3 className="font-display text-xl font-semibold tracking-[-0.02em] text-on-surface md:text-2xl">
           Explora
         </h3>
         <div className="no-scrollbar -mx-5 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 md:-mx-8 md:px-8">
@@ -121,12 +121,12 @@ export function HomeExperience({ name }: { name: string }) {
               key={s.href}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 + i * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ delay: 0.2 + i * 0.04, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
               className="snap-start"
             >
               <Link
                 href={s.href}
-                className="group flex h-32 w-44 shrink-0 flex-col justify-between rounded-2xl border border-app bg-surface/60 p-4 backdrop-blur-md transition hover:border-violet-400/30 hover:bg-tint-2 md:h-36 md:w-52"
+                className="surface-deep card-lift group flex h-32 w-44 shrink-0 flex-col justify-between rounded-2xl border border-app bg-surface/60 p-4 backdrop-blur-md md:h-36 md:w-52"
               >
                 <s.Icon size={20} className="text-violet-300 transition group-hover:text-cyan-300" />
                 <div>
@@ -145,7 +145,7 @@ export function HomeExperience({ name }: { name: string }) {
       {projects.length > 0 && (
         <section className="mt-10 md:mt-14">
           <div className="flex items-baseline justify-between">
-            <h3 className="font-display text-lg font-semibold tracking-tight text-on-surface md:text-xl">
+            <h3 className="font-display text-xl font-semibold tracking-[-0.02em] text-on-surface md:text-2xl">
               Tus proyectos
             </h3>
             <Link href="/app/projects" className="text-[13px] text-violet-300 hover:text-violet-200">
@@ -157,7 +157,7 @@ export function HomeExperience({ name }: { name: string }) {
               <Link
                 key={p.id}
                 href={`/app/projects`}
-                className="group flex h-28 w-56 shrink-0 snap-start flex-col justify-between rounded-2xl border border-app bg-surface/60 p-4 backdrop-blur-md transition hover:border-cyan-400/30 hover:bg-tint-2"
+                className="surface-deep card-lift group flex h-28 w-56 shrink-0 snap-start flex-col justify-between rounded-2xl border border-app bg-surface/60 p-4 backdrop-blur-md"
               >
                 <div className="flex items-center justify-between">
                   <p className="truncate font-display text-[15px] font-semibold tracking-tight text-on-surface">

@@ -24,6 +24,7 @@ const isProtected = createRouteMatcher([
   "/api/forge(.*)",
   "/api/vault(.*)",
   "/api/admin(.*)",
+  "/api/workspace(.*)",
 ]);
 
 // Rutas exclusivas del owner (Luis): V, su cockpit y sus productos.

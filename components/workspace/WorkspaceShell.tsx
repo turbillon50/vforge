@@ -51,7 +51,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-dvh overflow-hidden bg-void">
-      <aside className="sticky top-0 hidden h-dvh w-[260px] shrink-0 flex-col border-r border-app bg-ink md:flex">
+      <aside className="sticky top-0 glass-strong hidden h-dvh w-[260px] shrink-0 flex-col border-r border-app md:flex">
         <div className="flex items-center justify-between px-5 py-5">
           <Link href="/app"><VWordmark /></Link>
           <span className="chip">{t.workspace.b_ready}</span>
@@ -78,7 +78,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "group mb-0.5 flex items-center gap-3 rounded-md px-3 py-2 text-sm transition",
                   active
-                    ? "bg-violet-500/15 text-violet-300 ring-1 ring-violet-500/30"
+                    ? "bg-violet-500/15 text-violet-300 ring-1 ring-violet-500/30 shadow-[0_0_18px_rgba(139,92,246,0.18)]"
                     : "text-on-surface-variant hover:bg-tint-2 hover:text-on-surface"
                 )}
               >
@@ -93,7 +93,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="border-t border-app p-3">
-          <div className="mb-3 rounded-lg border border-app bg-tint-1 p-3">
+          <div className="surface-deep mb-3 rounded-lg border border-app bg-tint-1 p-3">
             <div className="flex items-center gap-2">
               <Sparkles size={14} className="text-cyber-cyan" />
               <p className="label-caps text-muted">{t.workspace.b_insights_label}</p>
@@ -142,7 +142,7 @@ function TopBar() {
   const { user } = useUser();
   return (
     <header
-      className="sticky top-0 z-30 border-b border-app bg-void/85 backdrop-blur-xl"
+      className="sticky top-0 z-30 glass-strong border-b border-app"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 md:px-8">
@@ -225,7 +225,7 @@ function MobileNav({ pathname }: { pathname: string }) {
   return (
     <nav
       aria-label="navegación principal"
-      className="vf-mobile-nav glass-strong fixed inset-x-3 z-40 mx-auto flex max-w-[460px] items-stretch justify-between gap-0.5 rounded-2xl px-1 shadow-elev md:hidden"
+      className="vf-mobile-nav glass-strong surface-deep fixed inset-x-3 z-40 mx-auto flex max-w-[460px] items-stretch justify-between gap-0.5 rounded-2xl px-1 shadow-elev md:hidden"
       style={{
         bottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)",
         minHeight: 56,

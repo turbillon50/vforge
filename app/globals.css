@@ -302,3 +302,91 @@ body.keyboard-open .vf-composer-pad {
 body.keyboard-open .vf-mobile-nav {
   display: none;
 }
+
+/* ============================================
+   Profundidad anti-slop (pase Apple TV)
+   Utilidades nuevas — usan tokens existentes,
+   válidas en dark y light mode.
+   ============================================ */
+.surface-deep {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 0 1px rgb(var(--color-border)),
+    0 24px 70px rgba(0, 0, 0, 0.35);
+}
+[data-theme="light"] .surface-deep {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 0 0 1px rgb(var(--color-border)),
+    0 18px 50px rgba(10, 10, 20, 0.1);
+}
+
+.grain {
+  position: relative;
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  mix-blend-mode: overlay;
+}
+
+/* Mesh/aurora violeta→cian — fija, muy difusa, detrás del contenido */
+.home-aurora {
+  position: relative;
+}
+.home-aurora::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: var(--aura-opacity);
+  background:
+    radial-gradient(560px 380px at 18% -6%, rgba(139, 92, 246, 0.14), transparent 70%),
+    radial-gradient(640px 420px at 84% 12%, rgba(34, 211, 238, 0.09), transparent 70%),
+    radial-gradient(720px 520px at 50% 58%, rgba(124, 58, 237, 0.07), transparent 72%);
+}
+.home-aurora > * {
+  position: relative;
+  z-index: 2;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hover lift + glow consistente — solo transform/box-shadow/border-color */
+.card-lift {
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  border-color: rgba(139, 92, 246, 0.45);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 18px 50px rgba(0, 0, 0, 0.4),
+    0 8px 32px rgba(139, 92, 246, 0.22);
+}
+[data-theme="light"] .card-lift:hover {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 18px 44px rgba(10, 10, 20, 0.12),
+    0 8px 30px rgba(109, 40, 217, 0.16);
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-lift,
+  .card-lift:hover {
+    transform: none;
+    transition: none;
+  }
+}
