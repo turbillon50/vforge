@@ -67,7 +67,7 @@ async function resolveOwner(userId: string): Promise<boolean> {
 export default hasClerk
   ? clerkMiddleware(async (auth, req) => {
       if (!isProtected(req)) return;
-      const { userId, sessionClaims } = await auth();
+      const { userId, sessionClaims, redirectToSignIn } = await auth();
       const isApi = req.nextUrl.pathname.startsWith("/api");
 
       if (!userId) {
@@ -77,7 +77,10 @@ export default hasClerk
             headers: { "Content-Type": "application/json" },
           });
         }
-        return NextResponse.redirect(new URL("/sign-in", req.url));
+        // redirectToSignIn() de Clerk maneja el handshake/refresh de token
+        // correctamente (a diferencia de un redirect manual, que podía
+        // dejar al usuario en un bucle /app ↔ /sign-in).
+        return redirectToSignIn();
       }
 
       if (isOwnerOnly(req)) {
