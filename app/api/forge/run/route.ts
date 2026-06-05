@@ -115,7 +115,7 @@ export async function POST(req: Request) {
   const systemPrompt =
     basePrompt +
     memoryPromptSection(userMemories) +
-    formatRecallSection(recallHits, 0.25);
+    formatRecallSection(recallHits, 0.15);
 
   // Estado del puente de agentes (hub Hetzner). Best-effort: si el hub
   // no responde en 4s, V opera sin ese bloque. Solo el owner llega aquí
