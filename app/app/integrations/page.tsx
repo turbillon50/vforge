@@ -13,6 +13,7 @@ import {
   CreditCard,
   Mail,
   Loader2,
+  KeyRound,
 } from "lucide-react";
 import { useT } from "@/i18n/AppProviders";
 
@@ -42,6 +43,35 @@ export default function IntegrationsPage() {
     "idle" | "saving" | "connected" | "error"
   >("idle");
   const [resendError, setResendError] = useState<string | null>(null);
+  const [neonKey, setNeonKey] = useState("");
+  const [neonState, setNeonState] = useState<"idle" | "saving" | "connected" | "error">("idle");
+  const [neonError, setNeonError] = useState<string | null>(null);
+  const [clerkKey, setClerkKey] = useState("");
+  const [clerkState, setClerkState] = useState<"idle" | "saving" | "connected" | "error">("idle");
+  const [clerkError, setClerkError] = useState<string | null>(null);
+
+  async function connectPaste(
+    service: "neon" | "clerk",
+    key: string,
+    setSt: (s: "idle" | "saving" | "connected" | "error") => void,
+    setErr: (e: string | null) => void,
+  ) {
+    if (!key.trim()) return;
+    setSt("saving");
+    setErr(null);
+    try {
+      const res = await fetch(`/api/connect/${service}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: key.trim() }),
+      });
+      const d = await res.json();
+      if (d.ok) setSt("connected");
+      else { setSt("error"); setErr(d.error || "rechazada"); }
+    } catch {
+      setSt("error"); setErr("No se pudo validar. Reintenta.");
+    }
+  }
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -167,29 +197,61 @@ export default function IntegrationsPage() {
           </div>
         </div>
 
-        {/* Conectar Neon — OAuth real (oauth2.apps.neon.tech) */}
+        {/* Conectar Neon — API key validada (OAuth de Neon es solo partners) */}
         <div className="mb-6 overflow-hidden rounded-2xl border border-app bg-surface/60 p-5 backdrop-blur-md">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4">
             <div className="flex items-start gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tint-2">
                 <Database size={19} className="text-on-surface" />
               </span>
-              <div>
-                <p className="font-display text-[15px] font-semibold tracking-tight text-on-surface">
-                  Neon
-                </p>
+              <div className="flex-1">
+                <p className="font-display text-[15px] font-semibold tracking-tight text-on-surface">Neon</p>
                 <p className="mt-0.5 text-[13px] leading-snug text-on-surface-variant">
-                  {neonStatus === "connected"
-                    ? "Conectado. V puede crear y gestionar tus bases Postgres."
-                    : neonStatus && neonStatus.startsWith("error")
-                      ? "No se pudo conectar. Reintenta."
-                      : "Autoriza con OAuth — V provisiona tus bases Postgres."}
+                  {neonState === "connected"
+                    ? "Conectado. Tu API key fue validada y guardada cifrada."
+                    : "Pega tu API key de Neon (console.neon.tech → Account → API keys). La validamos y se guarda cifrada."}
                 </p>
               </div>
             </div>
-            <a href="/api/auth/neon/start" className={oauthBtn(neonStatus === "connected")}>
-              {neonStatus === "connected" ? (<><CheckCircle2 size={16} /> Reconectar</>) : (<><Link2 size={16} /> Conectar Neon</>)}
-            </a>
+            {neonState !== "connected" && (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <input type="password" autoComplete="off" value={neonKey} onChange={(e) => setNeonKey(e.target.value)} placeholder="napi_xxxxxxxxxxxx" className="h-11 flex-1 rounded-xl border border-app bg-tint-1 px-4 font-mono text-[13px] text-on-surface placeholder:text-muted focus:border-app-strong focus:outline-none" />
+                <button type="button" onClick={() => connectPaste("neon", neonKey, setNeonState, setNeonError)} disabled={neonState === "saving" || !neonKey.trim()} className={oauthBtn(false) + " disabled:opacity-50"}>
+                  {neonState === "saving" ? (<><Loader2 size={16} className="animate-spin" /> Validando…</>) : (<><Link2 size={16} /> Conectar Neon</>)}
+                </button>
+              </div>
+            )}
+            {neonState === "connected" && (<div className="flex items-center gap-2 text-[13px] text-success-emerald"><CheckCircle2 size={16} /> API key validada y conectada.</div>)}
+            {neonState === "error" && (<p className="text-[13px] text-error-crimson">{neonError || "No se pudo validar."}</p>)}
+          </div>
+        </div>
+
+        {/* Conectar Clerk — API key validada (Clerk no tiene OAuth de cuenta) */}
+        <div className="mb-6 overflow-hidden rounded-2xl border border-app bg-surface/60 p-5 backdrop-blur-md">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tint-2">
+                <KeyRound size={19} className="text-on-surface" />
+              </span>
+              <div className="flex-1">
+                <p className="font-display text-[15px] font-semibold tracking-tight text-on-surface">Clerk</p>
+                <p className="mt-0.5 text-[13px] leading-snug text-on-surface-variant">
+                  {clerkState === "connected"
+                    ? "Conectado. Tu secret key fue validada y guardada cifrada."
+                    : "Si quieres usar tu propia instancia de Clerk, pega tu Secret Key (sk_…). Se valida y se guarda cifrada."}
+                </p>
+              </div>
+            </div>
+            {clerkState !== "connected" && (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <input type="password" autoComplete="off" value={clerkKey} onChange={(e) => setClerkKey(e.target.value)} placeholder="sk_live_xxxxxxxxxxxx" className="h-11 flex-1 rounded-xl border border-app bg-tint-1 px-4 font-mono text-[13px] text-on-surface placeholder:text-muted focus:border-app-strong focus:outline-none" />
+                <button type="button" onClick={() => connectPaste("clerk", clerkKey, setClerkState, setClerkError)} disabled={clerkState === "saving" || !clerkKey.trim()} className={oauthBtn(false) + " disabled:opacity-50"}>
+                  {clerkState === "saving" ? (<><Loader2 size={16} className="animate-spin" /> Validando…</>) : (<><Link2 size={16} /> Conectar Clerk</>)}
+                </button>
+              </div>
+            )}
+            {clerkState === "connected" && (<div className="flex items-center gap-2 text-[13px] text-success-emerald"><CheckCircle2 size={16} /> Secret key validada y conectada.</div>)}
+            {clerkState === "error" && (<p className="text-[13px] text-error-crimson">{clerkError || "No se pudo validar."}</p>)}
           </div>
         </div>
 

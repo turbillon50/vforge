@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   if (!userId) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
-  const key = String(body.key || "").trim();
+  const key = String(body.key || body.apiKey || "").trim();
   if (!key) return Response.json({ ok: false, error: "Falta la Secret Key" }, { status: 400 });
 
   try {
