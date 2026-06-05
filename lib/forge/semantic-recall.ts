@@ -38,6 +38,17 @@ export async function embed(text: string): Promise<number[] | null> {
 export async function embedBatch(
   texts: string[],
 ): Promise<number[][] | null> {
+  const viaOpenAI = await embedBatchOpenAI(texts);
+  if (viaOpenAI) return viaOpenAI;
+  // Fallback: Gemini embedding-001 con outputDimensionality 1536 —
+  // misma dimension que la tabla, distinta familia (consistente entre si
+  // porque el backfill y el recall usan el mismo proveedor disponible).
+  return embedBatchGemini(texts);
+}
+
+async function embedBatchOpenAI(
+  texts: string[],
+): Promise<number[][] | null> {
   try {
     if (texts.length === 0) return [];
     const apiKey = await getOperatorSecret("OPENAI_API_KEY");
@@ -274,4 +285,51 @@ export function formatRecallSection(
     })
     .join("\n");
   return `\n\nRECUERDOS RELEVANTES (memoria semántica):\n${lines}\n(Usa estos recuerdos solo si aportan al turno actual; son fragmentos de tu pasado con Luis.)`;
+}
+
+
+async function embedBatchGemini(
+  texts: string[],
+): Promise<number[][] | null> {
+  try {
+    if (texts.length === 0) return [];
+    const apiKey = await getOperatorSecret("GEMINI_API_KEY");
+    if (!apiKey) {
+      lastEmbedError = (lastEmbedError ?? "") + " | GEMINI_API_KEY no resuelta";
+      return null;
+    }
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requests: texts.map((t) => ({
+            model: "models/gemini-embedding-001",
+            content: { parts: [{ text: t.slice(0, 8000) || " " }] },
+            outputDimensionality: 1536,
+          })),
+        }),
+      },
+    );
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      lastEmbedError = `Gemini HTTP ${res.status}: ${body.slice(0, 200)}`;
+      console.error("[V recall] gemini embeddings", lastEmbedError);
+      return null;
+    }
+    const json = (await res.json()) as {
+      embeddings?: Array<{ values: number[] }>;
+    };
+    const vectors = (json.embeddings ?? []).map((e) => e.values);
+    if (vectors.length !== texts.length) {
+      lastEmbedError = "Gemini devolvió un número distinto de vectores";
+      return null;
+    }
+    lastEmbedError = null;
+    return vectors;
+  } catch (e) {
+    lastEmbedError = `Gemini: ${String(e).slice(0, 200)}`;
+    return null;
+  }
 }
