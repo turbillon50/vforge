@@ -21,6 +21,11 @@ export function useClerkAppearance() {
 
   return {
     baseTheme: isDark ? dark : undefined,
+    layout: {
+      // Registro de 1 tap: sociales arriba, grandes, como botón principal.
+      socialButtonsPlacement: "top" as const,
+      socialButtonsVariant: "blockButton" as const,
+    },
     variables: isDark
       ? {
           colorPrimary: "#8b5cf6",
