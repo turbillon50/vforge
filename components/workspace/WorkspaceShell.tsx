@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { Home, Users } from "lucide-react";
+import { VPresence } from "@/components/brand/VPresence";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
@@ -54,7 +55,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       <aside className="sticky top-0 glass-strong hidden h-dvh w-[260px] shrink-0 flex-col border-r border-app md:flex">
         <div className="flex items-center justify-between px-5 py-5">
           <Link href="/app"><VWordmark /></Link>
-          <span className="chip">{t.workspace.b_ready}</span>
+          <span className="flex items-center gap-1.5 text-[12px] text-on-surface-variant"><span className="h-1.5 w-1.5 rounded-full bg-success-emerald" />V en línea</span>
         </div>
 
         <div className="px-3">
@@ -66,7 +67,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="mt-4 flex-1 overflow-y-auto px-3 no-scrollbar">
-          <p className="label-caps mb-2 px-2 text-muted">{t.workspace.workspace_label}</p>
+          <p className="mb-2 px-2 text-[12px] font-medium text-muted">Espacio de trabajo</p>
           {nav.map((item) => {
             const active = (item as { exact?: boolean }).exact
               ? pathname === item.href
@@ -93,15 +94,6 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="border-t border-app p-3">
-          <div className="surface-deep mb-3 rounded-lg border border-app bg-tint-1 p-3">
-            <div className="flex items-center gap-2">
-              <Sparkles size={14} className="text-cyber-cyan" />
-              <p className="label-caps text-muted">{t.workspace.b_insights_label}</p>
-            </div>
-            <p className="mt-2 text-[12px] leading-relaxed text-on-surface-variant">
-              {t.workspace.b_insights_body}
-            </p>
-          </div>
           <Link
             href="/app/settings"
             className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-on-surface-variant hover:bg-tint-2 hover:text-on-surface"
@@ -167,7 +159,7 @@ function TopBar() {
             <span className="hidden max-w-[120px] truncate text-[13px] font-medium text-on-surface md:inline">
               {user?.firstName ?? user?.username ?? ""}
             </span>
-            <span className="hidden rounded-full bg-violet-500/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-violet-300 ring-1 ring-violet-500/30 md:inline">
+            <span className="hidden rounded-full bg-violet-500/15 px-2.5 py-0.5 text-[11px] font-medium text-violet-300 ring-1 ring-violet-500/30 md:inline">
               Owner
             </span>
           </div>
@@ -186,7 +178,7 @@ function Breadcrumbs() {
   return (
     <nav
       aria-label="ruta"
-      className="flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.18em]"
+      className="flex items-center gap-1.5 text-[13px]"
     >
       {trail.map((p, i) => {
         const isLast = i === trail.length - 1;
@@ -244,15 +236,8 @@ function MobileNav({ pathname }: { pathname: string }) {
               aria-current={active ? "page" : undefined}
               className="relative -mt-5 flex flex-col items-center justify-start"
             >
-              <span
-                className={cn(
-                  "flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 font-display text-2xl font-bold text-white transition active:scale-95",
-                  active
-                    ? "shadow-[0_10px_36px_rgba(139,92,246,0.65)]"
-                    : "shadow-[0_8px_28px_rgba(139,92,246,0.45)]",
-                )}
-              >
-                V
+              <span className="flex h-14 w-14 items-center justify-center transition active:scale-95">
+                <VPresence size={52} breathing={active} />
               </span>
             </Link>
           );
@@ -308,7 +293,7 @@ function MobileNav({ pathname }: { pathname: string }) {
             </motion.span>
             <span
               className={cn(
-                "font-mono text-[10px] uppercase tracking-widest transition",
+                "text-[10px] font-medium transition",
                 active
                   ? "bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-semibold text-transparent"
                   : "",

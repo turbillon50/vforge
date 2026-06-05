@@ -43,6 +43,10 @@ interface RunRequest {
 
 const OPERATOR_USER_ID = "operator_luis";
 const MAX_TOOL_ROUNDS = 5;
+// Solo las últimas N vueltas viajan al modelo. El historial completo vive
+// en la DB y en la UI, pero un contexto kilométrico (y contaminado de
+// estilos viejos) hace que V imite su pasado en vez de su doctrina.
+const MAX_CONTEXT_TURNS = 16;
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 export async function POST(req: Request) {
@@ -69,6 +73,10 @@ export async function POST(req: Request) {
   if (!Array.isArray(messages) || messages.length === 0) {
     return jsonError("messages array required and non-empty", 400);
   }
+  const trimmedMessages =
+    messages.length > MAX_CONTEXT_TURNS
+      ? messages.slice(-MAX_CONTEXT_TURNS)
+      : messages;
   if (!sessionId || typeof sessionId !== "string") {
     return jsonError("sessionId (string) required", 400);
   }
@@ -142,7 +150,7 @@ export async function POST(req: Request) {
   // and accumulate assistant + tool turns across rounds.
   const conversationMessages: ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt },
-    ...messages.map(toOpenAIMessage),
+    ...trimmedMessages.map(toOpenAIMessage),
   ];
 
   const encoder = new TextEncoder();

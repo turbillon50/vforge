@@ -349,6 +349,7 @@ export function ChatExperience() {
       const history: { role: "user" | "assistant"; content: string | StructuredBlock[] }[] =
         messagesRef.current
           .filter((m) => m.id !== "intro" && m.id !== aId)
+          .slice(-15)
           .map((m) => ({
             role: m.role === "b" ? ("assistant" as const) : ("user" as const),
             content: m.text,
@@ -706,8 +707,8 @@ export function ChatExperience() {
                 <p className="bg-gradient-to-r from-violet-500 via-violet-400 to-cyan-400 bg-clip-text font-display text-lg font-semibold tracking-tight text-transparent">
                   Hola, soy {t.common.label_b}.
                 </p>
-                <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
-                  {t.chat.operator_label} · {currentScope.label}
+                <p className="mt-0.5 text-[12px] text-muted">
+                  En línea · {currentScope.label}
                 </p>
               </div>
             </div>
@@ -715,8 +716,8 @@ export function ChatExperience() {
 
           {isHydrating && (
             <div className="mb-6 text-center">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
-                Cargando memoria de V…
+              <span className="text-[13px] italic text-muted">
+                V está recordando…
               </span>
             </div>
           )}
@@ -1176,7 +1177,7 @@ function MessageBubble({
         <div className="pt-1">
           <VOrb size={24} />
         </div>
-        <div className="min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md border border-app bg-surface/75 px-4 py-3 shadow-sm">
+        <div className="min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md bg-surface/60 px-5 py-4 shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_8px_30px_rgba(0,0,0,0.10)] backdrop-blur-sm">
           {msg.image && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -1253,7 +1254,7 @@ function StreamingBubble({ text, image }: { text: string; image?: string }) {
         <VOrb size={24} />
       </div>
       <div
-        className="min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md border border-app bg-surface/75 px-4 py-3 shadow-sm"
+        className="min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md bg-surface/60 px-5 py-4 shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_8px_30px_rgba(0,0,0,0.10)] backdrop-blur-sm"
         style={{ contain: "layout style" }}
       >
         {image && (

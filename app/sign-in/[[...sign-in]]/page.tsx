@@ -1,6 +1,7 @@
 "use client";
 
-import { SignIn } from "@clerk/nextjs";
+import { SignIn, SignOutButton, useUser } from "@clerk/nextjs";
+import { useClerkAppearance } from "@/lib/clerk-appearance";
 import Link from "next/link";
 import { VWordmark } from "@/components/brand/VMark";
 import { VWatermark } from "@/components/brand/VWatermark";
@@ -13,6 +14,8 @@ import { ClerkPlaceholder } from "@/components/auth/ClerkPlaceholder";
 export default function SignInPage() {
   const t = useT();
   const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+  const appearance = useClerkAppearance();
+  const { isSignedIn, user } = useUser();
 
   return (
     <div className="relative isolate min-h-dvh overflow-hidden">
@@ -47,7 +50,11 @@ export default function SignInPage() {
 
         <section className="flex items-start justify-center">
           {hasClerk ? (
-            <SignIn signUpUrl="/sign-up" forceRedirectUrl="/app" />
+            isSignedIn ? (
+              <ActiveSessionCard email={user?.primaryEmailAddress?.emailAddress} mode="sign-in" />
+            ) : (
+              <SignIn signUpUrl="/sign-up" forceRedirectUrl="/app" appearance={appearance} />
+            )
           ) : (
             <ClerkPlaceholder mode="sign-in" />
           )}
@@ -57,3 +64,33 @@ export default function SignInPage() {
   );
 }
 
+
+
+function ActiveSessionCard({ email, mode }: { email?: string; mode: "sign-in" | "sign-up" }) {
+  return (
+    <div className="surface-deep w-full max-w-md rounded-2xl border border-app bg-surface/80 p-8 backdrop-blur-xl">
+      <h2 className="font-display text-xl font-semibold tracking-tight text-on-surface">
+        Ya tienes una sesión abierta
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">
+        Estás dentro como <span className="font-medium text-on-surface">{email ?? "tu cuenta"}</span>.
+        {mode === "sign-up"
+          ? " Para crear una cuenta nueva, primero cierra esta sesión."
+          : " No necesitas iniciar sesión de nuevo."}
+      </p>
+      <div className="mt-6 flex flex-col gap-3">
+        <Link
+          href="/app"
+          className="flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-5 text-[15px] font-medium text-white shadow-glow-violet transition hover:opacity-95"
+        >
+          Ir a mi espacio
+        </Link>
+        <SignOutButton redirectUrl={mode === "sign-up" ? "/sign-up" : "/sign-in"}>
+          <button className="flex h-11 items-center justify-center rounded-xl border border-app bg-tint-1 px-5 text-[15px] text-on-surface transition hover:border-app-strong">
+            Cerrar sesión y usar otra cuenta
+          </button>
+        </SignOutButton>
+      </div>
+    </div>
+  );
+}

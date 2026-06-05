@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { VPresence } from "@/components/brand/VPresence";
 
 const PHASES = [
   "Pensando…",
@@ -91,31 +92,7 @@ export function ThinkingIndicator() {
   );
 }
 
-/** Subtle gradient orb used as the assistant avatar in message bubbles. */
+/** Avatar de V en burbujas — delega a la identidad oficial. */
 export function VOrb({ size = 24 }: { size?: number }) {
-  return (
-    <div
-      className="relative shrink-0 rounded-full"
-      style={{ width: size, height: size }}
-    >
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background:
-            "conic-gradient(from 140deg, #8b5cf6, #22d3ee, #8b5cf6)",
-        }}
-      />
-      <div className="absolute inset-[2px] rounded-full bg-void" />
-      <div className="absolute inset-[4px] rounded-full bg-gradient-to-br from-violet-400 to-cyan-400" />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -inset-1 rounded-full opacity-60"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(139,92,246,0.35), transparent 70%)",
-          filter: "blur(3px)",
-        }}
-      />
-    </div>
-  );
+  return <VPresence size={size} />;
 }

@@ -14,6 +14,7 @@ import {
   Users,
   Workflow,
 } from "lucide-react";
+import { VPresence } from "@/components/brand/VPresence";
 
 type Project = {
   id: string;
@@ -86,16 +87,7 @@ export function HomeExperience({ name }: { name: string }) {
             className="pointer-events-none absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-violet-500/25 blur-[110px] transition group-hover:bg-violet-500/35"
           />
           <div className="relative flex flex-col items-center text-center">
-            <span className="relative flex h-20 w-20 items-center justify-center md:h-24 md:w-24">
-              <span
-                aria-hidden
-                className="absolute inset-0 rounded-[28px] bg-gradient-to-br from-violet-500 to-cyan-400"
-                style={{ animation: "vhomePulse 3s ease-in-out infinite" }}
-              />
-              <span className="relative flex h-full w-full items-center justify-center rounded-[28px] bg-gradient-to-br from-violet-500 to-cyan-400 font-display text-4xl font-bold text-white shadow-[0_12px_50px_rgba(139,92,246,0.45)] md:text-5xl">
-                V
-              </span>
-            </span>
+            <VPresence size={104} />
             <h2 className="mt-6 font-display text-2xl font-semibold tracking-tight text-on-surface md:text-3xl">
               Habla con V
             </h2>
@@ -174,7 +166,6 @@ export function HomeExperience({ name }: { name: string }) {
         </section>
       )}
 
-      <style>{`@keyframes vhomePulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.35);opacity:0}}`}</style>
     </main>
   );
 }
