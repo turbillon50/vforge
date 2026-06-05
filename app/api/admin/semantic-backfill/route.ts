@@ -1,4 +1,4 @@
-import { backfillFromHistory } from "@/lib/forge/semantic-recall";
+import { lastEmbedError, backfillFromHistory } from "@/lib/forge/semantic-recall";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   }
   void req;
   const result = await backfillFromHistory(limit);
-  return new Response(JSON.stringify(result), {
+  return new Response(JSON.stringify({ ...result, debug: lastEmbedError }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });

@@ -24,6 +24,8 @@ function newId(): string {
 }
 
 /** Embedding de un solo texto. Devuelve null ante cualquier fallo. */
+export let lastEmbedError: string | null = null;
+
 export async function embed(text: string): Promise<number[] | null> {
   const vectors = await embedBatch([text]);
   return vectors ? (vectors[0] ?? null) : null;
@@ -39,7 +41,10 @@ export async function embedBatch(
   try {
     if (texts.length === 0) return [];
     const apiKey = await getOperatorSecret("OPENAI_API_KEY");
-    if (!apiKey) return null;
+    if (!apiKey) {
+      lastEmbedError = "OPENAI_API_KEY no resuelta del vault";
+      return null;
+    }
 
     const res = await fetch("https://api.openai.com/v1/embeddings", {
       method: "POST",
@@ -53,7 +58,9 @@ export async function embedBatch(
       }),
     });
     if (!res.ok) {
-      console.error("[V recall] embeddings HTTP", res.status);
+      const body = await res.text().catch(() => "");
+      lastEmbedError = `HTTP ${res.status}: ${body.slice(0, 200)}`;
+      console.error("[V recall] embeddings", lastEmbedError);
       return null;
     }
     const json = (await res.json()) as {
