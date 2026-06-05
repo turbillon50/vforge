@@ -1,7 +1,7 @@
 // VForge minimal service worker — offline shell + network-first for documents
 // Bump VERSION on every deploy where you want forced cache invalidation
 // (Luis: "se ve de la verga todavía" → asset cache pegado).
-const VERSION = "vforge-v7-2026-06-05-stream";
+const VERSION = "vforge-v8-2026-06-05-push";
 const SHELL = ["/", "/app/chat", "/offline"];
 
 self.addEventListener("install", (event) => {
@@ -51,6 +51,32 @@ self.addEventListener("fetch", (event) => {
         return res;
       });
       return cached || networkPromise;
+    })
+  );
+});
+
+// ── Push notifications (VAPID) ──
+self.addEventListener("push", (event) => {
+  let data = { title: "VForge", body: "Tienes una novedad.", url: "/app" };
+  try { if (event.data) data = { ...data, ...event.data.json() }; } catch (e) {}
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/icon.svg",
+      badge: "/icon.svg",
+      data: { url: data.url || "/app" },
+      vibrate: [80, 40, 80],
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || "/app";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) { if ("focus" in w) { w.navigate(url); return w.focus(); } }
+      return self.clients.openWindow(url);
     })
   );
 });
