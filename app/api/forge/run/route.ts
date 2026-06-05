@@ -61,11 +61,14 @@ export async function POST(req: Request) {
   // El middleware ya garantiza que solo el owner llega aquí; V es
   // single-user, así que el historial vive bajo el id canónico del
   // operador. Nunca confiamos en un userId del cliente.
-  // Si hay sesion Clerk, el historial y la memoria viven bajo ese id.
-  let userId = OPERATOR_USER_ID;
+  // Historial: SIEMPRE bajo el id canónico del operador — conversations
+  // tiene FK a users y la hidratación (active-session, conversations GET)
+  // lee operator_luis. La memoria por cuenta sí usa el id de Clerk.
+  const userId = OPERATOR_USER_ID;
+  let memoryUserId = OPERATOR_USER_ID;
   try {
     const a = await auth();
-    if (a?.userId) userId = a.userId;
+    if (a?.userId) memoryUserId = a.userId;
   } catch {
     // sin Clerk -> operador
   }
@@ -92,7 +95,7 @@ export async function POST(req: Request) {
     projectId: body.projectId ?? null,
   });
   // Memoria por cuenta (independiente de la sesion de chat).
-  const userMemories = await getUserMemories(userId);
+  const userMemories = await getUserMemories(memoryUserId);
   const systemPrompt = basePrompt + memoryPromptSection(userMemories);
 
   // Resolve the model cascade.
@@ -121,10 +124,14 @@ export async function POST(req: Request) {
     // text plus an optional "[1 imagen adjunta]" marker so rehydration
     // shows the user posted an image without re-fetching it).
     const textOnly = stringifyUserTurn(lastUserTurn.content);
-    await sql`
-      INSERT INTO conversations (user_id, session_id, role, content)
-      VALUES (${userId}, ${sessionId}, 'user', ${textOnly})
-    `;
+    try {
+      await sql`
+        INSERT INTO conversations (user_id, session_id, role, content)
+        VALUES (${userId}, ${sessionId}, 'user', ${textOnly})
+      `;
+    } catch (e) {
+      console.error("conversations insert failed (no tumba el chat):", e);
+    }
   }
 
   const openrouter = new OpenAI({
@@ -350,7 +357,7 @@ export async function POST(req: Request) {
         const { cleaned: assistantVisible, memories: newMemories } =
           extractMemoryBlocks(assistantTextBuffer);
         for (const m of newMemories) {
-          await saveUserMemory(userId, m.key, m.value);
+          await saveUserMemory(memoryUserId, m.key, m.value);
         }
 
         // Persist the final assistant text. Tool intermediate steps
