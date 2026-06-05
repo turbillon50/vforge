@@ -38,12 +38,15 @@ export async function embed(text: string): Promise<number[] | null> {
 export async function embedBatch(
   texts: string[],
 ): Promise<number[][] | null> {
-  // 1) v-server autohospedado (fastembed MiniLM multilingüe, 384d, GRATIS).
+  // Proveedor ÚNICO: v-server autohospedado (fastembed MiniLM multilingüe,
+  // 384d, GRATIS). La tabla semantic_memory es vector(384); OpenAI/Gemini
+  // dan 1536 y NO sirven aquí, así que NO se invocan (evita 429/403 ruidosos).
+  // Si el self-host falla, devolvemos null → recall degrada limpio a trigram.
   const viaSelfHost = await embedBatchSelfHost(texts);
   if (viaSelfHost) return viaSelfHost;
-  // 2/3) proveedores de pago como respaldo (dim 1536, NO mezclar con 384;
-  // solo se usan si la tabla está a 1536 — hoy está a 384, así que en la
-  // práctica el self-host es la única ruta activa).
+  return null;
+  // (paths de pago conservados abajo por si algún día se vuelve a 1536)
+  // eslint-disable-next-line no-unreachable
   const viaOpenAI = await embedBatchOpenAI(texts);
   if (viaOpenAI) return viaOpenAI;
   // Fallback: Gemini embedding-001 con outputDimensionality 1536 —
@@ -321,7 +324,7 @@ async function embedBatchGemini(
     if (!res.ok) {
       const body = await res.text().catch(() => "");
       lastEmbedError = `Gemini HTTP ${res.status}: ${body.slice(0, 200)}`;
-      console.error("[V recall] gemini embeddings", lastEmbedError);
+// gemini path inactivo
       return null;
     }
     const json = (await res.json()) as {
