@@ -20,6 +20,41 @@ export interface ResolvedAccess {
  *  - Cualquier otro usuario: SOLO su propio token conectado (user_secrets).
  *    Si no conectó nada → null (estado vacío). NUNCA el del owner.
  */
+/**
+ * Variante para contextos SIN sesion Clerk (p. ej. MCP, donde el userId
+ * viene de un token Bearer ya validado). Misma logica de aislamiento:
+ * owner -> tokens del operador, usuario -> sus propios tokens del vault.
+ */
+export async function resolveAccessForUser(
+  userId: string | null,
+): Promise<ResolvedAccess> {
+  if (!userId) {
+    return { userId: null, isOwner: false, githubToken: null, vercelToken: null };
+  }
+  let owner = false;
+  try {
+    const cc = await clerkClient();
+    const u = await cc.users.getUser(userId).catch(() => null);
+    owner = isOwnerUser(u);
+  } catch {
+    owner = false;
+  }
+
+  if (owner) {
+    const [gh, vc] = await Promise.all([
+      getOperatorSecret("GITHUB_TOKEN").catch(() => null),
+      getOperatorSecret("VERCEL_TOKEN").catch(() => null),
+    ]);
+    return { userId, isOwner: true, githubToken: gh, vercelToken: vc };
+  }
+
+  const [gh, vc] = await Promise.all([
+    getUserSecret(userId, "GITHUB_USER_TOKEN"),
+    getUserSecret(userId, "VERCEL_USER_TOKEN"),
+  ]);
+  return { userId, isOwner: false, githubToken: gh, vercelToken: vc };
+}
+
 export async function resolveAccess(): Promise<ResolvedAccess> {
   let userId: string | null = null;
   let owner = false;
