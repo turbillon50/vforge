@@ -343,10 +343,8 @@ async function embedBatchGemini(
 export async function recall(
   query: string,
   k = 6,
-): Promise<Array<{ content: string; score: number }>> {
-  const vec = await recallVector(query, k).catch(
-    () => [] as Array<{ content: string; score: number }>,
-  );
+): Promise<RecallHit[]> {
+  const vec = await recallVector(query, k).catch(() => [] as RecallHit[]);
   if (vec.length > 0) return vec;
   try {
     const rows = (await sql`
@@ -361,6 +359,7 @@ export async function recall(
     return rows.map((r) => ({
       content: String(r.content).slice(0, 1200),
       score: Number(r.score),
+      metadata: { source: "trigram" },
     }));
   } catch {
     return [];
