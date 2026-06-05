@@ -1284,6 +1284,20 @@ export const TOOLS: Tool[] = [
     },
   },
   {
+    name: "claude_code",
+    description:
+      "Orquesta a Claude Code (el binario agente de codificación) en el servidor de V para tareas grandes y multi-paso: refactors extensos, montar features completas, depurar un repo entero, correr migraciones, escribir suites de pruebas. V delega aquí lo PESADO mientras ella sigue conversando con Luis. Pasa una instrucción clara y, si aplica, el directorio del repo (cwd) ya clonado en el servidor. Devuelve el output de la sesión de Claude Code. RING 2 — puede escribir/ejecutar en el servidor: para acciones destructivas (borrar, deploy, push a main) describe primero a Luis y espera su 'sí'; para trabajo en sandbox/branch puedes proceder. (Nota: endpoint /claude en api.py — si 404, repórtalo a Luis para redesplegar el v-server.)",
+    input_schema: {
+      type: "object",
+      properties: {
+        instruction: { type: "string", description: "La tarea para Claude Code, clara y autocontenida. Ej: 'En el repo clonado en /tmp/foo, agrega autenticación Clerk a todas las rutas /app y corre el typecheck'." },
+        cwd: { type: "string", description: "Directorio de trabajo en el servidor (un repo ya clonado). Opcional; default el workspace de V." },
+        timeout_seconds: { type: "number", description: "Timeout en segundos (1-600). Default 300, porque Claude Code puede tardar." },
+      },
+      required: ["instruction"],
+    },
+  },
+  {
     name: "design_version",
     description:
       "Guarda una versión de diseño generada por V para un build (modo v0-sin-v0). Crea el build si no existe (por project_name del operador) y agrega la versión con sus archivos. Devuelve versionId, n y preview_url para que el chat muestre la VersionCard con preview inline. Úsala cada vez que generes/iteres el código de una app o UI pedida por Luis.",
@@ -1408,6 +1422,7 @@ function requiredModeForTool(name: string): AutonomyMode {
     name.includes("delete") ||
     name.includes("revert") ||
     name === "ssh_command_executor" ||
+    name === "claude_code" ||
     name === "remote_execution"
   ) {
     return "root";
@@ -3581,6 +3596,32 @@ async function dispatch(
         ? `ssh ${host} OK (exit=${body.return_code ?? 0})`
         : `ssh ${host} exit=${body.return_code ?? "?"} ${(body.stderr ?? body.error ?? "").slice(0, 60)}`;
       return { ok: okRun, content: JSON.stringify(body), summary };
+    }
+
+    case "claude_code": {
+      const instruction = requireString(input.instruction, "instruction");
+      const payload: Record<string, unknown> = { instruction };
+      if (typeof input.cwd === "string") payload.cwd = input.cwd;
+      const to =
+        typeof input.timeout_seconds === "number"
+          ? Math.max(1, Math.min(600, input.timeout_seconds))
+          : 300;
+      payload.timeout_seconds = to;
+      const res = await callVServer("/claude", payload, { timeoutMs: (to + 15) * 1000 });
+      if (!res.ok) {
+        return {
+          ok: false,
+          content: JSON.stringify({ error: res.error, status: res.status, body: res.body }),
+          summary: `claude_code falló: ${res.error}`,
+        };
+      }
+      const body = (res.body ?? {}) as { stdout?: string; output?: string; returncode?: number };
+      const out = body.output ?? body.stdout ?? "";
+      return {
+        ok: (body.returncode ?? 0) === 0,
+        content: JSON.stringify(res.body),
+        summary: `Claude Code corrió (${String(out).length} chars de salida)`,
+      };
     }
 
     case "design_version": {
