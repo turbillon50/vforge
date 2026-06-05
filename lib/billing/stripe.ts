@@ -110,12 +110,18 @@ export async function ensurePrices(): Promise<Record<PaidPlan, string>> {
   const forge =
     found.get("vforge_forge") ??
     (await createPlan("forge", "VForge Forge", { unit_amount: 10000 }));
-  const payg =
-    found.get("vforge_payg") ??
-    (await createPlan("payg", "VForge Pay-as-you-go", {
-      unit_amount: 100,
-      "recurring[usage_type]": "metered",
-    }));
+  // PAYG: Stripe (basil) ahora exige Meters para precios "metered". Para no
+  // bloquear el lanzamiento, PAYG se crea como precio recurrente base $0
+  // (el consumo se factura aparte con invoice items / meters más adelante).
+  // Si falla, NO debe tumbar Studio/Forge.
+  let payg = found.get("vforge_payg") ?? "";
+  if (!payg) {
+    try {
+      payg = await createPlan("payg", "VForge Pay-as-you-go", { unit_amount: 0 });
+    } catch (e) {
+      console.error("[billing] PAYG price no creado (no bloquea):", e);
+    }
+  }
 
   _priceCache = { studio, forge, payg };
   return _priceCache;
