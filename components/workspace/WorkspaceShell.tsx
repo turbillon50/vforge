@@ -217,6 +217,7 @@ function MobileNav({ pathname }: { pathname: string }) {
   return (
     <nav
       aria-label="navegación principal"
+      data-vorb-avoid
       className="vf-mobile-nav glass-strong surface-deep fixed inset-x-3 z-40 mx-auto flex max-w-[460px] items-stretch justify-between gap-0.5 rounded-2xl px-1 shadow-elev md:hidden"
       style={{
         bottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)",

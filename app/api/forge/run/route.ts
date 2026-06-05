@@ -46,7 +46,7 @@ const MAX_TOOL_ROUNDS = 5;
 // Solo las últimas N vueltas viajan al modelo. El historial completo vive
 // en la DB y en la UI, pero un contexto kilométrico (y contaminado de
 // estilos viejos) hace que V imite su pasado en vez de su doctrina.
-const MAX_CONTEXT_TURNS = 16;
+const MAX_CONTEXT_TURNS = 24;
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 export async function POST(req: Request) {
@@ -108,7 +108,12 @@ export async function POST(req: Request) {
   const dbConfiguredModel = await getModelForTask("chat-main").catch(
     () => null,
   );
-  const configuredModel = dbConfiguredModel ?? config.default_model;
+  let configuredModel = dbConfiguredModel ?? config.default_model;
+  // El chat del owner SIEMPRE habla con Claude. Nada de degradar a
+  // llama/gemini por ahorro: la voz de V no se negocia.
+  if (!configuredModel || !configuredModel.startsWith("anthropic/")) {
+    configuredModel = "anthropic/claude-sonnet-4.6";
+  }
   const isKnownSlug = !!MODELS[normalizeSlug(configuredModel)];
   const routing = isKnownSlug
     ? routeFor("chat-main", { forceSlug: normalizeSlug(configuredModel) })
@@ -178,6 +183,8 @@ export async function POST(req: Request) {
       let totalTokensIn = 0;
       let totalTokensOut = 0;
       let lastStopReason: string | null = null;
+      // El UI muestra discreto qué modelo responde: nunca más dudar quién escribe.
+      send({ type: "meta", model: actualModel });
 
       try {
         for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
@@ -214,6 +221,7 @@ export async function POST(req: Request) {
               const reason =
                 err instanceof Error ? err.message.slice(0, 180) : String(err);
               fallbackEvents.push({ from: currentSlug, to: next, status, reason });
+              send({ type: "meta", model: next, fallback: true });
               send({
                 type: "model_fallback",
                 from: currentSlug,

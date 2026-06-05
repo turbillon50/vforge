@@ -83,12 +83,31 @@ type StructuredBlock =
   | { type: "text"; text: string }
   | { type: "image"; source: { type: "base64"; media_type: string; data: string } };
 
+
+function friendlyModel(slug: string): string {
+  const map: Array<[RegExp, string]> = [
+    [/anthropic\/claude-opus-([\d.]+)/, "Claude Opus $1"],
+    [/anthropic\/claude-sonnet-([\d.]+)/, "Claude Sonnet $1"],
+    [/anthropic\/claude-haiku-([\d.]+)/, "Claude Haiku $1"],
+    [/anthropic\/claude-3\.5-sonnet/, "Claude 3.5 Sonnet"],
+    [/google\/gemini-([\w.-]+)/, "Gemini $1"],
+    [/meta-llama\/llama-([\w.-]+)/, "Llama $1"],
+    [/deepseek\//, "DeepSeek"],
+  ];
+  for (const [re, name] of map) {
+    const m = slug.match(re);
+    if (m) return name.replace("$1", m[1] ?? "");
+  }
+  return slug.split("/").pop() ?? slug;
+}
+
 type SSEEvent =
   | { type: "text"; value: string }
   | { type: "tool_use_start"; id: string; name: string }
   | { type: "tool_use_result"; id: string; ok: boolean; summary: string }
   | { type: "model_fallback"; from: string; to: string; status: number | null; reason: string }
   | { type: "done"; tokensIn: number; tokensOut: number; model: string }
+  | { type: "meta"; model: string; fallback?: boolean }
   | { type: "error"; message: string };
 
 interface ChatSession {
@@ -199,6 +218,7 @@ export function ChatExperience() {
   // The smooth-stream hook owns the live text while this is set, and the
   // <StreamingBubble> mounts in its place inside the messages list.
   const [streamingId, setStreamingId] = useState<string | null>(null);
+  const [modelLabel, setModelLabel] = useState<string | null>(null);
   const reducedMotion = usePrefersReducedMotion();
   const smooth = useSmoothStream({ immediate: reducedMotion });
 
@@ -402,7 +422,11 @@ export function ChatExperience() {
             if (!line.startsWith("data: ")) continue;
             try {
               const evt = JSON.parse(line.slice(6)) as SSEEvent;
-              if (evt.type === "text") {
+              if (evt.type === "meta") {
+                setModelLabel(friendlyModel(evt.model));
+              } else if (evt.type === "done" && evt.model) {
+                setModelLabel(friendlyModel(evt.model));
+              } else if (evt.type === "text") {
                 const visible = visibleDelta(evt.value);
                 if (!visible) continue;
                 assembled += visible;
@@ -684,8 +708,10 @@ export function ChatExperience() {
             <History size={14} />
           </button>
 
-          <div className="ml-auto flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
-            <span className="hidden sm:inline">V</span>
+          <div className="ml-auto flex items-center gap-2 text-[11px] text-muted">
+            <span className="hidden sm:inline">
+              V{modelLabel ? ` · ${modelLabel}` : ""}
+            </span>
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success-emerald" />
           </div>
         </div>
@@ -1045,8 +1071,8 @@ function Composer({
         data-vorb-avoid
         className="relative overflow-hidden rounded-2xl border border-app bg-surface/90 shadow-elev"
       >
-        <div className="flex items-end gap-2 px-2 py-2">
-          <div className="flex items-center gap-1 pb-0.5 text-on-surface-variant">
+        <div className="flex items-end gap-1.5 px-2 py-2 sm:gap-2">
+          <div className="flex items-center gap-0.5 pb-0.5 text-on-surface-variant sm:gap-1">
             {/* Adjuntar archivo */}
             <input
               ref={fileInputRef}
@@ -1077,7 +1103,7 @@ function Composer({
             <button
               type="button"
               onClick={() => cameraInputRef.current?.click()}
-              className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-tint-2"
+              className="hidden h-9 w-9 items-center justify-center rounded-full hover:bg-tint-2 sm:flex"
               aria-label="Foto"
               style={{ touchAction: "manipulation" }}
             >

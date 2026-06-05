@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { MessagesSquare, LayoutDashboard, GitBranch, Workflow, Cpu, Boxes } from "lucide-react";
 
 const ITEMS = [
@@ -35,6 +35,15 @@ function avoidCollision(p: { x: number; y: number }): { x: number; y: number } {
 
 export function VOrb() {
   const router = useRouter();
+  const pathname = usePathname();
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const upd = () => setIsMobile(mq.matches);
+    upd();
+    mq.addEventListener("change", upd);
+    return () => mq.removeEventListener("change", upd);
+  }, []);
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ x: number; y: number }>({ x: -1, y: -1 });
   const drag = useRef<{ moved: boolean; sx: number; sy: number; ox: number; oy: number } | null>(null);
@@ -96,6 +105,9 @@ export function VOrb() {
     drag.current = null;
   }
 
+  // En el chat móvil V ya vive en la barra y como avatar — el orb flotante
+  // solo tapa el composer. Fuera.
+  if (isMobile && pathname?.startsWith("/app/chat")) return null;
   if (pos.x < 0) return null;
   const onLeft = pos.x + 28 < (typeof window !== "undefined" ? window.innerWidth / 2 : 200);
 
