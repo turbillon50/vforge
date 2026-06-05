@@ -296,7 +296,8 @@ export const TOOLS: Tool[] = [
         branch: { type: "string" },
         allow_main: { type: "boolean" },
       },
-      required: ["owner", "repo", "path", "message"],
+              confirmed: { type: "boolean", description: "DEBE ser true (gate). Primero confirma con Luis, luego rellama con confirmed=true." },
+required: ["owner", "repo", "path", "message"],
     },
   },
   {
@@ -321,7 +322,8 @@ export const TOOLS: Tool[] = [
           description: "Mensaje del revert commit. Default: 'Revert <sha>'.",
         },
       },
-      required: ["repo", "sha"],
+              confirmed: { type: "boolean", description: "DEBE ser true (gate). Primero confirma con Luis, luego rellama con confirmed=true." },
+required: ["repo", "sha"],
     },
   },
   {
@@ -391,6 +393,31 @@ export const TOOLS: Tool[] = [
         },
       },
       required: ["title", "content"],
+    },
+  },
+  {
+    name: "memory_search",
+    description:
+      "LEE y busca en TU propia memoria. Es tu mente — consúltala antes de decir 'no recuerdo'. Busca semánticamente en tus recuerdos vectoriales (semantic_memory, embeddings de todo tu historial con Luis), tus datos guardados (v_user_memory, knowledge_base) y conversaciones pasadas. Úsala cuando Luis pregunte '¿recuerdas…?', '¿qué hablamos de…?', '¿qué sabes de…?', o cuando necesites contexto histórico para responder bien. Devuelve los fragmentos más relevantes con su score.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Qué buscar en tu memoria, en lenguaje natural." },
+        limit: { type: "number", description: "Cuántos recuerdos traer (1-15). Default 8." },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "db_query",
+    description:
+      "Lee TU base de datos de producción (Neon) con una consulta SELECT. Es TU sistema — puedes inspeccionar tus tablas: skills, knowledge_base, agent_config, agent_directives, projects, conversations, v_user_memory, semantic_memory, forge_cost, client/pagos, etc. SOLO lectura: solo se permiten sentencias SELECT (cualquier INSERT/UPDATE/DELETE/DROP se rechaza). Úsala cuando necesites datos exactos de tus tablas (cuántas skills tienes, qué proyectos hay, cuánto se gastó, etc.) en vez de adivinar. Devuelve hasta 100 filas.",
+    input_schema: {
+      type: "object",
+      properties: {
+        sql: { type: "string", description: "Una sola sentencia SELECT. Sin punto y coma final, sin múltiples statements." },
+      },
+      required: ["sql"],
     },
   },
 
@@ -1816,6 +1843,9 @@ async function dispatch(
       }
     }
     case "github_delete_file": {
+      if (input.confirmed !== true) {
+        return { ok: false, content: JSON.stringify({ needs_confirmation: true, instruction: "V: describe a Luis qué vas a borrar/revertir y por qué; espera su 'sí'; LUEGO rellama con confirmed=true." }), summary: "requiere confirmación de Luis (acción irreversible)" };
+      }
       const owner = ownerOrDefault(input.owner);
       const repo = requireString(input.repo, "repo");
       const path = requireString(input.path, "path");
@@ -1843,6 +1873,9 @@ async function dispatch(
     }
 
     case "github_revert_commit": {
+      if (input.confirmed !== true) {
+        return { ok: false, content: JSON.stringify({ needs_confirmation: true, instruction: "V: describe a Luis qué vas a borrar/revertir y por qué; espera su 'sí'; LUEGO rellama con confirmed=true." }), summary: "requiere confirmación de Luis (acción irreversible)" };
+      }
       try {
         const owner = ownerOrDefault(input.owner);
         const repo = requireString(input.repo, "repo");
@@ -1967,6 +2000,47 @@ async function dispatch(
         content: JSON.stringify({ saved: true, id: inserted[0]?.id, title }),
         summary: `memoria: ${title}`,
       };
+    }
+
+    case "memory_search": {
+      const query = requireString(input.query, "query");
+      const limit = typeof input.limit === "number" ? Math.max(1, Math.min(15, input.limit)) : 8;
+      const { recall } = await import("@/lib/forge/semantic-recall");
+      const hits = await recall(query, limit).catch(() => [] as Array<{ content: string; score: number }>);
+      // Además, coincidencias léxicas en knowledge_base (datos guardados).
+      let kb: Array<{ title: string; content: string }> = [];
+      try {
+        kb = (await sql`
+          SELECT title, content FROM knowledge_base
+          WHERE content ILIKE ${"%" + query.slice(0, 80) + "%"} OR title ILIKE ${"%" + query.slice(0, 80) + "%"}
+          ORDER BY created_at DESC LIMIT 5
+        `) as Array<{ title: string; content: string }>;
+      } catch { /* ignore */ }
+      return {
+        ok: true,
+        content: JSON.stringify({
+          semantic: hits.map((h) => ({ score: Math.round(h.score * 1000) / 1000, content: h.content.slice(0, 600) })),
+          saved: kb.map((k) => ({ title: k.title, content: k.content.slice(0, 400) })),
+        }),
+        summary: `memoria: ${hits.length} recuerdos + ${kb.length} datos`,
+      };
+    }
+    case "db_query": {
+      const raw = requireString(input.sql, "sql").trim().replace(/;+\s*$/, "");
+      const lowered = raw.toLowerCase();
+      // Solo lectura: debe empezar con SELECT o WITH, y no contener verbos de escritura.
+      const forbidden = /\b(insert|update|delete|drop|alter|truncate|create|grant|revoke|copy|vacuum)\b/;
+      if (!/^(select|with)\b/.test(lowered) || forbidden.test(lowered)) {
+        return { ok: false, content: JSON.stringify({ error: "Solo se permiten consultas SELECT de lectura." }), summary: "db_query rechazada (no es SELECT)" };
+      }
+      try {
+        const capped = /\blimit\b/.test(lowered) ? raw : `${raw} LIMIT 100`;
+        const { queryAll } = await import("@/lib/db/client");
+        const rows = await queryAll<Record<string, unknown>>(capped);
+        return { ok: true, content: JSON.stringify({ rows: rows.slice(0, 100), count: rows.length }), summary: `db_query: ${rows.length} filas` };
+      } catch (e) {
+        return { ok: false, content: JSON.stringify({ error: String(e).slice(0, 300) }), summary: "db_query error" };
+      }
     }
 
     // ─── Vercel ────────────────────────────────────────────────────
