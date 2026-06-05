@@ -93,6 +93,7 @@
 
 html,
 body {
+  overscroll-behavior-y: none;
   background-color: var(--color-void);
   color: var(--color-on-surface);
   -webkit-font-smoothing: antialiased;
