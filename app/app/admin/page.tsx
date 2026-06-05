@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { clerkClient } from "@clerk/nextjs/server";
 import { isOwnerUser } from "@/lib/auth/owner";
 
@@ -45,6 +46,15 @@ export default async function AdminPage() {
         </h1>
         <p className="mt-2 text-on-surface-variant">
           {users.length} {users.length === 1 ? "persona registrada" : "personas registradas"} en VForge.
+        </p>
+        <p className="mt-3">
+          <Link
+            href="/app/admin/billing"
+            className="inline-flex items-center text-sm text-cyber-cyan hover:underline"
+            style={{ minHeight: 44, touchAction: "manipulation" }}
+          >
+            Quién pagó qué →
+          </Link>
         </p>
       </header>
 

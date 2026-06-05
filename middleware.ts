@@ -15,6 +15,8 @@ const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 // Rutas que requieren sesión (cualquier usuario registrado).
 const isProtected = createRouteMatcher([
   "/app(.*)",
+  "/api/connect(.*)",
+  "/api/auth/neon(.*)",
   "/workspace(.*)",
   "/api/cockpit(.*)",
   "/api/projects(.*)",
@@ -26,6 +28,7 @@ const isProtected = createRouteMatcher([
   "/api/vault(.*)",
   "/api/admin(.*)",
   "/api/workspace(.*)",
+  "/api/billing(.*)",
   "/api/v/bridge(.*)",
 ]);
 

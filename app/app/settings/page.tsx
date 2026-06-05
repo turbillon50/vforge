@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   User,
@@ -19,7 +19,6 @@ import {
   Layers,
   Boxes,
   Bell as BellIcon,
-  Check,
 } from "lucide-react";
 import { PageHeader } from "@/components/workspace/PageHeader";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
@@ -170,44 +169,81 @@ function ProfilePanel() {
 }
 
 function PlanPanel() {
-  const plans = [
-    { name: "Solo", price: "$0", desc: "Para arrancar tu primer proyecto.", current: false },
-    { name: "Studio", price: "$29/mes", desc: "Hasta 10 proyectos, V dedicada.", current: true },
-    { name: "Forge", price: "$99/mes", desc: "Proyectos ilimitados, sub-agentes, prioridad.", current: false },
-  ];
+  const [me, setMe] = useState<{
+    plan: string;
+    status: string | null;
+    current_period_end: string | null;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/billing/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setMe(d))
+      .catch(() => setMe(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const planNames: Record<string, string> = {
+    free: "Free",
+    studio: "Studio",
+    forge: "Forge",
+    payg: "Pay-as-you-go",
+  };
+  const plan = me?.plan ?? "free";
+  const nextCharge = me?.current_period_end
+    ? new Date(me.current_period_end).toLocaleDateString("es-MX", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+
   return (
     <>
-      <Card title="Plan actual">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          {plans.map((p) => (
-            <div
-              key={p.name}
-              className={cn(
-                "rounded-xl border p-4",
-                p.current
-                  ? "border-violet-500/40 bg-violet-500/5"
-                  : "border-app bg-tint-1",
-              )}
+      <Card title="Tu plan">
+        {loading ? (
+          <p className="text-sm text-on-surface-variant">Consultando tu plan…</p>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-violet-500/15 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-violet-300 ring-1 ring-violet-500/30">
+              {planNames[plan] ?? plan}
+            </span>
+            {me?.status && (
+              <span className="chip text-success-emerald">{me.status}</span>
+            )}
+            {nextCharge && (
+              <span className="text-[12px] tabular-nums text-on-surface-variant">
+                Próximo cobro: {nextCharge}
+              </span>
+            )}
+          </div>
+        )}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {plan === "free" ? (
+            <Link
+              href="/pricing"
+              className="btn-primary !px-4 !py-2"
+              style={{ minHeight: 44, touchAction: "manipulation" }}
             >
-              <div className="flex items-start justify-between">
-                <h4 className="font-display text-base font-semibold">{p.name}</h4>
-                {p.current && (
-                  <span className="chip text-violet-300">
-                    <Check size={11} /> activo
-                  </span>
-                )}
-              </div>
-              <p className="mt-1 font-display text-xl font-semibold text-on-surface">
-                {p.price}
-              </p>
-              <p className="mt-2 text-[12px] text-on-surface-variant">{p.desc}</p>
-              {!p.current && (
-                <button className="btn-ghost mt-3 !px-3 !py-1.5 text-[11px]">
-                  Cambiar a {p.name}
-                </button>
-              )}
-            </div>
-          ))}
+              Subir de plan
+            </Link>
+          ) : (
+            <a
+              href="/api/billing/portal"
+              className="btn-primary !px-4 !py-2"
+              style={{ minHeight: 44, touchAction: "manipulation" }}
+            >
+              <CreditCard size={14} /> Gestionar suscripción
+            </a>
+          )}
+          <Link
+            href="/pricing"
+            className="btn-ghost !px-4 !py-2"
+            style={{ minHeight: 44, touchAction: "manipulation" }}
+          >
+            Ver planes
+          </Link>
         </div>
       </Card>
 
