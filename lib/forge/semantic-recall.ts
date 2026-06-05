@@ -38,6 +38,12 @@ export async function embed(text: string): Promise<number[] | null> {
 export async function embedBatch(
   texts: string[],
 ): Promise<number[][] | null> {
+  // 1) v-server autohospedado (fastembed MiniLM multilingüe, 384d, GRATIS).
+  const viaSelfHost = await embedBatchSelfHost(texts);
+  if (viaSelfHost) return viaSelfHost;
+  // 2/3) proveedores de pago como respaldo (dim 1536, NO mezclar con 384;
+  // solo se usan si la tabla está a 1536 — hoy está a 384, así que en la
+  // práctica el self-host es la única ruta activa).
   const viaOpenAI = await embedBatchOpenAI(texts);
   if (viaOpenAI) return viaOpenAI;
   // Fallback: Gemini embedding-001 con outputDimensionality 1536 —
@@ -363,5 +369,39 @@ export async function recall(
     }));
   } catch {
     return [];
+  }
+}
+
+
+async function embedBatchSelfHost(
+  texts: string[],
+): Promise<number[][] | null> {
+  try {
+    if (texts.length === 0) return [];
+    const base = (process.env.V_SERVER_URL || "http://178.105.135.26/v-server").replace(/\/$/, "");
+    const token = process.env.V_SERVER_TOKEN;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers["X-V-Token"] = token;
+    const res = await fetch(`${base}/embed`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ texts: texts.map((t) => (t || " ").slice(0, 1500)) }),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      lastEmbedError = `selfhost HTTP ${res.status}: ${body.slice(0, 160)}`;
+      return null;
+    }
+    const json = (await res.json()) as { embeddings?: number[][] };
+    const vectors = json.embeddings ?? [];
+    if (vectors.length !== texts.length) {
+      lastEmbedError = "selfhost devolvió un número distinto de vectores";
+      return null;
+    }
+    lastEmbedError = null;
+    return vectors;
+  } catch (e) {
+    lastEmbedError = `selfhost: ${String(e).slice(0, 160)}`;
+    return null;
   }
 }
