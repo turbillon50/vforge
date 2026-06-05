@@ -1,4 +1,5 @@
 import { queryOne } from "@/lib/db/client";
+import { resolveAccess } from "@/lib/connect/resolve-token";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +23,10 @@ interface Stats {
  * HUB_STATS that used to live in lib/mock-data.ts.
  */
 export async function GET() {
+  const __access = await resolveAccess();
+  if (!__access.userId) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+  if (!__access.isOwner) return new Response(JSON.stringify({ stats: null }), { status: 200, headers: { "Content-Type": "application/json" } });
+
   const projectsByCategory = await queryOne<{
     total: number;
     produccion: number;

@@ -7,6 +7,7 @@
 import { queryAll } from "@/lib/db/client";
 import { listAllUserRepos } from "@/lib/github/client";
 import { listProjects } from "@/lib/vercel/client";
+import { resolveAccess } from "@/lib/connect/resolve-token";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,6 +49,10 @@ function isDead(name: string, lang: string | null): boolean {
 }
 
 export async function GET() {
+  const __access = await resolveAccess();
+  if (!__access.userId) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+  if (!__access.isOwner) return new Response(JSON.stringify({ nodes: [], links: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+
   try {
     const [dbProjects, ghRepos, vercelProjects] = await Promise.all([
       queryAll<DbProject>(
