@@ -499,8 +499,26 @@ export async function POST(req: Request) {
         });
         controller.close();
       } catch (err) {
-        // Cascade OpenRouter agotado (o error irrecuperable): último
-        // recurso, cerebro directo Anthropic (sin tools, más robusto).
+        // Cascade OpenRouter agotado (o error irrecuperable). Doctrina:
+        // el motor de V es OpenRouter + Gemini; Anthropic directo es el
+        // ULTIMO recurso. Primero intentamos Gemini directo (key propia,
+        // no depende del saldo de OpenRouter).
+        try {
+          const handledGemini = await runGeminiDirect({
+            systemPrompt,
+            turns: trimmedMessages,
+            send,
+            sessionId,
+            userId,
+            memoryUserId,
+          });
+          if (handledGemini) {
+            controller.close();
+            return;
+          }
+        } catch (eg) {
+          console.error("[V] fallback Gemini directo falló:", eg);
+        }
         try {
           const handled = await runAnthropicDirect({
             systemPrompt,
@@ -532,6 +550,90 @@ export async function POST(req: Request) {
       "X-Accel-Buffering": "no",
     },
   });
+}
+
+/**
+ * Vía de respaldo PREFERIDA: Gemini DIRECTO con la GEMINI_API_KEY del vault
+ * (endpoint OpenAI-compatible de Google). Sin tools, robusto, no depende
+ * del saldo de OpenRouter. Emite los mismos eventos SSE {meta|text|done}.
+ */
+async function runGeminiDirect(args: {
+  systemPrompt: string;
+  turns: ChatTurn[];
+  send: (event: Record<string, unknown>) => void;
+  sessionId: string;
+  userId: string;
+  memoryUserId: string;
+}): Promise<boolean> {
+  const { systemPrompt, turns, send, sessionId, userId, memoryUserId } = args;
+  const geminiKey = await getOperatorSecret("GEMINI_API_KEY", {
+    auditUserId: userId,
+  });
+  if (!geminiKey) return false;
+
+  const client = new OpenAI({
+    apiKey: geminiKey,
+    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+  });
+  const model = "gemini-2.5-flash";
+  const MODEL_LABEL = "google/gemini-2.5-flash";
+
+  const messages: ChatCompletionMessageParam[] = [
+    { role: "system", content: systemPrompt },
+    ...turns.map(toOpenAIMessage),
+  ];
+
+  send({ type: "meta", model: MODEL_LABEL });
+
+  let assistantTextBuffer = "";
+  let tokensIn = 0;
+  let tokensOut = 0;
+
+  const completion = await client.chat.completions.create({
+    model,
+    messages,
+    max_tokens: 3072,
+    stream: true,
+  });
+  for await (const chunk of completion) {
+    if (chunk.usage) {
+      tokensIn += chunk.usage.prompt_tokens ?? 0;
+      tokensOut += chunk.usage.completion_tokens ?? 0;
+    }
+    const delta = chunk.choices?.[0]?.delta?.content;
+    if (delta) {
+      assistantTextBuffer += delta;
+      send({ type: "text", value: delta });
+    }
+  }
+  if (!assistantTextBuffer) return false;
+
+  const { cleaned: assistantVisible, memories: newMemories } =
+    extractMemoryBlocks(assistantTextBuffer);
+  for (const m of newMemories) {
+    await saveUserMemory(memoryUserId, m.key, m.value).catch(() => undefined);
+  }
+
+  try {
+    await sql`
+      INSERT INTO conversations (
+        user_id, session_id, role, content, model, tokens_in, tokens_out, cost_usd
+      )
+      VALUES (
+        ${userId}, ${sessionId}, 'assistant', ${assistantVisible},
+        ${MODEL_LABEL}, ${tokensIn}, ${tokensOut}, NULL
+      )
+    `;
+  } catch (e) {
+    console.error("conversations insert (gemini directo) failed:", e);
+  }
+
+  rememberTurn({ role: "assistant", content: assistantVisible, sessionId }).catch(
+    () => undefined,
+  );
+
+  send({ type: "done", tokensIn, tokensOut, model: MODEL_LABEL });
+  return true;
 }
 
 /**
