@@ -255,6 +255,8 @@ export function ChatExperience() {
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const sessionIdRef = useRef<string>("");
   const abortRef = useRef<AbortController | null>(null);
+  const lastSendAtRef = useRef<number>(0);
+  const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messagesRef = useRef<Msg[]>(messages);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
@@ -281,10 +283,22 @@ export function ChatExperience() {
     );
   }, [t.chat.intro]);
 
-  // Autoscroll instantaneo: V debe sentirse como chat, no como documento.
+  // Autoscroll que respeta al usuario: si subió a leer (>120px del fondo),
+  // NO lo yankeamos hacia abajo. Solo seguimos pegados si ya estaba al fondo.
+  const stickToBottomRef = useRef(true);
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
+    const onScroll = () => {
+      const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
+      stickToBottomRef.current = dist < 120;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el || !stickToBottomRef.current) return;
     const toBottom = () => el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
     requestAnimationFrame(() => { toBottom(); requestAnimationFrame(toBottom); });
   }, [messages, smooth.displayed]);
@@ -379,7 +393,17 @@ export function ChatExperience() {
     async (text: string) => {
       const trimmed = text.trim();
       // Permitir enviar solo con attachment (vision-only)
-      if ((!trimmed && !attachment) || pending) return;
+      if (!trimmed && !attachment) return;
+      // Guard de pending atascado: si un envío previo quedó colgado >90s,
+      // lo cancelamos y dejamos pasar este. Nunca tragarse un mensaje.
+      if (pending) {
+        const stuck = Date.now() - (lastSendAtRef.current || 0) > 90_000;
+        if (!stuck) return;
+        abortRef.current?.abort();
+        setPending(false);
+        setStreamingId(null);
+      }
+      lastSendAtRef.current = Date.now();
 
       const att = attachment;
       const userMsg: Msg = {
@@ -456,9 +480,19 @@ export function ChatExperience() {
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
+        const armStall = () => {
+          if (stallTimerRef.current) clearTimeout(stallTimerRef.current);
+          stallTimerRef.current = setTimeout(() => {
+            // Stream estancado (red caída en móvil): cortamos para que el
+            // usuario vea el error + retry en vez de un spinner infinito.
+            ctrl.abort();
+          }, 35_000);
+        };
+        armStall();
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
+          armStall();
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split("\n\n");
           buffer = lines.pop() ?? "";
@@ -507,12 +541,15 @@ export function ChatExperience() {
         }
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
-          // Commit whatever we've already shown so it persists in history.
           smooth.flush();
+          // Si fue el watchdog (sin texto), mensaje claro + el botón de
+          // regenerar de la burbuja sirve como retry.
+          const fallback = assembled || "⚠ Se cortó la conexión. Toca regenerar para reintentar.";
           setMessages((p) =>
-            p.map((m) => (m.id === aId ? { ...m, text: assembled } : m)),
+            p.map((m) => (m.id === aId ? { ...m, text: fallback } : m)),
           );
           setStreamingId(null);
+          setPending(false);
           return;
         }
         const msg = err instanceof Error ? err.message : String(err);
@@ -536,6 +573,7 @@ export function ChatExperience() {
         );
         setStreamingId(null);
         setPending(false);
+        if (stallTimerRef.current) { clearTimeout(stallTimerRef.current); stallTimerRef.current = null; }
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
