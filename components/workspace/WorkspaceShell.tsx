@@ -34,7 +34,6 @@ import { LocaleToggle } from "@/components/controls/LocaleToggle";
 import { VOrb } from "./VOrb";
 
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
-  const clerkAppearance = useClerkAppearance();
   const t = useT();
   const pathname = usePathname();
   const nav = [
@@ -134,6 +133,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
 function TopBar() {
   const { user } = useUser();
+  const clerkAppearance = useClerkAppearance();
   return (
     <header
       className="sticky top-0 z-30 glass-strong border-b border-app"
