@@ -17,6 +17,14 @@ export async function saveUserSecret(
   const enc = encryptOperatorSecret(value);
   const sql = neon(dburl);
   const projectId = "connect";
+  // user_secrets.user_id tiene FK a users(id): aseguramos la fila del
+  // usuario Clerk antes de guardar (rol 'member', email placeholder si
+  // no lo conocemos — el perfil real lo completa Clerk).
+  await sql`
+    INSERT INTO users (id, email, role)
+    VALUES (${userId}, ${userId + "@clerk.local"}, 'client')
+    ON CONFLICT (id) DO NOTHING
+  `;
   await sql`
     INSERT INTO user_secrets (user_id, project_id, name, scope, ciphertext, iv, auth_tag)
     VALUES (${userId}, ${projectId}, ${name}, ${scope}, ${enc.ciphertext}, ${enc.iv}, ${enc.authTag})
