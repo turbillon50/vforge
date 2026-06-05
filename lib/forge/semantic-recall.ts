@@ -129,7 +129,7 @@ export interface RecallHit {
 /**
  * Búsqueda semántica: top-k recuerdos más cercanos al query (similitud coseno).
  */
-export async function recall(query: string, k = 6): Promise<RecallHit[]> {
+async function recallVector(query: string, k = 6): Promise<RecallHit[]> {
   try {
     const text = (query || "").trim();
     if (!text) return [];
@@ -331,5 +331,38 @@ async function embedBatchGemini(
   } catch (e) {
     lastEmbedError = `Gemini: ${String(e).slice(0, 200)}`;
     return null;
+  }
+}
+
+
+/**
+ * Recall con degradación elegante: vectorial si hay proveedor de
+ * embeddings; si no, búsqueda léxica pg_trgm sobre el propio historial
+ * (interina — se auto-mejora sola cuando vuelvan los embeddings).
+ */
+export async function recall(
+  query: string,
+  k = 6,
+): Promise<Array<{ content: string; score: number }>> {
+  const vec = await recallVector(query, k).catch(
+    () => [] as Array<{ content: string; score: number }>,
+  );
+  if (vec.length > 0) return vec;
+  try {
+    const rows = (await sql`
+      SELECT content, similarity(content, ${query.slice(0, 500)}) AS score
+        FROM conversations
+       WHERE user_id = 'operator_luis'
+         AND length(content) > 40
+         AND content % ${query.slice(0, 500)}
+       ORDER BY score DESC
+       LIMIT ${k}
+    `) as Array<{ content: string; score: number }>;
+    return rows.map((r) => ({
+      content: String(r.content).slice(0, 1200),
+      score: Number(r.score),
+    }));
+  } catch {
+    return [];
   }
 }
