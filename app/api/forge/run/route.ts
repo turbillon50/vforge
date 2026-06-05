@@ -160,12 +160,11 @@ export async function POST(req: Request) {
   const dbConfiguredModel = await getModelForTask("chat-main").catch(
     () => null,
   );
-  let configuredModel = dbConfiguredModel ?? config.default_model;
-  // El chat del owner SIEMPRE habla con Claude. Nada de degradar a
-  // llama/gemini por ahorro: la voz de V no se negocia.
-  if (!configuredModel || !configuredModel.startsWith("anthropic/")) {
-    configuredModel = "anthropic/claude-sonnet-4.6";
-  }
+  // Motor de V (decisión de Luis): OpenRouter para optimizar costo, con
+  // Gemini como opción; Anthropic NO es su voz (solo último recurso si
+  // Luis lo aprueba). Respetamos agent_config/default_model tal cual y
+  // dejamos que el cascade haga su trabajo.
+  const configuredModel = dbConfiguredModel ?? config.default_model;
   const isKnownSlug = !!MODELS[normalizeSlug(configuredModel)];
   const routing = isKnownSlug
     ? routeFor("chat-main", { forceSlug: normalizeSlug(configuredModel) })
