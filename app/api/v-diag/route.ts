@@ -6,7 +6,7 @@
 import OpenAI from "openai";
 import { getOperatorSecret } from "@/lib/vault/get-secret";
 import { buildSystemPrompt } from "@/lib/forge/system-prompt";
-import { getModelForTask } from "@/lib/forge/agent-config";
+import { getModelForTask, setModelForTask } from "@/lib/forge/agent-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,9 +19,23 @@ export async function POST(req: Request) {
   }
   const body = (await req.json().catch(() => ({}))) as {
     test?: boolean;
+    test_gemini?: boolean;
+    set_model?: { task: string; model: string };
     message?: string;
   };
   const report: Record<string, unknown> = {};
+
+  if (body.set_model) {
+    try {
+      report.set_model = await setModelForTask(
+        body.set_model.task as Parameters<typeof setModelForTask>[0],
+        body.set_model.model,
+        { updatedBy: "v-diag" },
+      );
+    } catch (e) {
+      report.set_model = { error: String(e) };
+    }
+  }
 
   const orKey = await getOperatorSecret("OPENROUTER_API_KEY", {
     auditUserId: "operator_luis",
@@ -107,6 +121,42 @@ export async function POST(req: Request) {
       }
     }
     if (errors.length) report.testErrors = errors;
+  }
+
+  if (body.test_gemini) {
+    const gKey = await getOperatorSecret("GEMINI_API_KEY", {
+      auditUserId: "operator_luis",
+    });
+    if (!gKey) {
+      report.test_gemini = { error: "sin GEMINI_API_KEY" };
+    } else {
+      try {
+        const { systemPrompt } = await buildSystemPrompt({ projectId: null });
+        const g = new OpenAI({
+          apiKey: gKey,
+          baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+        });
+        const c = await g.chat.completions.create({
+          model: "gemini-2.5-flash",
+          max_tokens: 500,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: body.message ?? "Hola V, prueba de vida." },
+          ],
+        });
+        report.test_gemini = {
+          ok: true,
+          model: "gemini-2.5-flash (directo)",
+          text: c.choices?.[0]?.message?.content ?? "",
+        };
+      } catch (e) {
+        const err = e as { status?: number; message?: string };
+        report.test_gemini = {
+          status: err?.status ?? null,
+          error: String(err?.message ?? e).slice(0, 300),
+        };
+      }
+    }
   }
 
   return Response.json(report);
