@@ -35,3 +35,34 @@ export async function saveUserSecret(
       last_used_at = NULL
   `;
 }
+
+import { decryptOperatorSecret } from "@/lib/vault/operator-crypto";
+
+/**
+ * Lee y descifra un secreto de conexión guardado por el usuario.
+ * Devuelve null si no existe. Es la llave de aislamiento multi-tenant:
+ * cada usuario solo ve lo que ÉL conectó.
+ */
+export async function getUserSecret(
+  userId: string,
+  name: string,
+): Promise<string | null> {
+  const dburl = process.env.DATABASE_URL;
+  if (!dburl) return null;
+  const sql = neon(dburl);
+  const rows = (await sql`
+    SELECT ciphertext, iv, auth_tag FROM user_secrets
+    WHERE user_id = ${userId} AND name = ${name}
+    LIMIT 1
+  `) as Array<{ ciphertext: string; iv: string; auth_tag: string }>;
+  if (rows.length === 0) return null;
+  try {
+    return decryptOperatorSecret({
+      ciphertext: rows[0].ciphertext,
+      iv: rows[0].iv,
+      authTag: rows[0].auth_tag,
+    });
+  } catch {
+    return null;
+  }
+}

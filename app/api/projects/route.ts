@@ -1,4 +1,5 @@
 import { queryAll } from "@/lib/db/client";
+import { resolveAccess } from "@/lib/connect/resolve-token";
 import { neon } from "@neondatabase/serverless";
 
 export const runtime = "nodejs";
@@ -33,6 +34,18 @@ const OPERATOR_USER_ID = "operator_luis";
  * Returns the live catalog from the projects table.
  */
 export async function GET() {
+  // AISLAMIENTO: el catálogo `projects` es del owner. Un no-owner NO lo ve.
+  const access = await resolveAccess();
+  if (!access.userId) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401, headers: { "Content-Type": "application/json" },
+    });
+  }
+  if (!access.isOwner) {
+    return new Response(JSON.stringify({ projects: [] }), {
+      status: 200, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    });
+  }
   const rows = await queryAll<ProjectRow>(
     `SELECT id, name, category, status,
             github_repo, github_private, github_language,

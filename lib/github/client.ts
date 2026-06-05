@@ -11,6 +11,10 @@ import { requireOperatorSecret } from "@/lib/vault/get-secret";
 let cached: { client: Octokit; expiresAt: number } | null = null;
 const CACHE_TTL_MS = 60 * 1000;
 
+export function githubClientFromToken(token: string): Octokit {
+  return new Octokit({ auth: token, userAgent: "vforge/1.0" });
+}
+
 export async function getGithubClient(
   options: { auditUserId?: string } = {},
 ): Promise<Octokit> {
@@ -76,9 +80,11 @@ export interface RepoTreeNode {
  * automatically. Up to 200 repos by default.
  */
 export async function listAllUserRepos(
-  options: { perPage?: number; max?: number; auditUserId?: string } = {},
+  options: { perPage?: number; max?: number; auditUserId?: string; token?: string } = {},
 ): Promise<RepoSummary[]> {
-  const octokit = await getGithubClient({ auditUserId: options.auditUserId });
+  const octokit = options.token
+    ? githubClientFromToken(options.token)
+    : await getGithubClient({ auditUserId: options.auditUserId });
   const perPage = options.perPage ?? 100;
   const max = options.max ?? 200;
   const out: RepoSummary[] = [];
