@@ -12,8 +12,10 @@ export const dynamic = "force-dynamic";
  * Endpoint temporal de QA. Retirar tras la auditoría.
  */
 const QA_EMAIL = "qa-auditor@vforge.site";
+// Con body {fresh:true} genera un usuario nuevo val-test+<ts>@vforge.site (cliente desde cero).
 
-export async function POST() {
+export async function POST(req: Request) {
+  const body = (await req.json().catch(() => ({}))) as { fresh?: boolean };
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "unauthorized" }, { status: 401 });
   const cc = await clerkClient();
@@ -24,12 +26,15 @@ export async function POST() {
   if (!secret) return Response.json({ error: "CLERK_SECRET_KEY ausente" }, { status: 500 });
 
   // 1) Buscar o crear el usuario QA (rol normal, NO owner).
-  let qa = (
-    await cc.users.getUserList({ emailAddress: [QA_EMAIL], limit: 1 })
-  ).data[0];
+  const email = body.fresh
+    ? `val-test+${Date.now().toString(36)}@vforge.site`
+    : QA_EMAIL;
+  let qa = body.fresh
+    ? undefined
+    : (await cc.users.getUserList({ emailAddress: [email], limit: 1 })).data[0];
   if (!qa) {
     qa = await cc.users.createUser({
-      emailAddress: [QA_EMAIL],
+      emailAddress: [email],
       firstName: "QA",
       lastName: "Auditor",
       skipPasswordRequirement: true,
@@ -61,7 +66,7 @@ export async function POST() {
   return Response.json({
     ok: true,
     qa_user_id: qa.id,
-    email: QA_EMAIL,
+    email,
     urls,
     note: "URLs de un solo uso. Caducan en 24h. Llevan al auditor directo a /app como usuario normal.",
   });
