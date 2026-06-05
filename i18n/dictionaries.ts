@@ -991,7 +991,7 @@ export const en: Dictionary = {
     intro:
       "Hi — I’m V. Tell me what you want to build, or ask me to operate something. I can scaffold projects, configure integrations, deploy and run audits.",
     operator_label: "Operator · ready · forge.app",
-    placeholder: "Talk to V…",
+    placeholder: "Habla con V…",
     shift_enter_hint: "Shift + Enter for newline",
     send: "Send",
     thinking: "V is thinking…",

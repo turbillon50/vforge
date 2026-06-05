@@ -696,7 +696,7 @@ export function ChatExperience() {
         className="sticky top-0 z-40 flex-shrink-0 border-b border-app bg-void/70 backdrop-blur-xl"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
-        <div className="mx-auto flex h-12 max-w-3xl items-center gap-1 px-2 sm:px-3 md:px-8">
+        <div className="mx-auto flex h-12 max-w-3xl items-center gap-1 px-2 sm:px-3 md:px-8" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
           {/* Volver (solo móvil) */}
           <Link
             href="/app/home"
