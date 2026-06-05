@@ -21,6 +21,13 @@ export const metadata: Metadata = {
     "VForge es un workspace operativo nativo de IA. Crea apps, genera frontend y backend, despliega y orquesta cada servicio conversando con V.",
   applicationName: "VForge",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "VForge" },
   openGraph: {
     title: "VForge — Opera productos con una conversación",
