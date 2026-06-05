@@ -205,6 +205,7 @@ export async function POST(req: Request) {
               const status = errorStatus(err);
               const recoverable =
                 status === 402 ||
+                status === 404 || // modelo inexistente/deprecado en OpenRouter -> siguiente del cascade
                 status === 429 ||
                 (status !== null && status >= 500 && status <= 599);
               const hasNext = cascadeIdx + 1 < cascade.length;
