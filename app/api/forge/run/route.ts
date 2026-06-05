@@ -240,6 +240,28 @@ export async function POST(req: Request) {
       let lastStopReason: string | null = null;
       // El UI muestra discreto qué modelo responde: nunca más dudar quién escribe.
       send({ type: "meta", model: actualModel });
+
+      // MOTOR DE V: si la config apunta a un modelo Anthropic, vamos DIRECTO
+      // al cerebro Anthropic (con tools) — OpenRouter está sin saldo y solo
+      // produciría un fallback por turno. Config = realidad, cero churn.
+      if (configuredModel.startsWith("anthropic/")) {
+        try {
+          const handled = await runAnthropicDirect({
+            systemPrompt,
+            turns: trimmedMessages,
+            send,
+            sessionId,
+            userId,
+            memoryUserId,
+          });
+          if (handled) {
+            controller.close();
+            return;
+          }
+        } catch (e) {
+          console.error("[V] Anthropic directo (primario) falló, intento OpenRouter:", e);
+        }
+      }
       // BUILDER (v0-sin-v0): cuando la tool `design_version` se ejecute en
       // un round y devuelva {buildId, versionId, n, preview_url}, aquí se
       // emitirá send({ type: "version", buildId, versionId, n, summary })
@@ -533,45 +555,79 @@ async function runAnthropicDirect(args: {
 
   const client = new Anthropic({ apiKey: anthropicKey });
   const model = "claude-sonnet-4-6";
+  const MODEL_LABEL = "anthropic/claude-sonnet-4.6";
 
-  // Los turnos del FE ya vienen con bloques estilo Anthropic
-  // (text / image base64) — se pasan casi tal cual.
-  const anthMessages = turns.map((t) => ({
+  // Tools en formato Anthropic (TOOLS ya trae name/description/input_schema).
+  const anthTools = TOOLS.map((t) => ({
+    name: t.name,
+    description: t.description,
+    input_schema: t.input_schema as Anthropic.Tool.InputSchema,
+  }));
+
+  // Mensajes iniciales del FE (texto o bloques imagen base64).
+  const messages: Anthropic.MessageParam[] = turns.map((t) => ({
     role: t.role,
     content:
       typeof t.content === "string"
         ? t.content
-        : t.role === "assistant"
-          ? t.content
-              .filter((b): b is { type: "text"; text: string } => b.type === "text")
-              .map((b) => b.text)
-              .join("\n")
-          : t.content,
-  })) as Anthropic.MessageParam[];
+        : (t.content as unknown as Anthropic.ContentBlockParam[]),
+  }));
 
-  send({ type: "meta", model: "anthropic/claude-sonnet-4.6 (directo)", fallback: true });
+  send({ type: "meta", model: MODEL_LABEL });
 
   let assistantTextBuffer = "";
   let tokensIn = 0;
   let tokensOut = 0;
 
-  const stream = client.messages.stream({
-    model,
-    system: systemPrompt,
-    messages: anthMessages,
-    max_tokens: 2048,
-  });
+  // Loop de tool-use: V conserva sus 73 manos también por el camino directo.
+  for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+    const stream = client.messages.stream({
+      model,
+      system: systemPrompt,
+      messages,
+      max_tokens: 3072,
+      tools: anthTools,
+    });
+    stream.on("text", (delta) => {
+      assistantTextBuffer += delta;
+      send({ type: "text", value: delta });
+    });
+    const final = await stream.finalMessage();
+    tokensIn += final.usage?.input_tokens ?? 0;
+    tokensOut += final.usage?.output_tokens ?? 0;
 
-  stream.on("text", (delta) => {
-    assistantTextBuffer += delta;
-    send({ type: "text", value: delta });
-  });
+    const toolUses = final.content.filter(
+      (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
+    );
+    if (final.stop_reason !== "tool_use" || toolUses.length === 0) {
+      break;
+    }
 
-  const final = await stream.finalMessage();
-  tokensIn = final.usage?.input_tokens ?? 0;
-  tokensOut = final.usage?.output_tokens ?? 0;
+    // Ejecuta cada tool y arma los tool_result para la siguiente vuelta.
+    messages.push({ role: "assistant", content: final.content });
+    const results: Anthropic.ContentBlockParam[] = [];
+    for (const tu of toolUses) {
+      send({ type: "tool_use_start", id: tu.id, name: tu.name });
+      let out: { ok: boolean; content: string; summary: string };
+      try {
+        out = await executeTool(tu.name, (tu.input ?? {}) as Record<string, unknown>, {
+          userId,
+          sessionId,
+        });
+      } catch (e) {
+        out = { ok: false, content: String(e).slice(0, 500), summary: "error" };
+      }
+      send({ type: "tool_use_result", id: tu.id, ok: out.ok, summary: out.summary });
+      results.push({
+        type: "tool_result",
+        tool_use_id: tu.id,
+        content: out.content.slice(0, 8000),
+        is_error: !out.ok,
+      });
+    }
+    messages.push({ role: "user", content: results });
+  }
 
-  // Misma post-pista que la vía normal: memorias <memory> + persistencia.
   const { cleaned: assistantVisible, memories: newMemories } =
     extractMemoryBlocks(assistantTextBuffer);
   for (const m of newMemories) {
@@ -585,20 +641,18 @@ async function runAnthropicDirect(args: {
       )
       VALUES (
         ${userId}, ${sessionId}, 'assistant', ${assistantVisible},
-        ${"anthropic/claude-sonnet-4.6 (directo)"}, ${tokensIn}, ${tokensOut}, NULL
+        ${MODEL_LABEL}, ${tokensIn}, ${tokensOut}, NULL
       )
     `;
   } catch (e) {
     console.error("conversations insert (directo) failed:", e);
   }
 
-  rememberTurn({
-    role: "assistant",
-    content: assistantVisible,
-    sessionId,
-  }).catch(() => undefined);
+  rememberTurn({ role: "assistant", content: assistantVisible, sessionId }).catch(
+    () => undefined,
+  );
 
-  send({ type: "done", tokensIn, tokensOut, model: "anthropic/claude-sonnet-4.6 (directo)" });
+  send({ type: "done", tokensIn, tokensOut, model: MODEL_LABEL });
   return true;
 }
 
