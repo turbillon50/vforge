@@ -13,12 +13,14 @@ import {
   Globe2,
   Square,
   ChevronDown,
+  ChevronLeft,
+  MoreHorizontal,
+  Home,
   Plus,
   History,
   GitBranch,
   MessageSquare,
   Mic,
-  Camera,
   X,
   Check,
   Copy,
@@ -26,7 +28,9 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from "lucide-react";
+import Link from "next/link";
 import { useT } from "@/i18n/AppProviders";
+import { VPresence } from "@/components/brand/VPresence";
 import { Markdown } from "./Markdown";
 import { ThinkingIndicator, VOrb } from "./ThinkingIndicator";
 import { useSmoothStream, usePrefersReducedMotion } from "./useSmoothStream";
@@ -205,6 +209,7 @@ export function ChatExperience() {
   const [scope, setScope] = useState<string>("general");
   const [projects, setProjects] = useState<Project[]>([]);
   const [scopeMenuOpen, setScopeMenuOpen] = useState(false);
+  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -628,23 +633,45 @@ export function ChatExperience() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex-shrink-0 border-b border-app bg-void/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 py-2 md:px-8">
-          {/* Scope selector */}
-          <div className="relative">
+      <div
+        className="sticky top-0 z-40 flex-shrink-0 border-b border-app bg-void/70 backdrop-blur-xl"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      >
+        <div className="mx-auto flex h-12 max-w-3xl items-center gap-1 px-2 sm:px-3 md:px-8">
+          {/* Volver (solo móvil) */}
+          <Link
+            href="/app"
+            aria-label="Volver a inicio"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface md:hidden"
+            style={{ touchAction: "manipulation" }}
+          >
+            <ChevronLeft size={20} />
+          </Link>
+
+          {/* Centro: V + scope (tap abre el menú de scope existente) */}
+          <div className="relative flex min-w-0 flex-1 justify-center">
             <button
               type="button"
               onClick={() => setScopeMenuOpen((v) => !v)}
-              className="flex h-8 items-center gap-2 rounded-full border border-app bg-tint-1 px-3 text-sm text-on-surface hover:border-app-strong"
+              className="flex min-h-[44px] min-w-0 items-center gap-2 rounded-full px-2 transition hover:bg-tint-1"
               style={{ touchAction: "manipulation" }}
+              aria-haspopup="menu"
+              aria-expanded={scopeMenuOpen}
             >
-              {scope === "general" ? (
-                <MessageSquare size={13} className="text-violet-300" />
-              ) : (
-                <GitBranch size={13} className="text-cyber-cyan" />
-              )}
-              <span className="font-medium">{currentScope.label}</span>
-              <ChevronDown size={12} className="text-muted" />
+              <VPresence size={18} breathing />
+              <span className="min-w-0 text-left">
+                <span className="flex items-center gap-1">
+                  <span className="truncate text-sm font-medium text-on-surface">
+                    {currentScope.label}
+                  </span>
+                  <ChevronDown size={11} className="shrink-0 text-muted" />
+                </span>
+                {modelLabel && (
+                  <span className="block truncate text-[10px] leading-tight text-muted">
+                    {modelLabel}
+                  </span>
+                )}
+              </span>
             </button>
             {scopeMenuOpen && (
               <>
@@ -652,7 +679,7 @@ export function ChatExperience() {
                   className="fixed inset-0 z-30"
                   onClick={() => setScopeMenuOpen(false)}
                 />
-                <div className="absolute left-0 top-full z-40 mt-1 max-h-[60vh] w-[260px] overflow-y-auto rounded-md border border-app bg-ink shadow-elev">
+                <div className="absolute left-1/2 top-full z-40 mt-1 max-h-[60vh] w-[260px] -translate-x-1/2 overflow-y-auto rounded-md border border-app bg-ink shadow-elev">
                   {scopeOptions.map((opt) => (
                     <button
                       key={opt.id}
@@ -685,38 +712,63 @@ export function ChatExperience() {
             )}
           </div>
 
-          {/* New chat */}
-          <button
-            type="button"
-            onClick={newChat}
-            disabled={pending}
-            title="Nueva sesión en este scope"
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-app bg-tint-1 text-on-surface-variant hover:border-app-strong hover:text-on-surface disabled:opacity-50"
-            style={{ touchAction: "manipulation" }}
-          >
-            <Plus size={14} />
-          </button>
-
-          {/* Historial de chats */}
-          <button
-            type="button"
-            onClick={openSessions}
-            title="Tus chats"
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-app bg-tint-1 text-on-surface-variant hover:border-app-strong hover:text-on-surface"
-            style={{ touchAction: "manipulation" }}
-          >
-            <History size={14} />
-          </button>
-
-          <div className="ml-auto flex items-center gap-2 text-[11px] text-muted">
-            <span className="hidden sm:inline">
-              V{modelLabel ? ` · ${modelLabel}` : ""}
-            </span>
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success-emerald" />
+          {/* Menú ··· */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setHeaderMenuOpen((v) => !v)}
+              aria-label="Más opciones"
+              aria-haspopup="menu"
+              aria-expanded={headerMenuOpen}
+              className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface"
+              style={{ touchAction: "manipulation" }}
+            >
+              <MoreHorizontal size={18} />
+            </button>
+            {headerMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setHeaderMenuOpen(false)}
+                />
+                <div className="absolute right-0 top-full z-40 mt-1 w-[180px] overflow-hidden rounded-xl border border-app bg-ink shadow-elev">
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => {
+                      setHeaderMenuOpen(false);
+                      void newChat();
+                    }}
+                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1 disabled:opacity-50"
+                  >
+                    <Plus size={14} className="text-violet-300" /> Nuevo hilo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHeaderMenuOpen(false);
+                      openSessions();
+                    }}
+                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
+                  >
+                    <History size={14} className="text-cyber-cyan" /> Hilos
+                  </button>
+                  <Link
+                    href="/app"
+                    onClick={() => setHeaderMenuOpen(false)}
+                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
+                  >
+                    <Home size={14} className="text-muted" /> Inicio
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
 
+      <div className="flex min-h-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col min-h-0">
       <div
         ref={scrollerRef}
         className="flex min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
@@ -839,7 +891,7 @@ export function ChatExperience() {
       >
         <div className="mx-auto max-w-3xl px-3 pb-2 pt-2 sm:px-4 md:px-8">
           {messages.length <= 1 && (
-            <div className="mb-2 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:flex-wrap sm:px-0 sm:pb-0 no-scrollbar">
+            <div className="mb-2 -mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1 no-scrollbar">
               {quickPrompts.map((q) => (
                 <button
                   key={q.label}
@@ -869,6 +921,16 @@ export function ChatExperience() {
             setAttachment={setAttachment}
           />
         </div>
+      </div>
+      </div>
+
+      {/* Aside de previews (solo ≥xl) — aquí vivirán las tarjetas de versión del builder */}
+      <aside className="hidden w-[420px] shrink-0 flex-col items-center justify-center gap-4 border-l border-app xl:flex">
+        <VPresence size={32} breathing={false} />
+        <p className="max-w-[220px] text-center text-sm text-muted">
+          Los previews de tus builds vivirán aquí
+        </p>
+      </aside>
       </div>
     </div>
   );
@@ -1084,14 +1146,14 @@ function Composer({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-tint-2"
+              className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-tint-2"
               aria-label="Adjuntar archivo"
               style={{ touchAction: "manipulation" }}
             >
-              <Paperclip size={16} />
+              <Plus size={18} />
             </button>
 
-            {/* Cámara — capture environment para abrir cámara directa en mobile */}
+            {/* Cámara oculta — input se conserva por si se reusa, sin botón visible */}
             <input
               ref={cameraInputRef}
               type="file"
@@ -1100,22 +1162,13 @@ function Composer({
               hidden
               onChange={(e) => handleFile(e.target.files)}
             />
-            <button
-              type="button"
-              onClick={() => cameraInputRef.current?.click()}
-              className="hidden h-9 w-9 items-center justify-center rounded-full hover:bg-tint-2 sm:flex"
-              aria-label="Foto"
-              style={{ touchAction: "manipulation" }}
-            >
-              <Camera size={16} />
-            </button>
 
             {/* Micrófono — graba audio y transcribe via Whisper */}
             <button
               type="button"
               onClick={recording ? stopRecording : startRecording}
               disabled={transcribing}
-              className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+              className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
                 recording
                   ? "bg-error-crimson/15 text-error-crimson animate-pulse"
                   : transcribing

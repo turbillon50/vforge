@@ -111,7 +111,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 max-w-full flex-1 flex-col h-dvh overflow-x-hidden">
-        <TopBar />
+        <TopBar hiddenOnMobile={!!pathname?.startsWith("/app/chat")} />
         <div
           className={cn(
             "flex-1 min-h-0 min-w-0 max-w-full overflow-x-hidden",
@@ -125,18 +125,21 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         >
           {children}
         </div>
-        <MobileNav pathname={pathname || ""} />
+        {!pathname?.startsWith("/app/chat") && <MobileNav pathname={pathname || ""} />}
       </div>
     </div>
   );
 }
 
-function TopBar() {
+function TopBar({ hiddenOnMobile = false }: { hiddenOnMobile?: boolean }) {
   const { user } = useUser();
   const clerkAppearance = useClerkAppearance();
   return (
     <header
-      className="sticky top-0 z-30 glass-strong border-b border-app"
+      className={cn(
+        "sticky top-0 z-30 glass-strong border-b border-app",
+        hiddenOnMobile && "hidden md:block",
+      )}
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 md:px-8">
