@@ -220,10 +220,10 @@ function MobileNav({ pathname }: { pathname: string }) {
     <nav
       aria-label="navegación principal"
       data-vorb-avoid
-      className="vf-mobile-nav glass-strong surface-deep fixed inset-x-3 z-40 mx-auto flex max-w-[460px] items-stretch justify-between gap-0.5 rounded-2xl px-1 shadow-elev md:hidden"
+      className="vf-mobile-nav glass-strong fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-between gap-0.5 rounded-t-2xl border-t border-app px-2 md:hidden"
       style={{
-        bottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)",
-        minHeight: 56,
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        minHeight: 60,
       }}
     >
       {mobileNav.map((i) => {
@@ -237,11 +237,9 @@ function MobileNav({ pathname }: { pathname: string }) {
               href={i.href}
               aria-label="Hablar con V"
               aria-current={active ? "page" : undefined}
-              className="relative -mt-5 flex flex-col items-center justify-start"
+              className="flex flex-1 items-center justify-center transition active:scale-95"
             >
-              <span className="flex h-14 w-14 items-center justify-center transition active:scale-95">
-                <VPresence size={52} breathing={active} />
-              </span>
+              <VPresence size={42} breathing={active} />
             </Link>
           );
         }
