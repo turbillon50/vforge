@@ -21,7 +21,7 @@ export function MarketingFooter() {
         <div>
           <h4 className="label-caps mb-4 text-on-surface">{t.marketing.footer_platform}</h4>
           <ul className="space-y-3 text-sm text-on-surface-variant">
-            <li><Link href="/#workspace" className="hover:text-cyber-cyan">{t.common.nav_workspace}</Link></li>
+            <li><Link href="/#integraciones" className="hover:text-cyber-cyan">{t.common.nav_workspace}</Link></li>
             <li><Link href="/marketplace" className="hover:text-cyber-cyan">{t.common.nav_marketplace}</Link></li>
             <li><Link href="/glossary" className="hover:text-cyber-cyan">{t.common.nav_glossary}</Link></li>
             <li><Link href="/pricing" className="hover:text-cyber-cyan">{t.common.nav_pricing}</Link></li>

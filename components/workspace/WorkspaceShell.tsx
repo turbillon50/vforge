@@ -24,6 +24,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { UserButton, useUser } from "@clerk/nextjs";
+import { useClerkAppearance } from "@/lib/clerk-appearance";
 import { Home, Users } from "lucide-react";
 import { VPresence } from "@/components/brand/VPresence";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ import { LocaleToggle } from "@/components/controls/LocaleToggle";
 import { VOrb } from "./VOrb";
 
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
+  const clerkAppearance = useClerkAppearance();
   const t = useT();
   const pathname = usePathname();
   const nav = [
@@ -155,7 +157,7 @@ function TopBar() {
             <Bell size={15} />
           </button>
           <div className="flex items-center gap-2 rounded-full border border-app-strong bg-tint-1 py-1 pl-1 pr-2 md:pr-3">
-            <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "h-7 w-7" } }} />
+            <UserButton afterSignOutUrl="/" appearance={{ ...clerkAppearance, elements: { ...clerkAppearance.elements, avatarBox: "h-7 w-7" } }} />
             <span className="hidden max-w-[120px] truncate text-[13px] font-medium text-on-surface md:inline">
               {user?.firstName ?? user?.username ?? ""}
             </span>

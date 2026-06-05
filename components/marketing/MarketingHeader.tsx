@@ -12,8 +12,8 @@ export function MarketingHeader() {
   const [open, setOpen] = useState(false);
   const t = useT();
   const nav = [
-    { href: "/#product", label: t.common.nav_product },
-    { href: "/#workspace", label: t.common.nav_workspace },
+    { href: "/#metodo", label: t.common.nav_product },
+    { href: "/#integraciones", label: t.common.nav_workspace },
     { href: "/marketplace", label: t.common.nav_marketplace },
     { href: "/glossary", label: t.common.nav_glossary },
     { href: "/pricing", label: t.common.nav_pricing },

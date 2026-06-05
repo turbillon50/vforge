@@ -38,6 +38,16 @@ const moduleOrder: { id: ModuleKey; icon: LucideIcon; installed?: boolean; recom
   { id: "audit", icon: ShieldCheck },
 ];
 
+
+const UPCOMING = [
+  { name: "Stripe", blurb: "Cobros y suscripciones listos para producción." },
+  { name: "Mercado Pago", blurb: "Pagos locales para Latinoamérica." },
+  { name: "WhatsApp", blurb: "Conversaciones y notificaciones con tus clientes." },
+  { name: "Resend", blurb: "Email transaccional con plantillas de la casa." },
+  { name: "Twilio", blurb: "SMS y verificación telefónica." },
+  { name: "Neon", blurb: "Postgres serverless con ramas por entorno." },
+];
+
 export function MarketplaceGrid({ context }: { context?: "workspace" | "marketing" }) {
   const t = useT();
   const [q, setQ] = useState("");
@@ -85,6 +95,26 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
           ))}
         </div>
       </div>
+
+      {list.length === 0 && (
+        <div className="px-5 pb-10 md:px-8">
+          <div className="rounded-xl border border-app bg-tint-1 p-8 text-center">
+            <p className="font-display text-lg font-semibold text-on-surface">El marketplace abre pronto</p>
+            <p className="mt-2 text-sm text-on-surface-variant">Estos módulos están en camino. Te avisamos cuando puedas instalarlos.</p>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {UPCOMING.map((u) => (
+              <article key={u.name} className="rounded-xl border border-app bg-tint-1 p-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display text-base font-semibold text-on-surface">{u.name}</h3>
+                  <span className="chip text-cyber-cyan">Próximamente</span>
+                </div>
+                <p className="mt-3 text-sm text-on-surface-variant">{u.blurb}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-3 px-5 pb-10 md:grid-cols-2 md:px-8 lg:grid-cols-3">
         {list.map((m) => (

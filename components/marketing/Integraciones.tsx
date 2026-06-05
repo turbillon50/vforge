@@ -16,7 +16,7 @@ const INTEGRATIONS = [
 
 export function Integraciones() {
   return (
-    <section className="border-b border-app bg-void py-20 md:py-28">
+    <section id="integraciones" className="border-b border-app bg-void py-20 md:py-28">
       <div className="mx-auto max-w-container px-5 md:px-margin-desktop">
         <p className="label-caps mb-3 text-cyber-cyan">Conecta tu mundo</p>
         <h2 className="font-display text-3xl font-bold tracking-tight text-on-surface md:text-5xl">
@@ -28,12 +28,12 @@ export function Integraciones() {
         {INTEGRATIONS.map((it, i) => (
           <motion.div
             key={it.n}
-            initial={{ opacity: 0, y: 14 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
             transition={{ duration: 0.4, delay: (i % 4) * 0.06 }}
             style={{ scrollSnapAlign: "start" }}
-            className="group relative flex h-44 w-40 flex-none flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl transition hover:border-violet-400/40 hover:bg-white/10"
+            className="group relative flex h-44 w-40 flex-none flex-col justify-between rounded-2xl border border-app bg-tint-1 p-5 backdrop-blur-xl transition hover:border-violet-400/40 hover:bg-tint-2"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-xl text-lg font-bold" style={{ background: it.c + "22", color: it.c }}>
               {it.n.slice(0, 2)}

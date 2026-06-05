@@ -15,8 +15,8 @@ export function LocaleToggle({ compact = false }: { compact?: boolean }) {
       title={t.common.locale_toggle_aria}
       className={
         compact
-          ? "rounded-md border border-app-strong bg-tint-1 px-2 py-2 font-mono text-[11px] uppercase tracking-[0.18em] text-on-surface-variant transition hover:text-on-surface"
-          : "inline-flex items-center gap-2 rounded-md border border-app-strong bg-tint-1 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.18em] text-on-surface-variant transition hover:text-on-surface"
+          ? "inline-flex h-11 min-w-11 items-center justify-center gap-1 rounded-md border border-app-strong bg-tint-1 px-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-on-surface-variant transition hover:text-on-surface"
+          : "inline-flex h-11 items-center gap-2 rounded-md border border-app-strong bg-tint-1 px-3 font-mono text-[11px] uppercase tracking-[0.18em] text-on-surface-variant transition hover:text-on-surface"
       }
     >
       <Languages size={14} />
