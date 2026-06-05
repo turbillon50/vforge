@@ -18,7 +18,7 @@ export default function SignUpPage() {
   const { isSignedIn, user } = useUser();
 
   return (
-    <div className="relative isolate min-h-dvh overflow-hidden">
+    <div className="relative isolate flex min-h-dvh flex-col overflow-hidden" style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <VWatermark />
       <div className="pointer-events-none absolute inset-0 grid-bg" />
       <div className="absolute inset-x-0 top-0 h-[60vh] bg-violet-aura" />
@@ -37,7 +37,7 @@ export default function SignUpPage() {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto grid max-w-container grid-cols-1 gap-12 px-5 pb-20 md:grid-cols-2 md:px-margin-desktop md:pt-10">
+      <main className="relative z-10 mx-auto grid w-full max-w-container flex-1 grid-cols-1 items-center gap-12 px-5 py-8 md:grid-cols-2 md:px-margin-desktop md:py-10">
         <section className="hidden md:flex flex-col justify-center">
           <span className="chip mb-5 border-cyan-400/30 bg-cyan-400/5 text-cyan-400 w-fit">
             <Sparkles size={12} className="text-violet-300" /> {t.auth.sign_up_eyebrow}
@@ -48,7 +48,7 @@ export default function SignUpPage() {
           <p className="mt-4 max-w-md text-on-surface-variant">{t.auth.sign_up_subtitle}</p>
         </section>
 
-        <section className="flex items-start justify-center">
+        <section className="flex items-center justify-center">
           {hasClerk && isSignedIn ? (
             <ActiveSessionCard email={user?.primaryEmailAddress?.emailAddress} mode="sign-up" />
           ) : hasClerk ? (
@@ -76,14 +76,15 @@ function ActiveSessionCard({ email, mode }: { email?: string; mode: "sign-in" | 
           : " No necesitas iniciar sesión de nuevo."}
       </p>
       <div className="mt-6 flex flex-col gap-3">
-        <Link
-          href="/app"
-          className="flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-5 text-[15px] font-medium text-white shadow-glow-violet transition hover:opacity-95"
+        <button
+          type="button"
+          onClick={() => { window.location.href = "/app/chat"; }}
+          className="flex h-12 items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-5 text-[15px] font-medium text-white shadow-glow-violet transition active:scale-[0.98] hover:opacity-95"
         >
           Ir a mi espacio
-        </Link>
+        </button>
         <SignOutButton redirectUrl={mode === "sign-up" ? "/sign-up" : "/sign-in"}>
-          <button className="flex h-11 items-center justify-center rounded-xl border border-app bg-tint-1 px-5 text-[15px] text-on-surface transition hover:border-app-strong">
+          <button className="flex h-12 items-center justify-center rounded-xl border border-app bg-tint-1 px-5 text-[15px] text-on-surface transition active:scale-[0.98] hover:border-app-strong">
             Cerrar sesión y usar otra cuenta
           </button>
         </SignOutButton>
