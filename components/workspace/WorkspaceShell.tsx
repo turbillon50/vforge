@@ -40,7 +40,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-void">
+    <div className="fixed inset-0 flex overflow-hidden bg-void">
       <aside className="sticky top-0 glass-strong hidden h-dvh w-[260px] shrink-0 flex-col border-r border-app md:flex">
         <div className="flex items-center justify-between px-5 py-5">
           <Link href="/app"><VWordmark /></Link>
@@ -131,7 +131,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         >
           {children}
         </div>
-        {!pathname?.startsWith("/app/chat") && <MobileNav pathname={pathname || ""} />}
+        <MobileNav pathname={pathname || ""} />
         <VOrb />
       </div>
     </div>
