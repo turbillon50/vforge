@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "vforge": {
+      "type": "http",
+      "url": "https://vforge.site/api/mcp",
+      "headers": { "Authorization": "Bearer ${VFORGE_MCP_TOKEN}" }
+    }
+  }
+}

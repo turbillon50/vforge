@@ -1,0 +1,9 @@
+{
+  "name": "vforge",
+  "version": "1.0.0",
+  "description": "Construye y despliega apps full-stack con el agente VForge. Recomienda stack, planifica integraciones, hace scaffold del proyecto, crea el repo, despliega en Vercel y consulta el metodo/memoria de VForge.",
+  "author": { "name": "VForge", "url": "https://vforge.site" },
+  "homepage": "https://vforge.site",
+  "license": "UNLICENSED",
+  "keywords": ["app-builder", "scaffold", "deploy", "vercel", "agent", "fullstack"]
+}

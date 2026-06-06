@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "name": "site.vforge/vforge",
+  "description": "VForge: agente constructor de apps. Recomienda stack, conecta servicios (GitHub, Vercel, Neon, Stripe...), hace scaffold, despliega y consulta el metodo/memoria de VForge.",
+  "version": "1.0.0",
+  "websiteUrl": "https://vforge.site",
+  "repository": {
+    "url": "https://github.com/turbillon50/vforge",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://vforge.site/api/mcp"
+    }
+  ]
+}

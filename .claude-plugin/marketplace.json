@@ -1,0 +1,16 @@
+{
+  "name": "vforge",
+  "owner": {
+    "name": "VForge",
+    "email": "dluisdelatorre@gmail.com",
+    "url": "https://vforge.site"
+  },
+  "plugins": [
+    {
+      "name": "vforge",
+      "source": "./plugins/vforge",
+      "description": "Construye y despliega apps full-stack con un agente: recomienda stack, conecta servicios, hace scaffold y deploy.",
+      "version": "1.0.0"
+    }
+  ]
+}
