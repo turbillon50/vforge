@@ -393,3 +393,30 @@ body.keyboard-open .vf-mobile-nav {
     transition: none;
   }
 }
+
+/* ── Skeletons elegantes (shimmer) ─────────────────────────────── */
+.vf-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgb(var(--color-border) / 0.45);
+}
+.vf-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(139, 92, 246, 0.12) 40%,
+    rgba(34, 211, 238, 0.10) 60%,
+    transparent
+  );
+  animation: vfShimmer 1.4s ease-in-out infinite;
+}
+@keyframes vfShimmer {
+  100% { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vf-skeleton::after { animation: none; }
+}

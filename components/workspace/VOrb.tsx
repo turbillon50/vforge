@@ -44,6 +44,21 @@ export function VOrb() {
     mq.addEventListener("change", upd);
     return () => mq.removeEventListener("change", upd);
   }, []);
+  const [scrolling, setScrolling] = useState(false);
+  useEffect(() => {
+    // El orb se encoge mientras haces scroll para no estorbar la lectura,
+    // y regresa a su tamano al detenerte. Sensacion viva, nunca en medio.
+    const scroller: EventTarget = document.querySelector("[data-app-scroll]") || window;
+    let t = 0;
+    const onScroll = () => {
+      setScrolling(true);
+      clearTimeout(t);
+      t = window.setTimeout(() => setScrolling(false), 550) as unknown as number;
+    };
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => { clearTimeout(t); scroller.removeEventListener("scroll", onScroll); };
+  }, []);
+
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ x: number; y: number }>({ x: -1, y: -1 });
   const drag = useRef<{ moved: boolean; sx: number; sy: number; ox: number; oy: number } | null>(null);
@@ -107,7 +122,10 @@ export function VOrb() {
 
   // El manifiesto: la conversación manda. Dentro del chat el orb no
   // aparece (la V ya vive ahí); en el resto de la app vive con su menú.
-  if (pathname?.startsWith("/app/chat")) return null;
+  // Donde V ya tiene una presencia grande (chat y home), el orb flotante sobra:
+  // evitamos el duplicado y que tape contenido.
+  const HIDE_ON = ["/app/chat", "/app/home"];
+  if (pathname === "/app" || HIDE_ON.some((p) => pathname?.startsWith(p))) return null;
   if (pos.x < 0) return null;
   const onLeft = pos.x + 28 < (typeof window !== "undefined" ? window.innerWidth / 2 : 200);
 
@@ -137,8 +155,13 @@ export function VOrb() {
           onPointerMove={move}
           onPointerUp={up}
           aria-label="V"
-          style={{ touchAction: "none" }}
-          className={"vorb-sphere relative h-14 w-14 cursor-grab rounded-full transition active:scale-95 " + (open ? "vorb-open" : "")}
+          style={{
+            touchAction: "none",
+            transform: scrolling && !open ? "scale(0.62)" : "scale(1)",
+            opacity: scrolling && !open ? 0.78 : 1,
+            transition: "transform .28s cubic-bezier(.22,1,.36,1), opacity .28s ease",
+          }}
+          className={"vorb-sphere relative h-14 w-14 cursor-grab rounded-full active:scale-95 " + (open ? "vorb-open" : "")}
         >
           <span aria-hidden className="vorb-halo" />
           <span aria-hidden className="vorb-ring" />

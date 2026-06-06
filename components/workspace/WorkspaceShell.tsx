@@ -20,6 +20,7 @@ import { useClerkAppearance } from "@/lib/clerk-appearance";
 import { Home, Users } from "lucide-react";
 import { VPresence } from "@/components/brand/VPresence";
 import { VOrb } from "./VOrb";
+import { PageTransition } from "@/components/motion/PageTransition";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
@@ -119,6 +120,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 max-w-full flex-1 flex-col h-dvh overflow-x-hidden">
         <TopBar hiddenOnMobile={!!pathname?.startsWith("/app/chat")} />
         <div
+          data-app-scroll
           className={cn(
             "flex-1 min-h-0 min-w-0 max-w-full overflow-x-hidden",
             // La MobileNav vive en el flujo (flex-none) debajo de este
@@ -129,7 +131,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
               : "overflow-y-auto flex flex-col",
           )}
         >
-          {children}
+          {pathname?.startsWith("/app/chat") ? children : <PageTransition>{children}</PageTransition>}
         </div>
         <MobileNav pathname={pathname || ""} />
         <VOrb />

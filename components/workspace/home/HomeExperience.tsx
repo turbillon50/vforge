@@ -15,6 +15,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { VPresence } from "@/components/brand/VPresence";
+import { CardSkeleton } from "@/components/ui/Skeleton";
 
 type Project = {
   id: string;
@@ -44,11 +45,13 @@ const SHORTCUTS = [
 
 export function HomeExperience({ name }: { name: string }) {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
   useEffect(() => {
     fetch("/api/projects", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : { projects: [] }))
       .then((d: { projects?: Project[] }) => setProjects(d.projects ?? []))
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => setLoadingProjects(false));
   }, []);
 
   return (
@@ -80,7 +83,8 @@ export function HomeExperience({ name }: { name: string }) {
       >
         <Link
           href="/app/chat"
-          className="surface-deep group relative block overflow-hidden rounded-3xl border border-app bg-gradient-to-b from-violet-500/[0.07] via-surface/60 to-surface/80 px-6 py-10 backdrop-blur-xl transition hover:border-violet-400/30 md:px-12 md:py-14"
+          data-vorb-avoid
+          className="surface-deep group relative block overflow-hidden rounded-3xl border border-app bg-gradient-to-b from-violet-500/[0.07] via-surface/60 to-surface/80 px-6 py-10 backdrop-blur-xl transition duration-300 hover:border-violet-400/30 hover:shadow-glow-violet active:scale-[0.99] md:px-12 md:py-14"
         >
           <div
             aria-hidden
@@ -118,7 +122,7 @@ export function HomeExperience({ name }: { name: string }) {
             >
               <Link
                 href={s.href}
-                className="surface-deep card-lift group flex h-32 w-44 shrink-0 flex-col justify-between rounded-2xl border border-app bg-surface/60 p-4 backdrop-blur-md md:h-36 md:w-52"
+                className="surface-deep card-lift group flex h-32 w-44 shrink-0 flex-col justify-between rounded-2xl border border-app bg-surface/60 p-4 backdrop-blur-md transition active:scale-[0.97] md:h-36 md:w-52"
               >
                 <s.Icon size={20} className="text-violet-300 transition group-hover:text-cyan-300" />
                 <div>
@@ -133,8 +137,22 @@ export function HomeExperience({ name }: { name: string }) {
         </div>
       </section>
 
+      {/* Proyectos: skeleton mientras carga — nunca pantalla en blanco */}
+      {loadingProjects && (
+        <section className="mt-10 md:mt-14">
+          <h3 className="font-display text-xl font-semibold tracking-[-0.02em] text-on-surface md:text-2xl">
+            Tus proyectos
+          </h3>
+          <div className="no-scrollbar -mx-5 mt-4 flex gap-3 overflow-x-hidden px-5 pb-2 md:-mx-8 md:px-8">
+            {[0, 1, 2, 3].map((i) => (
+              <CardSkeleton key={i} className="h-28 w-56" />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Proyectos — fila deslizable */}
-      {projects.length > 0 && (
+      {!loadingProjects && projects.length > 0 && (
         <section className="mt-10 md:mt-14">
           <div className="flex items-baseline justify-between">
             <h3 className="font-display text-xl font-semibold tracking-[-0.02em] text-on-surface md:text-2xl">

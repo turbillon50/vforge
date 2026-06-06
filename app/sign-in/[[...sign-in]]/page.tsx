@@ -10,6 +10,7 @@ import { useT } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
 import { ClerkPlaceholder } from "@/components/auth/ClerkPlaceholder";
+import { PasskeyButton } from "@/components/auth/PasskeyButton";
 
 export default function SignInPage() {
   const t = useT();
@@ -53,7 +54,15 @@ export default function SignInPage() {
             isSignedIn ? (
               <ActiveSessionCard email={user?.primaryEmailAddress?.emailAddress} mode="sign-in" />
             ) : (
-              <SignIn signUpUrl="/sign-up" forceRedirectUrl="/app" appearance={appearance} />
+              <div className="flex w-full max-w-[400px] flex-col items-center gap-4">
+                <SignIn signUpUrl="/sign-up" forceRedirectUrl="/app" appearance={appearance} />
+                <div className="flex w-full items-center gap-3 px-1">
+                  <span className="h-px flex-1 bg-app" />
+                  <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">o</span>
+                  <span className="h-px flex-1 bg-app" />
+                </div>
+                <PasskeyButton redirectUrl="/app" />
+              </div>
             )
           ) : (
             <ClerkPlaceholder mode="sign-in" />
