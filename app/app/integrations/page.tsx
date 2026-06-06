@@ -125,7 +125,7 @@ export default function IntegrationsPage() {
         return {
           name,
           status: ok ? "ok" : "error",
-          detail: String(value),
+          detail: isBool ? (value ? "Activo" : "Inactivo") : String(value),
         };
       })
     : [];

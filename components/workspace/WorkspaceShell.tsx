@@ -121,12 +121,12 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         <div
           className={cn(
             "flex-1 min-h-0 min-w-0 max-w-full overflow-x-hidden",
-            // Chat manages its own bottom clearance via .vf-composer-pad — no
-            // pb-24 here or we get a double-reserve gap. Other routes need pb-24
-            // mobile to clear the floating MobileNav.
+            // La MobileNav vive en el flujo (flex-none) debajo de este
+            // contenedor, asi que NINGUNA ruta reserva espacio extra abajo:
+            // el contenido llena el alto entre header y tab bar, sin hueco.
             pathname?.startsWith("/app/chat")
               ? "overflow-y-hidden"
-              : "overflow-y-auto pb-24 md:pb-0 flex flex-col",
+              : "overflow-y-auto flex flex-col",
           )}
         >
           {children}
@@ -228,7 +228,7 @@ function MobileNav({ pathname }: { pathname: string }) {
     <nav
       aria-label="navegación principal"
       data-vorb-avoid
-      className="vf-mobile-nav glass-strong fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-between gap-0.5 rounded-t-2xl border-t border-app px-2 md:hidden"
+      className="vf-mobile-nav glass-strong z-40 flex flex-none items-stretch justify-between gap-0.5 border-t border-app px-2 md:hidden"
       style={{
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
         minHeight: 60,

@@ -286,11 +286,12 @@ img, svg, video, canvas {
    - Esconde el MobileNav (libera ~80px verticales)
    - Reduce el padding-bottom del composer a solo safe-area
    ============================================ */
-/* MobileNav: floats at bottom: safe-area + 10px, height 56px → total reach
-   from viewport bottom = safe-area + 66px. We add 10px breathing room. */
+/* MobileNav: ahora es parte del flujo flex (flex-none) pegada al fondo real,
+   con su propio paddingBottom = safe-area-inset-bottom para el home indicator. */
 .vf-composer-pad {
-  /* Tab bar fija en toda la app (60px + safe-area): el composer la libra. */
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 68px);
+  /* La tab bar ahora vive en el flujo (flex) justo debajo del composer, asi
+     que el composer NO reserva su altura (evita el doble padding / hueco). */
+  padding-bottom: 8px;
 }
 @media (min-width: 768px) {
   /* Desktop has the sidebar instead of MobileNav — no clearance needed. */
