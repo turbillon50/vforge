@@ -56,16 +56,16 @@ function bucketOf(p: PortfolioProject): Bucket {
 }
 
 const HEALTH_UI: Record<Health, { dot: string; label: string; text: string }> = {
-  vivo:   { dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]", label: "Vivo",   text: "text-emerald-300" },
-  atento: { dot: "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]",   label: "Atento", text: "text-amber-300" },
-  roto:   { dot: "bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.8)]",    label: "Roto",   text: "text-red-300" },
+  vivo:   { dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]", label: "Vivo",   text: "text-emerald-600 dark:text-emerald-300" },
+  atento: { dot: "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]",   label: "Atento", text: "text-amber-600 dark:text-amber-300" },
+  roto:   { dot: "bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.8)]",    label: "Roto",   text: "text-red-600 dark:text-red-300" },
 };
 
 const BUCKET_UI: Record<Bucket, {
   title: string; Icon: typeof Flame; accent: string; chip: string; hint: string;
 }> = {
-  urgentes: { title: "Urgentes", Icon: Flame, accent: "text-red-300", chip: "border-red-400/30 bg-red-500/10", hint: "Atiende hoy" },
-  lana:     { title: "Lana", Icon: Banknote, accent: "text-emerald-300", chip: "border-emerald-400/30 bg-emerald-500/10", hint: "Cobrables ya" },
+  urgentes: { title: "Urgentes", Icon: Flame, accent: "text-red-600 dark:text-red-300", chip: "border-red-400/30 bg-red-500/10", hint: "Atiende hoy" },
+  lana:     { title: "Lana", Icon: Banknote, accent: "text-emerald-600 dark:text-emerald-300", chip: "border-emerald-400/30 bg-emerald-500/10", hint: "Cobrables ya" },
   obra:     { title: "En obra", Icon: Hammer, accent: "text-cyber-cyan", chip: "border-cyan-400/25 bg-cyan-500/10", hint: "Avanzando" },
 };
 
@@ -79,10 +79,10 @@ function ProjectCard({ p }: { p: PortfolioProject }) {
           <span className={`h-2 w-2 flex-none rounded-full ${h.dot}`} title={h.label} />
           <p className="truncate text-sm font-medium text-on-surface">{p.client_name}</p>
         </div>
-        <span className="chip flex-none text-[10px] text-violet-300">{p.status}</span>
+        <span className="chip flex-none text-[10px] text-violet-600 dark:text-violet-300">{p.status}</span>
       </div>
       <div className="mt-3 flex items-baseline justify-between gap-2">
-        <span className={`text-lg font-semibold tabular-nums ${p.debe > 0 ? "text-amber-300" : "text-emerald-300"}`}>
+        <span className={`text-lg font-semibold tabular-nums ${p.debe > 0 ? "text-amber-600 dark:text-amber-300" : "text-emerald-600 dark:text-emerald-300"}`}>
           {p.debe > 0 ? mxn(p.debe) : "Pagado"}
         </span>
         <span className="text-[11px] text-muted tabular-nums">{mxn(p.paid_mxn)} / {mxn(p.total_mxn)}</span>
@@ -95,7 +95,7 @@ function ProjectCard({ p }: { p: PortfolioProject }) {
       </div>
       {p.next_milestone && (
         <p className="mt-3 flex items-center gap-1.5 text-[12px] text-muted">
-          <CalendarClock size={12} className="flex-none text-violet-300" />
+          <CalendarClock size={12} className="flex-none text-violet-600 dark:text-violet-300" />
           <span className="truncate">Siguiente: <span className="text-on-surface">{p.next_milestone}</span></span>
         </p>
       )}
@@ -193,7 +193,7 @@ export default function CockpitPage() {
         title="Centro de Mando"
         description="Tu tablero diario: qué cobrar, qué urge y qué está en obra — con datos vivos de la cartera."
         actions={
-          <span className={`chip ${paused ? "text-amber-300" : "text-emerald-300"}`}>
+          <span className={`chip ${paused ? "text-amber-600 dark:text-amber-300" : "text-emerald-600 dark:text-emerald-300"}`}>
             {paused ? "Fabrica pausada" : "Fabrica activa"}
           </span>
         }
@@ -207,12 +207,12 @@ export default function CockpitPage() {
           </div>
         ) : cartera ? (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <div className="glass rounded-2xl border border-amber-400/25 p-4">
-              <p className="label-caps text-amber-300">Por cobrar</p>
-              <p className="mt-1 text-xl font-semibold tabular-nums text-amber-300 md:text-2xl">{mxn(cartera.totals.debe)}</p>
+            <div className="glass rounded-2xl border border-amber-500/40 dark:border-amber-400/25 p-4">
+              <p className="label-caps text-amber-600 dark:text-amber-300">Por cobrar</p>
+              <p className="mt-1 text-xl font-semibold tabular-nums text-amber-600 dark:text-amber-300 md:text-2xl">{mxn(cartera.totals.debe)}</p>
             </div>
             <div className="glass rounded-2xl border border-white/10 p-4">
-              <p className="label-caps text-emerald-300">Pagado</p>
+              <p className="label-caps text-emerald-600 dark:text-emerald-300">Pagado</p>
               <p className="mt-1 text-xl font-semibold tabular-nums text-on-surface md:text-2xl">{mxn(cartera.totals.paid)}</p>
             </div>
             <div className="glass rounded-2xl border border-white/10 p-4">
@@ -222,14 +222,14 @@ export default function CockpitPage() {
             <div className="glass rounded-2xl border border-white/10 p-4">
               <p className="label-caps text-muted">Salud</p>
               <p className="mt-1 text-sm md:text-base">
-                <span className="font-semibold text-emerald-300">{vivos} vivos</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-300">{vivos} vivos</span>
                 <span className="text-muted"> · </span>
-                <span className={`font-semibold ${rotos > 0 ? "text-red-300" : "text-muted"}`}>{rotos} rotos</span>
+                <span className={`font-semibold ${rotos > 0 ? "text-red-600 dark:text-red-300" : "text-muted"}`}>{rotos} rotos</span>
               </p>
             </div>
           </div>
         ) : (
-          <div className="glass rounded-2xl border border-red-400/25 p-4 text-sm text-red-300">
+          <div className="glass rounded-2xl border border-red-400/25 p-4 text-sm text-red-600 dark:text-red-300">
             No se pudo cargar la cartera. <button onClick={() => { setCarteraError(false); loadCartera(); }} className="underline">Reintentar</button>
           </div>
         )}
@@ -300,7 +300,7 @@ export default function CockpitPage() {
                   <div key={k} className="flex items-center gap-2.5 border-t border-white/5 py-2 text-sm first:border-0">
                     <span className={`h-2 w-2 flex-none rounded-full ${v === "active" ? "bg-emerald-400" : "bg-amber-400"}`} />
                     <span className="text-on-surface">{NICE[k] || k}</span>
-                    <span className={`ml-auto text-[11px] font-medium ${v === "active" ? "text-emerald-300" : "text-amber-300"}`}>{v === "active" ? "VIVO" : "PAUSA"}</span>
+                    <span className={`ml-auto text-[11px] font-medium ${v === "active" ? "text-emerald-600 dark:text-emerald-300" : "text-amber-600 dark:text-amber-300"}`}>{v === "active" ? "VIVO" : "PAUSA"}</span>
                   </div>
                 ))}
               </div>
@@ -335,8 +335,8 @@ export default function CockpitPage() {
             {shortcuts.map((sc) => (
               <Link key={sc.href} href={sc.href} className="group glass flex flex-col gap-2 rounded-2xl border border-white/10 p-4 transition hover:border-violet-400/40">
                 <div className="flex items-center justify-between">
-                  <sc.icon size={20} className="text-violet-300" />
-                  <ArrowUpRight size={16} className="text-muted transition group-hover:text-violet-300" />
+                  <sc.icon size={20} className="text-violet-600 dark:text-violet-300" />
+                  <ArrowUpRight size={16} className="text-muted transition group-hover:text-violet-600 dark:text-violet-300" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-on-surface">{sc.label}</p>
