@@ -243,6 +243,79 @@ async function ensureSemanticMemory(): Promise<void> {
   }
 }
 
+
+type SeedClient = [string, string, string, number, number, string];
+
+const SEED_CARTERA: SeedClient[] = [
+  ["apsus", "APSUS (apsus.live)", "arranque", 12000, 0, "Infra completa — $4,000 el lunes"],
+  ["csn-carnes", "CSN Carnes (carnesn.ink)", "entrega — casi listo", 12000, 4500, "Contenido dinamico + comentarios cliente"],
+  ["decaciones", "Decaciones (decaciones.info)", "en obra", 12000, 4000, "Cover Flow + flujo Spotify"],
+  ["happytoc", "Happytoc (happytoc.life)", "roto: recuperar frontend", 12000, 4000, "Recuperar frontend original + logica actual"],
+  ["istore", "iStore (i-store.shop)", "arranque", 12000, 4000, "Infra completa desde cero"],
+  ["mt-empresarial", "MT Empresarial (mtempresarial.life)", "en obra", 12000, 4000, "Panel administrador completo"],
+  ["yerro-fiscal", "Yerro Fiscal (yerro.ink)", "en obra", 12000, 0, "Explotar features + panel admin"],
+  ["arco-covagps", "Pedro Cova GPS (arco.buzz)", "urgente: codigo perdido", 5000, 3000, "Reconstruir desde cero (ref TrackPoint)"],
+  ["castores-bitacora", "Castores Bitacora (castores.info)", "liquidado", 5000, 5000, "Fix QR + pase lista supervisor + nominas"],
+  ["castores-tienda", "Castores Tienda (castores.live)", "entrega — muy avanzada", 3500, 1500, "Seguimiento hasta cierre"],
+  ["crede-ti", "Crede-Ti (crede-ti.info)", "urgente: verificar entrega", 6000, 6000, "Flujo solicitud-aprobacion + VAPID"],
+  ["el-juego", "El Juego de la Inteligencia", "en obra", 12000, 9000, "Rediseno visual + 2 mascotas LLM"],
+  ["hakapoke", "Hakapoke (hakapoke.ink)", "terminado — cobrar", 5000, 3750, "Integrar Stripe + handoff"],
+  ["lnred", "LN RED (lnred.ink)", "entregado — cobrar", 9000, 6000, "Conectar Mercado Pago para pruebas"],
+  ["rideme", "RideMe (rideme.ink) — socio", "en obra", 3000, 3000, "Panel admin + Google Maps + servidor"],
+  ["ruta618", "Ruta 618 (ruta618.life)", "en obra", 9000, 1500, "Cierre con cliente (VAPID listo)"],
+  ["tortillap", "Tortillap (tortillap.info)", "arranque", 5000, 2500, "Avance visible para cobrar + admin + VAPID"],
+];
+
+async function ensureClientPortfolio(): Promise<void> {
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS client_project_status (
+        project_id     text PRIMARY KEY,
+        client_name    text NOT NULL,
+        status         text NOT NULL DEFAULT 'en obra',
+        total_mxn      numeric NOT NULL DEFAULT 0,
+        paid_mxn       numeric NOT NULL DEFAULT 0,
+        next_milestone text,
+        updated_at     timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+  } catch {
+    // Table already exists
+  }
+
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS v_project_activity (
+        id         bigserial PRIMARY KEY,
+        project_id text NOT NULL,
+        title      text NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_v_project_activity_project
+      ON v_project_activity (project_id, created_at DESC)
+    `;
+  } catch {
+    // Table already exists
+  }
+
+  // Seed inicial desde el mapa de proyectos (jun 2026). ON CONFLICT DO NOTHING:
+  // las ediciones posteriores de Luis SIEMPRE ganan sobre el seed.
+  for (const [id, name, status, total, paid, milestone] of SEED_CARTERA) {
+    try {
+      await sql`
+        INSERT INTO client_project_status
+          (project_id, client_name, status, total_mxn, paid_mxn, next_milestone)
+        VALUES (${id}, ${name}, ${status}, ${total}, ${paid}, ${milestone})
+        ON CONFLICT (project_id) DO NOTHING
+      `;
+    } catch {
+      // Seed row failed, ignore
+    }
+  }
+}
+
 /**
  * Heal the database schema. Runs once per process.
  * Call this from api routes or middleware that execute early.
@@ -258,6 +331,7 @@ export async function healDatabase(): Promise<void> {
     await ensureSeedSkills();
     await ensureOtherTables();
     await ensureSemanticMemory();
+    await ensureClientPortfolio();
   } catch (e) {
     // Silently fail - don't crash the app if database healing fails
     console.error("[V auto-heal] Database healing failed:", e);
