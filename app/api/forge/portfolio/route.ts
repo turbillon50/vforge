@@ -1,4 +1,4 @@
-import { queryAll } from "@/lib/db/client";
+import { queryAll, ensureDatabaseHealed } from "@/lib/db/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,6 +23,7 @@ interface PortfolioRow {
  */
 export async function GET() {
   try {
+    await ensureDatabaseHealed();
     const rows = await queryAll<PortfolioRow>(
       `SELECT s.project_id, s.client_name, s.status,
               s.total_mxn, s.paid_mxn, s.next_milestone, s.updated_at,
