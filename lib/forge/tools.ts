@@ -76,6 +76,43 @@ import {
   type ItemStatus as IntegrationItemStatus,
 } from "@/lib/integrations/plan-db";
 
+/**
+ * Archivos core de V que NUNCA pueden ser modificados vía sus propias tools.
+ * Solo Claude Code (en terminal, con PR revisado por Luis) puede tocarlos.
+ *
+ * Esto blinda contra:
+ *  - alucinaciones de V modificándose el cerebro de forma irreparable
+ *  - sugerencias mal intencionadas inyectadas via prompt
+ *  - bucles de auto-mejora sin gate humano
+ *
+ * El bloqueo se aplica SIEMPRE, incluso con confirmed=true. La única forma
+ * de modificarlos es vía git/PR fuera del agente.
+ */
+const PROTECTED_CORE_REPO = { owner: "turbillon50", repo: "vforge" } as const;
+const PROTECTED_CORE_PATHS = new Set<string>([
+  "lib/forge/tools.ts",
+  "lib/forge/system-prompt.ts",
+  "lib/forge/gemini-adapter.ts",
+  "lib/forge/v-server.ts",
+  "lib/forge/routing.ts",
+  "lib/forge/model-config.ts",
+  "lib/forge/agent-config.ts",
+  "lib/forge/openrouter-catalog.ts",
+  "lib/forge/models.ts",
+]);
+
+function isProtectedCoreFile(
+  owner: string,
+  repo: string,
+  path: string,
+): boolean {
+  if (owner !== PROTECTED_CORE_REPO.owner) return false;
+  if (repo !== PROTECTED_CORE_REPO.repo) return false;
+  // Normaliza path por si llega con leading slash.
+  const norm = path.replace(/^\/+/, "");
+  return PROTECTED_CORE_PATHS.has(norm);
+}
+
 export const TOOLS: Tool[] = [
   {
     name: "github_list_repos",
@@ -1786,6 +1823,19 @@ async function dispatch(
             : "main";
         const confirmed = input.confirmed === true;
 
+        if (isProtectedCoreFile(owner, repo, path)) {
+          return {
+            ok: false,
+            content: JSON.stringify({
+              error: `${path} es un archivo core protegido — V no puede modificarlo por sus propios medios`,
+              instruction: "V: este archivo define tu identidad/cerebro. Si necesitas un cambio, descríbelo a Luis en texto. Él construirá el cambio con Claude Code y lo mergea como PR revisado.",
+              failureCode: "PROTECTED_CORE_FILE",
+              path,
+            }),
+            summary: `bloqueado: ${path} es core protegido`,
+          };
+        }
+
         if (branch === "main" && !confirmed) {
           return {
             ok: false,
@@ -1841,6 +1891,19 @@ async function dispatch(
             ? input.branch
             : "main";
         const confirmed = input.confirmed === true;
+
+        if (isProtectedCoreFile(owner, repo, path)) {
+          return {
+            ok: false,
+            content: JSON.stringify({
+              error: `${path} es un archivo core protegido — V no puede modificarlo por sus propios medios`,
+              instruction: "V: este archivo define tu identidad/cerebro. Si necesitas un cambio, descríbelo a Luis en texto. Él construirá el cambio con Claude Code y lo mergea como PR revisado.",
+              failureCode: "PROTECTED_CORE_FILE",
+              path,
+            }),
+            summary: `bloqueado: ${path} es core protegido`,
+          };
+        }
 
         if (branch === "main" && !confirmed) {
           return {
