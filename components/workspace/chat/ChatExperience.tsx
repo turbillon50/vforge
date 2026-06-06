@@ -93,20 +93,27 @@ type StructuredBlock =
 
 
 function friendlyModel(slug: string): string {
+  // Quita el sufijo de variante (:free/:nitro/...) para no mostrar el id
+  // crudo "barato" en el header. V se ve premium aunque corra en gratis.
+  const base = slug.replace(/:(free|nitro|beta|extended|thinking|online)$/i, "");
   const map: Array<[RegExp, string]> = [
     [/anthropic\/claude-opus-([\d.]+)/, "Claude Opus $1"],
     [/anthropic\/claude-sonnet-([\d.]+)/, "Claude Sonnet $1"],
     [/anthropic\/claude-haiku-([\d.]+)/, "Claude Haiku $1"],
     [/anthropic\/claude-3\.5-sonnet/, "Claude 3.5 Sonnet"],
     [/google\/gemini-([\w.-]+)/, "Gemini $1"],
+    [/google\/gemma-([\w.-]+)/, "Gemma $1"],
+    [/moonshotai\/kimi-([\w.-]+)/, "Kimi $1"],
+    [/minimax\/minimax-([\w.-]+)/, "MiniMax $1"],
     [/meta-llama\/llama-([\w.-]+)/, "Llama $1"],
     [/deepseek\//, "DeepSeek"],
   ];
   for (const [re, name] of map) {
-    const m = slug.match(re);
+    const m = base.match(re);
     if (m) return name.replace("$1", m[1] ?? "");
   }
-  return slug.split("/").pop() ?? slug;
+  // Último recurso: nombre sin proveedor ni sufijo de variante.
+  return base.split("/").pop() ?? base;
 }
 
 type SSEEvent =
