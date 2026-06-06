@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/workspace/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   GitBranch, Workflow, Boxes, CircleCheck, Plus, Cpu, ArrowUpRight,
-  Flame, Banknote, Hammer, CalendarClock,
+  Flame, Banknote, Hammer, CalendarClock, Inbox, StickyNote, ListTodo,
 } from "lucide-react";
 
 type Item = { id: number; kind: string; text: string; done?: boolean };
@@ -199,7 +200,7 @@ export default function CockpitPage() {
         }
       />
 
-      <div className="space-y-5 p-5 md:p-8">
+      <div className="reveal-up space-y-5 p-5 md:p-8">
         {/* KPIs de cartera */}
         {!cartera && !carteraError ? (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -270,7 +271,9 @@ export default function CockpitPage() {
           <div className="glass rounded-2xl border border-white/10 p-5 md:col-span-2">
             <p className="label-caps mb-3 text-cyber-cyan">Pendientes · {open} abiertos</p>
             <div className="space-y-1">
-              {tasks.length === 0 && <p className="py-2 text-sm text-muted">Sin pendientes</p>}
+              {tasks.length === 0 && (
+                <EmptyState compact icon={ListTodo} title="Sin pendientes" hint="Captura abajo lo siguiente que la fabrica debe atender." />
+              )}
               {tasks.map((t) => (
                 <button key={t.id} onClick={() => toggle(t.id)} className="flex w-full items-start gap-3 rounded-lg px-2 py-2 text-left text-sm transition hover:bg-white/5">
                   <span className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-md border-2 transition ${t.done ? "border-emerald-400 bg-emerald-400 text-black" : "border-white/20"}`}>
@@ -308,7 +311,15 @@ export default function CockpitPage() {
 
             <div className="glass rounded-2xl border border-white/10 p-5">
               <p className="label-caps mb-3 text-cyber-cyan">Aprobaciones · {pending.length}</p>
-              {pending.length === 0 && <p className="py-2 text-sm text-muted">Sin demos pendientes</p>}
+              {pending.length === 0 && (
+                <EmptyState
+                  compact
+                  icon={Inbox}
+                  title="Sin demos pendientes"
+                  hint="Cuando un proyecto necesite tu visto bueno, aparece aquí."
+                  cta={{ label: "Ver proyectos", href: "/app/projects" }}
+                />
+              )}
               {pending.map((p: any, i: number) => (
                 <div key={i} className="border-t border-white/5 py-2 text-sm text-on-surface first:border-0">{p.title || p.idea || "lead"}</div>
               ))}
@@ -319,6 +330,9 @@ export default function CockpitPage() {
         <div className="glass rounded-2xl border border-white/10 p-5">
           <p className="label-caps mb-3 text-cyber-cyan">Notas</p>
           <div className="space-y-2">
+            {notes.length === 0 && (
+              <EmptyState compact icon={StickyNote} title="Sin notas" hint="Apunta ideas, recordatorios o contexto del día." />
+            )}
             {notes.map((n) => (
               <div key={n.id} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-on-surface">{n.text}</div>
             ))}

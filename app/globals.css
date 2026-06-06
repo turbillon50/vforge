@@ -394,7 +394,11 @@ body.keyboard-open .vf-mobile-nav {
   }
 }
 
-/* ── Skeletons elegantes (shimmer) ─────────────────────────────── */
+/* ============================================
+   Skeleton loaders (manifiesto B4 — Dopamine UX)
+   Shimmer theme-aware, válido en dark y light,
+   respeta prefers-reduced-motion.
+   ============================================ */
 .vf-skeleton {
   position: relative;
   overflow: hidden;
@@ -419,4 +423,25 @@ body.keyboard-open .vf-mobile-nav {
 }
 @media (prefers-reduced-motion: reduce) {
   .vf-skeleton::after { animation: none; }
+}
+
+/* Entrada suave para cards/tiles — usada con stagger inline.
+   El opacity:0 inicial evita el flash antes de animar. */
+.reveal-up {
+  animation: vf-reveal-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes vf-reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-up {
+    animation: none;
+  }
 }
