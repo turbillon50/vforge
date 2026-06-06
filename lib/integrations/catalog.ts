@@ -64,6 +64,15 @@ export const CATALOG: Record<string, ServiceRec> = {
     validateHint: "Conexión por Stripe Connect; tu dinero llega a tu cuenta.",
     oauthStart: "/api/auth/stripe/start",
   },
+  mercadopago: {
+    id: "mercadopago",
+    name: "Mercado Pago",
+    why: "Para cobrar con tarjeta, OXXO, SPEI y saldo en LatAm.",
+    connectKind: "oauth",
+    signupUrl: "https://www.mercadopago.com/developers",
+    validateHint: "Conexión por Mercado Pago Connect (OAuth); tu dinero llega a tu cuenta.",
+    oauthStart: "/api/auth/mercadopago/start",
+  },
   neon: {
     id: "neon",
     name: "Neon",

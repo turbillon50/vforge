@@ -14,6 +14,7 @@ import {
   Mail,
   Loader2,
   KeyRound,
+  Wallet,
 } from "lucide-react";
 import { useT } from "@/i18n/AppProviders";
 
@@ -36,6 +37,7 @@ export default function IntegrationsPage() {
   const [vcStatus, setVcStatus] = useState<string | null>(null);
   const [neonStatus, setNeonStatus] = useState<string | null>(null);
   const [stripeStatus, setStripeStatus] = useState<string | null>(null);
+  const [mpStatus, setMpStatus] = useState<string | null>(null);
 
   // Resend se conecta pegando API key (no soporta OAuth).
   const [resendKey, setResendKey] = useState("");
@@ -79,11 +81,13 @@ export default function IntegrationsPage() {
     const v = sp.get("vercel");
     const n = sp.get("neon");
     const s = sp.get("stripe");
+    const mp = sp.get("mp");
     if (g) setGhStatus(g);
     if (v) setVcStatus(v);
     if (n) setNeonStatus(n);
     if (s) setStripeStatus(s);
-    if (g || v || n || s) window.history.replaceState({}, "", "/app/integrations");
+    if (mp) setMpStatus(mp);
+    if (g || v || n || s || mp) window.history.replaceState({}, "", "/app/integrations");
   }, []);
 
   useEffect(() => {
@@ -125,7 +129,7 @@ export default function IntegrationsPage() {
         return {
           name,
           status: ok ? "ok" : "error",
-          detail: isBool ? (value ? "Activo" : "Inactivo") : String(value),
+          detail: String(value),
         };
       })
     : [];
@@ -279,6 +283,34 @@ export default function IntegrationsPage() {
             </div>
             <a href="/api/auth/stripe/start" className={oauthBtn(stripeStatus === "connected")}>
               {stripeStatus === "connected" ? (<><CheckCircle2 size={16} /> Reconectar</>) : (<><Link2 size={16} /> Conectar Stripe</>)}
+            </a>
+          </div>
+        </div>
+
+        {/* Conectar Mercado Pago — Connect OAuth (marketplace / split de pagos) */}
+        <div className="mb-6 overflow-hidden rounded-2xl border border-app bg-surface/60 p-5 backdrop-blur-md">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tint-2">
+                <Wallet size={19} className="text-on-surface" />
+              </span>
+              <div>
+                <p className="font-display text-[15px] font-semibold tracking-tight text-on-surface">
+                  Mercado Pago
+                </p>
+                <p className="mt-0.5 text-[13px] leading-snug text-on-surface-variant">
+                  {mpStatus === "connected"
+                    ? "Conectado. Cobros con split de pagos a tu cuenta de Mercado Pago."
+                    : mpStatus === "error_denied"
+                      ? "Autorización cancelada. Reintenta."
+                      : mpStatus && mpStatus.startsWith("error")
+                        ? "No se pudo conectar. Reintenta."
+                        : "Conecta tu cuenta con Mercado Pago Connect — un click."}
+                </p>
+              </div>
+            </div>
+            <a href="/api/auth/mercadopago/start" className={oauthBtn(mpStatus === "connected")}>
+              {mpStatus === "connected" ? (<><CheckCircle2 size={16} /> Reconectar</>) : (<><Link2 size={16} /> Conectar Mercado Pago</>)}
             </a>
           </div>
         </div>
