@@ -907,6 +907,15 @@ required: ["repo", "sha"],
     },
   },
   {
+    name: "self_audit",
+    description:
+      "Auto-diagnóstico de V. Cruza tres fuentes de verdad y devuelve un reporte: 1) skills declaradas en la BD, 2) docs en docs/skills/, 3) tools cableadas en lib/forge/tools.ts. Para cada skill etiqueta: 'real' (BD + doc + todas sus tools existen), 'partial' (falta doc o falta alguna tool) o 'hallucinated' (ninguna tool requerida existe). Úsala cuando Luis pregunte 'qué es real y qué no', 'diagnostícate' o cuando V quiera verificar su propio estado antes de prometer algo. Internamente llama GET /api/v-self-audit.",
+    input_schema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
     name: "directive_list",
     description:
       "Lista las directivas actuales de V (mantra, directive, preference). El mantra son las directivas LOCKED que definen la identidad core de V y no se pueden modificar. Usala cuando Luis pregunte 'cuales son tus reglas' o cuando V quiera ver su configuracion.",
@@ -3181,6 +3190,18 @@ async function dispatch(
         ok: true,
         content: JSON.stringify({ uninstalled: true, id: rows[0].id, name: rows[0].name }),
         summary: `skill desinstalada: ${rows[0].name}`,
+      };
+    }
+
+    case "self_audit": {
+      const { runSelfAudit } = await import("@/lib/forge/self-audit");
+      const report = await runSelfAudit();
+      return {
+        ok: report.ok,
+        content: JSON.stringify(report),
+        summary: report.ok
+          ? `audit OK: ${report.summary.real} real · ${report.summary.partial} partial · ${report.summary.hallucinated} hallucinated · ${report.summary.total_tools_in_code} tools`
+          : `audit FAIL: ${report.summary.hallucinated} skill(s) alucinada(s)${report.db_error ? " + db_error" : ""}`,
       };
     }
 
