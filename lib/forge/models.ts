@@ -83,7 +83,7 @@ export const MODELS: Record<string, ModelInfo> = {
       "anthropic/claude-haiku-4.5",
       "google/gemini-2.5-pro",
       "openai/gpt-5",
-      "minimax/minimax-m2.5:free",
+      "moonshotai/kimi-k2.6:free",
     ],
   },
   "anthropic/claude-sonnet-4.5": {
@@ -100,7 +100,7 @@ export const MODELS: Record<string, ModelInfo> = {
       "anthropic/claude-haiku-4.5",
       "google/gemini-2.5-pro",
       "openai/gpt-5",
-      "minimax/minimax-m2.5:free",
+      "moonshotai/kimi-k2.6:free",
     ],
   },
   "anthropic/claude-haiku-4.5": {
@@ -115,7 +115,7 @@ export const MODELS: Record<string, ModelInfo> = {
     goodFor: ["classification", "summarization", "extraction"],
     fallbackChain: [
       "google/gemini-2.5-flash",
-      "minimax/minimax-m2.5:free",
+      "moonshotai/kimi-k2.6:free",
       "google/gemma-4-31b-it:free",
     ],
   },
@@ -148,7 +148,7 @@ export const MODELS: Record<string, ModelInfo> = {
     goodFor: ["classification", "summarization", "extraction"],
     fallbackChain: [
       "anthropic/claude-haiku-4.5",
-      "minimax/minimax-m2.5:free",
+      "moonshotai/kimi-k2.6:free",
       "google/gemma-4-31b-it:free",
     ],
   },
@@ -171,15 +171,19 @@ export const MODELS: Record<string, ModelInfo> = {
   },
 
   // ─── Free models (subject to 50/day cap; 1000/day if account has $10 loaded) ───
-  "minimax/minimax-m2.5:free": {
-    slug: "minimax/minimax-m2.5:free",
-    label: "MiniMax M2.5 (free)",
+  // Kimi K2.6 free es el motor gratis primario de V: existe en OpenRouter,
+  // soporta tool-calling y maneja 262k de contexto. El slug DEBE llevar el
+  // prefijo `moonshotai/` — sin él OpenRouter responde 404 (lo que el chat
+  // traducía a "Recurso no encontrado" y mataba el tool-calling).
+  "moonshotai/kimi-k2.6:free": {
+    slug: "moonshotai/kimi-k2.6:free",
+    label: "Kimi K2.6 (free)",
     costInPer1M: 0,
     costOutPer1M: 0,
     tier: "cheap",
     kind: "free",
     supportsTools: true,
-    contextWindow: 196_608,
+    contextWindow: 262_144,
     goodFor: ["chat-main", "classification", "summarization"],
     fallbackChain: [
       "google/gemma-4-31b-it:free",
@@ -196,7 +200,7 @@ export const MODELS: Record<string, ModelInfo> = {
     supportsTools: true,
     contextWindow: 262_144,
     goodFor: ["classification", "summarization", "extraction"],
-    fallbackChain: ["minimax/minimax-m2.5:free", "google/gemini-2.5-flash"],
+    fallbackChain: ["moonshotai/kimi-k2.6:free", "google/gemini-2.5-flash"],
   },
 };
 
@@ -209,7 +213,7 @@ export const TASK_PREFERENCES: Record<TaskKind, ReadonlyArray<string>> = {
     "anthropic/claude-sonnet-4.6",
     "google/gemini-2.5-pro",
     "anthropic/claude-haiku-4.5",
-    "minimax/minimax-m2.5:free",
+    "moonshotai/kimi-k2.6:free",
   ],
   reasoning: [
     "anthropic/claude-opus-4.7",
@@ -225,13 +229,13 @@ export const TASK_PREFERENCES: Record<TaskKind, ReadonlyArray<string>> = {
   classification: [
     "google/gemini-2.5-flash",
     "anthropic/claude-haiku-4.5",
-    "minimax/minimax-m2.5:free",
+    "moonshotai/kimi-k2.6:free",
     "google/gemma-4-31b-it:free",
   ],
   summarization: [
     "google/gemini-2.5-flash",
     "anthropic/claude-haiku-4.5",
-    "minimax/minimax-m2.5:free",
+    "moonshotai/kimi-k2.6:free",
   ],
   extraction: [
     "anthropic/claude-haiku-4.5",
@@ -280,6 +284,11 @@ const LEGACY_SLUG_MAP: Record<string, string> = {
   "anthropic/claude-sonnet-4-6": "anthropic/claude-sonnet-4.6",
   "anthropic/claude-sonnet-4-5": "anthropic/claude-sonnet-4.5",
   "anthropic/claude-haiku-4-5": "anthropic/claude-haiku-4.5",
+  // Slug "pelón" sin proveedor: si agent_config quedó con el id corto, lo
+  // resolvemos al slug válido de OpenRouter (si no, 404 → "Recurso no
+  // encontrado" y muere el tool-calling).
+  "kimi-k2.6:free": "moonshotai/kimi-k2.6:free",
+  "kimi-k2.6": "moonshotai/kimi-k2.6",
 };
 
 /**
