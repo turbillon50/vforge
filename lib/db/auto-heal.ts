@@ -208,6 +208,25 @@ async function ensureOtherTables(): Promise<void> {
   } catch {
     // Table already exists
   }
+
+  // Eventos de webhook de Mercado Pago (ver app/api/mp/webhook/route.ts).
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS mp_events (
+        id          text PRIMARY KEY,
+        type        text,
+        action      text,
+        data_id     text,
+        live_mode   boolean,
+        raw         jsonb NOT NULL DEFAULT '{}'::jsonb,
+        created_at  timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+    await sql`CREATE INDEX IF NOT EXISTS idx_mp_events_data_id ON mp_events (data_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_mp_events_created_at ON mp_events (created_at DESC)`;
+  } catch {
+    // Table already exists
+  }
 }
 
 async function ensureSemanticMemory(): Promise<void> {
