@@ -4,6 +4,19 @@ import { ANON_PRINCIPAL, type McpPrincipal, canCallTool, toolKind } from "@/lib/
 
 const PROTOCOL_VERSION = "2024-11-05";
 
+/** URL de la Protected Resource Metadata (RFC 9728). El WWW-Authenticate de los
+ *  401 apunta aquí para que Claude descubra el authorization server y arranque
+ *  el flujo OAuth (Ajustes → Conectores → Add custom connector). */
+const RESOURCE_METADATA_URL =
+  (
+    process.env.MCP_PUBLIC_ORIGIN ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "https://vforge.site"
+  ).replace(/\/$/, "") + "/.well-known/oauth-protected-resource";
+
+const WWW_AUTH = `Bearer resource_metadata="${RESOURCE_METADATA_URL}"`;
+const WWW_AUTH_INVALID = `Bearer error="invalid_token", resource_metadata="${RESOURCE_METADATA_URL}"`;
+
 function rpc(id: unknown, result?: unknown, error?: { code: number; message: string }) {
   const body: Record<string, unknown> = { jsonrpc: "2.0", id: id ?? null };
   if (error) body.error = error;
@@ -14,28 +27,40 @@ function rpc(id: unknown, result?: unknown, error?: { code: number; message: str
   });
 }
 
-function unauthorized(id: unknown, message: string) {
+function unauthorized(id: unknown, message: string, wwwAuth: string = WWW_AUTH) {
   return new Response(
     JSON.stringify({ jsonrpc: "2.0", id: id ?? null, error: { code: -32001, message } }),
-    { status: 401, headers: { "Content-Type": "application/json", "WWW-Authenticate": "Bearer" } },
+    { status: 401, headers: { "Content-Type": "application/json", "WWW-Authenticate": wwwAuth } },
   );
 }
 
+type AuthResult =
+  | { kind: "ok"; principal: McpPrincipal }
+  | { kind: "missing" }
+  | { kind: "invalid" };
+
 /**
- * Resuelve el principal de la request. Sin token => principal público anónimo
- * (puede usar tools públicas, 401 en datos). Token presentado pero inválido
- * => null (401 duro).
+ * Resuelve el principal de la request a partir del Bearer.
+ *  - sin cabecera Bearer    => "missing" (401 + WWW-Authenticate → discovery OAuth)
+ *  - token presente inválido => "invalid" (401 + WWW-Authenticate)
+ *  - token válido            => principal (manual vfmcp_* u OAuth, mismo formato)
  */
-async function principalFromRequest(req: Request): Promise<McpPrincipal | null> {
+async function principalFromRequest(req: Request): Promise<AuthResult> {
   const authz = req.headers.get("authorization") || "";
   const m = authz.match(/^Bearer\s+(.+)$/i);
-  if (!m) return ANON_PRINCIPAL; // sin token = público (no es 401: las públicas responden)
-  return resolveMcpToken(m[1].trim()); // null si el token es inválido
+  if (!m) return { kind: "missing" };
+  const principal = await resolveMcpToken(m[1].trim());
+  return principal ? { kind: "ok", principal } : { kind: "invalid" };
 }
 
 /**
  * Núcleo compartido del handler MCP (JSON-RPC sobre HTTP). `forcePublic` lo usa
  * /api/mcp/public para degradar siempre a scope público sin importar el token.
+ *
+ * En /api/mcp (forcePublic=false) la AUSENCIA o invalidez del token devuelve
+ * 401 con WWW-Authenticate apuntando al resource metadata: así Claude descubre
+ * el flujo OAuth. Los Bearer manuales (vfmcp_*) siguen funcionando igual. La
+ * superficie pública sin auth vive en /api/mcp/public.
  */
 export async function handleMcp(req: Request, forcePublic = false): Promise<Response> {
   // El endpoint /api/mcp/public nunca valida token: siempre scope público.
@@ -44,11 +69,18 @@ export async function handleMcp(req: Request, forcePublic = false): Promise<Resp
     principal = ANON_PRINCIPAL;
   } else {
     const resolved = await principalFromRequest(req);
-    if (!resolved) {
-      // Token presentado pero inválido/inexistente => 401 duro.
-      return unauthorized(null, "unauthorized: token MCP inválido");
+    if (resolved.kind === "missing") {
+      return unauthorized(
+        null,
+        "unauthorized: autenticación requerida. Conecta vía OAuth (Add custom connector) " +
+          "o presenta un Bearer vfmcp_ válido. Sin auth, usa /api/mcp/public.",
+        WWW_AUTH,
+      );
     }
-    principal = resolved;
+    if (resolved.kind === "invalid") {
+      return unauthorized(null, "unauthorized: token MCP inválido o expirado.", WWW_AUTH_INVALID);
+    }
+    principal = resolved.principal;
   }
 
   let msg: { id?: unknown; method?: string; params?: Record<string, unknown> };

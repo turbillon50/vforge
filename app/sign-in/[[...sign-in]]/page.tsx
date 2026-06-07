@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { SignIn, SignOutButton, useUser } from "@clerk/nextjs";
 import { useClerkAppearance } from "@/lib/clerk-appearance";
 import Link from "next/link";
@@ -17,6 +18,14 @@ export default function SignInPage() {
   const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
   const appearance = useClerkAppearance();
   const { isSignedIn, user } = useUser();
+
+  // Respeta ?redirect_url=/ruta (mismo origen) para volver tras el login — lo
+  // usa el flujo OAuth del MCP (/api/mcp/oauth/authorize). Default: /app.
+  const [returnTo, setReturnTo] = useState("/app");
+  useEffect(() => {
+    const r = new URLSearchParams(window.location.search).get("redirect_url");
+    if (r && r.startsWith("/") && !r.startsWith("//")) setReturnTo(r);
+  }, []);
 
   return (
     <div className="relative isolate flex min-h-dvh flex-col overflow-hidden" style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
@@ -55,13 +64,13 @@ export default function SignInPage() {
               <ActiveSessionCard email={user?.primaryEmailAddress?.emailAddress} mode="sign-in" />
             ) : (
               <div className="flex w-full max-w-[400px] flex-col items-center gap-4">
-                <SignIn signUpUrl="/sign-up" forceRedirectUrl="/app" appearance={appearance} />
+                <SignIn signUpUrl="/sign-up" forceRedirectUrl={returnTo} appearance={appearance} />
                 <div className="flex w-full items-center gap-3 px-1">
                   <span className="h-px flex-1 bg-app" />
                   <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">o</span>
                   <span className="h-px flex-1 bg-app" />
                 </div>
-                <PasskeyButton redirectUrl="/app" />
+                <PasskeyButton redirectUrl={returnTo} />
               </div>
             )
           ) : (

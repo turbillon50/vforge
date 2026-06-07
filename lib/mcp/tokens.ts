@@ -25,7 +25,15 @@ async function ensureTable() {
   // RBAC columns (idempotent — safe si la migración 012 ya corrió).
   await sql()`ALTER TABLE mcp_tokens ADD COLUMN IF NOT EXISTS scope text NOT NULL DEFAULT 'client'`;
   await sql()`ALTER TABLE mcp_tokens ADD COLUMN IF NOT EXISTS org_id text`;
+  // expires_at: NULL = nunca expira (tokens manuales vfmcp_). Los emitidos por
+  // OAuth llevan caducidad y se renuevan con refresh_token.
+  await sql()`ALTER TABLE mcp_tokens ADD COLUMN IF NOT EXISTS expires_at timestamptz`;
   _ensured = true;
+}
+
+/** scope interno → label OAuth público. */
+export function oauthScopeLabel(scope: McpScope): string {
+  return scope === "admin" ? "mcp:operator" : scope === "public" ? "mcp:public" : "mcp:client";
 }
 
 const hash = (t: string) => createHash("sha256").update(t).digest("hex");
@@ -63,6 +71,27 @@ export async function createMcpToken(userId: string, label = "VForge MCP"): Prom
 }
 
 /**
+ * Emite un access_token MCP para OAuth: mismo formato vfmcp_ (lo resuelve el
+ * mismo /api/mcp), pero con caducidad. Reusa mcp_tokens ligado al userId Clerk.
+ * Devuelve el token, su scope efectivo y la caducidad en segundos.
+ */
+export async function createOAuthAccessToken(
+  userId: string,
+  ttlSeconds: number,
+  label = "VForge MCP (OAuth)",
+): Promise<{ token: string; scope: McpScope; expiresIn: number }> {
+  await ensureTable();
+  const { scope, orgId } = await scopeForUser(userId);
+  const token = "vfmcp_" + randomBytes(24).toString("hex");
+  const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString();
+  await sql()`
+    INSERT INTO mcp_tokens (token_hash, clerk_user_id, label, scope, org_id, expires_at)
+    VALUES (${hash(token)}, ${userId}, ${label}, ${scope}, ${orgId}, ${expiresAt})
+  `;
+  return { token, scope, expiresIn: ttlSeconds };
+}
+
+/**
  * Crea un token MCP PÚBLICO (marketing). No requiere usuario; scope=public,
  * sin org. Sólo sirve para las tools públicas (getting_started, vforge_method,
  * help). 401 en cualquier tool de datos.
@@ -86,10 +115,12 @@ export async function resolveMcpToken(token: string): Promise<McpPrincipal | nul
   try {
     await ensureTable();
     const rows = (await sql()`
-      SELECT clerk_user_id, scope, org_id
+      SELECT clerk_user_id, scope, org_id,
+             (expires_at IS NOT NULL AND expires_at < now()) AS expired
       FROM mcp_tokens WHERE token_hash = ${hash(token)} LIMIT 1
-    `) as Array<{ clerk_user_id: string; scope: string | null; org_id: string | null }>;
+    `) as Array<{ clerk_user_id: string; scope: string | null; org_id: string | null; expired: boolean }>;
     if (rows.length === 0) return null;
+    if (rows[0].expired) return null; // caducado (OAuth) ⇒ el cliente debe refrescar
     await sql()`UPDATE mcp_tokens SET last_used_at = now() WHERE token_hash = ${hash(token)}`;
     const r = rows[0];
     const scope: McpScope =
