@@ -317,6 +317,35 @@ async function ensureClientPortfolio(): Promise<void> {
 }
 
 /**
+ * MCP RBAC + multi-tenant isolation columns. org_id is the tenant key on the
+ * tables read by the MCP data tools. NULL = operator-only (admin sees it,
+ * clients never do). Idempotent. See migration 012_mcp_rbac.sql.
+ */
+async function ensureMcpRbac(): Promise<void> {
+  const alters = [
+    "ALTER TABLE projects ADD COLUMN IF NOT EXISTS org_id text",
+    "ALTER TABLE client_project_status ADD COLUMN IF NOT EXISTS org_id text",
+  ];
+  for (const a of alters) {
+    try {
+      await sql.query(a);
+    } catch {
+      // table may not exist yet in some envs, or column already present
+    }
+  }
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_projects_org ON projects (org_id)`;
+  } catch {
+    /* ignore */
+  }
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_client_project_status_org ON client_project_status (org_id)`;
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
  * Heal the database schema. Runs once per process.
  * Call this from api routes or middleware that execute early.
  */
@@ -332,6 +361,7 @@ export async function healDatabase(): Promise<void> {
     await ensureOtherTables();
     await ensureSemanticMemory();
     await ensureClientPortfolio();
+    await ensureMcpRbac();
   } catch (e) {
     // Silently fail - don't crash the app if database healing fails
     console.error("[V auto-heal] Database healing failed:", e);
