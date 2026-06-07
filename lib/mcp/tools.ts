@@ -1,10 +1,9 @@
-import { queryAll, queryOne, sql } from "@/lib/db/client";
+import { queryAll, queryOne, sql, ensureDatabaseHealed } from "@/lib/db/client";
 import { recall } from "@/lib/forge/semantic-recall";
-import { isOwnerEmail } from "@/lib/auth/owner";
-import { clerkClient } from "@clerk/nextjs/server";
 import { resolveAccessForUser } from "@/lib/connect/resolve-token";
 import { githubClientFromToken } from "@/lib/github/client";
 import { randomBytes } from "node:crypto";
+import { type McpPrincipal, isPublicTool } from "./rbac";
 
 export interface McpToolDef {
   name: string;
@@ -18,6 +17,28 @@ const CONFIRM_PROPS = {
 };
 
 export const MCP_TOOLS: McpToolDef[] = [
+  /* ============================ TOOLS PÚBLICAS ============================ */
+  /* Marketing — sin datos privados. Accesibles con token public o sin auth.  */
+  {
+    name: "getting_started",
+    description:
+      "PÚBLICA: qué es VForge y cómo conectarse. README vivo — explica la fábrica de apps, qué hace el agente V, cómo obtener un token MCP y empezar. No expone datos privados.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "vforge_method",
+    description:
+      "PÚBLICA: el Método VForge resumido — las 3 capas, los anillos de privilegio y el stack validado con el que VForge construye y opera apps. No expone datos privados.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "help",
+    description:
+      "PÚBLICA: lista las tools del MCP de VForge, qué hace cada una y qué scope necesita (público / con token). Punto de entrada para orientarse. No expone datos privados.",
+    inputSchema: { type: "object", properties: {} },
+  },
+
+  /* ============================== TOOLS DE DATOS ============================== */
   {
     name: "vforge_brain_search",
     description:
@@ -48,7 +69,17 @@ export const MCP_TOOLS: McpToolDef[] = [
   },
   {
     name: "vforge_project_status",
-    description: "Estado de los proyectos del usuario en VForge (solo lo que le pertenece). Requiere que el usuario tenga proyectos.",
+    description: "DATOS (admin|client): estado de los proyectos en VForge. Admin (operador) ve todos; client ve SOLO los de su org_id. Aislado por tenant.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "vforge_payments",
+    description: "DATOS (admin|client): pagos y avance financiero (total/pagado/pendiente) de los proyectos. Admin ve todo; client ve SOLO su org_id. Aislado por tenant.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "vforge_apps_health",
+    description: "DATOS (admin|client): salud/estado de despliegue de las apps (live/building/error/idle). Admin ve todo; client ve SOLO su org_id. Aislado por tenant.",
     inputSchema: { type: "object", properties: {} },
   },
   {
@@ -112,12 +143,11 @@ export const MCP_TOOLS: McpToolDef[] = [
   },
 ];
 
-async function isOwner(userId: string): Promise<boolean> {
-  try {
-    const cc = await clerkClient();
-    const u = await cc.users.getUser(userId);
-    return (u.emailAddresses ?? []).some((e) => isOwnerEmail(e.emailAddress));
-  } catch { return false; }
+/** Tools visibles para un principal: public ve sólo las públicas; admin|client
+ *  ven todas. Lo usa tools/list para no anunciar tools que igual rebotarían. */
+export function mcpToolsForScope(principal: McpPrincipal): McpToolDef[] {
+  if (principal.scope === "admin" || principal.scope === "client") return MCP_TOOLS;
+  return MCP_TOOLS.filter((t) => isPublicTool(t.name));
 }
 
 function text(t: string) {
@@ -290,18 +320,122 @@ async function kbByTitlePrefix(prefix: string): Promise<string | null> {
   return row?.content ?? null;
 }
 
+/* ============================== contenido público ============================== */
+
+const GETTING_STARTED = `# VForge — empieza aquí
+
+VForge es una fábrica de aplicaciones operada por un agente (V): construye, despliega y mantiene apps por conversación. Tú describes lo que quieres; V conecta GitHub, Vercel, Neon, Stripe/Mercado Pago, Clerk y opera el ciclo completo.
+
+## Cómo conectarte (MCP)
+1. Entra a https://vforge.site e inicia sesión.
+2. Genera tu token MCP: POST https://vforge.site/api/mcp/token (estando logueado). Se muestra UNA sola vez.
+3. Configura tu cliente MCP:
+   • URL:  https://vforge.site/api/mcp
+   • Auth: Bearer <tu-token>
+4. Llama \`help\` para ver las tools, o \`vforge_method\` para el método.
+
+## Scopes
+• Tu token te aísla a TU forge: sólo ves tus propios proyectos, pagos y apps.
+• El operador (admin) ve todo; tú nunca ves datos de otro cliente.
+• Sin token puedes usar las tools públicas (getting_started, vforge_method, help) en https://vforge.site/api/mcp/public.`;
+
+const VFORGE_METHOD = `# El Método VForge (resumen)
+
+## Las 3 capas de construcción
+1. Capa 1 — prompt descriptivo a un generador visual (layout, copy, microinteracciones).
+2. Capa 2 — JSX/CSS literal para componentes icónicos donde la geometría debe ser exacta.
+3. Capa 3 — código directo en el repo (configs, refactors cross-file, CI, docs, git ops).
+
+## Anillos de privilegio (cuándo avisar, no pedir permiso)
+• Anillo 0 — sólo lectura: ejecuta directo.
+• Anillo 1 — escritura en repo: ejecuta directo.
+• Anillo 2 — infra (deploy, env vars, DNS): ejecuta directo.
+• Anillo 3 — irreversible de gran blast radius: ejecuta y avisa en la misma respuesta.
+
+## Stack validado
+Next.js (App Router) + TypeScript + Tailwind + Clerk (auth) + Neon (Postgres serverless) + Vercel (deploy) + Stripe/Mercado Pago (pagos). Todo se conecta por OAuth/API key y se opera por conversación.`;
+
+function helpText(principal: McpPrincipal): string {
+  const lines: string[] = [];
+  lines.push("# VForge MCP — tools disponibles\n");
+  lines.push("## Públicas (sin token / token public)");
+  lines.push("• getting_started — qué es VForge y cómo conectarte.");
+  lines.push("• vforge_method — el método VForge resumido.");
+  lines.push("• help — esta ayuda.\n");
+  lines.push("## De datos (requieren token admin|client; aisladas por tenant)");
+  lines.push("• vforge_project_status — estado de tus proyectos.");
+  lines.push("• vforge_payments — avance financiero (total/pagado/pendiente).");
+  lines.push("• vforge_apps_health — salud de despliegue de tus apps.");
+  lines.push("• vforge_brain_search — memoria y método de VForge.");
+  lines.push("• vforge_skill_list — skills disponibles.");
+  lines.push("• vforge_integration_plan — qué servicios conectar para tu proyecto.");
+  lines.push("• vforge_recommend_stack — stack técnico recomendado.");
+  lines.push("• vforge_create_repo / vforge_deploy / vforge_scaffold_project — ejecutables (two-step).");
+  lines.push("• vforge_execute_skill — ejecuta una skill (sólo operador).");
+  const scopeName =
+    principal.scope === "admin" ? "admin (operador — ves todo)" :
+    principal.scope === "client" ? "client (ves SOLO tu forge)" :
+    "public (sólo tools públicas)";
+  lines.push(`\nTu scope actual: ${scopeName}.`);
+  return lines.join("\n");
+}
+
 /* ============================== runMcpTool ============================== */
 
-export async function runMcpTool(name: string, args: Record<string, unknown>, userId: string) {
+export async function runMcpTool(
+  name: string,
+  args: Record<string, unknown>,
+  principal: McpPrincipal,
+) {
+  // --- Tools PÚBLICAS: sin datos privados, cualquier scope (incl. public) ---
+  switch (name) {
+    case "getting_started":
+      return text(GETTING_STARTED);
+    case "vforge_method":
+      return text(VFORGE_METHOD);
+    case "help":
+      return text(helpText(principal));
+  }
+
+  // --- GATE de datos: todo lo demás exige admin|client. public/anon => 401. ---
+  if (principal.scope !== "admin" && principal.scope !== "client") {
+    return err(
+      "401: esta tool requiere un token MCP válido (admin o client). " +
+        "Genera el tuyo en https://vforge.site/api/mcp/token. " +
+        "Sin token sólo puedes usar getting_started, vforge_method y help.",
+    );
+  }
+
+  const userId = principal.userId ?? "";
+  const isAdminScope = principal.scope === "admin";
+  const orgId = principal.orgId; // null para admin (filtro deshabilitado)
+
+  // Garantiza que las columnas org_id (aislamiento) existan antes de consultar.
+  await ensureDatabaseHealed().catch(() => {});
+
   switch (name) {
     case "vforge_brain_search": {
       const q = String(args.query ?? "").slice(0, 300);
       if (!q) return err("Falta 'query'.");
 
-      const kb = await queryAll<{ title: string; content: string; kind: string | null }>(
-        "SELECT title, content, kind FROM knowledge_base WHERE content ILIKE $1 OR title ILIKE $1 ORDER BY created_at DESC LIMIT 12",
-        ["%" + q + "%"],
-      ).catch(() => []);
+      // AISLAMIENTO: el operador (admin) ve toda la base; un client SOLO ve
+      // contenido público del método/runbooks — nunca perfil de operador,
+      // credenciales ni notas de otros tenants.
+      const kb = isAdminScope
+        ? await queryAll<{ title: string; content: string; kind: string | null }>(
+            "SELECT title, content, kind FROM knowledge_base WHERE content ILIKE $1 OR title ILIKE $1 ORDER BY created_at DESC LIMIT 12",
+            ["%" + q + "%"],
+          ).catch(() => [])
+        : await queryAll<{ title: string; content: string; kind: string | null }>(
+            `SELECT title, content, kind FROM knowledge_base
+             WHERE (content ILIKE $1 OR title ILIKE $1)
+               AND kind IN ('method', 'runbook', 'example', 'adr')
+               AND title  NOT ILIKE '%credencial%' AND title  NOT ILIKE '%secret%'
+               AND title  NOT ILIKE '%token%'      AND title  NOT ILIKE '%password%'
+               AND title  NOT ILIKE '%api key%'
+             ORDER BY created_at DESC LIMIT 12`,
+            ["%" + q + "%"],
+          ).catch(() => []);
 
       // dedupe curados por título / inicio de contenido
       const seen = new Set<string>();
@@ -333,8 +467,10 @@ export async function runMcpTool(name: string, args: Record<string, unknown>, us
         if (lines?.length) sections.push(`## ${order}\n${lines.join("\n")}`);
       }
 
-      // crudos semánticos solo si hay pocos curados
-      if (curated.length < 3) {
+      // crudos semánticos solo si hay pocos curados. AISLAMIENTO: la memoria
+      // semántica (recall) cruza conversaciones; sólo el operador (admin) la
+      // ve. Un client jamás recibe fragmentos de chats de otros.
+      if (isAdminScope && curated.length < 3) {
         const hits = await recall(q, 6).catch(() => []);
         const raw: string[] = [];
         for (const h of hits as Array<{ content: string; score?: number }>) {
@@ -398,12 +534,66 @@ export async function runMcpTool(name: string, args: Record<string, unknown>, us
     }
 
     case "vforge_project_status": {
-      const owner = await isOwner(userId);
-      if (!owner) return text("No tienes proyectos registrados todavía. Crea uno desde tu workspace de VForge.");
-      const rows = await queryAll<{ name: string; category: string; status: string; vercel_url: string | null }>(
-        "SELECT name, category, status, vercel_url FROM projects ORDER BY name LIMIT 60",
-      ).catch(() => []);
-      return text(rows.map((r) => `• ${r.name} [${r.category}] ${r.vercel_url ?? ""}`).join("\n") || "Sin proyectos.");
+      // AISLAMIENTO: admin ve todos los proyectos; client SOLO los de su
+      // org_id. El filtro org_id se aplica en SQL — nunca se traen filas de
+      // otro tenant para luego filtrarlas en memoria.
+      const rows = isAdminScope
+        ? await queryAll<{ name: string; category: string; status: string; vercel_url: string | null }>(
+            "SELECT name, category, status, vercel_url FROM projects ORDER BY name LIMIT 60",
+          ).catch(() => [])
+        : await queryAll<{ name: string; category: string; status: string; vercel_url: string | null }>(
+            "SELECT name, category, status, vercel_url FROM projects WHERE org_id = $1 ORDER BY name LIMIT 60",
+            [orgId],
+          ).catch(() => []);
+      if (rows.length === 0) {
+        return text(
+          isAdminScope
+            ? "Sin proyectos."
+            : "No tienes proyectos en tu forge todavía. Crea uno desde tu workspace de VForge.",
+        );
+      }
+      return text(rows.map((r) => `• ${r.name} [${r.category}] ${r.status} ${r.vercel_url ?? ""}`.trim()).join("\n"));
+    }
+
+    case "vforge_payments": {
+      // AISLAMIENTO: admin ve todos los pagos; client SOLO los de su org_id.
+      const rows = isAdminScope
+        ? await queryAll<{ client_name: string; status: string; total_mxn: number; paid_mxn: number; next_milestone: string | null }>(
+            "SELECT client_name, status, total_mxn, paid_mxn, next_milestone FROM client_project_status ORDER BY client_name LIMIT 100",
+          ).catch(() => [])
+        : await queryAll<{ client_name: string; status: string; total_mxn: number; paid_mxn: number; next_milestone: string | null }>(
+            "SELECT client_name, status, total_mxn, paid_mxn, next_milestone FROM client_project_status WHERE org_id = $1 ORDER BY client_name LIMIT 100",
+            [orgId],
+          ).catch(() => []);
+      if (rows.length === 0) {
+        return text(isAdminScope ? "Sin pagos registrados." : "No hay pagos en tu forge todavía.");
+      }
+      const fmt = (n: number) => "$" + Number(n).toLocaleString("es-MX");
+      const lines = rows.map((r) => {
+        const pend = Number(r.total_mxn) - Number(r.paid_mxn);
+        return `• ${r.client_name} [${r.status}] total ${fmt(r.total_mxn)} · pagado ${fmt(r.paid_mxn)} · pendiente ${fmt(pend)}${r.next_milestone ? ` · próximo: ${r.next_milestone}` : ""}`;
+      });
+      return text(lines.join("\n"));
+    }
+
+    case "vforge_apps_health": {
+      // AISLAMIENTO: admin ve la salud de todas las apps; client SOLO su org_id.
+      const rows = isAdminScope
+        ? await queryAll<{ name: string; status: string; category: string; vercel_url: string | null; last_audit_score: number | null }>(
+            "SELECT name, status, category, vercel_url, last_audit_score FROM projects ORDER BY name LIMIT 100",
+          ).catch(() => [])
+        : await queryAll<{ name: string; status: string; category: string; vercel_url: string | null; last_audit_score: number | null }>(
+            "SELECT name, status, category, vercel_url, last_audit_score FROM projects WHERE org_id = $1 ORDER BY name LIMIT 100",
+            [orgId],
+          ).catch(() => []);
+      if (rows.length === 0) {
+        return text(isAdminScope ? "Sin apps registradas." : "No tienes apps en tu forge todavía.");
+      }
+      const icon: Record<string, string> = { live: "🟢", building: "🟡", error: "🔴", idle: "⚪", unknown: "⚫" };
+      const lines = rows.map(
+        (r) => `${icon[r.status] ?? "⚫"} ${r.name} — ${r.status}${r.last_audit_score != null ? ` (score ${r.last_audit_score})` : ""} ${r.vercel_url ?? ""}`.trim(),
+      );
+      return text(lines.join("\n"));
     }
 
     /* ---------------------- ejecutables con gate ---------------------- */
