@@ -1,4 +1,5 @@
 import { queryAll, queryOne, sql, ensureDatabaseHealed } from "@/lib/db/client";
+import { brainQueryAll } from "@/lib/db/brain";
 import { recall } from "@/lib/forge/semantic-recall";
 import { resolveAccessForUser } from "@/lib/connect/resolve-token";
 import { githubClientFromToken } from "@/lib/github/client";
@@ -320,6 +321,28 @@ async function kbByTitlePrefix(prefix: string): Promise<string | null> {
   return row?.content ?? null;
 }
 
+/**
+ * brain_files no tiene columna `kind`; derivamos una categoría a partir del
+ * prefijo del nombre para poder agrupar los resultados igual que knowledge_base.
+ */
+function brainKind(name: string): string {
+  const n = name.toLowerCase();
+  if (n.startsWith("roadmap")) return "roadmap";
+  if (n.startsWith("leccion") || n.startsWith("lección")) return "lesson";
+  if (n.startsWith("runbook")) return "runbook";
+  if (n.startsWith("credencial") || n.startsWith("accesos") || n.startsWith("alias")) return "credential";
+  if (n.startsWith("experto") || n.startsWith("curso") || n.startsWith("stack")) return "knowledge";
+  if (n.startsWith("metodo") || n.startsWith("método") || n.includes("method")) return "method";
+  return "memory";
+}
+
+/**
+ * Nombres del brain que NUNCA debe ver un client (sólo el operador/admin):
+ * credenciales, accesos, llaves, hosts. El conocimiento/método/memoria SÍ es
+ * global y visible para cualquier token válido.
+ */
+const BRAIN_SENSITIVE = /credencial|secret|token|password|api[\s_-]?key|^accesos|^alias|ssh|superadmin/i;
+
 /* ============================== contenido público ============================== */
 
 const GETTING_STARTED = `# VForge — empieza aquí
@@ -417,14 +440,33 @@ export async function runMcpTool(
     case "vforge_brain_search": {
       const q = String(args.query ?? "").slice(0, 300);
       if (!q) return err("Falta 'query'.");
+      const like = "%" + q + "%";
 
-      // AISLAMIENTO: el operador (admin) ve toda la base; un client SOLO ve
-      // contenido público del método/runbooks — nunca perfil de operador,
-      // credenciales ni notas de otros tenants.
+      // 1) BRAIN GLOBAL (brain_files, en BRAIN_DATABASE_URL): el método, la
+      //    memoria y el conocimiento del ecosistema. NO son datos de cliente:
+      //    son visibles para CUALQUIER token válido (admin o client). Esto es
+      //    lo que faltaba — antes sólo se consultaba knowledge_base (otra BD),
+      //    así que memoria-vulcano / roadmap-v-mcp / etc. nunca aparecían.
+      //    Lo único que se oculta a un client son los nombres SENSIBLES
+      //    (credenciales, accesos, llaves, hosts); el operador los ve todos.
+      const brainRows = await brainQueryAll<{ name: string; content: string }>(
+        `SELECT name, content FROM brain_files
+          WHERE name ILIKE $1 OR content ILIKE $1
+          ORDER BY (name ILIKE $1) DESC, updated_at DESC
+          LIMIT 20`,
+        [like],
+      ).catch(() => []);
+      const brain = brainRows
+        .filter((b) => isAdminScope || !BRAIN_SENSITIVE.test(b.name))
+        .map((b) => ({ title: b.name, content: b.content, kind: brainKind(b.name), src: "brain" as const }));
+
+      // 2) KNOWLEDGE_BASE (app DB): runbooks/decisiones/lecciones curados.
+      //    AISLAMIENTO: admin ve todo; un client SOLO método/runbooks públicos
+      //    — nunca perfil de operador, credenciales ni notas privadas.
       const kb = isAdminScope
         ? await queryAll<{ title: string; content: string; kind: string | null }>(
             "SELECT title, content, kind FROM knowledge_base WHERE content ILIKE $1 OR title ILIKE $1 ORDER BY created_at DESC LIMIT 12",
-            ["%" + q + "%"],
+            [like],
           ).catch(() => [])
         : await queryAll<{ title: string; content: string; kind: string | null }>(
             `SELECT title, content, kind FROM knowledge_base
@@ -434,12 +476,18 @@ export async function runMcpTool(
                AND title  NOT ILIKE '%token%'      AND title  NOT ILIKE '%password%'
                AND title  NOT ILIKE '%api key%'
              ORDER BY created_at DESC LIMIT 12`,
-            ["%" + q + "%"],
+            [like],
           ).catch(() => []);
+
+      // El brain global va primero (memoria/método), luego los curados de la app.
+      const combined = [
+        ...brain,
+        ...kb.map((k) => ({ title: k.title, content: k.content, kind: k.kind, src: "kb" as const })),
+      ];
 
       // dedupe curados por título / inicio de contenido
       const seen = new Set<string>();
-      const curated = kb.filter((k) => {
+      const curated = combined.filter((k) => {
         const key = (k.title || k.content.slice(0, 80)).toLowerCase().trim();
         if (seen.has(key)) return false;
         seen.add(key);
@@ -447,22 +495,26 @@ export async function runMcpTool(
       });
 
       const KIND_LABEL: Record<string, string> = {
+        memory: "Memoria",
+        method: "Método",
+        roadmap: "Roadmaps",
+        knowledge: "Conocimiento",
         runbook: "Runbooks",
         adr: "Decisiones de arquitectura",
         decision: "Decisiones de arquitectura",
         lesson: "Lecciones",
         note: "Notas",
-        method: "Método",
+        credential: "Credenciales",
       };
       const groups = new Map<string, string[]>();
       for (const k of curated) {
         const label = KIND_LABEL[(k.kind ?? "").toLowerCase()] ?? "Otros";
-        const line = `• [${k.title}] ${k.content.slice(0, 200).replace(/\s+/g, " ")} (${k.kind ?? "kb"})`;
+        const line = `• [${k.title}] ${k.content.slice(0, 200).replace(/\s+/g, " ")} (${k.src})`;
         groups.set(label, [...(groups.get(label) ?? []), line]);
       }
 
       const sections: string[] = [];
-      for (const order of ["Runbooks", "Decisiones de arquitectura", "Lecciones", "Notas", "Método", "Otros"]) {
+      for (const order of ["Memoria", "Método", "Roadmaps", "Conocimiento", "Runbooks", "Decisiones de arquitectura", "Lecciones", "Notas", "Credenciales", "Otros"]) {
         const lines = groups.get(order);
         if (lines?.length) sections.push(`## ${order}\n${lines.join("\n")}`);
       }

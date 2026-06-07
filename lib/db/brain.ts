@@ -42,6 +42,17 @@ export const brainSql: NeonQueryFunction<false, false> = new Proxy(
   },
 );
 
+/**
+ * Helper de consulta parametrizada contra el brain (varias filas).
+ * Mismo contrato que queryAll de lib/db/client pero apuntando a BRAIN_DATABASE_URL.
+ */
+export async function brainQueryAll<T = Record<string, unknown>>(
+  query: string,
+  params: unknown[] = [],
+): Promise<T[]> {
+  return (await getBrain().query(query, params)) as T[];
+}
+
 let _ensured = false;
 
 /**
