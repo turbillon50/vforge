@@ -346,6 +346,49 @@ async function ensureMcpRbac(): Promise<void> {
 }
 
 /**
+ * ACCESO DE DUEÑO (operator). El token MCP portátil de Luis debe verlo TODO:
+ * sus 64 proyectos (incluidos los de org_id NULL), client_project_status y el
+ * brain completo — desde CUALQUIER cliente MCP, porque la identidad la define
+ * el token, no la cuenta de Claude. La columna mcp_tokens.scope acepta dos
+ * sinónimos para el dueño: 'admin' (histórico) y 'operator' (canónico); el
+ * resolver (lib/mcp/tokens.ts) los trata idénticos = ven todo, sin filtro de
+ * tenant. El aislamiento de los tokens 'client' (sólo su org_id) NO se toca.
+ *
+ * Esto repara el caso real: el token del dueño quedó marcado 'client' (su
+ * lookup de owner falló al crearse), así que Luis no veía nada cross-tenant.
+ * Aquí se ancla, idempotente, en cada arranque. El hash es SHA-256 (no es el
+ * secreto) y puede sobre-escribirse por env VFORGE_OPERATOR_MCP_TOKEN_HASH.
+ */
+const OPERATOR_MCP_TOKEN_HASH =
+  process.env.VFORGE_OPERATOR_MCP_TOKEN_HASH ??
+  "085a824168d92736671850480a1ce48fd2b0b3b71cfa993fa10d77c462c51794";
+
+async function ensureOperatorScope(): Promise<void> {
+  // 1) La columna scope debe admitir 'operator' además de admin/client/public.
+  try {
+    await sql`ALTER TABLE mcp_tokens DROP CONSTRAINT IF EXISTS mcp_tokens_scope_chk`;
+    await sql`
+      ALTER TABLE mcp_tokens
+        ADD CONSTRAINT mcp_tokens_scope_chk
+        CHECK (scope IN ('admin', 'operator', 'client', 'public'))
+    `;
+  } catch {
+    // legacy rows pueden impedir el constraint; el código lo normaliza igual
+  }
+  // 2) Anclar el token del dueño como operator (ve TODO, sin filtro de tenant).
+  try {
+    await sql.query(
+      `UPDATE mcp_tokens
+         SET scope = 'operator', org_id = NULL
+       WHERE token_hash = $1 AND scope IS DISTINCT FROM 'operator'`,
+      [OPERATOR_MCP_TOKEN_HASH],
+    );
+  } catch {
+    // tabla aún no existe en algún env, o ya está anclado
+  }
+}
+
+/**
  * Heal the database schema. Runs once per process.
  * Call this from api routes or middleware that execute early.
  */
@@ -362,6 +405,7 @@ export async function healDatabase(): Promise<void> {
     await ensureSemanticMemory();
     await ensureClientPortfolio();
     await ensureMcpRbac();
+    await ensureOperatorScope();
   } catch (e) {
     // Silently fail - don't crash the app if database healing fails
     console.error("[V auto-heal] Database healing failed:", e);
