@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { sql, ensureDatabaseHealed } from "@/lib/db/client";
+import { brainSql, ensureBrainTables } from "@/lib/db/brain";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -81,7 +81,7 @@ async function recordEvent(args: {
   liveMode: boolean | null;
   raw: unknown;
 }): Promise<void> {
-  await sql`
+  await brainSql`
     INSERT INTO mp_events (id, type, action, data_id, live_mode, raw)
     VALUES (
       ${args.eventId},
@@ -145,7 +145,7 @@ async function handlePaymentApproved(dataId: string): Promise<void> {
     .filter(Boolean)
     .join("\n");
 
-  await sql`
+  await brainSql`
     INSERT INTO brain_files (name, content, updated_at)
     VALUES ('ultimo-pago-mp', ${resumen}, now())
     ON CONFLICT (name) DO UPDATE
@@ -182,7 +182,7 @@ export async function POST(req: Request) {
 
   // Firma válida → respondemos 200; el resto best-effort, nunca bloquea.
   try {
-    await ensureDatabaseHealed();
+    await ensureBrainTables();
 
     const type = body.type ?? url.searchParams.get("type") ?? null;
     const action = body.action ?? null;
