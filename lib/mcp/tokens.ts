@@ -123,12 +123,22 @@ export async function resolveMcpToken(token: string): Promise<McpPrincipal | nul
     if (rows[0].expired) return null; // caducado (OAuth) ⇒ el cliente debe refrescar
     await sql()`UPDATE mcp_tokens SET last_used_at = now() WHERE token_hash = ${hash(token)}`;
     const r = rows[0];
+    // "operator" es el nombre canónico del scope de DUEÑO (Luis). En runtime es
+    // idéntico a "admin": ve TODO, sin filtro por tenant. Se aceptan ambos
+    // valores en la columna scope para que el MISMO token funcione desde
+    // cualquier cliente MCP (desktop, móvil, web, Cursor) — la identidad la
+    // define el token, no la cuenta de Claude. "public" sólo marketing; resto
+    // degrada a "client" (aislado a su org_id). Fail-closed: nunca admin por error.
     const scope: McpScope =
-      r.scope === "admin" || r.scope === "public" ? r.scope : "client";
+      r.scope === "admin" || r.scope === "operator"
+        ? "admin"
+        : r.scope === "public"
+          ? "public"
+          : "client";
     return {
       userId: r.clerk_user_id === "public" ? null : r.clerk_user_id,
       scope,
-      // admin: filtro deshabilitado (org null). client: su org. public: null.
+      // admin/operator: filtro deshabilitado (org null). client: su org. public: null.
       orgId: scope === "admin" ? null : r.org_id,
     };
   } catch {

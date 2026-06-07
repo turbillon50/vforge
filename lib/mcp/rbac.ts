@@ -4,7 +4,11 @@
  * Every request to /api/mcp carries (at most) a Bearer token. That token
  * resolves to an `McpPrincipal` with a SCOPE that decides what it can touch:
  *
- *   admin   → the operator (Luis). Sees everything. No org filter.
+ *   admin   → the operator/owner (Luis). Sees everything. No org filter.
+ *             The DB column mcp_tokens.scope stores this as either 'admin'
+ *             (historical) or 'operator' (canonical owner label); the token
+ *             resolver normalizes BOTH to this `admin` runtime scope, so the
+ *             same token grants full visibility from any MCP client.
  *   client  → a tenant. Sees ONLY rows where org_id = principal.orgId.
  *             Never another tenant's data, never credential brain files.
  *   public  → marketing only. 401 on every data tool. The absence of a
