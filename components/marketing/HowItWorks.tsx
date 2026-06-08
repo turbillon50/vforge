@@ -9,7 +9,7 @@ export function HowItWorks() {
   const t = useT();
   const steps = t.marketing.how_steps.map((s, i) => ({ icon: icons[i], title: s.title, text: s.body }));
   return (
-    <section data-theme="dark" className="relative border-b border-app bg-ink/40">
+    <section className="relative border-b border-app bg-ink/40">
       <div className="mx-auto max-w-container px-5 py-20 md:px-margin-desktop md:py-28">
         <div className="grid grid-cols-1 items-end gap-10 md:grid-cols-2">
           <div>
@@ -18,7 +18,7 @@ export function HowItWorks() {
               {t.marketing.how_title}
             </h2>
           </div>
-          <p className="text-white/50 md:text-right">{t.marketing.how_body}</p>
+          <p className="text-on-surface-variant md:text-right">{t.marketing.how_body}</p>
         </div>
 
         <ol className="mt-14 grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -31,7 +31,7 @@ export function HowItWorks() {
                 <s.icon size={18} />
               </div>
               <h3 className="font-display text-lg font-semibold">{s.title}</h3>
-              <p className="mt-2 text-sm text-white/50">{s.text}</p>
+              <p className="mt-2 text-sm text-on-surface-variant">{s.text}</p>
             </li>
           ))}
         </ol>
