@@ -44,6 +44,10 @@ CREATE INDEX IF NOT EXISTS idx_skills_tags ON skills USING gin (tags);
 CREATE INDEX IF NOT EXISTS idx_skills_installed ON skills (installed_at) WHERE installed_at IS NOT NULL;
 
 -- Seed with system skills from /docs/skills/
+-- vulcano fix: ensure source check matches seed values
+ALTER TABLE skills DROP CONSTRAINT IF EXISTS skills_source_check;
+ALTER TABLE skills ADD CONSTRAINT skills_source_check CHECK (source IN ('system','user','learned'));
+
 INSERT INTO skills (id, name, description, system_prompt, tags, source, required_tools, installed_at) VALUES
   (
     'new-project-bootstrap',
