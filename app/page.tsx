@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { Hero } from "@/components/marketing/Hero";
+import { ProductCarousel } from "@/components/marketing/ProductCarousel";
 import { Metodo } from "@/components/marketing/Metodo";
 import { Integraciones } from "@/components/marketing/Integraciones";
 import { Credenciales } from "@/components/marketing/Credenciales";
@@ -22,6 +23,7 @@ export default async function HomePage() {
       <MarketingHeader />
       <main>
         <Hero />
+        <ProductCarousel />
         <Metodo />
         <Integraciones />
         <Credenciales />

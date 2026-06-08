@@ -2,19 +2,10 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
-import { useRef, useState, useEffect } from "react";
+import { useRef } from "react";
+
 import { ArrowRight, Sparkles, Play } from "lucide-react";
 
-const APPS = [
-  { name: "APSUS", cat: "Fintech", color: "#7c3aed", img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80", status: "live" },
-  { name: "CSN Carnes", cat: "E-Commerce", color: "#dc2626", img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=80", status: "live" },
-  { name: "MT Empresarial", cat: "Transporte", color: "#0891b2", img: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400&q=80", status: "live" },
-  { name: "Yerro Fiscal", cat: "Legal Tech", color: "#059669", img: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&q=80", status: "live" },
-  { name: "Happytoc", cat: "Bienestar", color: "#d97706", img: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=80", status: "live" },
-  { name: "LN Red", cat: "Eventos", color: "#7c3aed", img: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&q=80", status: "live" },
-  { name: "iStore Pro", cat: "SaaS", color: "#0891b2", img: "https://images.unsplash.com/photo-1512499617640-c74ae3a79d37?w=400&q=80", status: "building" },
-  { name: "RideMe", cat: "Movilidad", color: "#059669", img: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=400&q=80", status: "building" },
-];
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -26,12 +17,6 @@ export function Hero() {
   const sphereY = useTransform(scrollYProgress, [0, 1], [0, -80]);
   const sphereScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.85]);
   const sphereOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
-  const [activeApp, setActiveApp] = useState(0);
-
-  useEffect(() => {
-    const t = setInterval(() => setActiveApp(p => (p + 1) % APPS.length), 3200);
-    return () => clearInterval(t);
-  }, []);
 
   return (
     <section ref={ref} className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden pb-0">
@@ -197,52 +182,6 @@ export function Hero() {
           <span className="flex items-center gap-1.5"><span className="text-cyan-400/60">✓</span> 17+ apps en producción</span>
         </motion.div>
       </div>
-
-      {/* CARRUSEL DE APPS — Apple TV style */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.5, ease: EASE }}
-        className="relative mt-16 w-full overflow-hidden"
-      >
-        <p className="mb-4 text-center text-[11px] font-semibold tracking-[0.2em] text-white/20 uppercase">Apps construidas con V</p>
-        <div className="flex gap-3 px-4 pb-6 overflow-x-auto no-scrollbar snap-x snap-mandatory">
-          {APPS.map((app, i) => (
-            <motion.div
-              key={app.name}
-              animate={{
-                scale: activeApp === i ? 1 : 0.94,
-                opacity: activeApp === i ? 1 : 0.55,
-              }}
-              transition={{ duration: 0.5, ease: EASE }}
-              className="relative h-48 w-36 shrink-0 snap-center overflow-hidden rounded-2xl border border-white/10 cursor-pointer"
-              onClick={() => setActiveApp(i)}
-              style={{ boxShadow: activeApp === i ? `0 8px 40px ${app.color}60` : "none" }}
-            >
-              {/* Imagen splash */}
-              <img src={app.img} alt={app.name} className="absolute inset-0 h-full w-full object-cover" />
-              {/* Overlay degradado */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-              {/* Borde activo */}
-              {activeApp === i && (
-                <div className="absolute inset-0 rounded-2xl ring-1 ring-inset" style={{ ringColor: app.color + "80" }} />
-              )}
-              {/* Info */}
-              <div className="absolute bottom-0 left-0 right-0 p-3">
-                <p className="text-[10px] font-medium uppercase tracking-widest" style={{ color: app.color }}>{app.cat}</p>
-                <p className="text-sm font-bold text-white leading-tight">{app.name}</p>
-                <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${app.status === "live" ? "bg-emerald-500/20 text-emerald-400" : "bg-violet-500/20 text-violet-300"}`}>
-                  <span className="h-1 w-1 rounded-full bg-current animate-pulse" />
-                  {app.status === "live" ? "Live" : "En progreso"}
-                </span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-        {/* Fade edges */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#03020a] to-transparent" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#03020a] to-transparent" />
-      </motion.div>
     </section>
   );
 }
