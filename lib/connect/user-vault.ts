@@ -58,9 +58,9 @@ export async function getUserSecret(
   if (rows.length === 0) return null;
   try {
     return decryptOperatorSecret({
-      ciphertext: rows[0].ciphertext,
-      iv: rows[0].iv,
-      authTag: rows[0].auth_tag,
+      ciphertext: Buffer.from(rows[0].ciphertext),
+      iv: Buffer.from(rows[0].iv),
+      authTag: Buffer.from(rows[0].auth_tag),
     });
   } catch {
     return null;

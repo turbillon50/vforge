@@ -44,3 +44,9 @@ jobs:
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
+          # Clerk publishable key de TEST (dominio clerk.example.com) — sólo
+          # permite montar <ClerkProvider> durante el prerender estático del
+          # build. No hace llamadas de red ni toca el Clerk real. Sin esto, las
+          # páginas que usan useUser (/pricing, /sign-in…) fallan el prerender
+          # con "useUser must be used within <ClerkProvider>".
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k"
