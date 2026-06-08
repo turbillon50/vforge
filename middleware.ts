@@ -12,6 +12,13 @@ import {
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
+// Rutas que se autentican por operator token (Bearer VFORGE_OPERATOR_TOKEN),
+// NO por sesión Clerk. El middleware las deja pasar para que el check de
+// requireOperatorAuth de la propia ruta corra; si las interceptara Clerk,
+// rechazaría el Bearer (no es un JWT de Clerk) con 401 antes de llegar.
+// SÓLO incluir aquí rutas que YA validan el operator token por sí mismas.
+const isOperatorTokenRoute = createRouteMatcher(["/api/admin/migrate(.*)"]);
+
 // Rutas que requieren sesión (cualquier usuario registrado).
 const isProtected = createRouteMatcher([
   "/app(.*)",
@@ -66,6 +73,8 @@ async function resolveOwner(userId: string): Promise<boolean> {
 
 export default hasClerk
   ? clerkMiddleware(async (auth, req) => {
+      // Rutas con operator token: saltan Clerk; su handler valida el Bearer.
+      if (isOperatorTokenRoute(req)) return;
       if (!isProtected(req)) return;
       const { userId, sessionClaims, redirectToSignIn } = await auth();
       const isApi = req.nextUrl.pathname.startsWith("/api");
