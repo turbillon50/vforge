@@ -10,13 +10,22 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  // Algunos clientes hacen GET para SSE; respondemos info simple.
+  // Descubrimiento: algunos clientes (Claude Desktop) hacen GET antes del
+  // handshake JSON-RPC y rechazan la URL si no reconocen el servidor. Reflejamos
+  // el mismo serverInfo/capabilities que devuelve `initialize` por POST.
   return new Response(
     JSON.stringify({
-      name: "VForge MCP",
+      name: "VForge",
+      version: "1.0.0",
+      protocol: "mcp",
+      protocolVersion: "2024-11-05",
+      capabilities: { tools: {} },
       transport: "streamable-http",
       auth: "Bearer (opcional para tools públicas)",
     }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
+    {
+      status: 200,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    },
   );
 }

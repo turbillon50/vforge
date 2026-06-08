@@ -12,12 +12,32 @@ import {
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
-// Rutas que se autentican por operator token (Bearer VFORGE_OPERATOR_TOKEN),
-// NO por sesión Clerk. El middleware las deja pasar para que el check de
-// requireOperatorAuth de la propia ruta corra; si las interceptara Clerk,
-// rechazaría el Bearer (no es un JWT de Clerk) con 401 antes de llegar.
-// SÓLO incluir aquí rutas que YA validan el operator token por sí mismas.
-const isOperatorTokenRoute = createRouteMatcher(["/api/admin/migrate(.*)"]);
+// Rutas admin: se aceptan DOS formas de auth (ver dualidad abajo):
+//   1) operator token (Bearer VFORGE_OPERATOR_TOKEN) — para curl/CLI del owner
+//      y endpoints como /api/admin/migrate.
+//   2) sesión Clerk de owner — para la UI (/activity health pill, cockpit…).
+const isAdminRoute = createRouteMatcher(["/api/admin/(.*)"]);
+
+/**
+ * Valida el operator token del header Authorization en el edge. Comparación de
+ * tiempo constante (sin node:crypto, que no existe en el runtime del middleware).
+ * Si devuelve true, la request se considera autenticada como owner y salta Clerk;
+ * si no, cae al control normal de Clerk. Nunca expone la ruta: hace falta token
+ * válido O sesión válida.
+ */
+function hasValidOperatorToken(req: Request): boolean {
+  const expected = process.env.VFORGE_OPERATOR_TOKEN?.trim();
+  if (!expected) return false;
+  const m = (req.headers.get("authorization") ?? "").match(/^Bearer\s+(.+)$/i);
+  if (!m) return false;
+  const presented = m[1].trim();
+  if (presented.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < presented.length; i++) {
+    diff |= presented.charCodeAt(i) ^ expected.charCodeAt(i);
+  }
+  return diff === 0;
+}
 
 // Rutas que requieren sesión (cualquier usuario registrado).
 const isProtected = createRouteMatcher([
@@ -73,8 +93,10 @@ async function resolveOwner(userId: string): Promise<boolean> {
 
 export default hasClerk
   ? clerkMiddleware(async (auth, req) => {
-      // Rutas con operator token: saltan Clerk; su handler valida el Bearer.
-      if (isOperatorTokenRoute(req)) return;
+      // Auth dual en /api/admin: un operator token válido salta Clerk (el Bearer
+      // no es un JWT de Clerk, así que Clerk lo rechazaría con 401). Sin token
+      // válido, la ruta cae al control de Clerk de abajo (la UI usa su sesión).
+      if (isAdminRoute(req) && hasValidOperatorToken(req)) return;
       if (!isProtected(req)) return;
       const { userId, sessionClaims, redirectToSignIn } = await auth();
       const isApi = req.nextUrl.pathname.startsWith("/api");
