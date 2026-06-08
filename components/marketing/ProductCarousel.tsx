@@ -183,7 +183,7 @@ export function ProductCarousel() {
                     animate={{ y: [0, -10, 0] }}
                     transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                     className="h-44 w-44 object-contain"
-                    style={{ filter: `drop-shadow(0 0 40px ${p.accent}90)` }}
+                    style={{ mixBlendMode: "screen", filter: `drop-shadow(0 0 40px ${p.accent}90) saturate(1.2)` }}
                   />
                 </div>
               )}
@@ -250,7 +250,7 @@ export function ProductCarousel() {
                   {(activeProduct.sphere || activeProduct.icon) && (
                     <div className="absolute inset-0 flex items-center justify-center" style={{ background: `radial-gradient(circle at 50% 40%, ${activeProduct.accent}25, transparent 70%)` }}>
                       {activeProduct.sphere
-                        ? <img src={activeProduct.sphere} alt="" className="h-40 w-40 object-contain" style={{ filter: `drop-shadow(0 0 40px ${activeProduct.accent})` }} />
+                        ? <img src={activeProduct.sphere} alt="" className="h-40 w-40 object-contain" style={{ mixBlendMode: "screen", filter: `drop-shadow(0 0 40px ${activeProduct.accent}) saturate(1.2)` }} />
                         : (() => { const I = ICONS[activeProduct.icon!]; return <I size={72} strokeWidth={1.5} style={{ color: activeProduct.accent }} />; })()}
                     </div>
                   )}

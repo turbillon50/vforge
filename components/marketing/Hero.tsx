@@ -42,7 +42,7 @@ export function Hero() {
             src={SPHERE}
             alt="V"
             className="h-full w-full object-contain"
-            style={{ filter: "drop-shadow(0 0 60px rgba(124,58,237,0.6)) drop-shadow(0 0 120px rgba(124,58,237,0.3))" }}
+            style={{ mixBlendMode: "screen", filter: "drop-shadow(0 0 60px rgba(124,58,237,0.55)) drop-shadow(0 0 120px rgba(124,58,237,0.3)) saturate(1.15)" }}
           />
         </motion.div>
       </motion.div>

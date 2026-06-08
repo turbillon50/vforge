@@ -16,79 +16,79 @@ const CATEGORIES: Cat[] = [
     title: "Inteligencia Artificial",
     accent: "#d97757",
     items: [
-      { name: "OpenAI", domain: "openai.com" },
-      { name: "Claude", domain: "anthropic.com" },
-      { name: "Gemini", domain: "deepmind.google" },
-      { name: "OpenRouter", domain: "openrouter.ai" },
-      { name: "Grok", domain: "x.ai" },
-      { name: "DeepSeek", domain: "deepseek.com" },
+      { name: "OpenAI", domain: "openai" },
+      { name: "Claude", domain: "claude" },
+      { name: "Gemini", domain: "gemini" },
+      { name: "OpenRouter", domain: "openrouter" },
+      { name: "Grok", domain: "grok" },
+      { name: "DeepSeek", domain: "deepseek" },
     ],
   },
   {
     title: "Infraestructura",
     accent: "#22d3ee",
     items: [
-      { name: "GitHub", domain: "github.com" },
-      { name: "Vercel", domain: "vercel.com" },
-      { name: "Railway", domain: "railway.app" },
-      { name: "Hetzner", domain: "hetzner.com" },
-      { name: "Neon", domain: "neon.tech" },
+      { name: "GitHub", domain: "github" },
+      { name: "Vercel", domain: "vercel" },
+      { name: "Railway", domain: "railway" },
+      { name: "Hetzner", domain: "hetzner" },
+      { name: "Neon", domain: "neon" },
     ],
   },
   {
     title: "Comunicación",
     accent: "#22c55e",
     items: [
-      { name: "WhatsApp", domain: "whatsapp.com" },
-      { name: "Twilio", domain: "twilio.com" },
-      { name: "Resend", domain: "resend.com" },
-      { name: "Gmail", domain: "gmail.com" },
+      { name: "WhatsApp", domain: "whatsapp" },
+      { name: "Twilio", domain: "twilio" },
+      { name: "Resend", domain: "resend" },
+      { name: "Gmail", domain: "gmail" },
     ],
   },
   {
     title: "Productividad",
     accent: "#f59e0b",
     items: [
-      { name: "Airtable", domain: "airtable.com" },
-      { name: "HubSpot", domain: "hubspot.com" },
-      { name: "ClickUp", domain: "clickup.com" },
-      { name: "Slack", domain: "slack.com" },
-      { name: "Calendly", domain: "calendly.com" },
+      { name: "Airtable", domain: "airtable" },
+      { name: "HubSpot", domain: "hubspot" },
+      { name: "ClickUp", domain: "clickup" },
+      { name: "Slack", domain: "slack" },
+      { name: "Calendly", domain: "calendly" },
     ],
   },
   {
     title: "Identidad",
     accent: "#8b5cf6",
     items: [
-      { name: "Clerk", domain: "clerk.com" },
-      { name: "Google", domain: "google.com" },
-      { name: "Apple", domain: "apple.com" },
+      { name: "Clerk", domain: "clerk" },
+      { name: "Google", domain: "google" },
+      { name: "Apple", domain: "apple" },
     ],
   },
   {
     title: "Pagos",
     accent: "#635bff",
     items: [
-      { name: "Stripe", domain: "stripe.com" },
-      { name: "Mercado Pago", domain: "mercadopago.com" },
-      { name: "PayPal", domain: "paypal.com" },
+      { name: "Stripe", domain: "stripe" },
+      { name: "Mercado Pago", domain: "mercadopago" },
+      { name: "PayPal", domain: "paypal" },
     ],
   },
   {
     title: "Blockchain",
     accent: "#a855f7",
     items: [
-      { name: "Alchemy", domain: "alchemy.com" },
-      { name: "Thirdweb", domain: "thirdweb.com" },
-      { name: "Safe", domain: "safe.global" },
-      { name: "LiFi", domain: "li.fi" },
-      { name: "Turnkey", domain: "turnkey.com" },
+      { name: "Alchemy", domain: "alchemy" },
+      { name: "Thirdweb", domain: "thirdweb" },
+      { name: "Safe", domain: "safe" },
+      { name: "LiFi", domain: "lifi" },
+      { name: "Turnkey", domain: "turnkey" },
     ],
   },
 ];
 
-function logoUrl(domain: string) {
-  return `https://logo.clearbit.com/${domain}?size=80`;
+function logoUrl(slug: string) {
+  return `/logos/${slug}.svg`;
 }
 
 export function Integraciones() {
@@ -140,7 +140,7 @@ export function Integraciones() {
                         alt={item.name}
                         className="h-7 w-7 object-contain"
                         loading="lazy"
-                        onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0.3"; }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0.25"; }}
                       />
                     </div>
                     <span className="relative text-center text-[11px] font-medium text-white/55 leading-tight">{item.name}</span>
