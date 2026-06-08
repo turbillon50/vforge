@@ -2,7 +2,28 @@ import { auth } from "@clerk/nextjs/server";
 import { isOwnerUser } from "@/lib/auth/owner";
 import { clerkClient } from "@clerk/nextjs/server";
 import { getUserSecret } from "@/lib/connect/user-vault";
+import { syncClerkOAuthTokens } from "@/lib/connect/clerk-oauth-sync";
 import { getOperatorSecret } from "@/lib/vault/get-secret";
+
+/**
+ * Tokens GitHub/Vercel del usuario, con fallback a Clerk OAuth: si no están en
+ * el vault pero el usuario los conectó como social connection de Clerk, los
+ * espejamos al vault y los reusamos — sin pedir un OAuth adicional.
+ */
+async function userTokensWithClerkFallback(
+  userId: string,
+): Promise<{ githubToken: string | null; vercelToken: string | null }> {
+  let [gh, vc] = await Promise.all([
+    getUserSecret(userId, "GITHUB_USER_TOKEN"),
+    getUserSecret(userId, "VERCEL_USER_TOKEN"),
+  ]);
+  if (!gh || !vc) {
+    await syncClerkOAuthTokens(userId).catch(() => null);
+    if (!gh) gh = await getUserSecret(userId, "GITHUB_USER_TOKEN");
+    if (!vc) vc = await getUserSecret(userId, "VERCEL_USER_TOKEN");
+  }
+  return { githubToken: gh, vercelToken: vc };
+}
 
 export interface ResolvedAccess {
   userId: string | null;
@@ -48,11 +69,8 @@ export async function resolveAccessForUser(
     return { userId, isOwner: true, githubToken: gh, vercelToken: vc };
   }
 
-  const [gh, vc] = await Promise.all([
-    getUserSecret(userId, "GITHUB_USER_TOKEN"),
-    getUserSecret(userId, "VERCEL_USER_TOKEN"),
-  ]);
-  return { userId, isOwner: false, githubToken: gh, vercelToken: vc };
+  const { githubToken, vercelToken } = await userTokensWithClerkFallback(userId);
+  return { userId, isOwner: false, githubToken, vercelToken };
 }
 
 export async function resolveAccess(): Promise<ResolvedAccess> {
@@ -84,9 +102,6 @@ export async function resolveAccess(): Promise<ResolvedAccess> {
     return { userId, isOwner: true, githubToken: gh, vercelToken: vc };
   }
 
-  const [gh, vc] = await Promise.all([
-    getUserSecret(userId, "GITHUB_USER_TOKEN"),
-    getUserSecret(userId, "VERCEL_USER_TOKEN"),
-  ]);
-  return { userId, isOwner: false, githubToken: gh, vercelToken: vc };
+  const { githubToken, vercelToken } = await userTokensWithClerkFallback(userId);
+  return { userId, isOwner: false, githubToken, vercelToken };
 }
