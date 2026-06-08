@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
   ArrowRight, Sparkles, X, Rocket, HelpCircle,
@@ -48,33 +48,9 @@ export function Hero() {
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<"welcome" | "faq" | null>(null);
 
-  // El orbe sigue el cursor/toque suavemente
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const sx = useSpring(mx, { stiffness: 60, damping: 18 });
-  const sy = useSpring(my, { stiffness: 60, damping: 18 });
-
-  const heroRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = heroRef.current;
-    if (!el) return;
-    const onMove = (e: PointerEvent) => {
-      // Solo seguir el cursor con MOUSE real (desktop). En touch dejamos el dedo libre para scrollear.
-      if (e.pointerType !== "mouse") return;
-      const r = el.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height * 0.36;
-      mx.set(Math.max(-30, Math.min(30, (e.clientX - cx) / 12)));
-      my.set(Math.max(-24, Math.min(24, (e.clientY - cy) / 12)));
-    };
-    el.addEventListener("pointermove", onMove, { passive: true });
-    return () => el.removeEventListener("pointermove", onMove);
-  }, [mx, my]);
 
   return (
     <section
-      ref={heroRef}
       className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-5 pb-20 pt-24"
       style={{ touchAction: "pan-y" }}
     >
@@ -94,7 +70,6 @@ export function Hero() {
         initial={{ opacity: 0, scale: 0.85 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1.2, ease: EASE }}
-        style={{ x: sx, y: sy }}
         className="relative z-10 mb-6 flex items-center justify-center"
       >
         {/* Glow latente detrás */}
@@ -129,7 +104,7 @@ export function Hero() {
             animate={{ scale: [1, 1.04, 1] }}
             transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
             className="h-full w-full object-contain"
-            style={{ mixBlendMode: "screen", filter: "drop-shadow(0 0 60px rgba(124,58,237,0.6)) drop-shadow(0 0 120px rgba(124,58,237,0.3)) saturate(1.15)" }}
+            style={{ filter: "drop-shadow(0 0 50px rgba(124,58,237,0.55)) drop-shadow(0 0 100px rgba(124,58,237,0.28))" }}
             draggable={false}
           />
           {/* hint de toque */}
