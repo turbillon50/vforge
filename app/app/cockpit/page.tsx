@@ -74,7 +74,7 @@ function ProjectCard({ p }: { p: PortfolioProject }) {
   const pct = p.total_mxn > 0 ? Math.min(100, Math.round((p.paid_mxn / p.total_mxn) * 100)) : 0;
   const h = HEALTH_UI[healthOf(p)];
   return (
-    <div className="group rounded-xl border border-white/10 bg-white/5 p-4 transition hover:border-violet-400/40 hover:bg-white/[0.07]">
+    <div className="group crystal-card p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <span className={`h-2 w-2 flex-none rounded-full ${h.dot}`} title={h.label} />
@@ -88,9 +88,9 @@ function ProjectCard({ p }: { p: PortfolioProject }) {
         </span>
         <span className="text-[11px] text-muted tabular-nums">{mxn(p.paid_mxn)} / {mxn(p.total_mxn)}</span>
       </div>
-      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+      <div className="crystal-progress mt-1.5">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 transition-[width] duration-700 ease-out"
+          className="crystal-progress-fill transition-[width] duration-700 ease-out"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -114,7 +114,7 @@ function CarteraSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="glass rounded-2xl border border-white/10 p-5">
+        <div key={i} className="crystal-card p-5">
           <Skeleton className="mb-4 h-4 w-28" />
           <div className="space-y-3">
             <Skeleton className="h-28 w-full" />

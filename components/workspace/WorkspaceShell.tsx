@@ -20,6 +20,7 @@ import { useClerkAppearance } from "@/lib/clerk-appearance";
 import { Home, Users } from "lucide-react";
 import { VPresence } from "@/components/brand/VPresence";
 import { VOrb } from "./VOrb";
+import { Icon3D } from "@/components/brand/Icon3D";
 import { PageTransition } from "@/components/motion/PageTransition";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
@@ -222,9 +223,9 @@ function MobileNav({ pathname }: { pathname: string }) {
   // body.keyboard-open lo oculta automáticamente (CSS en globals.css).
   const mobileNav = [
     { href: "/app/chat", label: "Chat", icon: MessagesSquare, orb: true },
-    { href: "/app/projects", label: t.workspace.mobile_labels.projects, icon: Workflow },
-    { href: "/app/deployments", label: "Despliegues", icon: Activity },
-    { href: "/app/settings", label: "Ajustes", icon: Settings },
+    { href: "/app/projects", label: t.workspace.mobile_labels.projects, icon3d: "projects" as const },
+    { href: "/app/deployments", label: "Despliegues", icon3d: "rocket" as const },
+    { href: "/app/settings", label: "Ajustes", icon3d: "settings" as const },
   ];
   return (
     <nav
@@ -295,7 +296,7 @@ function MobileNav({ pathname }: { pathname: string }) {
               className="inline-flex items-center justify-center"
               animate={
                 active
-                  ? { scale: [1, 1.08, 1] }
+                  ? { scale: [1, 1.1, 1] }
                   : { scale: 1 }
               }
               transition={
@@ -304,15 +305,11 @@ function MobileNav({ pathname }: { pathname: string }) {
                   : { duration: 0.18 }
               }
             >
-              <i.icon
-                size={18}
-                strokeWidth={active ? 2.4 : 2}
-                className={cn(
-                  "transition",
-                  active
-                    ? "text-violet-300 drop-shadow-[0_0_8px_rgba(139,92,246,0.65)]"
-                    : "group-hover:text-on-surface",
-                )}
+              <Icon3D
+                name={(i as { icon3d?: any }).icon3d}
+                size={26}
+                glow={active}
+                className={cn("transition", active ? "" : "opacity-70 group-hover:opacity-100")}
               />
             </motion.span>
             <span
