@@ -75,6 +75,13 @@ CREATE TRIGGER prevent_locked_directive_update
 -- ============================================================================
 -- SEED: V's Mantra (LOCKED - defines core identity)
 -- ============================================================================
+-- vulcano fix: coerce created_by to text if a pre-existing table has it as uuid
+DO $vulcano$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agent_directives' AND column_name='created_by' AND data_type='uuid') THEN
+    ALTER TABLE agent_directives ALTER COLUMN created_by TYPE text USING created_by::text;
+  END IF;
+END $vulcano$;
+
 INSERT INTO agent_directives (kind, title, content, locked, priority, created_by) VALUES
   (
     'mantra',
