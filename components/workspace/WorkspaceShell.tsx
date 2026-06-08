@@ -13,7 +13,9 @@ import {
   MessagesSquare,
   Search,
   Settings,
-  Workflow,, FileText } from "lucide-react";
+  Workflow,
+  FileText,
+} from "lucide-react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useClerkAppearance } from "@/lib/clerk-appearance";
 import { Home, Users } from "lucide-react";
