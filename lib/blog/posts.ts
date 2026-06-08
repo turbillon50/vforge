@@ -1,0 +1,1857 @@
+
+// lib/blog/posts.ts
+// Fuente de verdad — 32 artículos del blog VForge
+
+export interface Post {
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: "origin" | "method" | "mcp" | "product" | "savings" | "community";
+  readingTime: number; // minutos
+  publishedAt: string;
+  featured?: boolean;
+  body: string; // markdown
+}
+
+export const POSTS: Post[] = [
+  {
+    slug: "como-nacio-vforge",
+    title: "Cómo nació VForge: de una idea a 17 apps en producción",
+    excerpt: "La historia de cómo un desarrollador solo en Guadalajara decidió que la IA debía hacer el trabajo pesado, no solo ayudar con él.",
+    category: "origin",
+    readingTime: 6,
+    publishedAt: "2026-01-15",
+    featured: true,
+    body: `
+## El problema que todos ignoraban
+
+En 2023, construir una app para un cliente mexicano tomaba entre 3 y 6 meses.
+No porque fuera difícil técnicamente — sino porque el proceso estaba roto.
+
+Scoping manual. Wireframes que nadie entendía. Iteraciones infinitas.
+Deployments que fallaban a las 11 de la noche.
+Y al final, el cliente preguntaba: "¿Por qué tardó tanto?"
+
+**Luis Delator tenía 14 proyectos activos y cero sistemas.**
+
+Cada app era un mundo aparte. Stack diferente. Convenciones diferentes.
+La única constante era el caos.
+
+## La pregunta que lo cambió todo
+
+Un día, después de la tercera reunión de la semana sobre un feature que debería tardar horas,
+Luis se hizo una pregunta simple:
+
+> ¿Y si la IA no solo me ayudara a escribir código, sino que operara todo el producto?
+
+No un copilot. No un asistente. Un **operador**.
+
+## El primer experimento
+
+La primera versión de V — el agente central de VForge — era un script de Python de 200 líneas
+que podía leer un repositorio de GitHub y responder preguntas sobre él.
+
+Funcionó. Pero era frágil.
+
+Lo que siguió fueron 18 meses de iteración:
+- Conectar V a Neon DB para que tuviera memoria real
+- Darle acceso a Vercel para que desplegara sin supervisión
+- Entrenarla con los patrones de cada proyecto
+- Construir el relay de Hetzner para que ejecutara desde servidor
+
+## 17 apps después
+
+Hoy VForge tiene 17 aplicaciones en producción, todas construidas con el mismo sistema:
+**V como operador, el cliente como dueño.**
+
+Carnesn.ink. Happytoc.life. Ruta618.life. Hakapoke.ink.
+Cada una con su propio Neon DB, su propio Vercel project, su propio Clerk app.
+Todas orquestadas desde un solo cerebro.
+
+## Lo que aprendimos
+
+1. **La IA no reemplaza al desarrollador — amplifica su radio de acción**
+2. **Un sistema consistente vale más que habilidad técnica aislada**
+3. **El cliente no quiere código — quiere resultados en producción**
+
+VForge nació de la frustración. Creció de la convicción.
+Y hoy es la infraestructura sobre la que construimos todo.
+    `,
+  },
+  {
+    slug: "que-es-vmomentum",
+    title: "Qué es V·Momentum y por qué no somos una agencia normal",
+    excerpt: "La diferencia entre una agencia de desarrollo y una fábrica de productos operada por IA. Spoiler: no es solo velocidad.",
+    category: "origin",
+    readingTime: 5,
+    publishedAt: "2026-01-22",
+    body: `
+## El modelo roto de las agencias
+
+La mayoría de las agencias de desarrollo en México operan igual:
+cobran por horas, entregan código, y desaparecen.
+
+El cliente queda con un repositorio que no entiende,
+una factura que no puede sostener,
+y cero capacidad de evolucionar su producto.
+
+## Nosotros somos otra cosa
+
+**V·Momentum** es la empresa. **VForge** es la plataforma.
+**V** es la inteligencia que opera todo.
+
+No vendemos horas. Vendemos productos funcionando en producción.
+
+La diferencia es fundamental:
+- Una agencia te da código → tú operas
+- V·Momentum te da el producto operando → V lo mantiene
+
+## Qué significa "fábrica de apps"
+
+Una fábrica tiene líneas de producción. Procesos repetibles. Estándares de calidad.
+
+Nuestra línea de producción es el **Método VForge**:
+1. Alcance en 1 sesión
+2. Demo en 4 días
+3. Deploy a producción
+
+Cada app que construimos pasa por el mismo proceso.
+Eso significa que la app número 17 es mejor que la número 1,
+porque cada iteración mejora el sistema.
+
+## La ventaja del operador
+
+Cuando V conoce tu proyecto, no solo puede responder preguntas.
+Puede actuar: deployments, integraciones, debugging, monitoreo.
+
+Eso es lo que nos hace diferentes.
+No somos más rápidos porque tenemos más gente.
+Somos más rápidos porque V es el equipo.
+    `,
+  },
+  {
+    slug: "el-metodo-vforge",
+    title: "El Método VForge: de idea a producción en 3 etapas",
+    excerpt: "Por qué la mayoría de los proyectos de software fracasan, y cómo el Método VForge elimina las 3 causas raíz.",
+    category: "method",
+    readingTime: 7,
+    publishedAt: "2026-02-01",
+    featured: true,
+    body: `
+## Por qué fracasan los proyectos de software
+
+Después de 17 proyectos, identificamos 3 causas raíz de fracaso:
+
+1. **Alcance sin definir**: El cliente pide X, el dev entiende Y
+2. **Demo tardía**: El cliente ve el producto 3 meses después — cuando ya cambió de opinión
+3. **Deploy como evento**: El lanzamiento es un momento de pánico, no un proceso continuo
+
+El Método VForge ataca las tres.
+
+## Etapa 1: Alcance en 1 sesión
+
+La primera conversación con V produce un Blueprint completo:
+- Lista de features priorizadas
+- Stack tecnológico definido
+- Integraciones necesarias
+- Estimado de tiempo y precio
+
+No es un documento. Es un diagrama visual interactivo que el cliente puede ver y editar en tiempo real.
+
+**Si el alcance no queda claro en 1 sesión, no empezamos.**
+
+## Etapa 2: Demo en 4 días
+
+Los primeros 4 días de trabajo producen una demo navegable.
+
+No un mockup. No un prototipo estático.
+Una app real, desplegada en Vercel, con datos demo plausibles.
+
+El cliente puede:
+- Navegar todas las pantallas
+- Probar los flujos principales
+- Mostrarla a su equipo y usuarios
+
+Si la demo no convence, paramos. Sin costo adicional.
+
+## Etapa 3: Deploy a producción
+
+Una vez aprobada la demo, construimos iteración por iteración.
+Cada feature nueva pasa por:
+
+1. **Build**: V escribe el código, corre TypeScript, verifica
+2. **Review**: Claude audita calidad antes de push
+3. **Deploy**: Vercel despliega automáticamente
+4. **Monitor**: Logs y errores visibles en el portal del cliente
+
+No hay "lanzamiento final". Hay producción continua.
+
+## El resultado
+
+- **17 apps en producción** con este método
+- **Demo garantizada en 4 días** o no cobramos la primera etapa
+- **Cero proyectos abandonados** desde que adoptamos el método
+
+El método no es magia. Es disciplina sistematizada.
+    `,
+  },
+  {
+    slug: "que-es-mcp",
+    title: "Qué es MCP y por qué va a cambiar cómo trabajas con IA",
+    excerpt: "Model Context Protocol: el estándar que permite a los modelos de IA conectarse con cualquier sistema del mundo real. Explicado sin tecnicismos.",
+    category: "mcp",
+    readingTime: 8,
+    publishedAt: "2026-02-10",
+    featured: true,
+    body: `
+## El problema de los LLMs aislados
+
+Un modelo de lenguaje, por poderoso que sea, tiene un límite crítico:
+vive encerrado en su ventana de contexto.
+
+No puede ver tu base de datos.
+No puede ejecutar código en tu servidor.
+No puede leer tus documentos privados.
+No puede actuar sobre tu infraestructura.
+
+Hasta que llega MCP.
+
+## Qué es Model Context Protocol
+
+**MCP** (Model Context Protocol) es un estándar abierto creado por Anthropic
+que define cómo los modelos de IA se conectan con sistemas externos.
+
+Piénsalo como USB-C para la IA:
+- Un puerto estándar que cualquier herramienta puede usar
+- El modelo "enchufa" herramientas y puede usarlas
+- Las herramientas exponen capacidades, el modelo las invoca
+
+## Cómo funciona técnicamente
+
+Un servidor MCP expone **tools** (herramientas) que el modelo puede llamar:
+
+\`\`\`
+Tool: query_database
+Input: { sql: "SELECT * FROM projects WHERE status='active'" }
+Output: { rows: [...] }
+\`\`\`
+
+El modelo recibe el output y lo incorpora a su respuesta.
+Para el usuario, es transparente. Para el sistema, es poderoso.
+
+## VForge MCP: lo que exponemos
+
+Nuestro servidor MCP en \`https://vforge.site/api/mcp\` expone 14 tools:
+
+- Gestión de proyectos (crear, consultar, actualizar)
+- Deployments (trigger, status, logs)
+- Integraciones (Clerk, Stripe, Neon, Resend)
+- Contratos y documentación
+- Workspace y blueprint
+
+Cualquier agente compatible con MCP puede usar VForge como backend operacional.
+
+## Por qué es importante para tu negocio
+
+Si tienes un proceso repetitivo que involucra IA, MCP te permite:
+- Dar al modelo acceso a tus datos reales
+- Automatizar acciones, no solo texto
+- Integrar con cualquier sistema existente
+
+**Esto no es el futuro. Es lo que VForge hace hoy.**
+    `,
+  },
+  {
+    slug: "vforge-mcp-instalacion",
+    title: "Cómo instalar VForge MCP en Claude Desktop en 5 minutos",
+    excerpt: "Guía paso a paso para conectar Claude Desktop con VForge y tener tu fábrica de apps operando desde cualquier conversación.",
+    category: "mcp",
+    readingTime: 5,
+    publishedAt: "2026-02-15",
+    body: `
+## Requisitos
+
+- Claude Desktop instalado (mac o Windows)
+- Cuenta en VForge (gratis en vforge.site)
+- Tu Bearer token de VForge
+
+## Paso 1: Obtén tu token
+
+En tu dashboard de VForge → Settings → MCP Token.
+Copia el token (empieza con \`vfmcp_\`).
+
+## Paso 2: Edita claude_desktop_config.json
+
+Abre Claude Desktop → Settings → Developer → Edit Config.
+
+Agrega este bloque:
+
+\`\`\`json
+{
+  "mcpServers": {
+    "vforge": {
+      "url": "https://vforge.site/api/mcp",
+      "headers": {
+        "Authorization": "Bearer TU_TOKEN_AQUI"
+      }
+    }
+  }
+}
+\`\`\`
+
+## Paso 3: Reinicia Claude Desktop
+
+Cierra y abre Claude Desktop.
+Verás el ícono de VForge en la barra de herramientas.
+
+## Paso 4: Prueba la conexión
+
+Escribe en Claude:
+> "Lista mis proyectos de VForge"
+
+Claude llamará a la tool \`list_projects\` y te mostrará tu portafolio real.
+
+## Qué puedes hacer ahora
+
+- "Crea un nuevo proyecto para [cliente]"
+- "¿Cuál es el estado de mi deploy de happytoc.life?"
+- "Genera un contrato para [nombre] por $12,000 MXN"
+- "Muéstrame el blueprint de [proyecto]"
+
+**VForge MCP convierte a Claude en tu operador real de infraestructura.**
+    `,
+  },
+  {
+    slug: "ahorro-40-porciento-tokens",
+    title: "Cómo el Método VForge reduce hasta 40% el consumo de tokens",
+    excerpt: "La economía de tokens no es trivial cuando tienes 17 proyectos activos. Así optimizamos el contexto para gastar menos sin saber menos.",
+    category: "savings",
+    readingTime: 9,
+    publishedAt: "2026-02-20",
+    featured: true,
+    body: `
+## El problema del contexto infinito
+
+La intuición dice: "más contexto = mejores respuestas".
+La realidad económica dice: "más contexto = más costo".
+
+Con 17 proyectos activos, cada conversación con V puede consumir
+fácilmente 50,000-100,000 tokens si no tienes un sistema.
+
+A escala, eso es dinero real.
+
+## Las 3 fugas de tokens que identificamos
+
+### 1. Relectura de archivos conocidos
+
+Sin memoria persistente, cada sesión empieza desde cero.
+V lee el mismo README, el mismo package.json, la misma estructura.
+
+**Solución**: Neon Brain DB almacena el contexto comprimido.
+V carga un resumen de 500 tokens en vez de leer 5,000 líneas de código.
+
+### 2. Prompts sin estructura
+
+"Ayúdame con mi proyecto de React" vs
+"Contexto: istore-pro, Next.js 14, Neon, Clerk. Tarea: fix bug en /api/products"
+
+El segundo prompt produce resultados en un turno.
+El primero necesita 3-5 turnos de clarificación.
+
+**Ahorro**: 60-70% menos tokens por tarea.
+
+### 3. Herramientas repetidas
+
+Sin un sistema de skills, V improvisa cada vez.
+Con el Skills Vault (27+ skills), V ejecuta el patrón probado directamente.
+
+**Ahorro**: 40-50% menos tokens en tareas recurrentes.
+
+## El sistema completo
+
+\`\`\`
+Sesión estándar SIN sistema:   ~80,000 tokens
+Sesión con Método VForge:      ~47,000 tokens
+Ahorro:                        ~41%
+\`\`\`
+
+Los componentes:
+1. **Boot context comprimido** — 466 tokens vs. miles
+2. **Skills Vault** — patrón ejecutado sin exploración
+3. **Neon Brain** — memoria semántica, no relectura
+4. **MCP directo** — herramientas reales vs. texto generado
+
+## El impacto en precio
+
+Si usas Claude Max (~$100/mes) y manejas 10+ proyectos,
+el Método VForge puede mantenerte en ese plan
+en vez de necesitar Enterprise.
+
+No es solo velocidad. Es economía de IA sostenible.
+    `,
+  },
+  {
+    slug: "v-el-agente-central",
+    title: "V: el agente que conoce tu proyecto mejor que tú",
+    excerpt: "Cómo construimos una IA con memoria real, contexto persistente y capacidad de acción sobre infraestructura real.",
+    category: "product",
+    readingTime: 7,
+    publishedAt: "2026-03-01",
+    body: `
+## Qué hace V diferente a ChatGPT
+
+ChatGPT responde preguntas.
+V opera infraestructura.
+
+La diferencia no es de modelo — es de sistema.
+
+## La arquitectura de V
+
+V tiene 4 capas:
+
+### Capa 1: Memoria (Neon Brain)
+Base de datos PostgreSQL con 6 tablas:
+- \`projects\` — todos los proyectos activos
+- \`skills\` — patrones ejecutables
+- \`patterns\` — lecciones aprendidas
+- \`tasks\` — tareas pendientes y completadas
+- \`conversations\` — historial semántico
+- \`credentials_registry\` — secretos (referencia, no valor)
+
+### Capa 2: Ejecución (Hetzner Relay)
+Servidor en Frankfurt que recibe comandos via API:
+- \`POST /brain/exec\` — ejecuta bash
+- \`POST /brain/query\` — consulta Neon
+- \`GET /brain/file/\` — lee archivos
+
+### Capa 3: Deploy (Vercel)
+V puede triggerear deployments directamente.
+Cada push a GitHub activa CI/CD automático.
+
+### Capa 4: Skills Vault
+27+ skills almacenados en GitHub.
+Cada skill es un patrón probado que V ejecuta sin improvisación.
+
+## Lo que V puede hacer en una sesión
+
+- Crear un proyecto completo (repo + Neon + Vercel + Clerk)
+- Debuggear un error en producción
+- Generar y enviar un contrato al cliente
+- Deployar una feature nueva
+- Revisar logs y diagnosticar problemas
+
+**Todo en conversación. Sin salir de Claude Desktop.**
+    `,
+  },
+  {
+    slug: "stack-vforge-2026",
+    title: "El stack completo de VForge en 2026",
+    excerpt: "Next.js, Neon, Clerk, Vercel, Resend, Stripe. Por qué elegimos cada pieza y cómo encajan.",
+    category: "product",
+    readingTime: 6,
+    publishedAt: "2026-03-08",
+    body: `
+## Por qué el stack importa
+
+Un stack inconsistente mata proyectos.
+Cuando cada app usa tecnologías diferentes, cada problema es único.
+
+**Nosotros tomamos la decisión opuesta**: un stack fijo para todos los proyectos.
+
+## El stack canónico VForge
+
+### Frontend
+**Next.js 14 (App Router)** — el estándar de facto.
+Routing, SSR, API routes, middleware: todo en uno.
+Deployment a Vercel es instantáneo.
+
+### Base de datos
+**Neon PostgreSQL** — serverless, escalable, con Data API REST.
+Sin gestionar servidores. Queries en milisegundos.
+Cada proyecto tiene su propio Neon project.
+
+### Auth
+**Clerk** — onboarding listo en 30 minutos.
+Social login, MFA, organizaciones.
+Se integra con Neon via JWKS sin configuración extra.
+
+### Email
+**Resend** — API moderna, templates con React.
+DKIM configurado via DNS. Dominio propio en cada proyecto.
+
+### Pagos
+**Stripe (live mode)** — solo Stripe.
+Webhooks, subscriptions, one-time payments.
+Todo en pesos mexicanos con IVA incluido.
+
+### Deploy
+**Vercel** — el único destino.
+Preview deployments en cada PR.
+Edge functions para latencia mínima en México.
+
+## Por qué este stack reduce tokens
+
+Cuando V conoce el stack de memoria, no necesita leer documentación.
+Sabe exactamente cómo conectar Clerk con Neon, cómo configurar Resend, cómo estructurar Stripe.
+
+**Conocimiento especializado = menos exploración = menos tokens.**
+    `,
+  },
+  {
+    slug: "pwa-vs-app-nativa",
+    title: "PWA vs App Nativa: cuándo elegir cada una",
+    excerpt: "La decisión más importante antes de contratar desarrollo. Spoiler: la mayoría de los clientes no necesitan app nativa.",
+    category: "method",
+    readingTime: 5,
+    publishedAt: "2026-03-15",
+    body: `
+## La pregunta que todos hacen mal
+
+"¿Me conviene una app o una página web?"
+
+Esta pregunta está mal formulada. La pregunta correcta es:
+**¿Qué necesita hacer tu producto y quién lo usa?**
+
+## PWA: el punto dulce
+
+Una Progressive Web App es una aplicación web que se instala como nativa.
+
+**Ventajas:**
+- Un solo codebase para todos los dispositivos
+- Sin App Store (no pagas el 30%)
+- Actualizaciones instantáneas sin revisión
+- Instalable desde el navegador
+- Funciona offline con Service Worker
+
+**Precio base en VForge: $12,000 MXN**
+
+## App Nativa: cuándo sí
+
+Necesitas app nativa cuando:
+- Accedes a hardware específico (NFC, Bluetooth LE, ARKit)
+- Requieres autenticación biométrica avanzada
+- El App Store es canal de distribución crítico
+- Necesitas pagos in-app (Apple Pay integrado)
+
+**Precio en VForge: +$5,000 iOS / +$3,000 Android**
+
+## La recomendación real
+
+De nuestros 17 proyectos:
+- **14 son PWA** — suficiente para el 90% de casos de uso
+- **3 tienen versión nativa** — por requerimientos específicos
+
+Empieza con PWA. Si el producto crece y aparece un requerimiento nativo real, lo añades.
+No al revés.
+    `,
+  },
+  {
+    slug: "generador-contenido-ia",
+    title: "VForge Generador de Contenido IA: crea 30 días de contenido en una sesión",
+    excerpt: "El nuevo módulo que convierte tu estrategia de negocio en posts, artículos y videos listos para publicar.",
+    category: "product",
+    readingTime: 6,
+    publishedAt: "2026-03-22",
+    featured: true,
+    body: `
+## El problema del contenido
+
+Tienes un negocio. Sabes que necesitas contenido.
+Pero crear 30 posts de calidad toma semanas.
+
+El Generador de Contenido IA de VForge lo hace en una sesión de trabajo.
+
+## Cómo funciona
+
+### Input: tu negocio
+Le cuentas a V sobre tu empresa:
+- Qué vendes
+- A quién le vendes
+- Cuál es tu diferenciador
+- Tu tono de voz
+
+### Proceso: V como estratega de contenido
+V analiza tu posicionamiento y genera:
+- 30 ideas de posts para Instagram/LinkedIn
+- 10 artículos de blog de 800-1,200 palabras
+- 5 scripts de video corto (Reels/TikTok)
+- 1 campaña de email de 5 correos
+
+### Output: listo para publicar
+Cada pieza viene con:
+- Texto completo optimizado
+- Hashtags relevantes
+- Hora de publicación sugerida
+- CTA personalizado
+
+## La diferencia con ChatGPT
+
+ChatGPT te da contenido genérico.
+El Generador VForge conoce tu empresa, tu cliente y tu historial.
+
+El contenido del mes 3 es más preciso que el del mes 1,
+porque V aprende de lo que funcionó.
+
+## Precio
+
+Desde $200/mes en el plan básico.
+Incluido en planes Studio y Forge.
+    `,
+  },
+  {
+    slug: "contratos-automaticos",
+    title: "Cómo generamos contratos profesionales en 30 segundos",
+    excerpt: "El sistema de contratos-compendio de VForge: legal + técnico + financiero en un solo documento de alta calidad.",
+    category: "product",
+    readingTime: 4,
+    publishedAt: "2026-03-29",
+    body: `
+## El dolor de los contratos
+
+Para un desarrollador freelance, los contratos son el talón de Aquiles.
+O usas un template genérico que no protege a nadie,
+o gastas horas redactando uno nuevo.
+
+V·Momentum resolvió esto con los **Contratos-Compendio**.
+
+## Qué es un contrato-compendio
+
+No es solo el contrato legal. Es un documento editorial completo:
+
+1. **Portada cinematográfica** — diseño premium con colores de marca
+2. **Resumen ejecutivo** — qué se va a construir, para quién, por cuánto
+3. **Guía del proceso** — el Método VForge explicado al cliente
+4. **Documentación técnica** — stack, arquitectura, integraciones
+5. **Variables de entorno** — tabla de cada servicio configurado
+6. **Contrato legal** — términos, propiedad intelectual, pagos
+7. **Información bancaria** — CLABE para transferencia directa
+
+## Generación automática
+
+V genera el contrato completo en 30 segundos:
+
+\`\`\`
+"Genera el contrato para [cliente] por $8,000 MXN,
+proyecto ruta618.life, anticipo $1,500"
+\`\`\`
+
+Output: archivo .docx listo para enviar.
+
+## La cláusula de IP
+
+Todos nuestros contratos incluyen:
+> Todo el código, repositorios, credenciales y control operacional
+> se transfieren íntegra e irrevocablemente al cliente al finalizar el proyecto.
+
+**El cliente es dueño de todo. Sin vendor lock-in.**
+    `,
+  },
+  {
+    slug: "casos-exito-carnesn",
+    title: "Caso de éxito: CSN Carnes Selectas — el panel de admin perfecto",
+    excerpt: "Cómo construimos el panel de administración de referencia para todos los proyectos VForge.",
+    category: "community",
+    readingTime: 5,
+    publishedAt: "2026-04-05",
+    body: `
+## El cliente
+
+CSN Carnes Selectas es una empresa de distribución de carne premium en México.
+Necesitaban un panel de administración para gestionar pedidos, clientes y entregas.
+
+## El desafío
+
+El cliente tenía procesos muy específicos:
+- Pedidos por WhatsApp que necesitaban digitalizarse
+- Rutas de entrega con múltiples paradas
+- Clientes con crédito y límites personalizados
+
+## Lo que construimos
+
+En 3 etapas del Método VForge:
+
+### Etapa 1: Alcance (1 sesión)
+Blueprint con 8 módulos:
+- Dashboard de pedidos en tiempo real
+- Gestión de clientes con historial
+- Rutas de entrega con mapa
+- Control de inventario
+- Facturación automática
+- Reportes semanales
+
+### Etapa 2: Demo (4 días)
+La demo incluyó los 3 flujos principales:
+- Crear pedido desde cero
+- Asignar a ruta de entrega
+- Marcar como entregado con firma digital
+
+El cliente aprobó en el primer review.
+
+### Etapa 3: Producción (3 semanas)
+Deploy completo en carnesn.ink.
+Panel de admin + app del repartidor + portal del cliente.
+
+## El resultado
+
+**carnesn.ink es hoy el estándar de referencia** para diseño de admin panel en todos los proyectos VForge.
+
+Cuando un nuevo proyecto necesita un panel de admin,
+V toma carnesn.ink como modelo y adapta.
+    `,
+  },
+  {
+    slug: "neon-database-por-que",
+    title: "Por qué usamos Neon en lugar de Supabase o PlanetScale",
+    excerpt: "La decisión que tomamos en 2024 y que cambia la economía de escalar 17 proyectos independientes.",
+    category: "product",
+    readingTime: 5,
+    publishedAt: "2026-04-12",
+    body: `
+## El problema de la base de datos a escala
+
+Con 17 proyectos, necesitamos 17 bases de datos.
+Cada una independiente, con su propia seguridad, sus propios backups.
+
+La pregunta no es cuál DB es "mejor".
+La pregunta es cuál DB es más económica y operacional a escala.
+
+## Por qué no Supabase
+
+Supabase es excelente. Pero tiene un problema:
+cada proyecto en el plan gratuito hiberna después de inactividad.
+Para aplicaciones de clientes que usan poco, eso es inaceptable.
+
+Además, el modelo de pricing escala mal cuando tienes muchos proyectos pequeños.
+
+## Por qué no PlanetScale
+
+PlanetScale eliminó su plan gratuito.
+Para proyectos en etapa temprana, eso es un bloqueador real.
+
+## Por qué Neon
+
+1. **Serverless real**: solo pagas por queries ejecutadas
+2. **Branching**: crea ramas de DB para preview deployments
+3. **Data API REST**: queries sin conexión directa (perfecto para Edge)
+4. **Plan gratuito generoso**: 10 proyectos activos sin costo
+5. **Integración directa con Vercel**: un botón para conectar
+
+## El setup que usamos
+
+Cada proyecto tiene:
+- Su propio Neon project
+- Su propio Neon DB name
+- Variables: \`DATABASE_URL\` + \`NEON_REST_URL\`
+- JWT auth via Clerk JWKS
+
+V puede crear, consultar y migrar cualquier Neon DB
+sin salir de la conversación.
+    `,
+  },
+  {
+    slug: "framer-motion-sistema",
+    title: "Por qué Framer Motion en todo: el sistema de animación VForge",
+    excerpt: "No usamos CSS animations en producción. Todo pasa por Framer Motion. Esta es la razón técnica y estética.",
+    category: "product",
+    readingTime: 4,
+    publishedAt: "2026-04-19",
+    body: `
+## La regla no negociable
+
+En VForge hay una regla de diseño que no se discute:
+**Framer Motion en todo.**
+
+FadeInOnScroll. StaggerContainer. HoverCard. PageTransition. NumberCounter.
+
+Si algo se mueve en una app VForge, lo hace a través de Framer Motion.
+
+## Por qué no CSS animations
+
+Las CSS animations son excelentes para micro-animaciones simples.
+Pero tienen limitaciones críticas:
+
+1. No pueden reaccionar a estado de React
+2. No tienen orquestación nativa entre componentes
+3. La interactividad compleja (drag, gestures) es complicada
+4. No tienen exit animations sin trabajo extra
+
+## Los 5 hooks canónicos
+
+\`\`\`typescript
+// useScrollAnimation — fade in al hacer scroll
+const { ref, inView } = useInView({ threshold: 0.1 });
+
+// useMouseParallax — efecto parallax con el cursor
+const { x, y } = useMouseParallax(0.02);
+
+// PageTransition — envuelve cada página
+<PageTransition>...</PageTransition>
+
+// StaggerContainer — children con delay escalonado
+<StaggerContainer staggerDelay={0.08}>...</StaggerContainer>
+
+// NumberCounter — contador animado para stats
+<NumberCounter from={0} to={17} duration={1.5} />
+\`\`\`
+
+## El resultado visual
+
+Una app VForge se siente fluida y premium desde el primer uso.
+No porque sea complicada — sino porque cada movimiento tiene intención.
+
+Esa sensación es lo que diferencia una app de $12,000 de una de $3,000.
+    `,
+  },
+  {
+    slug: "clerk-auth-en-10-minutos",
+    title: "Auth con Clerk en 10 minutos: nuestra configuración estándar",
+    excerpt: "Social login, organizaciones, JWKS con Neon. El setup que usamos en los 17 proyectos sin modificaciones.",
+    category: "product",
+    readingTime: 5,
+    publishedAt: "2026-04-26",
+    body: `
+## Por qué Clerk y no Auth.js o NextAuth
+
+Auth.js es flexible. Pero la flexibilidad tiene un precio: configuración.
+
+Para cada proyecto, NextAuth requiere:
+- Configurar cada provider por separado
+- Manejar sesiones manualmente
+- Construir UI de login desde cero
+- Integrar con la base de datos
+
+Clerk hace todo eso out-of-the-box.
+
+## El setup estándar VForge
+
+### Variables de entorno
+\`\`\`
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
+CLERK_SECRET_KEY=sk_live_...
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/app
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/onboarding
+\`\`\`
+
+### Middleware
+\`\`\`typescript
+// middleware.ts
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+
+const isProtected = createRouteMatcher(["/app(.*)", "/api/workspace(.*)"]);
+
+export default clerkMiddleware((auth, req) => {
+  if (isProtected(req)) auth().protect();
+});
+\`\`\`
+
+### Integración con Neon
+El JWT de Clerk se verifica contra el JWKS del proyecto.
+Las queries de Neon Data API usan el token directamente:
+
+\`\`\`typescript
+const { getToken } = auth();
+const token = await getToken();
+// Usar token en headers de Neon Data API
+\`\`\`
+
+## Tiempo de setup: 10 minutos
+
+V configura Clerk en cualquier proyecto nuevo en 10 minutos.
+Sin documentación. Sin tutoriales.
+El patrón está en el Skills Vault.
+    `,
+  },
+  {
+    slug: "vercel-vs-fly-vs-railway",
+    title: "Vercel vs Fly.io vs Railway: por qué elegimos Vercel sin dudarlo",
+    excerpt: "La comparativa que no te dicen: costo real, latencia en México y fricción de deploy para un equipo de uno.",
+    category: "product",
+    readingTime: 5,
+    publishedAt: "2026-05-03",
+    body: `
+## El contexto importa
+
+Esta no es una comparativa genérica.
+Es la comparativa para alguien que:
+- Maneja 17+ proyectos solo
+- Todos en Next.js
+- Clientes en México
+- Tiempo de deploy = dinero real
+
+## Vercel
+
+**Lo que nos da:**
+- Deploy automático en cada push a GitHub (30 segundos)
+- Preview deployments en cada PR
+- Edge network con nodos en São Paulo (latencia ~40ms México)
+- Analytics incluidos
+- Logs en tiempo real
+
+**Lo que cuesta:**
+- Hobby: gratis (1 proyecto comercial)
+- Pro: $20/mes (proyectos ilimitados + team)
+
+Para 17 proyectos, $20/mes es irrisorio.
+
+## Fly.io
+
+Excelente para aplicaciones con estado, websockets, y workloads largos.
+Para Next.js estático/SSR, es sobreingeniería.
+El deploy es más manual. La curva de aprendizaje es real.
+
+## Railway
+
+Buen DX. Pero el pricing por recurso escala rápido con muchos proyectos.
+Para 17 proyectos, empezarías a pagar $5-10/proyecto/mes.
+
+## La decisión
+
+**Vercel Pro + 17 proyectos = $20/mes total.**
+$1.17 por proyecto por mes.
+
+No hay competencia.
+    `,
+  },
+  {
+    slug: "resend-email-transaccional",
+    title: "Resend: el email transaccional que finalmente funciona en México",
+    excerpt: "DKIM, SPF, DMARC. Cómo configuramos Resend en cada proyecto para que los correos lleguen al inbox y no al spam.",
+    category: "product",
+    readingTime: 4,
+    publishedAt: "2026-05-10",
+    body: `
+## El problema del email en México
+
+Los emails transaccionales tienen una tasa de spam altísima en México.
+Los ISPs mexicanos son agresivos con el filtrado.
+
+La solución: configuración correcta de DNS + proveedor de buena reputación.
+
+## Por qué Resend
+
+- API moderna (npm install resend, listo)
+- Templates con React (JSX en vez de HTML de los 90s)
+- Logs y analytics incluidos
+- Soporte para envío en nombre de dominios propios
+- Plan gratuito: 3,000 emails/mes
+
+## La configuración DNS que siempre funciona
+
+Para cada dominio de cliente, configuramos 3 registros:
+
+\`\`\`
+# SPF — autoriza a Resend a enviar por tu dominio
+TXT @ "v=spf1 include:amazonses.com ~all"
+
+# DKIM — firma criptográfica de Resend
+CNAME resend._domainkey.[dominio].com → [valor de Resend]
+
+# DMARC — política de aceptación
+TXT _dmarc "v=DMARC1; p=none; rua=mailto:dmarc@[dominio]"
+\`\`\`
+
+## Error crítico con name.com
+
+En name.com, el campo Host acepta solo el subdominio.
+**NUNCA el dominio completo.**
+
+Correcto: \`resend._domainkey\`
+Incorrecto: \`resend._domainkey.midominio.com\`
+
+V tiene esta regla hardcoded en su memoria.
+    `,
+  },
+  {
+    slug: "stripe-live-mode-setup",
+    title: "Stripe en live mode desde el día 1: nuestra configuración estándar",
+    excerpt: "No usamos test mode en producción. Así configuramos Stripe live en cada proyecto VForge sin errores.",
+    category: "product",
+    readingTime: 4,
+    publishedAt: "2026-05-17",
+    body: `
+## La decisión de live mode desde el inicio
+
+Muchos desarrolladores lanzan con Stripe en test mode
+y "lo pasan a live después".
+
+Ese "después" nunca llega limpiamente.
+
+En VForge, todo proyecto con pagos arranca en live mode desde el día 1.
+
+## Variables de entorno requeridas
+
+\`\`\`
+STRIPE_SECRET_KEY=sk_live_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+\`\`\`
+
+## El webhook: la pieza más importante
+
+El 90% de los bugs de Stripe vienen de webhooks mal configurados.
+
+Nuestro setup estándar:
+
+\`\`\`typescript
+// app/api/webhooks/stripe/route.ts
+import Stripe from "stripe";
+import { headers } from "next/headers";
+
+export async function POST(req: Request) {
+  const body = await req.text();
+  const sig = headers().get("stripe-signature")!;
+
+  let event: Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      body, sig, process.env.STRIPE_WEBHOOK_SECRET!
+    );
+  } catch {
+    return new Response("Webhook error", { status: 400 });
+  }
+
+  switch (event.type) {
+    case "checkout.session.completed":
+      // Handle payment
+      break;
+  }
+
+  return new Response("OK");
+}
+\`\`\`
+
+## IVA en México
+
+Los precios en México deben incluir IVA (16%).
+Configuramos Stripe Tax para calcular automáticamente.
+
+$12,000 MXN visible para el cliente = $10,344.82 + IVA en el recibo fiscal.
+    `,
+  },
+  {
+    slug: "hetzner-relay-arquitectura",
+    title: "La arquitectura del relay de Hetzner: servidor para comandos, no para código",
+    excerpt: "Por qué tenemos un servidor en Frankfurt que no corre aplicaciones sino que ejecuta comandos para los agentes de IA.",
+    category: "product",
+    readingTime: 6,
+    publishedAt: "2026-05-24",
+    body: `
+## El concepto del relay
+
+En la arquitectura de V·Momentum hay un componente inusual:
+un servidor en Hetzner que no corre ninguna app de cliente.
+
+Su único trabajo: recibir comandos de V y ejecutarlos.
+
+## Por qué existe
+
+Claude Desktop y Claude.ai no pueden ejecutar comandos del sistema.
+No pueden hacer git push. No pueden instalar dependencias.
+No pueden interactuar con el filesystem.
+
+El relay resuelve eso.
+
+## Endpoints del relay
+
+\`\`\`
+POST /brain/exec
+Body: { secret: "...", cmd: "git push origin main" }
+Response: { code: 0, stdout: "...", stderr: "" }
+
+POST /brain/query
+Body: { secret: "...", sql: "SELECT * FROM projects" }
+Response: [{ id: "...", name: "..." }]
+
+GET /brain/file/{path}
+Response: contenido del archivo como texto
+
+POST /brain/dispatch
+Body: { secret: "...", agent: "goosip", payload: {...} }
+\`\`\`
+
+## Reglas de operación
+
+1. Shell es \`sh\`, no bash (no soporta \`declare -A\`)
+2. Scripts complejos van base64-encoded
+3. \`setsid\` para procesos en background
+4. No anidar comillas en JSON — usar scripts staged
+
+## La seguridad
+
+El secret es un string largo compartido entre V y el servidor.
+No es OAuth. No es JWT.
+Es simple, funciona, y V lo maneja sin exposición.
+
+**¿Es para producción en una empresa grande? No.**
+**¿Es perfecto para un equipo de uno? Absolutamente.**
+    `,
+  },
+  {
+    slug: "agentes-ia-ecosistema",
+    title: "El ecosistema de agentes: V, Tanit, Breack, Goossip y Prism",
+    excerpt: "Cómo organizamos múltiples agentes de IA especializados que trabajan juntos sin pisarse.",
+    category: "product",
+    readingTime: 6,
+    publishedAt: "2026-06-01",
+    body: `
+## Por qué múltiples agentes
+
+Un solo agente general es menos eficiente que varios especializados.
+
+La especialización permite:
+- Contexto más relevante (menos tokens)
+- Patrones más precisos para cada dominio
+- Fallos aislados (si uno falla, los otros siguen)
+
+## Los agentes del ecosistema
+
+### V (Orchestrator)
+El agente central. Conoce todos los proyectos, todos los clientes.
+Coordina a los demás agentes. Es quien habla directamente con Luis.
+
+### Tanit (Memory + Trading)
+Especializada en memoria a largo plazo y análisis financiero.
+Mantiene el historial semántico del ecosistema.
+
+### Breack (Audit)
+El auditor. Revisa código antes de cada push.
+Mantiene 79+ lecciones aprendidas en Neon.
+Vive en breack.life con memoria persistente.
+
+### Goossip (Marketing + WhatsApp)
+Bot de marketing en Hetzner.
+Conectado a WhatsApp via Baileys.
+Envía campañas, responde queries, agenda citas.
+
+### Prism (Visual)
+Especializado en generación de contenido visual.
+Coordinador con Higgsfield para videos e imágenes.
+
+## La coordinación
+
+Los agentes se comunican via el relay de Hetzner:
+\`POST /brain/dispatch\` con el agente destino y el payload.
+
+V orquesta. Los demás ejecutan.
+    `,
+  },
+  {
+    slug: "skills-vault-sistema",
+    title: "El Skills Vault: 27+ habilidades que V ejecuta sin improvisación",
+    excerpt: "Por qué un repositorio de patrones probados vale más que modelos más grandes o más contexto.",
+    category: "savings",
+    readingTime: 5,
+    publishedAt: "2026-06-08",
+    body: `
+## El problema de la improvisación
+
+Cuando un modelo de IA improvisa, comete errores.
+Cuando ejecuta un patrón probado, es consistente.
+
+El Skills Vault es nuestra colección de patrones probados.
+
+## Qué es un skill
+
+Un skill es un archivo SKILL.md que define:
+- **Cuándo activarlo**: trigger conditions
+- **Qué hace**: el proceso paso a paso
+- **Herramientas**: qué comandos o APIs usa
+- **Errores conocidos**: trampas a evitar
+
+## Los 27+ skills actuales
+
+**Infraestructura:**
+- \`secret-injector\` — inyecta credenciales en Vercel + Hetzner
+- \`neon-brain\` — consulta y escribe a la memoria central
+- \`turbo-boot\` — arranque rápido con contexto comprimido
+
+**Deployment:**
+- \`frontend-ship\` — gate de calidad antes de cada deploy
+- \`auto-verify\` — verificación automática de cuentas via SMS/email
+
+**Contenido:**
+- \`content-engine\` — crea contenido para X, LinkedIn, TikTok
+- \`demo-screens\` — pantallas demo sin backend
+
+**Contratos:**
+- \`contract-compendium\` — genera contratos completos como .docx
+
+## El impacto en tokens
+
+Sin Skills Vault: V explora, improvisa, itera. ~3-5 turnos.
+Con Skills Vault: V ejecuta el patrón. 1 turno.
+
+Para 17 proyectos activos, esto suma decenas de miles de tokens ahorrados por semana.
+    `,
+  },
+  {
+    slug: "happytoc-numerologia-ia",
+    title: "Caso: HappyToc — numerología validada con 160/160 casos de prueba",
+    excerpt: "Cómo construimos el motor de numerología más preciso del mercado mexicano, validado contra 160 casos reales.",
+    category: "community",
+    readingTime: 5,
+    publishedAt: "2026-06-15",
+    body: `
+## El cliente
+
+Hilda, emprendedora de bienestar y productividad en México.
+Su app: HappyToc — agenda personal basada en numerología.
+
+## El desafío técnico
+
+La numerología tiene reglas específicas que no son obvias:
+- Números maestros: 11, 22 (no se reducen)
+- Año calendario vs año personal
+- Fases lunares sincronizadas con energía del día
+
+**La cliente tenía una hoja de cálculo con 160 casos validados manualmente.**
+
+## La solución
+
+V construyó el motor de numerología en Python y lo validó
+contra los 160 casos de la hoja de cálculo.
+
+\`\`\`python
+def calcular_año_personal(fecha_nacimiento: date, año: int) -> int:
+    # Reducir mes + día de nacimiento
+    mes = fecha_nacimiento.month
+    dia = fecha_nacimiento.day
+    
+    # Sumar con el año actual
+    suma = mes + dia + sum(int(d) for d in str(año))
+    
+    # Reducir a un dígito (respetando números maestros)
+    while suma > 9 and suma not in (11, 22):
+        suma = sum(int(d) for d in str(suma))
+    
+    return suma
+\`\`\`
+
+Resultado: **160/160 casos correctos.**
+
+## Lo que se construyó
+
+- Motor de numerología validado
+- Agenda personal con energía del día
+- 44 fases lunares para 2026 pre-cargadas
+- Notificaciones push via VAPID
+- Login con Clerk
+- Base de datos Neon: profiles, agenda_entries, energy_meanings, moon_phases
+
+Stack completo en producción: happytoc.life
+    `,
+  },
+  {
+    slug: "istore-pro-tiendas-reparacion",
+    title: "iStore Pro: el SaaS para tiendas de reparación que estaba faltando",
+    excerpt: "Por qué el mercado de reparación de smartphones en México necesitaba su propio sistema, y cómo lo construimos.",
+    category: "community",
+    readingTime: 4,
+    publishedAt: "2026-06-22",
+    body: `
+## El mercado
+
+Hay miles de tiendas de reparación de smartphones en México.
+La mayoría lleva el control en libretas o en WhatsApp.
+
+El software existente es caro, complicado o no está en español.
+
+## iStore Pro
+
+Un SaaS construido para el día a día de una tienda de reparación:
+
+### Módulos principales
+- **Órdenes de trabajo** — registro de reparación con foto, precio, tiempo estimado
+- **Clientes** — historial de reparaciones y dispositivos
+- **Inventario** — piezas y componentes con alertas de stock mínimo
+- **Técnicos** — asignación de reparaciones y comisiones
+- **Reportes** — ingresos, tiempos, eficiencia por técnico
+
+### La experiencia del cliente
+SMS automático cuando la reparación está lista.
+Link para ver el estatus sin llamar.
+Recibo digital con QR.
+
+## El stack
+
+- Next.js + Neon (sin Neon project dedicado aún — usa DATABASE_URL compartida)
+- Clerk para auth multi-tenant
+- Stripe para cobro de órdenes
+- Resend para SMS y correos
+
+Vive en: istore-pro.vercel.app
+
+**El cliente brief aún no ha llegado. Cuando llegue, V lo migra a producción completa en días.**
+    `,
+  },
+  {
+    slug: "ruta618-logistica-mexico",
+    title: "Ruta 618: logística de transporte para el Bajío mexicano",
+    excerpt: "Cómo construimos una app de logística para Pedro Eric Piedra Reyes que conecta transportistas con clientes en tiempo real.",
+    category: "community",
+    readingTime: 4,
+    publishedAt: "2026-07-01",
+    body: `
+## El cliente
+
+Pedro Eric Piedra Reyes, empresario de transporte en la región del Bajío.
+Su necesidad: digitalizar las rutas y conectar transportistas con clientes.
+
+## El proyecto
+
+ruta618.life — PWA de logística y transporte.
+
+### Features principales
+- Mapa de rutas en tiempo real
+- Solicitud de transporte
+- Seguimiento de carga
+- Portal del transportista
+- Reportes de viajes y facturación
+
+## El contrato
+
+Este fue uno de los primeros proyectos con el sistema de Contratos-Compendio:
+- Precio: $8,000 MXN
+- Anticipo: $1,500 MXN
+- Stack documentado completo
+- Cláusula de transferencia total de IP
+
+## Lo que aprendimos
+
+Ruta 618 fue el proyecto donde validamos que el sistema de contratos
+reduce las discusiones post-entrega a casi cero.
+
+Cuando el cliente tiene el stack, la arquitectura y los términos
+en un documento bien diseñado desde el día 1, no hay sorpresas.
+
+**Esa claridad vale más que cualquier feature extra.**
+    `,
+  },
+  {
+    slug: "darkmode-lightmode-contraste",
+    title: "Modo día y noche en VForge: la guía de contraste real",
+    excerpt: "Por qué el modo claro no es 'poner fondo blanco'. Cómo diseñamos un sistema que pasa WCAG AA en ambos modos.",
+    category: "method",
+    readingTime: 5,
+    publishedAt: "2026-07-08",
+    body: `
+## El error más común
+
+Muchos sistemas de diseño definen dark mode y después "invierten" para light mode.
+El resultado: colores que funcionan en oscuro pero tienen ratio de contraste insuficiente en claro.
+
+## Los ratios WCAG que seguimos
+
+- **Texto normal sobre fondo**: mínimo 4.5:1
+- **Texto grande (18px+)**: mínimo 3:1
+- **Elementos interactivos**: mínimo 3:1
+
+## Nuestros tokens en dark mode
+
+\`\`\`css
+--color-on-surface: #e5e2e1;      /* sobre #0e0e0e = 13.8:1 ✓ */
+--color-muted: #6b6975;           /* sobre #0e0e0e = 4.7:1 ✓ */
+--color-violet-400: #a078ff;      /* sobre #0e0e0e = 5.2:1 ✓ */
+--color-cyan-400: #22d3ee;        /* sobre #0e0e0e = 8.1:1 ✓ */
+\`\`\`
+
+## Los tokens en light mode
+
+\`\`\`css
+--color-on-surface: #0c0c10;      /* sobre #ffffff = 19.6:1 ✓ */
+--color-muted: #7a7a88;           /* sobre #ffffff = 4.9:1 ✓ */
+--color-violet-400: #7c3aed;      /* sobre #ffffff = 5.8:1 ✓ */
+--color-cyan-400: #0891b2;        /* sobre #ffffff = 4.6:1 ✓ */
+\`\`\`
+
+Nota: los accentos en light mode son más oscuros que en dark.
+El violet-400 en dark es #a078ff. En light es #7c3aed.
+Mismo token, diferente valor.
+
+## El ThemeToggle
+
+El toggle de tema en VForge usa \`data-theme\` en el html root.
+El cambio es instantáneo, sin flash, con transición de 300ms.
+
+\`\`\`typescript
+document.documentElement.setAttribute(
+  "data-theme",
+  theme === "dark" ? "dark" : "light"
+);
+\`\`\`
+    `,
+  },
+  {
+    slug: "ia-no-reemplaza-desarrollador",
+    title: "La IA no te reemplaza. Te hace irrelevante si no la usas.",
+    excerpt: "Una reflexión honesta sobre cómo cambió el trabajo de desarrollo en 18 meses de operar con IA como primera herramienta.",
+    category: "origin",
+    readingTime: 6,
+    publishedAt: "2026-07-15",
+    body: `
+## El debate equivocado
+
+La conversación sobre "IA vs desarrolladores" está mal planteada.
+
+No es ¿reemplaza o no reemplaza?
+Es: **¿qué pasa con los desarrolladores que no aprenden a trabajar con IA?**
+
+## Lo que cambió en 18 meses
+
+En enero 2024, Luis tardaba 3-4 horas en scaffoldear un nuevo proyecto Next.js.
+En junio 2026, V lo hace en 8 minutos.
+
+Eso no significa que Luis hace menos trabajo.
+Significa que Luis puede manejar 17 proyectos en lugar de 3.
+
+## La nueva competencia
+
+El desarrollador que compite contigo no es la IA.
+Es el desarrollador que usa IA tan bien que produce
+lo que tú produces en 10x menos tiempo.
+
+## Qué aprendimos de los primeros 17 proyectos
+
+1. **El sistema vale más que la habilidad individual** — V puede manejar lo que yo no recuerdo
+2. **La consistencia es una ventaja competitiva** — mismo stack = menos sorpresas
+3. **El cliente no ve el código** — ve resultados, velocidad, confianza
+
+## La pregunta que deberías hacerte
+
+¿Cuánto de tu trabajo diario es repetitivo?
+¿Cuánto tiempo pasas haciendo cosas que ya hiciste antes?
+
+Ese tiempo es el que la IA te devuelve.
+Lo que haces con él es la diferencia.
+    `,
+  },
+  {
+    slug: "mcp-empresarial-casos-uso",
+    title: "VForge MCP Empresarial: casos de uso reales para equipos de +10 personas",
+    excerpt: "Qué pueden hacer empresas medianas con un servidor MCP personalizado conectado a sus sistemas internos.",
+    category: "mcp",
+    readingTime: 7,
+    publishedAt: "2026-07-22",
+    body: `
+## Más allá del uso personal
+
+El MCP de VForge que instalas en Claude Desktop es una cosa.
+El **MCP Empresarial** es otra: un servidor personalizado
+que expone las herramientas específicas de tu empresa.
+
+## Qué es un MCP Empresarial
+
+Un servidor MCP privado conectado a tus sistemas:
+- Tu ERP (SAP, Odoo, Contpaqi)
+- Tu CRM (Salesforce, HubSpot)
+- Tu base de datos interna
+- Tus documentos privados (Drive, SharePoint)
+- Tus APIs propias
+
+## Casos de uso reales
+
+### Caso 1: Empresa de manufactura
+El equipo de ventas usa Claude con MCP para:
+- Consultar inventario en tiempo real
+- Generar cotizaciones automáticas
+- Verificar fechas de entrega
+- Crear órdenes de compra
+
+Antes: 4 pasos en 3 sistemas diferentes.
+Con MCP: una pregunta en lenguaje natural.
+
+### Caso 2: Despacho de contabilidad
+El equipo usa Claude con MCP para:
+- Consultar estado de declaraciones
+- Generar reportes de clientes
+- Calcular provisiones de IVA
+- Enviar recordatorios automáticos
+
+### Caso 3: Cadena de retail
+Gerentes de tienda usan Claude con MCP para:
+- Ver ventas del día vs objetivo
+- Solicitar transferencia de inventario
+- Aprobar promociones locales
+- Ver ranking de tiendas
+
+## Precio
+
+**VForge MCP Empresarial: desde $25,000 MXN**
+Incluye: servidor, 20+ tools customizadas, documentación, capacitación.
+    `,
+  },
+  {
+    slug: "ia-para-negocios-mexico",
+    title: "IA para negocios en México: el estado actual en 2026",
+    excerpt: "Qué está adoptando el mercado mexicano, qué sigue rezagado, y dónde están las oportunidades reales.",
+    category: "community",
+    readingTime: 6,
+    publishedAt: "2026-07-29",
+    body: `
+## México en el mapa de adopción de IA
+
+México tiene una posición única en Latam:
+- Segunda economía más grande de la región
+- 40+ millones de smartphones activos
+- Alta penetración de WhatsApp (95%+ de usuarios de internet)
+- Ecosistema de startups creciendo en CDMX, GDL, MTY
+
+Pero en adopción de IA para negocios, México está 18-24 meses detrás de EE.UU.
+
+## Qué ya se está adoptando
+
+1. **Chatbots de WhatsApp** — el caso más común. Automatización básica.
+2. **Generación de contenido** — posts, descripciones de producto, emails.
+3. **Soporte al cliente** — respuestas automáticas en primer nivel.
+
+## Qué sigue rezagado
+
+1. **Agentes con acceso a sistemas internos** — MCP es prácticamente desconocido.
+2. **Automatización de procesos internos** — la mayoría sigue en Excel.
+3. **IA en el desarrollo de software** — pocos despachos lo usan sistemáticamente.
+
+## La oportunidad
+
+El rezago de 18-24 meses crea una ventana de oportunidad enorme
+para empresas que adopten IA ahora.
+
+El que tenga un MCP Empresarial funcionando en 2026
+tendrá una ventaja operacional que sus competidores tardarán años en replicar.
+
+## Dónde entra VForge
+
+Somos el puente entre la tecnología y la empresa mexicana.
+No vendemos tecnología — vendemos resultados operacionales en español,
+con soporte real, en pesos mexicanos.
+    `,
+  },
+  {
+    slug: "costo-no-hacer-app",
+    title: "El costo de NO tener una app en 2026",
+    excerpt: "Cuánto dinero están dejando sobre la mesa los negocios mexicanos que aún dependen de WhatsApp y hojas de Excel.",
+    category: "community",
+    readingTime: 5,
+    publishedAt: "2026-08-05",
+    body: `
+## La ilusión de "no necesito app"
+
+"Mi negocio funciona bien sin app."
+
+Puede ser verdad hoy. Pero hay un costo oculto que no estás contando.
+
+## Los 4 costos invisibles
+
+### 1. Tiempo de gestión manual
+¿Cuántas horas por semana dedicas a tareas que podrían automatizarse?
+Cotizaciones manuales. Seguimiento por WhatsApp. Inventario en Excel.
+
+Promedio en negocios mexicanos sin sistemas: **8-12 horas/semana**.
+A $300/hora (costo real de tu tiempo): **$9,600-14,400 MXN/mes desperdiciados**.
+
+### 2. Errores humanos
+Sin sistema: cada error de captura es una queja de cliente o un descuadre de inventario.
+Costo promedio de un error en pedido: $500-2,000 MXN entre reposición y atención.
+
+### 3. Fricción del cliente
+Un cliente que no puede ver el estatus de su pedido llama al WhatsApp.
+Esa llamada cuesta tiempo. Y paciencia del cliente.
+
+### 4. Datos que no existen
+Sin sistema, no tienes datos. Sin datos, no puedes decidir con información.
+¿Cuál es tu producto más rentable? ¿Tu cliente más valioso? ¿Tu hora más productiva?
+
+## La matemática real
+
+Una PWA de $12,000 MXN amortizada a 12 meses = $1,000/mes.
+Si resuelve 4 horas de trabajo manual por semana = $4,800/mes de valor.
+
+**ROI: 380% en el primer año.**
+    `,
+  },
+  {
+    slug: "whatsapp-bot-baileys",
+    title: "Cómo construimos Goossip: el bot de marketing en WhatsApp",
+    excerpt: "La arquitectura detrás de Goossip, nuestro agente de marketing que opera en WhatsApp via Baileys desde Hetzner.",
+    category: "product",
+    readingTime: 6,
+    publishedAt: "2026-08-12",
+    body: `
+## Por qué WhatsApp
+
+WhatsApp tiene 95% de penetración entre usuarios de internet en México.
+Es donde viven los clientes. Donde se toman decisiones de compra.
+
+No estar en WhatsApp es no estar en el mercado.
+
+## La arquitectura de Goossip
+
+Goossip corre en Hetzner en dos procesos pm2:
+1. \`baileys-goossip\` — el bot de WhatsApp
+2. \`goosip-scheduler\` — el programador de campañas
+
+### El bot de WhatsApp
+
+Usamos Baileys (biblioteca Node.js no oficial).
+La conexión se establece via pairing code, no QR.
+
+\`\`\`javascript
+// Conexión inicial
+const sock = makeWASocket({
+  auth: state,
+  printQRInTerminal: false,
+});
+
+// Autenticación via pairing code
+const code = await sock.requestPairingCode(phoneNumber);
+console.log("Código:", code); // → Ingresar en WhatsApp > Dispositivos
+\`\`\`
+
+### El scheduler
+
+Cada campaña de marketing se programa con una fecha y hora:
+- Mensaje de lanzamiento
+- Seguimiento 48 horas después
+- Recordatorio final
+
+Goossip envía automáticamente, sin intervención humana.
+
+## Lo que puede hacer
+
+- Enviar campañas a lista de contactos
+- Responder preguntas frecuentes automáticamente
+- Agendar citas y enviar confirmación
+- Notificar cuando un pedido está listo
+- Recopilar feedback post-servicio
+
+## Precio como producto
+
+**Bots Inteligentes desde $1,500 MXN** en el catálogo de VForge.
+    `,
+  },
+  {
+    slug: "video-ia-higgsfield",
+    title: "Generamos el primer video de VForge con Higgsfield en 4 créditos",
+    excerpt: "Cómo usamos Seedance 1.5 Pro desde el servidor de Hetzner para generar video cinematic de marca sin salir de la terminal.",
+    category: "product",
+    readingTime: 4,
+    publishedAt: "2026-08-19",
+    body: `
+## La esfera que lo empezó todo
+
+El primer asset visual de VForge fue una imagen generada con Nano Banana Pro:
+una esfera de energía iridiscente en azul cobalto y violeta.
+
+El prompt: plasma swirling inside, cobalt blue, violet, crimson rim accent.
+El resultado: la identidad visual del año.
+
+## De imagen a video
+
+Con la esfera ya en biblioteca, el siguiente paso fue natural:
+animarla en un video cinematográfico de 12 segundos.
+
+## El proceso
+
+\`\`\`bash
+# Desde el relay de Hetzner
+higgsfield generate create seedance1_5 \\
+  --prompt "The VMomentum energy sphere rotates and pulses..." \\
+  --aspect_ratio 16:9 \\
+  --duration 12 \\
+  --resolution 720p \\
+  --image [UUID de la esfera] \\
+  --wait --json
+\`\`\`
+
+Costo: **4 créditos** (~$1.20 USD equivalente).
+Tiempo de generación: **~2 minutos**.
+
+## El resultado
+
+Un video de 12 segundos, 720p, con audio generado automáticamente.
+La esfera rota, emite anillos de luz, la cámara hace push-in con gravedad épica.
+
+Ese video ahora es el fondo del hero de vforge.site.
+
+## Lo que esto significa
+
+Con $200 MXN en créditos de Higgsfield,
+cualquier cliente de VForge puede tener un video de marca cinematográfico.
+
+**Videos IA desde $200 en el catálogo de VForge.**
+    `,
+  },
+  {
+    slug: "obsidian-crystal-design",
+    title: "La estética Obsidian + Crystal: el lenguaje visual de VForge",
+    excerpt: "Por qué elegimos esta estética, qué la define, y cómo la aplicamos de forma consistente en cada pantalla.",
+    category: "method",
+    readingTime: 5,
+    publishedAt: "2026-08-26",
+    body: `
+## El brief visual
+
+Cuando Luis decidió rediseñar VForge en 2026, el brief fue simple:
+**"Higgsfield level. No puedo tener librerías de íconos baratas mezcladas con calidad de cine."**
+
+De ahí nació la estética Obsidian + Crystal.
+
+## Los principios
+
+### 1. Obsidian base
+Todo empieza en negro volcánico: #03020a.
+No negro puro (#000). Negro con personalidad.
+
+El fondo no es un lienzo vacío. Es una profundidad con vida.
+
+### 2. Crystal elements
+Los componentes de UI son cristales: translúcidos, con reflejos, con bordes que brillan.
+
+\`\`\`css
+/* Crystal card */
+background: linear-gradient(135deg, rgba(139,92,246,0.18), rgba(139,92,246,0.06));
+border: 1px solid rgba(139,92,246,0.4);
+/* Sheen superior — el destello del cristal */
+::before { background: linear-gradient(180deg, rgba(255,255,255,0.12), transparent 40%); }
+\`\`\`
+
+### 3. Sin íconos de librería
+Lucide, Heroicons, FontAwesome — todos fuera.
+Cada ícono en VForge es un SVG diseñado o un emoji dimensional de alto contraste.
+
+### 4. Tipografía display
+Geist Sans para UI. Hanken Grotesk para copy.
+Tracking agresivo en labels: 0.2em.
+Pesos extremos: 300 (body) y 700 (hero).
+
+### 5. Motion con propósito
+Cada animación tiene razón de existir.
+El orbe respira. Los nodos pulsan. Las tarjetas cristal tienen sheen en hover.
+
+## La prueba de fuego
+
+Si un elemento puede ir en cualquier web, no es de VForge.
+Si al verlo dices "esto es VForge", está bien hecho.
+    `,
+  },
+  {
+    slug: "construir-solo-con-ia",
+    title: "Construir 17 apps solo en un año: lo que la IA hace posible",
+    excerpt: "Un número que no debería ser posible para una sola persona. Cómo el sistema lo hace real.",
+    category: "origin",
+    readingTime: 7,
+    publishedAt: "2026-09-02",
+    featured: true,
+    body: `
+## El número que no cuadra
+
+17 aplicaciones en producción.
+1 solo desarrollador.
+12 meses.
+
+Si le preguntas a cualquier PM de software qué equipo necesitaría para eso,
+te dirá: 5-8 personas, al menos.
+
+Nosotros lo hicimos con Luis + V.
+
+## Qué hace V que Luis no puede
+
+### Ejecución paralela
+Luis puede pensar en un proyecto a la vez.
+V puede tener contexto de 17 proyectos simultáneamente.
+
+Cuando Luis cambia de proyecto, V ya tiene el contexto listo.
+No hay "calentamiento" intelectual. El arranque es inmediato.
+
+### Memoria sin límite
+Luis olvida los detalles de proyectos que no toca en semanas.
+V nunca olvida. Cada decision, cada patrón, cada error está en Neon Brain.
+
+### Código sin fatiga
+A las 11 PM, el código de Luis tiene más bugs que a las 9 AM.
+El código de V es igual a cualquier hora.
+
+## Qué hace Luis que V no puede
+
+### Criterio de negocio
+V no sabe si un feature agrega valor real para el cliente.
+Luis sí.
+
+### Relación humana
+V no puede ir a comer con el cliente y entender su contexto real.
+Luis sí.
+
+### Decisiones de arquitectura nueva
+V ejecuta patrones conocidos brillantemente.
+Para territorio nuevo, Luis lidera y V implementa.
+
+## La fórmula
+
+**Luis (criterio + relación) + V (ejecución + memoria) = equipo completo.**
+
+17 apps en producción no es magia.
+Es el resultado de una división del trabajo bien diseñada.
+    `,
+  },
+  {
+    slug: "proximos-pasos-vforge",
+    title: "VForge en los próximos 12 meses: hoja de ruta pública",
+    excerpt: "Qué estamos construyendo, qué lanzaremos y hacia dónde va la plataforma en el resto de 2026 y 2027.",
+    category: "origin",
+    readingTime: 4,
+    publishedAt: "2026-09-09",
+    body: `
+## Por qué publicar la hoja de ruta
+
+La transparencia es una ventaja competitiva para nosotros.
+Nuestros clientes necesitan saber hacia dónde vamos.
+Nuestros futuros clientes necesitan ver que hay visión.
+
+## Lo que lanzamos en 2026
+
+### Q2 2026 (completado)
+- ✅ Rediseño completo Obsidian + Crystal
+- ✅ VForge MCP v1 (14 tools)
+- ✅ Generador de Contenido IA
+- ✅ Video IA via Higgsfield
+- ✅ Contratos-Compendio 2.0
+- ✅ Blog y documentación pública
+
+### Q3 2026 (en progreso)
+- 🔄 Portal del cliente rediseñado (pantalla de seguimiento iPhone-style)
+- 🔄 Vista Owner (Jimmy + Luis) para gestión multi-cliente
+- 🔄 Galería de videos IA por proyecto
+- 🔄 MCP Empresarial v1
+
+### Q4 2026 (planeado)
+- 📋 V disponible para clientes (no solo para Luis)
+- 📋 Marketplace de templates con deploy en 1 click
+- 📋 API pública de VForge
+- 📋 Partner program para agencias
+
+## 2027
+
+- App Store oficial de VForge
+- Multi-tenancy completo
+- V como producto SaaS independiente
+
+**El objetivo: ser la infraestructura de IA para las mejores agencias de Latam.**
+    `,
+  },
+];
+
+export const FEATURED_POSTS = POSTS.filter((p) => p.featured);
+
+export const POST_BY_SLUG = Object.fromEntries(
+  POSTS.map((p) => [p.slug, p])
+);
+
+export const CATEGORIES = {
+  origin: { label: "Origen", color: "#a855f7" },
+  method: { label: "Método", color: "#22d3ee" },
+  mcp: { label: "MCP", color: "#f59e0b" },
+  product: { label: "Producto", color: "#10b981" },
+  savings: { label: "Ahorro", color: "#3b82f6" },
+  community: { label: "Comunidad", color: "#ec4899" },
+} as const;

@@ -16,6 +16,8 @@ export function MarketingHeader() {
     { href: "/marketplace", label: "V-Shop" },
     { href: "/pricing", label: "Precios" },
     { href: "/developers", label: "Developers", badge: "Soon" },
+    { href: "/blog", label: "Blog" },
+    { href: "/mcp", label: "MCP" },
   ];
 
   const handleShare = () => {
