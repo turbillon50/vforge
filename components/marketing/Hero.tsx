@@ -21,13 +21,13 @@ type RadialItem = {
 };
 
 // 6 accesos alrededor de la esfera
-const RADIAL: RadialItem[] = [
-  { id: "welcome", label: "Qué es V", icon: Sparkles, panel: "welcome", color: "#a855f7" },
-  { id: "worlds", label: "Por dónde\nempiezo", icon: BookOpen, panel: "worlds", color: "#22d3ee" },
-  { id: "products", label: "Productos", icon: ShoppingBag, href: "#productos", color: "#8b5cf6" },
-  { id: "pricing", label: "Precios", icon: Tag, href: "/pricing", color: "#0ea5e9" },
-  { id: "faq", label: "Preguntas", icon: HelpCircle, panel: "faq", color: "#f59e0b" },
-  { id: "start", label: "Empezar", icon: Rocket, href: "/sign-up", color: "#22c55e" },
+const RADIAL: (RadialItem & { img3d: string })[] = [
+  { id: "welcome", label: "Qué es V", icon: Sparkles, panel: "welcome", color: "#a855f7", img3d: "/icons3d/sparkle.png" },
+  { id: "worlds", label: "Por dónde\nempiezo", icon: BookOpen, panel: "worlds", color: "#22d3ee", img3d: "/icons3d/book.png" },
+  { id: "products", label: "Productos", icon: ShoppingBag, href: "#productos", color: "#8b5cf6", img3d: "/icons3d/bag.png" },
+  { id: "pricing", label: "Precios", icon: Tag, href: "/pricing", color: "#0ea5e9", img3d: "/icons3d/tag.png" },
+  { id: "faq", label: "Preguntas", icon: HelpCircle, panel: "faq", color: "#f59e0b", img3d: "/icons3d/help.png" },
+  { id: "start", label: "Empezar", icon: Rocket, href: "/sign-up", color: "#22c55e", img3d: "/icons3d/rocket.png" },
 ];
 
 const WELCOME_CARDS = [
@@ -144,18 +144,15 @@ export function Hero() {
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {RADIAL.map((item, i) => {
-                  const Icon = item.icon;
                   const inner = (
                     <motion.div
                       initial={{ opacity: 0, y: 14 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05, ease: EASE }}
-                      className="flex h-[92px] flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-2 text-center transition-all active:scale-95"
+                      className="flex h-[100px] flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-2 text-center transition-all active:scale-95"
                       style={{ boxShadow: `inset 0 1px 0 ${item.color}20` }}
                     >
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: `${item.color}1f`, border: `1px solid ${item.color}40` }}>
-                        <Icon size={18} style={{ color: item.color }} />
-                      </span>
+                      <img src={item.img3d} alt="" className="h-11 w-11 object-contain" style={{ filter: `drop-shadow(0 0 8px ${item.color}80)` }} draggable={false} />
                       <span className="whitespace-pre-line text-[10px] font-semibold leading-tight text-white/80">{item.label}</span>
                     </motion.div>
                   );
