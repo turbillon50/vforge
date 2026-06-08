@@ -54,11 +54,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS prevent_locked_directive_delete ON agent_directives;
 CREATE TRIGGER prevent_locked_directive_delete
   BEFORE DELETE ON agent_directives
   FOR EACH ROW
   EXECUTE FUNCTION protect_locked_directives();
 
+DROP TRIGGER IF EXISTS prevent_locked_directive_update ON agent_directives;
 CREATE TRIGGER prevent_locked_directive_update
   BEFORE UPDATE ON agent_directives
   FOR EACH ROW

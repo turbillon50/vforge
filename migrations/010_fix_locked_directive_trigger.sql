@@ -12,7 +12,7 @@ DROP TRIGGER IF EXISTS prevent_locked_directive_update ON agent_directives;
 DROP TRIGGER IF EXISTS prevent_locked_directive_delete ON agent_directives;
 DROP FUNCTION IF EXISTS protect_locked_directives();
 
--- Recreate function — now fires on ANY update to a locked row
+-- ReCREATE OR REPLACE FUNCTION — now fires on ANY update to a locked row
 CREATE OR REPLACE FUNCTION protect_locked_directives()
 RETURNS TRIGGER AS $$
 BEGIN
