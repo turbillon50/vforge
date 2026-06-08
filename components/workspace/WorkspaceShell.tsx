@@ -13,8 +13,7 @@ import {
   MessagesSquare,
   Search,
   Settings,
-  Workflow,
-} from "lucide-react";
+  Workflow,, FileText } from "lucide-react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useClerkAppearance } from "@/lib/clerk-appearance";
 import { Home, Users } from "lucide-react";
@@ -35,6 +34,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
     { href: "/app/repovision", label: t.workspace.nav.repovision, icon: GitBranch, kbd: "R" },
     { href: "/app/deployments", label: t.workspace.nav.deployments, icon: Activity, kbd: "D" },
     { href: "/app/projects", label: t.workspace.nav.projects, icon: Workflow, kbd: "P" },
+    { href: "/app/contracts", label: "Contratos", icon: FileText, kbd: "T" },
   ];
   const navBottom = [
     { href: "/app/home", label: "Inicio", icon: Home, kbd: "H", exact: true },
