@@ -1,398 +1,154 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/workspace/PageHeader";
+import { IconCheck, IconWarn, IconLink, IconKey, IconRepeat } from "@/components/brand/VFIcons";
 import {
-  CheckCircle2,
-  CircleDot,
-  XCircle,
-  Github,
-  Link2,
-  Triangle,
-  Database,
-  CreditCard,
-  Mail,
-  Loader2,
-  KeyRound,
-} from "lucide-react";
+  GitHubLogo, VercelLogo, NeonLogo, ClerkLogo, StripeLogo,
+  ResendLogo, AnthropicLogo, OpenAILogo, TwilioLogo, MercadoPagoLogo,
+} from "@/components/brand/logos/ServiceLogos";
 import { useT } from "@/i18n/AppProviders";
+import { motion } from "framer-motion";
 
-interface HealthData {
-  ok: boolean;
-  checks: Record<string, boolean | string | number>;
-}
+const EASE:[number,number,number,number]=[0.22,1,0.36,1];
 
-interface IntegrationStat {
-  name: string;
-  status: "ok" | "warning" | "error";
-  detail: string;
-}
+interface HealthData { ok:boolean; checks:Record<string,boolean|string|number>; }
+
+const SERVICES = [
+  { id:"github",   name:"GitHub",        Logo:GitHubLogo,    color:"#e4e4e7", desc:"Control de versiones y repositorios",  oauthKey:"github"  },
+  { id:"vercel",   name:"Vercel",        Logo:VercelLogo,    color:"#e4e4e7", desc:"Deploy y hosting serverless",           oauthKey:"vercel"  },
+  { id:"neon",     name:"Neon",          Logo:NeonLogo,      color:"#00e5bf", desc:"Base de datos PostgreSQL serverless",   pasteKey:"neon"    },
+  { id:"clerk",    name:"Clerk",         Logo:ClerkLogo,     color:"#6c47ff", desc:"Autenticación y gestión de usuarios",   pasteKey:"clerk"   },
+  { id:"stripe",   name:"Stripe",        Logo:StripeLogo,    color:"#635bff", desc:"Pagos y suscripciones",                 oauthKey:"stripe"  },
+  { id:"resend",   name:"Resend",        Logo:ResendLogo,    color:"#e4e4e7", desc:"Email transaccional y campañas",        pasteKey:"resend"  },
+  { id:"anthropic",name:"Anthropic",     Logo:AnthropicLogo, color:"#ca8a04", desc:"Claude API — el modelo detrás de V",    manual:true        },
+  { id:"openai",   name:"OpenAI",        Logo:OpenAILogo,    color:"#10a37f", desc:"GPT-4 y modelos auxiliares",             manual:true        },
+  { id:"twilio",   name:"Twilio",        Logo:TwilioLogo,    color:"#f22f46", desc:"SMS, voz y WhatsApp",                   manual:true        },
+  { id:"mp",       name:"Mercado Pago",  Logo:MercadoPagoLogo,color:"#009ee3",desc:"Pagos en pesos mexicanos",              manual:true        },
+];
 
 export default function IntegrationsPage() {
-  const t = useT();
-  const [data, setData] = useState<HealthData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [ghStatus, setGhStatus] = useState<string | null>(null);
-  const [vcStatus, setVcStatus] = useState<string | null>(null);
-  const [neonStatus, setNeonStatus] = useState<string | null>(null);
-  const [stripeStatus, setStripeStatus] = useState<string | null>(null);
+  const t=useT();
+  const [data,setData]=useState<HealthData|null>(null);
+  const [loading,setLoading]=useState(true);
+  const [pasteValues,setPasteValues]=useState<Record<string,string>>({});
+  const [states,setStates]=useState<Record<string,"idle"|"saving"|"connected"|"error">>({});
+  const [errors,setErrors]=useState<Record<string,string>>({});
 
-  // Resend se conecta pegando API key (no soporta OAuth).
-  const [resendKey, setResendKey] = useState("");
-  const [resendState, setResendState] = useState<
-    "idle" | "saving" | "connected" | "error"
-  >("idle");
-  const [resendError, setResendError] = useState<string | null>(null);
-  const [neonKey, setNeonKey] = useState("");
-  const [neonState, setNeonState] = useState<"idle" | "saving" | "connected" | "error">("idle");
-  const [neonError, setNeonError] = useState<string | null>(null);
-  const [clerkKey, setClerkKey] = useState("");
-  const [clerkState, setClerkState] = useState<"idle" | "saving" | "connected" | "error">("idle");
-  const [clerkError, setClerkError] = useState<string | null>(null);
+  useEffect(()=>{
+    const sp=new URLSearchParams(window.location.search);
+    const g=sp.get("github"), v=sp.get("vercel"), s=sp.get("stripe");
+    const st:Record<string,"idle"|"saving"|"connected"|"error">={};
+    if(g==="ok") st.github="connected";
+    if(v==="ok") st.vercel="connected";
+    if(s==="ok") st.stripe="connected";
+    setStates(st);
+    fetch("/api/admin/health",{cache:"no-store"})
+      .then(r=>r.ok?r.json():{ok:false,checks:{}})
+      .then(setData).catch(()=>{}).finally(()=>setLoading(false));
+  },[]);
 
-  async function connectPaste(
-    service: "neon" | "clerk",
-    key: string,
-    setSt: (s: "idle" | "saving" | "connected" | "error") => void,
-    setErr: (e: string | null) => void,
-  ) {
-    if (!key.trim()) return;
-    setSt("saving");
-    setErr(null);
+  async function connectPaste(key:string) {
+    const val=pasteValues[key]?.trim(); if(!val) return;
+    setStates(s=>({...s,[key]:"saving"})); setErrors(e=>({...e,[key]:""}));
     try {
-      const res = await fetch(`/api/connect/${service}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: key.trim() }),
-      });
-      const d = await res.json();
-      if (d.ok) setSt("connected");
-      else { setSt("error"); setErr(d.error || "rechazada"); }
-    } catch {
-      setSt("error"); setErr("No se pudo validar. Reintenta.");
-    }
+      const r=await fetch(`/api/connect/${key}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:val})});
+      const d=await r.json();
+      if(d.ok) setStates(s=>({...s,[key]:"connected"}));
+      else { setStates(s=>({...s,[key]:"error"})); setErrors(e=>({...e,[key]:d.error||"rechazada"})); }
+    } catch { setStates(s=>({...s,[key]:"error"})); setErrors(e=>({...e,[key]:"Error de red"})); }
   }
 
-  useEffect(() => {
-    const sp = new URLSearchParams(window.location.search);
-    const g = sp.get("github");
-    const v = sp.get("vercel");
-    const n = sp.get("neon");
-    const s = sp.get("stripe");
-    if (g) setGhStatus(g);
-    if (v) setVcStatus(v);
-    if (n) setNeonStatus(n);
-    if (s) setStripeStatus(s);
-    if (g || v || n || s) window.history.replaceState({}, "", "/app/integrations");
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/v-health", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setData(d))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function connectResend() {
-    if (!resendKey.trim()) return;
-    setResendState("saving");
-    setResendError(null);
-    try {
-      const res = await fetch("/api/connect/resend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: resendKey.trim() }),
-      });
-      const body = (await res.json()) as { ok?: boolean; error?: string };
-      if (res.ok && body.ok) {
-        setResendState("connected");
-        setResendKey("");
-      } else {
-        setResendState("error");
-        setResendError(body.error || "error");
-      }
-    } catch {
-      setResendState("error");
-      setResendError("network");
-    }
+  function isConnected(svc:typeof SERVICES[0]):boolean {
+    const id=svc.id;
+    if(states[id]==="connected") return true;
+    if(svc.oauthKey && data?.checks[svc.oauthKey]) return !!data.checks[svc.oauthKey];
+    if(svc.pasteKey && data?.checks[svc.pasteKey]) return !!data.checks[svc.pasteKey];
+    return false;
   }
 
-  const integrations: IntegrationStat[] = data
-    ? Object.entries(data.checks).map(([name, value]) => {
-        const isBool = typeof value === "boolean";
-        const ok = isBool ? value : true;
-        return {
-          name,
-          status: ok ? "ok" : "error",
-          detail: isBool ? (value ? "Activo" : "Inactivo") : String(value),
-        };
-      })
-    : [];
-
-  const oauthBtn = (connected: boolean) =>
-    "inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-[14px] font-medium transition " +
-    (connected
-      ? "border border-app bg-tint-1 text-on-surface hover:border-app-strong"
-      : "bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-glow-violet hover:opacity-95");
+  const connected=SERVICES.filter(s=>isConnected(s)).length;
 
   return (
     <>
-      <PageHeader
-        eyebrow={t.integrations.eyebrow}
-        title={t.integrations.title}
-        description={t.integrations.body}
-      />
+      <PageHeader eyebrow={t.integrations?.eyebrow??"Integraciones"} title={t.integrations?.title??"Conexiones activas"} description={t.integrations?.body??"Conecta los servicios que V usa para operar tus proyectos."}
+        actions={<button className="btn-ghost" onClick={()=>window.location.reload()}><IconRepeat size={13}/> Refrescar</button>}/>
 
-      <div className="px-5 py-6 md:px-8">
-        {/* Conectar GitHub — OAuth de un click, sin pegar tokens */}
-        <div className="mb-6 overflow-hidden rounded-2xl border border-app bg-surface/60 p-5 backdrop-blur-md">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tint-2">
-                <Github size={20} className="text-on-surface" />
-              </span>
-              <div>
-                <p className="font-display text-[15px] font-semibold tracking-tight text-on-surface">
-                  GitHub
-                </p>
-                <p className="mt-0.5 text-[13px] leading-snug text-on-surface-variant">
-                  {ghStatus === "connected"
-                    ? "Conectado. V ya puede leer y operar tus repos."
-                    : ghStatus && ghStatus.startsWith("error")
-                      ? "No se pudo conectar. Reintenta."
-                      : "Autoriza con un click — sin pegar tokens."}
-                </p>
-              </div>
-            </div>
-            <a href="/api/auth/github/start" className={oauthBtn(ghStatus === "connected")}>
-              {ghStatus === "connected" ? (<><CheckCircle2 size={16} /> Reconectar</>) : (<><Link2 size={16} /> Conectar GitHub</>)}
-            </a>
+      {/* Stats bar */}
+      <div className="mx-auto max-w-4xl px-5 pb-4 md:px-8">
+        <div className="flex items-center gap-3">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+            <motion.div initial={{width:0}} animate={{width:`${(connected/SERVICES.length)*100}%`}}
+              transition={{duration:0.8,ease:EASE}} className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"/>
           </div>
+          <span className="font-mono text-[11px] text-white/30">{connected}/{SERVICES.length} conectados</span>
         </div>
+      </div>
 
-        {/* Conectar Vercel — Integration V-Forge */}
-        <div className="mb-6 overflow-hidden rounded-2xl border border-app bg-surface/60 p-5 backdrop-blur-md">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tint-2">
-                <Triangle size={18} className="fill-current text-on-surface" />
-              </span>
-              <div>
-                <p className="font-display text-[15px] font-semibold tracking-tight text-on-surface">
-                  Vercel
-                </p>
-                <p className="mt-0.5 text-[13px] leading-snug text-on-surface-variant">
-                  {vcStatus === "connected"
-                    ? "Conectado. Deploys y dominios gestionados desde aquí."
-                    : vcStatus && vcStatus.startsWith("error")
-                      ? "No se pudo conectar. Reintenta."
-                      : "Instala la integración V-Forge con un click."}
-                </p>
-              </div>
-            </div>
-            <a href="/api/auth/vercel/start" className={oauthBtn(vcStatus === "connected")}>
-              {vcStatus === "connected" ? (<><CheckCircle2 size={16} /> Reconectar</>) : (<><Link2 size={16} /> Conectar Vercel</>)}
-            </a>
-          </div>
-        </div>
+      {/* Grid */}
+      <div className="mx-auto grid max-w-4xl grid-cols-1 gap-3 px-5 pb-8 md:grid-cols-2 md:px-8">
+        {SERVICES.map((svc,i)=>{
+          const { Logo, color, name, desc, id } = svc;
+          const conn=isConnected(svc);
+          const st=states[id]??"idle";
+          const err=errors[id];
+          return (
+            <motion.div key={id} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:i*0.04,ease:EASE}}
+              className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0a0a12] p-5 transition hover:border-white/[0.09]">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/6 to-transparent"/>
+              {conn&&<span className="absolute inset-x-0 top-0 h-0.5 rounded-t-2xl" style={{background:`linear-gradient(90deg,transparent,${color}60,transparent)`}}/>}
 
-        {/* Conectar Neon — API key validada (OAuth de Neon es solo partners) */}
-        <div className="mb-6 overflow-hidden rounded-2xl border border-app bg-surface/60 p-5 backdrop-blur-md">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tint-2">
-                <Database size={19} className="text-on-surface" />
-              </span>
-              <div className="flex-1">
-                <p className="font-display text-[15px] font-semibold tracking-tight text-on-surface">Neon</p>
-                <p className="mt-0.5 text-[13px] leading-snug text-on-surface-variant">
-                  {neonState === "connected"
-                    ? "Conectado. Tu API key fue validada y guardada cifrada."
-                    : "Pega tu API key de Neon (console.neon.tech → Account → API keys). La validamos y se guarda cifrada."}
-                </p>
-              </div>
-            </div>
-            {neonState !== "connected" && (
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <input type="password" autoComplete="off" value={neonKey} onChange={(e) => setNeonKey(e.target.value)} placeholder="napi_xxxxxxxxxxxx" className="h-11 flex-1 rounded-xl border border-app bg-tint-1 px-4 font-mono text-[13px] text-on-surface placeholder:text-muted focus:border-app-strong focus:outline-none" />
-                <button type="button" onClick={() => connectPaste("neon", neonKey, setNeonState, setNeonError)} disabled={neonState === "saving" || !neonKey.trim()} className={oauthBtn(false) + " disabled:opacity-50"}>
-                  {neonState === "saving" ? (<><Loader2 size={16} className="animate-spin" /> Validando…</>) : (<><Link2 size={16} /> Conectar Neon</>)}
-                </button>
-              </div>
-            )}
-            {neonState === "connected" && (<div className="flex items-center gap-2 text-[13px] text-success-emerald"><CheckCircle2 size={16} /> API key validada y conectada.</div>)}
-            {neonState === "error" && (<p className="text-[13px] text-error-crimson">{neonError || "No se pudo validar."}</p>)}
-          </div>
-        </div>
-
-        {/* Conectar Clerk — API key validada (Clerk no tiene OAuth de cuenta) */}
-        <div className="mb-6 overflow-hidden rounded-2xl border border-app bg-surface/60 p-5 backdrop-blur-md">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tint-2">
-                <KeyRound size={19} className="text-on-surface" />
-              </span>
-              <div className="flex-1">
-                <p className="font-display text-[15px] font-semibold tracking-tight text-on-surface">Clerk</p>
-                <p className="mt-0.5 text-[13px] leading-snug text-on-surface-variant">
-                  {clerkState === "connected"
-                    ? "Conectado. Tu secret key fue validada y guardada cifrada."
-                    : "Si quieres usar tu propia instancia de Clerk, pega tu Secret Key (sk_…). Se valida y se guarda cifrada."}
-                </p>
-              </div>
-            </div>
-            {clerkState !== "connected" && (
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <input type="password" autoComplete="off" value={clerkKey} onChange={(e) => setClerkKey(e.target.value)} placeholder="sk_live_xxxxxxxxxxxx" className="h-11 flex-1 rounded-xl border border-app bg-tint-1 px-4 font-mono text-[13px] text-on-surface placeholder:text-muted focus:border-app-strong focus:outline-none" />
-                <button type="button" onClick={() => connectPaste("clerk", clerkKey, setClerkState, setClerkError)} disabled={clerkState === "saving" || !clerkKey.trim()} className={oauthBtn(false) + " disabled:opacity-50"}>
-                  {clerkState === "saving" ? (<><Loader2 size={16} className="animate-spin" /> Validando…</>) : (<><Link2 size={16} /> Conectar Clerk</>)}
-                </button>
-              </div>
-            )}
-            {clerkState === "connected" && (<div className="flex items-center gap-2 text-[13px] text-success-emerald"><CheckCircle2 size={16} /> Secret key validada y conectada.</div>)}
-            {clerkState === "error" && (<p className="text-[13px] text-error-crimson">{clerkError || "No se pudo validar."}</p>)}
-          </div>
-        </div>
-
-        {/* Conectar Stripe — Connect OAuth real (connect.stripe.com) */}
-        <div className="mb-6 overflow-hidden rounded-2xl border border-app bg-surface/60 p-5 backdrop-blur-md">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tint-2">
-                <CreditCard size={19} className="text-on-surface" />
-              </span>
-              <div>
-                <p className="font-display text-[15px] font-semibold tracking-tight text-on-surface">
-                  Stripe
-                </p>
-                <p className="mt-0.5 text-[13px] leading-snug text-on-surface-variant">
-                  {stripeStatus === "connected"
-                    ? "Conectado. Cobros y suscripciones de tu cuenta Stripe."
-                    : stripeStatus === "error_denied"
-                      ? "Autorización cancelada. Reintenta."
-                      : stripeStatus && stripeStatus.startsWith("error")
-                        ? "No se pudo conectar. Reintenta."
-                        : "Conecta tu cuenta con Stripe Connect — un click."}
-                </p>
-              </div>
-            </div>
-            <a href="/api/auth/stripe/start" className={oauthBtn(stripeStatus === "connected")}>
-              {stripeStatus === "connected" ? (<><CheckCircle2 size={16} /> Reconectar</>) : (<><Link2 size={16} /> Conectar Stripe</>)}
-            </a>
-          </div>
-        </div>
-
-        {/* Conectar Resend — NO soporta OAuth: API key validada */}
-        <div className="mb-6 overflow-hidden rounded-2xl border border-app bg-surface/60 p-5 backdrop-blur-md">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tint-2">
-                <Mail size={19} className="text-on-surface" />
-              </span>
-              <div className="flex-1">
-                <p className="font-display text-[15px] font-semibold tracking-tight text-on-surface">
-                  Resend
-                </p>
-                <p className="mt-0.5 text-[13px] leading-snug text-on-surface-variant">
-                  {resendState === "connected"
-                    ? "Conectado. Tu API key fue validada y guardada cifrada."
-                    : "Resend no usa OAuth: pega tu API key (re_…). La validamos y se guarda cifrada."}
-                </p>
-              </div>
-            </div>
-
-            {resendState !== "connected" && (
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <input
-                  type="password"
-                  inputMode="text"
-                  autoComplete="off"
-                  value={resendKey}
-                  onChange={(e) => setResendKey(e.target.value)}
-                  placeholder="re_xxxxxxxxxxxxxxxxxxxx"
-                  className="h-11 flex-1 rounded-xl border border-app bg-tint-1 px-4 font-mono text-[13px] text-on-surface placeholder:text-muted focus:border-app-strong focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={connectResend}
-                  disabled={resendState === "saving" || !resendKey.trim()}
-                  className={oauthBtn(false) + " disabled:opacity-50"}
-                >
-                  {resendState === "saving" ? (
-                    <><Loader2 size={16} className="animate-spin" /> Validando…</>
-                  ) : (
-                    <><Link2 size={16} /> Conectar Resend</>
-                  )}
-                </button>
-              </div>
-            )}
-
-            {resendState === "connected" && (
-              <div className="flex items-center gap-2 text-[13px] text-success-emerald">
-                <CheckCircle2 size={16} /> API key validada y conectada.
-              </div>
-            )}
-            {resendState === "error" && (
-              <p className="text-[13px] text-error-crimson">
-                {resendError === "invalid_key"
-                  ? "API key inválida — Resend la rechazó."
-                  : resendError === "bad_format"
-                    ? "Formato inválido: debe empezar con re_."
-                    : "No se pudo validar la key. Reintenta."}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {loading && (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-[100px] rounded-xl border border-app bg-tint-1/40 animate-pulse"
-              />
-            ))}
-          </div>
-        )}
-
-        {!loading && integrations.length === 0 && (
-          <div className="rounded-xl border border-app bg-tint-1 p-10 text-center text-on-surface-variant">
-            <p className="font-display text-lg">No pude leer el healthcheck</p>
-            <p className="mt-2 text-sm">
-              El endpoint /api/v-health no respondió. Revisa logs.
-            </p>
-          </div>
-        )}
-
-        {!loading && integrations.length > 0 && (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {integrations.map((i) => (
-              <div
-                key={i.name}
-                className="rounded-xl border border-app bg-tint-1 p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="font-display font-semibold text-on-surface capitalize">
-                    {i.name.replace(/_/g, " ")}
-                  </p>
-                  {i.status === "ok" && (
-                    <CheckCircle2 size={16} className="text-success-emerald shrink-0" />
-                  )}
-                  {i.status === "warning" && (
-                    <CircleDot size={16} className="text-cyber-cyan animate-pulse shrink-0" />
-                  )}
-                  {i.status === "error" && (
-                    <XCircle size={16} className="text-error-crimson shrink-0" />
-                  )}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  {/* Logo container */}
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.07] bg-[#0e0e18]">
+                    <Logo className="h-5 w-5" style={{color}} aria-label={name}/>
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-semibold text-white/85">{name}</p>
+                    <p className="text-[11px] text-white/35">{desc}</p>
+                  </div>
                 </div>
-                <p className="mt-2 font-mono text-[11px] uppercase tracking-widest text-muted truncate">
-                  {i.detail}
-                </p>
+                {conn ? (
+                  <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/8 px-2.5 py-1 font-mono text-[10px] text-emerald-400">
+                    <IconCheck size={10}/> Conectado
+                  </span>
+                ) : (
+                  <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/[0.07] bg-white/[0.025] px-2.5 py-1 font-mono text-[10px] text-white/30">
+                    Sin conectar
+                  </span>
+                )}
               </div>
-            ))}
-          </div>
-        )}
+
+              {/* Connect action */}
+              {!conn && (
+                <div className="mt-4">
+                  {svc.oauthKey && (
+                    <a href={`/api/auth/${svc.oauthKey}/start`}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.025] py-2.5 font-mono text-[11px] text-white/45 transition hover:border-violet-500/30 hover:text-violet-300">
+                      <IconLink size={12}/> Conectar con {name}
+                    </a>
+                  )}
+                  {svc.pasteKey && (
+                    <div className="flex gap-2">
+                      <input value={pasteValues[svc.pasteKey!]||""} onChange={e=>setPasteValues(v=>({...v,[svc.pasteKey!]:e.target.value}))}
+                        placeholder={`Pega tu ${name} API key`}
+                        className="flex-1 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2.5 font-mono text-[11px] text-white/60 outline-none placeholder:text-white/20 focus:border-violet-500/40"/>
+                      <button onClick={()=>connectPaste(svc.pasteKey!)} disabled={st==="saving"||!pasteValues[svc.pasteKey!]}
+                        className="flex items-center gap-1.5 rounded-xl bg-violet-600/80 px-4 py-2.5 font-mono text-[11px] text-white disabled:opacity-40 hover:bg-violet-600">
+                        {st==="saving"?<span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"/>:<IconKey size={12}/>}
+                        Guardar
+                      </button>
+                    </div>
+                  )}
+                  {svc.manual && (
+                    <p className="text-center font-mono text-[10px] text-white/20">Configurar en Settings → Secrets</p>
+                  )}
+                  {err&&<p className="mt-2 text-center text-[11px] text-red-400">⚠ {err}</p>}
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
       </div>
     </>
   );

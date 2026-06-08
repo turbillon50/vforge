@@ -1,26 +1,13 @@
 "use client";
-
-import { Languages } from "lucide-react";
-import { useLocale, useT } from "@/i18n/AppProviders";
-
-export function LocaleToggle({ compact = false }: { compact?: boolean }) {
-  const { locale, toggleLocale } = useLocale();
-  const t = useT();
-  const label = locale === "es" ? "EN" : "ES";
+import { useLocale } from "@/i18n/AppProviders";
+import { cn } from "@/lib/utils";
+export function LocaleToggle({ compact=false }: { compact?: boolean }) {
+  const { locale, setLocale } = useLocale();
+  const isEs = locale === "es";
   return (
-    <button
-      type="button"
-      onClick={toggleLocale}
-      aria-label={t.common.locale_toggle_aria}
-      title={t.common.locale_toggle_aria}
-      className={
-        compact
-          ? "inline-flex h-11 min-w-11 items-center justify-center gap-1 rounded-md border border-app-strong bg-tint-1 px-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-on-surface-variant transition hover:text-on-surface"
-          : "inline-flex h-11 items-center gap-2 rounded-md border border-app-strong bg-tint-1 px-3 font-mono text-[11px] uppercase tracking-[0.18em] text-on-surface-variant transition hover:text-on-surface"
-      }
-    >
-      <Languages size={14} />
-      <span>{label}</span>
+    <button onClick={()=>setLocale(isEs?"en":"es")} aria-label="Cambiar idioma"
+      className={cn("flex items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.03] font-mono text-[10px] font-bold uppercase tracking-widest text-white/40 transition hover:border-white/12 hover:text-white/70",compact?"h-8 w-10":"h-9 w-12")}>
+      {isEs?"EN":"ES"}
     </button>
   );
 }

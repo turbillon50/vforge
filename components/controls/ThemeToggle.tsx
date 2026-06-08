@@ -1,26 +1,22 @@
 "use client";
-
-import { Moon, Sun } from "lucide-react";
-import { useTheme, useT } from "@/i18n/AppProviders";
-
-export function ThemeToggle({ compact = false }: { compact?: boolean }) {
-  const { theme, toggleTheme } = useTheme();
-  const t = useT();
-  const isDark = theme === "dark";
+import { useEffect, useState } from "react";
+import { IconSun, IconMoon } from "@/components/brand/VFIcons";
+import { cn } from "@/lib/utils";
+function apply(t: "dark"|"light") {
+  document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem("vf-theme", t); } catch {}
+}
+export function ThemeToggle({ compact=false }: { compact?: boolean }) {
+  const [t, setT] = useState<"dark"|"light">("dark");
+  useEffect(()=>{
+    const s=(typeof window!=="undefined"&&localStorage.getItem("vf-theme")) as "dark"|"light"|null;
+    const i=s??"dark"; setT(i); apply(i);
+  },[]);
+  const tog=()=>{ const n=t==="dark"?"light":"dark"; setT(n); apply(n); };
   return (
-    <button
-      type="button"
-      onClick={toggleTheme}
-      aria-label={t.common.theme_toggle_aria}
-      title={t.common.theme_toggle_aria}
-      className={
-        compact
-          ? "inline-flex h-11 w-11 items-center justify-center rounded-md border border-app-strong bg-tint-1 text-on-surface-variant transition hover:text-on-surface"
-          : "inline-flex h-11 items-center gap-2 rounded-md border border-app-strong bg-tint-1 px-3 font-mono text-[11px] uppercase tracking-[0.18em] text-on-surface-variant transition hover:text-on-surface"
-      }
-    >
-      {isDark ? <Sun size={14} /> : <Moon size={14} />}
-      {!compact && <span>{isDark ? "Claro" : "Oscuro"}</span>}
+    <button onClick={tog} aria-label={t==="dark"?"Modo claro":"Modo oscuro"}
+      className={cn("flex items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.03] text-white/40 transition hover:border-white/12 hover:text-white/70",compact?"h-8 w-8":"h-9 w-9")}>
+      {t==="dark"?<IconSun size={14}/>:<IconMoon size={14}/>}
     </button>
   );
 }

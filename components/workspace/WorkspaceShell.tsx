@@ -1,24 +1,15 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { VMark, VWordmark } from "@/components/brand/VMark";
 import {
-  Activity,
-  Bell,
-  ChevronRight,
-  GitBranch,
-  LifeBuoy,
-  MessagesSquare,
-  Search,
-  Settings,
-  Workflow,
-  FileText,
-} from "lucide-react";
+  IconChat, IconBranch, IconActivity, IconLayers, IconFile,
+  IconSearch, IconSettings, IconHome, IconUsers, IconBell,
+  IconChevR, IconLifeBuoy, IconRocket,
+} from "@/components/brand/VFIcons";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useClerkAppearance } from "@/lib/clerk-appearance";
-import { Home, Users } from "lucide-react";
 import { VPresence } from "@/components/brand/VPresence";
 import { VOrb } from "./VOrb";
 import { Icon3D } from "@/components/brand/Icon3D";
@@ -28,177 +19,122 @@ import { useT } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
 
-export function WorkspaceShell({ children }: { children: React.ReactNode }) {
-  const t = useT();
-  const pathname = usePathname();
-  const nav = [
-    { href: "/app/chat", label: "Conversación", icon: MessagesSquare, kbd: "C" },
-    { href: "/app/repovision", label: t.workspace.nav.repovision, icon: GitBranch, kbd: "R" },
-    { href: "/app/deployments", label: t.workspace.nav.deployments, icon: Activity, kbd: "D" },
-    { href: "/app/projects", label: t.workspace.nav.projects, icon: Workflow, kbd: "P" },
-    { href: "/app/contracts", label: "Contratos", icon: FileText, kbd: "T" },
-  ];
-  const navBottom = [
-    { href: "/app/home", label: "Inicio", icon: Home, kbd: "H", exact: true },
-    { href: "/app/admin", label: "Usuarios", icon: Users, kbd: "U" },
-  ];
+const NAV = [
+  { href:"/app/chat",        label:"Conversación",  Icon:IconChat,     kbd:"C" },
+  { href:"/app/repovision",  label:"RepoVisión",    Icon:IconBranch,   kbd:"R" },
+  { href:"/app/deployments", label:"Despliegues",   Icon:IconRocket,   kbd:"D" },
+  { href:"/app/projects",    label:"Proyectos",     Icon:IconLayers,   kbd:"P" },
+  { href:"/app/contracts",   label:"Contratos",     Icon:IconFile,     kbd:"T" },
+  { href:"/app/activity",    label:"Actividad",     Icon:IconActivity, kbd:"A" },
+];
+const NAV_BTM = [
+  { href:"/app/home",  label:"Inicio",   Icon:IconHome,  exact:true },
+  { href:"/app/admin", label:"Usuarios", Icon:IconUsers },
+];
+const MOBILE = [
+  { href:"/app/chat",        label:"Chat",      orb:true },
+  { href:"/app/projects",    label:"Proyectos", icon3d:"projects"  as const },
+  { href:"/app/deployments", label:"Deploy",    icon3d:"rocket"    as const },
+  { href:"/app/settings",    label:"Ajustes",   icon3d:"settings"  as const },
+];
 
+export function WorkspaceShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname() ?? "";
   return (
-    <div className="fixed inset-0 flex overflow-hidden bg-void">
-      <aside className="sticky top-0 glass-strong hidden h-dvh w-[260px] shrink-0 flex-col border-r border-app md:flex">
+    <div className="fixed inset-0 flex overflow-hidden bg-[#050509]">
+      {/* Sidebar */}
+      <aside className="hidden h-dvh w-[248px] shrink-0 flex-col border-r border-white/[0.05] bg-[#07070d]/90 backdrop-blur-2xl md:flex">
         <div className="flex items-center justify-between px-5 py-5">
           <Link href="/app"><VWordmark /></Link>
-          <span className="flex items-center gap-1.5 text-[12px] text-on-surface-variant"><span className="h-1.5 w-1.5 rounded-full bg-success-emerald" />V en línea</span>
+          <span className="flex items-center gap-1.5 font-mono text-[10px] text-white/25">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"/>online
+          </span>
         </div>
-
-        <div className="px-3">
-          <button className="group flex w-full items-center gap-2 rounded-md border border-app bg-tint-1 px-3 py-2 text-left text-sm text-on-surface-variant transition hover:border-app-strong">
-            <Search size={14} />
-            <span className="flex-1 truncate">{t.workspace.quick_command}</span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">⌘K</span>
+        <div className="px-3 pb-3">
+          <button className="flex w-full items-center gap-2.5 rounded-xl border border-white/[0.05] bg-white/[0.025] px-3.5 py-2.5 text-[13px] text-white/25 transition hover:bg-white/[0.04]">
+            <IconSearch size={14}/><span className="flex-1">Buscar</span>
+            <kbd className="font-mono text-[10px] opacity-40">⌘K</kbd>
           </button>
         </div>
-
-        <nav className="mt-4 flex-1 overflow-y-auto px-3 no-scrollbar">
-          <p className="mb-2 px-2 text-[12px] font-medium text-muted">Espacio de trabajo</p>
-          {nav.map((item) => {
-            const active = (item as { exact?: boolean }).exact
-              ? pathname === item.href
-              : pathname?.startsWith(item.href);
+        <nav className="flex-1 overflow-y-auto px-3 pb-2 no-scrollbar">
+          <p className="mb-2 px-2 font-mono text-[9px] uppercase tracking-[0.18em] text-white/20">Workspace</p>
+          {NAV.map(({ href, label, Icon, kbd }) => {
+            const active = pathname.startsWith(href);
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "group mb-0.5 flex items-center gap-3 rounded-md px-3 py-2 text-sm transition",
-                  active
-                    ? "bg-violet-500/15 text-violet-300 ring-1 ring-violet-500/30 shadow-[0_0_18px_rgba(139,92,246,0.18)]"
-                    : "text-on-surface-variant hover:bg-tint-2 hover:text-on-surface"
-                )}
-              >
-                <item.icon size={15} className={active ? "text-cyber-cyan" : ""} />
-                <span className="flex-1">{item.label}</span>
-                <span className="hidden font-mono text-[10px] uppercase tracking-widest text-muted group-hover:inline">
-                  {item.kbd}
-                </span>
+              <Link key={href} href={href} className={cn(
+                "group relative mb-0.5 flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all",
+                active ? "bg-violet-500/10 text-violet-200 ring-1 ring-violet-500/20" : "text-white/35 hover:bg-white/[0.04] hover:text-white/75"
+              )}>
+                {active && <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-violet-400 opacity-80"/>}
+                <Icon size={15} className={active?"text-violet-400":"text-white/25 group-hover:text-white/55"}/>
+                <span className="flex-1">{label}</span>
+                <span className="hidden font-mono text-[9px] tracking-widest text-white/15 group-hover:inline">{kbd}</span>
               </Link>
             );
           })}
         </nav>
-
-        <div className="border-t border-app p-3">
-          {navBottom.map((item) => {
-            const active = item.exact ? pathname === item.href : pathname?.startsWith(item.href);
+        <div className="border-t border-white/[0.05] p-3 space-y-0.5">
+          {NAV_BTM.map(({ href, label, Icon, exact }) => {
+            const active = exact ? pathname===href : pathname.startsWith(href);
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition",
-                  active
-                    ? "bg-violet-500/15 text-violet-300 ring-1 ring-violet-500/30"
-                    : "text-on-surface-variant hover:bg-tint-2 hover:text-on-surface"
-                )}
-              >
-                <item.icon size={15} className={active ? "text-cyber-cyan" : ""} />
-                <span className="flex-1">{item.label}</span>
+              <Link key={href} href={href} className={cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium transition",
+                active?"bg-violet-500/10 text-violet-200":"text-white/35 hover:bg-white/[0.04] hover:text-white/65"
+              )}>
+                <Icon size={14} className={active?"text-violet-400":"text-white/25"}/>{label}
               </Link>
             );
           })}
-          <Link
-            href="/app/settings"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-on-surface-variant hover:bg-tint-2 hover:text-on-surface"
-          >
-            <Settings size={15} /> {t.workspace.nav.settings}
+          <Link href="/app/settings" className="flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-white/35 transition hover:bg-white/[0.04] hover:text-white/65">
+            <IconSettings size={14} className="text-white/25"/>Configuración
           </Link>
-          <a
-            href="#"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-on-surface-variant hover:bg-tint-2 hover:text-on-surface"
-          >
-            <LifeBuoy size={15} /> {t.workspace.nav.help}
+          <a href="#" className="flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-white/35 transition hover:bg-white/[0.04] hover:text-white/65">
+            <IconLifeBuoy size={14} className="text-white/25"/>Ayuda
           </a>
         </div>
       </aside>
-
-      <div className="flex min-w-0 max-w-full flex-1 flex-col h-dvh overflow-x-hidden">
-        <TopBar hiddenOnMobile={!!pathname?.startsWith("/app/chat")} />
-        <div
-          data-app-scroll
-          className={cn(
-            "flex-1 min-h-0 min-w-0 max-w-full overflow-x-hidden",
-            // La MobileNav vive en el flujo (flex-none) debajo de este
-            // contenedor, asi que NINGUNA ruta reserva espacio extra abajo:
-            // el contenido llena el alto entre header y tab bar, sin hueco.
-            pathname?.startsWith("/app/chat")
-              ? "overflow-y-hidden"
-              : "overflow-y-auto flex flex-col",
-          )}
-        >
-          {pathname?.startsWith("/app/chat") ? children : <PageTransition>{children}</PageTransition>}
+      {/* Main */}
+      <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
+        <TopBar hiddenOnMobile={pathname.startsWith("/app/chat")} pathname={pathname}/>
+        <div data-app-scroll className={cn(
+          "flex-1 min-h-0 min-w-0 max-w-full overflow-x-hidden",
+          pathname.startsWith("/app/chat")?"overflow-y-hidden":"overflow-y-auto flex flex-col"
+        )}>
+          {pathname.startsWith("/app/chat")?children:<PageTransition>{children}</PageTransition>}
         </div>
-        <MobileNav pathname={pathname || ""} />
-        <VOrb />
+        <MobileNav pathname={pathname}/>
+        <VOrb/>
       </div>
     </div>
   );
 }
 
-function TopBar({ hiddenOnMobile = false }: { hiddenOnMobile?: boolean }) {
+function TopBar({ hiddenOnMobile, pathname }: { hiddenOnMobile?:boolean; pathname:string }) {
   const { user } = useUser();
-  const clerkAppearance = useClerkAppearance();
+  const ca = useClerkAppearance();
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-30 glass-strong border-b border-app",
-        hiddenOnMobile && "hidden md:block",
-      )}
-      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-    >
-      <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 md:px-8">
-        <Link
-          href="/"
-          aria-label="Ir a la página principal de VForge"
-          className="flex shrink-0 items-center gap-2 text-on-surface-variant transition active:scale-95 md:hidden"
-        >
-          <VMark size={20} />
-          <span className="font-display text-sm font-semibold tracking-tight text-on-surface">VForge</span>
+    <header className={cn("sticky top-0 z-30 border-b border-white/[0.05] bg-[#07070d]/85 backdrop-blur-2xl",hiddenOnMobile&&"hidden md:block")}
+      style={{ paddingTop:"env(safe-area-inset-top,0px)" }}>
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5 md:px-6">
+        <Link href="/" className="flex items-center gap-2 text-white/60 transition active:scale-95 md:hidden">
+          <VMark size={18}/><span className="font-display text-sm font-semibold text-white/80">VForge</span>
         </Link>
-        <div className="min-w-0 flex-1 overflow-hidden">
-          <Breadcrumbs />
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Link
-            href="/"
-            aria-label="Volver a la web pública"
-            title="Ir a la landing"
-            className="hidden items-center gap-1.5 rounded-full border border-app-strong bg-tint-1 px-3 py-1.5 text-[13px] font-medium text-on-surface-variant transition hover:border-violet-500/40 hover:text-violet-300 sm:inline-flex"
-          >
-            <Home size={14} /> Landing
+        <div className="hidden min-w-0 flex-1 md:block"><Breadcrumbs pathname={pathname}/></div>
+        <div className="flex items-center gap-2">
+          <Link href="/" className="hidden items-center gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 font-mono text-[11px] text-white/35 transition hover:border-violet-500/25 hover:text-violet-300 sm:inline-flex">
+            <IconHome size={11}/> Landing
           </Link>
-          <Link
-            href="/"
-            aria-label="Volver a la web pública"
-            title="Ir a la landing"
-            className="inline-flex items-center justify-center rounded-md border border-app-strong bg-tint-1 p-2 text-on-surface-variant transition hover:border-violet-500/40 hover:text-violet-300 sm:hidden"
-          >
-            <Home size={15} />
-          </Link>
-          <LocaleToggle compact />
-          <ThemeToggle compact />
-          <button
-            aria-label="Notifications"
-            className="rounded-md border border-app-strong bg-tint-1 p-2 text-on-surface-variant hover:text-on-surface"
-          >
-            <Bell size={15} />
+          <LocaleToggle compact/>
+          <ThemeToggle compact/>
+          <button aria-label="Notificaciones" className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-white/35 transition hover:text-white/65">
+            <IconBell size={13}/>
           </button>
-          <div className="flex items-center gap-2 rounded-full border border-app-strong bg-tint-1 py-1 pl-1 pr-2 md:pr-3">
-            <UserButton afterSignOutUrl="/" appearance={{ ...clerkAppearance, elements: { ...clerkAppearance.elements, avatarBox: "h-7 w-7" } }} />
-            <span className="hidden max-w-[120px] truncate text-[13px] font-medium text-on-surface md:inline">
-              {user?.firstName ?? user?.username ?? ""}
+          <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.025] py-1 pl-1 pr-2.5">
+            <UserButton afterSignOutUrl="/" appearance={{...ca,elements:{...ca.elements,avatarBox:"h-6 w-6"}}}/>
+            <span className="hidden max-w-[90px] truncate font-display text-[12px] font-medium text-white/60 md:inline">
+              {user?.firstName??user?.username??""}
             </span>
-            <span className="hidden rounded-full bg-violet-500/15 px-2.5 py-0.5 text-[11px] font-medium text-violet-300 ring-1 ring-violet-500/30 md:inline">
-              Owner
-            </span>
+            <span className="hidden rounded-full border border-violet-500/20 bg-violet-500/8 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-violet-300 md:inline">Owner</span>
           </div>
         </div>
       </div>
@@ -206,30 +142,17 @@ function TopBar({ hiddenOnMobile = false }: { hiddenOnMobile?: boolean }) {
   );
 }
 
-function Breadcrumbs() {
-  const pathname = usePathname() || "";
+function Breadcrumbs({ pathname }: { pathname:string }) {
   const parts = pathname.split("/").filter(Boolean);
-  // Prefix "VForge" so users always see brand root even on mobile.
-  const trail = ["VForge", ...parts];
+  const trail = ["VForge",...parts];
   return (
-    <nav
-      aria-label="ruta"
-      className="flex items-center gap-1.5 text-[13px]"
-    >
-      {trail.map((p, i) => {
-        const isLast = i === trail.length - 1;
+    <nav aria-label="ruta" className="flex items-center gap-1 font-mono text-[12px]">
+      {trail.map((p,i)=>{
+        const isLast=i===trail.length-1;
         return (
-          <span key={p + i} className="flex items-center gap-1">
-            <span
-              className={
-                isLast
-                  ? "bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-semibold text-transparent"
-                  : "text-muted"
-              }
-            >
-              {p}
-            </span>
-            {!isLast && <ChevronRight size={11} className="text-muted/50" />}
+          <span key={p+i} className="flex items-center gap-1">
+            <span className={isLast?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-semibold text-transparent":"text-white/20"}>{p}</span>
+            {!isLast&&<IconChevR size={9} className="text-white/12"/>}
           </span>
         );
       })}
@@ -237,113 +160,27 @@ function Breadcrumbs() {
   );
 }
 
-function MobileNav({ pathname }: { pathname: string }) {
-  const t = useT();
-  // El bottom-nav vive en TODAS las rutas, incluyendo /app/chat. Sin él
-  // Luis se queda sin navegación rápida hacia Proyectos / Bóveda /
-  // Deploy / Alertas. Cuando el teclado mobile está abierto, la clase
-  // body.keyboard-open lo oculta automáticamente (CSS en globals.css).
-  const mobileNav = [
-    { href: "/app/chat", label: "Chat", icon: MessagesSquare, orb: true },
-    { href: "/app/projects", label: t.workspace.mobile_labels.projects, icon3d: "projects" as const },
-    { href: "/app/deployments", label: "Despliegues", icon3d: "rocket" as const },
-    { href: "/app/settings", label: "Ajustes", icon3d: "settings" as const },
-  ];
+function MobileNav({ pathname }: { pathname:string }) {
   return (
-    <nav
-      aria-label="navegación principal"
-      data-vorb-avoid
-      className="vf-mobile-nav glass-strong z-40 flex flex-none items-stretch justify-between gap-0.5 border-t border-app px-2 md:hidden"
-      style={{
-        paddingBottom: "min(env(safe-area-inset-bottom, 0px), 16px)",
-        minHeight: 58,
-      }}
-    >
-      {mobileNav.map((i) => {
-        const active = (i as { exact?: boolean }).exact
-          ? pathname === i.href
-          : pathname.startsWith(i.href);
-        if ((i as { orb?: boolean }).orb) {
-          return (
-            <Link
-              key={i.href}
-              href={i.href}
-              aria-label="Hablar con V"
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-[0.94]",
-                active ? "text-violet-300" : "text-on-surface-variant",
-              )}
-            >
-              <VPresence size={28} breathing={active} />
-              <span
-                className={cn(
-                  "text-[10px] font-medium",
-                  active
-                    ? "bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-semibold text-transparent"
-                    : "",
-                )}
-              >
-                {i.label}
-              </span>
-            </Link>
-          );
-        }
+    <nav data-vorb-avoid className="flex flex-none items-stretch justify-between gap-0.5 border-t border-white/[0.05] bg-[#07070d]/90 px-2 backdrop-blur-2xl md:hidden"
+      style={{ paddingBottom:"min(env(safe-area-inset-bottom,0px),16px)", minHeight:58 }}>
+      {MOBILE.map(item=>{
+        const active=pathname.startsWith(item.href);
+        if(item.orb) return (
+          <Link key={item.href} href={item.href} className={cn("flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",active?"text-violet-300":"text-white/35")}>
+            <VPresence size={25} breathing={active}/>
+            <span className={cn("font-mono text-[9px] uppercase tracking-widest",active?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-bold text-transparent":"")}>{item.label}</span>
+          </Link>
+        );
         return (
-          <Link
-            key={i.href}
-            href={i.href}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-[0.94]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400",
-              active ? "text-violet-300" : "text-on-surface-variant",
-            )}
-          >
-            {active && (
-              <motion.span
-                aria-hidden
-                layoutId="vf-nav-halo"
-                transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                className="pointer-events-none absolute inset-x-3 -bottom-0.5 top-1 -z-10 rounded-xl"
-                style={{
-                  background:
-                    "radial-gradient(ellipse at center, rgba(139,92,246,0.5), rgba(34,211,238,0.28) 55%, transparent 75%)",
-                  filter: "blur(8px)",
-                  opacity: 0.7,
-                }}
-              />
-            )}
-            <motion.span
-              className="inline-flex items-center justify-center"
-              animate={
-                active
-                  ? { scale: [1, 1.1, 1] }
-                  : { scale: 1 }
-              }
-              transition={
-                active
-                  ? { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
-                  : { duration: 0.18 }
-              }
-            >
-              <Icon3D
-                name={(i as { icon3d?: any }).icon3d}
-                size={28}
-                glow={active}
-                className={cn("transition", active ? "" : "opacity-70 group-hover:opacity-100")}
-              />
+          <Link key={item.href} href={item.href} className={cn("group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",active?"text-violet-300":"text-white/35")}>
+            {active&&<motion.span aria-hidden layoutId="vf-mob-halo" transition={{type:"spring",stiffness:380,damping:32}}
+              className="pointer-events-none absolute inset-x-2 -bottom-0.5 top-1 -z-10 rounded-xl"
+              style={{background:"radial-gradient(ellipse,rgba(139,92,246,0.4),transparent 70%)",filter:"blur(8px)"}}/>}
+            <motion.span className="inline-flex" animate={active?{scale:[1,1.08,1]}:{scale:1}} transition={active?{duration:2.4,repeat:Infinity,ease:"easeInOut"}:{duration:0.18}}>
+              <Icon3D name={(item as {icon3d?:any}).icon3d} size={25} glow={active} className={cn("transition",active?"":"opacity-55 group-hover:opacity-90")}/>
             </motion.span>
-            <span
-              className={cn(
-                "text-[10px] font-medium transition",
-                active
-                  ? "bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-semibold text-transparent"
-                  : "",
-              )}
-            >
-              {i.label}
-            </span>
+            <span className={cn("font-mono text-[9px] uppercase tracking-widest",active?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-bold text-transparent":"")}>{item.label}</span>
           </Link>
         );
       })}
