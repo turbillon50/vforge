@@ -7,7 +7,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, SendHorizonal, Sparkles, Zap } from "lucide-react";
+import { IconLoader, IconSend, IconSparkles, IconZap } from "@/components/brand/VFIcons";
 import { Markdown } from "@/components/workspace/chat/Markdown";
 
 interface Msg {
@@ -133,7 +133,7 @@ export default function AssistantChat() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
         {/* V avatar */}
         <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-cyan-500 shadow-glow">
-          <Sparkles size={15} className="text-white" />
+          <IconSparkles size={15} className="text-white" />
           <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0a0a0f] bg-emerald-400" />
         </div>
         <div>
@@ -151,7 +151,7 @@ export default function AssistantChat() {
         </div>
         <div className="ml-auto">
           <div className="flex items-center gap-1.5 rounded-full border border-white/8 bg-white/4 px-3 py-1">
-            <Zap size={10} className="text-violet-400" />
+            <IconZap size={10} className="text-violet-400" />
             <span className="font-mono text-[10px] text-muted">Claude Sonnet</span>
           </div>
         </div>
@@ -165,7 +165,7 @@ export default function AssistantChat() {
       >
         {loading ? (
           <div className="flex h-full items-center justify-center text-muted">
-            <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+            <IconLoader className="h-5 w-5 animate-spin" aria-hidden />
           </div>
         ) : messages.length === 0 ? (
           <motion.div
@@ -177,7 +177,7 @@ export default function AssistantChat() {
             {/* Central orb */}
             <div className="relative mb-6">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600/80 to-cyan-500/80 shadow-glow backdrop-blur">
-                <Sparkles className="h-7 w-7 text-white" aria-hidden />
+                <IconSparkles className="h-7 w-7 text-white" aria-hidden />
               </div>
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-500 opacity-20 blur-xl" />
             </div>
@@ -213,7 +213,7 @@ export default function AssistantChat() {
               >
                 {m.role === "assistant" && (
                   <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-cyan-500">
-                    <Sparkles size={12} className="text-white" />
+                    <IconSparkles size={12} className="text-white" />
                   </div>
                 )}
 
@@ -288,9 +288,9 @@ export default function AssistantChat() {
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-cyan-500 text-white shadow-glow transition-all hover:brightness-110 disabled:opacity-30 disabled:shadow-none"
           >
             {busy ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+              <IconLoader className="h-3.5 w-3.5 animate-spin" aria-hidden />
             ) : (
-              <SendHorizonal className="h-3.5 w-3.5" aria-hidden />
+              <IconSend className="h-3.5 w-3.5" aria-hidden />
             )}
           </button>
         </div>

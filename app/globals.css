@@ -671,3 +671,97 @@ body.keyboard-open .vf-mobile-nav {
 [data-theme="light"] .blog-body code { color: #6d28d9; background: rgba(109,40,217,0.08); }
 [data-theme="light"] .blog-body pre { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.08); }
 [data-theme="light"] .blog-body pre code { color: #1e1e3f; }
+
+/* ============================================
+   CONTRASTE MODO CLARO — FIX TOTAL
+   Todas las clases text-white/* deben usar
+   variables semánticas en light mode.
+   ============================================ */
+
+/* Variables semánticas de texto */
+:root {
+  --fg-primary: rgba(255,255,255,0.92);
+  --fg-secondary: rgba(255,255,255,0.60);
+  --fg-tertiary: rgba(255,255,255,0.40);
+  --fg-muted: rgba(255,255,255,0.25);
+  --fg-subtle: rgba(255,255,255,0.12);
+  --surface-1: rgba(255,255,255,0.025);
+  --surface-2: rgba(255,255,255,0.04);
+  --surface-3: rgba(255,255,255,0.07);
+  --border-1: rgba(255,255,255,0.06);
+  --border-2: rgba(255,255,255,0.10);
+}
+
+[data-theme="light"] {
+  --fg-primary: rgba(10,10,20,0.90);
+  --fg-secondary: rgba(10,10,20,0.65);
+  --fg-tertiary: rgba(10,10,20,0.45);
+  --fg-muted: rgba(10,10,20,0.30);
+  --fg-subtle: rgba(10,10,20,0.12);
+  --surface-1: rgba(10,10,20,0.03);
+  --surface-2: rgba(10,10,20,0.05);
+  --surface-3: rgba(10,10,20,0.08);
+  --border-1: rgba(10,10,20,0.07);
+  --border-2: rgba(10,10,20,0.12);
+}
+
+/* Utilidades semánticas light-mode-safe */
+.vf-text-primary   { color: var(--fg-primary); }
+.vf-text-secondary { color: var(--fg-secondary); }
+.vf-text-tertiary  { color: var(--fg-tertiary); }
+.vf-text-muted     { color: var(--fg-muted); }
+.vf-text-subtle    { color: var(--fg-subtle); }
+.vf-surface-1      { background: var(--surface-1); }
+.vf-surface-2      { background: var(--surface-2); }
+.vf-surface-3      { background: var(--surface-3); }
+.vf-border-1       { border-color: var(--border-1); }
+.vf-border-2       { border-color: var(--border-2); }
+
+/* Blog light mode — ya cubierto por .blog-body pero reforzar */
+[data-theme="light"] .blog-body p { color: rgba(10,10,20,0.65); }
+[data-theme="light"] .blog-body h2 { color: rgba(10,10,20,0.90); }
+[data-theme="light"] .blog-body h3 { color: rgba(10,10,20,0.75); }
+[data-theme="light"] .blog-body strong { color: rgba(10,10,20,0.90); }
+[data-theme="light"] .blog-body li { color: rgba(10,10,20,0.65); }
+
+/* Backgrounds light mode */
+[data-theme="light"] {
+  --color-void: #f2f2f7;
+  --color-ink: #f8f8fc;
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+}
+
+/* Cards en light mode */
+[data-theme="light"] .crystal-card {
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(10,10,20,0.08);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 8px 30px rgba(10,10,20,0.08);
+}
+[data-theme="light"] .crystal-card:hover {
+  border-color: rgba(109,40,217,0.25);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.95) inset, 0 12px 40px rgba(109,40,217,0.12);
+}
+
+/* Sidebar light mode */
+[data-theme="light"] #__next .WorkspaceShell aside,
+[data-theme="light"] [data-workspace-sidebar] {
+  background: rgba(248,248,252,0.95);
+  border-color: rgba(10,10,20,0.07);
+}
+
+/* Scroll personalizado light/dark */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.25); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,0.45); }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(109,40,217,0.2); }
+
+/* Smooth scroll global */
+html { scroll-behavior: smooth; }
+
+/* Fix overflow scroll en mobile — no clipear contenido */
+.overflow-y-auto, [data-app-scroll] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
