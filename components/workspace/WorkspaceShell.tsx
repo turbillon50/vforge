@@ -235,8 +235,8 @@ function MobileNav({ pathname }: { pathname: string }) {
       data-vorb-avoid
       className="vf-mobile-nav glass-strong z-40 flex flex-none items-stretch justify-between gap-0.5 border-t border-app px-2 md:hidden"
       style={{
-        paddingBottom: "env(safe-area-inset-bottom, 0px)",
-        minHeight: 60,
+        paddingBottom: "min(env(safe-area-inset-bottom, 0px), 16px)",
+        minHeight: 58,
       }}
     >
       {mobileNav.map((i) => {
@@ -309,7 +309,7 @@ function MobileNav({ pathname }: { pathname: string }) {
             >
               <Icon3D
                 name={(i as { icon3d?: any }).icon3d}
-                size={26}
+                size={28}
                 glow={active}
                 className={cn("transition", active ? "" : "opacity-70 group-hover:opacity-100")}
               />
