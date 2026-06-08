@@ -6,6 +6,7 @@ import { Hero } from "@/components/marketing/Hero";
 import { ProductCarousel } from "@/components/marketing/ProductCarousel";
 import { Metodo } from "@/components/marketing/Metodo";
 import { Integraciones } from "@/components/marketing/Integraciones";
+import { Contratos } from "@/components/marketing/Contratos";
 import { Credenciales } from "@/components/marketing/Credenciales";
 import { CTA } from "@/components/marketing/CTA";
 
@@ -26,6 +27,7 @@ export default async function HomePage() {
         <ProductCarousel />
         <Metodo />
         <Integraciones />
+        <Contratos />
         <Credenciales />
         <CTA />
       </main>
