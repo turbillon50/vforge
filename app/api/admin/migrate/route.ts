@@ -123,30 +123,55 @@ export async function POST(req: Request) {
  */
 function splitSql(input: string): string[] {
   const out: string[] = [];
-  let buf = "";
-  let inDollar = false;
-  let inSingle = false;
-  for (let i = 0; i < input.length; i++) {
-    const ch = input[i];
-    const next2 = input.slice(i, i + 2);
-    if (!inSingle && next2 === "$$") {
-      inDollar = !inDollar;
-      buf += "$$";
-      i += 1;
+  let cur = '';
+  let i = 0;
+  const n = input.length;
+  while (i < n) {
+    const c = input[i];
+    if (c === '-' && input[i + 1] === '-') {
+      while (i < n && input[i] !== '\n') { cur += input[i]; i++; }
       continue;
     }
-    if (!inDollar && ch === "'") {
-      inSingle = !inSingle;
+    if (c === '/' && input[i + 1] === '*') {
+      cur += '/*'; i += 2;
+      while (i < n && !(input[i] === '*' && input[i + 1] === '/')) { cur += input[i]; i++; }
+      if (i < n) { cur += '*/'; i += 2; }
+      continue;
     }
-    buf += ch;
-    if (!inDollar && !inSingle && ch === ";") {
-      const meaningful = stripCommentLines(buf);
-      if (meaningful) out.push(buf.trim());
-      buf = "";
+    if (c === "'") {
+      cur += c; i++;
+      while (i < n) {
+        if (input[i] === "'" && input[i + 1] === "'") { cur += "''"; i += 2; continue; }
+        cur += input[i];
+        if (input[i] === "'") { i++; break; }
+        i++;
+      }
+      continue;
     }
+    if (c === '$') {
+      const m = input.slice(i).match(/^\$[A-Za-z0-9_]*\$/);
+      if (m) {
+        const tag = m[0];
+        cur += tag; i += tag.length;
+        const idx = input.indexOf(tag, i);
+        if (idx === -1) { cur += input.slice(i); i = n; }
+        else { cur += input.slice(i, idx + tag.length); i = idx + tag.length; }
+        continue;
+      }
+    }
+    if (c === ';') {
+      const t = cur.trim();
+      const code = t.replace(/--.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
+      if (code) out.push(t);
+      cur = '';
+      i++;
+      continue;
+    }
+    cur += c; i++;
   }
-  const meaningfulTail = stripCommentLines(buf);
-  if (meaningfulTail) out.push(buf.trim());
+  const tail = cur.trim();
+  const tailCode = tail.replace(/--.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
+  if (tailCode) out.push(tail);
   return out;
 }
 
