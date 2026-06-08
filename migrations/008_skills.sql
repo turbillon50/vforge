@@ -46,6 +46,7 @@ CREATE INDEX IF NOT EXISTS idx_skills_installed ON skills (installed_at) WHERE i
 -- Seed with system skills from /docs/skills/
 -- vulcano fix: ensure source check matches seed values
 ALTER TABLE skills DROP CONSTRAINT IF EXISTS skills_source_check;
+UPDATE skills SET source='system' WHERE source NOT IN ('system','user','learned');
 ALTER TABLE skills ADD CONSTRAINT skills_source_check CHECK (source IN ('system','user','learned'));
 
 INSERT INTO skills (id, name, description, system_prompt, tags, source, required_tools, installed_at) VALUES
