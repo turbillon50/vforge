@@ -60,13 +60,15 @@ export function Hero() {
     const el = heroRef.current;
     if (!el) return;
     const onMove = (e: PointerEvent) => {
+      // Solo seguir el cursor con MOUSE real (desktop). En touch dejamos el dedo libre para scrollear.
+      if (e.pointerType !== "mouse") return;
       const r = el.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height * 0.36;
       mx.set(Math.max(-30, Math.min(30, (e.clientX - cx) / 12)));
       my.set(Math.max(-24, Math.min(24, (e.clientY - cy) / 12)));
     };
-    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointermove", onMove, { passive: true });
     return () => el.removeEventListener("pointermove", onMove);
   }, [mx, my]);
 
@@ -74,6 +76,7 @@ export function Hero() {
     <section
       ref={heroRef}
       className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-5 pb-20 pt-24"
+      style={{ touchAction: "pan-y" }}
     >
       {/* Fondo obsidian con aura viva */}
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -117,6 +120,7 @@ export function Hero() {
           animate={{ y: [0, -12, 0] }}
           transition={{ y: { duration: 6, repeat: Infinity, ease: "easeInOut" } }}
           className="relative flex h-[clamp(210px,60vw,300px)] w-[clamp(210px,60vw,300px)] items-center justify-center outline-none"
+          style={{ touchAction: "pan-y" }}
           aria-label="Activar V"
         >
           <motion.img
