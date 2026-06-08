@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -5,11 +6,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
   ArrowRight, Sparkles, X, Rocket, HelpCircle,
-  ShoppingBag, Tag, LayoutDashboard, BookOpen, Check,
+  ShoppingBag, Tag, LayoutDashboard, BookOpen,
+  Zap, Globe, Bot, FileText,
 } from "lucide-react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-const SPHERE = "/sphere-violet.png";
+const SPHERE_IMG = "/sphere-violet.png";
+const SPHERE_VIDEO = "https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_201813_b9a2afed-93fb-46f1-a1b0-c767205f546d.mp4";
 
 type RadialItem = {
   id: string;
@@ -20,7 +23,6 @@ type RadialItem = {
   color: string;
 };
 
-// 6 accesos alrededor de la esfera
 const RADIAL: (RadialItem & { img3d: string })[] = [
   { id: "welcome", label: "Qué es V", icon: Sparkles, panel: "welcome", color: "#a855f7", img3d: "/icons3d/sparkle.png" },
   { id: "worlds", label: "Por dónde\nempiezo", icon: BookOpen, panel: "worlds", color: "#22d3ee", img3d: "/icons3d/book.png" },
@@ -30,13 +32,26 @@ const RADIAL: (RadialItem & { img3d: string })[] = [
   { id: "start", label: "Empezar", icon: Rocket, href: "/sign-up", color: "#22c55e", img3d: "/icons3d/rocket.png" },
 ];
 
-const WELCOME_CARDS = [
-  { icon: Sparkles, title: "V es tu fábrica de IA", desc: "Una inteligencia que conoce tu stack, tus repos y tus clientes. Le hablas y construye productos reales." },
-  { icon: Rocket, title: "De idea a producción", desc: "Apps, automatizaciones, bots y modelos de lenguaje. Todo desplegado, con dominio y listo para operar." },
-  { icon: LayoutDashboard, title: "Tú controlas todo", desc: "V ejecuta, tú decides. Ves cada avance, cada integración y cada despliegue en tiempo real." },
+// ── BIENVENIDA REDISEÑADA ─────────────────────────────────────
+const LAUNCH_BADGES = [
+  { icon: Bot, label: "VForge MCP", sub: "Empresarial", color: "#a855f7" },
+  { icon: Zap, label: "Generador IA", sub: "de Contenido", color: "#22d3ee" },
+  { icon: Globe, label: "Apps reales", sub: "App Store + Play", color: "#22c55e" },
+  { icon: FileText, label: "Método VForge", sub: "De idea a deploy", color: "#f59e0b" },
 ];
 
-// Los 3 mundos — V te orienta según quién eres
+const METODO_STEPS = [
+  { n: "01", title: "Alcance en 1 sesión", desc: "V entiende tu idea, define features y te muestra el blueprint en tiempo real." },
+  { n: "02", title: "Demo en 4 días", desc: "Ves tu app funcionando antes de pagar el siguiente paso. Sin sorpresas." },
+  { n: "03", title: "Deploy a producción", desc: "Dominio propio, App Store, Google Play. Todo desplegado y operando." },
+];
+
+const WELCOME_STATS = [
+  { value: "17+", label: "Apps en producción" },
+  { value: "4d", label: "Demo garantizada" },
+  { value: "100%", label: "Código tuyo" },
+];
+
 const WORLDS = [
   { icon: ShoppingBag, color: "#8b5cf6", title: "Quiero una app o servicio", desc: "Eres un cliente. Mira los productos: apps, automatizaciones, bots, videos y MCP empresariales.", cta: "Ver productos", href: "#productos" },
   { icon: Tag, color: "#0ea5e9", title: "Soy developer / agencia", desc: "Usa VForge como plataforma para construir y desplegar. Mira los planes Explorer, Studio y Forge.", cta: "Ver precios", href: "/pricing" },
@@ -56,21 +71,51 @@ export function Hero() {
   const [panel, setPanel] = useState<"welcome" | "faq" | "worlds" | null>(null);
 
   return (
-    <section className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-5 pb-20 pt-24"
-      style={{ touchAction: "pan-y" }}>
-
-      {/* Fondo obsidian con aura viva */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
+    <section
+      className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-5 pb-20 pt-24"
+      style={{ touchAction: "pan-y" }}
+    >
+      {/* ── FONDO: video de la esfera en loop ── */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute inset-0 bg-[#03020a]" />
-        <motion.div
-          animate={{ opacity: [0.5, 0.8, 0.5], scale: [1, 1.1, 1] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute left-1/2 top-[30%] h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-600/25 blur-[130px]"
+        {/* Video esfera de fondo */}
+        <video
+          src={SPHERE_VIDEO}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute left-1/2 top-1/2 h-[110%] w-[110%] -translate-x-1/2 -translate-y-1/2 object-cover opacity-30"
+          style={{ filter: "blur(2px) saturate(1.4)" }}
         />
-        <div className="absolute left-1/2 top-[32%] h-[260px] w-[260px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-[80px]" />
+        {/* Overlay oscuro para legibilidad */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#03020a]/60 via-transparent to-[#03020a]/80" />
+        {/* Aura violet viva */}
+        <motion.div
+          animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.12, 1] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute left-1/2 top-[35%] h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-600/20 blur-[120px]"
+        />
       </div>
 
-      {/* ====== ORBE V ====== */}
+      {/* ── BADGE LANZAMIENTO ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: EASE }}
+        className="relative z-10 mb-5 flex items-center gap-2 rounded-full border border-violet-400/30 bg-[#0a0614]/70 px-4 py-1.5 backdrop-blur-xl"
+      >
+        <motion.span
+          animate={{ opacity: [1, 0.3, 1] }}
+          transition={{ duration: 1.6, repeat: Infinity }}
+          className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"
+        />
+        <span className="text-[11px] font-semibold tracking-[0.2em] text-violet-200 uppercase">
+          V·Momentum lanza VForge MCP + Generador IA
+        </span>
+      </motion.div>
+
+      {/* ── ORBE V (con la esfera de imagen encima del video) ── */}
       <motion.div
         initial={{ opacity: 0, scale: 0.85 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -82,7 +127,6 @@ export function Hero() {
           transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
           className="absolute h-[300px] w-[300px] rounded-full bg-violet-600/35 blur-[80px]"
         />
-
         {!open && (
           <motion.div
             animate={{ scale: [1, 1.4], opacity: [0.5, 0] }}
@@ -90,7 +134,6 @@ export function Hero() {
             className="absolute h-[230px] w-[230px] rounded-full border border-violet-400/40"
           />
         )}
-
         <motion.button
           onClick={() => { setOpen((v) => !v); setPanel(null); }}
           whileTap={{ scale: 0.94 }}
@@ -101,11 +144,12 @@ export function Hero() {
           aria-label="Activar V"
         >
           <motion.img
-            src={SPHERE} alt="V"
+            src={SPHERE_IMG}
+            alt="V"
             animate={{ scale: [1, 1.04, 1] }}
             transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
             className="h-full w-full object-contain"
-            style={{ filter: "drop-shadow(0 0 50px rgba(124,58,237,0.55)) drop-shadow(0 0 100px rgba(124,58,237,0.28))" }}
+            style={{ filter: "drop-shadow(0 0 50px rgba(124,58,237,0.6)) drop-shadow(0 0 100px rgba(124,58,237,0.3))" }}
             draggable={false}
           />
           {!open && (
@@ -120,7 +164,7 @@ export function Hero() {
         </motion.button>
       </motion.div>
 
-      {/* ====== MENÚ DE V (grid limpio, no se sale en móvil) ====== */}
+      {/* ── MENÚ V ── */}
       <AnimatePresence>
         {open && (
           <>
@@ -168,31 +212,25 @@ export function Hero() {
         )}
       </AnimatePresence>
 
-      {/* ====== TEXTO ====== */}
+      {/* ── TEXTO HERO ── */}
       <motion.div
         animate={{ opacity: open ? 0.12 : 1, filter: open ? "blur(4px)" : "blur(0px)" }}
         transition={{ ease: EASE }}
         className="relative z-0 flex flex-col items-center"
       >
-        <div className="mb-6 flex items-center gap-2 rounded-full border border-violet-400/30 bg-[#0a0614]/70 px-4 py-1.5 backdrop-blur-xl">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
-          <span className="text-[11px] font-semibold tracking-[0.2em] text-violet-200 uppercase">V en línea</span>
-        </div>
-
         <p className="mb-4 text-center text-[11px] font-semibold tracking-[0.25em] text-violet-400/60 uppercase">
           La fábrica de apps con IA
         </p>
-
         <h1 className="text-center text-[clamp(3rem,13vw,5.5rem)] font-bold leading-[0.92] tracking-[-0.04em] text-white">
           Construye.<br />
           <span className="bg-gradient-to-r from-violet-400 via-violet-300 to-cyan-400 bg-clip-text text-transparent">Despliega.</span><br />
           Domina.
         </h1>
-
         <p className="mt-6 max-w-[420px] text-center text-[clamp(0.95rem,2.6vw,1.1rem)] font-light leading-relaxed text-white/50">
           V conoce tu stack, tus repos y tus clientes. Hablas — ella construye. Tú controlas todo.
         </p>
 
+        {/* CTA buttons */}
         <div className="mt-9 flex w-full max-w-sm flex-col items-center gap-3">
           <button
             onClick={() => setOpen(true)}
@@ -220,7 +258,7 @@ export function Hero() {
         </div>
       </motion.div>
 
-      {/* ====== PANELES ====== */}
+      {/* ── PANELES ── */}
       <AnimatePresence>
         {panel && (
           <>
@@ -236,40 +274,108 @@ export function Hero() {
               transition={{ ease: EASE, duration: 0.4 }}
               className="fixed inset-0 z-[81] flex items-end justify-center md:items-center"
             >
-              <div className="relative max-h-[88vh] w-full max-w-lg overflow-auto rounded-t-[2rem] border border-violet-400/30 bg-[#06040f] p-6 md:rounded-[2rem]"
-                style={{ boxShadow: "0 0 120px rgba(124,58,237,0.4)" }}>
-                <button onClick={() => setPanel(null)} className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-xl transition hover:bg-black/70">
+              <div
+                className="relative max-h-[92vh] w-full max-w-lg overflow-auto rounded-t-[2rem] border border-violet-400/20 bg-[#06040f] p-6 pb-10 md:rounded-[2rem]"
+                style={{ boxShadow: "0 0 120px rgba(124,58,237,0.4)" }}
+              >
+                <button
+                  onClick={() => setPanel(null)}
+                  className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-xl transition hover:bg-black/70"
+                >
                   <X size={16} />
                 </button>
 
+                {/* ── PANEL BIENVENIDA NUEVO ── */}
                 {panel === "welcome" && (
-                  <>
-                    <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-400/70">Bienvenido</p>
-                    <h2 className="mt-1 text-2xl font-bold text-white">Conoce a V</h2>
-                    <div className="mt-5 space-y-3">
-                      {WELCOME_CARDS.map((c, i) => (
-                        <motion.div key={c.title}
-                          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.08, ease: EASE }}
-                          className="flex items-start gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/10">
-                            <c.icon size={18} className="text-violet-300" />
+                  <div>
+                    {/* Header con video esfera mini */}
+                    <div className="relative mb-6 overflow-hidden rounded-2xl border border-violet-500/20">
+                      <video
+                        src={SPHERE_VIDEO}
+                        autoPlay loop muted playsInline
+                        className="h-36 w-full object-cover opacity-60"
+                        style={{ filter: "saturate(1.5)" }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#06040f] via-[#06040f]/40 to-transparent" />
+                      <div className="absolute bottom-0 left-0 p-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-violet-400/80">V·Momentum</p>
+                        <p className="text-xl font-bold text-white leading-tight">Somos VForge</p>
+                      </div>
+                    </div>
+
+                    {/* Qué somos */}
+                    <p className="text-sm leading-relaxed text-white/60 mb-5">
+                      Somos la <span className="text-white font-medium">fábrica de apps con IA</span> de México. Construimos productos reales — PWAs, apps móviles, automatizaciones y MCPs — usando el Método VForge: de tu idea a producción en días, no meses.
+                    </p>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-2 mb-5">
+                      {WELCOME_STATS.map((s) => (
+                        <div key={s.label} className="rounded-2xl border border-white/8 bg-white/3 p-3 text-center">
+                          <p className="text-xl font-bold text-white">{s.value}</p>
+                          <p className="mt-0.5 text-[10px] text-white/40 leading-tight">{s.label}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Lo nuevo */}
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400/70 mb-3">
+                      🚀 Recién lanzado
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 mb-5">
+                      {LAUNCH_BADGES.map((b, i) => (
+                        <motion.div
+                          key={b.label}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.07, ease: EASE }}
+                          className="flex items-center gap-2.5 rounded-2xl border p-3"
+                          style={{ borderColor: `${b.color}25`, background: `${b.color}0c` }}
+                        >
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: `${b.color}20` }}>
+                            <b.icon size={15} style={{ color: b.color }} />
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-white">{c.title}</p>
-                            <p className="mt-0.5 text-xs leading-relaxed text-white/50">{c.desc}</p>
+                            <p className="text-[12px] font-semibold text-white leading-tight">{b.label}</p>
+                            <p className="text-[10px] text-white/40">{b.sub}</p>
                           </div>
                         </motion.div>
                       ))}
                     </div>
-                    <button onClick={() => setPanel("worlds")}
-                      className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-violet-500 py-4 text-sm font-semibold text-white"
-                      style={{ boxShadow: "0 0 40px rgba(124,58,237,0.5)" }}>
+
+                    {/* El Método VForge */}
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-violet-400/70 mb-3">
+                      El Método VForge
+                    </p>
+                    <div className="space-y-2 mb-6">
+                      {METODO_STEPS.map((s, i) => (
+                        <motion.div
+                          key={s.n}
+                          initial={{ opacity: 0, x: -12 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.3 + i * 0.08, ease: EASE }}
+                          className="flex items-start gap-3 rounded-xl border border-white/6 bg-white/3 p-3"
+                        >
+                          <span className="font-mono text-[11px] font-bold text-violet-400/60 mt-0.5 shrink-0">{s.n}</span>
+                          <div>
+                            <p className="text-[12px] font-semibold text-white">{s.title}</p>
+                            <p className="text-[11px] text-white/40 leading-relaxed mt-0.5">{s.desc}</p>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => setPanel("worlds")}
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-violet-500 py-4 text-sm font-semibold text-white"
+                      style={{ boxShadow: "0 0 40px rgba(124,58,237,0.5)" }}
+                    >
                       ¿Por dónde empiezo? <ArrowRight size={14} />
                     </button>
-                  </>
+                  </div>
                 )}
 
+                {/* ── PANEL MUNDOS ── */}
                 {panel === "worlds" && (
                   <>
                     <p className="text-[11px] font-semibold uppercase tracking-widest text-cyan-400/70">V te orienta</p>
@@ -301,6 +407,7 @@ export function Hero() {
                   </>
                 )}
 
+                {/* ── PANEL FAQ ── */}
                 {panel === "faq" && (
                   <>
                     <p className="text-[11px] font-semibold uppercase tracking-widest text-amber-400/70">Resolvemos tus dudas</p>
