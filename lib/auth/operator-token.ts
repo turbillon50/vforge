@@ -23,7 +23,11 @@ const OPERATOR_USER_ID = "operator_luis";
  * with a JSON-friendly error and HTTP status.
  */
 export function requireOperatorAuth(req: Request): AuthResult {
-  const expected = process.env.VFORGE_OPERATOR_TOKEN;
+  // Trim the configured value too: pasting a secret into a dashboard often
+  // leaves a trailing newline/space, which would silently fail the
+  // equal-length check below and always return 403. Presented token is also
+  // trimmed, so both sides are normalized.
+  const expected = process.env.VFORGE_OPERATOR_TOKEN?.trim();
   if (!expected) {
     return {
       ok: false,
