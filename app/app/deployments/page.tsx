@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/workspace/PageHeader";
-import { CheckCircle2, CircleDot, ExternalLink, Rocket } from "lucide-react";
+import { Icon3D } from "@/components/brand/Icon3D";
+import { CheckCircle2, CircleDot, ExternalLink, Rocket, GitBranch, Globe } from "lucide-react";
+import { motion } from "framer-motion";
 import { useT } from "@/i18n/AppProviders";
 
 interface Project {
@@ -22,6 +24,12 @@ function statusOf(p: Project): DeployStatus {
   if (p.category === "activo" || p.category === "en_revision") return "preview";
   return "draft";
 }
+
+const STATUS_META: Record<DeployStatus, { label: string; badge: string; dot: string }> = {
+  ready: { label: "live", badge: "crystal-badge-live", dot: "#34d399" },
+  preview: { label: "preview", badge: "crystal-badge", dot: "#22d3ee" },
+  draft: { label: "draft", badge: "crystal-badge-warn", dot: "#9ca3af" },
+};
 
 export default function DeploymentsPage() {
   const t = useT();
@@ -54,95 +62,97 @@ export default function DeploymentsPage() {
 
       <div className="px-5 py-6 md:px-8">
         {error && (
-          <div className="mb-4 rounded-md border border-error-crimson/30 bg-error-crimson/5 px-4 py-3 text-sm text-error-crimson">
+          <div className="mb-4 rounded-xl border border-error-crimson/30 bg-error-crimson/5 px-4 py-3 text-sm text-error-crimson">
             ⚠ {error}
           </div>
         )}
 
         {loading && (
-          <div className="space-y-3">
-            {[0, 1, 2].map((i) => (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {[0, 1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-[70px] rounded-xl border border-app bg-tint-1/40 animate-pulse"
+                className="h-[150px] rounded-2xl border border-app bg-tint-1/40 animate-pulse"
               />
             ))}
           </div>
         )}
 
         {!loading && projects.length === 0 && (
-          <div className="rounded-xl border border-app bg-tint-1 p-10 text-center text-on-surface-variant">
-            <Rocket className="mx-auto mb-3 text-cyber-cyan" size={24} />
-            <p className="font-display text-lg">Ningún proyecto desplegado todavía</p>
-            <p className="mt-2 text-sm">
-              Cuando V despliegue un proyecto en Vercel, aparece aquí con
-              dominio y estado en vivo.
+          <div className="crystal-card p-10 text-center text-on-surface-variant">
+            <div className="crystal-icon-cap mx-auto mb-4 h-14 w-14">
+              <Icon3D name="rocket" size={34} glow />
+            </div>
+            <p className="font-display text-lg text-on-surface">Ningún proyecto desplegado todavía</p>
+            <p className="mx-auto mt-2 max-w-sm text-sm">
+              Cuando V despliegue un proyecto en Vercel, aparece aquí con dominio
+              y estado en vivo.
             </p>
           </div>
         )}
 
         {!loading && projects.length > 0 && (
-          <div className="rounded-xl border border-app">
-            <div className="grid grid-cols-12 items-center gap-3 border-b border-app bg-tint-1 px-4 py-2">
-              <span className="col-span-5 label-caps text-muted">proyecto</span>
-              <span className="col-span-3 label-caps text-muted">dominio</span>
-              <span className="col-span-2 label-caps text-muted">estado</span>
-              <span className="col-span-2 label-caps text-muted text-right">
-                acción
-              </span>
-            </div>
-            <ul>
-              {projects.map((p) => {
-                const status = statusOf(p);
-                const host =
-                  p.domain ?? (p.vercel_url ?? "").replace(/^https?:\/\//, "");
-                return (
-                  <li
-                    key={p.id}
-                    className="grid grid-cols-12 items-center gap-3 border-b border-app px-4 py-3 last:border-0 hover:bg-tint-1"
-                  >
-                    <div className="col-span-5 min-w-0">
-                      <p className="font-display font-semibold text-on-surface truncate">
-                        {p.name}
-                      </p>
-                      <p className="font-mono text-[11px] uppercase tracking-widest text-muted truncate">
-                        {p.github_repo ?? "sin repo"}
-                      </p>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {projects.map((p, idx) => {
+              const status = statusOf(p);
+              const meta = STATUS_META[status];
+              const host = p.domain ?? (p.vercel_url ?? "").replace(/^https?:\/\//, "");
+              const repo = (p.github_repo ?? "sin repo").split("/").pop() ?? "sin repo";
+              return (
+                <motion.a
+                  key={p.id}
+                  href={p.vercel_url!}
+                  target="_blank"
+                  rel="noreferrer"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(idx * 0.05, 0.4), duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="crystal-card card-lift group relative block overflow-hidden p-5"
+                >
+                  {/* halo de estado arriba a la derecha */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-40 blur-2xl transition group-hover:opacity-70"
+                    style={{ background: `radial-gradient(circle, ${meta.dot}, transparent 70%)` }}
+                  />
+
+                  <div className="relative flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="crystal-icon-cap h-11 w-11 shrink-0">
+                        <Icon3D name="rocket" size={26} glow={status === "ready"} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-display text-[15px] font-semibold leading-tight text-on-surface truncate">
+                          {p.name}
+                        </p>
+                        <p className="mt-0.5 flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.16em] text-muted truncate">
+                          <GitBranch size={9} /> {repo}
+                        </p>
+                      </div>
                     </div>
-                    <div className="col-span-3 font-mono text-[12px] text-on-surface-variant truncate">
+                    <span className={`${meta.badge} shrink-0`}>
+                      {status === "ready" ? (
+                        <CheckCircle2 size={10} />
+                      ) : (
+                        <CircleDot size={10} className={status === "preview" ? "animate-pulse" : ""} />
+                      )}
+                      {meta.label}
+                    </span>
+                  </div>
+
+                  <div className="relative mt-4 flex items-center gap-2 rounded-xl border border-app/60 bg-black/20 px-3 py-2">
+                    <Globe size={12} className="shrink-0 text-cyber-cyan" />
+                    <span className="min-w-0 flex-1 font-mono text-[12px] text-on-surface-variant truncate">
                       {host}
-                    </div>
-                    <div className="col-span-2">
-                      {status === "ready" && (
-                        <span className="chip text-success-emerald">
-                          <CheckCircle2 size={11} /> live
-                        </span>
-                      )}
-                      {status === "preview" && (
-                        <span className="chip text-cyber-cyan">
-                          <CircleDot size={11} className="animate-pulse" /> preview
-                        </span>
-                      )}
-                      {status === "draft" && (
-                        <span className="chip text-muted">
-                          <CircleDot size={11} /> draft
-                        </span>
-                      )}
-                    </div>
-                    <div className="col-span-2 text-right">
-                      <a
-                        href={p.vercel_url!}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 rounded-md border border-app px-2.5 py-1.5 text-[12px] text-on-surface-variant hover:bg-tint-2 hover:text-on-surface"
-                      >
-                        <ExternalLink size={11} /> abrir
-                      </a>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+                    </span>
+                    <ExternalLink
+                      size={13}
+                      className="shrink-0 text-muted transition group-hover:text-violet-300"
+                    />
+                  </div>
+                </motion.a>
+              );
+            })}
           </div>
         )}
       </div>

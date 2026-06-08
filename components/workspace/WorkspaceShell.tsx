@@ -155,14 +155,34 @@ function TopBar({ hiddenOnMobile = false }: { hiddenOnMobile?: boolean }) {
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 md:px-8">
-        <div className="flex shrink-0 items-center gap-2 text-on-surface-variant md:hidden">
+        <Link
+          href="/"
+          aria-label="Ir a la página principal de VForge"
+          className="flex shrink-0 items-center gap-2 text-on-surface-variant transition active:scale-95 md:hidden"
+        >
           <VMark size={20} />
           <span className="font-display text-sm font-semibold tracking-tight text-on-surface">VForge</span>
-        </div>
+        </Link>
         <div className="min-w-0 flex-1 overflow-hidden">
           <Breadcrumbs />
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href="/"
+            aria-label="Volver a la web pública"
+            title="Ir a la landing"
+            className="hidden items-center gap-1.5 rounded-full border border-app-strong bg-tint-1 px-3 py-1.5 text-[13px] font-medium text-on-surface-variant transition hover:border-violet-500/40 hover:text-violet-300 sm:inline-flex"
+          >
+            <Home size={14} /> Landing
+          </Link>
+          <Link
+            href="/"
+            aria-label="Volver a la web pública"
+            title="Ir a la landing"
+            className="inline-flex items-center justify-center rounded-md border border-app-strong bg-tint-1 p-2 text-on-surface-variant transition hover:border-violet-500/40 hover:text-violet-300 sm:hidden"
+          >
+            <Home size={15} />
+          </Link>
           <LocaleToggle compact />
           <ThemeToggle compact />
           <button
