@@ -1,211 +1,252 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, Sparkles, Zap, Loader2 } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { Check, Sparkles, Zap, Crown, ArrowRight } from "lucide-react";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
+import { motion } from "framer-motion";
 
-type PaidPlan = "studio" | "forge" | "payg";
+const EASE = [0.22, 1, 0.36, 1] as const;
 
-interface PlanCard {
-  id: "free" | PaidPlan;
-  name: string;
-  price: string;
-  cadence: string;
-  blurb: string;
-  features: string[];
-  cta: string;
-  highlight?: boolean;
-  hero?: boolean;
-}
-
-const PLANS: PlanCard[] = [
+const PLANS = [
   {
     id: "free",
-    name: "Free",
-    price: "$0",
-    cadence: "/mes",
-    blurb: "Empieza gratis. Conoce a V y construye tu primer espacio.",
+    name: "Explorer",
+    price: { monthly: "$0", annual: "$0" },
+    cadence: "/mes · siempre gratis",
+    blurb: "Conoce a V. Explora el workspace. Construye tu primer proyecto.",
+    icon: Sparkles,
+    iconColor: "text-violet-300",
     features: [
-      "1 workspace",
-      "20 mensajes al día con V",
+      "1 workspace activo",
+      "20 mensajes/día con V",
       "Conexión GitHub + Vercel",
       "Marketplace comunitario",
+      "Deploy básico incluido",
+      "Soporte por docs",
     ],
     cta: "Empieza gratis",
-    hero: true,
+    ctaHref: "/sign-up",
+    highlight: false,
   },
   {
     id: "studio",
     name: "Studio",
-    price: "$20",
+    price: { monthly: "$30", annual: "$24" },
     cadence: "/mes",
-    blurb: "Para fundadores que envían productos reales cada semana.",
+    blurb: "Para founders que envían productos reales cada semana. El plan de los que construyen en serio.",
+    icon: Zap,
+    iconColor: "text-cyan-300",
     features: [
-      "5 workspaces",
-      "200 mensajes al día con V",
-      "Builds y deploys incluidos",
-      "Bóveda de secretos",
+      "5 workspaces activos",
+      "Mensajes ilimitados con V",
+      "Builds y deploys sin límite",
+      "Bóveda de secretos encriptada",
       "Dominios personalizados",
+      "Panel de clientes (invitación)",
+      "Acceso a V-Shop completo",
+      "Integraciones premium (Stripe, MP, Clerk)",
+      "VAPID push notifications",
+      "Soporte prioritario por chat",
     ],
     cta: "Elegir Studio",
+    ctaHref: "/sign-up?plan=studio",
     highlight: true,
+    badge: "Más popular",
   },
   {
     id: "forge",
     name: "Forge",
-    price: "$100",
+    price: { monthly: "$60", annual: "$48" },
     cadence: "/mes",
-    blurb: "Para operadores con un portafolio completo a escala.",
+    blurb: "Para operadores con portafolio completo. Todo lo de Studio más potencia de agencia.",
+    icon: Crown,
+    iconColor: "text-yellow-300",
     features: [
       "Workspaces ilimitados",
-      "Mensajes ilimitados con V",
-      "Builds con prioridad",
-      "Auditoría y aprobaciones",
-      "Soporte dedicado",
+      "Multi-cliente con scopes",
+      "Acceso Owner completo",
+      "Contratos digitales (DocuSign)",
+      "White-label disponible",
+      "API propia de V",
+      "Analytics avanzados de proyectos",
+      "V-Shop: subir tus propias apps",
+      "Soporte directo con el equipo",
+      "Acceso beta a nuevas features",
     ],
     cta: "Elegir Forge",
-  },
-  {
-    id: "payg",
-    name: "Pay-as-you-go",
-    price: "$0",
-    cadence: "base + uso",
-    blurb: "Paga solo lo que V ejecuta. $1 por unidad de cómputo.",
-    features: [
-      "Sin cuota mensual fija",
-      "Builds medidos por uso",
-      "Mismo stack que Studio",
-      "Corte mensual transparente",
-    ],
-    cta: "Activar medido",
+    ctaHref: "/sign-up?plan=forge",
+    highlight: false,
   },
 ];
 
-export default function PricingPage() {
-  const { isSignedIn } = useUser();
-  const router = useRouter();
-  const [loading, setLoading] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+const COMPARISON = [
+  { feature: "Workspaces", free: "1", studio: "5", forge: "∞" },
+  { feature: "Mensajes con V", free: "20/día", studio: "Ilimitados", forge: "Ilimitados" },
+  { feature: "Deploys", free: "Básico", studio: "Sin límite", forge: "Sin límite" },
+  { feature: "Panel de clientes", free: "—", studio: "✓", forge: "✓" },
+  { feature: "V-Shop acceso", free: "Explore", studio: "Completo", forge: "Completo + upload" },
+  { feature: "Contratos digitales", free: "—", studio: "—", forge: "✓" },
+  { feature: "White-label", free: "—", studio: "—", forge: "✓" },
+  { feature: "API de V", free: "—", studio: "—", forge: "✓" },
+];
 
-  async function choose(plan: PlanCard) {
-    setError(null);
-    if (plan.id === "free") {
-      router.push(isSignedIn ? "/app" : "/sign-up");
-      return;
-    }
-    if (!isSignedIn) {
-      router.push(`/sign-up?plan=${plan.id}`);
-      return;
-    }
-    try {
-      setLoading(plan.id);
-      const res = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: plan.id }),
-      });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        setError(data.error ?? "No pude iniciar el pago. Intenta de nuevo.");
-        setLoading(null);
-      }
-    } catch {
-      setError("No pude iniciar el pago. Intenta de nuevo.");
-      setLoading(null);
-    }
-  }
+export default function PricingPage() {
+  const [annual, setAnnual] = useState(false);
 
   return (
     <>
       <MarketingHeader />
-      <main className="relative isolate overflow-hidden">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[45vh] bg-violet-aura" />
-        <div className="mx-auto max-w-container px-5 pb-24 pt-16 md:px-margin-desktop md:pt-24">
-          <div className="mx-auto max-w-2xl text-center">
-            <span className="chip mx-auto w-fit border-violet-500/30 bg-violet-500/5 text-violet-300">
-              <Sparkles size={12} className="text-cyber-cyan" /> Precios en USD, sin sorpresas
+      <main className="min-h-screen bg-[#03020a] pb-24 pt-24">
+
+        {/* Header */}
+        <div className="mx-auto max-w-4xl px-5 text-center">
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-3 text-[11px] font-semibold tracking-[0.25em] text-violet-400/70 uppercase"
+          >
+            Planes y precios
+          </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, ease: EASE }}
+            className="text-[clamp(2.2rem,7vw,4rem)] font-bold leading-tight tracking-tight text-white"
+          >
+            El poder de una agencia.
+            <br />
+            <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
+              El precio de una herramienta.
             </span>
-            <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight text-balance md:text-6xl">
-              Un operador. Cuatro maneras de pagarle.
-            </h1>
-            <p className="mt-4 text-on-surface-variant md:text-lg">
-              Todos los planes incluyen a V. Empieza gratis, sube cuando tu stack lo pida —
-              o paga solo por lo que ejecuta.
-            </p>
-          </div>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.25 }}
+            className="mx-auto mt-4 max-w-lg text-base font-light text-white/40"
+          >
+            Sin contratos, sin sorpresas. Cancela cuando quieras.
+          </motion.p>
 
-          {error && (
-            <p className="mx-auto mt-8 max-w-md rounded-xl border border-error-crimson/30 bg-error-crimson/5 px-4 py-3 text-center text-sm text-error-crimson">
-              {error}
-            </p>
-          )}
+          {/* Toggle anual */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35 }}
+            className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-1 backdrop-blur-sm"
+          >
+            <button
+              onClick={() => setAnnual(false)}
+              className={`rounded-xl px-5 py-2 text-sm font-medium transition-all ${!annual ? "bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]" : "text-white/40 hover:text-white/70"}`}
+            >
+              Mensual
+            </button>
+            <button
+              onClick={() => setAnnual(true)}
+              className={`flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-medium transition-all ${annual ? "bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]" : "text-white/40 hover:text-white/70"}`}
+            >
+              Anual
+              <span className="rounded-full bg-cyan-400/20 px-2 py-0.5 text-[10px] font-bold text-cyan-400">-20%</span>
+            </button>
+          </motion.div>
+        </div>
 
-          <div className="mt-14 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {PLANS.map((p) => (
-              <article
-                key={p.id}
-                className={`relative flex flex-col overflow-hidden rounded-2xl border p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-transform duration-300 hover:-translate-y-1 ${
-                  p.highlight
-                    ? "glow-border border-transparent bg-gradient-to-b from-violet-500/[0.09] to-cyan-400/[0.05]"
-                    : p.hero
-                      ? "border-cyan-400/25 bg-gradient-to-b from-cyan-400/[0.05] to-transparent"
-                      : "border-app bg-tint-1"
+        {/* Cards */}
+        <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-4 px-5 md:grid-cols-3">
+          {PLANS.map((plan, i) => (
+            <motion.div
+              key={plan.id}
+              initial={{ opacity: 0, y: 32 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 * i + 0.4, ease: EASE }}
+              className={`relative flex flex-col overflow-hidden rounded-3xl border p-7 transition-all ${
+                plan.highlight
+                  ? "border-violet-400/50 bg-gradient-to-b from-violet-600/15 to-[#080614] shadow-[0_0_80px_rgba(124,58,237,0.2),0_0_0_1px_rgba(124,58,237,0.3)] scale-[1.03]"
+                  : "border-white/[0.08] bg-white/[0.02] hover:border-white/15"
+              }`}
+            >
+              {plan.badge && (
+                <div className="absolute -top-px left-1/2 -translate-x-1/2">
+                  <span className="rounded-b-xl bg-gradient-to-r from-violet-600 to-cyan-500 px-4 py-1 text-[11px] font-bold text-white tracking-widest uppercase shadow-[0_4px_20px_rgba(124,58,237,0.5)]">
+                    {plan.badge}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] ${plan.iconColor}`}>
+                    <plan.icon size={16} />
+                  </div>
+                  <p className="text-lg font-bold text-white">{plan.name}</p>
+                  <p className="mt-1 text-xs font-light text-white/40">{plan.blurb}</p>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <span className="text-4xl font-bold tracking-tight text-white">
+                  {annual ? plan.price.annual : plan.price.monthly}
+                </span>
+                <span className="ml-1 text-sm text-white/30">{plan.cadence}</span>
+              </div>
+
+              <Link
+                href={plan.ctaHref}
+                className={`mt-6 flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold transition-all ${
+                  plan.highlight
+                    ? "bg-gradient-to-r from-violet-600 to-violet-500 text-white shadow-[0_0_30px_rgba(124,58,237,0.4)] hover:shadow-[0_0_50px_rgba(124,58,237,0.6)] hover:scale-[1.02]"
+                    : "border border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white"
                 }`}
               >
-                {p.highlight && (
-                  <span className="chip absolute right-4 top-4 border-cyan-400/30 bg-cyan-400/5 text-cyan-400">
-                    El más elegido
-                  </span>
-                )}
-                {p.id === "payg" && (
-                  <span className="chip absolute right-4 top-4 border-violet-500/30 bg-violet-500/5 text-violet-300">
-                    <Zap size={11} /> Medido
-                  </span>
-                )}
-                <h2 className="font-display text-2xl font-semibold">{p.name}</h2>
-                <p className="mt-1 min-h-[40px] text-sm text-on-surface-variant">{p.blurb}</p>
-                <div className="mt-6 flex items-baseline gap-1.5">
-                  <span className="font-display text-5xl font-semibold tracking-tight tabular-nums">
-                    {p.price}
-                  </span>
-                  <span className="text-sm text-on-surface-variant">{p.cadence}</span>
-                </div>
-                <ul className="mt-6 flex-1 space-y-2.5 text-sm">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-on-surface">
-                      <Check size={14} className="shrink-0 text-success-emerald" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => choose(p)}
-                  disabled={loading !== null}
-                  style={{ minHeight: 44, touchAction: "manipulation" }}
-                  className={`mt-8 inline-flex w-full items-center justify-center gap-2 ${
-                    p.highlight || p.hero ? "btn-primary" : "btn-ghost"
-                  } disabled:opacity-60`}
-                >
-                  {loading === p.id ? (
-                    <Loader2 size={15} className="animate-spin" />
-                  ) : (
-                    p.cta
-                  )}
-                </button>
-              </article>
-            ))}
-          </div>
+                {plan.cta}
+                <ArrowRight size={13} />
+              </Link>
 
-          <p className="mt-12 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
-            ¿Necesitas un tier enterprise?{" "}
-            <Link href="#" className="text-cyber-cyan">
-              Habla con nosotros
-            </Link>
+              <ul className="mt-6 space-y-2.5">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-sm text-white/60">
+                    <Check size={13} className="mt-0.5 shrink-0 text-cyan-400" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Tabla comparativa */}
+        <div className="mx-auto mt-20 max-w-4xl px-5">
+          <p className="mb-6 text-center text-[11px] font-semibold tracking-[0.2em] text-white/25 uppercase">Comparativa detallada</p>
+          <div className="overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/[0.07]">
+                  <th className="px-5 py-4 text-left text-xs font-semibold text-white/30 uppercase tracking-widest">Feature</th>
+                  <th className="px-4 py-4 text-center text-xs font-semibold text-white/30 uppercase tracking-widest">Explorer</th>
+                  <th className="px-4 py-4 text-center text-xs font-semibold text-violet-300 uppercase tracking-widest">Studio</th>
+                  <th className="px-4 py-4 text-center text-xs font-semibold text-yellow-300/70 uppercase tracking-widest">Forge</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON.map((row, i) => (
+                  <tr key={row.feature} className={`border-b border-white/[0.04] ${i % 2 === 0 ? "" : "bg-white/[0.01]"}`}>
+                    <td className="px-5 py-3.5 text-white/60">{row.feature}</td>
+                    <td className="px-4 py-3.5 text-center text-white/35">{row.free}</td>
+                    <td className="px-4 py-3.5 text-center text-violet-300">{row.studio}</td>
+                    <td className="px-4 py-3.5 text-center text-yellow-300/70">{row.forge}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* FAQ mínimo */}
+        <div className="mx-auto mt-16 max-w-2xl px-5 text-center">
+          <p className="text-sm text-white/30">
+            ¿Tienes dudas? Habla con <Link href="/sign-up" className="text-violet-400 hover:underline">V directamente</Link> — te explica todo en segundos.
           </p>
         </div>
       </main>
