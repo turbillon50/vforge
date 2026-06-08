@@ -12,7 +12,7 @@ const steps = [
 
 export function Metodo() {
   return (
-    <section id="metodo" className="border-b border-app bg-void py-24 md:py-32">
+    <section data-theme="dark" id="metodo" className="border-b border-app bg-[#03020a] py-24 md:py-32">
       <div className="mx-auto max-w-container px-5 md:px-margin-desktop">
         <motion.div initial={false} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1 }} transition={{ duration: 0.5 }} className="mb-14 max-w-2xl">
           <p className="label-caps mb-4 text-cyber-cyan">Cómo funciona</p>
@@ -22,10 +22,10 @@ export function Metodo() {
         </motion.div>
         <div className="grid gap-px overflow-hidden rounded-2xl border border-app bg-app md:grid-cols-3">
           {steps.map((s, i) => (
-            <motion.div key={s.n} initial={false} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1 }} transition={{ duration: 0.5, delay: i * 0.1 }} className="bg-void p-8">
+            <motion.div key={s.n} initial={false} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1 }} transition={{ duration: 0.5, delay: i * 0.1 }} className="bg-[#03020a] p-8">
               <span className="font-mono text-sm text-violet-300">{s.n}</span>
               <h3 className="mt-4 font-display text-xl font-semibold text-on-surface">{s.t}</h3>
-              <p className="mt-3 text-[15px] leading-relaxed text-on-surface-variant">{s.d}</p>
+              <p className="mt-3 text-[15px] leading-relaxed text-white/50">{s.d}</p>
             </motion.div>
           ))}
         </div>

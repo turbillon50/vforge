@@ -14,7 +14,7 @@ const STEPS = [
 
 export function Contratos() {
   return (
-    <section id="contratos" className="relative py-20">
+    <section data-theme="dark" id="contratos" className="relative py-20">
       <div className="mx-auto max-w-5xl px-5">
         <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-br from-[#0c0a1a] to-[#06040f] p-8 md:p-12">
           {/* Glow */}

@@ -23,14 +23,14 @@ export function Capabilities() {
     text: it.body,
   }));
   return (
-    <section id="product" className="border-b border-app">
+    <section data-theme="dark" id="product" className="border-b border-app">
       <div className="mx-auto max-w-container px-5 py-20 md:px-margin-desktop md:py-28">
         <div className="flex flex-col items-center text-center">
           <span className="label-caps text-cyber-cyan">{t.marketing.capabilities_eyebrow}</span>
           <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight md:text-5xl text-balance">
             {t.marketing.capabilities_title}
           </h2>
-          <p className="mt-4 max-w-2xl text-on-surface-variant">
+          <p className="mt-4 max-w-2xl text-white/50">
             {t.marketing.capabilities_subtitle}
           </p>
         </div>
@@ -46,7 +46,7 @@ export function Capabilities() {
                 <it.icon size={18} />
               </div>
               <h3 className="font-display text-lg font-semibold tracking-tight">{it.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">{it.text}</p>
+              <p className="mt-2 text-sm leading-relaxed text-white/50">{it.text}</p>
             </article>
           ))}
         </div>

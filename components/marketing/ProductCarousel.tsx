@@ -139,7 +139,7 @@ export function ProductCarousel() {
   const activeProduct = PRODUCTS.find((p) => p.id === active);
 
   return (
-    <section id="productos" className="relative py-20">
+    <section data-theme="dark" id="productos" className="relative py-20">
       <div className="mx-auto max-w-5xl px-5">
         <p className="text-center text-[11px] font-semibold tracking-[0.25em] text-violet-400/70 uppercase">Nuestros productos</p>
         <h2 className="mt-2 text-center text-[clamp(1.8rem,5vw,3rem)] font-bold leading-tight tracking-tight text-white">

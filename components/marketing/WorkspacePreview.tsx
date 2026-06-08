@@ -7,7 +7,7 @@ import { useT } from "@/i18n/AppProviders";
 export function WorkspacePreview() {
   const t = useT();
   return (
-    <section id="workspace" className="border-b border-app">
+    <section data-theme="dark" id="workspace" className="border-b border-app">
       <div className="mx-auto max-w-container px-5 py-20 md:px-margin-desktop md:py-28">
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
           <div>
@@ -15,7 +15,7 @@ export function WorkspacePreview() {
             <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight md:text-5xl text-balance">
               {t.marketing.workspace_title}
             </h2>
-            <p className="mt-5 text-on-surface-variant">{t.marketing.workspace_body}</p>
+            <p className="mt-5 text-white/50">{t.marketing.workspace_body}</p>
 
             <ul className="mt-6 space-y-2 text-sm text-on-surface">
               {t.marketing.workspace_bullets.map((b) => (
@@ -48,7 +48,7 @@ export function WorkspacePreview() {
                       className={`mb-1 truncate rounded px-2 py-1.5 font-mono text-[11px] uppercase tracking-[0.12em] ${
                         i === 0
                           ? "bg-violet-500/15 text-violet-100"
-                          : "text-on-surface-variant"
+                          : "text-white/50"
                       }`}
                     >
                       {l}
@@ -58,17 +58,17 @@ export function WorkspacePreview() {
                 <div className="col-span-6 rounded-lg bg-tint-2 p-4">
                   <p className="label-caps mb-2 text-muted">{t.common.label_b} · {t.common.label_operator}</p>
                   <div className="space-y-2 text-[13px]">
-                    <div className="rounded-md border border-app-strong bg-tint-1 p-2 text-on-surface-variant">
+                    <div className="rounded-md border border-app-strong bg-tint-1 p-2 text-white/50">
                       {t.chat.quick_prompts[1]}
                     </div>
                     <div className="rounded-md border border-violet-500/20 bg-violet-500/[0.08] p-2 text-on-surface">
                       {t.chat.b_response_text}
                     </div>
-                    <div className="rounded-md border border-app-strong bg-tint-1 p-2 text-on-surface-variant">
+                    <div className="rounded-md border border-app-strong bg-tint-1 p-2 text-white/50">
                       {t.chat.quick_prompts[3]}
                     </div>
                   </div>
-                  <div className="mt-3 rounded-md border border-app-strong bg-tint-2 p-2 font-mono text-[12px] text-on-surface-variant">
+                  <div className="mt-3 rounded-md border border-app-strong bg-tint-2 p-2 font-mono text-[12px] text-white/50">
                     <span className="text-cyber-cyan">›</span> {t.chat.placeholder}
                   </div>
                 </div>

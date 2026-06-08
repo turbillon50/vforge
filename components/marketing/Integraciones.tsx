@@ -4,101 +4,96 @@ import { motion } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-type Cat = {
-  title: string;
-  accent: string;
-  items: { name: string; domain: string }[];
-};
+type Cat = { title: string; accent: string; items: { name: string; logo: string }[] };
 
-// domain → logo oficial vía Clearbit (logos reales de cada servicio)
+// Logos reales via Google Favicon CDN (siempre disponible, sin CORS)
+function logo(domain: string) {
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+}
+
 const CATEGORIES: Cat[] = [
   {
-    title: "Inteligencia Artificial",
-    accent: "#d97757",
+    title: "Inteligencia Artificial", accent: "#d97757",
     items: [
-      { name: "OpenAI", domain: "openai" },
-      { name: "Claude", domain: "claude" },
-      { name: "Gemini", domain: "gemini" },
-      { name: "OpenRouter", domain: "openrouter" },
-      { name: "Grok", domain: "grok" },
-      { name: "DeepSeek", domain: "deepseek" },
+      { name: "OpenAI",     logo: logo("openai.com") },
+      { name: "Claude",     logo: logo("claude.ai") },
+      { name: "Gemini",     logo: logo("gemini.google.com") },
+      { name: "OpenRouter", logo: logo("openrouter.ai") },
+      { name: "Grok",       logo: logo("grok.com") },
+      { name: "DeepSeek",   logo: logo("deepseek.com") },
     ],
   },
   {
-    title: "Infraestructura",
-    accent: "#22d3ee",
+    title: "Infraestructura", accent: "#22d3ee",
     items: [
-      { name: "GitHub", domain: "github" },
-      { name: "Vercel", domain: "vercel" },
-      { name: "Railway", domain: "railway" },
-      { name: "Hetzner", domain: "hetzner" },
-      { name: "Neon", domain: "neon" },
+      { name: "GitHub",  logo: logo("github.com") },
+      { name: "Vercel",  logo: logo("vercel.com") },
+      { name: "Neon",    logo: logo("neon.tech") },
+      { name: "Hetzner", logo: logo("hetzner.com") },
+      { name: "Railway", logo: logo("railway.app") },
     ],
   },
   {
-    title: "Comunicación",
-    accent: "#22c55e",
+    title: "Comunicación", accent: "#22c55e",
     items: [
-      { name: "WhatsApp", domain: "whatsapp" },
-      { name: "Twilio", domain: "twilio" },
-      { name: "Resend", domain: "resend" },
-      { name: "Gmail", domain: "gmail" },
+      { name: "WhatsApp", logo: logo("whatsapp.com") },
+      { name: "Twilio",   logo: logo("twilio.com") },
+      { name: "Resend",   logo: logo("resend.com") },
+      { name: "Gmail",    logo: logo("gmail.com") },
     ],
   },
   {
-    title: "Productividad",
-    accent: "#f59e0b",
+    title: "Productividad", accent: "#f59e0b",
     items: [
-      { name: "Airtable", domain: "airtable" },
-      { name: "HubSpot", domain: "hubspot" },
-      { name: "ClickUp", domain: "clickup" },
-      { name: "Slack", domain: "slack" },
-      { name: "Calendly", domain: "calendly" },
+      { name: "Airtable", logo: logo("airtable.com") },
+      { name: "HubSpot",  logo: logo("hubspot.com") },
+      { name: "ClickUp",  logo: logo("clickup.com") },
+      { name: "Slack",    logo: logo("slack.com") },
+      { name: "Calendly", logo: logo("calendly.com") },
     ],
   },
   {
-    title: "Identidad",
-    accent: "#8b5cf6",
+    title: "Identidad", accent: "#8b5cf6",
     items: [
-      { name: "Clerk", domain: "clerk" },
-      { name: "Google", domain: "google" },
-      { name: "Apple", domain: "apple" },
+      { name: "Clerk",  logo: logo("clerk.com") },
+      { name: "Google", logo: logo("google.com") },
+      { name: "Apple",  logo: logo("apple.com") },
     ],
   },
   {
-    title: "Pagos",
-    accent: "#635bff",
+    title: "Pagos", accent: "#635bff",
     items: [
-      { name: "Stripe", domain: "stripe" },
-      { name: "Mercado Pago", domain: "mercadopago" },
-      { name: "PayPal", domain: "paypal" },
+      { name: "Stripe",       logo: logo("stripe.com") },
+      { name: "Mercado Pago", logo: logo("mercadopago.com.mx") },
+      { name: "PayPal",       logo: logo("paypal.com") },
     ],
   },
   {
-    title: "Blockchain",
-    accent: "#a855f7",
+    title: "Blockchain", accent: "#a855f7",
     items: [
-      { name: "Alchemy", domain: "alchemy" },
-      { name: "Thirdweb", domain: "thirdweb" },
-      { name: "Safe", domain: "safe" },
-      { name: "LiFi", domain: "lifi" },
-      { name: "Turnkey", domain: "turnkey" },
+      { name: "Alchemy",  logo: logo("alchemy.com") },
+      { name: "Thirdweb", logo: logo("thirdweb.com") },
+      { name: "Safe",     logo: logo("safe.global") },
     ],
   },
 ];
 
-function logoUrl(slug: string) {
-  return `/logos/${slug}.svg`;
-}
-
 export function Integraciones() {
   return (
-    <section id="integraciones" className="relative py-20">
+    // data-theme="dark" forzado — esta sección siempre oscura
+    <section id="integraciones" data-theme="dark" className="relative bg-[#050509] py-20">
+      {/* Top separator */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent" />
+
       <div className="mx-auto max-w-5xl px-5">
-        <p className="text-center text-[11px] font-semibold tracking-[0.25em] text-cyan-400/60 uppercase">Centro de integraciones</p>
+        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.25em] text-cyan-400/60">
+          Centro de integraciones
+        </p>
         <h2 className="mt-2 text-center text-[clamp(1.8rem,5vw,3rem)] font-bold leading-tight tracking-tight text-white">
           Conectado con<br />
-          <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">todo tu ecosistema.</span>
+          <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
+            todo tu ecosistema.
+          </span>
         </h2>
         <p className="mx-auto mt-3 max-w-md text-center text-sm font-light text-white/40">
           V orquesta más de 30 servicios. Tu stack completo, hablando el mismo idioma.
@@ -108,42 +103,58 @@ export function Integraciones() {
           {CATEGORIES.map((cat, ci) => (
             <motion.div
               key={cat.title}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: ci * 0.05, ease: EASE }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ delay: ci * 0.04, ease: EASE }}
             >
+              {/* Category header */}
               <div className="mb-4 flex items-center gap-3">
-                <span className="h-1.5 w-1.5 rounded-full" style={{ background: cat.accent, boxShadow: `0 0 8px ${cat.accent}` }} />
+                <span className="h-1.5 w-1.5 rounded-full"
+                  style={{ background: cat.accent, boxShadow: `0 0 8px ${cat.accent}80` }} />
                 <p className="text-sm font-semibold text-white">{cat.title}</p>
-                <span className="text-xs text-white/25">{cat.items.length}</span>
-                <div className="ml-2 h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[9px] text-white/30">
+                  {cat.items.length}
+                </span>
+                <div className="ml-1 h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
               </div>
-              <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-5">
+
+              {/* Logo grid */}
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
                 {cat.items.map((item, i) => (
                   <motion.div
                     key={item.name}
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, scale: 0.88 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
-                    transition={{ delay: ci * 0.05 + i * 0.03, ease: EASE }}
-                    className="group relative flex flex-col items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 transition-all hover:border-white/20 hover:bg-white/[0.05]"
-                    style={{ ["--accent" as any]: cat.accent }}
+                    transition={{ delay: ci * 0.04 + i * 0.025, ease: EASE }}
+                    className="group relative flex flex-col items-center gap-2.5 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0c18] p-4 transition-all hover:border-white/20"
+                    style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}
                   >
-                    <div
-                      className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity group-hover:opacity-100"
-                      style={{ background: `radial-gradient(circle at 50% 0%, ${cat.accent}18, transparent 70%)` }}
-                    />
-                    <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white/5">
+                    {/* Hover glow */}
+                    <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                      style={{ background: `radial-gradient(circle at 50% 0%, ${cat.accent}20, transparent 65%)` }} />
+
+                    {/* Logo container */}
+                    <div className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.05]">
                       <img
-                        src={logoUrl(item.domain)}
+                        src={item.logo}
                         alt={item.name}
+                        width={28} height={28}
                         className="h-7 w-7 object-contain"
                         loading="lazy"
-                        onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0.25"; }}
+                        onError={(e) => {
+                          const t = e.target as HTMLImageElement;
+                          t.style.display = "none";
+                          if (t.parentElement) {
+                            t.parentElement.innerHTML = `<span style="font-size:18px;opacity:0.4">${item.name[0]}</span>`;
+                          }
+                        }}
                       />
                     </div>
-                    <span className="relative text-center text-[11px] font-medium text-white/55 leading-tight">{item.name}</span>
+                    <span className="relative text-center text-[11px] font-medium leading-tight text-white/60 group-hover:text-white/85 transition-colors">
+                      {item.name}
+                    </span>
                   </motion.div>
                 ))}
               </div>
@@ -151,6 +162,9 @@ export function Integraciones() {
           ))}
         </div>
       </div>
+
+      {/* Bottom separator */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
     </section>
   );
 }

@@ -55,7 +55,7 @@ export function OperatorPreview() {
                 className={`mb-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm ${
                   i.active
                     ? "bg-violet-500/15 text-violet-100 ring-1 ring-violet-500/30"
-                    : "text-on-surface-variant"
+                    : "text-white/50"
                 }`}
               >
                 <i.icon size={14} />
@@ -82,14 +82,14 @@ export function OperatorPreview() {
                     ) : (
                       <CircleDot size={14} className="text-muted" />
                     )}
-                    <span className={idx >= 3 ? "text-on-surface-variant" : ""}>{label}</span>
+                    <span className={idx >= 3 ? "text-white/50" : ""}>{label}</span>
                   </li>
                 ))}
               </ul>
             </Bubble>
 
             <div className="mt-5 rounded-lg border border-app-strong bg-tint-2 p-3">
-              <div className="font-mono text-[12px] text-on-surface-variant">
+              <div className="font-mono text-[12px] text-white/50">
                 <span className="text-cyber-cyan">›</span> {t.chat.placeholder}
               </div>
             </div>
@@ -134,7 +134,7 @@ function Bubble({
       className={`mb-3 max-w-[90%] rounded-xl border px-4 py-3 text-[14px] leading-relaxed ${
         isB
           ? "ml-0 border-violet-500/20 bg-violet-500/[0.06] text-on-surface"
-          : "ml-auto border-app-strong bg-tint-1 text-on-surface-variant"
+          : "ml-auto border-app-strong bg-tint-1 text-white/50"
       }`}
     >
       {isB && (
@@ -170,7 +170,7 @@ function Stat({
         <p className="label-caps text-muted">{label}</p>
         <p className="font-display text-lg font-semibold text-on-surface">{value}</p>
       </div>
-      <div className="flex items-center gap-2 text-[11px] text-on-surface-variant">
+      <div className="flex items-center gap-2 text-[11px] text-white/50">
         <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
         {hint}
       </div>
@@ -194,7 +194,7 @@ function ActivityItem({
       ? "text-cyber-cyan"
       : "text-success-emerald";
   return (
-    <div className="flex items-center gap-2 py-1.5 text-[12px] text-on-surface-variant">
+    <div className="flex items-center gap-2 py-1.5 text-[12px] text-white/50">
       <Icon size={12} className={c} />
       <span className="truncate font-mono">{label}</span>
     </div>
