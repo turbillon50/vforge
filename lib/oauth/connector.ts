@@ -16,7 +16,7 @@
  * lib/mcp/tokens.ts. Habla DIRECTO a Neon vía lib/db/client (DATABASE_URL).
  */
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { sql, queryOne } from "@/lib/db/client";
+import { sql, queryOne, queryAll } from "@/lib/db/client";
 import { ensureOauthTables, getClient, type OauthClient } from "@/lib/mcp/oauth";
 
 /** Origin público del conector. En prod: https://vforge.site */
@@ -132,6 +132,81 @@ export async function verifyConnectorSecret(
 export function redirectUriAllowed(client: OauthClient, redirectUri: string): boolean {
   if (!redirectUri) return false;
   return client.redirect_uris.includes(redirectUri);
+}
+
+/* ──────────────────────── gestión de clientes (owner) ──────────────────────── */
+
+export interface OauthClientPublic {
+  client_id: string;
+  client_name: string | null;
+  redirect_uris: string[];
+  token_endpoint_auth_method: string;
+  has_secret: boolean;
+  created_at: string;
+}
+
+/** Lista todos los clientes registrados (sin exponer el hash del secret). */
+export async function listClients(): Promise<OauthClientPublic[]> {
+  await ensureOauthTables();
+  const rows = await queryAll<{
+    client_id: string;
+    client_name: string | null;
+    redirect_uris: string[] | string;
+    token_endpoint_auth_method: string;
+    has_secret: boolean;
+    created_at: string;
+  }>(
+    `SELECT client_id, client_name, redirect_uris, token_endpoint_auth_method,
+            (client_secret_hash IS NOT NULL) AS has_secret, created_at
+       FROM oauth_clients ORDER BY created_at DESC`,
+  ).catch(() => []);
+  const arr = (v: string[] | string): string[] =>
+    Array.isArray(v) ? v : (() => { try { return JSON.parse(v); } catch { return []; } })();
+  return rows.map((r) => ({
+    client_id: r.client_id,
+    client_name: r.client_name,
+    redirect_uris: arr(r.redirect_uris),
+    token_endpoint_auth_method: r.token_endpoint_auth_method,
+    has_secret: r.has_secret,
+    created_at: r.created_at,
+  }));
+}
+
+/**
+ * Rota el client_secret de un cliente existente: genera uno nuevo, persiste su
+ * hash y lo marca como confidencial. Devuelve el secret EN CLARO (una sola vez)
+ * o null si el client_id no existe. Los access_token vfmcp_ ya emitidos siguen
+ * válidos; sólo cambia el secret necesario para futuros canjes de code.
+ */
+export async function rotateClientSecret(
+  clientId: string,
+): Promise<{ client_id: string; client_secret: string } | null> {
+  await ensureOauthTables();
+  const client_secret = "vfs_" + randomBytes(24).toString("hex");
+  const secretHash = sha256(client_secret);
+  const updated = (await sql`
+    UPDATE oauth_clients
+       SET client_secret_hash = ${secretHash},
+           token_endpoint_auth_method = 'client_secret_post'
+     WHERE client_id = ${clientId}
+     RETURNING client_id
+  `) as Array<{ client_id: string }>;
+  if (updated.length === 0) return null;
+  return { client_id: clientId, client_secret };
+}
+
+/**
+ * Borra un cliente y todos sus authorization_codes pendientes. Devuelve true si
+ * existía. Los access_token vfmcp_ ya emitidos NO se revocan aquí (se gestionan
+ * en mcp_tokens); borrar el cliente sólo impide nuevos flujos de autorización.
+ */
+export async function deleteClient(clientId: string): Promise<boolean> {
+  await ensureOauthTables();
+  await sql`DELETE FROM oauth_codes WHERE client_id = ${clientId}`.catch(() => {});
+  const deleted = (await sql`
+    DELETE FROM oauth_clients WHERE client_id = ${clientId} RETURNING client_id
+  `) as Array<{ client_id: string }>;
+  return deleted.length > 0;
 }
 
 /* ────────────────────────────── auth codes ────────────────────────────── */
