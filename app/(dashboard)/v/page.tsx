@@ -62,7 +62,7 @@ export default function VChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto px-4 py-6">
+    <div className="flex flex-col flex-1 min-h-0 max-w-3xl mx-auto w-full px-4 py-6">
       <div className="mb-4">
         <h1 className="text-2xl font-bold">V — Agente Central</h1>
         <p className="text-sm text-muted-foreground">

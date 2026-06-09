@@ -93,13 +93,17 @@ function IntegrationPopup({ item, onClose }: { item: Integration; onClose: () =>
         className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a14]"
         style={{ boxShadow:`0 0 80px ${item.accent}30, 0 40px 100px rgba(0,0,0,0.6)` }}>
         <div className="relative h-44 overflow-hidden">
-          <img src={item.bgImg} alt={item.name} className="h-full w-full object-cover opacity-60" style={{ filter:"saturate(1.3)" }} />
+          <img src={item.bgImg} alt={item.name} className="h-full w-full object-cover opacity-60" style={{ filter:"saturate(1.3)" }} 
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a14] via-[#0a0a14]/40 to-transparent" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           <button onClick={onClose} className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white/60 backdrop-blur transition hover:text-white">✕</button>
           <div className="absolute bottom-4 left-5 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a14]">
-              <img src={item.logo} alt={item.name} className="h-10 w-10 object-cover" />
+              <img src={item.logo} alt={item.name} className="h-10 w-10 object-cover" 
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
             </div>
             <div>
               <p className="text-lg font-bold text-white leading-tight">{item.name}</p>
@@ -143,13 +147,17 @@ function IntegrationCard({ item, onClick }: { item: Integration; onClick: () => 
       <div className="relative h-[280px] overflow-hidden">
         <img src={item.bgImg} alt={item.name}
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-          style={{ filter:"saturate(1.2) brightness(0.65)" }} />
+          style={{ filter:"saturate(1.2) brightness(0.65)" }} 
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
         <div className="absolute inset-0 bg-gradient-to-t from-[#050509] via-[#050509]/50 to-transparent" />
         <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           style={{ background:`radial-gradient(ellipse at 50% 0%, ${item.accent}25, transparent 60%)` }} />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         <div className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-white/[0.07] bg-[#0c0c18]">
-          <img src={item.logo} alt={item.name} className="h-9 w-9 object-cover" />
+          <img src={item.logo} alt={item.name} className="h-9 w-9 object-cover" 
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
         </div>
         <div className="absolute right-4 top-4 rounded-full border border-white/15 bg-black/50 px-2 py-0.5 backdrop-blur-sm">
           <p className="font-mono text-[9px] uppercase tracking-widest text-white/60">{item.category}</p>

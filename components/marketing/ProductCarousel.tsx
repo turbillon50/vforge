@@ -33,7 +33,7 @@ const PRODUCTS: Product[] = [
     tagline: "De cero a producción",
     priceLabel: "$12,000 MXN",
     accent: "#8b5cf6",
-    bgImg: "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&q=85",
+    bgImg: "https://picsum.photos/seed/vforge-apps/800/500",
     badge: "Producto estrella",
     fullDesc: "Construimos tu aplicación completa: PWA premium, base de datos, login, dashboard y todo lo necesario para operar en el mundo real. Empiezas con una demo gratuita y avanzas por etapas con pagos claros.",
     timeline: [
@@ -64,7 +64,7 @@ const PRODUCTS: Product[] = [
     tagline: "Tu app en el App Store",
     priceLabel: "$5,000 MXN",
     accent: "#0ea5e9",
-    bgImg: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=800&q=85",
+    bgImg: "https://picsum.photos/seed/vforge-ios/800/500",
     fullDesc: "Llevamos tu aplicación al App Store de Apple. Configuración de cuenta de desarrollador, build firmado, assets, revisión de Apple y publicación. Tu app lista para iIconBell y iPad.",
     timeline: [
       { phase: "Preparación", detail: "Configuración de App Store Connect" },
@@ -79,7 +79,7 @@ const PRODUCTS: Product[] = [
     tagline: "Tu app en Google Play",
     priceLabel: "$3,000 MXN",
     accent: "#22c55e",
-    bgImg: "https://images.unsplash.com/photo-1607252650355-f7fd0460ccdb?w=800&q=85",
+    bgImg: "https://picsum.photos/seed/vforge-android/800/500",
     fullDesc: "Publicamos tu aplicación en Google Play. Configuración de Play Console, build firmado, ficha de tienda optimizada, revisión y publicación para millones de dispositivos Android.",
     timeline: [
       { phase: "Preparación", detail: "Configuración de Play Console" },
@@ -94,7 +94,7 @@ const PRODUCTS: Product[] = [
     tagline: "Pixar, cine y corporativo",
     priceLabel: "Desde $200 MXN",
     accent: "#f59e0b",
-    bgImg: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&q=85",
+    bgImg: "https://picsum.photos/seed/vforge-video/800/500",
     fullDesc: "Producimos videos cinematográficos generados con IA de última generación. Estilo Pixar, cinematográfico realista o corporativo profesional. Perfectos para campañas, presentaciones y lanzamientos.",
     capabilities: ["Estilo Pixar / animación 3D", "Cinematográfico fotorrealista", "Corporativo profesional", "Spots para redes sociales", "Intros y lanzamientos", "Entrega en alta resolución"],
   },

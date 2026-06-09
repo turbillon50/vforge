@@ -640,7 +640,7 @@ body.keyboard-open .vf-mobile-nav {
 .blog-body p {
   font-size: 1rem;
   line-height: 1.75;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.75);
   margin-bottom: 0.75rem;
 }
 .blog-body strong {
@@ -672,7 +672,7 @@ body.keyboard-open .vf-mobile-nav {
 }
 .blog-body li {
   font-size: 0.95rem;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.75);
   line-height: 1.7;
   padding-left: 1rem;
   position: relative;

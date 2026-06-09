@@ -39,6 +39,19 @@ const config: Config = {
         "tint-3": "rgb(var(--tint-3) / <alpha-value>)",
         "success-emerald": "var(--color-success-emerald)",
         "error-crimson": "var(--color-error-crimson)",
+        // VForge HUD design tokens (forge page / composer)
+        "vf-bg":      "var(--color-background, #0a0a0f)",
+        "vf-bg-1":    "var(--color-surface, #111118)",
+        "vf-bg-2":    "var(--color-surface-low, #0e0e14)",
+        "vf-bg-3":    "var(--color-surface-high, #1a1a24)",
+        "vf-border":  "rgba(255,255,255,0.08)",
+        "vf-border-1":"rgba(255,255,255,0.10)",
+        "vf-border-2":"rgba(255,255,255,0.16)",
+        "vf-fg":      "rgba(255,255,255,0.95)",
+        "vf-fg-1":    "rgba(255,255,255,0.75)",
+        "vf-fg-2":    "rgba(255,255,255,0.50)",
+        "vf-green":   "#22c55e",
+        "vf-error":   "#ef4444",
 
         // Static palettes (still useful for explicit tailwind shades elsewhere)
         violet: {
@@ -80,6 +93,10 @@ const config: Config = {
         lg: "0.75rem",
         xl: "1rem",
         "2xl": "1.25rem",
+      },
+
+      padding: {
+        safe: "env(safe-area-inset-bottom, 0px)",
       },
       spacing: {
         gutter: "24px",

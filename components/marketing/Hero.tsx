@@ -138,7 +138,7 @@ export function Hero() {
           aria-label="Activar V"
         >
           <motion.img
-            src={SPHERE_IMG}
+            src={SPHERE_IMG} loading="lazy"
             alt="V"
             animate={{ scale: [1, 1.04, 1] }}
             transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}

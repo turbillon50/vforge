@@ -61,8 +61,15 @@ export default function IntegrationsPage() {
   function isConnected(svc:typeof SERVICES[0]):boolean {
     const id=svc.id;
     if(states[id]==="connected") return true;
-    if(svc.oauthKey && data?.checks[svc.oauthKey]) return !!data.checks[svc.oauthKey];
-    if(svc.pasteKey && data?.checks[svc.pasteKey]) return !!data.checks[svc.pasteKey];
+    // OAuth services detected via callback redirect param (e.g. ?github=ok)
+    if(svc.oauthKey) {
+      const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+      return params.get(svc.oauthKey) === "ok";
+    }
+    // API-key services: check health endpoint keys
+    if(svc.pasteKey === "neon") return data?.checks?.db === true;
+    if(svc.pasteKey === "openrouter") return data?.checks?.openrouter === true;
+    if(svc.pasteKey && data?.checks?.[svc.pasteKey]) return !!data.checks[svc.pasteKey];
     return false;
   }
 

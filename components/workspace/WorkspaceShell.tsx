@@ -95,10 +95,10 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       </aside>
       {/* Main */}
       <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
-        <TopBar hiddenOnMobile={pathname.startsWith("/app/chat")} pathname={pathname}/>
+        <TopBar hiddenOnMobile={pathname.startsWith("/app/chat")||pathname.startsWith("/forge")||pathname.startsWith("/v")} pathname={pathname}/>
         <div data-app-scroll className={cn(
           "flex-1 min-h-0 min-w-0 max-w-full overflow-x-hidden",
-          pathname.startsWith("/app/chat")?"overflow-y-hidden":"overflow-y-auto flex flex-col"
+          (pathname.startsWith("/app/chat")||pathname.startsWith("/forge")||pathname.startsWith("/v"))?"overflow-y-hidden":"overflow-y-auto flex flex-col"
         )}>
           {pathname.startsWith("/app/chat")?children:<PageTransition>{children}</PageTransition>}
         </div>
@@ -163,7 +163,7 @@ function Breadcrumbs({ pathname }: { pathname:string }) {
 function MobileNav({ pathname }: { pathname:string }) {
   return (
     <nav data-vorb-avoid className="flex flex-none items-stretch justify-between gap-0.5 border-t border-white/[0.05] bg-[#07070d]/90 px-2 backdrop-blur-2xl md:hidden"
-      style={{ paddingBottom:"min(env(safe-area-inset-bottom,0px),16px)", minHeight:58 }}>
+      style={{ paddingBottom:"max(env(safe-area-inset-bottom,0px),12px)", minHeight:58 }}>
       {MOBILE.map(item=>{
         const active=pathname.startsWith(item.href);
         if(item.orb) return (
