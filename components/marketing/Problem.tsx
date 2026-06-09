@@ -1,16 +1,9 @@
 "use client";
 
-import {
-  Boxes,
-  KeyRound,
-  PlugZap,
-  Rocket,
-  ShieldAlert,
-  Terminal,
-} from "lucide-react";
+import { IconBoxes, IconCode, IconKey, IconRocket, IconShield, IconZap } from "@/components/brand/VFIcons";
 import { useT } from "@/i18n/AppProviders";
 
-const icons = [Terminal, Boxes, KeyRound, PlugZap, ShieldAlert, Rocket];
+const icons = [IconCode, IconBoxes, IconKey, IconZap, IconShield, IconRocket];
 
 export function Problem() {
   const t = useT();

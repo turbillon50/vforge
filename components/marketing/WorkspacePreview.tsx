@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { IconExtLink } from "@/components/brand/VFIcons";
 import { useT } from "@/i18n/AppProviders";
 
 export function WorkspacePreview() {
@@ -24,7 +24,7 @@ export function WorkspacePreview() {
             </ul>
 
             <Link href="/app" className="btn-primary mt-8 inline-flex">
-              {t.marketing.workspace_cta} <ArrowUpRight size={14} />
+              {t.marketing.workspace_cta} <IconExtLink size={14} />
             </Link>
           </div>
 

@@ -4,7 +4,7 @@ import { memo, useMemo, useState } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
-import { Check, Copy } from "lucide-react";
+import { IconCheck, IconCopy } from "@/components/brand/VFIcons";
 
 const sanitizeSchema = {
   ...defaultSchema,
@@ -69,7 +69,7 @@ function CodeBlock({ inline, className, children }: {
           className="flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:text-violet-300"
           aria-label="Copy code"
         >
-          {copied ? <Check size={11} /> : <Copy size={11} />}
+          {copied ? <IconCheck size={11} /> : <IconCopy size={11} />}
           <span className="hidden sm:inline">{copied ? "Copiado" : "Copy"}</span>
         </button>
       </div>

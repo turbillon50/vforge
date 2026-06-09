@@ -11,7 +11,7 @@ const OPERATOR_TOKEN_KEY = "vforge_operator_token";
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ExternalLink, Github, Triangle, Trash2, X } from "lucide-react";
+import { IconExtLink, IconGithub, IconTriangle, IconTrash, IconX } from "@/components/brand/VFIcons";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface NodeData {
@@ -538,7 +538,7 @@ export function ProjectGraph() {
             <p className="text-xs text-muted mt-1">{selected.data.desc}</p>
             <button onClick={() => { state.current.selected=null; setSelected(null); }}
                     className="absolute top-3 right-3 text-muted hover:text-on-surface transition-colors">
-              <X size={16} />
+              <IconX size={16} />
             </button>
           </div>
 
@@ -606,15 +606,15 @@ export function ProjectGraph() {
           <div className="p-4" style={{ borderTop:"1px solid rgba(30,111,255,0.08)" }}>
             <div className="flex flex-col gap-2">
               {selected.data.vercelUrl && selected.type === "vercel" && (
-                <ExtLink href={selected.data.vercelUrl} icon={<Triangle size={11} />} label="Ver en Vercel" sub="Deploy live" />
+                <ExtLink href={selected.data.vercelUrl} icon={<IconTriangle size={11} />} label="Ver en Vercel" sub="Deploy live" />
               )}
               {selected.data.ghUrl && (
-                <ExtLink href={selected.data.ghUrl} icon={<Github size={11} />} label="Ver en GitHub" sub="Repositorio" />
+                <ExtLink href={selected.data.ghUrl} icon={<IconGithub size={11} />} label="Ver en GitHub" sub="Repositorio" />
               )}
               {selected.type === "vercel" && selected.data.ghRepo && (
                 <ExtLink
                   href={`https://vercel.com/luis-projects-48b011f9/${selected.data.name}`}
-                  icon={<ExternalLink size={11} />}
+                  icon={<IconExtLink size={11} />}
                   label="Vercel Dashboard"
                   sub="Configuración y env vars"
                 />
@@ -625,7 +625,7 @@ export function ProjectGraph() {
                   disabled={deleting}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors w-full text-left disabled:opacity-50"
                   style={{ border:"1px solid rgba(238,51,68,0.25)", background:"rgba(238,51,68,0.07)", color:"#cc4444" }}>
-                  <Trash2 size={12} />
+                  <IconTrash size={12} />
                   <span className="flex-1">Eliminar de Vercel</span>
                   {deleting && <span className="text-[10px]">…</span>}
                 </button>
@@ -751,7 +751,7 @@ function ExtLink({ href, icon, label, sub }: { href: string; icon: React.ReactNo
         <span className="block text-xs font-medium text-on-surface">{label}</span>
         <span className="block text-[10px] text-muted">{sub}</span>
       </span>
-      <ExternalLink size={11} className="text-muted group-hover:text-on-surface-variant shrink-0" />
+      <IconExtLink size={11} className="text-muted group-hover:text-on-surface-variant shrink-0" />
     </a>
   );
 }

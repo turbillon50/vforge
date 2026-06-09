@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
-import { Construction, Clock, Sparkles, ArrowRight, Check } from "lucide-react";
+import { IconConstruction, IconClock, IconSparkles, IconArrowR, IconCheck } from "@/components/brand/VFIcons";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const HF_SPHERE = "https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_082007_60084359-8811-4bc5-8d6b-a3ab56409de3.png";
@@ -46,7 +46,7 @@ export default function DeveloperPage() {
             <div className="relative h-full w-full overflow-hidden rounded-full" style={{ boxShadow: "0 0 60px rgba(124,58,237,0.5), 0 0 0 1px rgba(255,255,255,0.1) inset" }}>
               <img src={HF_SPHERE} alt="" className="h-full w-full object-cover opacity-70" style={{ objectPosition: "40% 30%" }} />
               <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
-                <Construction size={28} className="text-violet-300" />
+                <IconConstruction size={28} className="text-violet-300" />
               </div>
             </div>
             {/* Anillo */}
@@ -55,7 +55,7 @@ export default function DeveloperPage() {
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, ease: EASE }}>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/10 px-4 py-1.5 text-xs font-semibold text-violet-300">
-              <Clock size={11} /> Próximamente
+              <IconClock size={11} /> Próximamente
             </div>
             <h1 className="text-[clamp(2rem,7vw,3.5rem)] font-bold leading-tight tracking-tight text-white">
               Portal<br />
@@ -75,7 +75,7 @@ export default function DeveloperPage() {
           >
             {FEATURES_COMING.map((f, i) => (
               <li key={i} className="flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-sm text-white/55">
-                <Sparkles size={13} className="mt-0.5 shrink-0 text-violet-400/60" />
+                <IconSparkles size={13} className="mt-0.5 shrink-0 text-violet-400/60" />
                 {f}
               </li>
             ))}
@@ -91,7 +91,7 @@ export default function DeveloperPage() {
             {sent ? (
               <div className="flex flex-col items-center gap-3 py-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-400/15">
-                  <Check size={20} className="text-emerald-400" />
+                  <IconCheck size={20} className="text-emerald-400" />
                 </div>
                 <p className="font-semibold text-white">¡Estás en la lista!</p>
                 <p className="text-sm text-white/40">Te avisamos cuando el portal developer abra. Serás de los primeros.</p>
@@ -113,7 +113,7 @@ export default function DeveloperPage() {
                     type="submit"
                     className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-violet-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_0_24px_rgba(124,58,237,0.4)] hover:scale-[1.02] transition-transform"
                   >
-                    Quiero acceso <ArrowRight size={13} />
+                    Quiero acceso <IconArrowR size={13} />
                   </button>
                 </form>
               </>

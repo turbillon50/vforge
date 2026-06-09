@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
-import { ArrowRight, Lock, Sparkles, Zap, Brain, Globe, CreditCard, MessageSquare } from "lucide-react";
+import { IconArrowR, IconShield, IconSparkles, IconZap, IconBrain, IconGlobe, IconCreditCard, IconChat } from "@/components/brand/VFIcons";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -161,16 +161,15 @@ export default function MarketplacePage() {
                 <p className="mt-4 text-sm font-light leading-relaxed text-white/55">{activeItem.desc}</p>
                 <div className="mt-4 flex items-center gap-3">
                   {activeItem.status === "live" ? (
-                    <Link
-                      href="/sign-up"
+                    <Link href="/sign-up"
                       onClick={() => setActive(null)}
                       className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-violet-500 py-3.5 text-sm font-semibold text-white shadow-[0_0_30px_rgba(124,58,237,0.4)]"
                     >
-                      Agregar a mi proyecto <ArrowRight size={13} />
+                      Agregar a mi proyecto <IconArrowR size={13} />
                     </Link>
                   ) : (
                     <button className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-violet-400/30 bg-violet-500/10 py-3.5 text-sm font-medium text-violet-300">
-                      <Lock size={13} /> Notificarme cuando esté listo
+                      <IconShield size={13} /> Notificarme cuando esté listo
                     </button>
                   )}
                   <button onClick={() => setActive(null)} className="rounded-2xl border border-white/10 px-4 py-3.5 text-sm text-white/40 hover:text-white/70">

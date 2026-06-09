@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, RotateCcw, X, Check, Image as ImageIcon } from "lucide-react";
+import { IconCamera, IconRotateCcw, IconX, IconCheck, IconImage } from "@/components/brand/VFIcons";
 import { cn } from "@/lib/utils";
 
 type FacingMode = "user" | "environment";
@@ -181,7 +181,7 @@ export function CameraCapture({
             aria-label="Cerrar"
             className="w-9 h-9 flex items-center justify-center rounded-md text-vf-fg-1 hover:bg-vf-bg-2"
           >
-            <X className="w-5 h-5" />
+            <IconX className="w-5 h-5" />
           </button>
         </div>
 
@@ -221,7 +221,7 @@ export function CameraCapture({
                     onClick={() => fileInputRef.current?.click()}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-vf-green text-black text-sm font-medium"
                   >
-                    <ImageIcon className="w-4 h-4" />
+                    <IconImage className="w-4 h-4" />
                     Elegir del rollo
                   </button>
                 </div>
@@ -252,7 +252,7 @@ export function CameraCapture({
                 className="w-11 h-11 rounded-full border border-vf-border bg-vf-bg-2 text-vf-fg-1 flex items-center justify-center"
                 aria-label="Cambiar cámara"
               >
-                <RotateCcw className="w-5 h-5" />
+                <IconRotateCcw className="w-5 h-5" />
               </button>
               <button
                 onClick={handleCapture}
@@ -264,14 +264,14 @@ export function CameraCapture({
                 )}
                 aria-label="Capturar"
               >
-                <Camera className="w-7 h-7" />
+                <IconCamera className="w-7 h-7" />
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="w-11 h-11 rounded-full border border-vf-border bg-vf-bg-2 text-vf-fg-1 flex items-center justify-center"
                 aria-label="Elegir archivo"
               >
-                <ImageIcon className="w-5 h-5" />
+                <IconImage className="w-5 h-5" />
               </button>
             </>
           ) : (
@@ -286,7 +286,7 @@ export function CameraCapture({
                 onClick={handleConfirm}
                 className="flex-1 h-11 rounded-md bg-vf-green text-black text-sm font-semibold inline-flex items-center justify-center gap-2"
               >
-                <Check className="w-4 h-4" />
+                <IconCheck className="w-4 h-4" />
                 Usar foto
               </button>
             </>

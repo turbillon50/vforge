@@ -8,7 +8,7 @@
  * strip de versiones y acciones discretas.
  */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { ThumbsUp, Pencil, Rocket, Maximize2, X, Check } from "lucide-react";
+import { IconThumb, IconPen, IconRocket, IconMaximize, IconX, IconCheck } from "@/components/brand/VFIcons";
 
 type VersionMeta = {
   id: string;
@@ -135,7 +135,7 @@ export default function VersionCard({
           aria-label="Expandir preview"
           className="flex h-11 w-11 flex-none items-center justify-center rounded-xl text-on-surface-variant transition hover:bg-white/10 hover:text-white md:h-9 md:w-9"
         >
-          <Maximize2 size={15} />
+          <IconMaximize size={15} />
         </button>
       </div>
 
@@ -192,7 +192,7 @@ export default function VersionCard({
               onClick={ship}
               className="flex h-11 items-center gap-1 rounded-lg bg-violet-500/30 px-3 text-white transition hover:bg-violet-500/45 md:h-8"
             >
-              <Check size={13} /> Sí
+              <IconCheck size={13} /> Sí
             </button>
             <button
               type="button"
@@ -205,20 +205,20 @@ export default function VersionCard({
         ) : (
           <>
             <CardAction
-              icon={<ThumbsUp size={14} />}
+              icon={<IconThumb size={14} />}
               label={liked ? "Te gusta" : "Me gusta"}
               active={liked}
               onClick={like}
             />
             <CardAction
-              icon={<Pencil size={14} />}
+              icon={<IconPen size={14} />}
               label="Cambia esto"
               onClick={() =>
                 onChangeRequest?.(`Sobre la versión ${active.n}: `)
               }
             />
             <CardAction
-              icon={<Rocket size={14} />}
+              icon={<IconRocket size={14} />}
               label={shipped ? "Lista para publicar" : "Publicar"}
               active={shipped}
               onClick={() => !shipped && setConfirmShip(true)}
@@ -240,7 +240,7 @@ export default function VersionCard({
               aria-label="Cerrar preview"
               className="flex h-11 w-11 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white"
             >
-              <X size={17} />
+              <IconX size={17} />
             </button>
           </div>
           <iframe

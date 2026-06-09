@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { ForgeOrb } from "@/components/ui/forge-orb";
-import { Check } from "lucide-react";
+import { IconCheck } from "@/components/brand/VFIcons";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -149,7 +149,7 @@ export function ChatMessage({ message, onAction }: ChatMessageProps) {
               {message.steps.map((step, idx) => (
                 <li key={idx} className="flex items-center gap-2">
                   {step.status === "done" && (
-                    <Check className="w-4 h-4 text-vf-green flex-shrink-0" />
+                    <IconCheck className="w-4 h-4 text-vf-green flex-shrink-0" />
                   )}
                   {step.status === "loading" && (
                     <ForgeOrb size={18} state="loading" glow={false} className="flex-shrink-0" />

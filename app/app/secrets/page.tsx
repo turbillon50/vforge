@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/workspace/PageHeader";
-import { Check, Copy, KeyRound, Loader2, Lock, ShieldCheck } from "lucide-react";
+import { IconCheck, IconCopy, IconKey, IconLoader, IconShield } from "@/components/brand/VFIcons";
 import { useT } from "@/i18n/AppProviders";
 
 interface OperatorSecret {
@@ -134,11 +134,11 @@ export default function SecretsPage() {
           <>
             {hasToken ? (
               <button onClick={lock} className="btn-ghost">
-                <Lock size={13} /> Bloquear
+                <IconShield size={13} /> Bloquear
               </button>
             ) : (
               <button onClick={unlock} className="btn-primary">
-                <KeyRound size={13} /> Unlock vault
+                <IconKey size={13} /> Unlock vault
               </button>
             )}
           </>
@@ -165,14 +165,14 @@ export default function SecretsPage() {
           <div className="flex items-center justify-between border-b border-app px-4 py-3">
             <p className="label-caps text-muted">{t.secrets.list_label}</p>
             <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted">
-              <ShieldCheck size={12} className="text-success-emerald" />{" "}
+              <IconShield size={12} className="text-success-emerald" />{" "}
               {t.secrets.sealed}
             </div>
           </div>
 
           {!hasToken && (
             <div className="p-8 text-center text-on-surface-variant">
-              <Lock className="mx-auto mb-3 text-violet-300" size={28} />
+              <IconShield className="mx-auto mb-3 text-violet-300" size={28} />
               <p className="font-display text-lg text-on-surface">Vault bloqueada</p>
               <p className="mt-2 text-sm max-w-md mx-auto leading-relaxed">
                 Tus secretos viven encriptados (AES-256-GCM) en Neon. Para
@@ -185,7 +185,7 @@ export default function SecretsPage() {
                 className="btn-primary mt-5 inline-flex"
                 style={{ touchAction: "manipulation" }}
               >
-                <KeyRound size={13} /> Unlock vault
+                <IconKey size={13} /> Unlock vault
               </button>
               <p className="mt-4 text-[11px] text-muted">
                 El token vive en la env var <span className="font-mono">VFORGE_OPERATOR_TOKEN</span>{" "}
@@ -222,7 +222,7 @@ export default function SecretsPage() {
                     className="grid grid-cols-12 items-center gap-3 border-b border-app px-4 py-3 last:border-0 hover:bg-tint-1"
                   >
                     <div className="col-span-12 md:col-span-5 flex items-center gap-3 min-w-0">
-                      <Lock size={14} className="text-violet-300 shrink-0" />
+                      <IconShield size={14} className="text-violet-300 shrink-0" />
                       <span className="font-mono text-[13px] text-on-surface truncate">
                         {s.name}
                       </span>
@@ -253,11 +253,11 @@ export default function SecretsPage() {
                         }
                       >
                         {isLoading ? (
-                          <Loader2 size={11} className="animate-spin" />
+                          <IconLoader size={11} className="animate-spin" />
                         ) : isCopied ? (
-                          <Check size={11} />
+                          <IconCheck size={11} />
                         ) : (
-                          <Copy size={11} />
+                          <IconCopy size={11} />
                         )}
                         <span>{isCopied ? "Copiado" : "Copy"}</span>
                       </button>

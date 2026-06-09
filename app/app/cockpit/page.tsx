@@ -5,10 +5,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/workspace/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
-import {
-  GitBranch, Workflow, Boxes, CircleCheck, Plus, Cpu, ArrowUpRight,
-  Flame, Banknote, Hammer, CalendarClock, Inbox, StickyNote, ListTodo,
-} from "lucide-react";
+import { IconBell, IconBoxes, IconBranch, IconCheck, IconClock, IconCpu, IconCreditCard, IconExtLink, IconFile, IconLayers, IconPlus, IconSettings, IconWorkflow, IconZap } from "@/components/brand/VFIcons";
 
 type Item = { id: number; kind: string; text: string; done?: boolean };
 type Data = { services?: Record<string, string>; pending?: any[]; items?: Item[] };
@@ -63,11 +60,11 @@ const HEALTH_UI: Record<Health, { dot: string; label: string; text: string }> = 
 };
 
 const BUCKET_UI: Record<Bucket, {
-  title: string; Icon: typeof Flame; accent: string; chip: string; hint: string;
+  title: string; Icon: typeof IconZap; accent: string; chip: string; hint: string;
 }> = {
-  urgentes: { title: "Urgentes", Icon: Flame, accent: "text-red-600 dark:text-red-300", chip: "border-red-400/30 bg-red-500/10", hint: "Atiende hoy" },
-  lana:     { title: "Lana", Icon: Banknote, accent: "text-emerald-600 dark:text-emerald-300", chip: "border-emerald-400/30 bg-emerald-500/10", hint: "Cobrables ya" },
-  obra:     { title: "En obra", Icon: Hammer, accent: "text-cyber-cyan", chip: "border-cyan-400/25 bg-cyan-500/10", hint: "Avanzando" },
+  urgentes: { title: "Urgentes", Icon: IconZap, accent: "text-red-600 dark:text-red-300", chip: "border-red-400/30 bg-red-500/10", hint: "Atiende hoy" },
+  lana:     { title: "Lana", Icon: IconCreditCard, accent: "text-emerald-600 dark:text-emerald-300", chip: "border-emerald-400/30 bg-emerald-500/10", hint: "Cobrables ya" },
+  obra:     { title: "En obra", Icon: IconSettings, accent: "text-cyber-cyan", chip: "border-cyan-400/25 bg-cyan-500/10", hint: "Avanzando" },
 };
 
 function ProjectCard({ p }: { p: PortfolioProject }) {
@@ -96,7 +93,7 @@ function ProjectCard({ p }: { p: PortfolioProject }) {
       </div>
       {p.next_milestone && (
         <p className="mt-3 flex items-center gap-1.5 text-[12px] text-muted">
-          <CalendarClock size={12} className="flex-none text-violet-600 dark:text-violet-300" />
+          <IconClock size={12} className="flex-none text-violet-600 dark:text-violet-300" />
           <span className="truncate">Siguiente: <span className="text-on-surface">{p.next_milestone}</span></span>
         </p>
       )}
@@ -181,10 +178,10 @@ export default function CockpitPage() {
   };
 
   const shortcuts = [
-    { href: "/app/repovision", label: "RepoVision", desc: "Grafo 3D de proyectos", icon: GitBranch },
-    { href: "/app/blueprint", label: "Blueprint", desc: "Flujo de la fabrica", icon: Workflow },
-    { href: "/app/projects", label: "Proyectos", desc: "Tu portfolio", icon: Boxes },
-    { href: "/app/integrations", label: "Integraciones", desc: "Conectores MCP", icon: Cpu },
+    { href: "/app/repovision", label: "RepoVision", desc: "Grafo 3D de proyectos", icon: IconBranch },
+    { href: "/app/blueprint", label: "Blueprint", desc: "Flujo de la fabrica", icon: IconWorkflow },
+    { href: "/app/projects", label: "Proyectos", desc: "Tu portfolio", icon: IconBoxes },
+    { href: "/app/integrations", label: "Integraciones", desc: "Conectores MCP", icon: IconCpu },
   ];
 
   return (
@@ -272,12 +269,12 @@ export default function CockpitPage() {
             <p className="label-caps mb-3 text-cyber-cyan">Pendientes · {open} abiertos</p>
             <div className="space-y-1">
               {tasks.length === 0 && (
-                <EmptyState compact icon={ListTodo} title="Sin pendientes" hint="Captura abajo lo siguiente que la fabrica debe atender." />
+                <EmptyState compact icon={IconLayers} title="Sin pendientes" hint="Captura abajo lo siguiente que la fabrica debe atender." />
               )}
               {tasks.map((t) => (
                 <button key={t.id} onClick={() => toggle(t.id)} className="flex w-full items-start gap-3 rounded-lg px-2 py-2 text-left text-sm transition hover:bg-white/5">
                   <span className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-md border-2 transition ${t.done ? "border-emerald-400 bg-emerald-400 text-black" : "border-white/20"}`}>
-                    {t.done && <CircleCheck size={12} />}
+                    {t.done && <IconCheck size={12} />}
                   </span>
                   <span className={t.done ? "text-muted line-through" : "text-on-surface"}>{t.text}</span>
                 </button>
@@ -285,7 +282,7 @@ export default function CockpitPage() {
             </div>
             <form onSubmit={(e) => { e.preventDefault(); add("task", val); setVal(""); }} className="mt-3 flex gap-2">
               <input value={val} onChange={(e) => setVal(e.target.value)} placeholder="Agregar pendiente..." className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-on-surface outline-none transition focus:border-violet-400" />
-              <button type="submit" className="flex w-11 items-center justify-center rounded-xl bg-violet-500 text-white transition active:scale-95"><Plus size={18} /></button>
+              <button type="submit" className="flex w-11 items-center justify-center rounded-xl bg-violet-500 text-white transition active:scale-95"><IconPlus size={18} /></button>
             </form>
           </div>
 
@@ -314,7 +311,7 @@ export default function CockpitPage() {
               {pending.length === 0 && (
                 <EmptyState
                   compact
-                  icon={Inbox}
+                  icon={IconBell}
                   title="Sin demos pendientes"
                   hint="Cuando un proyecto necesite tu visto bueno, aparece aquí."
                   cta={{ label: "Ver proyectos", href: "/app/projects" }}
@@ -331,7 +328,7 @@ export default function CockpitPage() {
           <p className="label-caps mb-3 text-cyber-cyan">Notas</p>
           <div className="space-y-2">
             {notes.length === 0 && (
-              <EmptyState compact icon={StickyNote} title="Sin notas" hint="Apunta ideas, recordatorios o contexto del día." />
+              <EmptyState compact icon={IconFile} title="Sin notas" hint="Apunta ideas, recordatorios o contexto del día." />
             )}
             {notes.map((n) => (
               <div key={n.id} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-on-surface">{n.text}</div>
@@ -339,7 +336,7 @@ export default function CockpitPage() {
           </div>
           <form onSubmit={(e) => { e.preventDefault(); add("note", note); setNote(""); }} className="mt-3 flex gap-2">
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Escribe una nota..." className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-on-surface outline-none transition focus:border-violet-400" />
-            <button type="submit" className="flex w-11 items-center justify-center rounded-xl bg-violet-500 text-white transition active:scale-95"><Plus size={18} /></button>
+            <button type="submit" className="flex w-11 items-center justify-center rounded-xl bg-violet-500 text-white transition active:scale-95"><IconPlus size={18} /></button>
           </form>
         </div>
 
@@ -350,7 +347,7 @@ export default function CockpitPage() {
               <Link key={sc.href} href={sc.href} className="group glass flex flex-col gap-2 rounded-2xl border border-white/10 p-4 transition hover:border-violet-400/40">
                 <div className="flex items-center justify-between">
                   <sc.icon size={20} className="text-violet-600 dark:text-violet-300" />
-                  <ArrowUpRight size={16} className="text-muted transition group-hover:text-violet-600 dark:text-violet-300" />
+                  <IconExtLink size={16} className="text-muted transition group-hover:text-violet-600 dark:text-violet-300" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-on-surface">{sc.label}</p>

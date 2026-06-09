@@ -5,7 +5,7 @@
  */
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MessageSquare, Workflow } from "lucide-react";
+import { IconChat, IconWorkflow } from "@/components/brand/VFIcons";
 import AssistantChat from "@/components/userspace/AssistantChat";
 import BlueprintCanvas from "@/components/userspace/BlueprintCanvas";
 import IntegrationPlan from "@/components/userspace/IntegrationPlan";
@@ -23,13 +23,13 @@ export default function WorkspaceShell({ scope }: { scope: WorkspaceScope }) {
         <TabButton
           active={tab === "chat"}
           onClick={() => setTab("chat")}
-          icon={<MessageSquare className="h-4 w-4" aria-hidden />}
+          icon={<IconChat className="h-4 w-4" aria-hidden />}
           label="Chat"
         />
         <TabButton
           active={tab === "blueprint"}
           onClick={() => setTab("blueprint")}
-          icon={<Workflow className="h-4 w-4" aria-hidden />}
+          icon={<IconWorkflow className="h-4 w-4" aria-hidden />}
           label="Blueprint"
         />
       </div>

@@ -1,6 +1,4 @@
-
 "use client";
-
 /**
  * BlueprintCanvas — Higgsfield "Obsidian + Crystal" redesign
  * Nodos crystal con glassmorphism, glow rings, flujo de partículas animado.

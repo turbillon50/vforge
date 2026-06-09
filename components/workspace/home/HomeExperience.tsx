@@ -3,17 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  Activity,
-  ArrowUpRight,
-  Boxes,
-  GitBranch,
-  KeyRound,
-  Map,
-  MessagesSquare,
-  Users,
-  Workflow,
-} from "lucide-react";
+import { IconActivity, IconExtLink, IconBoxes, IconBranch, IconKey, IconMap, IconChats, IconUsers, IconWorkflow } from "@/components/brand/VFIcons";
 import { VPresence } from "@/components/brand/VPresence";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 
@@ -34,13 +24,13 @@ function greeting(): string {
 }
 
 const SHORTCUTS = [
-  { href: "/app/projects", label: "Proyectos", desc: "Tu portafolio en vivo", Icon: Workflow },
-  { href: "/app/deployments", label: "Deploys", desc: "Qué está en producción", Icon: Activity },
-  { href: "/app/repovision", label: "RepoVision", desc: "Tus repos en 3D", Icon: GitBranch },
-  { href: "/app/blueprint", label: "Blueprint", desc: "El flujo de la fábrica", Icon: Map },
-  { href: "/app/integrations", label: "Conexiones", desc: "Servicios conectados", Icon: Boxes },
-  { href: "/app/secrets", label: "Bóveda", desc: "Llaves y credenciales", Icon: KeyRound },
-  { href: "/app/admin", label: "Usuarios", desc: "Quién está en VForge", Icon: Users },
+  { href: "/app/projects", label: "Proyectos", desc: "Tu portafolio en vivo", Icon: IconWorkflow },
+  { href: "/app/deployments", label: "Deploys", desc: "Qué está en producción", Icon: IconActivity },
+  { href: "/app/repovision", label: "RepoVision", desc: "Tus repos en 3D", Icon: IconBranch },
+  { href: "/app/blueprint", label: "Blueprint", desc: "El flujo de la fábrica", Icon: IconMap },
+  { href: "/app/integrations", label: "Conexiones", desc: "Servicios conectados", Icon: IconBoxes },
+  { href: "/app/secrets", label: "Bóveda", desc: "Llaves y credenciales", Icon: IconKey },
+  { href: "/app/admin", label: "Usuarios", desc: "Quién está en VForge", Icon: IconUsers },
 ];
 
 export function HomeExperience({ name }: { name: string }) {
@@ -81,8 +71,7 @@ export function HomeExperience({ name }: { name: string }) {
         transition={{ delay: 0.15, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         className="mt-10 md:mt-14"
       >
-        <Link
-          href="/app/chat"
+        <Link href="/app/chat"
           data-vorb-avoid
           className="surface-deep group relative block overflow-hidden rounded-3xl border border-app bg-gradient-to-b from-violet-500/[0.07] via-surface/60 to-surface/80 px-6 py-10 backdrop-blur-xl transition duration-300 hover:border-violet-400/30 hover:shadow-glow-violet active:scale-[0.99] md:px-12 md:py-14"
         >
@@ -100,7 +89,7 @@ export function HomeExperience({ name }: { name: string }) {
               Pídele lo que necesites — ella se encarga.
             </p>
             <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-cyan-500 px-6 py-2.5 text-sm font-medium text-white shadow-glow-violet transition group-hover:scale-[1.03]">
-              Abrir conversación <ArrowUpRight size={15} />
+              Abrir conversación <IconExtLink size={15} />
             </span>
           </div>
         </Link>
@@ -120,8 +109,7 @@ export function HomeExperience({ name }: { name: string }) {
               transition={{ delay: 0.2 + i * 0.04, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
               className="snap-start"
             >
-              <Link
-                href={s.href}
+              <Link href={s.href}
                 className="surface-deep card-lift group flex h-32 w-44 shrink-0 flex-col justify-between rounded-2xl border border-app bg-surface/60 p-4 backdrop-blur-md transition active:scale-[0.97] md:h-36 md:w-52"
               >
                 <s.Icon size={20} className="text-violet-300 transition group-hover:text-cyan-300" />

@@ -2,33 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  ArrowUp,
-  CheckCircle2,
-  CircleDot,
-  Paperclip,
-  Sparkles,
-  Wand2,
-  ShieldCheck,
-  Globe2,
-  Square,
-  ChevronDown,
-  ChevronLeft,
-  MoreHorizontal,
-  Home,
-  Plus,
-  History,
-  GitBranch,
-  Rocket,
-  MessageSquare,
-  Mic,
-  X,
-  Check,
-  Copy,
-  RefreshCw,
-  ThumbsUp,
-  ThumbsDown,
-} from "lucide-react";
+import { IconActivity, IconArrowUp, IconBranch, IconChat, IconCheck, IconChevD, IconChevL, IconCopy, IconGlobe, IconHistory, IconHome, IconMic, IconPaperclip, IconPlus, IconRefresh, IconRocket, IconShield, IconSparkles, IconStop, IconThumb, IconThumbDown, IconWand, IconX } from "@/components/brand/VFIcons";
 import Link from "next/link";
 import { useT } from "@/i18n/AppProviders";
 import { VPresence } from "@/components/brand/VPresence";
@@ -133,7 +107,7 @@ interface ChatSession {
   count: number;
 }
 
-interface HistoryTurn {
+interface IconHistory {
   id: string;
   role: "user" | "assistant" | "system" | "tool";
   content: string;
@@ -368,7 +342,7 @@ export function ChatExperience() {
           { cache: "no-store", signal: ctrl.signal },
         );
         if (res.ok) {
-          const data = (await res.json()) as { turns: HistoryTurn[] };
+          const data = (await res.json()) as { turns: IconHistory[] };
           const hydrated: Msg[] = (data.turns ?? [])
             .filter((tn) => tn.role === "user" || tn.role === "assistant")
             .map((tn) => ({
@@ -694,7 +668,7 @@ export function ChatExperience() {
           { cache: "no-store" },
         );
         if (res.ok) {
-          const data = (await res.json()) as { turns: HistoryTurn[] };
+          const data = (await res.json()) as { turns: IconHistory[] };
           const hydrated: Msg[] = (data.turns ?? [])
             .filter((tn) => tn.role === "user" || tn.role === "assistant")
             .map((tn) => ({
@@ -731,7 +705,7 @@ export function ChatExperience() {
   const currentScope = scopeOptions.find((o) => o.id === scope) ?? scopeOptions[0];
 
   const quickPrompts = t.chat.quick_prompts.map((label, i) => ({
-    icon: [Sparkles, Wand2, ShieldCheck, Globe2][i],
+    icon: [IconSparkles, IconWand, IconShield, IconGlobe][i],
     label,
   }));
 
@@ -743,13 +717,12 @@ export function ChatExperience() {
       >
         <div className="mx-auto flex h-12 max-w-3xl items-center gap-1 px-2 sm:px-3 md:px-8">
           {/* Volver (solo móvil) */}
-          <Link
-            href="/app/home"
+          <Link href="/app/home"
             aria-label="Volver a inicio"
             className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface md:hidden"
             style={{ touchAction: "manipulation" }}
           >
-            <ChevronLeft size={20} />
+            <IconChevL size={20} />
           </Link>
 
           {/* Centro: V + scope (tap abre el menú de scope existente) */}
@@ -768,7 +741,7 @@ export function ChatExperience() {
                   <span className="truncate text-sm font-medium text-on-surface">
                     {currentScope.label}
                   </span>
-                  <ChevronDown size={11} className="shrink-0 text-muted" />
+                  <IconChevD size={11} className="shrink-0 text-muted" />
                 </span>
                 {modelLabel && (
                   <span className="block truncate text-[10px] leading-tight text-muted">
@@ -797,9 +770,9 @@ export function ChatExperience() {
                       }`}
                     >
                       {opt.id === "general" ? (
-                        <MessageSquare size={13} className="mt-0.5 shrink-0 text-violet-300" />
+                        <IconChat size={13} className="mt-0.5 shrink-0 text-violet-300" />
                       ) : (
-                        <GitBranch size={13} className="mt-0.5 shrink-0 text-cyber-cyan" />
+                        <IconBranch size={13} className="mt-0.5 shrink-0 text-cyber-cyan" />
                       )}
                       <div className="min-w-0">
                         <p className="truncate font-medium">{opt.label}</p>
@@ -831,7 +804,7 @@ export function ChatExperience() {
               className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface"
               style={{ touchAction: "manipulation" }}
             >
-              <GitBranch size={17} />
+              <IconBranch size={17} />
             </button>
             {repoMenuOpen && (
               <>
@@ -851,7 +824,7 @@ export function ChatExperience() {
                         onClick={() => setRepoFormOpen(true)}
                         className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
                       >
-                        <Plus size={14} className="text-violet-300" /> Crear repositorio…
+                        <IconPlus size={14} className="text-violet-300" /> Crear repositorio…
                       </button>
                       {currentScope.repo && (
                         <a
@@ -861,7 +834,7 @@ export function ChatExperience() {
                           onClick={() => setRepoMenuOpen(false)}
                           className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
                         >
-                          <GitBranch size={14} className="text-cyber-cyan" /> Ver en GitHub
+                          <IconBranch size={14} className="text-cyber-cyan" /> Ver en GitHub
                         </a>
                       )}
                     </>
@@ -910,7 +883,7 @@ export function ChatExperience() {
               className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface"
               style={{ touchAction: "manipulation" }}
             >
-              <Rocket size={17} />
+              <IconRocket size={17} />
             </button>
             {deployMenuOpen && (
               <>
@@ -928,15 +901,14 @@ export function ChatExperience() {
                     onClick={() => void sendBuilderRequest("deploy-request")}
                     className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1 disabled:opacity-50"
                   >
-                    <Rocket size={14} className="text-violet-300" />
+                    <IconRocket size={14} className="text-violet-300" />
                     {builderBusy ? "Encolando…" : "Deploy a Vercel…"}
                   </button>
-                  <Link
-                    href="/app/deployments"
+                  <Link href="/app/deployments"
                     onClick={() => setDeployMenuOpen(false)}
                     className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
                   >
-                    <Globe2 size={14} className="text-cyber-cyan" /> Ver deployments
+                    <IconGlobe size={14} className="text-cyber-cyan" /> Ver deployments
                   </Link>
                   {builderNote && (
                     <p className="px-3 pb-2.5 text-[12px] text-muted">{builderNote}</p>
@@ -957,7 +929,7 @@ export function ChatExperience() {
               className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface"
               style={{ touchAction: "manipulation" }}
             >
-              <MoreHorizontal size={18} />
+              <IconChevD size={18} />
             </button>
             {headerMenuOpen && (
               <>
@@ -975,7 +947,7 @@ export function ChatExperience() {
                     }}
                     className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1 disabled:opacity-50"
                   >
-                    <Plus size={14} className="text-violet-300" /> Nuevo hilo
+                    <IconPlus size={14} className="text-violet-300" /> Nuevo hilo
                   </button>
                   <button
                     type="button"
@@ -985,14 +957,13 @@ export function ChatExperience() {
                     }}
                     className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
                   >
-                    <History size={14} className="text-cyber-cyan" /> Hilos
+                    <IconHistory size={14} className="text-cyber-cyan" /> Hilos
                   </button>
-                  <Link
-                    href="/app/home"
+                  <Link href="/app/home"
                     onClick={() => setHeaderMenuOpen(false)}
                     className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
                   >
-                    <Home size={14} className="text-muted" /> Inicio
+                    <IconHome size={14} className="text-muted" /> Inicio
                   </Link>
                 </div>
               </>
@@ -1079,7 +1050,7 @@ export function ChatExperience() {
                 onClick={() => setSessionsOpen(false)}
                 className="flex h-7 w-7 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
               >
-                <X size={15} />
+                <IconX size={15} />
               </button>
             </div>
             <div className="px-3 pt-3">
@@ -1089,7 +1060,7 @@ export function ChatExperience() {
                 disabled={pending}
                 className="flex w-full items-center gap-2 rounded-xl border border-violet-400/50 bg-violet-500/25 px-3 py-2.5 text-sm font-medium text-white transition hover:bg-violet-500/35 disabled:opacity-50"
               >
-                <Plus size={15} className="text-cyan-300" />
+                <IconPlus size={15} className="text-cyan-300" />
                 Nuevo chat
               </button>
             </div>
@@ -1348,7 +1319,7 @@ function Composer({
                 className="float-right text-error-crimson/70 hover:text-error-crimson"
                 aria-label="Cerrar error"
               >
-                <X size={12} />
+                <IconX size={12} />
               </button>
             </div>
           )}
@@ -1361,7 +1332,7 @@ function Composer({
                   className="h-10 w-10 rounded object-cover"
                 />
               ) : (
-                <Paperclip size={14} className="text-violet-300" />
+                <IconPaperclip size={14} className="text-violet-300" />
               )}
               <span className="flex-1 truncate text-[12px] text-on-surface-variant">
                 {attachment.name}
@@ -1371,7 +1342,7 @@ function Composer({
                 className="rounded p-1 text-muted hover:bg-tint-2 hover:text-on-surface"
                 aria-label="Quitar adjunto"
               >
-                <X size={12} />
+                <IconX size={12} />
               </button>
             </div>
           )}
@@ -1403,7 +1374,7 @@ function Composer({
               aria-label="Adjuntar archivo"
               style={{ touchAction: "manipulation" }}
             >
-              <Plus size={18} />
+              <IconPlus size={18} />
             </button>
 
             {/* Cámara oculta — input se conserva por si se reusa, sin botón visible */}
@@ -1431,7 +1402,7 @@ function Composer({
               aria-label={recording ? "Detener grabación" : "Grabar voz"}
               style={{ touchAction: "manipulation" }}
             >
-              <Mic size={16} />
+              <IconMic size={16} />
             </button>
           </div>
 
@@ -1472,7 +1443,7 @@ function Composer({
               aria-label="Detener"
               style={{ touchAction: "manipulation" }}
             >
-              <Square size={15} className="fill-current" />
+              <IconStop size={15} className="fill-current" />
             </button>
           ) : (
             <button
@@ -1486,7 +1457,7 @@ function Composer({
               }`}
               style={{ touchAction: "manipulation" }}
             >
-              <ArrowUp size={17} strokeWidth={2.5} />
+              <IconArrowUp size={17} strokeWidth={2.5} />
             </button>
           )}
         </div>
@@ -1539,11 +1510,11 @@ function MessageBubble({
               {msg.actions.map((a) => (
                 <li key={a.label} className="flex items-center gap-2 text-on-surface">
                   {a.status === "done" ? (
-                    <CheckCircle2 size={14} className="text-success-emerald" />
+                    <IconCheck size={14} className="text-success-emerald" />
                   ) : a.status === "running" ? (
-                    <CircleDot size={14} className="animate-pulse text-cyber-cyan" />
+                    <IconActivity size={14} className="animate-pulse text-cyber-cyan" />
                   ) : (
-                    <CircleDot size={14} className="text-muted" />
+                    <IconActivity size={14} className="text-muted" />
                   )}
                   <span className={a.status === "queued" ? "text-on-surface-variant" : ""}>{a.label}</span>
                 </li>
@@ -1723,7 +1694,7 @@ function AssistantActions({
         className={btn}
         aria-label={copied ? "Copiado" : "Copiar respuesta"}
       >
-        {copied ? <Check size={11} /> : <Copy size={11} />}
+        {copied ? <IconCheck size={11} /> : <IconCopy size={11} />}
         <span>{copied ? "Copiado" : "Copy"}</span>
       </button>
       {onRegenerate && (
@@ -1734,7 +1705,7 @@ function AssistantActions({
           aria-label="Regenerar respuesta"
           title="Regenerar"
         >
-          <RefreshCw size={11} />
+          <IconRefresh size={11} />
           <span>Regen</span>
         </button>
       )}
@@ -1749,7 +1720,7 @@ function AssistantActions({
         aria-label={feedback === "up" ? "Quitar pulgar arriba" : "Pulgar arriba"}
         aria-pressed={feedback === "up"}
       >
-        <ThumbsUp size={11} />
+        <IconThumb size={11} />
       </button>
       <button
         type="button"
@@ -1762,7 +1733,7 @@ function AssistantActions({
         aria-label={feedback === "down" ? "Quitar pulgar abajo" : "Pulgar abajo"}
         aria-pressed={feedback === "down"}
       >
-        <ThumbsDown size={11} />
+        <IconThumbDown size={11} />
       </button>
     </div>
   );

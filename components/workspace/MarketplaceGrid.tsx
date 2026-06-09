@@ -1,41 +1,26 @@
 "use client";
+import type React from "react";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import type { LucideIcon } from "lucide-react";
-import {
-  Bot,
-  CreditCard,
-  Database,
-  Eye,
-  Globe2,
-  HardDrive,
-  KeyRound,
-  Mail,
-  MapPin,
-  Phone,
-  Rocket,
-  Search,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { IconBell, IconBot, IconCreditCard, IconDatabase, IconEye, IconGlobe, IconKey, IconMap, IconRocket, IconSearch, IconShield, IconSparkles } from "@/components/brand/VFIcons";
 import { useT } from "@/i18n/AppProviders";
 
 type ModuleKey = "clerk" | "stripe" | "twilio" | "maps" | "neon" | "vision" | "mail" | "storage" | "vercel" | "domains" | "agent" | "audit";
 
-const moduleOrder: { id: ModuleKey; icon: LucideIcon; installed?: boolean; recommended?: boolean }[] = [
-  { id: "clerk", icon: KeyRound, installed: true, recommended: true },
-  { id: "stripe", icon: CreditCard, installed: true, recommended: true },
-  { id: "twilio", icon: Phone },
-  { id: "maps", icon: MapPin },
-  { id: "neon", icon: Database, installed: true },
-  { id: "vision", icon: Eye, recommended: true },
-  { id: "mail", icon: Mail },
-  { id: "storage", icon: HardDrive },
-  { id: "vercel", icon: Rocket, installed: true },
-  { id: "domains", icon: Globe2 },
-  { id: "agent", icon: Bot },
-  { id: "audit", icon: ShieldCheck },
+const moduleOrder: { id: ModuleKey; icon: (props: {size?: number; className?: string; [key: string]: unknown}) => React.ReactElement | null; installed?: boolean; recommended?: boolean }[] = [
+  { id: "clerk", icon: IconKey, installed: true, recommended: true },
+  { id: "stripe", icon: IconCreditCard, installed: true, recommended: true },
+  { id: "twilio", icon: IconBell },
+  { id: "maps", icon: IconMap },
+  { id: "neon", icon: IconDatabase, installed: true },
+  { id: "vision", icon: IconEye, recommended: true },
+  { id: "mail", icon: IconBell },
+  { id: "storage", icon: IconDatabase },
+  { id: "vercel", icon: IconRocket, installed: true },
+  { id: "domains", icon: IconGlobe },
+  { id: "agent", icon: IconBot },
+  { id: "audit", icon: IconShield },
 ];
 
 
@@ -71,7 +56,7 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
     <div>
       <div className="flex flex-col gap-3 px-5 py-5 md:flex-row md:items-center md:px-8">
         <div className="relative flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+          <IconSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -135,7 +120,7 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
                 </div>
               </div>
               {m.recommended && (
-                <span className="chip text-cyber-cyan"><Sparkles size={10} /> {t.common.label_b_picks}</span>
+                <span className="chip text-cyber-cyan"><IconSparkles size={10} /> {t.common.label_b_picks}</span>
               )}
             </div>
             <p className="mt-3 text-sm text-on-surface-variant">{m.blurb}</p>

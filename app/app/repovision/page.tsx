@@ -2,19 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/workspace/PageHeader";
-import {
-  GitBranch,
-  Lock,
-  Star,
-  Search,
-  ArrowDownNarrowWide,
-  ArrowUpNarrowWide,
-  CircleAlert,
-  Archive,
-  Sparkles,
-  ChevronDown,
-  CircleDot,
-} from "lucide-react";
+import { IconActivity, IconArrowL, IconArrowR, IconBranch, IconChevD, IconFile, IconSearch, IconSettings, IconShield, IconSparkles, IconStar, IconWarn } from "@/components/brand/VFIcons";
 import { useT } from "@/i18n/AppProviders";
 
 interface Repo {
@@ -95,9 +83,9 @@ function pushedLabel(iso: string | null): string {
   return `push hace ${d}d`;
 }
 
-type Filter = "todos" | Health;
+type IconSettings = "todos" | Health;
 
-const FILTERS: { id: Filter; label: string }[] = [
+const FILTERS: { id: IconSettings; label: string }[] = [
   { id: "todos", label: "Todos" },
   { id: "vivo", label: "Vivos" },
   { id: "activo", label: "Activos" },
@@ -111,7 +99,7 @@ export default function RepoVisionPage() {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<Filter>("todos");
+  const [filter, setIconSettings] = useState<IconSettings>("todos");
   const [query, setQuery] = useState("");
   const [oldestFirst, setOldestFirst] = useState(false);
   const [cleanupOpen, setCleanupOpen] = useState(false);
@@ -179,7 +167,7 @@ export default function RepoVisionPage() {
       <div className="px-5 py-6 md:px-8">
         {error && (
           <div className="mb-5 flex items-center gap-2 rounded-lg border border-error-crimson/30 bg-error-crimson/5 px-4 py-3 text-sm text-error-crimson">
-            <CircleAlert size={15} className="shrink-0" />
+            <IconWarn size={15} className="shrink-0" />
             {error}
           </div>
         )}
@@ -211,7 +199,7 @@ export default function RepoVisionPage() {
               return (
                 <button
                   key={f.id}
-                  onClick={() => setFilter(f.id)}
+                  onClick={() => setIconSettings(f.id)}
                   className={`min-h-[44px] rounded-full border px-4 text-sm font-medium transition ${
                     active
                       ? "border-violet-400/50 bg-tint-3 text-on-surface"
@@ -226,7 +214,7 @@ export default function RepoVisionPage() {
 
           <div className="flex items-center gap-2">
             <div className="relative flex-1 lg:w-64">
-              <Search
+              <IconSearch
                 size={15}
                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
               />
@@ -243,9 +231,9 @@ export default function RepoVisionPage() {
               className="flex h-11 min-w-[44px] items-center justify-center gap-1.5 rounded-lg border border-app bg-tint-1 px-3 text-sm text-on-surface-variant transition hover:text-on-surface"
             >
               {oldestFirst ? (
-                <ArrowUpNarrowWide size={16} />
+                <IconArrowR size={16} />
               ) : (
-                <ArrowDownNarrowWide size={16} />
+                <IconArrowL size={16} />
               )}
               <span className="hidden sm:inline">
                 {oldestFirst ? "Antiguos" : "Recientes"}
@@ -269,7 +257,7 @@ export default function RepoVisionPage() {
         {/* Vacío */}
         {!loading && enriched.length === 0 && !error && (
           <div className="rounded-xl border border-app bg-tint-1 p-10 text-center text-on-surface-variant">
-            <GitBranch className="mx-auto mb-3 text-violet-300" size={24} />
+            <IconBranch className="mx-auto mb-3 text-violet-300" size={24} />
             <p className="font-display text-lg text-on-surface">No hay repos cargados</p>
             <p className="mt-2 text-sm">
               Conéctate y vuelve a intentar, o revisa tu GitHub en Integraciones.
@@ -301,7 +289,7 @@ export default function RepoVisionPage() {
               className="flex min-h-[44px] w-full items-center justify-between gap-3 px-5 py-4 text-left"
             >
               <span className="flex items-center gap-2.5">
-                <Sparkles size={16} className="text-violet-300" />
+                <IconSparkles size={16} className="text-violet-300" />
                 <span className="font-display text-sm font-semibold text-on-surface">
                   Limpieza sugerida
                 </span>
@@ -309,7 +297,7 @@ export default function RepoVisionPage() {
                   {cleanupCandidates.length}
                 </span>
               </span>
-              <ChevronDown
+              <IconChevD
                 size={18}
                 className={`text-muted transition-transform ${cleanupOpen ? "rotate-180" : ""}`}
               />
@@ -335,9 +323,9 @@ export default function RepoVisionPage() {
                         >
                           <span className="flex min-w-0 items-center gap-2">
                             {r.health === "archivado" ? (
-                              <Archive size={14} className="shrink-0 text-muted" />
+                              <IconFile size={14} className="shrink-0 text-muted" />
                             ) : (
-                              <CircleDot size={14} className="shrink-0 text-error-crimson" />
+                              <IconActivity size={14} className="shrink-0 text-error-crimson" />
                             )}
                             <span className="truncate text-sm text-on-surface">
                               {r.full_name}
@@ -401,11 +389,11 @@ function RepoCard({ repo, health }: { repo: Repo; health: Health }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <GitBranch size={14} className="shrink-0 text-violet-300" />
+            <IconBranch size={14} className="shrink-0 text-violet-300" />
             <p className="truncate font-display font-semibold text-on-surface">
               {repo.name}
             </p>
-            {repo.private && <Lock size={11} className="shrink-0 text-muted" />}
+            {repo.private && <IconShield size={11} className="shrink-0 text-muted" />}
           </div>
           <p className="mt-1 truncate text-xs text-muted">{repo.full_name}</p>
         </div>
@@ -428,11 +416,11 @@ function RepoCard({ repo, health }: { repo: Repo; health: Health }) {
         <span className="tabular">{repo.default_branch}</span>
         <span className="tabular">{pushedLabel(repo.pushed_at)}</span>
         <span className="flex items-center gap-1 tabular">
-          <Star size={11} /> {repo.stargazers_count}
+          <IconStar size={11} /> {repo.stargazers_count}
         </span>
         {issues > 0 && (
           <span className="flex items-center gap-1 tabular">
-            <CircleDot size={11} /> {issues}
+            <IconActivity size={11} /> {issues}
           </span>
         )}
       </div>

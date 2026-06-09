@@ -1,14 +1,8 @@
-
 "use client";
-
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import {
-  ArrowRight, Sparkles, X, Rocket, HelpCircle,
-  ShoppingBag, Tag, LayoutDashboard, BookOpen,
-  Zap, Globe, Bot, FileText,
-} from "lucide-react";
+import { IconArrowR, IconSparkles, IconX, IconRocket, IconHelp, IconBag, IconTag, IconLayout, IconBook, IconZap, IconGlobe, IconBot, IconFile } from "@/components/brand/VFIcons";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SPHERE_IMG = "/sphere-violet.png";
@@ -17,27 +11,27 @@ const SPHERE_VIDEO = "https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4Dm
 type RadialItem = {
   id: string;
   label: string;
-  icon: typeof Rocket;
+  icon: typeof IconRocket;
   href?: string;
   panel?: "welcome" | "faq" | "worlds";
   color: string;
 };
 
 const RADIAL: (RadialItem & { img3d: string })[] = [
-  { id: "welcome", label: "Qué es V", icon: Sparkles, panel: "welcome", color: "#a855f7", img3d: "/icons3d/sparkle.png" },
-  { id: "worlds", label: "Por dónde\nempiezo", icon: BookOpen, panel: "worlds", color: "#22d3ee", img3d: "/icons3d/book.png" },
-  { id: "products", label: "Productos", icon: ShoppingBag, href: "#productos", color: "#8b5cf6", img3d: "/icons3d/bag.png" },
-  { id: "pricing", label: "Precios", icon: Tag, href: "/pricing", color: "#0ea5e9", img3d: "/icons3d/tag.png" },
-  { id: "faq", label: "Preguntas", icon: HelpCircle, panel: "faq", color: "#f59e0b", img3d: "/icons3d/help.png" },
-  { id: "start", label: "Empezar", icon: Rocket, href: "/sign-up", color: "#22c55e", img3d: "/icons3d/rocket.png" },
+  { id: "welcome", label: "Qué es V", icon: IconSparkles, panel: "welcome", color: "#a855f7", img3d: "/icons3d/sparkle.png" },
+  { id: "worlds", label: "Por dónde\nempiezo", icon: IconBook, panel: "worlds", color: "#22d3ee", img3d: "/icons3d/book.png" },
+  { id: "products", label: "Productos", icon: IconBag, href: "#productos", color: "#8b5cf6", img3d: "/icons3d/bag.png" },
+  { id: "pricing", label: "Precios", icon: IconTag, href: "/pricing", color: "#0ea5e9", img3d: "/icons3d/tag.png" },
+  { id: "faq", label: "Preguntas", icon: IconHelp, panel: "faq", color: "#f59e0b", img3d: "/icons3d/help.png" },
+  { id: "start", label: "Empezar", icon: IconRocket, href: "/sign-up", color: "#22c55e", img3d: "/icons3d/rocket.png" },
 ];
 
 // ── BIENVENIDA REDISEÑADA ─────────────────────────────────────
 const LAUNCH_BADGES = [
-  { icon: Bot, label: "VForge MCP", sub: "Empresarial", color: "#a855f7" },
-  { icon: Zap, label: "Generador IA", sub: "de Contenido", color: "#22d3ee" },
-  { icon: Globe, label: "Apps reales", sub: "App Store + Play", color: "#22c55e" },
-  { icon: FileText, label: "Método VForge", sub: "De idea a deploy", color: "#f59e0b" },
+  { icon: IconBot, label: "VForge MCP", sub: "Empresarial", color: "#a855f7" },
+  { icon: IconZap, label: "Generador IA", sub: "de Contenido", color: "#22d3ee" },
+  { icon: IconGlobe, label: "Apps reales", sub: "App Store + Play", color: "#22c55e" },
+  { icon: IconFile, label: "Método VForge", sub: "De idea a deploy", color: "#f59e0b" },
 ];
 
 const METODO_STEPS = [
@@ -53,9 +47,9 @@ const WELCOME_STATS = [
 ];
 
 const WORLDS = [
-  { icon: ShoppingBag, color: "#8b5cf6", title: "Quiero una app o servicio", desc: "Eres un cliente. Mira los productos: apps, automatizaciones, bots, videos y MCP empresariales.", cta: "Ver productos", href: "#productos" },
-  { icon: Tag, color: "#0ea5e9", title: "Soy developer / agencia", desc: "Usa VForge como plataforma para construir y desplegar. Mira los planes Explorer, Studio y Forge.", cta: "Ver precios", href: "/pricing" },
-  { icon: LayoutDashboard, color: "#22c55e", title: "Ya soy cliente de VForge", desc: "Entra a tu portal y sigue el avance de tu proyecto en tiempo real, como una misión.", cta: "Entrar al portal", href: "/sign-in" },
+  { icon: IconBag, color: "#8b5cf6", title: "Quiero una app o servicio", desc: "Eres un cliente. Mira los productos: apps, automatizaciones, bots, videos y MCP empresariales.", cta: "Ver productos", href: "#productos" },
+  { icon: IconTag, color: "#0ea5e9", title: "Soy developer / agencia", desc: "Usa VForge como plataforma para construir y desplegar. Mira los planes Explorer, Studio y Forge.", cta: "Ver precios", href: "/pricing" },
+  { icon: IconLayout, color: "#22c55e", title: "Ya soy cliente de VForge", desc: "Entra a tu portal y sigue el avance de tu proyecto en tiempo real, como una misión.", cta: "Entrar al portal", href: "/sign-in" },
 ];
 
 const FAQ = [
@@ -237,12 +231,11 @@ export function Hero() {
             className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-violet-500 to-violet-600 px-8 py-4 text-base font-semibold text-white shadow-[0_8px_40px_rgba(124,58,237,0.5)] transition-all hover:shadow-[0_8px_60px_rgba(124,58,237,0.7)] active:scale-[0.98]"
           >
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-            <Sparkles size={17} className="relative text-cyan-200" />
+            <IconSparkles size={17} className="relative text-cyan-200" />
             <span className="relative">Despierta a V</span>
-            <ArrowRight size={17} className="relative transition-transform group-hover:translate-x-1" />
+            <IconArrowR size={17} className="relative transition-transform group-hover:translate-x-1" />
           </button>
-          <Link
-            href="/sign-up"
+          <Link href="/sign-up"
             className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-8 py-4 text-base font-medium text-white/70 backdrop-blur-sm transition-all hover:border-violet-400/30 hover:bg-white/[0.07] hover:text-white"
           >
             Empieza gratis
@@ -282,7 +275,7 @@ export function Hero() {
                   onClick={() => setPanel(null)}
                   className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-xl transition hover:bg-black/70"
                 >
-                  <X size={16} />
+                  <IconX size={16} />
                 </button>
 
                 {/* ── PANEL BIENVENIDA NUEVO ── */}
@@ -370,7 +363,7 @@ export function Hero() {
                       className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-violet-500 py-4 text-sm font-semibold text-white"
                       style={{ boxShadow: "0 0 40px rgba(124,58,237,0.5)" }}
                     >
-                      ¿Por dónde empiezo? <ArrowRight size={14} />
+                      ¿Por dónde empiezo? <IconArrowR size={14} />
                     </button>
                   </div>
                 )}
@@ -399,7 +392,7 @@ export function Hero() {
                           <Link href={w.href} onClick={() => { setPanel(null); setOpen(false); }}
                             className="mt-3 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-semibold text-white transition-transform active:scale-95"
                             style={{ background: `${w.color}` }}>
-                            {w.cta} <ArrowRight size={13} />
+                            {w.cta} <IconArrowR size={13} />
                           </Link>
                         </motion.div>
                       ))}
@@ -420,7 +413,7 @@ export function Hero() {
                           className="group rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
                           <summary className="flex cursor-pointer items-center justify-between text-sm font-semibold text-white">
                             {f.q}
-                            <ArrowRight size={14} className="text-violet-400 transition-transform group-open:rotate-90" />
+                            <IconArrowR size={14} className="text-violet-400 transition-transform group-open:rotate-90" />
                           </summary>
                           <p className="mt-2 text-xs leading-relaxed text-white/50">{f.a}</p>
                         </motion.details>

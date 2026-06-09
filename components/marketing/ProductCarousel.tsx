@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { X, Check, ArrowRight, Sparkles, Cpu, Bot, Zap, Database } from "lucide-react";
+import { IconArrowR, IconBot, IconCheck, IconCpu, IconDatabase, IconSparkles, IconZap, IconX } from "@/components/brand/VFIcons";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -65,7 +65,7 @@ const PRODUCTS: Product[] = [
     priceLabel: "$5,000 MXN",
     accent: "#0ea5e9",
     bgImg: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=800&q=85",
-    fullDesc: "Llevamos tu aplicación al App Store de Apple. Configuración de cuenta de desarrollador, build firmado, assets, revisión de Apple y publicación. Tu app lista para iPhone y iPad.",
+    fullDesc: "Llevamos tu aplicación al App Store de Apple. Configuración de cuenta de desarrollador, build firmado, assets, revisión de Apple y publicación. Tu app lista para iIconBell y iPad.",
     timeline: [
       { phase: "Preparación", detail: "Configuración de App Store Connect" },
       { phase: "Build", detail: "Compilación y firma del paquete" },
@@ -110,12 +110,12 @@ const PRODUCTS: Product[] = [
   },
   {
     id: "bots",
-    name: "Bots Inteligentes",
+    name: "IconBot Inteligentes",
     tagline: "Atención y ventas 24/7",
     priceLabel: "Desde $1,500 MXN",
     accent: "#06b6d4",
     icon: "bot",
-    fullDesc: "Bots inteligentes que atienden, venden y dan seguimiento sin descanso. En WhatsApp, Telegram o tu sitio web. Responden, califican leads y cierran ventas mientras tu equipo duerme.",
+    fullDesc: "IconBot inteligentes que atienden, venden y dan seguimiento sin descanso. En WhatsApp, Telegram o tu sitio web. Responden, califican leads y cierran ventas mientras tu equipo duerme.",
     capabilities: ["Atención al cliente", "Ventas automatizadas", "Seguimiento de leads", "WhatsApp", "Telegram", "Widget web"],
   },
   {
@@ -132,7 +132,7 @@ const PRODUCTS: Product[] = [
   },
 ];
 
-const ICONS = { cpu: Cpu, bot: Bot, zap: Zap, db: Database };
+const ICONS = { cpu: IconCpu, bot: IconBot, zap: IconZap, db: IconDatabase };
 
 export function ProductCarousel() {
   const [active, setActive] = useState<string | null>(null);
@@ -222,7 +222,7 @@ export function ProductCarousel() {
                   <span className="text-lg font-bold text-white">{p.priceLabel}</span>
                   <span className="flex h-9 w-9 items-center justify-center rounded-full border transition-all group-hover:scale-110"
                     style={{ borderColor: `${p.accent}60`, background: `${p.accent}20` }}>
-                    <ArrowRight size={15} className="text-white" />
+                    <IconArrowR size={15} className="text-white" />
                   </span>
                 </div>
               </div>
@@ -256,7 +256,7 @@ export function ProductCarousel() {
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#06040f] via-[#06040f]/40 to-transparent" />
                   <button onClick={() => setActive(null)} className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-xl transition hover:bg-black/70">
-                    <X size={16} />
+                    <IconX size={16} />
                   </button>
                   <div className="absolute bottom-4 left-5 right-5">
                     {activeProduct.isNew && <span className="mb-2 inline-block rounded-full px-2.5 py-1 text-[10px] font-bold uppercase text-black" style={{ background: activeProduct.accent }}>NEW</span>}
@@ -299,7 +299,7 @@ export function ProductCarousel() {
                       <div className="grid grid-cols-2 gap-2">
                         {activeProduct.includes.map((f) => (
                           <div key={f} className="flex items-center gap-2 text-xs text-white/70">
-                            <Check size={12} style={{ color: activeProduct.accent }} className="shrink-0" />{f}
+                            <IconCheck size={12} style={{ color: activeProduct.accent }} className="shrink-0" />{f}
                           </div>
                         ))}
                       </div>
@@ -320,7 +320,7 @@ export function ProductCarousel() {
                   {activeProduct.note && (
                     <div className="mt-5 rounded-2xl border px-4 py-3" style={{ borderColor: `${activeProduct.accent}40`, background: `${activeProduct.accent}12` }}>
                       <p className="flex items-start gap-2 text-xs font-light leading-relaxed text-white/80">
-                        <Sparkles size={13} style={{ color: activeProduct.accent }} className="mt-0.5 shrink-0" />{activeProduct.note}
+                        <IconSparkles size={13} style={{ color: activeProduct.accent }} className="mt-0.5 shrink-0" />{activeProduct.note}
                       </p>
                     </div>
                   )}
@@ -328,7 +328,7 @@ export function ProductCarousel() {
                   <Link href="/sign-up" onClick={() => setActive(null)}
                     className="mt-6 flex items-center justify-center gap-2 rounded-2xl py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
                     style={{ background: `linear-gradient(135deg, ${activeProduct.accent}, ${activeProduct.accent}cc)`, boxShadow: `0 0 40px ${activeProduct.accent}50` }}>
-                    {activeProduct.ctaLabel || "Solicitar este producto"} <ArrowRight size={14} />
+                    {activeProduct.ctaLabel || "Solicitar este producto"} <IconArrowR size={14} />
                   </Link>
                 </div>
               </div>

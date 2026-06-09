@@ -1,6 +1,4 @@
-
 "use client";
-
 /**
  * AssistantChat — Higgsfield "Obsidian + Crystal" redesign
  * Mantiene toda la lógica de streaming. Rediseño visual únicamente.

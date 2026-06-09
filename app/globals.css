@@ -5,90 +5,113 @@
 :root {
   color-scheme: dark;
 
-  /* Surfaces — dark (default) */
-  --color-void: #050505;
-  --color-ink: #0a0a0a;
-  --color-background: #0e0e0e;
-  --color-surface: #131313;
-  --color-surface-low: #1a1a1a;
-  --color-surface-high: #1f1f1f;
-  --color-surface-elev: #262626;
+  /* ── IRON MAN DARK — Obsidian base ── */
+  --color-void: #03020a;          /* fondo más profundo — obsidian puro */
+  --color-ink: #06050f;           /* segundo nivel */
+  --color-background: #0a0814;    /* superficie principal */
+  --color-surface: #0d0b1a;       /* tarjetas base */
+  --color-surface-low: #110f1f;   /* inputs, chips */
+  --color-surface-high: #16142a;  /* hover states */
+  --color-surface-elev: #1c1930;  /* modales, dropdowns */
 
-  --color-border: 255 255 255 / 0.06;
-  --color-border-strong: 255 255 255 / 0.12;
+  /* Bordes HUD style */
+  --color-border: 139 92 246 / 0.10;
+  --color-border-strong: 139 92 246 / 0.20;
 
-  /* Text */
-  --color-on-surface: #e5e2e1;
-  --color-on-surface-variant: #a3a0ad;
-  --color-muted: #6b6975;
-  --color-off-white: #f8fafc;
+  /* Texto */
+  --color-on-surface: #e8e4ff;
+  --color-on-surface-variant: #a89fd4;
+  --color-muted: #6b628f;
+  --color-off-white: #f0ecff;
 
-  /* Accents (same in both modes, slightly tuned for light) */
-  --color-violet-300: #b497ff;
-  --color-violet-400: #a078ff;
-  --color-violet-500: #8b5cf6;
+  /* Accents Iron Man */
+  --color-violet-300: #c4b5fd;
+  --color-violet-400: #a78bfa;
+  --color-violet-500: #7c3aed;
   --color-cyan-400: #22d3ee;
+  --color-gold-arc: #fbbf24;      /* reactor arc glow */
   --color-electric-blue: #3b82f6;
   --color-success-emerald: #10b981;
   --color-error-crimson: #ef4444;
 
+  /* Iron Man HUD glow effects */
+  --hud-glow-v: 0 0 20px rgba(124,58,237,0.4), 0 0 60px rgba(124,58,237,0.15);
+  --hud-glow-c: 0 0 20px rgba(34,211,238,0.4), 0 0 60px rgba(34,211,238,0.12);
+  --hud-glow-g: 0 0 20px rgba(251,191,36,0.3), 0 0 40px rgba(251,191,36,0.1);
+  --hud-line: rgba(139,92,246,0.25);
+
   /* Effects */
   --aura-opacity: 1;
-  --grid-opacity: 0.035;
-  --glass-bg: 16 16 18 / 0.55;
-  --glass-bg-strong: 14 14 16 / 0.7;
-  --scanlines-opacity: 0.18;
+  --grid-opacity: 0.04;
+  --glass-bg: 10 8 20 / 0.65;
+  --glass-bg-strong: 10 8 20 / 0.85;
+  --scanlines-opacity: 0.12;
   --scanlines-blend: overlay;
-  --shadow-elev: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 24px 60px rgba(0, 0, 0, 0.35);
+  --shadow-elev:
+    0 1px 0 rgba(139,92,246,0.08) inset,
+    0 0 0 1px rgba(139,92,246,0.12),
+    0 24px 60px rgba(0,0,0,0.5);
 
-  /* Subtle white overlay tints */
-  --tint-1: 255 255 255 / 0.02;
-  --tint-2: 255 255 255 / 0.04;
-  --tint-3: 255 255 255 / 0.06;
+  /* Tints */
+  --tint-1: 139 92 246 / 0.03;
+  --tint-2: 139 92 246 / 0.06;
+  --tint-3: 139 92 246 / 0.10;
 }
 
 [data-theme="light"] {
   color-scheme: light;
 
-  /* Surfaces — light (premium paper) */
-  --color-void: #f5f5f7;
-  --color-ink: #fafafa;
-  --color-background: #ffffff;
-  --color-surface: #ffffff;
-  --color-surface-low: #f8f8fa;
-  --color-surface-high: #f0f0f3;
-  --color-surface-elev: #e7e7ec;
+  /* ── BLACK NACARADO — efecto nacar holográfico ── */
+  /* Fondo: negro con reflejo nacarado iridiscente, no blanco plano */
+  --color-void: #e8e4f4;
+  --color-ink: #ece9f6;
+  --color-background: #f0edf8;
+  --color-surface: #f5f2fc;
+  --color-surface-low: #f9f7fe;
+  --color-surface-high: #ede9f9;
+  --color-surface-elev: #e4dffa;
 
-  --color-border: 10 10 20 / 0.08;
-  --color-border-strong: 10 10 20 / 0.14;
+  /* Bordes con tono violeta suave */
+  --color-border: 109 40 217 / 0.12;
+  --color-border-strong: 109 40 217 / 0.22;
 
-  /* Text */
-  --color-on-surface: #0c0c10;
-  --color-on-surface-variant: #4a4a55;
-  --color-muted: #7a7a88;
+  /* Texto con contraste Iron Man en light */
+  --color-on-surface: #0a0718;
+  --color-on-surface-variant: #3d2e72;
+  --color-muted: #6b5a9e;
   --color-off-white: #ffffff;
 
-  /* Accents — slightly deeper for AA contrast on light */
-  --color-violet-300: #8b5cf6;
-  --color-violet-400: #7c3aed;
-  --color-violet-500: #6d28d9;
+  /* Accents más saturados para AA contrast */
+  --color-violet-300: #7c3aed;
+  --color-violet-400: #6d28d9;
+  --color-violet-500: #5b21b6;
   --color-cyan-400: #0891b2;
+  --color-gold-arc: #d97706;
   --color-electric-blue: #2563eb;
   --color-success-emerald: #059669;
   --color-error-crimson: #dc2626;
 
+  /* HUD glows (más suaves en light) */
+  --hud-glow-v: 0 0 12px rgba(109,40,217,0.25), 0 0 30px rgba(109,40,217,0.08);
+  --hud-glow-c: 0 0 12px rgba(8,145,178,0.25), 0 0 30px rgba(8,145,178,0.08);
+  --hud-glow-g: 0 0 12px rgba(217,119,6,0.2), 0 0 24px rgba(217,119,6,0.06);
+  --hud-line: rgba(109,40,217,0.18);
+
   /* Effects */
-  --aura-opacity: 0.6;
-  --grid-opacity: 0.05;
-  --glass-bg: 255 255 255 / 0.72;
-  --glass-bg-strong: 255 255 255 / 0.85;
+  --aura-opacity: 0.7;
+  --grid-opacity: 0.06;
+  --glass-bg: 245 242 252 / 0.75;
+  --glass-bg-strong: 245 242 252 / 0.92;
   --scanlines-opacity: 0;
   --scanlines-blend: normal;
-  --shadow-elev: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 18px 48px rgba(10, 10, 20, 0.08);
+  --shadow-elev:
+    0 1px 0 rgba(255,255,255,0.9) inset,
+    0 0 0 1px rgba(109,40,217,0.12),
+    0 18px 48px rgba(10,7,24,0.10);
 
-  --tint-1: 10 10 20 / 0.02;
-  --tint-2: 10 10 20 / 0.04;
-  --tint-3: 10 10 20 / 0.06;
+  --tint-1: 109 40 217 / 0.03;
+  --tint-2: 109 40 217 / 0.06;
+  --tint-3: 109 40 217 / 0.10;
 }
 
 html,
@@ -765,3 +788,213 @@ html { scroll-behavior: smooth; }
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   IRON MAN HUD SYSTEM — Obsidian dark / Black nacarado light
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Nacar background para light mode ── */
+[data-theme="light"] body,
+[data-theme="light"] html {
+  background:
+    radial-gradient(ellipse 120% 80% at 30% -10%, rgba(167,139,250,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 100% 70% at 80% 110%, rgba(34,211,238,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(251,191,36,0.03) 0%, transparent 60%),
+    #f0edf8;
+}
+
+/* ── Obsidian background dark mode ── */
+body, html {
+  background:
+    radial-gradient(ellipse 80% 55% at 50% -5%, rgba(124,58,237,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 85% 85%, rgba(34,211,238,0.07) 0%, transparent 50%),
+    #03020a;
+}
+
+/* ── HUD scan lines (dark only) ── */
+[data-theme="dark"] .hud-scanlines::after,
+body:not([data-theme="light"]) .hud-scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(139,92,246,0.015) 2px,
+    rgba(139,92,246,0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── HUD Card — borde con gradiente de luz ── */
+.hud-card {
+  position: relative;
+  border-radius: 16px;
+  background: rgba(var(--glass-bg));
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  overflow: hidden;
+}
+.hud-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(139,92,246,0.45) 0%,
+    rgba(34,211,238,0.3) 40%,
+    rgba(251,191,36,0.15) 70%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+[data-theme="light"] .hud-card::before {
+  background: linear-gradient(
+    135deg,
+    rgba(109,40,217,0.3) 0%,
+    rgba(8,145,178,0.2) 40%,
+    rgba(217,119,6,0.1) 70%,
+    transparent 100%
+  );
+}
+
+/* ── HUD corner brackets — efecto Iron Man ── */
+.hud-bracket {
+  position: relative;
+}
+.hud-bracket::before,
+.hud-bracket::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: rgba(139,92,246,0.6);
+  border-style: solid;
+  border-width: 0;
+}
+.hud-bracket::before {
+  top: -1px; left: -1px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+  border-radius: 3px 0 0 0;
+}
+.hud-bracket::after {
+  bottom: -1px; right: -1px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+  border-radius: 0 0 3px 0;
+}
+[data-theme="light"] .hud-bracket::before,
+[data-theme="light"] .hud-bracket::after {
+  border-color: rgba(109,40,217,0.4);
+}
+
+/* ── Arc reactor glow pulse ── */
+.arc-pulse {
+  animation: arcPulse 3s ease-in-out infinite;
+}
+@keyframes arcPulse {
+  0%, 100% { box-shadow: var(--hud-glow-v); opacity: 1; }
+  50% { box-shadow: 0 0 30px rgba(124,58,237,0.6), 0 0 80px rgba(124,58,237,0.2); opacity: 0.85; }
+}
+
+/* ── HUD text glow ── */
+.hud-text-glow {
+  text-shadow: 0 0 12px rgba(167,139,250,0.7), 0 0 30px rgba(124,58,237,0.3);
+}
+[data-theme="light"] .hud-text-glow {
+  text-shadow: 0 0 8px rgba(109,40,217,0.4);
+}
+
+/* ── Frutal gradient borders ── */
+.frutal-border {
+  border-image: linear-gradient(
+    135deg,
+    #7c3aed 0%,
+    #22d3ee 35%,
+    #fbbf24 65%,
+    #7c3aed 100%
+  ) 1;
+}
+
+/* ── Crystal surface ── */
+.crystal-surface {
+  background:
+    linear-gradient(135deg,
+      rgba(139,92,246,0.06) 0%,
+      rgba(34,211,238,0.04) 50%,
+      rgba(251,191,36,0.02) 100%
+    ),
+    rgba(var(--glass-bg));
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+[data-theme="light"] .crystal-surface {
+  background:
+    linear-gradient(135deg,
+      rgba(109,40,217,0.05) 0%,
+      rgba(8,145,178,0.03) 50%,
+      rgba(217,119,6,0.02) 100%
+    ),
+    rgba(var(--glass-bg));
+}
+
+/* ── HUD data line — separador estilo HUD ── */
+.hud-line {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(139,92,246,0.4) 20%,
+    rgba(34,211,238,0.3) 50%,
+    rgba(251,191,36,0.2) 80%,
+    transparent
+  );
+}
+[data-theme="light"] .hud-line {
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(109,40,217,0.25) 20%,
+    rgba(8,145,178,0.2) 50%,
+    rgba(217,119,6,0.12) 80%,
+    transparent
+  );
+}
+
+/* ── Nacar shimmer (light mode surfaces) ── */
+[data-theme="light"] .nacar-shimmer {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,0.9) 0%,
+      rgba(240,237,255,0.95) 25%,
+      rgba(232,250,255,0.9) 50%,
+      rgba(255,248,235,0.95) 75%,
+      rgba(255,255,255,0.9) 100%
+    );
+  background-size: 200% 200%;
+  animation: nacarShimmer 8s ease-in-out infinite;
+}
+@keyframes nacarShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ── Scrollbar Iron Man ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(124,58,237,0.35);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.6); }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(109,40,217,0.25); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(109,40,217,0.45); }

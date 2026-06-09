@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { Fingerprint, Loader2 } from "lucide-react";
+import { IconFingerprint, IconLoader } from "@/components/brand/VFIcons";
 
 /**
  * Inicio de sesion con passkey (Face ID / Touch ID / Windows Hello).
@@ -45,9 +45,9 @@ export function PasskeyButton({ redirectUrl = "/app" }: { redirectUrl?: string }
         className="group flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-violet-400/40 bg-violet-500/10 px-5 text-sm font-medium text-violet-100 transition active:scale-[0.98] hover:border-violet-400/70 hover:bg-violet-500/20 disabled:opacity-60"
       >
         {loading ? (
-          <Loader2 size={16} className="animate-spin" />
+          <IconLoader size={16} className="animate-spin" />
         ) : (
-          <Fingerprint size={16} className="text-cyan-300 transition group-hover:scale-110" />
+          <IconFingerprint size={16} className="text-cyan-300 transition group-hover:scale-110" />
         )}
         {loading ? "Verificando…" : "Continuar con passkey"}
       </button>

@@ -11,13 +11,7 @@
  */
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  CheckCircle2,
-  ChevronDown,
-  ExternalLink,
-  Loader2,
-  Plug,
-} from "lucide-react";
+import { IconCheck, IconChevD, IconExtLink, IconLink, IconLoader } from "@/components/brand/VFIcons";
 
 type Status = "pending" | "connected" | "skipped";
 
@@ -64,7 +58,7 @@ export default function IntegrationPlan() {
   if (loading)
     return (
       <div className="flex items-center gap-2 px-5 py-6 text-sm text-on-surface-variant">
-        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+        <IconLoader className="h-4 w-4 animate-spin" aria-hidden />
         Preparando tus conexiones…
       </div>
     );
@@ -83,7 +77,7 @@ export default function IntegrationPlan() {
     <section className="px-4 py-5 sm:px-5">
       <header className="mb-4">
         <div className="flex items-center gap-2">
-          <Plug className="h-4 w-4 text-violet-300" aria-hidden />
+          <IconLink className="h-4 w-4 text-violet-300" aria-hidden />
           <h2 className="font-display text-base font-semibold text-on-surface">
             Conexiones de tu proyecto
           </h2>
@@ -157,7 +151,7 @@ function Row({
         </span>
         {connected ? (
           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-300">
-            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+            <IconCheck className="h-3.5 w-3.5" aria-hidden />
             Conectado
           </span>
         ) : (
@@ -165,7 +159,7 @@ function Row({
             Pendiente
           </span>
         )}
-        <ChevronDown
+        <IconChevD
           className={`h-4 w-4 shrink-0 text-on-surface-variant transition-transform ${
             expanded ? "rotate-180" : ""
           }`}
@@ -212,7 +206,7 @@ function StepCard({
           className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-full border border-app bg-surface px-4 text-sm text-on-surface transition hover:bg-tint-2"
         >
           Crear cuenta
-          <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+          <IconExtLink className="h-3.5 w-3.5" aria-hidden />
         </a>
       )}
 
@@ -222,7 +216,7 @@ function StepCard({
             href={item.oauthStart}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-violet-500/50 bg-violet-500/10 px-4 text-sm text-on-surface transition hover:bg-violet-500/20"
           >
-            <Plug className="h-4 w-4" aria-hidden />
+            <IconLink className="h-4 w-4" aria-hidden />
             Conectar
           </a>
           {item.validateHint && (
@@ -311,14 +305,14 @@ function PasteConnect({
           disabled={busy || !key.trim()}
           className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-violet-500/50 bg-violet-500/10 px-4 text-sm text-on-surface transition hover:bg-violet-500/20 disabled:opacity-50"
         >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+          {busy ? <IconLoader className="h-4 w-4 animate-spin" aria-hidden /> : null}
           Validar
         </button>
       </div>
       {err && <p className="mt-2 text-xs text-rose-300">{err}</p>}
       {ok && (
         <p className="mt-2 inline-flex items-center gap-1 text-xs text-emerald-300">
-          <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+          <IconCheck className="h-3.5 w-3.5" aria-hidden />
           Conectado correctamente.
         </p>
       )}

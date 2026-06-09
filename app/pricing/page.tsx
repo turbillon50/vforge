@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Sparkles, Zap, Crown, ArrowRight } from "lucide-react";
+import { IconCheck, IconSparkles, IconZap, IconCrown, IconArrowR } from "@/components/brand/VFIcons";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { motion } from "framer-motion";
@@ -16,7 +16,7 @@ const PLANS = [
     price: { monthly: "$0", annual: "$0" },
     cadence: "/mes · siempre gratis",
     blurb: "Conoce a V. Explora el workspace. Construye tu primer proyecto.",
-    icon: Sparkles,
+    icon: IconSparkles,
     iconColor: "text-violet-300",
     features: [
       "1 workspace activo",
@@ -36,7 +36,7 @@ const PLANS = [
     price: { monthly: "$30", annual: "$24" },
     cadence: "/mes",
     blurb: "Para founders que envían productos reales cada semana. El plan de los que construyen en serio.",
-    icon: Zap,
+    icon: IconZap,
     iconColor: "text-cyan-300",
     features: [
       "5 workspaces activos",
@@ -61,7 +61,7 @@ const PLANS = [
     price: { monthly: "$60", annual: "$48" },
     cadence: "/mes",
     blurb: "Para operadores con portafolio completo. Todo lo de Studio más potencia de agencia.",
-    icon: Crown,
+    icon: IconCrown,
     iconColor: "text-yellow-300",
     features: [
       "Workspaces ilimitados",
@@ -192,8 +192,7 @@ export default function PricingPage() {
                 <span className="ml-1 text-sm text-white/30">{plan.cadence}</span>
               </div>
 
-              <Link
-                href={plan.ctaHref}
+              <Link href={plan.ctaHref}
                 className={`mt-6 flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold transition-all ${
                   plan.highlight
                     ? "bg-gradient-to-r from-violet-600 to-violet-500 text-white shadow-[0_0_30px_rgba(124,58,237,0.4)] hover:shadow-[0_0_50px_rgba(124,58,237,0.6)] hover:scale-[1.02]"
@@ -201,13 +200,13 @@ export default function PricingPage() {
                 }`}
               >
                 {plan.cta}
-                <ArrowRight size={13} />
+                <IconArrowR size={13} />
               </Link>
 
               <ul className="mt-6 space-y-2.5">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-2.5 text-sm text-white/60">
-                    <Check size={13} className="mt-0.5 shrink-0 text-cyan-400" />
+                    <IconCheck size={13} className="mt-0.5 shrink-0 text-cyan-400" />
                     {f}
                   </li>
                 ))}

@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { MessagesSquare, LayoutDashboard, GitBranch, Workflow, Cpu, Boxes } from "lucide-react";
+import { IconChats, IconLayout, IconBranch, IconWorkflow, IconCpu, IconBoxes } from "@/components/brand/VFIcons";
 
 const ITEMS = [
-  { label: "Hablar con V", Icon: MessagesSquare, href: "/app/chat", primary: true },
-  { label: "Centro de Mando", Icon: LayoutDashboard, href: "/app/cockpit" },
-  { label: "RepoVision", Icon: GitBranch, href: "/app/repovision" },
-  { label: "Blueprint", Icon: Workflow, href: "/app/blueprint" },
-  { label: "Conexiones", Icon: Cpu, href: "/app/integrations" },
-  { label: "Proyectos", Icon: Boxes, href: "/app/projects" },
+  { label: "Hablar con V", Icon: IconChats, href: "/app/chat", primary: true },
+  { label: "Centro de Mando", Icon: IconLayout, href: "/app/cockpit" },
+  { label: "RepoVision", Icon: IconBranch, href: "/app/repovision" },
+  { label: "Blueprint", Icon: IconWorkflow, href: "/app/blueprint" },
+  { label: "Conexiones", Icon: IconCpu, href: "/app/integrations" },
+  { label: "Proyectos", Icon: IconBoxes, href: "/app/projects" },
 ];
 
 const ORB = 56;

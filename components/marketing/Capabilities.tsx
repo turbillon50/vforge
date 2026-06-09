@@ -1,19 +1,9 @@
 "use client";
 
-import {
-  Code2,
-  Database,
-  Globe2,
-  KeyRound,
-  Layers,
-  PlugZap,
-  Rocket,
-  Terminal,
-  Workflow,
-} from "lucide-react";
+import { IconCode, IconDatabase, IconGlobe, IconKey, IconLayers, IconRocket, IconWorkflow, IconZap } from "@/components/brand/VFIcons";
 import { useT } from "@/i18n/AppProviders";
 
-const icons = [Code2, Terminal, Rocket, PlugZap, KeyRound, Globe2, Database, Workflow, Layers];
+const icons = [IconCode, IconCode, IconRocket, IconZap, IconKey, IconGlobe, IconDatabase, IconWorkflow, IconLayers];
 
 export function Capabilities() {
   const t = useT();

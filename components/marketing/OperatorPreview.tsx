@@ -1,19 +1,8 @@
 "use client";
+import type React from "react";
 
 import { motion } from "framer-motion";
-import type { LucideIcon } from "lucide-react";
-import {
-  Activity,
-  CheckCircle2,
-  CircleDot,
-  Cpu,
-  GitBranch,
-  Globe2,
-  Layers,
-  ShieldCheck,
-  Sparkles,
-  Workflow,
-} from "lucide-react";
+import { IconActivity, IconBranch, IconCheck, IconCpu, IconGlobe, IconLayers, IconShield, IconSparkles, IconWorkflow } from "@/components/brand/VFIcons";
 import { useT } from "@/i18n/AppProviders";
 
 export function OperatorPreview() {
@@ -42,13 +31,13 @@ export function OperatorPreview() {
           <div className="col-span-3 hidden border-r border-app bg-tint-2 p-4 md:block">
             <p className="label-caps mb-3 text-muted">{t.workspace.workspace_label}</p>
             {[
-              { icon: Sparkles, label: t.workspace.nav.chat, active: true },
-              { icon: GitBranch, label: t.workspace.nav.repovision },
-              { icon: Activity, label: t.workspace.nav.deployments },
-              { icon: Layers, label: t.workspace.nav.marketplace },
-              { icon: ShieldCheck, label: t.workspace.nav.secrets },
-              { icon: Globe2, label: "Domains" },
-              { icon: Workflow, label: t.workspace.nav.projects },
+              { icon: IconSparkles, label: t.workspace.nav.chat, active: true },
+              { icon: IconBranch, label: t.workspace.nav.repovision },
+              { icon: IconActivity, label: t.workspace.nav.deployments },
+              { icon: IconLayers, label: t.workspace.nav.marketplace },
+              { icon: IconShield, label: t.workspace.nav.secrets },
+              { icon: IconGlobe, label: "Domains" },
+              { icon: IconWorkflow, label: t.workspace.nav.projects },
             ].map((i) => (
               <div
                 key={i.label}
@@ -74,13 +63,13 @@ export function OperatorPreview() {
                 {t.chat.b_response_actions.map((label, idx) => (
                   <li key={label} className="flex items-center gap-2 text-on-surface">
                     {idx === 0 ? (
-                      <CheckCircle2 size={14} className="text-success-emerald" />
+                      <IconCheck size={14} className="text-success-emerald" />
                     ) : idx === 1 ? (
-                      <CheckCircle2 size={14} className="text-success-emerald" />
+                      <IconCheck size={14} className="text-success-emerald" />
                     ) : idx === 2 ? (
-                      <CircleDot size={14} className="animate-pulse text-cyber-cyan" />
+                      <IconActivity size={14} className="animate-pulse text-cyber-cyan" />
                     ) : (
-                      <CircleDot size={14} className="text-muted" />
+                      <IconActivity size={14} className="text-muted" />
                     )}
                     <span className={idx >= 3 ? "text-on-surface-variant" : ""}>{label}</span>
                   </li>
@@ -105,9 +94,9 @@ export function OperatorPreview() {
 
             <div className="mt-5 rounded-md border border-app-strong bg-tint-2 p-3">
               <p className="label-caps mb-2 text-muted">{t.chat.ops.recent}</p>
-              <ActivityItem icon={GitBranch} label={t.chat.ops.events[0]} tone="violet" />
-              <ActivityItem icon={Cpu} label={t.chat.ops.events[1]} tone="cyan" />
-              <ActivityItem icon={Globe2} label={t.chat.ops.events[2]} tone="emerald" />
+              <ActivityItem icon={IconBranch} label={t.chat.ops.events[0]} tone="violet" />
+              <ActivityItem icon={IconCpu} label={t.chat.ops.events[1]} tone="cyan" />
+              <ActivityItem icon={IconGlobe} label={t.chat.ops.events[2]} tone="emerald" />
             </div>
           </div>
         </div>
@@ -183,7 +172,7 @@ function ActivityItem({
   label,
   tone,
 }: {
-  icon: LucideIcon;
+  icon: (props: {size?: number; className?: string; [key: string]: unknown}) => React.ReactElement | null;
   label: string;
   tone: "violet" | "cyan" | "emerald";
 }) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Mic, Square, X, Check, Play, Pause } from "lucide-react";
+import { IconMic, IconStop, IconX, IconCheck, IconPlay, IconPause } from "@/components/brand/VFIcons";
 import { cn } from "@/lib/utils";
 
 export interface VoiceRecorderResult {
@@ -256,7 +256,7 @@ export function VoiceRecorder({
             aria-label="Cerrar"
             className="w-9 h-9 flex items-center justify-center rounded-md text-vf-fg-1 hover:bg-vf-bg-2"
           >
-            <X className="w-5 h-5" />
+            <IconX className="w-5 h-5" />
           </button>
         </div>
 
@@ -314,7 +314,7 @@ export function VoiceRecorder({
               className="w-16 h-16 rounded-full bg-vf-green text-black flex items-center justify-center voice-button"
               aria-label="Iniciar grabación"
             >
-              <Mic className="w-7 h-7" />
+              <IconMic className="w-7 h-7" />
             </button>
           )}
           {phase === "recording" && (
@@ -323,7 +323,7 @@ export function VoiceRecorder({
               className="w-16 h-16 rounded-full bg-vf-error text-white flex items-center justify-center"
               aria-label="Detener grabación"
             >
-              <Square className="w-6 h-6 fill-current" />
+              <IconStop className="w-6 h-6 fill-current" />
             </button>
           )}
           {phase === "review" && (
@@ -339,13 +339,13 @@ export function VoiceRecorder({
                 className="w-11 h-11 rounded-full border border-vf-border bg-vf-bg-2 text-vf-fg-1 flex items-center justify-center"
                 aria-label={isPlaying ? "Pausar" : "Reproducir"}
               >
-                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                {isPlaying ? <IconPause className="w-5 h-5" /> : <IconPlay className="w-5 h-5" />}
               </button>
               <button
                 onClick={handleConfirm}
                 className="flex-1 h-11 rounded-md bg-vf-green text-black text-sm font-semibold inline-flex items-center justify-center gap-2"
               >
-                <Check className="w-4 h-4" />
+                <IconCheck className="w-4 h-4" />
                 Usar
               </button>
             </>

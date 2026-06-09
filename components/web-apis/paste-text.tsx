@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Clipboard, X, Check } from "lucide-react";
+import { IconClipboard, IconX, IconCheck } from "@/components/brand/VFIcons";
 import { cn } from "@/lib/utils";
 
 export interface PasteTextResult {
@@ -101,7 +101,7 @@ export function PasteText({
             aria-label="Cerrar"
             className="w-9 h-9 flex items-center justify-center rounded-md text-vf-fg-1 hover:bg-vf-bg-2"
           >
-            <X className="w-5 h-5" />
+            <IconX className="w-5 h-5" />
           </button>
         </div>
 
@@ -134,14 +134,14 @@ export function PasteText({
               onClick={handleClipboard}
               className="flex-1 h-11 rounded-md border border-vf-border bg-vf-bg-2 text-vf-fg text-sm font-medium inline-flex items-center justify-center gap-2"
             >
-              <Clipboard className="w-4 h-4" />
+              <IconClipboard className="w-4 h-4" />
               Del portapapeles
             </button>
             <button
               onClick={handleAccept}
               className="flex-1 h-11 rounded-md bg-vf-green text-black text-sm font-semibold inline-flex items-center justify-center gap-2"
             >
-              <Check className="w-4 h-4" />
+              <IconCheck className="w-4 h-4" />
               Usar
             </button>
           </div>

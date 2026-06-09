@@ -1,9 +1,9 @@
 "use client";
 
-import { MessagesSquare, Sparkles, ShieldCheck, Rocket } from "lucide-react";
+import { IconChats, IconRocket, IconShield, IconSparkles } from "@/components/brand/VFIcons";
 import { useT } from "@/i18n/AppProviders";
 
-const icons = [MessagesSquare, Sparkles, ShieldCheck, Rocket];
+const icons = [IconChats, IconSparkles, IconShield, IconRocket];
 
 export function HowItWorks() {
   const t = useT();

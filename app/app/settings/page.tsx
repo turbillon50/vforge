@@ -2,24 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  User,
-  CreditCard,
-  Receipt,
-  Bell,
-  Palette,
-  ShieldCheck,
-  KeyRound,
-  Globe2,
-  Download,
-  ExternalLink,
-  ChevronRight,
-  LayoutDashboard,
-  Map,
-  Layers,
-  Boxes,
-  Bell as BellIcon,
-} from "lucide-react";
+import { IconBell, IconBoxes, IconChevR, IconCreditCard, IconDownload, IconExtLink, IconFile, IconGlobe, IconKey, IconLayers, IconLayout, IconMap, IconShield, IconSparkles, IconUsers } from "@/components/brand/VFIcons";
 import { PageHeader } from "@/components/workspace/PageHeader";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
@@ -36,15 +19,15 @@ type SectionId =
   | "security"
   | "api";
 
-const SECTIONS: { id: SectionId; icon: typeof User }[] = [
-  { id: "profile", icon: User },
-  { id: "plan", icon: ShieldCheck },
-  { id: "billing", icon: CreditCard },
-  { id: "invoices", icon: Receipt },
-  { id: "notifications", icon: Bell },
-  { id: "appearance", icon: Palette },
-  { id: "security", icon: KeyRound },
-  { id: "api", icon: Globe2 },
+const SECTIONS: { id: SectionId; icon: typeof IconUsers }[] = [
+  { id: "profile", icon: IconUsers },
+  { id: "plan", icon: IconShield },
+  { id: "billing", icon: IconCreditCard },
+  { id: "invoices", icon: IconFile },
+  { id: "notifications", icon: IconBell },
+  { id: "appearance", icon: IconSparkles },
+  { id: "security", icon: IconKey },
+  { id: "api", icon: IconGlobe },
 ];
 
 export default function SettingsPage() {
@@ -278,8 +261,7 @@ function PlanPanel() {
         )}
         <div className="mt-4 flex flex-wrap gap-2">
           {plan === "free" ? (
-            <Link
-              href="/pricing"
+            <Link href="/pricing"
               className="btn-primary !px-4 !py-2"
               style={{ minHeight: 44, touchAction: "manipulation" }}
             >
@@ -291,11 +273,10 @@ function PlanPanel() {
               className="btn-primary !px-4 !py-2"
               style={{ minHeight: 44, touchAction: "manipulation" }}
             >
-              <CreditCard size={14} /> Gestionar suscripción
+              <IconCreditCard size={14} /> Gestionar suscripción
             </a>
           )}
-          <Link
-            href="/pricing"
+          <Link href="/pricing"
             className="btn-ghost !px-4 !py-2"
             style={{ minHeight: 44, touchAction: "manipulation" }}
           >
@@ -329,7 +310,7 @@ function BillingPanel() {
             Cuando habilitemos Stripe en producción, podrás agregar tu método de pago aquí.
           </p>
           <button className="btn-primary mt-3 !px-3 !py-1.5 text-[12px]">
-            <CreditCard size={13} /> Agregar tarjeta
+            <IconCreditCard size={13} /> Agregar tarjeta
           </button>
         </div>
       </Card>
@@ -353,7 +334,7 @@ function InvoicesPanel() {
     <Card title="Historial de facturas">
       {invoices.length === 0 ? (
         <div className="rounded-md border border-app bg-void p-6 text-center">
-          <Receipt className="mx-auto mb-2 text-violet-300" size={20} />
+          <IconFile className="mx-auto mb-2 text-violet-300" size={20} />
           <p className="text-sm text-on-surface">Aún no hay facturas emitidas</p>
           <p className="mt-1 text-[12px] text-on-surface-variant">
             Cuando empieces a operar en plan pago, tus facturas aparecen aquí en
@@ -386,7 +367,7 @@ function InvoicesPanel() {
                 {inv.status}
               </span>
               <button className="rounded-md border border-app p-2 text-on-surface-variant hover:bg-tint-2 hover:text-on-surface">
-                <Download size={13} />
+                <IconDownload size={13} />
               </button>
             </li>
           ))}
@@ -472,7 +453,7 @@ function ApiPanel() {
           </li>
         </ul>
         <button className="btn-ghost mt-3 !px-3 !py-1.5 text-[12px]">
-          <Globe2 size={13} /> Conectar dominio
+          <IconGlobe size={13} /> Conectar dominio
         </button>
       </Card>
 
@@ -490,7 +471,7 @@ function ApiPanel() {
           rel="noreferrer"
           className="inline-flex items-center gap-2 text-sm text-cyber-cyan hover:underline"
         >
-          <ExternalLink size={13} /> Contrato del backend (docs)
+          <IconExtLink size={13} /> Contrato del backend (docs)
         </a>
       </Card>
     </>
@@ -509,12 +490,12 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function MoreToolsCard() {
   const tools = [
-    { href: "/app/cockpit", label: "Centro de Mando", icon: LayoutDashboard },
-    { href: "/app/blueprint", label: "Blueprint", icon: Map },
-    { href: "/app/marketplace", label: "Marketplace", icon: Layers },
-    { href: "/app/integrations", label: "Integraciones", icon: Boxes },
-    { href: "/app/secrets", label: "Bóveda", icon: ShieldCheck },
-    { href: "/app/activity", label: "Actividad", icon: BellIcon },
+    { href: "/app/cockpit", label: "Centro de Mando", icon: IconLayout },
+    { href: "/app/blueprint", label: "Blueprint", icon: IconMap },
+    { href: "/app/marketplace", label: "Marketplace", icon: IconLayers },
+    { href: "/app/integrations", label: "Integraciones", icon: IconBoxes },
+    { href: "/app/secrets", label: "Bóveda", icon: IconShield },
+    { href: "/app/activity", label: "Actividad", icon: IconBell },
   ];
   return (
     <Card title="Más herramientas">
@@ -528,7 +509,7 @@ function MoreToolsCard() {
           >
             <tool.icon size={15} className="text-violet-300" />
             <span className="flex-1">{tool.label}</span>
-            <ChevronRight size={13} className="text-muted" />
+            <IconChevR size={13} className="text-muted" />
           </Link>
         ))}
       </div>

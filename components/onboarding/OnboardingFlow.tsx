@@ -1,24 +1,10 @@
 "use client";
+import type React from "react";
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
-import {
-  ArrowRight,
-  ArrowLeft,
-  CheckCircle2,
-  Circle,
-  Github,
-  Globe2,
-  Database,
-  CreditCard,
-  Phone,
-  MapPin,
-  Sparkles,
-  Info,
-  Rocket,
-} from "lucide-react";
+import { IconArrowL, IconArrowR, IconBell, IconCheck, IconCircle, IconCreditCard, IconDatabase, IconGithub, IconGlobe, IconInfo, IconMap, IconRocket, IconSparkles } from "@/components/brand/VFIcons";
 import { VWordmark } from "@/components/brand/VMark";
 import { useT, interpolate } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
@@ -26,14 +12,14 @@ import { LocaleToggle } from "@/components/controls/LocaleToggle";
 
 type IntegrationKey = "github" | "vercel" | "domains" | "neon" | "stripe" | "twilio" | "maps";
 
-const integrationOrder: { id: IntegrationKey; icon: LucideIcon; required?: boolean }[] = [
-  { id: "github", icon: Github, required: true },
-  { id: "vercel", icon: Rocket, required: true },
-  { id: "domains", icon: Globe2 },
-  { id: "neon", icon: Database },
-  { id: "stripe", icon: CreditCard },
-  { id: "twilio", icon: Phone },
-  { id: "maps", icon: MapPin },
+const integrationOrder: { id: IntegrationKey; icon: (props: {size?: number; className?: string; [key: string]: unknown}) => React.ReactElement | null; required?: boolean }[] = [
+  { id: "github", icon: IconGithub, required: true },
+  { id: "vercel", icon: IconRocket, required: true },
+  { id: "domains", icon: IconGlobe },
+  { id: "neon", icon: IconDatabase },
+  { id: "stripe", icon: IconCreditCard },
+  { id: "twilio", icon: IconBell },
+  { id: "maps", icon: IconMap },
 ];
 
 type Step = "welcome" | "profile" | "connect" | "first-project" | "summary";
@@ -132,15 +118,15 @@ export function OnboardingFlow() {
 
       <div className="mt-6 flex items-center justify-between">
         <button onClick={goBack} disabled={stepIndex === 0} className="btn-ghost disabled:opacity-30">
-          <ArrowLeft size={14} /> {t.common.cta_back}
+          <IconArrowL size={14} /> {t.common.cta_back}
         </button>
         {step !== "summary" ? (
           <button onClick={goNext} className="btn-primary">
-            {t.common.cta_continue} <ArrowRight size={14} />
+            {t.common.cta_continue} <IconArrowR size={14} />
           </button>
         ) : (
           <Link href="/app" className="btn-primary">
-            {t.onboarding.enter_workspace} <ArrowRight size={14} />
+            {t.onboarding.enter_workspace} <IconArrowR size={14} />
           </Link>
         )}
       </div>
@@ -153,14 +139,14 @@ function Welcome({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="text-center">
       <div className="mx-auto mb-5 inline-flex h-14 w-14 items-center justify-center rounded-full bg-violet-500/10 ring-1 ring-violet-500/30 animate-breathe">
-        <Sparkles className="text-cyber-cyan" size={22} />
+        <IconSparkles className="text-cyber-cyan" size={22} />
       </div>
       <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl text-balance">
         {t.onboarding.welcome_title}
       </h1>
       <p className="mx-auto mt-3 max-w-md text-on-surface-variant">{t.onboarding.welcome_body}</p>
       <button onClick={onContinue} className="btn-primary mt-8">
-        {t.onboarding.welcome_cta} <ArrowRight size={14} />
+        {t.onboarding.welcome_cta} <IconArrowR size={14} />
       </button>
     </div>
   );
@@ -260,12 +246,12 @@ function Connect({
                   className="rounded-md p-2 text-muted hover:bg-tint-2 hover:text-on-surface"
                   aria-label={`Glossary: ${meta.name}`}
                 >
-                  <Info size={16} />
+                  <IconInfo size={16} />
                 </button>
                 <button onClick={() => onToggle(id)} className={isOn ? "btn-ghost" : "btn-primary"}>
                   {isOn ? (
                     <>
-                      <CheckCircle2 size={14} className="text-success-emerald" /> {t.onboarding.label_connected}
+                      <IconCheck size={14} className="text-success-emerald" /> {t.onboarding.label_connected}
                     </>
                   ) : (
                     t.common.cta_connect
@@ -362,7 +348,7 @@ function Summary({
   return (
     <div className="text-center">
       <div className="mx-auto mb-5 inline-flex h-14 w-14 items-center justify-center rounded-full bg-success-emerald/10 ring-1 ring-success-emerald/30">
-        <CheckCircle2 size={22} className="text-success-emerald" />
+        <IconCheck size={22} className="text-success-emerald" />
       </div>
       <h2 className="font-display text-3xl font-semibold tracking-tight">{title}</h2>
       <p className="mx-auto mt-3 max-w-md text-on-surface-variant">{body}</p>
@@ -379,11 +365,11 @@ function Summary({
               </span>
               {isOn ? (
                 <span className="flex items-center gap-1.5 text-success-emerald">
-                  <CheckCircle2 size={12} /> {t.onboarding.summary_ready}
+                  <IconCheck size={12} /> {t.onboarding.summary_ready}
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5 text-muted">
-                  <Circle size={12} /> {t.onboarding.summary_later}
+                  <IconCircle size={12} /> {t.onboarding.summary_later}
                 </span>
               )}
             </div>

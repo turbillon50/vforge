@@ -1,19 +1,9 @@
-
 "use client";
-
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { PageHeader } from "@/components/workspace/PageHeader";
-import {
-  Activity,
-  ExternalLink,
-  GitBranch,
-  Globe,
-  Layers,
-  Rocket,
-  Sparkles,
-} from "lucide-react";
+import { IconActivity, IconExtLink, IconBranch, IconGlobe, IconLayers, IconRocket, IconSparkles } from "@/components/brand/VFIcons";
 import { useT, interpolate } from "@/i18n/AppProviders";
 
 interface RealProject {
@@ -90,7 +80,7 @@ export default function ProjectsPage() {
           <>
             <button className="btn-ghost">{t.projects.cta_import}</button>
             <Link href="/app/chat" className="btn-primary">
-              <Sparkles size={13} /> {t.projects.cta_new}
+              <IconSparkles size={13} /> {t.projects.cta_new}
             </Link>
           </>
         }
@@ -146,12 +136,12 @@ export default function ProjectsPage() {
           className="mx-auto max-w-md p-10 text-center text-on-surface-variant"
         >
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/20 bg-violet-500/5">
-            <Layers size={24} className="text-violet-400" />
+            <IconLayers size={24} className="text-violet-400" />
           </div>
           <p className="font-display text-lg font-semibold">Aún no tienes proyectos</p>
           <p className="mt-2 text-sm opacity-60">Habla con V para dar de alta tu primer proyecto.</p>
           <Link href="/app/chat" className="btn-primary mt-5 inline-flex">
-            <Sparkles size={13} /> Hablar con V
+            <IconSparkles size={13} /> Hablar con V
           </Link>
         </motion.div>
       )}
@@ -188,7 +178,7 @@ export default function ProjectsPage() {
                       {p.name}
                     </h3>
                     <div className="mt-1 flex items-center gap-1.5">
-                      <Globe size={10} className="shrink-0 text-muted" />
+                      <IconGlobe size={10} className="shrink-0 text-muted" />
                       <p className="font-mono text-[11px] text-muted truncate">{domain}</p>
                     </div>
                   </div>
@@ -261,7 +251,7 @@ export default function ProjectsPage() {
                   <div className="rounded-xl border border-white/6 bg-white/3 px-3 py-2.5">
                     <p className="font-mono text-[9px] uppercase tracking-widest text-muted">Deploy</p>
                     <p className="mt-1 flex items-center gap-1.5 text-[12px] font-medium text-on-surface">
-                      <Activity size={11} className={status === "live" ? "text-emerald-400" : "text-muted"} />
+                      <IconActivity size={11} className={status === "live" ? "text-emerald-400" : "text-muted"} />
                       {p.vercel_url ? "Vercel" : "Sin deploy"}
                     </p>
                   </div>
@@ -270,7 +260,7 @@ export default function ProjectsPage() {
                 {/* Repo */}
                 {p.github_repo && (
                   <div className="mt-3 flex items-center gap-1.5 rounded-xl border border-white/6 bg-white/3 px-3 py-2">
-                    <GitBranch size={11} className="shrink-0 text-muted" />
+                    <IconBranch size={11} className="shrink-0 text-muted" />
                     <span className="truncate font-mono text-[11px] text-muted">
                       {p.github_repo}
                     </span>
@@ -280,8 +270,7 @@ export default function ProjectsPage() {
 
               {/* Footer */}
               <div className="flex items-center justify-between border-t border-white/6 px-5 py-3">
-                <Link
-                  href="/app/chat"
+                <Link href="/app/chat"
                   className="font-mono text-[10px] uppercase tracking-widest text-violet-400 transition-colors hover:text-violet-300"
                 >
                   {interpolate(t.projects.ask_b, { name: p.name.split(" ")[0] })}
@@ -293,12 +282,12 @@ export default function ProjectsPage() {
                     rel="noreferrer"
                     className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-mono text-[10px] text-on-surface transition-all hover:border-white/20 hover:bg-white/8"
                   >
-                    <ExternalLink size={10} />
+                    <IconExtLink size={10} />
                     Abrir
                   </a>
                 ) : (
                   <span className="flex items-center gap-1.5 font-mono text-[10px] text-muted">
-                    <Rocket size={10} />
+                    <IconRocket size={10} />
                     Sin URL
                   </span>
                 )}

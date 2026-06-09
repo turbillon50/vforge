@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Paperclip, Camera, Mic, X, Send } from "lucide-react";
+import { IconPaperclip, IconCamera, IconMic, IconX, IconSend } from "@/components/brand/VFIcons";
 import { cn } from "@/lib/utils";
 import {
   CameraCapture,
@@ -214,7 +214,7 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
                 className="ml-auto text-vf-fg-2 hover:text-vf-fg"
                 aria-label="Cerrar"
               >
-                <X className="w-3.5 h-3.5" />
+                <IconX className="w-3.5 h-3.5" />
               </button>
             </>
           )}
@@ -256,7 +256,7 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
                 className="w-6 h-6 flex items-center justify-center rounded text-vf-fg-2 hover:text-vf-fg hover:bg-vf-bg"
                 aria-label={`Quitar ${att.label}`}
               >
-                <X className="w-3.5 h-3.5" />
+                <IconX className="w-3.5 h-3.5" />
               </button>
             </div>
           ))}
@@ -272,7 +272,7 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
             className={iconButtonClass}
             aria-label="Adjuntar archivo"
           >
-            <Paperclip className="w-5 h-5" />
+            <IconPaperclip className="w-5 h-5" />
           </button>
           <button
             type="button"
@@ -280,7 +280,7 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
             className={iconButtonClass}
             aria-label="Tomar foto"
           >
-            <Camera className="w-5 h-5" />
+            <IconCamera className="w-5 h-5" />
           </button>
           <input
             ref={fileInputRef}
@@ -335,7 +335,7 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
             aria-label="Grabar voz"
             title="Grabar audio (Whisper transcribe a texto)"
           >
-            <Mic className="w-5 h-5" />
+            <IconMic className="w-5 h-5" />
           </button>
           <button
             type="button"
@@ -351,7 +351,7 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
             aria-label="Enviar mensaje"
             title="Enviar (⌘/Ctrl + Enter)"
           >
-            <Send className="w-5 h-5" />
+            <IconSend className="w-5 h-5" />
           </button>
         </div>
       </div>

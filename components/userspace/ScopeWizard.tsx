@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
+import { IconArrowL, IconArrowR, IconCheck, IconLoader } from "@/components/brand/VFIcons";
 import type { WorkspaceScope } from "@/lib/workspace/db";
 
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -280,7 +280,7 @@ export default function ScopeWizard({ initialScope }: Props) {
             disabled={step === 0 || saving}
             className="flex min-h-[44px] items-center gap-2 rounded-full border border-app bg-tint-1 px-5 py-2.5 text-sm text-on-surface-variant transition hover:bg-tint-2 disabled:opacity-0"
           >
-            <ArrowLeft className="h-4 w-4" aria-hidden />
+            <IconArrowL className="h-4 w-4" aria-hidden />
             Atrás
           </button>
 
@@ -292,7 +292,7 @@ export default function ScopeWizard({ initialScope }: Props) {
               className="flex min-h-[44px] items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-cyan-500 px-6 py-2.5 text-sm font-medium text-white shadow-elev transition hover:brightness-110 disabled:opacity-40"
             >
               Continuar
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              <IconArrowR className="h-4 w-4" aria-hidden />
             </button>
           ) : (
             <button
@@ -302,9 +302,9 @@ export default function ScopeWizard({ initialScope }: Props) {
               className="flex min-h-[44px] items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-cyan-500 px-7 py-2.5 text-sm font-medium text-white shadow-elev transition hover:brightness-110 disabled:opacity-40"
             >
               {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                <IconLoader className="h-4 w-4 animate-spin" aria-hidden />
               ) : (
-                <Check className="h-4 w-4" aria-hidden />
+                <IconCheck className="h-4 w-4" aria-hidden />
               )}
               {saving ? "Guardando…" : "Crear mi workspace"}
             </button>
@@ -373,7 +373,7 @@ function OptionGrid({
               </span>
               {active && (
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-white">
-                  <Check className="h-3.5 w-3.5" aria-hidden />
+                  <IconCheck className="h-3.5 w-3.5" aria-hidden />
                 </span>
               )}
             </span>

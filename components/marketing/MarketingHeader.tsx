@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { VWordmark } from "@/components/brand/VMark";
 import { useState } from "react";
-import { IconMenu, IconX, IconShare } from "@/components/brand/VFIcons";
+import { IconMenu, IconShare, IconX } from "@/components/brand/VFIcons";
 import { useT } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";

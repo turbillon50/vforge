@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type DragEvent } from "react";
-import { Upload, FileText, X, Check } from "lucide-react";
+import { IconUpload, IconFile, IconX, IconCheck } from "@/components/brand/VFIcons";
 import { cn } from "@/lib/utils";
 
 export interface FileDropResult {
@@ -132,7 +132,7 @@ export function FileDropZone({
               aria-label="Cerrar"
               className="w-9 h-9 flex items-center justify-center rounded-md text-vf-fg-1 hover:bg-vf-bg-2"
             >
-              <X className="w-5 h-5" />
+              <IconX className="w-5 h-5" />
             </button>
           )}
         </div>
@@ -166,7 +166,7 @@ export function FileDropZone({
             )}
             aria-label={`${title}. ${hint}`}
           >
-            <Upload className="w-8 h-8 text-vf-green-quiet mb-3" />
+            <IconUpload className="w-8 h-8 text-vf-green-quiet mb-3" />
             <p className="text-sm font-medium text-vf-fg">{hint}</p>
             <p className="text-xs text-vf-fg-2 mt-1 font-mono">
               Drag · Drop · Paste · Pick
@@ -174,7 +174,7 @@ export function FileDropZone({
           </div>
         ) : (
           <div className="bg-vf-bg-2 border border-vf-border rounded-lg p-4 flex items-start gap-3">
-            <FileText className="w-5 h-5 text-vf-green flex-shrink-0 mt-0.5" />
+            <IconFile className="w-5 h-5 text-vf-green flex-shrink-0 mt-0.5" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-vf-fg truncate">
                 {accepted.file.name || "Archivo pegado"}
@@ -195,7 +195,7 @@ export function FileDropZone({
               className="w-8 h-8 flex items-center justify-center rounded-md text-vf-fg-1 hover:bg-vf-bg"
               aria-label="Quitar archivo"
             >
-              <X className="w-4 h-4" />
+              <IconX className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -223,7 +223,7 @@ export function FileDropZone({
             onClick={handleConfirm}
             className="w-full h-11 rounded-md bg-vf-green text-black text-sm font-semibold inline-flex items-center justify-center gap-2"
           >
-            <Check className="w-4 h-4" />
+            <IconCheck className="w-4 h-4" />
             Usar archivo
           </button>
         </div>

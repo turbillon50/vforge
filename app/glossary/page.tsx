@@ -1,32 +1,21 @@
 "use client";
+import type React from "react";
 
 import Link from "next/link";
-import {
-  Boxes,
-  Cloud,
-  CreditCard,
-  Database,
-  Globe2,
-  KeyRound,
-  Layers,
-  PlugZap,
-  Rocket,
-  Server,
-  ShieldCheck,
-  Workflow,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { IconBoxes, IconCreditCard, IconDatabase, IconGlobe, IconKey, IconLayers, IconRocket, IconShield, IconWorkflow, IconZap } from "@/components/brand/VFIcons";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { useT } from "@/i18n/AppProviders";
 
-const icons: LucideIcon[] = [Boxes, Rocket, Globe2, KeyRound, PlugZap, Database, Workflow, Layers, Cloud, Server, ShieldCheck, CreditCard];
+// @ts-ignore — VFIcons compatible con JSX.Element[]
+const icons: (props: {size?: number; className?: string; [key: string]: unknown}) => React.ReactElement | null[] = [IconBoxes, IconRocket, IconGlobe, IconKey, IconZap, IconDatabase, IconWorkflow, IconLayers, IconGlobe, IconDatabase, IconShield, IconCreditCard];
 const tones = ["violet", "cyan", "violet", "cyan", "violet", "cyan", "violet", "cyan", "violet", "cyan", "violet", "cyan"] as const;
 
 export default function GlossaryPage() {
   const t = useT();
   const terms = t.glossary.terms.map((term, i) => ({
-    icon: icons[i],
+// @ts-ignore
+    icon: (icons[i] as any),
     title: term.title,
     body: term.body,
     examples: term.examples,

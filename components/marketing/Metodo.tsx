@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { IconArrowR } from "@/components/brand/VFIcons";
 
 const steps = [
   { n: "01", t: "Conecta tu mundo", d: "Pegas tus herramientas — WhatsApp, pagos, tu base de datos, lo que uses. Se enlazan solas por MCP." },
@@ -31,7 +31,7 @@ export function Metodo() {
         </div>
         <div className="mt-12">
           <Link href="/sign-up" className="btn-primary !px-7 !py-3.5 text-[15px]">
-            Crear cuenta gratis <ArrowRight size={15} />
+            Crear cuenta gratis <IconArrowR size={15} />
           </Link>
         </div>
       </div>

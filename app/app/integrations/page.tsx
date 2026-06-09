@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/workspace/PageHeader";
-import { IconCheck, IconWarn, IconLink, IconKey, IconRepeat } from "@/components/brand/VFIcons";
+import { IconCheck, IconWarn, IconLink, IconKey, IconRefresh } from "@/components/brand/VFIcons";
 import {
   GitHubLogo, VercelLogo, NeonLogo, ClerkLogo, StripeLogo,
   ResendLogo, AnthropicLogo, OpenAILogo, TwilioLogo, MercadoPagoLogo,
@@ -71,7 +71,7 @@ export default function IntegrationsPage() {
   return (
     <>
       <PageHeader eyebrow={t.integrations?.eyebrow??"Integraciones"} title={t.integrations?.title??"Conexiones activas"} description={t.integrations?.body??"Conecta los servicios que V usa para operar tus proyectos."}
-        actions={<button className="btn-ghost" onClick={()=>window.location.reload()}><IconRepeat size={13}/> Refrescar</button>}/>
+        actions={<button className="btn-ghost" onClick={()=>window.location.reload()}><IconRefresh size={13}/> Refrescar</button>}/>
 
       {/* Stats bar */}
       <div className="mx-auto max-w-4xl px-5 pb-4 md:px-8">
