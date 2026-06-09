@@ -114,7 +114,14 @@
   --tint-3: 109 40 217 / 0.10;
 }
 
-html,
+html {
+  /* Solo bloquea scroll horizontal — NO establece scroll container en y.
+     Si html también tiene overflow-y:auto, crea un doble contenedor y
+     el wheel event se pierde en html sin que nada se mueva. */
+  overflow-x: clip;
+  max-width: 100vw;
+}
+
 body {
   overscroll-behavior-y: none;
   background-color: var(--color-void);
@@ -122,11 +129,9 @@ body {
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "ss01", "cv11";
   transition: background-color 0.3s ease, color 0.3s ease;
-  /* `clip` no crea nuevo contexto de scroll y es respetado por iOS
-     Safari mucho mejor que `hidden` (que ahí se rompe con pinch-zoom
-     y contenido absoluto). Doble cinturón: max-width 100vw para que
-     ningún hijo intrínsecamente ancho empuje el body. */
   overflow-x: clip;
+  /* body es EL scroll container — html no debe tener overflow-y para
+     que el wheel event llegue aquí y no se quede atrapado en html. */
   overflow-y: auto;
   max-width: 100vw;
   width: 100%;
