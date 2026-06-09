@@ -6,7 +6,7 @@ import { IconArrowR, IconSparkles, IconX, IconRocket, IconHelp, IconBag, IconTag
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SPHERE_IMG = "/sphere-violet.png";
-const SPHERE_VIDEO = "https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_201813_b9a2afed-93fb-46f1-a1b0-c767205f546d.mp4";
+const SPHERE_VIDEO = "https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_224036_5d36a8bc-fa57-49f9-ad05-1dee4fc96f6d.mp4";
 
 type RadialItem = {
   id: string;
