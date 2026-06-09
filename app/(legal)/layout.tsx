@@ -10,8 +10,8 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
         <article className="vf-legal text-on-surface-variant">{children}</article>
         <div className="mt-16 border-t border-app pt-8 text-[13px] text-muted">
           <Link href="/docs" className="mr-4 hover:text-on-surface">Docs</Link>
-          <Link href="/terms" className="mr-4 hover:text-on-surface">Términos</Link>
-          <Link href="/privacy" className="mr-4 hover:text-on-surface">Privacidad</Link>
+          <Link href="/terminos" className="mr-4 hover:text-on-surface">Terminos</Link>
+          <Link href="/privacidad" className="mr-4 hover:text-on-surface">Privacidad</Link>
           <Link href="/support" className="hover:text-on-surface">Soporte</Link>
         </div>
       </main>
