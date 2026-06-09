@@ -20,7 +20,7 @@ export default async function HomePage() {
     if (userId) redirect("/app");
   }
   return (
-    <>
+    <div data-theme="dark" className="min-h-screen" style={{background:"#03020a"}}>
       <MarketingHeader />
       <main>
         <Hero />
@@ -32,6 +32,6 @@ export default async function HomePage() {
         <CTA />
       </main>
       <MarketingFooter />
-    </>
+    </div>
   );
 }

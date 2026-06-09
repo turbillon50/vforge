@@ -8,6 +8,7 @@ export function MarketingFooter() {
   const t = useT();
   return (
     <footer
+      data-theme="dark"
       className="border-t border-app bg-ink"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >

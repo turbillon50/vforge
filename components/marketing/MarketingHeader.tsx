@@ -25,10 +25,10 @@ export function MarketingHeader() {
       navigator.clipboard?.writeText("https://vforge.site");
   };
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.05] bg-[#03020a]/85 backdrop-blur-2xl">
+    <header data-theme="dark" className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.05] bg-[#03020a]/85 backdrop-blur-2xl">
       <div className="mx-auto flex max-w-5xl items-center gap-4 px-5 py-3.5">
         <Link href="/" className="shrink-0"><VWordmark/></Link>
-        <nav className="ml-4 hidden items-center gap-0.5 md:flex">
+        <nav data-theme="dark" className="ml-4 hidden items-center gap-0.5 md:flex">
           {nav.map(item=>(
             <Link key={item.href} href={item.href}
               className="relative flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-mono text-[12px] text-white/65 transition hover:bg-white/[0.06] hover:text-white">

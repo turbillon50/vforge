@@ -66,7 +66,7 @@ export function Hero() {
 
   return (
     <section
-      className="relative isolate flex min-h-[100svh] lg:min-h-[88vh] flex-col items-center justify-center overflow-hidden px-5 pb-16 pt-20"
+      className="relative isolate flex min-h-[100svh] landscape:min-h-[100dvh] lg:min-h-[88vh] lg:landscape:min-h-[88vh] flex-col items-center justify-center overflow-hidden px-5 pb-10 pt-16 landscape:pb-6 landscape:pt-12 lg:pb-16 lg:pt-20"
       style={{ touchAction: "pan-y" }}
     >
       {/* ── FONDO: video de la esfera en loop ── */}
@@ -119,7 +119,7 @@ export function Hero() {
         <motion.div
           animate={{ scale: [1, 1.18, 1], opacity: [0.45, 0.75, 0.45] }}
           transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute h-[200px] w-[200px] lg:h-[220px] lg:w-[220px] rounded-full bg-violet-600/35 blur-[80px]"
+          className="absolute h-[clamp(100px,22vw,200px)] w-[clamp(100px,22vw,200px)] landscape:h-[100px] landscape:w-[100px] lg:h-[220px] lg:w-[220px] lg:landscape:h-[220px] lg:landscape:w-[220px] rounded-full bg-violet-600/35 blur-[80px]"
         />
         {!open && (
           <motion.div
@@ -133,7 +133,7 @@ export function Hero() {
           whileTap={{ scale: 0.94 }}
           animate={{ y: [0, -12, 0] }}
           transition={{ y: { duration: 6, repeat: Infinity, ease: "easeInOut" } }}
-          className="relative flex h-[clamp(160px,30vw,220px)] w-[clamp(160px,30vw,220px)] lg:h-[200px] lg:w-[200px] items-center justify-center outline-none"
+          className="relative flex h-[clamp(120px,22vw,220px)] w-[clamp(120px,22vw,220px)] landscape:h-[clamp(80px,18vh,160px)] landscape:w-[clamp(80px,18vh,160px)] lg:h-[200px] lg:w-[200px] lg:landscape:h-[200px] lg:landscape:w-[200px] items-center justify-center outline-none"
           style={{ touchAction: "pan-y" }}
           aria-label="Activar V"
         >
@@ -215,7 +215,7 @@ export function Hero() {
         <p className="mb-4 text-center text-[11px] font-semibold tracking-[0.25em] text-violet-400/60 uppercase">
           La fábrica de apps con IA
         </p>
-        <h1 className="text-center text-[clamp(2.8rem,10vw,4.8rem)] font-bold leading-[0.92] tracking-[-0.04em] text-white">
+        <h1 className="text-center text-[clamp(2rem,8vw,4.8rem)] landscape:text-[clamp(1.6rem,6vh,3rem)] font-bold leading-[0.92] tracking-[-0.04em] text-white lg:text-[clamp(2.8rem,10vw,4.8rem)] lg:landscape:text-[clamp(2.8rem,10vw,4.8rem)]">
           Construye.<br />
           <span className="bg-gradient-to-r from-violet-400 via-violet-300 to-cyan-400 bg-clip-text text-transparent">Despliega.</span><br />
           Domina.

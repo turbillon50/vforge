@@ -4,13 +4,22 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { IconChats, IconLayout, IconBranch, IconWorkflow, IconCpu, IconBoxes } from "@/components/brand/VFIcons";
 
-const ITEMS = [
+const ITEMS_DEFAULT = [
   { label: "Hablar con V", Icon: IconChats, href: "/app/chat", primary: true },
   { label: "Centro de Mando", Icon: IconLayout, href: "/app/cockpit" },
   { label: "RepoVision", Icon: IconBranch, href: "/app/repovision" },
   { label: "Blueprint", Icon: IconWorkflow, href: "/app/blueprint" },
   { label: "Conexiones", Icon: IconCpu, href: "/app/integrations" },
   { label: "Proyectos", Icon: IconBoxes, href: "/app/projects" },
+];
+
+const ITEMS_CHAT = [
+  { label: "Nuevo Chat", Icon: IconChats, href: "/app/chat/new", primary: true },
+  { label: "Proyectos", Icon: IconBoxes, href: "/app/projects" },
+  { label: "Deploy", Icon: IconLayout, href: "/app/deployments" },
+  { label: "RepoVision", Icon: IconBranch, href: "/app/repovision" },
+  { label: "Blueprint", Icon: IconWorkflow, href: "/app/blueprint" },
+  { label: "Inicio", Icon: IconCpu, href: "/app" },
 ];
 
 const ORB = 56;
@@ -113,7 +122,7 @@ export function VOrb() {
     drag.current = null;
   }
 
-  const HIDE_ON = ["/app/chat", "/app/home"];
+  const HIDE_ON = ["/app/home"];
   if (pathname === "/app" || HIDE_ON.some((p) => pathname?.startsWith(p))) return null;
   if (pos.x < 0) return null;
   const onLeft = pos.x + 28 < (typeof window !== "undefined" ? window.innerWidth / 2 : 200);
@@ -129,7 +138,7 @@ export function VOrb() {
               <div className="vorb-menu-dot" />
               <span className="text-[11px] font-semibold tracking-widest text-violet-300/60 uppercase">V — Menú</span>
             </div>
-            {ITEMS.map((it, i) => (
+            {(pathname?.startsWith("/app/chat") ? ITEMS_CHAT : ITEMS_DEFAULT).map((it, i) => (
               <button
                 key={it.label}
                 onClick={() => { setOpen(false); router.push(it.href); }}
