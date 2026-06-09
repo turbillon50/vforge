@@ -66,7 +66,7 @@ export function Hero() {
 
   return (
     <section
-      className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-5 pb-20 pt-24"
+      className="relative isolate flex min-h-[100svh] lg:min-h-0 flex-col lg:flex-row lg:items-stretch overflow-hidden px-5 pb-20 pt-24 lg:pt-20 lg:pb-0 lg:px-0"
       style={{ touchAction: "pan-y" }}
     >
       {/* ── FONDO: video de la esfera en loop ── */}
@@ -92,6 +92,9 @@ export function Hero() {
         />
       </div>
 
+      {/* ── DESKTOP: left column wrapper ── */}
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center lg:items-start lg:justify-center lg:pl-16 lg:pr-8 lg:py-24">
+
       {/* ── BADGE LANZAMIENTO ── */}
       <motion.div
         initial={{ opacity: 0, y: -12 }}
@@ -104,10 +107,54 @@ export function Hero() {
           transition={{ duration: 1.6, repeat: Infinity }}
           className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"
         />
-        <span className="text-[11px] font-semibold tracking-[0.2em] text-violet-200 uppercase">
+        <span className="text-[11px] font-semibold tracking-[0.15em] text-violet-200/90 uppercase">
           V·Momentum lanza VForge MCP + Generador IA
         </span>
       </motion.div>
+
+      {/* ── HEADLINE DESKTOP (visible lg+) ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.15, ease: EASE }}
+        className="hidden lg:block"
+      >
+        <h1 className="text-left text-[clamp(2.8rem,4.5vw,4rem)] font-bold leading-[0.92] tracking-[-0.04em] text-white">
+          Construye.<br />
+          <span className="bg-gradient-to-r from-violet-400 via-violet-300 to-cyan-400 bg-clip-text text-transparent">Despliega.</span><br />
+          Domina.
+        </h1>
+        <p className="mt-5 max-w-[400px] text-left text-[1rem] font-light leading-relaxed text-white/58">
+          V conoce tu stack, tus repos y tus clientes.<br/>Hablas — ella construye. Tú controlas todo.
+        </p>
+        <div className="mt-8 flex flex-col items-start gap-3 w-full max-w-[300px]">
+          <button
+            onClick={() => setOpen(true)}
+            className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-violet-500 to-violet-600 px-7 py-3.5 text-[0.95rem] font-semibold text-white shadow-[0_6px_30px_rgba(124,58,237,0.45)] transition-all hover:shadow-[0_8px_50px_rgba(124,58,237,0.65)] active:scale-[0.98]"
+          >
+            <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+            <span className="relative">Despierta a V</span>
+            <IconArrowR size={16} className="relative transition-transform group-hover:translate-x-1" />
+          </button>
+          <Link href="/sign-up"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-7 py-3.5 text-[0.9rem] font-medium text-white/70 backdrop-blur-sm transition-all hover:border-violet-400/30 hover:bg-white/[0.07] hover:text-white"
+          >
+            Empieza gratis
+          </Link>
+        </div>
+        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-white/38">
+          <span className="flex items-center gap-1.5"><span className="text-cyan-400/80">✓</span> Sin tarjeta</span>
+          <span className="h-3 w-px bg-white/10" />
+          <span className="flex items-center gap-1.5"><span className="text-cyan-400/80">✓</span> Deploy en segundos</span>
+          <span className="h-3 w-px bg-white/10" />
+          <span className="flex items-center gap-1.5"><span className="text-cyan-400/80">✓</span> 17+ apps en producción</span>
+        </div>
+      </motion.div>
+
+      </div>{/* end desktop left column */}
+
+      {/* ── DESKTOP: right column — orb ── */}
+      <div className="relative hidden lg:flex lg:w-[480px] lg:shrink-0 lg:items-center lg:justify-center lg:py-16">
 
       {/* ── ORBE V (con la esfera de imagen encima del video) ── */}
       <motion.div
@@ -206,26 +253,28 @@ export function Hero() {
         )}
       </AnimatePresence>
 
-      {/* ── TEXTO HERO ── */}
+      </div>{/* end desktop right column */}
+
+      {/* ── TEXTO HERO (mobile only — desktop shows in left col) ── */}
       <motion.div
         animate={{ opacity: open ? 0.12 : 1, filter: open ? "blur(4px)" : "blur(0px)" }}
         transition={{ ease: EASE }}
-        className="relative z-0 flex flex-col items-center"
+        className="relative z-0 flex flex-col items-center lg:hidden"
       >
         <p className="mb-4 text-center text-[11px] font-semibold tracking-[0.25em] text-violet-400/60 uppercase">
           La fábrica de apps con IA
         </p>
-        <h1 className="text-center text-[clamp(3rem,13vw,5.5rem)] font-bold leading-[0.92] tracking-[-0.04em] text-white">
+        <h1 className="text-center lg:text-left text-[clamp(2.4rem,6vw,4.5rem)] font-bold leading-[0.92] tracking-[-0.04em] text-white">
           Construye.<br />
           <span className="bg-gradient-to-r from-violet-400 via-violet-300 to-cyan-400 bg-clip-text text-transparent">Despliega.</span><br />
           Domina.
         </h1>
-        <p className="mt-6 max-w-[420px] text-center text-[clamp(0.95rem,2.6vw,1.1rem)] font-light leading-relaxed text-white/50">
+        <p className="mt-6 max-w-[440px] text-center lg:text-left text-[clamp(0.95rem,1.4vw,1.05rem)] font-light leading-relaxed text-white/55">
           V conoce tu stack, tus repos y tus clientes. Hablas — ella construye. Tú controlas todo.
         </p>
 
         {/* CTA buttons */}
-        <div className="mt-9 flex w-full max-w-sm flex-col items-center gap-3">
+        <div className="mt-8 flex w-full max-w-sm flex-col items-center lg:items-start gap-3">
           <button
             onClick={() => setOpen(true)}
             className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-violet-500 to-violet-600 px-8 py-4 text-base font-semibold text-white shadow-[0_8px_40px_rgba(124,58,237,0.5)] transition-all hover:shadow-[0_8px_60px_rgba(124,58,237,0.7)] active:scale-[0.98]"
@@ -242,7 +291,7 @@ export function Hero() {
           </Link>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12px] text-white/30">
+        <div className="mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-2 text-[12px] text-white/35">
           <span className="flex items-center gap-1.5"><span className="text-cyan-400/70">✓</span> Sin tarjeta</span>
           <span className="h-3 w-px bg-white/10" />
           <span className="flex items-center gap-1.5"><span className="text-cyan-400/70">✓</span> Deploy en segundos</span>

@@ -31,7 +31,7 @@ export function MarketingHeader() {
         <nav className="ml-4 hidden items-center gap-0.5 md:flex">
           {nav.map(item=>(
             <Link key={item.href} href={item.href}
-              className="relative flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-mono text-[12px] text-white/40 transition hover:bg-white/[0.04] hover:text-white/80">
+              className="relative flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-mono text-[12px] text-white/65 transition hover:bg-white/[0.06] hover:text-white">
               {item.label}
               {item.badge&&<span className="rounded-full bg-violet-500/15 px-1.5 py-0.5 text-[9px] font-bold text-violet-300 uppercase tracking-wider">{item.badge}</span>}
             </Link>
@@ -41,10 +41,10 @@ export function MarketingHeader() {
           <LocaleToggle/>
           <ThemeToggle/>
           <button onClick={handleShare}
-            className="hidden items-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2 font-mono text-[11px] text-white/35 transition hover:text-white/65 md:flex">
+            className="hidden items-center gap-1.5 rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-[11px] text-white/60 transition hover:text-white/90 md:flex">
             <IconShare size={12}/>Compartir
           </button>
-          <Link href="/sign-in" className="rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 py-2 font-mono text-[11px] text-white/40 transition hover:text-white/75">Entrar</Link>
+          <Link href="/sign-in" className="rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-2 font-mono text-[11px] text-white/65 transition hover:text-white">Entrar</Link>
           <Link href="/sign-up" className="rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 px-4 py-2 font-mono text-[11px] font-semibold text-white shadow-[0_4px_20px_rgba(124,58,237,0.35)] transition hover:brightness-110">Empezar</Link>
           <button onClick={()=>setOpen(v=>!v)} className="flex items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.025] p-2 text-white/40 transition hover:text-white/70 md:hidden">
             {open?<IconX size={16}/>:<IconMenu size={16}/>}
