@@ -115,10 +115,12 @@
 }
 
 html {
-  /* Solo bloquea scroll horizontal — NO establece scroll container en y.
-     Si html también tiene overflow-y:auto, crea un doble contenedor y
-     el wheel event se pierde en html sin que nada se mueva. */
+  /* overflow-x:clip bloquea scroll horizontal sin crear scroll container.
+     PERO: cuando html tiene overflow-x != visible, la propagación del
+     body al viewport se rompe (CSS2.1 spec). Fix: html necesita
+     overflow-y:auto explícito para que el viewport pueda scrollear. */
   overflow-x: clip;
+  overflow-y: auto;
   max-width: 100vw;
 }
 
