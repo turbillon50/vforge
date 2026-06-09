@@ -58,6 +58,50 @@
   --tint-3: 139 92 246 / 0.10;
 }
 
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-void: #03020a;
+  --color-ink: #06050f;
+  --color-background: #0a0814;
+  --color-surface: #0d0b1a;
+  --color-surface-low: #110f1f;
+  --color-surface-high: #16142a;
+  --color-surface-elev: #1c1930;
+  --color-border: 139 92 246 / 0.10;
+  --color-border-strong: 139 92 246 / 0.20;
+  --color-on-surface: #e8e4ff;
+  --color-on-surface-variant: #a89fd4;
+  --color-muted: #6b628f;
+  --color-off-white: #f0ecff;
+  --color-violet-300: #c4b5fd;
+  --color-violet-400: #a78bfa;
+  --color-violet-500: #7c3aed;
+  --color-cyan-400: #22d3ee;
+  --color-gold-arc: #fbbf24;
+  --color-electric-blue: #3b82f6;
+  --color-success-emerald: #10b981;
+  --color-error-crimson: #ef4444;
+  --hud-glow-v: 0 0 20px rgba(124,58,237,0.4), 0 0 60px rgba(124,58,237,0.15);
+  --hud-glow-c: 0 0 20px rgba(34,211,238,0.4), 0 0 60px rgba(34,211,238,0.12);
+  --hud-glow-g: 0 0 20px rgba(251,191,36,0.3), 0 0 40px rgba(251,191,36,0.1);
+  --hud-line: rgba(139,92,246,0.25);
+  --aura-opacity: 1;
+  --grid-opacity: 0.04;
+  --glass-bg: 10 8 20 / 0.65;
+  --glass-bg-strong: 10 8 20 / 0.85;
+  --scanlines-opacity: 0.12;
+  --scanlines-blend: overlay;
+  --shadow-elev:
+    0 1px 0 rgba(139,92,246,0.08) inset,
+    0 0 0 1px rgba(139,92,246,0.12),
+    0 24px 60px rgba(0,0,0,0.5);
+  --tint-1: 139 92 246 / 0.03;
+  --tint-2: 139 92 246 / 0.06;
+  --tint-3: 139 92 246 / 0.10;
+}
+
 [data-theme="light"] {
   color-scheme: light;
 
