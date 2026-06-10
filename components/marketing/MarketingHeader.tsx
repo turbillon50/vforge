@@ -4,7 +4,6 @@ import { VWordmark } from "@/components/brand/VMark";
 import { useState } from "react";
 import { IconMenu, IconShare, IconX } from "@/components/brand/VFIcons";
 import { useT } from "@/i18n/AppProviders";
-import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
 
 export function MarketingHeader() {
@@ -16,6 +15,8 @@ export function MarketingHeader() {
     {href:"/pricing",label:"Precios"},
     {href:"/blog",label:"Blog"},
     {href:"/mcp",label:"MCP"},
+    {href:"/vulcano",label:"Navegador",badge:"IA"},
+    {href:"/status",label:"Taller",badge:"Live"},
     {href:"/developers",label:"Desarrolladores",badge:"Pronto"},
   ];
   const handleShare=()=>{
@@ -39,7 +40,6 @@ export function MarketingHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <LocaleToggle/>
-          <ThemeToggle/>
           <button onClick={handleShare}
             className="hidden items-center gap-1.5 rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-[11px] text-white/60 transition hover:text-white/90 md:flex">
             <IconShare size={12}/>Compartir
