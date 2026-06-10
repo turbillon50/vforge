@@ -18,7 +18,7 @@ type AppContextValue = {
 const AppContext = createContext<AppContextValue | null>(null);
 
 const LOCALE_KEY = "vforge.locale";
-const THEME_KEY = "vforge.theme";
+const THEME_KEY = "vf-theme"; // unificado con ThemeToggle/ThemeBootScript
 
 function readCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
@@ -43,12 +43,10 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       const browser = navigator.language?.slice(0, 2) as Locale;
       if (locales.includes(browser)) setLocaleState(browser);
     }
-    const t = (localStorage.getItem(THEME_KEY) as Theme | null) ?? null;
-    if (t === "dark" || t === "light") setThemeState(t);
-    else {
-      const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
-      setThemeState(prefersLight ? "light" : "dark");
-    }
+    // Dark-first (marca VForge obsidian). Llave unica vf-theme; migra la vieja.
+    // NO usar prefers-color-scheme: el SO no debe forzar light sobre la marca.
+    const t = (localStorage.getItem("vf-theme") || localStorage.getItem("vforge.theme")) as Theme | null;
+    setThemeState(t === "light" ? "light" : "dark");
     setMounted(true);
   }, []);
 
