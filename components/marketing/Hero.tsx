@@ -1,429 +1,448 @@
 "use client";
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Link from "next/link";
-import { IconArrowR, IconSparkles, IconX, IconRocket, IconHelp, IconBag, IconTag, IconLayout, IconBook, IconZap, IconGlobe, IconBot, IconFile } from "@/components/brand/VFIcons";
+import {
+  IconArrowR,
+  IconSparkles,
+  IconRocket,
+  IconBot,
+  IconBag,
+  IconActivity,
+  IconX,
+} from "@/components/brand/VFIcons";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-const SPHERE_IMG = "/sphere-violet.png";
-const SPHERE_VIDEO = "/hero/sphere.mp4";
 
-type RadialItem = {
-  id: string;
-  label: string;
-  icon: typeof IconRocket;
-  href?: string;
-  panel?: "welcome" | "faq" | "worlds";
-  color: string;
+type SphereId = "forge" | "vulcano";
+
+type SphereDef = {
+  id: SphereId;
+  img: string;
+  eyebrow: string;
+  name: string;
+  tagline: string;
+  accent: string;
+  what: string;
+  bullets: string[];
+  action: string;
+  links: { label: string; href: string; primary?: boolean }[];
 };
 
-const RADIAL: (RadialItem & { img3d: string })[] = [
-  { id: "welcome", label: "Qué es V", icon: IconSparkles, panel: "welcome", color: "#a855f7", img3d: "/icons3d/sparkle.png" },
-  { id: "worlds", label: "Por dónde\nempiezo", icon: IconBook, panel: "worlds", color: "#22d3ee", img3d: "/icons3d/book.png" },
-  { id: "products", label: "Productos", icon: IconBag, href: "#productos", color: "#8b5cf6", img3d: "/icons3d/bag.png" },
-  { id: "pricing", label: "Precios", icon: IconTag, href: "/pricing", color: "#0ea5e9", img3d: "/icons3d/tag.png" },
-  { id: "faq", label: "Preguntas", icon: IconHelp, panel: "faq", color: "#f59e0b", img3d: "/icons3d/help.png" },
-  { id: "start", label: "Empezar", icon: IconRocket, href: "/sign-up", color: "#22c55e", img3d: "/icons3d/rocket.png" },
+const SPHERES: SphereDef[] = [
+  {
+    id: "forge",
+    img: "/hero/forge-sphere.webp",
+    eyebrow: "La plataforma",
+    name: "VForge",
+    tagline: "La forja",
+    accent: "#a78bfa",
+    what: "Donde tu idea se vuelve un producto real. VForge toma lo que describes y lo convierte en una app —PWA, móvil o MCP— desplegada a producción con dominio, base de datos y panel.",
+    bullets: ["De idea a deploy en días", "Apps reales en App Store y Play", "El código es tuyo"],
+    action: "Forjando producto",
+    links: [
+      { label: "Ver productos", href: "#productos", primary: true },
+      { label: "Cómo funciona", href: "/pricing" },
+    ],
+  },
+  {
+    id: "vulcano",
+    img: "/hero/vulcano-sphere.webp",
+    eyebrow: "El copiloto",
+    name: "Vulcano",
+    tagline: "La IA que construye",
+    accent: "#22d3ee",
+    what: "La inteligencia que forja contigo. Hablas y Vulcano ejecuta: escribe código, conecta integraciones, despliega y vigila tu infraestructura en tiempo real. Tú diriges, él construye.",
+    bullets: ["Construye y despliega por ti", "Conoce tu stack y tus repos", "Trabaja mientras tú revisas"],
+    action: "Vulcano ejecutando",
+    links: [
+      { label: "Navegador Vulcano", href: "/vulcano", primary: true },
+      { label: "El Taller", href: "/status" },
+    ],
+  },
 ];
 
-// ── BIENVENIDA REDISEÑADA ─────────────────────────────────────
-const LAUNCH_BADGES = [
-  { icon: IconBot, label: "VForge MCP", sub: "Empresarial", color: "#a855f7" },
-  { icon: IconZap, label: "Generador IA", sub: "de Contenido", color: "#22d3ee" },
-  { icon: IconGlobe, label: "Apps reales", sub: "App Store + Play", color: "#22c55e" },
-  { icon: IconFile, label: "Método VForge", sub: "De idea a deploy", color: "#f59e0b" },
-];
-
-const METODO_STEPS = [
-  { n: "01", title: "Alcance en 1 sesión", desc: "V entiende tu idea, define funciones y te muestra el blueprint en tiempo real." },
-  { n: "02", title: "Demo en 4 días", desc: "Ves tu app funcionando antes de pagar el siguiente paso. Sin sorpresas." },
-  { n: "03", title: "Deploy a producción", desc: "Dominio propio, App Store, Google Play. Todo desplegado y operando." },
-];
-
-const WELCOME_STATS = [
-  { value: "17+", label: "Apps en producción" },
-  { value: "4d", label: "Demo garantizada" },
-  { value: "100%", label: "Código tuyo" },
-];
-
-const WORLDS = [
-  { icon: IconBag, color: "#8b5cf6", title: "Quiero una app o servicio", desc: "Eres un cliente. Mira los productos: apps, automatizaciones, bots, videos y MCP empresariales.", cta: "Ver productos", href: "#productos" },
-  { icon: IconTag, color: "#0ea5e9", title: "Soy developer / agencia", desc: "Usa VForge como plataforma para construir y desplegar. Mira los planes Explorer, Studio y Forge.", cta: "Ver precios", href: "/pricing" },
-  { icon: IconLayout, color: "#22c55e", title: "Ya soy cliente de VForge", desc: "Entra a tu portal y sigue el avance de tu proyecto en tiempo real, como una misión.", cta: "Entrar al portal", href: "/sign-in" },
-];
-
-const FAQ = [
-  { q: "¿Necesito saber programar?", a: "No. Le describes lo que quieres a V y ella lo construye. Tú revisas y apruebas." },
-  { q: "¿Cuánto tarda mi app?", a: "Ves una demo en los primeros 4 días. La entrega final depende del alcance, normalmente 2-3 etapas." },
-  { q: "¿Mi app se publica en las tiendas?", a: "Sí. Publicamos en App Store ($5,000) y Google Play ($3,000). Es lo que nos diferencia." },
-  { q: "¿Qué incluye el precio?", a: "PWA, dominio, diseño premium, base de datos, login, dashboard, notificaciones, correos, integraciones, manual y capacitación." },
-  { q: "¿Puedo seguir el avance?", a: "Sí. Tienes un portal donde ves el estado, las integraciones activas y el próximo paso, como seguir una misión." },
+const TOUR: { target: "head" | SphereId | "cta"; title: string; body: string }[] = [
+  { target: "head", title: "Bienvenido a VForge", body: "Te doy un recorrido de 20 segundos. La fábrica de apps con IA, en dos piezas." },
+  { target: "forge", title: "1 · La forja", body: "VForge es la plataforma: convierte tu idea en una app real desplegada a producción." },
+  { target: "vulcano", title: "2 · El copiloto", body: "Vulcano es la IA que construye contigo. Habla y él ejecuta: código, deploy, integraciones." },
+  { target: "cta", title: "Tú decides", body: "Pasa el cursor sobre cada esfera para ver qué hace, o empieza gratis ahora." },
 ];
 
 export function Hero() {
-  const [open, setOpen] = useState(false);
-  const [panel, setPanel] = useState<"welcome" | "faq" | "worlds" | null>(null);
+  const reduce = useReducedMotion();
+  const [active, setActive] = useState<SphereId | null>(null);
+
+  const [tour, setTour] = useState(0);
+  const [tourOn, setTourOn] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLHeadingElement>(null);
+  const forgeRef = useRef<HTMLDivElement>(null);
+  const vulcanoRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const [ring, setRing] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+
+  useEffect(() => {
+    if (reduce) return;
+    const t = setTimeout(() => setTourOn(true), 900);
+    return () => clearTimeout(t);
+  }, [reduce]);
+
+  useEffect(() => {
+    if (!tourOn) return;
+    if (tour >= TOUR.length - 1) return;
+    const t = setTimeout(() => setTour((s) => s + 1), 3800);
+    return () => clearTimeout(t);
+  }, [tourOn, tour]);
+
+  useEffect(() => {
+    if (!tourOn) {
+      setRing(null);
+      return;
+    }
+    const step = TOUR[tour];
+    const map: Record<string, React.RefObject<HTMLElement>> = {
+      head: headRef as React.RefObject<HTMLElement>,
+      forge: forgeRef as React.RefObject<HTMLElement>,
+      vulcano: vulcanoRef as React.RefObject<HTMLElement>,
+      cta: ctaRef as React.RefObject<HTMLElement>,
+    };
+    const el = map[step.target]?.current;
+    const host = sectionRef.current;
+    if (!el || !host) return;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      const h = host.getBoundingClientRect();
+      setRing({ x: r.left - h.left, y: r.top - h.top, w: r.width, h: r.height });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [tour, tourOn]);
+
+  const endTour = () => {
+    setTourOn(false);
+    setRing(null);
+  };
 
   return (
     <section
-      className="relative isolate flex min-h-[100svh] landscape:min-h-[100dvh] lg:min-h-[88vh] lg:landscape:min-h-[88vh] flex-col items-center justify-center overflow-hidden px-5 pb-10 pt-16 landscape:pb-6 landscape:pt-12 lg:pb-16 lg:pt-20"
-      style={{ touchAction: "pan-y" }}
+      ref={sectionRef}
+      className="relative isolate flex min-h-[100svh] lg:min-h-[92vh] flex-col items-center justify-center overflow-hidden px-5 pb-16 pt-24 lg:pt-28"
+      style={{ touchAction: "pan-y", background: "rgb(var(--color-void) / 1)" }}
     >
-      {/* ── FONDO: video de la esfera en loop ── */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-[#03020a]" />
-        {/* Video esfera de fondo */}
-        <video
-          src={SPHERE_VIDEO}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute left-1/2 top-1/2 h-[110%] w-[110%] -translate-x-1/2 -translate-y-1/2 object-cover opacity-30"
-          style={{ filter: "blur(2px) saturate(1.4)" }}
+        <div className="absolute inset-0" style={{ background: "var(--color-void, #03020a)" }} />
+        <div
+          className="absolute inset-0"
+          style={{
+            opacity: "var(--grid-opacity, 0.04)",
+            backgroundImage:
+              "linear-gradient(rgba(139,92,246,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.5) 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+            maskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 80%)",
+            WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 80%)",
+          }}
         />
-        {/* Overlay oscuro para legibilidad */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#03020a]/60 via-transparent to-[#03020a]/80" />
-        {/* Aura violet viva */}
         <motion.div
-          animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.12, 1] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute left-1/2 top-[35%] h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-600/20 blur-[120px]"
+          aria-hidden
+          className="absolute h-[42vmax] w-[42vmax] rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 50%, rgba(139,92,246,0.16), rgba(34,211,238,0.07) 45%, transparent 70%)",
+            filter: "blur(60px)",
+            top: "-6%",
+            left: "-6%",
+          }}
+          animate={
+            reduce
+              ? { x: "30vw", y: "20vh" }
+              : { x: ["0vw", "60vw", "25vw", "70vw", "0vw"], y: ["0vh", "40vh", "65vh", "15vh", "0vh"] }
+          }
+          transition={reduce ? { duration: 0 } : { duration: 38, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          aria-hidden
+          className="absolute h-[30vmax] w-[30vmax] rounded-full"
+          style={{
+            background: "radial-gradient(circle at 50% 50%, rgba(34,211,238,0.10), transparent 70%)",
+            filter: "blur(70px)",
+            bottom: "-10%",
+            right: "-8%",
+          }}
+          animate={reduce ? { x: 0, y: 0 } : { x: ["0vw", "-35vw", "-10vw", "0vw"], y: ["0vh", "-30vh", "-55vh", "0vh"] }}
+          transition={reduce ? { duration: 0 } : { duration: 46, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
-      {/* ── BADGE LANZAMIENTO ── */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: EASE }}
-        className="relative z-10 mb-5 flex items-center gap-2 rounded-full border border-violet-400/30 bg-[#0a0614]/70 px-4 py-1.5 backdrop-blur-xl"
+      <div
+        className="reveal-up relative z-10 mb-7 flex items-center gap-2 rounded-full border px-4 py-1.5 backdrop-blur-xl"
+        style={{ borderColor: "rgb(var(--color-border-strong))", background: "rgb(var(--glass-bg))" }}
       >
-        <motion.span
-          animate={{ opacity: [1, 0.3, 1] }}
-          transition={{ duration: 1.6, repeat: Infinity }}
-          className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"
-        />
-        <span className="text-[11px] font-semibold tracking-[0.2em] text-violet-200 uppercase">
-          V·Momentum lanza VForge MCP + Generador IA
-        </span>
-      </motion.div>
-
-      {/* ── ORBE V (con la esfera de imagen encima del video) ── */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1.2, ease: EASE }}
-        className="relative z-10 mb-6 flex items-center justify-center"
-      >
-        <motion.div
-          animate={{ scale: [1, 1.18, 1], opacity: [0.45, 0.75, 0.45] }}
-          transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute h-[clamp(100px,22vw,200px)] w-[clamp(100px,22vw,200px)] landscape:h-[100px] landscape:w-[100px] lg:h-[220px] lg:w-[220px] lg:landscape:h-[220px] lg:landscape:w-[220px] rounded-full bg-violet-600/35 blur-[80px]"
-        />
-        {!open && (
-          <motion.div
-            animate={{ scale: [1, 1.4], opacity: [0.5, 0] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
-            className="absolute h-[230px] w-[230px] rounded-full border border-violet-400/40"
-          />
-        )}
-        <motion.button
-          onClick={() => { setOpen((v) => !v); setPanel(null); }}
-          whileTap={{ scale: 0.94 }}
-          animate={{ y: [0, -12, 0] }}
-          transition={{ y: { duration: 6, repeat: Infinity, ease: "easeInOut" } }}
-          className="relative flex h-[clamp(120px,22vw,220px)] w-[clamp(120px,22vw,220px)] landscape:h-[clamp(80px,18vh,160px)] landscape:w-[clamp(80px,18vh,160px)] lg:h-[200px] lg:w-[200px] lg:landscape:h-[200px] lg:landscape:w-[200px] items-center justify-center outline-none"
-          style={{ touchAction: "pan-y" }}
-          aria-label="Activar V"
+        <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
+        <span
+          className="text-[11px] font-semibold uppercase tracking-[0.22em]"
+          style={{ color: "rgb(var(--color-on-surface-variant, 168 159 212))" }}
         >
-          <motion.img
-            src={SPHERE_IMG} loading="lazy"
-            alt="V"
-            animate={{ scale: [1, 1.04, 1] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-            className="h-full w-full object-contain"
-            style={{ filter: "drop-shadow(0 0 50px rgba(124,58,237,0.6)) drop-shadow(0 0 100px rgba(124,58,237,0.3))" }}
-            draggable={false}
-          />
-          {!open && (
-            <motion.span
-              initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 0] }}
-              transition={{ duration: 3, repeat: Infinity, delay: 1.5 }}
-              className="absolute -bottom-1 text-[10px] font-medium uppercase tracking-[0.2em] text-violet-300/70"
-            >
-              Tócame
-            </motion.span>
-          )}
-        </motion.button>
-      </motion.div>
+          La fábrica de apps con IA
+        </span>
+      </div>
 
-      {/* ── MENÚ V ── */}
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setOpen(false)}
-              className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 30, scale: 0.96 }}
-              transition={{ ease: EASE, duration: 0.4 }}
-              className="fixed inset-x-0 bottom-0 z-[61] mx-auto max-w-md rounded-t-[2rem] border-t border-violet-400/30 bg-[#08060f]/95 p-6 pb-9 backdrop-blur-2xl"
-              style={{ boxShadow: "0 -20px 80px rgba(124,58,237,0.35)" }}
+      <h1
+        ref={headRef}
+        className="reveal-up relative z-10 text-center text-[clamp(2.2rem,7vw,4.4rem)] font-bold leading-[0.95] tracking-[-0.04em]"
+        style={{ color: "var(--color-on-surface, #e8e4ff)", animationDelay: "0.06s" }}
+      >
+        Construye.{" "}
+        <span className="bg-gradient-to-r from-violet-400 via-violet-300 to-cyan-400 bg-clip-text text-transparent">
+          Despliega.
+        </span>{" "}
+        Domina.
+      </h1>
+
+      <p
+        className="reveal-up relative z-10 mt-6 max-w-[440px] text-center text-[clamp(0.95rem,2.4vw,1.1rem)] font-light leading-relaxed"
+        style={{ color: "var(--color-on-surface-variant, #a89fd4)", animationDelay: "0.12s" }}
+      >
+        Dos piezas, un sistema: la <span style={{ color: "var(--color-on-surface)" }}>forja</span> que
+        despliega tu producto y la <span style={{ color: "var(--color-on-surface)" }}>IA</span> que lo
+        construye contigo.
+      </p>
+
+      <div className="relative z-10 mt-12 grid w-full max-w-3xl grid-cols-1 gap-5 sm:grid-cols-2">
+        {SPHERES.map((s, i) => {
+          const ref = s.id === "forge" ? forgeRef : vulcanoRef;
+          const isActive = active === s.id;
+          return (
+            <div
+              key={s.id}
+              ref={ref}
+              onMouseEnter={() => setActive(s.id)}
+              onMouseLeave={() => setActive((a) => (a === s.id ? null : a))}
+              onClick={() => setActive((a) => (a === s.id ? null : s.id))}
+              className="reveal-up group relative flex cursor-pointer flex-col items-center rounded-3xl border p-6 text-center backdrop-blur-xl transition-colors"
+              style={{
+                borderColor: isActive ? `${s.accent}55` : "rgb(var(--color-border))",
+                background: "rgb(var(--glass-bg))",
+                boxShadow: isActive ? `0 0 50px ${s.accent}22` : "none",
+                animationDelay: `${0.18 + i * 0.1}s`,
+              }}
             >
-              <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-white/20" />
-              <div className="mb-4 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
-                <p className="text-sm font-semibold text-white">V te escucha. ¿A dónde vamos?</p>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                {RADIAL.map((item, i) => {
-                  const inner = (
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute left-1/2 top-16 h-40 w-40 -translate-x-1/2 rounded-full"
+                style={{ background: `radial-gradient(circle, ${s.accent}33, transparent 70%)`, filter: "blur(34px)" }}
+                animate={reduce ? { opacity: 0.5 } : { opacity: isActive ? [0.5, 0.85, 0.5] : 0.4, scale: isActive ? [1, 1.12, 1] : 1 }}
+                transition={reduce ? { duration: 0 } : { duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+              />
+
+              <div className="relative h-32 w-32">
+                <motion.img
+                  src={s.img}
+                  alt={s.name}
+                  draggable={false}
+                  className="h-full w-full object-contain"
+                  style={{ filter: `drop-shadow(0 0 30px ${s.accent}66)` }}
+                  animate={reduce ? { y: 0 } : { y: [0, -8, 0] }}
+                  transition={reduce ? { duration: 0 } : { duration: 5 + i, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <AnimatePresence>
+                  {isActive && !reduce && (
                     <motion.div
-                      initial={{ opacity: 0, y: 14 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05, ease: EASE }}
-                      className="flex h-[100px] flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-2 text-center transition-all active:scale-95"
-                      style={{ boxShadow: `inset 0 1px 0 ${item.color}20` }}
+                      key="scan"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="pointer-events-none absolute inset-0 overflow-hidden rounded-full"
                     >
-                      <img src={item.img3d} alt="" className="h-11 w-11 object-contain" style={{ filter: `drop-shadow(0 0 8px ${item.color}80)` }} draggable={false} />
-                      <span className="whitespace-pre-line text-[10px] font-semibold leading-tight text-white/80">{item.label}</span>
+                      <motion.div
+                        className="absolute left-0 h-[2px] w-full"
+                        style={{ background: `linear-gradient(90deg, transparent, ${s.accent}, transparent)` }}
+                        animate={{ top: ["8%", "92%", "8%"] }}
+                        transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                      />
                     </motion.div>
-                  );
-                  return item.href ? (
-                    <Link key={item.id} href={item.href} onClick={() => setOpen(false)}>{inner}</Link>
-                  ) : (
-                    <button key={item.id} onClick={() => setPanel(item.panel!)} className="text-left">{inner}</button>
-                  );
-                })}
+                  )}
+                </AnimatePresence>
               </div>
-            </motion.div>
-          </>
+
+              <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: s.accent }}>
+                {s.eyebrow}
+              </p>
+              <h3 className="mt-1 flex items-center gap-2 text-xl font-bold" style={{ color: "var(--color-on-surface)" }}>
+                {s.id === "forge" ? <IconBag size={16} style={{ color: s.accent }} /> : <IconBot size={16} style={{ color: s.accent }} />}
+                {s.name}
+              </h3>
+              <p className="text-xs" style={{ color: "var(--color-on-surface-variant)" }}>
+                {s.tagline}
+              </p>
+
+              <AnimatePresence>
+                {isActive && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-1 flex items-center gap-1.5 overflow-hidden text-[10px]"
+                    style={{ color: s.accent }}
+                  >
+                    <IconActivity size={11} />
+                    <span>{s.action}</span>
+                    <motion.span animate={reduce ? {} : { opacity: [0.2, 1, 0.2] }} transition={{ duration: 1.2, repeat: Infinity }}>
+                      •••
+                    </motion.span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {isActive && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                    exit={{ opacity: 0, y: 10, height: 0 }}
+                    transition={{ ease: EASE, duration: 0.35 }}
+                    className="mt-4 w-full overflow-hidden text-left"
+                  >
+                    <p className="text-[12.5px] leading-relaxed" style={{ color: "var(--color-on-surface-variant)" }}>
+                      {s.what}
+                    </p>
+                    <ul className="mt-3 space-y-1.5">
+                      {s.bullets.map((b) => (
+                        <li key={b} className="flex items-center gap-2 text-[11px]" style={{ color: "var(--color-on-surface)" }}>
+                          <span className="h-1 w-1 rounded-full" style={{ background: s.accent }} />
+                          {b}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {s.links.map((l) => (
+                        <Link
+                          key={l.href}
+                          href={l.href}
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold transition-transform active:scale-95"
+                          style={
+                            l.primary
+                              ? { background: s.accent, color: "#06040f" }
+                              : { border: `1px solid ${s.accent}40`, color: s.accent }
+                          }
+                        >
+                          {l.label}
+                          <IconArrowR size={12} />
+                        </Link>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {!isActive && (
+                <p className="mt-3 text-[10px]" style={{ color: "var(--color-muted, #6b628f)" }}>
+                  Pasa el cursor para ver qué hace
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div ref={ctaRef} className="relative z-10 mt-12 flex w-full max-w-sm flex-col items-center gap-3">
+        <Link
+          href="/sign-up"
+          className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-violet-500 to-violet-600 px-8 py-4 text-base font-semibold text-white shadow-[0_8px_40px_rgba(124,58,237,0.45)] transition-all hover:shadow-[0_8px_60px_rgba(124,58,237,0.65)] active:scale-[0.98]"
+        >
+          <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+          <IconSparkles size={17} className="relative text-cyan-200" />
+          <span className="relative">Empieza gratis</span>
+          <IconArrowR size={17} className="relative transition-transform group-hover:translate-x-1" />
+        </Link>
+        <Link
+          href="/vulcano"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border px-8 py-4 text-base font-medium backdrop-blur-sm transition-all hover:text-white"
+          style={{ borderColor: "rgb(var(--color-border))", background: "rgb(var(--glass-bg))", color: "var(--color-on-surface-variant)" }}
+        >
+          <IconRocket size={16} /> Conoce a Vulcano
+        </Link>
+      </div>
+
+      <div className="relative z-10 mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12px]" style={{ color: "var(--color-muted)" }}>
+        <span className="flex items-center gap-1.5"><span className="text-cyan-400/80">✓</span> Sin tarjeta</span>
+        <span className="h-3 w-px" style={{ background: "rgb(var(--color-border))" }} />
+        <span className="flex items-center gap-1.5"><span className="text-cyan-400/80">✓</span> Deploy en segundos</span>
+        <span className="h-3 w-px" style={{ background: "rgb(var(--color-border))" }} />
+        <span className="flex items-center gap-1.5"><span className="text-cyan-400/80">✓</span> 17+ apps en producción</span>
+      </div>
+
+      <AnimatePresence>
+        {tourOn && ring && (
+          <motion.div
+            aria-hidden
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, left: ring.x - 10, top: ring.y - 10, width: ring.w + 20, height: ring.h + 20 }}
+            exit={{ opacity: 0 }}
+            transition={{ ease: EASE, duration: 0.6 }}
+            className="pointer-events-none absolute z-20 rounded-3xl border-2"
+            style={{ borderColor: "rgba(34,211,238,0.55)", boxShadow: "0 0 40px rgba(34,211,238,0.25)" }}
+          />
         )}
       </AnimatePresence>
 
-      {/* ── TEXTO HERO ── */}
-      <motion.div
-        animate={{ opacity: open ? 0.12 : 1, filter: open ? "blur(4px)" : "blur(0px)" }}
-        transition={{ ease: EASE }}
-        className="relative z-0 flex flex-col items-center"
-      >
-        <p className="mb-4 text-center text-[11px] font-semibold tracking-[0.25em] text-violet-400/60 uppercase">
-          La fábrica de apps con IA
-        </p>
-        <h1 className="text-center text-[clamp(2rem,8vw,4.8rem)] landscape:text-[clamp(1.6rem,6vh,3rem)] font-bold leading-[0.92] tracking-[-0.04em] text-white lg:text-[clamp(2.8rem,10vw,4.8rem)] lg:landscape:text-[clamp(2.8rem,10vw,4.8rem)]">
-          Construye.<br />
-          <span className="bg-gradient-to-r from-violet-400 via-violet-300 to-cyan-400 bg-clip-text text-transparent">Despliega.</span><br />
-          Domina.
-        </h1>
-        <p className="mt-6 max-w-[420px] text-center text-[clamp(0.95rem,2.6vw,1.1rem)] font-light leading-relaxed text-white/60">
-          V conoce tu stack, tus repos y tus clientes. Hablas — ella construye. Tú controlas todo.
-        </p>
-
-        {/* CTA buttons */}
-        <div className="mt-9 flex w-full max-w-sm flex-col items-center gap-3">
-          <button
-            onClick={() => setOpen(true)}
-            className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-violet-500 to-violet-600 px-8 py-4 text-base font-semibold text-white shadow-[0_8px_40px_rgba(124,58,237,0.5)] transition-all hover:shadow-[0_8px_60px_rgba(124,58,237,0.7)] active:scale-[0.98]"
-          >
-            <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-            <IconSparkles size={17} className="relative text-cyan-200" />
-            <span className="relative">Despierta a V</span>
-            <IconArrowR size={17} className="relative transition-transform group-hover:translate-x-1" />
-          </button>
-          <Link href="/sign-up"
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-8 py-4 text-base font-medium text-white/70 backdrop-blur-sm transition-all hover:border-violet-400/30 hover:bg-white/[0.07] hover:text-white"
-          >
-            Empieza gratis
-          </Link>
-        </div>
-
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12px] text-white/30">
-          <span className="flex items-center gap-1.5"><span className="text-cyan-400/70">✓</span> Sin tarjeta</span>
-          <span className="h-3 w-px bg-white/10" />
-          <span className="flex items-center gap-1.5"><span className="text-cyan-400/70">✓</span> Deploy en segundos</span>
-          <span className="h-3 w-px bg-white/10" />
-          <span className="flex items-center gap-1.5"><span className="text-cyan-400/70">✓</span> 17+ apps en producción</span>
-        </div>
-      </motion.div>
-
-      {/* ── PANELES ── */}
       <AnimatePresence>
-        {panel && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setPanel(null)}
-              className="fixed inset-0 z-[80] bg-black/85 backdrop-blur-md"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 30 }}
-              transition={{ ease: EASE, duration: 0.4 }}
-              className="fixed inset-0 z-[81] flex items-end justify-center md:items-center"
-            >
-              <div
-                className="relative max-h-[92vh] w-full max-w-lg overflow-auto rounded-t-[2rem] border border-violet-400/20 bg-[#06040f] p-6 pb-10 md:rounded-[2rem]"
-                style={{ boxShadow: "0 0 120px rgba(124,58,237,0.4)" }}
-              >
-                <button
-                  onClick={() => setPanel(null)}
-                  className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-xl transition hover:bg-black/70"
-                >
-                  <IconX size={16} />
-                </button>
-
-                {/* ── PANEL BIENVENIDA NUEVO ── */}
-                {panel === "welcome" && (
-                  <div>
-                    {/* Header con video esfera mini */}
-                    <div className="relative mb-6 overflow-hidden rounded-2xl border border-violet-500/20">
-                      <video
-                        src={SPHERE_VIDEO}
-                        autoPlay loop muted playsInline
-                        className="h-36 w-full object-cover opacity-60"
-                        style={{ filter: "saturate(1.5)" }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#06040f] via-[#06040f]/40 to-transparent" />
-                      <div className="absolute bottom-0 left-0 p-4">
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-violet-400/80">V·Momentum</p>
-                        <p className="text-xl font-bold text-white leading-tight">Somos VForge</p>
-                      </div>
-                    </div>
-
-                    {/* Qué somos */}
-                    <p className="text-sm leading-relaxed text-white/60 mb-5">
-                      Somos la <span className="text-white font-medium">fábrica de apps con IA</span> de México. Construimos productos reales — PWAs, apps móviles, automatizaciones y MCPs — usando el Método VForge: de tu idea a producción en días, no meses.
-                    </p>
-
-                    {/* Stats */}
-                    <div className="grid grid-cols-3 gap-2 mb-5">
-                      {WELCOME_STATS.map((s) => (
-                        <div key={s.label} className="rounded-2xl border border-white/8 bg-white/3 p-3 text-center">
-                          <p className="text-xl font-bold text-white">{s.value}</p>
-                          <p className="mt-0.5 text-[10px] text-white/40 leading-tight">{s.label}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Lo nuevo */}
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400/70 mb-3">
-                      Recién lanzado
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 mb-5">
-                      {LAUNCH_BADGES.map((b, i) => (
-                        <motion.div
-                          key={b.label}
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.07, ease: EASE }}
-                          className="flex items-center gap-2.5 rounded-2xl border p-3"
-                          style={{ borderColor: `${b.color}25`, background: `${b.color}0c` }}
-                        >
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: `${b.color}20` }}>
-                            <b.icon size={15} style={{ color: b.color }} />
-                          </div>
-                          <div>
-                            <p className="text-[12px] font-semibold text-white leading-tight">{b.label}</p>
-                            <p className="text-[10px] text-white/40">{b.sub}</p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* El Método VForge */}
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-violet-400/70 mb-3">
-                      El Método VForge
-                    </p>
-                    <div className="space-y-2 mb-6">
-                      {METODO_STEPS.map((s, i) => (
-                        <motion.div
-                          key={s.n}
-                          initial={{ opacity: 0, x: -12 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.3 + i * 0.08, ease: EASE }}
-                          className="flex items-start gap-3 rounded-xl border border-white/6 bg-white/3 p-3"
-                        >
-                          <span className="font-mono text-[11px] font-bold text-violet-400/60 mt-0.5 shrink-0">{s.n}</span>
-                          <div>
-                            <p className="text-[12px] font-semibold text-white">{s.title}</p>
-                            <p className="text-[11px] text-white/40 leading-relaxed mt-0.5">{s.desc}</p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={() => setPanel("worlds")}
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-violet-500 py-4 text-sm font-semibold text-white"
-                      style={{ boxShadow: "0 0 40px rgba(124,58,237,0.5)" }}
-                    >
-                      ¿Por dónde empiezo? <IconArrowR size={14} />
-                    </button>
-                  </div>
-                )}
-
-                {/* ── PANEL MUNDOS ── */}
-                {panel === "worlds" && (
-                  <>
-                    <p className="text-[11px] font-semibold uppercase tracking-widest text-cyan-400/70">V te orienta</p>
-                    <h2 className="mt-1 text-2xl font-bold text-white">¿Por dónde empiezo?</h2>
-                    <p className="mt-1 text-xs text-white/40">Dime quién eres y te llevo al lugar correcto.</p>
-                    <div className="mt-5 space-y-3">
-                      {WORLDS.map((w, i) => (
-                        <motion.div key={w.title}
-                          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.08, ease: EASE }}
-                          className="rounded-2xl border p-4" style={{ borderColor: `${w.color}30`, background: `${w.color}0c` }}>
-                          <div className="flex items-start gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: `${w.color}1f`, border: `1px solid ${w.color}40` }}>
-                              <w.icon size={18} style={{ color: w.color }} />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-semibold text-white">{w.title}</p>
-                              <p className="mt-0.5 text-xs leading-relaxed text-white/50">{w.desc}</p>
-                            </div>
-                          </div>
-                          <Link href={w.href} onClick={() => { setPanel(null); setOpen(false); }}
-                            className="mt-3 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-semibold text-white transition-transform active:scale-95"
-                            style={{ background: `${w.color}` }}>
-                            {w.cta} <IconArrowR size={13} />
-                          </Link>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                {/* ── PANEL FAQ ── */}
-                {panel === "faq" && (
-                  <>
-                    <p className="text-[11px] font-semibold uppercase tracking-widest text-amber-400/70">Resolvemos tus dudas</p>
-                    <h2 className="mt-1 text-2xl font-bold text-white">Preguntas frecuentes</h2>
-                    <div className="mt-5 space-y-2.5">
-                      {FAQ.map((f, i) => (
-                        <motion.details key={i}
-                          initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.05, ease: EASE }}
-                          className="group rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-                          <summary className="flex cursor-pointer items-center justify-between text-sm font-semibold text-white">
-                            {f.q}
-                            <IconArrowR size={14} className="text-violet-400 transition-transform group-open:rotate-90" />
-                          </summary>
-                          <p className="mt-2 text-xs leading-relaxed text-white/50">{f.a}</p>
-                        </motion.details>
-                      ))}
-                    </div>
-                  </>
-                )}
+        {tourOn && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ ease: EASE, duration: 0.4 }}
+            className="fixed inset-x-0 bottom-4 z-40 mx-auto flex max-w-md items-start gap-3 rounded-2xl border px-4 py-3.5 backdrop-blur-2xl"
+            style={{
+              borderColor: "rgba(34,211,238,0.25)",
+              background: "rgb(var(--glass-bg-strong))",
+              boxShadow: "0 -10px 50px rgba(0,0,0,0.5)",
+              width: "calc(100% - 2rem)",
+            }}
+          >
+            <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ background: "rgba(34,211,238,0.15)" }}>
+              <IconSparkles size={14} className="text-cyan-300" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[13px] font-semibold" style={{ color: "var(--color-on-surface)" }}>
+                  {TOUR[tour].title}
+                </p>
+                <div className="flex items-center gap-1">
+                  {TOUR.map((_, i) => (
+                    <span
+                      key={i}
+                      className="h-1 rounded-full transition-all"
+                      style={{ width: i === tour ? 14 : 5, background: i === tour ? "#22d3ee" : "rgb(var(--color-border-strong))" }}
+                    />
+                  ))}
+                </div>
               </div>
-            </motion.div>
-          </>
+              <p className="mt-1 text-[12px] leading-snug" style={{ color: "var(--color-on-surface-variant)" }}>
+                {TOUR[tour].body}
+              </p>
+              <div className="mt-2.5 flex items-center gap-3">
+                {tour < TOUR.length - 1 ? (
+                  <button onClick={() => setTour((s) => s + 1)} className="flex items-center gap-1 text-[11px] font-semibold text-cyan-300">
+                    Siguiente <IconArrowR size={11} />
+                  </button>
+                ) : (
+                  <button onClick={endTour} className="flex items-center gap-1 text-[11px] font-semibold text-cyan-300">
+                    Explorar <IconArrowR size={11} />
+                  </button>
+                )}
+                <button onClick={endTour} className="text-[11px]" style={{ color: "var(--color-muted)" }}>
+                  Saltar guía
+                </button>
+              </div>
+            </div>
+            <button onClick={endTour} aria-label="Cerrar guía" className="shrink-0" style={{ color: "var(--color-muted)" }}>
+              <IconX size={14} />
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </section>

@@ -20,7 +20,7 @@ export default async function HomePage() {
     if (userId) redirect("/app");
   }
   return (
-    <div data-theme="dark" className="min-h-screen" style={{background:"#03020a"}}>
+    <div className="min-h-screen" style={{background:"rgb(var(--color-void))"}}>
       <MarketingHeader />
       <main>
         <Hero />
