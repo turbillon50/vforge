@@ -16,7 +16,7 @@ interface Msg {
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 const QUICK_PROMPTS = [
-  "¿Cuáles son las features clave?",
+  "¿Cuáles son las funciones clave?",
   "Explica el blueprint",
   "¿Cómo funciona VForge?",
 ];

@@ -15,7 +15,7 @@ export default function TermsPage() {
       <p>Debes tener al menos 18 años de edad y capacidad legal para celebrar contratos en tu jurisdicción. Si usas el Servicio en nombre de una empresa, declaras estar autorizado para aceptar estos Términos en su nombre. No puedes usar el Servicio si has sido suspendido previamente o si tu uso viola leyes aplicables.</p>
 
       <h2>3. Descripción del Servicio</h2>
-      <p>VForge es una plataforma de desarrollo de software asistido por inteligencia artificial. El Servicio incluye, sin limitarse a: (a) el agente V, que genera código, configura infraestructura y orquesta herramientas; (b) un servidor MCP para integrar agentes de IA externos (Claude, Cursor, Codex, entre otros); (c) un marketplace de apps, integraciones y templates (V-Shop); (d) herramientas de gestión de proyectos, despliegues y clientes; (e) almacenamiento de secretos y configuraciones de proyectos.</p>
+      <p>VForge es una plataforma de desarrollo de software asistido por inteligencia artificial. El Servicio incluye, sin limitarse a: (a) el agente V, que genera código, configura infraestructura y orquesta herramientas; (b) un servidor MCP para integrar agentes de IA externos (Claude, Cursor, Codex, entre otros); (c) un marketplace de apps, integraciones y plantillas (V-Shop); (d) herramientas de gestión de proyectos, despliegues y clientes; (e) almacenamiento de secretos y configuraciones de proyectos.</p>
 
       <h2>4. Cuentas y roles</h2>
       <p><strong>Owner:</strong> acceso completo a todas las funciones según el plan contratado. Responsable de todas las acciones realizadas desde su cuenta.</p>

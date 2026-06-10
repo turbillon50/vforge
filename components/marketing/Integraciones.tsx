@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-const CDN = "https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/";
 
 interface Integration {
   id: string; name: string; category: string; accent: string;
@@ -15,15 +14,15 @@ interface Integration {
 const INTEGRATIONS: Integration[] = [
   {
     id:"neon", name:"Neon", category:"Base de datos", accent:"#00e5bf",
-    logo:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_231325_3634e672-a272-4b6c-a0ec-35f03d9e5506.png", bgImg:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_234735_127bebff-30c0-48af-9795-24156084993a.png",
-    tagline:"PostgreSQL serverless de cada proyecto",
-    desc:"Cada app que V construye vive en su propio Neon PostgreSQL. Serverless, con branching para previews y Data API REST para queries desde Edge.",
+    logo:"/integraciones/b7bb9977ce.jpg", bgImg:"/integraciones/4226c2a1b0.jpg",
+    tagline:"PostgreSQL serverless para cada proyecto",
+    desc:"Cada app que V construye vive en su propio Neon PostgreSQL. Serverless, con ramas para previews y Data API REST para consultas desde Edge.",
     role:"Almacena usuarios, sesiones, datos del negocio y memoria de V",
     steps:["V crea el Neon project automáticamente","Genera el schema según el alcance","Conecta Clerk via JWKS para auth","Activa Data API REST para Edge queries"],
   },
   {
     id:"clerk", name:"Clerk", category:"Autenticación", accent:"#6c47ff",
-    logo:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_231404_ab86fc88-0af6-4562-9886-dee0ddf79b76.png", bgImg:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_234712_b03e8a8e-c718-4b43-96b3-cfe557ad940b.png",
+    logo:"/integraciones/083a5f7453.jpg", bgImg:"/integraciones/65f9c80c36.jpg",
     tagline:"Login listo en 10 minutos, seguro para siempre",
     desc:"Social login, MFA, organizaciones y roles. V configura Clerk en cada nuevo proyecto sin documentación — el patrón está en el Skills Vault.",
     role:"Autentica a todos los usuarios de tus apps",
@@ -31,31 +30,31 @@ const INTEGRATIONS: Integration[] = [
   },
   {
     id:"vercel", name:"Vercel", category:"Deploy", accent:"#ffffff",
-    logo:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_231302_e0eba5c5-f95a-4408-a44d-f0c9becc9774.png", bgImg:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_234613_5fc9f31a-2282-4ba2-889e-3b868de32cda.png",
-    tagline:"Deploy en 30 segundos, cada push",
-    desc:"Cada commit a GitHub triggerrea un deploy automático en Vercel. Preview deployments en cada PR. Edge network con nodos en São Paulo.",
+    logo:"/integraciones/180f27edee.jpg", bgImg:"/integraciones/173d8a2ef3.jpg",
+    tagline:"Despliegue en 30 segundos con cada push",
+    desc:"Cada commit a GitHub dispara un despliegue automático en Vercel. Previews en cada PR y red edge con nodos en São Paulo.",
     role:"Sirve todas las apps en producción con latencia mínima",
-    steps:["V hace push a GitHub","Vercel detecta el commit","Build y deploy automático","URL de producción activa en <60s"],
+    steps:["V hace push a GitHub","Vercel detecta el commit","Build y despliegue automático","URL de producción activa en <60s"],
   },
   {
-    id:"resend", name:"Resend", category:"Email", accent:"#ff5c00",
-    logo:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_231503_d8af086d-31ad-48b5-a4a9-e44f0463acb2.png", bgImg:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_234735_127bebff-30c0-48af-9795-24156084993a.png",
-    tagline:"Emails que llegan al inbox, siempre",
-    desc:"API moderna con templates en React JSX. DKIM configurado por V en cada dominio. Tasa de entrega >99% en México.",
+    id:"resend", name:"Resend", category:"Correo", accent:"#ff5c00",
+    logo:"/integraciones/3c27232f5c.jpg", bgImg:"/integraciones/4226c2a1b0.jpg",
+    tagline:"Correos que llegan a la bandeja, siempre",
+    desc:"API moderna con plantillas en React JSX. DKIM configurado por V en cada dominio. Tasa de entrega >99% en México.",
     role:"Envía confirmaciones, notificaciones y campañas",
-    steps:["V configura DKIM en name.com","Verifica el dominio en Resend","Crea templates con React Email","Activa webhooks de entrega"],
+    steps:["V configura DKIM en name.com","Verifica el dominio en Resend","Crea plantillas con React Email","Activa webhooks de entrega"],
   },
   {
     id:"stripe", name:"Stripe", category:"Pagos", accent:"#635bff",
-    logo:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_231430_08c8fc52-8277-4b55-a0dc-b92e9397f28d.png", bgImg:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_234548_546910fd-8a1b-4fa0-a95e-995730ae504f.png",
+    logo:"/integraciones/2acbd74f53.jpg", bgImg:"/integraciones/9670498573.jpg",
     tagline:"Pagos en vivo desde el día 1",
-    desc:"V configura Stripe en live mode desde el primer día. Webhooks para checkout, suscripciones y reembolsos. IVA automático para México.",
+    desc:"V configura Stripe en modo producción desde el primer día. Webhooks para checkout, suscripciones y reembolsos. IVA automático para México.",
     role:"Procesa todos los pagos de tus clientes",
     steps:["V inyecta las keys de Stripe","Configura el webhook endpoint","Activa Stripe Tax para IVA","Implementa checkout y portal"],
   },
   {
     id:"github", name:"GitHub", category:"Código", accent:"#e4e4e7",
-    logo:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_231235_953715b5-b04f-4588-b5f2-84e0244f4c35.png", bgImg:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_234548_546910fd-8a1b-4fa0-a95e-995730ae504f.png",
+    logo:"/integraciones/7dfb6156c5.jpg", bgImg:"/integraciones/9670498573.jpg",
     tagline:"Tu código, siempre tuyo",
     desc:"Cada proyecto tiene su propio repositorio en tu cuenta de GitHub. V hace commits, abre PRs y mantiene el historial completo.",
     role:"Versionamiento y CI/CD de todos los proyectos",
@@ -63,7 +62,7 @@ const INTEGRATIONS: Integration[] = [
   },
   {
     id:"maps", name:"Google Maps", category:"Mapas", accent:"#4285f4",
-    logo:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_231526_618fe59d-eb2e-409e-b928-ddf6849fa414.png", bgImg:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_234613_5fc9f31a-2282-4ba2-889e-3b868de32cda.png",
+    logo:"/integraciones/f3d914d417.jpg", bgImg:"/integraciones/173d8a2ef3.jpg",
     tagline:"Mapas y geolocalización en tu app",
     desc:"Rutas, marcadores, geofencing y búsqueda de lugares. V integra Maps API en apps de logística, delivery y servicios con ubicación.",
     role:"Geolocalización, rutas y mapas interactivos",
@@ -71,7 +70,7 @@ const INTEGRATIONS: Integration[] = [
   },
   {
     id:"whatsapp", name:"WhatsApp", category:"Mensajería", accent:"#25d366",
-    logo:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_231556_02f56566-5f85-4302-9509-2daa44e3c00f.png", bgImg:"https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_234712_b03e8a8e-c718-4b43-96b3-cfe557ad940b.png",
+    logo:"/integraciones/7699ce92c6.jpg", bgImg:"/integraciones/65f9c80c36.jpg",
     tagline:"El canal donde viven tus clientes",
     desc:"Bots inteligentes, notificaciones automáticas y campañas de marketing via WhatsApp Business. Goossip corre en Hetzner con Baileys.",
     role:"Comunicación directa con clientes mexicanos",
@@ -181,7 +180,8 @@ export function Integraciones() {
   const [selected, setSelected] = useState<Integration | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(sectionRef, { once:true, margin:"-80px" });
+  const inViewRaw = useInView(sectionRef, { once:true, margin:"-80px" });
+  const inView = true; void inViewRaw;
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
@@ -200,7 +200,7 @@ export function Integraciones() {
   function onMouseUp() { isDragging.current = false; }
 
   return (
-    <section ref={sectionRef} data-theme="dark" id="integraciones" className="relative bg-[#050509] py-20 overflow-hidden">
+    <section ref={sectionRef} data-theme="dark" id="integraciones" className="relative bg-[#050509] py-16 md:py-20 overflow-hidden">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.03]"
         style={{ backgroundImage:"radial-gradient(circle, rgba(139,92,246,0.8) 1px, transparent 1px)", backgroundSize:"40px 40px" }} />

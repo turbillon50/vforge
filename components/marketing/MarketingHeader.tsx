@@ -16,7 +16,7 @@ export function MarketingHeader() {
     {href:"/pricing",label:"Precios"},
     {href:"/blog",label:"Blog"},
     {href:"/mcp",label:"MCP"},
-    {href:"/developers",label:"Developers",badge:"Soon"},
+    {href:"/developers",label:"Desarrolladores",badge:"Pronto"},
   ];
   const handleShare=()=>{
     if(typeof navigator!=="undefined"&&navigator.share)

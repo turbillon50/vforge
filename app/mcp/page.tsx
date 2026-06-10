@@ -20,7 +20,7 @@ const STEPS = [
   {
     n: "02",
     title: "Obtén tu token MCP",
-    body: "En tu dashboard → Settings → MCP Token. El token empieza con vfmcp_",
+    body: "En tu dashboard → Configuración → Token MCP. El token empieza con vfmcp_",
     code: `// Tu token se ve así:
 vfmcp_10731b2b8eee26a32b8dc97d855b...`,
     cta: null,
@@ -28,7 +28,7 @@ vfmcp_10731b2b8eee26a32b8dc97d855b...`,
   {
     n: "03",
     title: "Edita claude_desktop_config.json",
-    body: "Abre Claude Desktop → Settings → Developer → Edit Config. Agrega el bloque:",
+    body: "Abre Claude Desktop → Configuración → Desarrollador → Editar configuración. Agrega el bloque:",
     code: `{
   "mcpServers": {
     "vforge": {
@@ -56,8 +56,8 @@ vfmcp_10731b2b8eee26a32b8dc97d855b...`,
 "Lista mis proyectos de VForge"
 
 // Respuesta esperada:
-→ istore-pro (TypeScript · Vercel · live)
-→ happytoc.life (TypeScript · Vercel · live)
+→ istore-pro (TypeScript · Vercel · producción)
+→ happytoc.life (TypeScript · Vercel · producción)
 → ruta618.life (TypeScript · Vercel · preview)
 ...`,
     cta: null,
@@ -65,25 +65,25 @@ vfmcp_10731b2b8eee26a32b8dc97d855b...`,
 ];
 
 const TOOLS = [
-  { name: "list_projects", desc: "Lista todos tus proyectos con status, stack y URL" },
-  { name: "get_project", desc: "Detalle completo de un proyecto: repo, DB, env vars" },
+  { name: "list_projects", desc: "Lista todos tus proyectos con estado, tecnologías y URL" },
+  { name: "get_project", desc: "Detalle completo de un proyecto: repo, DB y variables de entorno" },
   { name: "create_project", desc: "Crea un nuevo proyecto en la base de datos de VForge" },
   { name: "trigger_deploy", desc: "Triggerear deploy en Vercel para un proyecto" },
-  { name: "get_deploy_status", desc: "Estado actual del último deploy" },
-  { name: "list_deployments", desc: "Historial de deployments con URLs de preview" },
+  { name: "get_deploy_status", desc: "Estado actual del último despliegue" },
+  { name: "list_deployments", desc: "Historial de despliegues con URLs de preview" },
   { name: "generate_contract", desc: "Genera contrato-compendio .docx para un cliente" },
   { name: "get_blueprint", desc: "Obtiene el blueprint visual de un proyecto" },
-  { name: "update_scope", desc: "Actualiza el alcance y features de un proyecto" },
+  { name: "update_scope", desc: "Actualiza el alcance y funciones de un proyecto" },
   { name: "list_integrations", desc: "Integraciones activas: Clerk, Stripe, Neon, Resend" },
   { name: "get_workspace", desc: "Accede al workspace del proyecto en VForge" },
   { name: "create_task", desc: "Crea una tarea en la cola de dispatch" },
   { name: "get_credentials_registry", desc: "Consulta qué credenciales están configuradas" },
-  { name: "send_notification", desc: "Envía notificación al cliente via Resend" },
+  { name: "send_notification", desc: "Envía notificación al cliente vía Resend" },
 ];
 
 const SAVINGS = [
   { pct: "40%", label: "Reducción en consumo de tokens", desc: "El contexto comprimido de VForge elimina relectura de archivos." },
-  { pct: "70%", label: "Menos turnos por tarea", desc: "V conoce tu stack. No necesita 5 preguntas para entender el contexto." },
+  { pct: "70%", label: "Menos turnos por tarea", desc: "V conoce tu stack técnico. No necesita 5 preguntas para entender el contexto." },
   { pct: "8min", label: "Scaffold de proyecto nuevo", desc: "Repo + Neon + Vercel + Clerk configurados en una sola conversación." },
   { pct: "30s", label: "Generar contrato completo", desc: "Compendio editorial + legal + técnico en 30 segundos." },
 ];
@@ -110,7 +110,7 @@ export default function MCPDocsPage() {
           </h1>
           <p className="mx-auto mt-5 max-w-lg text-[1rem] font-light leading-relaxed text-white/40">
             VForge MCP expone 14 herramientas que permiten a Claude operar tu infraestructura real.
-            Proyectos, deployments, contratos y más — desde cualquier conversación.
+            Proyectos, despliegues, contratos y más — desde cualquier conversación.
           </p>
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/8 px-4 py-2">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
@@ -185,11 +185,11 @@ export default function MCPDocsPage() {
           <div className="mb-8 flex items-end justify-between">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/25 mb-1">
-                Tools disponibles
+                Herramientas disponibles
               </p>
               <h2 className="text-2xl font-bold text-white">14 herramientas reales</h2>
             </div>
-            <span className="font-mono text-[11px] text-white/25">{TOOLS.length} tools</span>
+            <span className="font-mono text-[11px] text-white/25">{TOOLS.length} herramientas</span>
           </div>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             {TOOLS.map((tool) => (
@@ -214,11 +214,11 @@ export default function MCPDocsPage() {
           <div className="space-y-3">
             {[
               { from: "user", text: "Lista mis proyectos activos en VForge" },
-              { from: "v", text: "Encontré 17 proyectos. Los 3 más recientes: istore-pro (live · vercel), happytoc.life (live · vercel), ruta618.life (preview · vercel). ¿Quieres detalle de alguno?" },
+              { from: "v", text: "Encontré 17 proyectos. Los 3 más recientes: istore-pro (producción · Vercel), happytoc.life (producción · Vercel), ruta618.life (preview · Vercel). ¿Quieres detalle de alguno?" },
               { from: "user", text: "Genera el contrato para el cliente Hilda, proyecto happytoc.life, $8,000 MXN con anticipo de $2,000" },
               { from: "v", text: "Generando contrato-compendio... ✓ Contrato generado: happytoc-hilda-2026.docx — incluye portada, guía del proceso, stack técnico, variables de entorno y contrato legal con cláusula de transferencia IP." },
               { from: "user", text: "Triggerear deploy de ruta618 en Vercel" },
-              { from: "v", text: "✓ Deploy triggereado — ID: dpl_8kQm... · Status: building · Verás el resultado en ~45 segundos en ruta618.life" },
+              { from: "v", text: "✓ Despliegue disparado — ID: dpl_8kQm... · Estado: construyendo · Verás el resultado en ~45 segundos en ruta618.life" },
             ].map((msg, i) => (
               <div key={i} className={`flex ${msg.from === "user" ? "justify-end" : "justify-start gap-2.5"}`}>
                 {msg.from === "v" && (

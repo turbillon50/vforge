@@ -191,7 +191,7 @@ export default function BlueprintCanvas({ scope }: Props) {
         <div className="flex items-center gap-3">
           <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 backdrop-blur">
             <span className="font-mono text-[10px] text-muted">
-              {nodes.filter((n) => n.kind === "feature").length} features ·{" "}
+              {nodes.filter((n) => n.kind === "feature").length} funciones ·{" "}
               {nodes.filter((n) => n.kind === "integration").length} integraciones
             </span>
           </div>

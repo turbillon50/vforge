@@ -51,7 +51,7 @@ const STEPS = [
 
 export function Contratos() {
   return (
-    <section data-theme="dark" id="contratos" className="relative py-20">
+    <section data-theme="dark" id="contratos" className="relative py-14 md:py-16">
       <div className="mx-auto max-w-5xl px-5">
         <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-br from-[#0c0a1a] to-[#06040f] p-8 md:p-12">
           <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-violet-600/20 blur-[100px]" />
@@ -95,7 +95,7 @@ export function Contratos() {
 
             <div className="mt-7 flex items-center gap-2 text-xs text-white/30">
               <span className="text-cyan-400/70"><IconShieldSm /></span>
-              Firma electrónica con validez legal · Powered by DocuSign
+              Firma electrónica con validez legal · Respaldado por DocuSign
             </div>
           </div>
         </div>

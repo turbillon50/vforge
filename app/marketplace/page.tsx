@@ -16,32 +16,32 @@ const CATEGORIES: { id: Category; label: string }[] = [
   { id: "apps", label: "Apps" },
   { id: "integraciones", label: "Integraciones" },
   { id: "llms", label: "LLMs" },
-  { id: "templates", label: "Templates" },
+  { id: "templates", label: "Plantillas" },
 ];
 
-const HF_SPHERE = "https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_082007_60084359-8811-4bc5-8d6b-a3ab56409de3.png";
+const HF_SPHERE = "/marketplace/6901e1f6e2.jpg";
 
 const ITEMS = [
   // APPS
-  { id: "apsus", cat: "apps", name: "APSUS", sub: "Plataforma fintech completa", icon: "💸", color: "#7c3aed", price: "Incluido en Forge", status: "live", img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=300&q=80", desc: "Créditos, facturas, movimientos y perfilamiento crediticio. Listo para deploy con Clerk + Neon." },
-  { id: "csn", cat: "apps", name: "CSN Carnes", sub: "Red de sucursales E-Commerce", icon: "🥩", color: "#dc2626", price: "Incluido en Forge", status: "live", img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=300&q=80", desc: "App para redes de tiendas. Admin multi-sucursal, catálogo dinámico y dashboard de ventas." },
-  { id: "mt", cat: "apps", name: "MT Empresarial", sub: "Traslados ejecutivos PWA", icon: "🚗", color: "#0891b2", price: "Incluido en Forge", status: "live", img: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=300&q=80", desc: "Gestión de flotas, reservas y driver panel. GPS + notificaciones push incluidas." },
-  { id: "rideme", cat: "apps", name: "RideMe", sub: "Réplica InDriver para LATAM", icon: "🛺", color: "#059669", price: "Próximamente", status: "soon", img: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=300&q=80", desc: "Plataforma de movilidad con modelo de subasta de precio. Admin, driver y pasajero." },
+  { id: "apsus", cat: "apps", name: "APSUS", sub: "Plataforma fintech completa", icon: "💸", color: "#7c3aed", price: "Incluido en Forge", status: "live", img: "/marketplace/12a5602c5b.jpg", desc: "Créditos, facturas, movimientos y perfilamiento crediticio. Listo para desplegar con Clerk + Neon." },
+  { id: "csn", cat: "apps", name: "CSN Carnes", sub: "Red de sucursales e-commerce", icon: "🥩", color: "#dc2626", price: "Incluido en Forge", status: "live", img: "/marketplace/1fd124d333.jpg", desc: "App para redes de tiendas. Administración multi-sucursal, catálogo dinámico y dashboard de ventas." },
+  { id: "mt", cat: "apps", name: "MT Empresarial", sub: "Traslados ejecutivos PWA", icon: "🚗", color: "#0891b2", price: "Incluido en Forge", status: "live", img: "/marketplace/3065cbab8e.jpg", desc: "Gestión de flotas, reservas y panel de conductores. GPS + notificaciones push incluidas." },
+  { id: "rideme", cat: "apps", name: "RideMe", sub: "Réplica InDriver para LATAM", icon: "🛺", color: "#059669", price: "Próximamente", status: "soon", img: "/marketplace/6cb8a5afe1.jpg", desc: "Plataforma de movilidad con modelo de subasta de precio. Administración, conductor y pasajero." },
   // INTEGRACIONES
-  { id: "clerk", cat: "integraciones", name: "Clerk Auth", sub: "Autenticación production-ready", icon: "🔐", color: "#6d28d9", price: "Gratis", status: "live", img: null, desc: "Setup completo: pk_live_, webhooks, user sync con Neon. V lo configura sola." },
-  { id: "neon", cat: "integraciones", name: "Neon Postgres", sub: "Base de datos serverless", icon: "🐘", color: "#00e599", price: "Gratis", status: "live", img: null, desc: "Branching de DB por feature. Migrations automáticas. Integrado con Vercel en un click." },
-  { id: "stripe", cat: "integraciones", name: "Stripe Payments", sub: "Pagos + suscripciones", icon: "💳", color: "#635bff", price: "Gratis", status: "live", img: null, desc: "Checkout, webhooks, billing portal y prueba de planes. V inyecta las claves sola." },
-  { id: "mp", cat: "integraciones", name: "Mercado Pago", sub: "Pagos LATAM nativos", icon: "🟡", color: "#009ee3", price: "Gratis", status: "live", img: null, desc: "Checkout Pro, Subscriptions y notificaciones. Ideal para México, Argentina y Brasil." },
-  { id: "resend", cat: "integraciones", name: "Resend Email", sub: "Emails transaccionales", icon: "📧", color: "#000000", price: "Gratis", status: "live", img: null, desc: "Templates de bienvenida, recuperación de contraseña y notificaciones. DNS configurado por V." },
-  { id: "vapid", cat: "integraciones", name: "Push VAPID", sub: "Notificaciones push PWA", icon: "🔔", color: "#f59e0b", price: "Gratis", status: "live", img: null, desc: "Web push en iOS y Android. Service worker, permisos y targeting por usuario." },
+  { id: "clerk", cat: "integraciones", name: "Clerk Auth", sub: "Autenticación lista para producción", icon: "🔐", color: "#6d28d9", price: "Gratis", status: "live", img: null, desc: "Configuración completa: pk_live_, webhooks y sincronización de usuarios con Neon. V lo configura sola." },
+  { id: "neon", cat: "integraciones", name: "Neon Postgres", sub: "Base de datos serverless", icon: "🐘", color: "#00e599", price: "Gratis", status: "live", img: null, desc: "Ramas de base de datos por función, migraciones automáticas e integración con Vercel en un clic." },
+  { id: "stripe", cat: "integraciones", name: "Stripe Payments", sub: "Pagos + suscripciones", icon: "💳", color: "#635bff", price: "Gratis", status: "live", img: null, desc: "Checkout, webhooks, portal de facturación y prueba de planes. V inyecta las claves sola." },
+  { id: "mp", cat: "integraciones", name: "Mercado Pago", sub: "Pagos LATAM nativos", icon: "🟡", color: "#009ee3", price: "Gratis", status: "live", img: null, desc: "Checkout Pro, suscripciones y notificaciones. Ideal para México, Argentina y Brasil." },
+  { id: "resend", cat: "integraciones", name: "Resend Email", sub: "Correos transaccionales", icon: "📧", color: "#000000", price: "Gratis", status: "live", img: null, desc: "Plantillas de bienvenida, recuperación de contraseña y notificaciones. DNS configurado por V." },
+  { id: "vapid", cat: "integraciones", name: "Push VAPID", sub: "Notificaciones push PWA", icon: "🔔", color: "#f59e0b", price: "Gratis", status: "live", img: null, desc: "Web push en iOS y Android. Service worker, permisos y segmentación por usuario." },
   // LLMs
   { id: "claude", cat: "llms", name: "Claude (Anthropic)", sub: "El cerebro de V", icon: "🧠", color: "#d97757", price: "API key propia", status: "live", img: null, desc: "Claude Sonnet 4 integrado en el chat de V. Razona, escribe código y orquesta tu stack." },
   { id: "openai", cat: "llms", name: "OpenAI GPT-4o", sub: "Modelo alternativo", icon: "✨", color: "#10a37f", price: "API key propia", status: "live", img: null, desc: "Usa GPT-4o como modelo secundario para tareas específicas dentro de tu workspace." },
   { id: "gemini", cat: "llms", name: "Gemini Pro", sub: "Google AI", icon: "🌟", color: "#4285f4", price: "Próximamente", status: "soon", img: null, desc: "Integración con Gemini Pro para procesamiento multimodal y análisis de documentos." },
   { id: "elevenlabs", cat: "llms", name: "ElevenLabs", sub: "Voz sintética IA", icon: "🎙️", color: "#7c3aed", price: "Próximamente", status: "soon", img: null, desc: "Voz para tu app: onboarding guiado, notificaciones habladas y asistentes de voz." },
   // TEMPLATES
-  { id: "pwa-saas", cat: "templates", name: "PWA SaaS Base", sub: "Template completo de arranque", icon: "🚀", color: "#7c3aed", price: "$0 con Studio", status: "live", img: null, desc: "Next.js 14 + Clerk + Neon + Resend + VAPID + admin panel. El estándar MYMOMENTUM." },
-  { id: "landing-pro", cat: "templates", name: "Landing Pro", sub: "Landing de conversión", icon: "🎯", color: "#dc2626", price: "$0 con Studio", status: "live", img: null, desc: "Hero + features + pricing + testimonials + CTA. Dark premium mobile-first." },
+  { id: "pwa-saas", cat: "templates", name: "PWA SaaS Base", sub: "Plantilla completa de arranque", icon: "🚀", color: "#7c3aed", price: "$0 con Studio", status: "live", img: null, desc: "Next.js 14 + Clerk + Neon + Resend + VAPID + panel de administración. El estándar MYMOMENTUM." },
+  { id: "landing-pro", cat: "templates", name: "Landing Pro", sub: "Landing de conversión", icon: "🎯", color: "#dc2626", price: "$0 con Studio", status: "live", img: null, desc: "Hero, funciones, precios, testimonios y CTA. Tema oscuro premium, mobile-first." },
   { id: "ecommerce", cat: "templates", name: "E-Commerce LATAM", sub: "Tienda lista para México", icon: "🛍️", color: "#059669", price: "Próximamente", status: "soon", img: null, desc: "Catálogo, carrito, Mercado Pago y panel de administración. Lleva tu tienda en 1 día." },
 ];
 
@@ -69,7 +69,7 @@ export default function MarketplacePage() {
               <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">tu próxima app.</span>
             </h1>
             <p className="mx-auto mt-3 max-w-md text-sm font-light text-white/35">
-              Apps listas, integraciones, LLMs y templates. V los conecta a tu proyecto en segundos.
+              Apps listas, integraciones, LLMs y plantillas. V los conecta a tu proyecto en segundos.
             </p>
           </motion.div>
         </div>

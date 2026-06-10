@@ -36,7 +36,7 @@ export const INTEGRATIONS: Integration[] = [
     Logo: GitHubLogo,
     brandColor: "#ffffff",
     blurb:
-      "Conecta tu repositorio y VForge versiona cada cambio que genera. Tu codigo vive donde ya trabajas, listo para hacer deploy.",
+      "Conecta tu repositorio y VForge versiona cada cambio que genera. Tu codigo vive donde ya trabajas, listo para desplegar.",
     connectHref: "/api/auth/github/start",
     video: "https://www.youtube.com/embed/pBy1zgt0XPc",
   },
@@ -46,7 +46,7 @@ export const INTEGRATIONS: Integration[] = [
     Logo: VercelLogo,
     brandColor: "#ffffff",
     blurb:
-      "Publica tu app en segundos. VForge hace deploy a Vercel con cada iteracion y te entrega una URL en vivo al instante.",
+      "Publica tu app en segundos. VForge despliega en Vercel con cada iteracion y te entrega una URL en vivo al instante.",
     connectHref: "/api/auth/vercel/start",
     video: null,
   },
@@ -116,7 +116,7 @@ export const INTEGRATIONS: Integration[] = [
     Logo: NeonLogo,
     brandColor: "#00E699",
     blurb:
-      "Postgres serverless para tu app. VForge provisiona y conecta tu base de datos Neon lista para escalar al instante.",
+      "Postgres serverless para tu app. VForge provisiona y conecta tu base de datos Neon, lista para escalar al instante.",
     connectHref: "/app/integrations",
     video: "https://www.youtube.com/embed/llSTZMVrbx8",
   },
@@ -136,7 +136,7 @@ export const INTEGRATIONS: Integration[] = [
     Logo: ResendLogo,
     brandColor: "#ffffff",
     blurb:
-      "Correos que llegan a la bandeja. VForge envia emails transaccionales con Resend desde tu app sin configurar servidores.",
+      "Correos que llegan a la bandeja. VForge envia correos transaccionales con Resend desde tu app sin configurar servidores.",
     connectHref: "/app/integrations",
     video: "https://www.youtube.com/embed/HyDwVN1AFwY",
   },

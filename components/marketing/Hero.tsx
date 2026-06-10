@@ -6,7 +6,7 @@ import { IconArrowR, IconSparkles, IconX, IconRocket, IconHelp, IconBag, IconTag
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SPHERE_IMG = "/sphere-violet.png";
-const SPHERE_VIDEO = "https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_224036_5d36a8bc-fa57-49f9-ad05-1dee4fc96f6d.mp4";
+const SPHERE_VIDEO = "/hero/sphere.mp4";
 
 type RadialItem = {
   id: string;
@@ -35,7 +35,7 @@ const LAUNCH_BADGES = [
 ];
 
 const METODO_STEPS = [
-  { n: "01", title: "Alcance en 1 sesión", desc: "V entiende tu idea, define features y te muestra el blueprint en tiempo real." },
+  { n: "01", title: "Alcance en 1 sesión", desc: "V entiende tu idea, define funciones y te muestra el blueprint en tiempo real." },
   { n: "02", title: "Demo en 4 días", desc: "Ves tu app funcionando antes de pagar el siguiente paso. Sin sorpresas." },
   { n: "03", title: "Deploy a producción", desc: "Dominio propio, App Store, Google Play. Todo desplegado y operando." },
 ];
@@ -313,7 +313,7 @@ export function Hero() {
 
                     {/* Lo nuevo */}
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400/70 mb-3">
-                      🚀 Recién lanzado
+                      Recién lanzado
                     </p>
                     <div className="grid grid-cols-2 gap-2 mb-5">
                       {LAUNCH_BADGES.map((b, i) => (

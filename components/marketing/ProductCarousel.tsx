@@ -33,7 +33,7 @@ const PRODUCTS: Product[] = [
     tagline: "De cero a producción",
     priceLabel: "$12,000 MXN",
     accent: "#8b5cf6",
-    bgImg: "https://picsum.photos/seed/vforge-apps/800/500",
+    bgImg: "/products/app.jpg",
     badge: "Producto estrella",
     fullDesc: "Construimos tu aplicación completa: PWA premium, base de datos, login, dashboard y todo lo necesario para operar en el mundo real. Empiezas con una demo gratuita y avanzas por etapas con pagos claros.",
     timeline: [
@@ -64,7 +64,7 @@ const PRODUCTS: Product[] = [
     tagline: "Tu app en el App Store",
     priceLabel: "$5,000 MXN",
     accent: "#0ea5e9",
-    bgImg: "https://picsum.photos/seed/vforge-ios/800/500",
+    bgImg: "/products/mcp.jpg",
     fullDesc: "Llevamos tu aplicación al App Store de Apple. Configuración de cuenta de desarrollador, build firmado, assets, revisión de Apple y publicación. Tu app lista para iIconBell y iPad.",
     timeline: [
       { phase: "Preparación", detail: "Configuración de App Store Connect" },
@@ -79,7 +79,7 @@ const PRODUCTS: Product[] = [
     tagline: "Tu app en Google Play",
     priceLabel: "$3,000 MXN",
     accent: "#22c55e",
-    bgImg: "https://picsum.photos/seed/vforge-android/800/500",
+    bgImg: "/products/android.jpg",
     fullDesc: "Publicamos tu aplicación en Google Play. Configuración de Play Console, build firmado, ficha de tienda optimizada, revisión y publicación para millones de dispositivos Android.",
     timeline: [
       { phase: "Preparación", detail: "Configuración de Play Console" },
@@ -94,7 +94,7 @@ const PRODUCTS: Product[] = [
     tagline: "Pixar, cine y corporativo",
     priceLabel: "Desde $200 MXN",
     accent: "#f59e0b",
-    bgImg: "https://picsum.photos/seed/vforge-video/800/500",
+    bgImg: "/products/videos.jpg",
     fullDesc: "Producimos videos cinematográficos generados con IA de última generación. Estilo Pixar, cinematográfico realista o corporativo profesional. Perfectos para campañas, presentaciones y lanzamientos.",
     capabilities: ["Estilo Pixar / animación 3D", "Cinematográfico fotorrealista", "Corporativo profesional", "Spots para redes sociales", "Intros y lanzamientos", "Entrega en alta resolución"],
   },
@@ -139,7 +139,7 @@ export function ProductCarousel() {
   const activeProduct = PRODUCTS.find((p) => p.id === active);
 
   return (
-    <section id="productos" data-theme="dark" className="relative py-20 bg-[#050509]">
+    <section id="productos" className="relative py-20">
       <div className="mx-auto max-w-5xl px-5">
         <p className="text-center text-[11px] font-semibold tracking-[0.25em] text-violet-400/70 uppercase">Nuestros productos</p>
         <h2 className="mt-2 text-center text-[clamp(1.8rem,5vw,3rem)] font-bold leading-tight tracking-tight text-white">
@@ -159,7 +159,8 @@ export function ProductCarousel() {
               key={p.id}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.01 }}
               transition={{ delay: i * 0.05, ease: EASE }}
               onClick={() => setActive(p.id)}
               className="group relative h-[440px] w-[310px] shrink-0 snap-center overflow-hidden rounded-[2rem] border text-left transition-all duration-500 hover:scale-[1.03]"

@@ -10,12 +10,12 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const HF_SPHERE = "https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_082007_60084359-8811-4bc5-8d6b-a3ab56409de3.png";
 
 const FEATURES_COMING = [
-  "Portal de developer con documentación técnica completa",
+  "Portal de desarrolladores con documentación técnica completa",
   "Acceso a la API pública de V",
-  "Sandbox para probar integraciones sin producción",
-  "Foro de comunidad y soporte técnico entre developers",
-  "Early access a nuevas features y modelos de IA",
-  "Revenue sharing en el V-Shop marketplace",
+  "Entorno sandbox para probar integraciones sin producción",
+  "Foro de comunidad y soporte técnico entre desarrolladores",
+  "Acceso anticipado a nuevas funciones y modelos de IA",
+  "Reparto de ingresos en el marketplace V-Shop",
 ];
 
 export default function DeveloperPage() {
@@ -59,10 +59,10 @@ export default function DeveloperPage() {
             </div>
             <h1 className="text-[clamp(2rem,7vw,3.5rem)] font-bold leading-tight tracking-tight text-white">
               Portal<br />
-              <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">Developer</span>
+              <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">Desarrolladores</span>
             </h1>
             <p className="mx-auto mt-4 max-w-md text-base font-light text-white/40">
-              Estamos construyendo el espacio definitivo para developers que quieren integrar, extender y monetizar con V.
+              Estamos construyendo el espacio definitivo para desarrolladores que quieren integrar, extender y monetizar con V.
             </p>
           </motion.div>
 
@@ -94,7 +94,7 @@ export default function DeveloperPage() {
                   <IconCheck size={20} className="text-emerald-400" />
                 </div>
                 <p className="font-semibold text-white">¡Estás en la lista!</p>
-                <p className="text-sm text-white/40">Te avisamos cuando el portal developer abra. Serás de los primeros.</p>
+                <p className="text-sm text-white/40">Te avisamos cuando abra el portal de desarrolladores. Serás de los primeros.</p>
               </div>
             ) : (
               <>
