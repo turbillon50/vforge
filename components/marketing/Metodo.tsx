@@ -30,7 +30,7 @@ export function Metodo() {
           ))}
         </div>
         <div className="mt-12">
-          <Link href="/sign-up" className="btn-primary !px-7 !py-3.5 text-[15px]">
+          <Link href="/sign-up" prefetch={false} className="btn-primary !px-7 !py-3.5 text-[15px]">
             Crear cuenta gratis <IconArrowR size={15} />
           </Link>
         </div>

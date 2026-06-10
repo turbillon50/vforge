@@ -326,7 +326,7 @@ export function ProductCarousel() {
                     </div>
                   )}
 
-                  <Link href="/sign-up" onClick={() => setActive(null)}
+                  <Link href="/sign-up" prefetch={false} onClick={() => setActive(null)}
                     className="mt-6 flex items-center justify-center gap-2 rounded-2xl py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
                     style={{ background: `linear-gradient(135deg, ${activeProduct.accent}, ${activeProduct.accent}cc)`, boxShadow: `0 0 40px ${activeProduct.accent}50` }}>
                     {activeProduct.ctaLabel || "Solicitar este producto"} <IconArrowR size={14} />

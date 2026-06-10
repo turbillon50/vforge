@@ -42,6 +42,9 @@ function hasValidOperatorToken(req: Request): boolean {
 // Rutas que requieren sesión (cualquier usuario registrado).
 const isProtected = createRouteMatcher([
   "/app(.*)",
+  "/forge(.*)",
+  "/v",
+  "/api/v/chat(.*)",
   "/api/connect(.*)",
   "/api/integrations(.*)",
   "/api/mcp/token(.*)",
@@ -65,6 +68,8 @@ const isProtected = createRouteMatcher([
 // Rutas exclusivas del owner (Luis): V, su cockpit y sus productos.
 const isOwnerOnly = createRouteMatcher([
   "/app(.*)",
+  "/forge(.*)",
+  "/v",
   "/api/cockpit(.*)",
   "/api/graph(.*)",
   "/api/github(.*)",

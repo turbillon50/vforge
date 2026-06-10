@@ -245,7 +245,7 @@ export default function PricingPage() {
         {/* FAQ mínimo */}
         <div className="mx-auto mt-16 max-w-2xl px-5 text-center">
           <p className="text-sm text-white/30">
-            ¿Tienes dudas? Habla con <Link href="/sign-up" className="text-violet-400 hover:underline">V directamente</Link> — te explica todo en segundos.
+            ¿Tienes dudas? Habla con <Link href="/sign-up" prefetch={false} className="text-violet-400 hover:underline">V directamente</Link> — te explica todo en segundos.
           </p>
         </div>
       </main>

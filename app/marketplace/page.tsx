@@ -161,7 +161,7 @@ export default function MarketplacePage() {
                 <p className="mt-4 text-sm font-light leading-relaxed text-white/55">{activeItem.desc}</p>
                 <div className="mt-4 flex items-center gap-3">
                   {activeItem.status === "live" ? (
-                    <Link href="/sign-up"
+                    <Link href="/sign-up" prefetch={false}
                       onClick={() => setActive(null)}
                       className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-violet-500 py-3.5 text-sm font-semibold text-white shadow-[0_0_30px_rgba(124,58,237,0.4)]"
                     >

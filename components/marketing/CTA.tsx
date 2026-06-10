@@ -17,7 +17,7 @@ export function CTA() {
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-white/75">{t.marketing.cta_body}</p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/sign-up" className="btn-primary">
+            <Link href="/sign-up" prefetch={false} className="btn-primary">
               {t.marketing.cta_primary}
             </Link>
             <Link href="/pricing" className="btn-ghost">

@@ -349,7 +349,7 @@ export function Hero() {
 
       <div ref={ctaRef} className="relative z-10 mt-12 flex w-full max-w-sm flex-col items-center gap-3">
         <Link
-          href="/sign-up"
+          href="/sign-up" prefetch={false}
           className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-violet-500 to-violet-600 px-8 py-4 text-base font-semibold text-white shadow-[0_8px_40px_rgba(124,58,237,0.45)] transition-all hover:shadow-[0_8px_60px_rgba(124,58,237,0.65)] active:scale-[0.98]"
         >
           <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />

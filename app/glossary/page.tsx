@@ -65,7 +65,7 @@ export default function GlossaryPage() {
           </div>
 
           <div className="mt-12 flex flex-col items-center gap-3 text-center md:flex-row md:justify-center">
-            <Link href="/sign-up" className="btn-primary">
+            <Link href="/sign-up" prefetch={false} className="btn-primary">
               {t.glossary.cta_primary}
             </Link>
             <Link href="/app/chat" className="btn-ghost">

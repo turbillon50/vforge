@@ -256,7 +256,7 @@ export default function MCPDocsPage() {
             </p>
             <div className="flex flex-col gap-3">
               <Link
-                href="/sign-up"
+                href="/sign-up" prefetch={false}
                 className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-violet-500 py-4 text-sm font-semibold text-white shadow-[0_8px_40px_rgba(124,58,237,0.4)]"
               >
                 Crear cuenta gratis
