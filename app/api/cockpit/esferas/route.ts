@@ -66,7 +66,12 @@ async function readDispatchQueue(): Promise<EsferaState[] | null> {
       SELECT *
       FROM dispatch_queue
       WHERE status IN ('running', 'in_progress', 'active', 'pending', 'queued')
-      ORDER BY COALESCE(started_at, created_at, NOW()) DESC
+         OR (status = 'done' AND COALESCE(completed_at, created_at) > NOW() - INTERVAL '5 minutes')
+      ORDER BY
+        CASE WHEN status IN ('running','in_progress','active') THEN 0
+             WHEN status IN ('pending','queued') THEN 1
+             ELSE 2 END,
+        COALESCE(started_at, created_at, NOW()) DESC
       LIMIT 100
     `) as Record<string, unknown>[];
 
@@ -77,14 +82,14 @@ async function readDispatchQueue(): Promise<EsferaState[] | null> {
       const agent = normalizeAgent(pick(row, ["agent", "esfera", "worker", "sphere", "model"]));
       if (!agent || byAgent.has(agent)) continue;
       const statusRaw = (pick(row, ["status", "state"]) || "").toLowerCase();
-      const working = /run|progress|active/.test(statusRaw);
+      const working = /run|progress|active|pending|queued/.test(statusRaw);
       byAgent.set(agent, {
         id: agent,
         name: LABEL[agent],
         role: ROLE[agent],
         status: working ? "working" : "idle",
-        project: pick(row, ["project", "repo", "project_id", "target", "repository"]),
-        task: pick(row, ["task", "title", "prompt", "description", "summary", "job"]),
+        project: pick(row, ["gajo", "project", "repo", "project_id", "target", "repository", "source"]),
+        task: pick(row, ["task", "title", "prompt", "description", "summary", "job", "source"]),
         since: pick(row, ["started_at", "created_at", "updated_at"]),
       });
     }

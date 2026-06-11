@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { PageHeader } from "@/components/workspace/PageHeader";
-import { IconActivity, IconExtLink, IconBranch, IconGlobe, IconLayers, IconRocket, IconSparkles } from "@/components/brand/VFIcons";
+import { AnimatePresence } from "framer-motion";
+import { IconActivity, IconExtLink, IconBranch, IconGlobe, IconLayers, IconSparkles, IconUsers, IconRocket, IconChevR, IconX, IconCode } from "@/components/brand/VFIcons";
 import { useT, interpolate } from "@/i18n/AppProviders";
+import { InviteModal } from "@/components/projects/InviteModal";
 
 interface RealProject {
   id: string;
@@ -50,6 +52,8 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "live" | "preview" | "draft">("all");
+  const [inviteProject, setInviteProject] = useState<{ id: string; name: string } | null>(null);
+  const [detailProject, setDetailProject] = useState<RealProject | null>(null);
 
   useEffect(() => {
     fetch("/api/projects", { cache: "no-store" })
@@ -268,34 +272,142 @@ export default function ProjectsPage() {
                 )}
               </div>
 
-              {/* Footer */}
-              <div className="flex items-center justify-between border-t border-white/6 px-5 py-3">
-                <Link href="/app/chat"
-                  className="font-mono text-[10px] uppercase tracking-widest text-violet-400 transition-colors hover:text-violet-300"
+              {/* Footer — acciones por proyecto */}
+              <div className="flex items-center gap-2 border-t border-white/6 px-5 py-3">
+                <button
+                  onClick={() => {
+                    const url = p.vercel_url || (p.domain ? `https://${p.domain}` : null);
+                    if (url) window.open(url, "_blank", "noopener,noreferrer");
+                    else setDetailProject(p);
+                  }}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-on-surface transition-all hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-200"
                 >
-                  {interpolate(t.projects.ask_b, { name: p.name.split(" ")[0] })}
-                </Link>
-                {p.vercel_url ? (
-                  <a
-                    href={p.vercel_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-mono text-[10px] text-on-surface transition-all hover:border-white/20 hover:bg-white/8"
-                  >
-                    <IconExtLink size={10} />
-                    Abrir
-                  </a>
-                ) : (
-                  <span className="flex items-center gap-1.5 font-mono text-[10px] text-muted">
-                    <IconRocket size={10} />
-                    Sin URL
-                  </span>
-                )}
+                  <IconRocket size={11} />
+                  Abrir
+                </button>
+                <button
+                  onClick={() => setInviteProject({ id: p.id, name: p.name })}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-violet-200 transition-all hover:border-violet-500/50 hover:bg-violet-500/15"
+                >
+                  <IconUsers size={11} />
+                  Invitar
+                </button>
               </div>
             </motion.article>
           );
         })}
       </div>
+
+      {/* Panel de detalle del proyecto */}
+      <AnimatePresence>
+        {detailProject && (
+          <motion.div
+            className="fixed inset-0 z-[110] flex justify-end"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <button
+              aria-label="Cerrar"
+              onClick={() => setDetailProject(null)}
+              className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            />
+            <motion.aside
+              initial={{ x: 80, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 80, opacity: 0 }}
+              transition={{ duration: 0.34, ease: EASE }}
+              className="relative z-10 flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-white/10 bg-[#0c0c14] shadow-2xl"
+            >
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-violet-400/40 to-transparent" />
+
+              <div className="flex items-start justify-between gap-3 border-b border-white/8 px-6 py-5">
+                <div className="min-w-0">
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-violet-400">
+                    Detalle de proyecto
+                  </p>
+                  <h2 className="mt-1 truncate font-display text-xl font-semibold text-on-surface">
+                    {detailProject.name}
+                  </h2>
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <IconGlobe size={11} className="shrink-0 text-muted" />
+                    <p className="truncate font-mono text-[11px] text-muted">
+                      {detailProject.domain || detailProject.vercel_url?.replace(/^https?:\/\//, "") || "—"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setDetailProject(null)}
+                  className="shrink-0 rounded-lg border border-white/10 bg-white/5 p-2 text-muted transition-colors hover:border-white/20 hover:text-on-surface"
+                >
+                  <IconX size={15} />
+                </button>
+              </div>
+
+              <div className="space-y-3 px-6 py-6">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-white/6 bg-white/3 px-3 py-2.5">
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-muted">Estado</p>
+                    <p className="mt-1 text-[13px] font-medium capitalize text-on-surface">
+                      {STATUS_FROM_CATEGORY[detailProject.category] ?? "draft"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-white/6 bg-white/3 px-3 py-2.5">
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-muted">Stack</p>
+                    <p className="mt-1 text-[13px] font-medium text-on-surface">
+                      {detailProject.github_language ?? "—"}
+                    </p>
+                  </div>
+                </div>
+
+                {detailProject.github_repo && (
+                  <div className="flex items-center gap-2 rounded-xl border border-white/6 bg-white/3 px-3 py-2.5">
+                    <IconCode size={13} className="shrink-0 text-muted" />
+                    <span className="truncate font-mono text-[12px] text-muted">{detailProject.github_repo}</span>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2 pt-2">
+                  {detailProject.vercel_url && (
+                    <a
+                      href={detailProject.vercel_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-on-surface transition-all hover:border-white/20 hover:bg-white/8"
+                    >
+                      <IconExtLink size={14} /> Abrir deploy
+                    </a>
+                  )}
+                  <button
+                    onClick={() => {
+                      setInviteProject({ id: detailProject.id, name: detailProject.name });
+                      setDetailProject(null);
+                    }}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 px-4 py-3 text-sm font-semibold text-white shadow-glow-violet transition-all hover:from-violet-500 hover:to-violet-400"
+                  >
+                    <IconUsers size={15} /> Invitar participante
+                  </button>
+                  <Link
+                    href="/app/chat"
+                    className="flex items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-violet-300 transition-all hover:bg-white/5"
+                  >
+                    <IconSparkles size={14} /> {interpolate(t.projects.ask_b, { name: detailProject.name.split(" ")[0] })}
+                  </Link>
+                </div>
+              </div>
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de invitación */}
+      <InviteModal
+        open={inviteProject !== null}
+        projectId={inviteProject?.id ?? null}
+        projectName={inviteProject?.name ?? ""}
+        onClose={() => setInviteProject(null)}
+      />
     </>
   );
 }
