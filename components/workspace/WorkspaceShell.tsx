@@ -10,7 +10,6 @@ import {
 } from "@/components/brand/VFIcons";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useClerkAppearance } from "@/lib/clerk-appearance";
-import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
 import { VPresence } from "@/components/brand/VPresence";
 import { VOrb } from "./VOrb";
 import { Icon3D } from "@/components/brand/Icon3D";
@@ -19,6 +18,11 @@ import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
+
+function hasClerkPublishableKey(): boolean {
+  return /^pk_(test|live)_/.test(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "");
+}
+
 
 const NAV = [
   { href:"/app/chat",        label:"Conversación",  Icon:IconChat,     kbd:"C" },

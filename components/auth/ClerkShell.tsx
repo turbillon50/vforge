@@ -1,5 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { isClerkPublishableKey } from "@/lib/auth/clerk-key";
 
 /**
  * ClerkShell wraps the app with ClerkProvider when a publishable key is present.
@@ -9,7 +10,7 @@ import { dark } from "@clerk/themes";
 export function ClerkShell({ children }: { children: React.ReactNode }) {
   const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-  if (!pk) {
+  if (!isClerkPublishableKey(pk)) {
     return <>{children}</>;
   }
 

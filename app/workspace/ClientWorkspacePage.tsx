@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { useUser } from "@clerk/nextjs";
+import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
 import { IconCheck, IconClock, IconZap, IconGlobe, IconBranch, IconChat, IconShield, IconShare } from "@/components/brand/VFIcons";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -19,7 +20,7 @@ const UPDATES = [
 ];
 
 export function ClientWorkspacePage() {
-  const { user } = useUser();
+  const clerkEnabled = hasClerkPublishableKey();
   const shareUrl = typeof window !== "undefined" ? window.location.origin : "https://vforge.site";
   const handleShare = () => {
     if (typeof navigator !== "undefined" && navigator.share) navigator.share({ title:"Mi proyecto en VForge", url:shareUrl });
@@ -36,7 +37,9 @@ export function ClientWorkspacePage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-white">Tu espacio en VForge</p>
-              <p className="text-[11px] text-white/35">Cliente · {user?.firstName ?? "Bienvenido"}</p>
+              <p className="text-[11px] text-white/35">
+                Cliente · {clerkEnabled ? <WorkspaceUserName /> : "Bienvenido"}
+              </p>
             </div>
           </div>
           <button onClick={handleShare} className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/60 transition hover:text-white/90">
@@ -109,4 +112,9 @@ export function ClientWorkspacePage() {
       </div>
     </div>
   );
+}
+
+function WorkspaceUserName() {
+  const { user } = useUser();
+  return <>{user?.firstName ?? "Bienvenido"}</>;
 }

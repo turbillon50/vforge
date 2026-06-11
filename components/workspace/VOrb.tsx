@@ -126,6 +126,7 @@ export function VOrb() {
   if (pathname === "/app" || HIDE_ON.some((p) => pathname?.startsWith(p))) return null;
   if (pos.x < 0) return null;
   const onLeft = pos.x + 28 < (typeof window !== "undefined" ? window.innerWidth / 2 : 200);
+  const items = pathname?.startsWith("/app/chat") ? ITEMS_CHAT : ITEMS_DEFAULT;
 
   return (
     <>
@@ -138,7 +139,7 @@ export function VOrb() {
               <div className="vorb-menu-dot" />
               <span className="text-[11px] font-semibold tracking-widest text-violet-300/60 uppercase">V — Menú</span>
             </div>
-            {(pathname?.startsWith("/app/chat") ? ITEMS_CHAT : ITEMS_DEFAULT).map((it, i) => (
+            {items.map((it, i) => (
               <button
                 key={it.label}
                 onClick={() => { setOpen(false); router.push(it.href); }}
@@ -161,7 +162,7 @@ export function VOrb() {
                   }
                   setOpen(false);
                 }}
-                style={{ animation: "vorbIn .2s " + ITEMS.length * 0.035 + "s both" }}
+                style={{ animation: "vorbIn .2s " + items.length * 0.035 + "s both" }}
                 className="flex w-full items-center gap-3 rounded-xl border border-white/[0.05] bg-white/[0.03] px-3 py-2.5 text-sm font-medium text-white/60 transition-all hover:bg-white/[0.08] hover:text-white/90"
               >
                 <span className="text-cyan-400/60 group-hover:text-cyan-400">⇧</span>
