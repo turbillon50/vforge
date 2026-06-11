@@ -1,26 +1,22 @@
-import OpenAI from "openai";
 import { sql } from "@/lib/db/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const OPERATOR_USER_ID = "operator_luis";
-const MAX_BYTES = 25 * 1024 * 1024; // 25 MB — OpenAI limit
+const MAX_BYTES = 25 * 1024 * 1024;
+const EL_KEY = process.env.ELEVENLABS_API_KEY || "";
+const STT_MODEL = process.env.ELEVENLABS_STT_MODEL || "scribe_v1";
 
 /**
  * POST /api/forge/transcribe
- * Body: multipart/form-data with field "audio" (Blob) and optional
- *       "language" (BCP-47 tag, default "es").
- *
- * Returns { text } with the Whisper transcription. Costs ~$0.006/min.
- *
- * Audio is ephemeral: never persisted to disk or DB. We only log the
- * resulting text length and duration in audit_events.
+ * Body: multipart/form-data con campo "audio" (Blob) y opcional "language".
+ * Transcribe con ElevenLabs Scribe (antes Whisper/OpenAI, migrado por cuota 429).
+ * Devuelve { text }. Audio efímero: nunca se persiste; solo metadata en audit_events.
  */
 export async function POST(req: Request) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return jsonError("OPENAI_API_KEY not configured", 500);
+  if (!EL_KEY) {
+    return jsonError("ELEVENLABS_API_KEY not configured", 500);
   }
 
   let form: FormData;
@@ -46,25 +42,35 @@ export async function POST(req: Request) {
     );
   }
 
-  const openai = new OpenAI({ apiKey });
-
-  // Determine filename from MIME type so OpenAI's multipart upload
-  // names the part with a recognizable extension.
   const mime = audio.type || "audio/webm";
   const ext = mimeToExt(mime);
-  const file = new File([audio], `voice.${ext}`, { type: mime });
+
+  const elForm = new FormData();
+  elForm.append("model_id", STT_MODEL);
+  elForm.append("language_code", toScribeLang(language));
+  elForm.append("file", audio, `voice.${ext}`);
 
   try {
-    const transcript = await openai.audio.transcriptions.create({
-      file,
-      model: "whisper-1",
-      language,
-      response_format: "json",
+    const upstream = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
+      method: "POST",
+      headers: { "xi-api-key": EL_KEY },
+      body: elForm,
     });
 
-    const text = transcript.text?.trim() ?? "";
+    const raw = await upstream.text();
+    if (!upstream.ok) {
+      return jsonError(`Scribe error: ${upstream.status} ${raw.slice(0, 200)}`, 502);
+    }
 
-    // Audit event (no audio bytes saved — just metadata)
+    let data: { text?: string };
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      return jsonError("STT response not parseable", 502);
+    }
+
+    const text = (data.text || "").trim();
+
     await sql`
       INSERT INTO audit_events (user_id, action, resource_type, ring, payload)
       VALUES (
@@ -73,6 +79,7 @@ export async function POST(req: Request) {
           bytes: audio.size,
           mime,
           language,
+          engine: "elevenlabs_scribe",
           text_chars: text.length,
         })}::jsonb
       )
@@ -84,7 +91,7 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return jsonError(`Whisper error: ${message}`, 502);
+    return jsonError(`Scribe error: ${message}`, 502);
   }
 }
 
@@ -95,6 +102,13 @@ function jsonError(message: string, status: number): Response {
   });
 }
 
+function toScribeLang(lang: string): string {
+  const l = lang.toLowerCase();
+  if (l.startsWith("es")) return "spa";
+  if (l.startsWith("en")) return "eng";
+  return "spa";
+}
+
 function mimeToExt(mime: string): string {
   if (mime.includes("webm")) return "webm";
   if (mime.includes("mp4") || mime.includes("m4a")) return "m4a";
@@ -103,3 +117,4 @@ function mimeToExt(mime: string): string {
   if (mime.includes("ogg")) return "ogg";
   return "webm";
 }
+
