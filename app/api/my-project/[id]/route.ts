@@ -2,46 +2,25 @@
  * API Portal Cliente — detalle de UN proyecto (read-only).
  *
  * GET — valida que el usuario actual sea miembro ACTIVO del proyecto.
- *   Si no lo es → 403. Si lo es, devuelve:
+ *   Si no lo es → 403. Si lo es, devuelve TODO lo que el cliente ve en su
+ *   portal:
  *     - project: datos del proyecto
- *     - timeline: project_timeline ordenado por position
+ *     - status:  client_project_status (estado + avance de cobro real)
+ *     - timeline: project_timeline ordenado (avance EN VIVO)
+ *     - contracts: contratos del proyecto con su esquema de pagos
+ *     - evidence: evidencias subidas (fotos/archivos/notas)
+ *     - feedback: comentarios y sugerencias del cliente
  *     - integrations: project_integrations del proyecto
  */
 import { NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
 import { queryAll, queryOne } from "@/lib/db/client";
+import { requireMember } from "@/lib/projects/membership";
+import { listContractsForProject } from "@/lib/contracts/queries";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type ProjectDetail = {
-  id: string;
-  name: string;
-  status: string;
-  github_repo: string | null;
-  vercel_url: string | null;
-  domain: string | null;
-};
-
-type TimelineRow = {
-  id: string;
-  stage: string;
-  status: string;
-  title: string;
-  detail: string | null;
-  position: number;
-  created_at: string;
-  updated_at: string;
-};
-
-type IntegrationRow = {
-  id: string;
-  kind: string;
-  label: string;
-  status: string;
-  meta: unknown;
-  created_at: string;
-};
+const noStore = { "Cache-Control": "no-store" };
 
 export async function GET(
   _req: Request,
@@ -49,67 +28,78 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const user = await currentUser();
-  const email = user?.emailAddresses?.[0]?.emailAddress;
-
-  if (!email) {
-    return NextResponse.json(
-      { error: "unauthorized" },
-      { status: 401, headers: { "Cache-Control": "no-store" } },
-    );
-  }
-
-  // Gate: el usuario debe ser miembro ACTIVO de ESTE proyecto.
-  const membership = await queryOne<{ project_id: string }>(
-    `SELECT project_id
-       FROM project_members
-      WHERE project_id = $1
-        AND lower(email) = lower($2)
-        AND status = 'active'
-      LIMIT 1`,
-    [id, email],
-  );
-
-  if (!membership) {
+  const member = await requireMember(id);
+  if (!member) {
     return NextResponse.json(
       { error: "forbidden" },
-      { status: 403, headers: { "Cache-Control": "no-store" } },
+      { status: 403, headers: noStore },
     );
   }
 
-  const project = await queryOne<ProjectDetail>(
+  const project = await queryOne<{
+    id: string;
+    name: string;
+    status: string;
+    github_repo: string | null;
+    vercel_url: string | null;
+    domain: string | null;
+  }>(
     `SELECT id, name, status, github_repo, vercel_url, domain
-       FROM projects
-      WHERE id = $1
-      LIMIT 1`,
+       FROM projects WHERE id = $1 LIMIT 1`,
     [id],
   );
-
   if (!project) {
     return NextResponse.json(
       { error: "not_found" },
-      { status: 404, headers: { "Cache-Control": "no-store" } },
+      { status: 404, headers: noStore },
     );
   }
 
-  const timeline = await queryAll<TimelineRow>(
-    `SELECT id, stage, status, title, detail, position, created_at, updated_at
-       FROM project_timeline
-      WHERE project_id = $1
-      ORDER BY position ASC, created_at ASC`,
-    [id],
-  );
-
-  const integrations = await queryAll<IntegrationRow>(
-    `SELECT id, kind, label, status, meta, created_at
-       FROM project_integrations
-      WHERE project_id = $1
-      ORDER BY created_at ASC`,
-    [id],
-  );
+  const [status, timeline, integrations, evidence, feedback, contracts] =
+    await Promise.all([
+      queryOne(
+        `SELECT client_name, status, total_mxn, paid_mxn, next_milestone, updated_at
+           FROM client_project_status WHERE project_id = $1`,
+        [id],
+      ),
+      queryAll(
+        `SELECT id, stage, status, title, detail, position, created_at, updated_at
+           FROM project_timeline WHERE project_id = $1
+          ORDER BY position ASC, created_at ASC`,
+        [id],
+      ),
+      queryAll(
+        `SELECT id, kind, label, status, meta, created_at
+           FROM project_integrations WHERE project_id = $1
+          ORDER BY created_at ASC`,
+        [id],
+      ),
+      queryAll(
+        `SELECT id, kind, raw_url, transcript, interpretation, created_by, created_at
+           FROM evidence_vault WHERE project_slug = $1
+          ORDER BY created_at DESC LIMIT 50`,
+        [id],
+      ),
+      queryAll(
+        `SELECT id, author_email, author_name, kind, body, created_at
+           FROM project_feedback WHERE project_id = $1
+          ORDER BY created_at DESC LIMIT 50`,
+        [id],
+      ),
+      listContractsForProject(id),
+    ]);
 
   return NextResponse.json(
-    { project, timeline, integrations },
-    { status: 200, headers: { "Cache-Control": "no-store" } },
+    {
+      project,
+      status,
+      timeline,
+      integrations,
+      evidence,
+      feedback,
+      contracts,
+      me: { email: member.email, name: member.name, role: member.role },
+    },
+    { status: 200, headers: noStore },
   );
 }

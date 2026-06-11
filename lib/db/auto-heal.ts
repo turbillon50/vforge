@@ -389,6 +389,106 @@ async function ensureOperatorScope(): Promise<void> {
 }
 
 /**
+ * CONTRATOS + PORTAL DEL CLIENTE (jun 2026). Tablas que sostienen:
+ *  - contracts: un contrato por proyecto, con estado de firma DocuSign.
+ *  - contract_payments: el esquema de 3 pagos de V-Momentum (40/40/20 default).
+ *  - project_feedback: comentarios y sugerencias del cliente desde su portal.
+ * Además extiende evidence_vault.kind para aceptar fotos/archivos subidos por
+ * el cliente desde su celular. Idempotente. Ver migración 018.
+ */
+async function ensureContractsPortal(): Promise<void> {
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS contracts (
+        id                  text PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        project_id          text NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        client_name         text NOT NULL,
+        product             text NOT NULL,
+        amount_mxn          numeric NOT NULL DEFAULT 0,
+        currency            text NOT NULL DEFAULT 'MXN',
+        status              text NOT NULL DEFAULT 'draft'
+                            CHECK (status IN ('draft','sent','signed','declined','voided')),
+        signer_name         text,
+        signer_email        text,
+        docusign_envelope_id text,
+        pdf_url             text,
+        sent_at             timestamptz,
+        signed_at           timestamptz,
+        created_by          text,
+        created_at          timestamptz NOT NULL DEFAULT now(),
+        updated_at          timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+  } catch {
+    /* table exists */
+  }
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_contracts_project ON contracts (project_id)`;
+  } catch {
+    /* ignore */
+  }
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_contracts_envelope ON contracts (docusign_envelope_id) WHERE docusign_envelope_id IS NOT NULL`;
+  } catch {
+    /* ignore */
+  }
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS contract_payments (
+        id          text PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        contract_id text NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
+        idx         int  NOT NULL,
+        label       text NOT NULL,
+        amount_mxn  numeric NOT NULL DEFAULT 0,
+        status      text NOT NULL DEFAULT 'pending'
+                    CHECK (status IN ('pending','paid')),
+        paid_at     timestamptz,
+        UNIQUE (contract_id, idx)
+      )
+    `;
+  } catch {
+    /* table exists */
+  }
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_contract_payments_contract ON contract_payments (contract_id, idx)`;
+  } catch {
+    /* ignore */
+  }
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS project_feedback (
+        id           text PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        project_id   text NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        author_email text NOT NULL,
+        author_name  text,
+        kind         text NOT NULL DEFAULT 'comment'
+                     CHECK (kind IN ('comment','suggestion')),
+        body         text NOT NULL,
+        created_at   timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+  } catch {
+    /* table exists */
+  }
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_project_feedback_project ON project_feedback (project_id, created_at DESC)`;
+  } catch {
+    /* ignore */
+  }
+  // El cliente sube fotos y archivos desde su celular: ampliar el CHECK de kind.
+  try {
+    await sql`ALTER TABLE evidence_vault DROP CONSTRAINT IF EXISTS evidence_vault_kind_check`;
+    await sql`
+      ALTER TABLE evidence_vault
+        ADD CONSTRAINT evidence_vault_kind_check
+        CHECK (kind IN ('screenshot','text','voice','photo','file'))
+    `;
+  } catch {
+    /* legacy rows o constraint ya correcto */
+  }
+}
+
+/**
  * Heal the database schema. Runs once per process.
  * Call this from api routes or middleware that execute early.
  */
@@ -406,6 +506,7 @@ export async function healDatabase(): Promise<void> {
     await ensureClientPortfolio();
     await ensureMcpRbac();
     await ensureOperatorScope();
+    await ensureContractsPortal();
   } catch (e) {
     // Silently fail - don't crash the app if database healing fails
     console.error("[V auto-heal] Database healing failed:", e);

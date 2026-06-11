@@ -2,7 +2,7 @@
  * Tenants + Esferas. Cada usuario Clerk del portal = un tenant con su propio
  * DEK envuelto. Al crear el tenant se le crea su Esfera en estado 'forging'.
  */
-import { csql, ensureControlSchema } from "./db";
+import { csql, ensureControlSchema, withTenant } from "./db";
 import { generateWrappedDek } from "./envelope";
 import { toBuf } from "./bytes";
 
@@ -53,6 +53,20 @@ export async function ensureTenantContext(
   let tenant: Tenant;
   if (existing.length > 0) {
     tenant = existing[0];
+    // Backfill: si el tenant se creó sin email/nombre (currentUser() falló en el
+    // primer request), rellénalos en cuanto los tengamos. Sin pisar valores ya
+    // presentes. tenants no fuerza RLS → va con csql directo.
+    if ((!tenant.email && email) || (!tenant.display_name && name)) {
+      const rows = (await csql`
+        UPDATE tenants
+        SET email = COALESCE(email, ${email}),
+            display_name = COALESCE(display_name, ${name}),
+            updated_at = now()
+        WHERE id = ${tenant.id}
+        RETURNING id, clerk_user_id, email, display_name, plan
+      `) as Tenant[];
+      tenant = rows[0] ?? tenant;
+    }
   } else {
     const { wrapped } = generateWrappedDek();
     const rows = (await csql`
@@ -64,20 +78,25 @@ export async function ensureTenantContext(
     tenant = rows[0];
   }
 
-  const spheres = (await csql`
-    SELECT id, tenant_id, name, status, activated_at
-    FROM spheres WHERE tenant_id = ${tenant.id}
-    ORDER BY created_at ASC LIMIT 1
-  `) as Sphere[];
+  // spheres tiene FORCE RLS → fijamos la GUC del tenant en la misma transacción.
+  const [spheres] = (await withTenant(tenant.id, [
+    csql`
+      SELECT id, tenant_id, name, status, activated_at
+      FROM spheres WHERE tenant_id = ${tenant.id}
+      ORDER BY created_at ASC LIMIT 1
+    `,
+  ])) as [Sphere[]];
 
   let sphere: Sphere;
   if (spheres.length > 0) {
     sphere = spheres[0];
   } else {
-    const rows = (await csql`
-      INSERT INTO spheres (tenant_id) VALUES (${tenant.id})
-      RETURNING id, tenant_id, name, status, activated_at
-    `) as Sphere[];
+    const [rows] = (await withTenant(tenant.id, [
+      csql`
+        INSERT INTO spheres (tenant_id) VALUES (${tenant.id})
+        RETURNING id, tenant_id, name, status, activated_at
+      `,
+    ])) as [Sphere[]];
     sphere = rows[0];
   }
 
@@ -103,17 +122,20 @@ export async function setSphereStatus(
   sphereId: string,
   status: Sphere["status"],
 ): Promise<void> {
-  const activated = status === "active" ? "now()" : null;
+  // spheres tiene FORCE RLS → la UPDATE va dentro de withTenant.
   if (status === "active") {
-    await csql`
-      UPDATE spheres SET status = ${status}, activated_at = COALESCE(activated_at, now()), updated_at = now()
-      WHERE id = ${sphereId} AND tenant_id = ${tenantId}
-    `;
+    await withTenant(tenantId, [
+      csql`
+        UPDATE spheres SET status = ${status}, activated_at = COALESCE(activated_at, now()), updated_at = now()
+        WHERE id = ${sphereId} AND tenant_id = ${tenantId}
+      `,
+    ]);
   } else {
-    await csql`
-      UPDATE spheres SET status = ${status}, updated_at = now()
-      WHERE id = ${sphereId} AND tenant_id = ${tenantId}
-    `;
-    void activated;
+    await withTenant(tenantId, [
+      csql`
+        UPDATE spheres SET status = ${status}, updated_at = now()
+        WHERE id = ${sphereId} AND tenant_id = ${tenantId}
+      `,
+    ]);
   }
 }

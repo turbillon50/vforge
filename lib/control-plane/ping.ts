@@ -60,19 +60,31 @@ export async function pingVercel(token: string): Promise<PingResult> {
   }
 }
 
-/** Neon: GET /api/v2/projects → cuenta de proyectos accesibles. */
+/**
+ * Neon: GET /api/v2/users/me → identidad de la cuenta.
+ *
+ * Usamos /users/me y NO /projects porque las API keys org-scoped de Neon
+ * (el default moderno) rechazan /projects sin `org_id` con HTTP 400 — y el
+ * cliente no nos pasa su org_id en el wizard. /users/me valida la llave para
+ * AMBOS tipos (personal y org-scoped) y devuelve email/login para mostrar.
+ */
 export async function pingNeon(apiKey: string): Promise<PingResult> {
   try {
-    const res = await withTimeout("https://console.neon.tech/api/v2/projects?limit=1", {
+    const res = await withTimeout("https://console.neon.tech/api/v2/users/me", {
       headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
     });
     if (!res.ok) {
       return { ok: false, identity: null, error: `Neon respondió ${res.status}` };
     }
-    const body = (await res.json()) as { projects?: Array<{ name?: string }> };
-    const n = body.projects?.length ?? 0;
-    const sample = body.projects?.[0]?.name;
-    return { ok: true, identity: sample ? `proyecto: ${sample}` : `${n} proyecto(s)`, error: null };
+    const body = (await res.json()) as {
+      email?: string;
+      login?: string;
+      name?: string;
+      plan?: string;
+    };
+    const who = body.email ?? body.login ?? body.name ?? null;
+    const identity = who ? (body.plan ? `${who} (${body.plan})` : who) : "cuenta Neon";
+    return { ok: true, identity, error: null };
   } catch (e) {
     return { ok: false, identity: null, error: netErr(e) };
   }

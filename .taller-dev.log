@@ -1,0 +1,55 @@
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3100
+- Network:       http://178.105.135.26:3100
+- Environments: .env.local
+✓ Ready in 395ms
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /root/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /root/vforge/package-lock.json
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+○ Compiling /app/taller ...
+ GET /app/taller 200 in 9.4s (next.js: 8.7s, proxy.ts: 104ms, application-code: 529ms)
+ GET /api/cockpit/esferas 200 in 1492ms (next.js: 1120ms, proxy.ts: 13ms, application-code: 359ms)
+ GET /app/taller 200 in 109ms (next.js: 3ms, proxy.ts: 4ms, application-code: 102ms)
+ GET /api/cockpit/esferas 200 in 151ms (next.js: 7ms, proxy.ts: 8ms, application-code: 136ms)
+ GET /api/cockpit/esferas 200 in 134ms (next.js: -292µs, proxy.ts: 20ms, application-code: 115ms)
+ GET /api/cockpit/esferas 200 in 134ms (next.js: 6ms, proxy.ts: 6ms, application-code: 122ms)
+ GET /app/taller 200 in 95ms (next.js: 5ms, proxy.ts: 7ms, application-code: 83ms)
+ GET /api/cockpit/esferas 200 in 146ms (next.js: 12ms, proxy.ts: 4ms, application-code: 129ms)
+ GET /api/cockpit/esferas 200 in 122ms (next.js: 6ms, proxy.ts: 6ms, application-code: 110ms)
+ GET /api/cockpit/esferas 200 in 139ms (next.js: 19ms, proxy.ts: 5ms, application-code: 115ms)
+ GET /app/taller 200 in 137ms (next.js: 4ms, proxy.ts: 6ms, application-code: 128ms)
+ GET /api/cockpit/esferas 200 in 342ms (next.js: 9ms, proxy.ts: 4ms, application-code: 329ms)
+ GET /api/cockpit/esferas 200 in 138ms (next.js: 9ms, proxy.ts: 7ms, application-code: 122ms)
+ GET /api/cockpit/esferas 200 in 129ms (next.js: 4ms, proxy.ts: 7ms, application-code: 118ms)
+ GET /app/taller 200 in 85ms (next.js: 2ms, proxy.ts: 2ms, application-code: 80ms)
+ GET /api/cockpit/esferas 200 in 335ms (next.js: 8ms, proxy.ts: 6ms, application-code: 321ms)
+ GET /api/cockpit/esferas 200 in 147ms (next.js: 6ms, proxy.ts: 25ms, application-code: 116ms)
+ GET /api/cockpit/esferas 200 in 122ms (next.js: 5ms, proxy.ts: 5ms, application-code: 112ms)
+⚠ Found a change in next.config.mjs. Restarting the server to apply the changes...
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3100
+- Network:       http://178.105.135.26:3100
+- Environments: .env.local
+✓ Ready in 335ms
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+○ Compiling /app/taller ...
+✓ Finished writing to filesystem cache in 21.2s
+✓ Finished writing to filesystem cache in 31.8s
+✓ Finished writing to filesystem cache in 30.5s
+✓ Finished writing to filesystem cache in 13.9s
+✓ Finished writing to filesystem cache in 21.9s
+✓ Finished writing to filesystem cache in 37.5s
+✓ Finished writing to filesystem cache in 17.9s
+✓ Finished writing to filesystem cache in 67s
+✓ Finished writing to filesystem cache in 2.0min
+✓ Finished writing to filesystem cache in 27.7s
+✓ Finished writing to filesystem cache in 23.9s
+✓ Finished writing to filesystem cache in 30.9s
+✓ Finished writing to filesystem cache in 19.4s

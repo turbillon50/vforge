@@ -101,11 +101,22 @@ CREATE INDEX IF NOT EXISTS idx_events_tenant ON events(tenant_id, created_at DES
 -- Política: una fila es visible/operable solo si su tenant_id coincide con la
 -- GUC de sesión `app.current_tenant`. lib/control-plane/db.ts fija esa GUC por
 -- request (withTenant). El código además filtra tenant_id explícito.
+-- FORCE en las tablas de DATOS por-tenant: RLS muerde incluso para el OWNER de
+-- la conexión (el rol por defecto de Neon), sin depender de crear un rol aparte.
+-- `tenants` solo ENABLE: el INSERT de provisioning corre antes de que exista un
+-- tenant_id (bootstrap privilegiado). lib/control-plane/db.ts aplica esto mismo
+-- en runtime (ensureControlSchema) y fija la GUC vía set_config(...,true) dentro
+-- de una transacción (withTenant) — única forma de que la GUC viva con el
+-- driver HTTP stateless de Neon.
 ALTER TABLE tenants            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE spheres            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE spheres            FORCE  ROW LEVEL SECURITY;
 ALTER TABLE sphere_credentials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sphere_credentials FORCE  ROW LEVEL SECURITY;
 ALTER TABLE jobs               ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobs               FORCE  ROW LEVEL SECURITY;
 ALTER TABLE events             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE events             FORCE  ROW LEVEL SECURITY;
 
 DO $$
 BEGIN

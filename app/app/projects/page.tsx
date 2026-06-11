@@ -1,12 +1,27 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { PageHeader } from "@/components/workspace/PageHeader";
-import { AnimatePresence } from "framer-motion";
-import { IconActivity, IconExtLink, IconBranch, IconGlobe, IconLayers, IconSparkles, IconUsers, IconRocket, IconChevR, IconX, IconCode } from "@/components/brand/VFIcons";
+import {
+  IconActivity,
+  IconExtLink,
+  IconBranch,
+  IconGlobe,
+  IconLayers,
+  IconSparkles,
+  IconUsers,
+  IconX,
+  IconCode,
+  IconPlus,
+} from "@/components/brand/VFIcons";
 import { useT, interpolate } from "@/i18n/AppProviders";
-import { InviteModal } from "@/components/projects/InviteModal";
+import InviteModal, {
+  MemberStack,
+  scopeLabel,
+  scopeColor,
+  type Member,
+} from "@/components/projects/InviteModal";
 
 interface RealProject {
   id: string;
@@ -55,6 +70,13 @@ export default function ProjectsPage() {
   const [inviteProject, setInviteProject] = useState<{ id: string; name: string } | null>(null);
   const [detailProject, setDetailProject] = useState<RealProject | null>(null);
 
+  // Miembros por proyecto (cache compartido tarjeta ↔ detalle ↔ modal).
+  const [membersByProject, setMembersByProject] = useState<Record<string, Member[]>>({});
+
+  const handleMembersChange = useCallback((projectId: string, members: Member[]) => {
+    setMembersByProject((prev) => ({ ...prev, [projectId]: members }));
+  }, []);
+
   useEffect(() => {
     fetch("/api/projects", { cache: "no-store" })
       .then((r) => {
@@ -66,6 +88,33 @@ export default function ProjectsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Carga perezosa de miembros de cada proyecto para la pila de avatares.
+  useEffect(() => {
+    if (projects.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      await Promise.all(
+        projects.map(async (p) => {
+          try {
+            const r = await fetch(`/api/invitations?project_id=${encodeURIComponent(p.id)}`, {
+              cache: "no-store",
+            });
+            if (!r.ok) return;
+            const d = (await r.json()) as { members: Member[] };
+            if (!cancelled) {
+              setMembersByProject((prev) => ({ ...prev, [p.id]: d.members ?? [] }));
+            }
+          } catch {
+            /* proyecto sin miembros o error puntual: ignorar */
+          }
+        }),
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [projects]);
+
   const filtered = projects.filter((p) => {
     if (filter === "all") return true;
     return (STATUS_FROM_CATEGORY[p.category] ?? "draft") === filter;
@@ -73,6 +122,8 @@ export default function ProjectsPage() {
 
   const liveCount = projects.filter((p) => STATUS_FROM_CATEGORY[p.category] === "live").length;
   const previewCount = projects.filter((p) => STATUS_FROM_CATEGORY[p.category] === "preview").length;
+
+  const detailMembers = detailProject ? membersByProject[detailProject.id] ?? [] : [];
 
   return (
     <>
@@ -156,6 +207,7 @@ export default function ProjectsPage() {
           const domain = p.domain || p.vercel_url?.replace(/^https?:\/\//, "") || "—";
           const progress = STATUS_PROGRESS[status];
           const langColor = p.github_language ? (LANG_COLOR[p.github_language] ?? "#8b5cf6") : "#8b5cf6";
+          const members = membersByProject[p.id] ?? [];
 
           return (
             <motion.article
@@ -270,26 +322,38 @@ export default function ProjectsPage() {
                     </span>
                   </div>
                 )}
+
+                {/* Participantes */}
+                <div className="mt-3 flex h-6 items-center gap-2">
+                  {members.length > 0 ? (
+                    <>
+                      <MemberStack members={members} />
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-muted">
+                        {members.length === 1 ? "1 participante" : `${members.length} participantes`}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted/70">
+                      <IconUsers size={11} /> Sin participantes
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Footer — acciones por proyecto */}
               <div className="flex items-center gap-2 border-t border-white/6 px-5 py-3">
                 <button
-                  onClick={() => {
-                    const url = p.vercel_url || (p.domain ? `https://${p.domain}` : null);
-                    if (url) window.open(url, "_blank", "noopener,noreferrer");
-                    else setDetailProject(p);
-                  }}
+                  onClick={() => setDetailProject(p)}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-on-surface transition-all hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-200"
                 >
-                  <IconRocket size={11} />
+                  <IconExtLink size={11} />
                   Abrir
                 </button>
                 <button
                   onClick={() => setInviteProject({ id: p.id, name: p.name })}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-violet-200 transition-all hover:border-violet-500/50 hover:bg-violet-500/15"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-violet-500/40 bg-violet-500/10 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-violet-200 transition-all hover:border-violet-400/60 hover:bg-violet-500/20"
                 >
-                  <IconUsers size={11} />
+                  <IconPlus size={11} />
                   Invitar
                 </button>
               </div>
@@ -298,7 +362,7 @@ export default function ProjectsPage() {
         })}
       </div>
 
-      {/* Panel de detalle del proyecto */}
+      {/* Panel de detalle del proyecto (drawer lateral) */}
       <AnimatePresence>
         {detailProject && (
           <motion.div
@@ -395,6 +459,56 @@ export default function ProjectsPage() {
                     <IconSparkles size={14} /> {interpolate(t.projects.ask_b, { name: detailProject.name.split(" ")[0] })}
                   </Link>
                 </div>
+
+                {/* Participantes del proyecto */}
+                <div className="border-t border-white/8 pt-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <IconUsers size={14} className="text-muted" />
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
+                      Participantes {detailMembers.length > 0 && `(${detailMembers.length})`}
+                    </p>
+                  </div>
+
+                  {detailMembers.length === 0 ? (
+                    <p className="text-[13px] text-muted">Aún no hay participantes en este proyecto.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {detailMembers.map((m) => (
+                        <li
+                          key={m.id}
+                          className="flex items-center gap-3 rounded-xl border border-white/6 bg-white/3 px-3 py-2.5"
+                        >
+                          <span
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold text-white"
+                            style={{ backgroundColor: scopeColor(m.scope) + "cc" }}
+                          >
+                            {(m.contact || m.email || "?").replace(/^\+/, "").trim()[0]?.toUpperCase() ?? "?"}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] text-on-surface">{m.contact || m.email}</p>
+                            <p
+                              className="font-mono text-[10px] uppercase tracking-widest"
+                              style={{ color: scopeColor(m.scope) }}
+                            >
+                              {scopeLabel(m.scope)}
+                            </p>
+                          </div>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest ${
+                              m.status === "active"
+                                ? "border border-emerald-500/30 bg-emerald-500/8 text-emerald-400"
+                                : m.status === "revoked"
+                                  ? "border border-white/8 bg-white/3 text-muted"
+                                  : "border border-cyan-400/30 bg-cyan-400/8 text-cyan-400"
+                            }`}
+                          >
+                            {m.status === "active" ? "Activo" : m.status === "revoked" ? "Revocado" : "Invitado"}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             </motion.aside>
           </motion.div>
@@ -403,10 +517,10 @@ export default function ProjectsPage() {
 
       {/* Modal de invitación */}
       <InviteModal
+        project={inviteProject}
         open={inviteProject !== null}
-        projectId={inviteProject?.id ?? null}
-        projectName={inviteProject?.name ?? ""}
         onClose={() => setInviteProject(null)}
+        onMembersChange={handleMembersChange}
       />
     </>
   );

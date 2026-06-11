@@ -126,10 +126,80 @@ export async function ensureControlSchema(): Promise<void> {
         created_at  timestamptz NOT NULL DEFAULT now()
       )`;
     await s`CREATE INDEX IF NOT EXISTS idx_events_tenant ON events(tenant_id, created_at DESC)`;
+
+    // ── Row Level Security: ENCENDERLA en runtime, no solo en el .sql ─────────
+    // Las tablas de DATOS por-tenant usan FORCE → RLS "muerde" incluso para el
+    // OWNER de la conexión (el rol por defecto de Neon). Así el aislamiento no
+    // depende de crear un rol no-owner aparte. `tenants` solo ENABLE: su INSERT
+    // de provisioning ocurre antes de que exista un tenant_id (bootstrap
+    // privilegiado por el owner); las lecturas van siempre por id de la sesión.
+    await s`ALTER TABLE tenants            ENABLE ROW LEVEL SECURITY`;
+    await s`ALTER TABLE spheres            ENABLE ROW LEVEL SECURITY`;
+    await s`ALTER TABLE spheres            FORCE  ROW LEVEL SECURITY`;
+    await s`ALTER TABLE sphere_credentials ENABLE ROW LEVEL SECURITY`;
+    await s`ALTER TABLE sphere_credentials FORCE  ROW LEVEL SECURITY`;
+    await s`ALTER TABLE jobs               ENABLE ROW LEVEL SECURITY`;
+    await s`ALTER TABLE jobs               FORCE  ROW LEVEL SECURITY`;
+    await s`ALTER TABLE events             ENABLE ROW LEVEL SECURITY`;
+    await s`ALTER TABLE events             FORCE  ROW LEVEL SECURITY`;
+    await s`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='tenants' AND policyname='tenant_isolation') THEN
+          CREATE POLICY tenant_isolation ON tenants
+            USING (id = current_setting('app.current_tenant', true)::uuid)
+            WITH CHECK (id = current_setting('app.current_tenant', true)::uuid);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='spheres' AND policyname='tenant_isolation') THEN
+          CREATE POLICY tenant_isolation ON spheres
+            USING (tenant_id = current_setting('app.current_tenant', true)::uuid)
+            WITH CHECK (tenant_id = current_setting('app.current_tenant', true)::uuid);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='sphere_credentials' AND policyname='tenant_isolation') THEN
+          CREATE POLICY tenant_isolation ON sphere_credentials
+            USING (tenant_id = current_setting('app.current_tenant', true)::uuid)
+            WITH CHECK (tenant_id = current_setting('app.current_tenant', true)::uuid);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='jobs' AND policyname='tenant_isolation') THEN
+          CREATE POLICY tenant_isolation ON jobs
+            USING (tenant_id = current_setting('app.current_tenant', true)::uuid)
+            WITH CHECK (tenant_id = current_setting('app.current_tenant', true)::uuid);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='events' AND policyname='tenant_isolation') THEN
+          CREATE POLICY tenant_isolation ON events
+            USING (tenant_id = current_setting('app.current_tenant', true)::uuid)
+            WITH CHECK (tenant_id = current_setting('app.current_tenant', true)::uuid);
+        END IF;
+      END$$`;
   } catch (e) {
     _migrated = false; // permite reintento en la próxima request
     console.error("[control-plane] ensureControlSchema falló:", redactErr(e));
   }
+}
+
+/**
+ * Ejecuta queries DENTRO de una transacción con la GUC `app.current_tenant`
+ * fijada transaction-local (`set_config(..., true)`). Es la ÚNICA forma de que
+ * RLS muerda con el driver HTTP stateless de Neon: el `set_config` y las queries
+ * viajan en UN solo request/transacción (BEGIN…COMMIT), así la GUC aplica a
+ * todas. Sin esto, cada query es su propia conexión y la GUC se perdería.
+ *
+ * Las `queries` se construyen con `csql` (mismo instance vía el Proxy) y se
+ * pasan SIN await — `transaction()` las orquesta. Devuelve solo los resultados
+ * de `queries` (descarta el del set_config).
+ */
+export async function withTenant(
+  tenantId: string,
+  queries: unknown[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any[]> {
+  const s = getSql();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const all = await (s as any).transaction([
+    s`SELECT set_config('app.current_tenant', ${tenantId}, true)`,
+    ...queries,
+  ]);
+  return all.slice(1);
 }
 
 /** Mensaje de error sin secretos (defensivo). */

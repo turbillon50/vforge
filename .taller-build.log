@@ -1,0 +1,213 @@
+
+> vforge@0.2.0 build
+> next build
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /root/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /root/vforge/package-lock.json
+
+▲ Next.js 16.2.4 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 16.0s
+  Skipping validation of types
+  Finished TypeScript config validation in 10ms ...
+  Collecting page data using 7 workers ...
+⚠ Using edge runtime on a page currently disables static generation for that page
+  Generating static pages using 7 workers (0/59) ...
+  Generating static pages using 7 workers (14/59) 
+  Generating static pages using 7 workers (29/59) 
+  Generating static pages using 7 workers (44/59) 
+✓ Generating static pages using 7 workers (59/59) in 810ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /.well-known/oauth-authorization-server
+├ ƒ /.well-known/oauth-protected-resource
+├ ƒ /api/admin/clerk-info
+├ ƒ /api/admin/health
+├ ƒ /api/admin/migrate
+├ ƒ /api/admin/notify
+├ ƒ /api/admin/openrouter
+├ ƒ /api/admin/qa-user
+├ ƒ /api/admin/seed-oauth
+├ ƒ /api/admin/semantic-backfill
+├ ƒ /api/admin/stripe-test
+├ ƒ /api/auth/github/callback
+├ ƒ /api/auth/github/start
+├ ƒ /api/auth/stripe/callback
+├ ƒ /api/auth/stripe/start
+├ ƒ /api/auth/vercel/callback
+├ ƒ /api/auth/vercel/start
+├ ƒ /api/automatizaciones
+├ ƒ /api/billing/checkout
+├ ƒ /api/billing/me
+├ ƒ /api/billing/portal
+├ ƒ /api/builder
+├ ƒ /api/builder/preview/[versionId]
+├ ƒ /api/clerk-reset
+├ ƒ /api/cockpit
+├ ƒ /api/cockpit/esferas
+├ ƒ /api/connect/clerk
+├ ƒ /api/connect/clerk-sync
+├ ƒ /api/connect/google_maps
+├ ƒ /api/connect/neon
+├ ƒ /api/connect/resend
+├ ƒ /api/connect/twilio
+├ ƒ /api/contracts
+├ ƒ /api/contracts/[id]/send
+├ ƒ /api/contracts/onboard
+├ ƒ /api/docusign/callback
+├ ƒ /api/esfera
+├ ƒ /api/family-incoming
+├ ƒ /api/fix-skills-table
+├ ƒ /api/forge/active-session
+├ ƒ /api/forge/activity
+├ ƒ /api/forge/conversations
+├ ƒ /api/forge/cost
+├ ƒ /api/forge/extract-secret
+├ ƒ /api/forge/family-respond
+├ ƒ /api/forge/portfolio
+├ ƒ /api/forge/recap
+├ ƒ /api/forge/run
+├ ƒ /api/forge/sessions
+├ ƒ /api/forge/transcribe
+├ ƒ /api/forja/activate
+├ ƒ /api/forja/connect
+├ ƒ /api/forja/status
+├ ƒ /api/github/repos
+├ ƒ /api/github/repos/[owner]/[repo]
+├ ƒ /api/graph/data
+├ ƒ /api/integrations/plan
+├ ƒ /api/invitations
+├ ƒ /api/invitations/[id]
+├ ƒ /api/invitations/accept
+├ ƒ /api/invitations/qr
+├ ƒ /api/marketplace
+├ ƒ /api/marketplace/[id]
+├ ƒ /api/mcp
+├ ƒ /api/mcp/oauth/authorization-server-metadata
+├ ƒ /api/mcp/oauth/authorize
+├ ƒ /api/mcp/oauth/protected-resource-metadata
+├ ƒ /api/mcp/oauth/register
+├ ƒ /api/mcp/oauth/token
+├ ƒ /api/mcp/public
+├ ƒ /api/mcp/token
+├ ƒ /api/mp/webhook
+├ ƒ /api/my-project
+├ ƒ /api/my-project/[id]
+├ ƒ /api/my-project/[id]/evidence
+├ ƒ /api/my-project/[id]/feedback
+├ ƒ /api/navegador
+├ ƒ /api/navegador/agente
+├ ƒ /api/navegador/control
+├ ƒ /api/oauth/authorize
+├ ƒ /api/oauth/callback
+├ ƒ /api/oauth/clients
+├ ƒ /api/oauth/clients/[clientId]
+├ ƒ /api/oauth/register
+├ ƒ /api/oauth/token
+├ ƒ /api/onboarding/connect
+├ ƒ /api/projects
+├ ƒ /api/projects/[id]
+├ ƒ /api/projects/sync
+├ ƒ /api/push/send
+├ ƒ /api/push/subscribe
+├ ƒ /api/stats
+├ ƒ /api/taller
+├ ƒ /api/v-bootstrap
+├ ƒ /api/v-complete-injection
+├ ƒ /api/v-diag
+├ ƒ /api/v-dns-sync
+├ ƒ /api/v-full-power
+├ ƒ /api/v-full-repair
+├ ƒ /api/v-health
+├ ƒ /api/v-self-audit
+├ ƒ /api/v-self-heal
+├ ƒ /api/v-skills-nuclear
+├ ƒ /api/v/bridge
+├ ƒ /api/v/chat
+├ ƒ /api/vault
+├ ƒ /api/vault/operator-secrets
+├ ƒ /api/vault/operator-secrets/[id]
+├ ƒ /api/vault/operator-secrets/[id]/value
+├ ƒ /api/vault/project-secrets
+├ ƒ /api/vault/project-secrets/[id]
+├ ƒ /api/vault/project-secrets/[id]/value
+├ ƒ /api/vault/status
+├ ƒ /api/vault/upload
+├ ƒ /api/webhooks/github
+├ ƒ /api/webhooks/stripe
+├ ƒ /api/webhooks/vercel
+├ ƒ /api/whoami
+├ ƒ /api/workspace/assistant
+├ ƒ /api/workspace/scope
+├ ƒ /app
+├ ƒ /app/activity
+├ ƒ /app/admin
+├ ƒ /app/admin/billing
+├ ƒ /app/automatizaciones
+├ ƒ /app/blueprint
+├ ƒ /app/chat
+├ ƒ /app/cockpit
+├ ƒ /app/contracts
+├ ƒ /app/deployments
+├ ƒ /app/home
+├ ƒ /app/integrations
+├ ƒ /app/marketplace
+├ ƒ /app/projects
+├ ƒ /app/repovision
+├ ƒ /app/secrets
+├ ƒ /app/settings
+├ ƒ /app/taller
+├ ƒ /app/vault
+├ ƒ /app/vulcano
+├ ƒ /apple-icon
+├ ○ /billing
+├ ○ /blog
+├ ● /blog/[slug]
+│ ├ /blog/como-nacio-vforge
+│ ├ /blog/que-es-vmomentum
+│ ├ /blog/el-metodo-vforge
+│ └ [+31 more paths]
+├ ○ /developers
+├ ○ /docs
+├ ƒ /esfera
+├ ○ /forge
+├ ƒ /forja
+├ ○ /glossary
+├ ○ /icon.svg
+├ ○ /marketplace
+├ ○ /mcp
+├ ○ /offline
+├ ○ /onboarding
+├ ○ /pricing
+├ ○ /privacidad
+├ ○ /privacy
+├ ƒ /sign-in/[[...sign-in]]
+├ ƒ /sign-up/[[...sign-up]]
+├ ○ /status
+├ ○ /support
+├ ○ /terminos
+├ ○ /terms
+├ ○ /v
+├ ○ /vulcano
+├ ƒ /workspace
+├ ƒ /workspace/join/[projectId]
+├ ƒ /workspace/proyecto/[id]
+└ ƒ /workspace/setup
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
