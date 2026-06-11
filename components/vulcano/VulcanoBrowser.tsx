@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   IconGlobe, IconActivity, IconCheck, IconFingerprint,
   IconRefresh, IconExtLink, IconShield, IconWarn, IconArrowL,
+  IconRocket, IconArrowR,
 } from "@/components/brand/VFIcons";
 import { ObsidianLoader } from "@/components/ui/ObsidianLoader";
 
@@ -36,6 +37,10 @@ export function VulcanoBrowser() {
   const [showProfiles, setShowProfiles] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  // ── Barra de control: Luis le dicta a la IA a dónde navegar ──
+  const [cmdUrl, setCmdUrl] = useState("");
+  const [sending, setSending] = useState(false);
+  const [lastResult, setLastResult] = useState<string | null>(null);
 
   const fetchInst = useCallback(async () => {
     try {
@@ -90,6 +95,41 @@ export function VulcanoBrowser() {
     await pollHs();
     setTaking(false);
   };
+
+  // Dicta a la IA a dónde ir → POST /api/navegador/control (action:navigate)
+  const navega = async (url: string) => {
+    const target = url.trim();
+    if (!target || sending) return;
+    const full = /^https?:\/\//i.test(target) ? target : `https://${target}`;
+    setSending(true);
+    setLastResult(null);
+    try {
+      const r = await fetch("/api/navegador/control", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "navigate", url: full }),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      // Refresca el VNC para que se vea el cambio en el Chrome visible
+      setIframeLoaded(false);
+      setIframeKey(k => k + 1);
+      let host = full;
+      try { host = new URL(full).hostname.replace(/^www\./, ""); } catch {}
+      setLastResult(`La IA navegó a ${host}`);
+      setCmdUrl("");
+    } catch {
+      setLastResult("No se pudo enviar la orden — reintenta");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // El indicador de resultado desaparece a los 3s
+  useEffect(() => {
+    if (!lastResult) return;
+    const t = setTimeout(() => setLastResult(null), 3000);
+    return () => clearTimeout(t);
+  }, [lastResult]);
 
   const isHuman  = hs?.driver === "human";
   const needsYou = hs?.handoff?.active ?? false;
@@ -321,6 +361,62 @@ export function VulcanoBrowser() {
           </div>
         )}
       </div>
+
+      {/* ── BARRA DE CONTROL: Luis le dicta a la IA a donde ir ── */}
+      {inst?.ready && (
+        <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px",
+          borderTop:"1px solid rgba(127,127,170,0.12)",
+          borderBottom:"1px solid rgba(127,127,170,0.12)",
+          background:"rgba(15,12,30,0.6)", backdropFilter:"blur(8px)", flexWrap:"wrap" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, flex:"1 1 320px", minWidth:240,
+            padding:"6px 12px", borderRadius:10, background:"rgba(255,255,255,0.04)",
+            border:`1px solid ${VIOLET}33` }}>
+            <IconGlobe size={15} style={{ color:VIOLET, flexShrink:0 }} />
+            <input
+              value={cmdUrl}
+              onChange={(e) => setCmdUrl(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") navega(cmdUrl); }}
+              placeholder="Dile a la IA a donde ir: dashboard.clerk.com..."
+              style={{ flex:1, background:"transparent", border:"none", outline:"none",
+                color:"var(--color-on-surface)", fontSize:13 }}
+            />
+            <button
+              onClick={() => navega(cmdUrl)}
+              disabled={sending || !cmdUrl.trim()}
+              style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"6px 14px",
+                borderRadius:8, border:"none", cursor: sending || !cmdUrl.trim() ? "default" : "pointer",
+                background: sending || !cmdUrl.trim() ? "rgba(167,139,250,0.25)" : VIOLET,
+                color:"#0a0a0f", fontSize:12, fontWeight:700, flexShrink:0,
+                opacity: sending ? 0.6 : 1 }}>
+              <IconRocket size={13} /> {sending ? "Yendo..." : "Ir"}
+            </button>
+          </div>
+          {[
+            { label:"Clerk",  url:"https://dashboard.clerk.com" },
+            { label:"Vercel", url:"https://vercel.com/dashboard" },
+            { label:"Neon",   url:"https://console.neon.tech" },
+            { label:"GitHub", url:"https://github.com/turbillon50" },
+          ].map((d) => (
+            <button key={d.label} onClick={() => navega(d.url)} disabled={sending}
+              style={{ padding:"6px 12px", borderRadius:999, cursor: sending ? "default" : "pointer",
+                background:"rgba(255,255,255,0.04)", border:"1px solid rgba(127,127,170,0.18)",
+                color:"var(--color-muted)", fontSize:11.5, fontWeight:600 }}>
+              {d.label}
+            </button>
+          ))}
+          <AnimatePresence>
+            {lastResult && (
+              <motion.div
+                initial={{ opacity:0, x:8 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0 }}
+                style={{ display:"inline-flex", alignItems:"center", gap:6, marginLeft:"auto",
+                  fontSize:11.5, fontWeight:600,
+                  color: lastResult.startsWith("No se") ? AMBER : GREEN }}>
+                <IconCheck size={13} /> {lastResult}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* ── CUERPO: VNC + panel ── */}
       <div style={{ flex:1, display:"grid", gridTemplateColumns:"1fr 320px", minHeight:0 }}>
