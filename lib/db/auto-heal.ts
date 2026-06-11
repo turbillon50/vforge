@@ -489,6 +489,41 @@ async function ensureContractsPortal(): Promise<void> {
 }
 
 /**
+ * CHAT PERSISTENTE DE V (jun 2026). El chat de la página /v ("V, Agente
+ * Central") debe guardar CADA conversación de Luis para no perderla al recargar
+ * y poder retomarla entre sesiones. Dos tablas dedicadas (ver lib/v-chat/store).
+ * Idempotente. El store también las auto-cura en su primer uso.
+ */
+async function ensureVChat(): Promise<void> {
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS v_chat_sessions (
+        id         text PRIMARY KEY,
+        user_id    text NOT NULL,
+        titulo     text,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        last_at    timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS v_chat_messages (
+        id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id    text NOT NULL,
+        session_id text NOT NULL,
+        role       text NOT NULL CHECK (role IN ('user','assistant')),
+        content    text NOT NULL,
+        model      text,
+        created_at timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+    await sql`CREATE INDEX IF NOT EXISTS idx_v_chat_messages_session ON v_chat_messages (session_id, created_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_v_chat_sessions_user ON v_chat_sessions (user_id, last_at DESC)`;
+  } catch {
+    // Tablas ya existen o el heal corre luego; el store las asegura igual.
+  }
+}
+
+/**
  * Heal the database schema. Runs once per process.
  * Call this from api routes or middleware that execute early.
  */
@@ -507,6 +542,7 @@ export async function healDatabase(): Promise<void> {
     await ensureMcpRbac();
     await ensureOperatorScope();
     await ensureContractsPortal();
+    await ensureVChat();
   } catch (e) {
     // Silently fail - don't crash the app if database healing fails
     console.error("[V auto-heal] Database healing failed:", e);

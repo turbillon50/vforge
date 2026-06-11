@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { voiceBrain, type ChatTurn } from "@/lib/forge/v-voice-brain";
+import { persistVTurn } from "@/lib/v-chat/store";
 
 export const runtime = "nodejs";
 
@@ -22,9 +23,25 @@ export async function POST(req: NextRequest) {
       ? history.slice(-MAX_HISTORY_TURNS * 2)
       : [];
 
+    // ¿Persistimos este turno? Sólo con un hilo real (no los placeholders
+    // volátiles "default"/"voice"). Best-effort: nunca rompe el chat.
+    const persistable =
+      typeof session_id === "string" &&
+      session_id.length > 0 &&
+      session_id !== "default" &&
+      session_id !== "voice";
+
     // ─── MODO VOZ: cerebro hablado Gemini ───────────────────────────────────
     if (mode === "voice") {
       const reply = await voiceBrain(message, safeHistory);
+      if (persistable && typeof reply === "string" && reply.trim()) {
+        await persistVTurn({
+          sessionId: session_id,
+          userText: message,
+          assistantText: reply,
+          model: "v-voice",
+        }).catch(() => {});
+      }
       return NextResponse.json({ ok: true, reply, mode: "voice", session_id: session_id || "voice" });
     }
 
@@ -58,6 +75,15 @@ export async function POST(req: NextRequest) {
           (idx > 20 ? r.substring(0, idx).trim() : "") +
           "\n\n⚠ _Respuesta truncada — modelo con contexto excesivo._";
       }
+    }
+
+    if (persistable && typeof data.reply === "string" && data.reply.trim()) {
+      await persistVTurn({
+        sessionId: session_id,
+        userText: message,
+        assistantText: data.reply,
+        model: "v-hetzner",
+      }).catch(() => {});
     }
 
     return NextResponse.json(data);
