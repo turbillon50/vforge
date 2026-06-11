@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/workspace/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { IconBell, IconBoxes, IconBranch, IconCheck, IconClock, IconCpu, IconCreditCard, IconExtLink, IconFile, IconLayers, IconPlus, IconSettings, IconWorkflow, IconZap } from "@/components/brand/VFIcons";
+import { EsferasNucleo } from "@/components/cockpit/EsferasNucleo";
 
 type Item = { id: number; kind: string; text: string; done?: boolean };
 type Data = { services?: Record<string, string>; pending?: any[]; items?: Item[] };
@@ -231,6 +232,9 @@ export default function CockpitPage() {
             No se pudo cargar la cartera. <button onClick={() => { setCarteraError(false); loadCartera(); }} className="underline">Reintentar</button>
           </div>
         )}
+
+        {/* Núcleo de operaciones — esferas Vulcano en vivo */}
+        <EsferasNucleo />
 
         {/* Las 3 cubetas */}
         {!cartera && !carteraError ? (

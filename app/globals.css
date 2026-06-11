@@ -15,13 +15,13 @@
   --color-surface-elev: #1c1930;  /* modales, dropdowns */
 
   /* Bordes HUD style */
-  --color-border: 139 92 246 / 0.10;
+  --color-border: 139 92 246 / 0.14;
   --color-border-strong: 139 92 246 / 0.20;
 
   /* Texto */
   --color-on-surface: #e8e4ff;
-  --color-on-surface-variant: #a89fd4;
-  --color-muted: #6b628f;
+  --color-on-surface-variant: #b8b0e0;
+  --color-muted: #8b82b3;
   --color-off-white: #f0ecff;
 
   /* Accents Iron Man */
@@ -480,21 +480,29 @@ body.keyboard-open .vf-mobile-nav {
 .vf-skeleton {
   position: relative;
   overflow: hidden;
-  background: rgb(var(--color-border) / 0.45);
+  /* Base obsidian sutil (no gris plano): surface oscuro con tinte violeta tenue */
+  background-color: var(--color-surface-low);
+  background-image: linear-gradient(
+    180deg,
+    rgba(124, 58, 237, 0.05),
+    rgba(3, 2, 10, 0.04)
+  );
 }
 .vf-skeleton::after {
   content: "";
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
+  /* Brillito obsidian: violeta -> cian muy tenues que barren la superficie */
   background: linear-gradient(
     90deg,
-    transparent,
-    rgba(139, 92, 246, 0.12) 40%,
-    rgba(34, 211, 238, 0.10) 60%,
-    transparent
+    transparent 0%,
+    rgba(124, 58, 237, 0.07) 32%,
+    rgba(167, 139, 250, 0.18) 50%,
+    rgba(34, 211, 238, 0.09) 68%,
+    transparent 100%
   );
-  animation: vfShimmer 1.4s ease-in-out infinite;
+  animation: vfShimmer 1.6s ease-in-out infinite;
 }
 @keyframes vfShimmer {
   100% { transform: translateX(100%); }

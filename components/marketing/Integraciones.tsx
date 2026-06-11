@@ -229,13 +229,14 @@ export function Integraciones() {
             </div>
           </div>
           <div ref={scrollRef}
-            className="flex gap-4 overflow-x-auto pb-4 cursor-grab active:cursor-grabbing"
+            className="flex gap-5 overflow-x-auto px-5 pb-10 no-scrollbar snap-x snap-mandatory cursor-grab active:cursor-grabbing"
             style={{ scrollbarWidth:"none", WebkitOverflowScrolling:"touch" as any }}
             onMouseDown={onMouseDown} onMouseMove={onMouseMove}
             onMouseUp={onMouseUp} onMouseLeave={onMouseUp}>
             <div className="pointer-events-none sticky left-0 z-10 w-8 shrink-0 bg-gradient-to-r from-[#050509] to-transparent" />
             {INTEGRATIONS.map((item, i) => (
               <motion.div key={item.id}
+                className="shrink-0 snap-center"
                 initial={{ opacity:0, x:20 }} animate={inView ? { opacity:1, x:0 } : { opacity:0, x:20 }}
                 transition={{ delay:0.4 + i*0.06, ease:EASE as any }}>
                 <IntegrationCard item={item} onClick={() => setSelected(item)} />

@@ -55,9 +55,10 @@ export function useClerkAppearance() {
       headerTitle: "font-display tracking-tight",
       footerActionLink: "text-violet-400 hover:text-violet-300",
       socialButtonsBlockButton: isDark
-        ? "border border-white/10 bg-white/5 text-[color:var(--color-on-surface)] hover:bg-white/10"
-        : "border border-black/10 bg-white text-[#0c0c10] hover:bg-black/5",
-      socialButtonsBlockButtonText: isDark ? "text-[color:var(--color-on-surface)]" : "text-[#0c0c10]",
+        ? "border border-white/15 bg-white/[0.08] text-white hover:bg-white/[0.14] hover:border-white/25 transition-all [&_svg]:opacity-100 [&_img]:brightness-0 [&_img]:invert"
+        : "border border-black/12 bg-white text-[#0c0c10] hover:bg-black/[0.04] hover:border-black/20 transition-all",
+      socialButtonsBlockButtonText: isDark ? "!text-white font-medium" : "!text-[#0c0c10] font-medium",
+      socialButtonsProviderIcon: isDark ? "brightness-0 invert opacity-100" : "opacity-100",
       // Errores de Clerk (Turnstile/bot-check incluidos) siempre visibles.
       formFieldErrorText: "!text-[color:var(--color-error-crimson)] !opacity-100 !block",
       alert: "!border !border-[color:var(--color-error-crimson)] !text-[color:var(--color-error-crimson)] !opacity-100",

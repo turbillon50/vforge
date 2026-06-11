@@ -8,6 +8,7 @@ import {
 } from "@/components/brand/logos/ServiceLogos";
 import { useT } from "@/i18n/AppProviders";
 import { motion } from "framer-motion";
+import ConnectionsHealth from "@/components/integrations/ConnectionsHealth";
 
 const EASE:[number,number,number,number]=[0.22,1,0.36,1];
 
@@ -89,6 +90,11 @@ export default function IntegrationsPage() {
           </div>
           <span className="font-mono text-[11px] text-white/30">{connected}/{SERVICES.length} conectados</span>
         </div>
+      </div>
+
+      {/* Estado de conexiones (health dashboard) */}
+      <div className="mx-auto max-w-4xl px-5 pb-8 md:px-8 reveal-up">
+        <ConnectionsHealth />
       </div>
 
       {/* Grid */}
