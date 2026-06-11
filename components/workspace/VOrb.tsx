@@ -2,24 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { IconChats, IconLayout, IconBranch, IconWorkflow, IconCpu, IconBoxes } from "@/components/brand/VFIcons";
+import { AnimatePresence, motion } from "framer-motion";
+import { IconChats, IconCpu, IconMic, IconGlobe, IconWorkflow } from "@/components/brand/VFIcons";
 
-const ITEMS_DEFAULT = [
-  { label: "Hablar con V", Icon: IconChats, href: "/app/chat", primary: true },
-  { label: "Centro de Mando", Icon: IconLayout, href: "/app/cockpit" },
-  { label: "RepoVision", Icon: IconBranch, href: "/app/repovision" },
+// Accesos FIJOS de la burbuja de V — iguales en toda la app.
+// Taller (sala de máquinas) y Blueprint (editor de flujos) siempre primero.
+const ITEMS = [
+  { label: "Taller", Icon: IconCpu, href: "/app/taller", primary: true },
   { label: "Blueprint", Icon: IconWorkflow, href: "/app/blueprint" },
-  { label: "Conexiones", Icon: IconCpu, href: "/app/integrations" },
-  { label: "Proyectos", Icon: IconBoxes, href: "/app/projects" },
-];
-
-const ITEMS_CHAT = [
-  { label: "Nuevo Chat", Icon: IconChats, href: "/app/chat/new", primary: true },
-  { label: "Proyectos", Icon: IconBoxes, href: "/app/projects" },
-  { label: "Deploy", Icon: IconLayout, href: "/app/deployments" },
-  { label: "RepoVision", Icon: IconBranch, href: "/app/repovision" },
-  { label: "Blueprint", Icon: IconWorkflow, href: "/app/blueprint" },
-  { label: "Inicio", Icon: IconCpu, href: "/app" },
+  { label: "Hablar con V", Icon: IconMic, href: "/app/chat?voice=1" },
+  { label: "Conversación", Icon: IconChats, href: "/app/chat" },
+  { label: "Navegador", Icon: IconGlobe, href: "/app/vulcano" },
 ];
 
 const ORB = 56;
@@ -141,51 +134,83 @@ export function VOrb() {
   if (pathname === "/app" || HIDE_ON.some((p) => pathname?.startsWith(p))) return null;
   if (pos.x < 0) return null;
   const onLeft = pos.x + 28 < (typeof window !== "undefined" ? window.innerWidth / 2 : 200);
-  const items = pathname?.startsWith("/app/chat") ? ITEMS_CHAT : ITEMS_DEFAULT;
+
+  const go = (href: string) => { setOpen(false); router.push(href); };
 
   return (
     <>
-      {open && <div onClick={() => setOpen(false)} className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" aria-hidden />}
-      <div style={{ left: pos.x, top: pos.y }} className="fixed z-[61] select-none">
+      <AnimatePresence>
         {open && (
-          <div className={"absolute bottom-[72px] flex w-64 flex-col gap-1 rounded-2xl border border-white/10 bg-[#06040f]/85 p-2 shadow-[0_24px_80px_rgba(0,0,0,0.7),0_0_0_1px_rgba(124,58,237,0.15)] backdrop-blur-3xl " + (onLeft ? "left-0" : "right-0")}>
-            {/* Header del menú */}
-            <div className="mb-1 flex items-center gap-2 px-3 py-2">
-              <div className="vorb-menu-dot" />
-              <span className="text-[11px] font-semibold tracking-widest text-violet-300/60 uppercase">V — Menú</span>
-            </div>
-            {items.map((it, i) => (
-              <button
-                key={it.label}
-                onClick={() => { setOpen(false); router.push(it.href); }}
-                style={{ animation: "vorbIn .2s " + i * 0.035 + "s both" }}
-                className={"group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all " + (it.primary ? "border-violet-400/40 bg-gradient-to-r from-violet-600/30 to-cyan-500/15 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:from-violet-600/45 hover:to-cyan-500/25" : "border-white/[0.05] bg-white/[0.04] text-white/80 hover:bg-white/[0.1] hover:text-white hover:border-violet-400/20")}
-              >
-                <it.Icon size={15} className={it.primary ? "text-cyan-300" : "text-violet-300/70 group-hover:text-violet-300"} />
-                <span className="flex-1 text-left">{it.label}</span>
-                <span className="text-white/20 group-hover:text-white/40 transition-colors">→</span>
-              </button>
-            ))}
-            {/* Divider + share */}
-            <div className="mt-1 border-t border-white/[0.06] pt-1">
-              <button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({ title: "VForge", text: "La fábrica de apps con IA más potente. Únete.", url: "https://vforge.site" });
-                  } else {
-                    navigator.clipboard?.writeText("https://vforge.site");
-                  }
-                  setOpen(false);
-                }}
-                style={{ animation: "vorbIn .2s " + items.length * 0.035 + "s both" }}
-                className="flex w-full items-center gap-3 rounded-xl border border-white/[0.05] bg-white/[0.03] px-3 py-2.5 text-sm font-medium text-white/60 transition-all hover:bg-white/[0.08] hover:text-white/90"
-              >
-                <span className="text-cyan-400/60 group-hover:text-cyan-400">⇧</span>
-                <span>Compartir VForge</span>
-              </button>
-            </div>
-          </div>
+          <motion.div
+            key="vorb-scrim"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
+            aria-hidden
+          />
         )}
+      </AnimatePresence>
+      <div style={{ left: pos.x, top: pos.y }} className="fixed z-[61] select-none">
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              key="vorb-menu"
+              role="menu"
+              aria-label="V — Menú"
+              initial={{ opacity: 0, y: 12, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 420, damping: 32 }}
+              style={{ transformOrigin: onLeft ? "bottom left" : "bottom right" }}
+              className={"absolute bottom-[72px] flex w-64 flex-col gap-1 rounded-2xl border border-white/10 bg-[#06040f]/85 p-2 shadow-[0_24px_80px_rgba(0,0,0,0.7),0_0_0_1px_rgba(124,58,237,0.15)] backdrop-blur-3xl " + (onLeft ? "left-0" : "right-0")}
+            >
+              {/* Header del menú */}
+              <div className="mb-1 flex items-center gap-2 px-3 py-2">
+                <div className="vorb-menu-dot" />
+                <span className="text-[11px] font-semibold tracking-widest text-violet-300/60 uppercase">V — Menú</span>
+              </div>
+              {ITEMS.map((it, i) => (
+                <motion.button
+                  key={it.label}
+                  role="menuitem"
+                  onClick={() => go(it.href)}
+                  initial={{ opacity: 0, x: onLeft ? -8 : 8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.04 + i * 0.045, type: "spring", stiffness: 460, damping: 30 }}
+                  whileTap={{ scale: 0.97 }}
+                  className={"group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all " + (it.primary ? "border-violet-400/40 bg-gradient-to-r from-violet-600/30 to-cyan-500/15 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:from-violet-600/45 hover:to-cyan-500/25" : "border-white/[0.05] bg-white/[0.04] text-white/80 hover:bg-white/[0.1] hover:text-white hover:border-violet-400/20")}
+                >
+                  <it.Icon size={15} className={it.primary ? "text-cyan-300" : "text-violet-300/70 group-hover:text-violet-300"} />
+                  <span className="flex-1 text-left">{it.label}</span>
+                  {it.primary && <span className="rounded-md bg-cyan-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-cyan-300">Live</span>}
+                  <span className="text-white/20 transition-colors group-hover:text-white/40">→</span>
+                </motion.button>
+              ))}
+              {/* Divider + share */}
+              <div className="mt-1 border-t border-white/[0.06] pt-1">
+                <motion.button
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({ title: "VForge", text: "La fábrica de apps con IA más potente. Únete.", url: "https://vforge.site" });
+                    } else {
+                      navigator.clipboard?.writeText("https://vforge.site");
+                    }
+                    setOpen(false);
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.04 + ITEMS.length * 0.045 }}
+                  className="flex w-full items-center gap-3 rounded-xl border border-white/[0.05] bg-white/[0.03] px-3 py-2.5 text-sm font-medium text-white/60 transition-all hover:bg-white/[0.08] hover:text-white/90"
+                >
+                  <span className="text-cyan-400/60 group-hover:text-cyan-400">⇧</span>
+                  <span>Compartir VForge</span>
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ESFERA V — cristal con Higgsfield */}
         <button

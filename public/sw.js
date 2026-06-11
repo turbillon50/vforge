@@ -1,7 +1,7 @@
 // VForge minimal service worker — offline shell + network-first for documents
 // Bump VERSION on every deploy where you want forced cache invalidation
 // (Luis: "se ve de la verga todavía" → asset cache pegado).
-const VERSION = "vforge-v13-2026-06-11-taller-mobile";
+const VERSION = "vforge-v14-2026-06-11-burbuja-taller";
 const SHELL = ["/", "/app/chat", "/offline"];
 
 self.addEventListener("install", (event) => {
@@ -14,6 +14,11 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
   );
   self.clients.claim();
+});
+
+// El cliente (RegisterSW) puede pedir activación inmediata al tocar "Actualizar".
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("fetch", (event) => {
