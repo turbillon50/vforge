@@ -1,116 +1,275 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
-import { ThemeToggle } from "@/components/controls/ThemeToggle";
-import { IconArrowL, IconBot, IconShield, IconExtLink, IconActivity } from "@/components/brand/VFIcons";
+import { useUser } from "@clerk/nextjs";
+import { IconArrowL, IconShield, IconActivity } from "@/components/brand/VFIcons";
 
-const REMOTE = "https://vulcano.vmomentum.site/vulcano";
-const TEAL = "#14b8a6";
+// URLs reales — el iframe carga el KasmVNC autenticado via nginx proxy
+const VNC_URL  = "https://vulcano.vmomentum.site/";
+const API_BASE = "https://vulcano.vmomentum.site/api";
+const TEAL  = "#14b8a6";
 const AMBER = "#f5a623";
+const POLL  = 3500; // ms
 
-const LOG_SEED = [
-  { t: "ia", m: "Abriendo sesión remota en la nube de VForge…" },
-  { t: "ia", m: "Navegando al portal solicitado" },
-  { t: "ia", m: "Rellenando formulario (campos no sensibles)" },
-  { t: "human", m: "Login detectado → control devuelto al humano" },
-  { t: "ia", m: "Esperando tu toque humano para continuar" },
-];
+type LogLine = { type: "ok"|"need"|"ia"; msg: string; ts: number };
+type HandoffState = { driver: "vulcano"|"human"; handoff: { active: boolean; reason: string }; log: LogLine[] };
 
 export function VulcanoBrowser() {
-  const [mode, setMode] = useState<"ia" | "human">("ia");
-  const [lines, setLines] = useState<{ t: string; m: string; ts: string }[]>([]);
+  const { user } = useUser();
+  const [state, setState]   = useState<HandoffState | null>(null);
+  const [error, setError]   = useState<string | null>(null);
+  const [taking, setTaking] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  useEffect(() => {
-    let i = 0;
-    const id = setInterval(() => {
-      const s = LOG_SEED[i % LOG_SEED.length];
-      const ts = new Date().toLocaleTimeString("es-MX", { hour12: false });
-      setLines((p) => [...p.slice(-6), { ...s, ts }]);
-      i++;
-    }, 2200);
-    return () => clearInterval(id);
+  // Poll handoff API cada 3.5s
+  const poll = useCallback(async () => {
+    try {
+      const r = await fetch(`${API_BASE}/handoff`, { cache: "no-store" });
+      if (!r.ok) throw new Error(`API ${r.status}`);
+      const d: HandoffState = await r.json();
+      setState(d);
+      setError(null);
+    } catch (e: any) {
+      setError(e.message);
+    }
   }, []);
 
-  const accent = mode === "ia" ? TEAL : AMBER;
+  useEffect(() => {
+    poll();
+    const id = setInterval(poll, POLL);
+    return () => clearInterval(id);
+  }, [poll]);
+
+  const takeControl = async () => {
+    setTaking(true);
+    await fetch(`${API_BASE}/handoff/take`, { method: "POST" }).catch(() => {});
+    await poll();
+    setTaking(false);
+  };
+
+  const returnControl = async () => {
+    setTaking(true);
+    await fetch(`${API_BASE}/handoff/done`, { method: "POST" }).catch(() => {});
+    await poll();
+    setTaking(false);
+  };
+
+  const isHuman  = state?.driver === "human";
+  const needsYou = state?.handoff?.active ?? false;
+  const accent   = isHuman ? AMBER : TEAL;
+  const logs     = [...(state?.log ?? [])].reverse().slice(0, 10);
 
   return (
-    <main style={{ minHeight: "100dvh", background: "var(--color-void)", color: "var(--color-on-surface)" }}>
-      {/* ── BACK BAR ── */}
-      <div className="sticky top-0 z-30 flex items-center gap-3 px-5 py-3 backdrop-blur-xl"
-        style={{ borderBottom: "1px solid rgba(127,127,170,0.14)", background: "color-mix(in srgb, var(--color-void) 78%, transparent)" }}>
-        <Link href="/" aria-label="Volver al inicio"
-          className="flex h-9 w-9 items-center justify-center rounded-xl transition"
-          style={{ border: "1px solid rgba(127,127,170,0.18)", color: "var(--color-on-surface-variant)" }}>
-          <IconArrowL size={15} />
-        </Link>
-        <span className="text-sm font-semibold tracking-tight">VForge</span>
-        <span className="text-xs" style={{ color: "var(--color-muted)" }}>/ Navegador Vulcano</span>
-        <div className="ml-auto"><ThemeToggle compact /></div>
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "1fr 360px",
+      height: "100dvh",
+      background: "#07070d",
+      color: "#e7ecf2",
+      fontFamily: "Inter, -apple-system, sans-serif",
+      overflow: "hidden",
+    }}>
+
+      {/* ── LEFT: iframe KasmVNC ── */}
+      <div style={{ position: "relative", background: "#000", borderRight: "1px solid rgba(127,127,170,0.1)" }}>
+
+        {/* Top pill — quien conduce */}
+        <div style={{
+          position: "absolute", top: 12, left: 12, zIndex: 10,
+          display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "6px 14px", borderRadius: 999,
+          background: accent + "18", border: `1px solid ${accent}40`,
+          fontSize: 12, fontWeight: 600, color: accent,
+          pointerEvents: "none",
+        }}>
+          <span style={{
+            width: 8, height: 8, borderRadius: "50%",
+            background: accent, boxShadow: `0 0 10px ${accent}`,
+            animation: "pulse 2s infinite",
+          }}/>
+          {isHuman ? "Tu turno" : "Vulcano conduciendo"}
+        </div>
+
+        {/* Banner ámbar cuando Vulcano pide tu turno */}
+        {needsYou && (
+          <div style={{
+            position: "absolute", top: 52, left: "50%", transform: "translateX(-50%)",
+            zIndex: 10, padding: "8px 18px", borderRadius: 10,
+            background: "rgba(133,79,11,0.22)", border: `1px solid ${AMBER}50`,
+            color: "#f2c879", fontSize: 13, fontWeight: 600,
+            backdropFilter: "blur(8px)", whiteSpace: "nowrap",
+          }}>
+            ⚠ Vulcano se detuvo — {state?.handoff?.reason || "tu acción requerida"}
+          </div>
+        )}
+
+        {/* El iframe REAL del KasmVNC */}
+        <iframe
+          ref={iframeRef}
+          src={VNC_URL}
+          style={{ width: "100%", height: "100%", border: 0, display: "block" }}
+          allow="clipboard-read; clipboard-write"
+          title="Navegador Vulcano"
+        />
+
+        {/* Overlay cuando no hay sesión */}
+        {error && (
+          <div style={{
+            position: "absolute", inset: 0, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            background: "rgba(7,7,13,0.92)", gap: 12,
+          }}>
+            <span style={{ fontSize: 40 }}>🔌</span>
+            <p style={{ color: "#8a95a3", fontSize: 14 }}>Reconectando al navegador…</p>
+            <p style={{ color: "#444", fontSize: 12 }}>{error}</p>
+          </div>
+        )}
       </div>
 
-      <div className="mx-auto max-w-3xl px-5 pb-24 pt-10">
-        {/* ── HERO ── */}
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1"
-          style={{ border: '1px solid ' + accent + '40', background: accent + '12' }}>
-          <span className="h-1.5 w-1.5 rounded-full" style={{ background: accent, boxShadow: '0 0 10px ' + accent }} />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: accent }}>IA &amp; Human</span>
-        </div>
-        <h1 className="text-[clamp(2rem,6vw,3.4rem)] font-bold leading-[0.95] tracking-[-0.03em]">Navegador Vulcano</h1>
-        <p className="mt-4 max-w-xl text-[15px] leading-relaxed" style={{ color: "var(--color-on-surface-variant)" }}>
-          Un navegador remoto en la nube de VForge. <b style={{ color: TEAL }}>La IA conduce</b> en verde;
-          cuando aparece un login, registro, captcha o pago, <b style={{ color: AMBER }}>tú tomas el control</b> en ámbar.
-          La IA nunca hace logins ni pagos — eso siempre lo haces tú.
-        </p>
-        <p className="mt-5 text-lg font-medium" style={{ color: "var(--color-on-surface)" }}>
-          Tú das el toque humano. <span style={{ color: TEAL }}>Vulcano hace el resto.</span>
-        </p>
+      {/* ── RIGHT: panel VForge branded ── */}
+      <div style={{ display: "flex", flexDirection: "column", height: "100dvh", overflowY: "auto" }}>
 
-        {/* ── GLASS PANEL: estado + log ── */}
-        <div className="mt-8 overflow-hidden rounded-3xl"
-          style={{ border: "1px solid rgba(127,127,170,0.16)", background: "color-mix(in srgb, var(--color-surface) 70%, transparent)", boxShadow: "0 24px 70px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)", backdropFilter: "blur(20px)" }}>
-          <div className="flex flex-wrap items-center gap-3 border-b px-5 py-4" style={{ borderColor: "rgba(127,127,170,0.14)" }}>
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: accent + '1f', color: accent }}>
-                {mode === "ia" ? <IconBot size={16} /> : <IconShield size={16} />}
-              </span>
-              <div>
-                <p className="text-[13px] font-semibold">{mode === "ia" ? "IA conduce" : "Humano en control"}</p>
-                <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>{mode === "ia" ? "Vulcano opera el navegador" : "Login / pago / captcha — tú decides"}</p>
-              </div>
+        {/* Header VForge */}
+        <div style={{
+          padding: "16px 20px 14px",
+          borderBottom: "1px solid rgba(127,127,170,0.1)",
+          display: "flex", alignItems: "center", gap: 12,
+        }}>
+          <Link href="/app" style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: 34, height: 34, borderRadius: 10,
+            border: "1px solid rgba(127,127,170,0.18)",
+            color: "#8a95a3", textDecoration: "none", fontSize: 14,
+          }}>←</Link>
+
+          {/* Brand */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{
+                width: 20, height: 20, borderRadius: 6,
+                background: `radial-gradient(circle at 30% 30%, ${TEAL}, #0f6e56)`,
+                boxShadow: `0 0 12px ${TEAL}60`,
+              }}/>
+              <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 0.2 }}>Navegador Vulcano</span>
             </div>
-            <button onClick={() => setMode(mode === "ia" ? "human" : "ia")}
-              className="ml-auto rounded-xl px-4 py-2 text-[12px] font-semibold transition active:scale-95"
-              style={{ background: AMBER, color: "#1a1205" }}>
-              {mode === "ia" ? "Tomar control" : "Devolver a la IA"}
+            <span style={{ fontSize: 11, color: "#8a95a3", letterSpacing: "0.4px", textTransform: "uppercase" }}>
+              IA &amp; Human · VForge
+            </span>
+          </div>
+
+          {/* User avatar */}
+          {user && (
+            <div style={{
+              marginLeft: "auto", width: 30, height: 30, borderRadius: "50%",
+              background: accent + "30", border: `1.5px solid ${accent}50`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12, fontWeight: 700, color: accent,
+            }}>
+              {user.firstName?.[0] ?? user.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase() ?? "U"}
+            </div>
+          )}
+        </div>
+
+        {/* Status row */}
+        <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(127,127,170,0.08)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, fontWeight: 600 }}>
+            <span style={{
+              width: 9, height: 9, borderRadius: "50%",
+              background: accent, boxShadow: `0 0 8px ${accent}`,
+            }}/>
+            <span style={{ color: accent }}>{isHuman ? "Tu turno" : "Vulcano conduciendo"}</span>
+          </div>
+          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#8a95a3" }}>
+            {isHuman
+              ? "Estás al control. Haz lo que necesitas y devuelve cuando termines."
+              : "La IA opera el navegador. Tú entras cuando hay un login, captcha o pago."}
+          </p>
+        </div>
+
+        {/* Handoff card — solo aparece cuando Vulcano pide tu turno */}
+        {needsYou && !isHuman && (
+          <div style={{
+            margin: "14px 16px", padding: 16, borderRadius: 14,
+            background: "rgba(133,79,11,0.15)", border: `1px solid ${AMBER}40`,
+          }}>
+            <h4 style={{ margin: "0 0 6px", fontSize: 15, color: "#f4ce83", fontWeight: 700 }}>
+              🟠 Tu turno — acción requerida
+            </h4>
+            <p style={{ margin: "0 0 14px", fontSize: 13, color: "#d9c7a6", lineHeight: 1.5 }}>
+              {state?.handoff?.reason || "Vulcano necesita tu intervención para continuar."}
+            </p>
+            <button onClick={takeControl} disabled={taking} style={{
+              width: "100%", padding: "10px 0", borderRadius: 10, border: "none",
+              background: AMBER, color: "#1a0f00", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", opacity: taking ? 0.6 : 1,
+            }}>
+              {taking ? "Conectando…" : "Tomar control"}
             </button>
           </div>
-          <div className="px-5 py-4">
-            <div className="mb-2 flex items-center gap-2 text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
-              <IconActivity size={12} /> Log en vivo
-            </div>
-            <div className="space-y-1.5 font-mono text-[12px]">
-              {lines.length === 0 && <p style={{ color: "var(--color-muted)" }}>Conectando…</p>}
-              {lines.map((l, i) => (
-                <div key={i} className="flex gap-2">
-                  <span style={{ color: "var(--color-muted)" }}>{l.ts}</span>
-                  <span style={{ color: l.t === "ia" ? TEAL : AMBER }}>{l.t === "ia" ? "IA" : "YOU"}</span>
-                  <span style={{ color: "var(--color-on-surface-variant)" }}>{l.m}</span>
-                </div>
-              ))}
-            </div>
+        )}
+
+        {/* Devolver control — solo cuando el humano tiene el control */}
+        {isHuman && (
+          <div style={{ margin: "14px 16px" }}>
+            <button onClick={returnControl} disabled={taking} style={{
+              width: "100%", padding: "10px 0", borderRadius: 10, border: "none",
+              background: TEAL, color: "#001a14", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", opacity: taking ? 0.6 : 1,
+            }}>
+              {taking ? "Transfiriendo…" : "✓ Terminé — devolver a Vulcano"}
+            </button>
           </div>
+        )}
+
+        {/* Log en tiempo real */}
+        <div style={{ flex: 1, padding: "0 16px 16px", overflowY: "auto" }}>
+          <div style={{
+            fontSize: 10, textTransform: "uppercase", letterSpacing: "1px",
+            color: "#8a95a3", marginBottom: 10, marginTop: 4,
+            display: "flex", alignItems: "center", gap: 6,
+          }}>
+            <IconActivity size={11}/> Log en tiempo real
+          </div>
+          {logs.length === 0 ? (
+            <p style={{ fontSize: 12, color: "#444" }}>Conectando…</p>
+          ) : logs.map((ev, i) => (
+            <div key={i} style={{
+              display: "flex", gap: 8, padding: "6px 0",
+              borderBottom: "1px solid rgba(127,127,170,0.06)",
+              fontSize: 12,
+            }}>
+              <span style={{ color: ev.type === "need" ? AMBER : ev.type === "ia" ? TEAL : "#6fe0bb", flexShrink: 0 }}>
+                {ev.type === "need" ? "⚠" : "✓"}
+              </span>
+              <span style={{ flex: 1, color: ev.type === "need" ? "#f2c879" : "#c9d5e0", lineHeight: 1.4 }}>
+                {ev.msg}
+              </span>
+              <span style={{ color: "#444", fontSize: 10, flexShrink: 0 }}>
+                {new Date(ev.ts).toLocaleTimeString("es-MX", { hour12: false })}
+              </span>
+            </div>
+          ))}
         </div>
 
-        {/* ── CTA ── */}
-        <a href={REMOTE} target="_blank" rel="noopener noreferrer"
-          className="mt-7 flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-[15px] font-semibold transition active:scale-[0.99]"
-          style={{ background: "linear-gradient(180deg,#27B98A,#0F6E56)", color: "#04241b", boxShadow: "0 10px 40px rgba(20,184,166,0.35)" }}>
-          Abrir mi Navegador Vulcano <IconExtLink size={15} />
-        </a>
-        <p className="mt-4 text-[12px] leading-relaxed" style={{ color: "var(--color-muted)" }}>
-          Cada usuario tendrá su propia instancia aislada bajo su responsabilidad. Esta es la instancia owner (Luis), con acceso protegido.
-        </p>
+        {/* Guardrails footer */}
+        <div style={{
+          padding: "12px 16px", borderTop: "1px solid rgba(127,127,170,0.08)",
+          display: "flex", gap: 8, alignItems: "flex-start",
+        }}>
+          <IconShield size={13} style={{ color: "#8a95a3", flexShrink: 0, marginTop: 2 }}/>
+          <p style={{ margin: 0, fontSize: 11, color: "#8a95a3", lineHeight: 1.5 }}>
+            La IA <b>nunca</b> hace logins, registros, captchas ni pagos.
+            Eres responsable de lo que realices cuando tomas el control.
+          </p>
+        </div>
       </div>
-    </main>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
+    </div>
   );
 }
