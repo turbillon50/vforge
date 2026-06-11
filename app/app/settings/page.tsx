@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useReverification } from "@clerk/nextjs";
 
 type SectionId =
   | "profile"
@@ -416,18 +416,40 @@ function SecurityPanel() {
   const [passkeyStatus, setPasskeyStatus] = useState<"idle"|"loading"|"done"|"error">("idle");
   const [passkeyMsg, setPasskeyMsg] = useState("");
 
+  // useReverification envuelve la operación: si Clerk pide step-up
+  // (additional verification), lanza el modal nativo automáticamente,
+  // el usuario confirma su identidad, y luego completa createPasskey.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createPasskeyWithReverify = useReverification(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    () => (user as any)!.createPasskey()
+  );
+
   async function addPasskey() {
     setPasskeyStatus("loading");
+    setPasskeyMsg("");
     try {
       if (!user) throw new Error("Sesión no disponible — recarga la página");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (user as any).createPasskey();
+      await createPasskeyWithReverify();
       setPasskeyStatus("done");
       setPasskeyMsg("✓ Passkey creada y registrada en este dispositivo");
     } catch (e: unknown) {
-      setPasskeyStatus("error");
       const msg = e instanceof Error ? e.message : String(e);
-      setPasskeyMsg(msg.includes("aborted") ? "Cancelado por el usuario" : msg.slice(0, 120));
+      // Cancelaciones del usuario no son errores reales
+      if (msg.toLowerCase().includes("abort") || msg.toLowerCase().includes("cancel")) {
+        setPasskeyStatus("idle");
+        setPasskeyMsg("");
+        return;
+      }
+      setPasskeyStatus("error");
+      // Mensaje más claro según el tipo de error
+      if (msg.includes("additional verification") || msg.includes("reverification")) {
+        setPasskeyMsg("Confirma tu identidad cuando aparezca el aviso e intenta de nuevo.");
+      } else if (msg.includes("not supported") || msg.includes("NotSupported")) {
+        setPasskeyMsg("Este dispositivo o navegador no soporta passkeys.");
+      } else {
+        setPasskeyMsg(msg.slice(0, 140));
+      }
     }
   }
 
