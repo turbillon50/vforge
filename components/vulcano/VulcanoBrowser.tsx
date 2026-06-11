@@ -177,7 +177,7 @@ export function VulcanoBrowser() {
   // URL del iframe KasmVNC con auto-login (password) + ajuste remoto
   const vncSrc = inst?.vnc_url
     ? `${inst.vnc_url}${inst.vnc_password
-        ? `?password=${encodeURIComponent(inst.vnc_password)}&autoconnect=true&resize=remote&reconnect=true`
+        ? `?password=${encodeURIComponent(inst.vnc_password)}&autoconnect=true&resize=${isMobile ? "scale" : "remote"}&reconnect=true`
         : ""}`
     : "";
 
@@ -262,8 +262,8 @@ export function VulcanoBrowser() {
       fontFamily:"Inter,-apple-system,sans-serif", overflow:"hidden" }}>
 
       {/* ── TOPBAR: estado de conexión ── */}
-      <div style={{ display:"flex", alignItems:"center", gap:12,
-        padding:"10px 16px", borderBottom:"1px solid rgba(127,127,170,0.12)",
+      <div style={{ display:"flex", alignItems:"center", gap: isMobile ? 8 : 12,
+        padding: isMobile ? "10px 12px" : "10px 16px", borderBottom:"1px solid rgba(127,127,170,0.12)",
         background:"var(--color-surface)", flexShrink:0 }}>
 
         <Link href="/app" style={{ display:"flex", alignItems:"center", justifyContent:"center",
@@ -280,8 +280,9 @@ export function VulcanoBrowser() {
           <IconGlobe size={17} />
         </div>
 
-        <div style={{ minWidth:0 }}>
-          <div style={{ fontWeight:800, fontSize:14, letterSpacing:0.2, lineHeight:1.1 }}>Navegador Vulcano</div>
+        <div style={{ minWidth:0, flex: isMobile ? "0 1 auto" : "0 0 auto" }}>
+          <div style={{ fontWeight:800, fontSize: isMobile ? 13 : 14, letterSpacing:0.2, lineHeight:1.1,
+            whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>Navegador Vulcano</div>
           {!isMobile && (
             <div style={{ fontSize:10, color:"var(--color-on-surface-variant)", textTransform:"uppercase", letterSpacing:"0.4px" }}>
               Chrome en la nube · VForge
@@ -401,77 +402,92 @@ export function VulcanoBrowser() {
 
       {/* ── BARRA DE CONTROL: Luis le dicta a la IA a donde ir ── */}
       {inst?.ready && (
-        <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px",
+        <div style={{ display:"flex", flexDirection:"column", gap:8, padding: isMobile ? "10px 12px" : "10px 14px",
           borderTop:"1px solid rgba(127,127,170,0.12)",
           borderBottom:"1px solid rgba(127,127,170,0.12)",
-          background:"rgba(15,12,30,0.6)", backdropFilter:"blur(8px)", flexWrap:"wrap" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8, flex:"1 1 240px", minWidth: isMobile ? 0 : 240,
-            padding:"6px 12px", borderRadius:10, background:"rgba(255,255,255,0.04)",
-            border:`1px solid ${VIOLET}33` }}>
-            <IconGlobe size={15} style={{ color:VIOLET, flexShrink:0 }} />
-            <input
-              value={cmdUrl}
-              onChange={(e) => setCmdUrl(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") navega(cmdUrl); }}
-              placeholder="Dile a la IA a donde ir: dashboard.clerk.com..."
-              style={{ flex:1, background:"transparent", border:"none", outline:"none",
-                color:"var(--color-on-surface)", fontSize:13 }}
-            />
+          background:"rgba(15,12,30,0.6)", backdropFilter:"blur(8px)", flexShrink:0 }}>
+
+          {/* Fila 1: input URL + boton Ir */}
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, flex:1, minWidth:0,
+              padding:"7px 12px", borderRadius:10, background:"rgba(255,255,255,0.04)",
+              border:`1px solid ${VIOLET}33` }}>
+              <IconGlobe size={15} style={{ color:VIOLET, flexShrink:0 }} />
+              <input
+                value={cmdUrl}
+                onChange={(e) => setCmdUrl(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") navega(cmdUrl); }}
+                placeholder={isMobile ? "URL: dashboard.clerk.com..." : "Dile a la IA a donde ir: dashboard.clerk.com..."}
+                style={{ flex:1, minWidth:0, background:"transparent", border:"none", outline:"none",
+                  color:"var(--color-on-surface)", fontSize:13 }}
+              />
+            </div>
             <button
               onClick={() => navega(cmdUrl)}
               disabled={sending || !cmdUrl.trim()}
-              style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"6px 14px",
+              style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"8px 14px",
                 borderRadius:8, border:"none", cursor: sending || !cmdUrl.trim() ? "default" : "pointer",
                 background: sending || !cmdUrl.trim() ? "rgba(167,139,250,0.25)" : VIOLET,
                 color:"#0a0a0f", fontSize:12, fontWeight:700, flexShrink:0,
                 opacity: sending ? 0.6 : 1 }}>
-              <IconRocket size={13} /> {sending ? "Yendo..." : "Ir"}
+              <IconRocket size={13} /> {sending ? "..." : "Ir"}
             </button>
           </div>
-          {[
-            { label:"Clerk",  url:"https://dashboard.clerk.com" },
-            { label:"Vercel", url:"https://vercel.com/dashboard" },
-            { label:"Neon",   url:"https://console.neon.tech" },
-            { label:"GitHub", url:"https://github.com/turbillon50" },
-          ].map((d) => (
-            <button key={d.label} onClick={() => navega(d.url)} disabled={sending}
-              style={{ padding:"6px 12px", borderRadius:999, cursor: sending ? "default" : "pointer",
-                background:"rgba(255,255,255,0.04)", border:"1px solid rgba(127,127,170,0.18)",
-                color:"var(--color-muted)", fontSize:11.5, fontWeight:600 }}>
-              {d.label}
-            </button>
-          ))}
-          <div style={{ display:"flex", alignItems:"center", gap:8, flex:"1 1 100%", marginTop:8,
-            padding:"6px 12px", borderRadius:10, background:"rgba(167,139,250,0.06)",
-            border:`1px solid ${VIOLET}40` }}>
-            <span style={{ fontSize:11, fontWeight:700, color:VIOLET, flexShrink:0,
-              display:"inline-flex", alignItems:"center", gap:5 }}>
-              <IconActivity size={13} /> IA
-            </span>
-            <input
-              value={aiGoal}
-              onChange={(e) => setAiGoal(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") pideALaIA(aiGoal); }}
-              placeholder="Dile en tus palabras: busca vuelos a Cancun, abre mis apps de Clerk..."
-              style={{ flex:1, background:"transparent", border:"none", outline:"none",
-                color:"var(--color-on-surface)", fontSize:13 }}
-            />
+
+          {/* Fila 2: chips de destinos (scroll horizontal en movil) */}
+          <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2,
+            WebkitOverflowScrolling:"touch" }}>
+            {[
+              { label:"Clerk",  url:"https://dashboard.clerk.com" },
+              { label:"Vercel", url:"https://vercel.com/dashboard" },
+              { label:"Neon",   url:"https://console.neon.tech" },
+              { label:"GitHub", url:"https://github.com/turbillon50" },
+            ].map((d) => (
+              <button key={d.label} onClick={() => navega(d.url)} disabled={sending}
+                style={{ padding:"6px 14px", borderRadius:999, cursor: sending ? "default" : "pointer",
+                  background:"rgba(255,255,255,0.04)", border:"1px solid rgba(127,127,170,0.18)",
+                  color:"var(--color-muted)", fontSize:11.5, fontWeight:600, whiteSpace:"nowrap", flexShrink:0 }}>
+                {d.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Fila 3: input IA lenguaje natural + boton */}
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, flex:1, minWidth:0,
+              padding:"7px 12px", borderRadius:10, background:"rgba(167,139,250,0.06)",
+              border:`1px solid ${VIOLET}40` }}>
+              <span style={{ fontSize:11, fontWeight:700, color:VIOLET, flexShrink:0,
+                display:"inline-flex", alignItems:"center", gap:5 }}>
+                <IconActivity size={13} /> IA
+              </span>
+              <input
+                value={aiGoal}
+                onChange={(e) => setAiGoal(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") pideALaIA(aiGoal); }}
+                placeholder={isMobile ? "Busca vuelos a Cancun..." : "Dile en tus palabras: busca vuelos a Cancun, abre mis apps de Clerk..."}
+                style={{ flex:1, minWidth:0, background:"transparent", border:"none", outline:"none",
+                  color:"var(--color-on-surface)", fontSize:13 }}
+              />
+            </div>
             <button
               onClick={() => pideALaIA(aiGoal)}
               disabled={aiSending || !aiGoal.trim()}
-              style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"6px 14px",
+              style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"8px 14px",
                 borderRadius:8, border:`1px solid ${VIOLET}`, flexShrink:0,
                 cursor: aiSending || !aiGoal.trim() ? "default" : "pointer",
                 background: aiSending ? "rgba(167,139,250,0.15)" : "transparent",
-                color: VIOLET, fontSize:12, fontWeight:700, opacity: aiSending ? 0.7 : 1 }}>
-              <IconActivity size={13} /> {aiSending ? "Pensando\u2026" : "Que lo haga la IA"}
+                color: VIOLET, fontSize:12, fontWeight:700, opacity: aiSending ? 0.7 : 1, whiteSpace:"nowrap" }}>
+              <IconActivity size={13} /> {aiSending ? "..." : (isMobile ? "IA" : "Que lo haga la IA")}
             </button>
           </div>
+
+          {/* Feedback */}
           <AnimatePresence>
             {lastResult && (
               <motion.div
-                initial={{ opacity:0, x:8 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0 }}
-                style={{ display:"inline-flex", alignItems:"center", gap:6, marginLeft:"auto",
+                initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
+                style={{ display:"inline-flex", alignItems:"center", gap:6,
                   fontSize:11.5, fontWeight:600,
                   color: lastResult.startsWith("No se") ? AMBER : GREEN }}>
                 <IconCheck size={13} /> {lastResult}
@@ -528,7 +544,7 @@ export function VulcanoBrowser() {
                 )}
               </AnimatePresence>
               <iframe
-                key={iframeKey}
+                key={`${iframeKey}-${isMobile ? "m" : "d"}`}
                 src={vncSrc}
                 onLoad={() => setIframeLoaded(true)}
                 style={{ width:"100%", height:"100%", border:0, display:"block" }}
