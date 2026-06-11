@@ -416,6 +416,8 @@ function SecurityPanel() {
   const clerk = useClerk();
   const [passkeyStatus, setPasskeyStatus] = useState<"idle"|"loading"|"done"|"error">("idle");
   const [passkeyMsg, setPasskeyMsg] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const existingPasskeys: { id: string; name?: string }[] = ((user as any)?.passkeys ?? []).map((p: any) => ({ id: p.id, name: p.name }));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const createPasskeyWithReverify = useReverification(
@@ -446,6 +448,12 @@ function SecurityPanel() {
         clerk.openUserProfile();
         return;
       }
+      // Passkey ya existe = no es error, ya está activo
+      if (msg.includes("already_exists") || msg.includes("already exists") || msg.includes("invalid state")) {
+        setPasskeyStatus("done");
+        setPasskeyMsg("✓ Ya tienes un passkey activo en este dispositivo");
+        return;
+      }
       setPasskeyStatus("error");
       if (msg.includes("not supported") || msg.includes("NotSupported")) {
         setPasskeyMsg("Este dispositivo o navegador no soporta passkeys.");
@@ -471,6 +479,17 @@ function SecurityPanel() {
             {passkeyMsg}
           </div>
         ) : null}
+        {existingPasskeys.length > 0 && (
+          <div className="mb-3 space-y-2">
+            {existingPasskeys.map((pk) => (
+              <div key={pk.id} className="flex items-center gap-3 rounded-lg border border-emerald-500/15 bg-emerald-500/5 px-3 py-2.5">
+                <IconKey size={14} className="text-emerald-400 shrink-0" />
+                <p className="min-w-0 flex-1 text-[13px] text-on-surface truncate">{pk.name || "Passkey de este dispositivo"}</p>
+                <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wide shrink-0">activo</span>
+              </div>
+            ))}
+          </div>
+        )}
         {passkeyStatus !== "done" && (
           <div className="flex flex-col gap-2">
             <button
@@ -480,7 +499,7 @@ function SecurityPanel() {
               style={{ minHeight: 44, touchAction: "manipulation" }}
             >
               <IconKey size={14} />
-              {passkeyStatus === "loading" ? "Activando…" : "Agregar Passkey a este dispositivo"}
+              {passkeyStatus === "loading" ? "Activando…" : existingPasskeys.length > 0 ? "Agregar otro dispositivo" : "Agregar Passkey a este dispositivo"}
             </button>
             <button
               onClick={() => clerk.openUserProfile()}

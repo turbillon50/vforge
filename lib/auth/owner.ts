@@ -1,15 +1,15 @@
 /**
- * Owner gating — V (y todo su cockpit) es exclusiva de Luis.
+ * Owner gating — V (y todo su cockpit) es para los owners (Luis + Jaime).
  *
  * Un usuario es owner si:
  *  1. publicMetadata.role === "owner" en Clerk, o
  *  2. alguno de sus emails está en VFORGE_OWNER_EMAILS (env, CSV).
  *
- * Default de emails: las dos cuentas de Luis.
+ * Default de emails: las cuentas de Luis + Jaime (owners de V·Forge).
  */
 export const OWNER_EMAILS: string[] = (
   process.env.VFORGE_OWNER_EMAILS ??
-  "turbillon50@gmail.com,dluisdelatorre@gmail.com,luisdelator@vmomentums.info"
+  "turbillon50@gmail.com,dluisdelatorre@gmail.com,luisdelator@vmomentums.info,jaime@vmomentums.info"
 )
   .toLowerCase()
   .split(",")

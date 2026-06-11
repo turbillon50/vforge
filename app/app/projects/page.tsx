@@ -78,8 +78,8 @@ export default function ProjectsPage() {
         description={t.projects.body}
         actions={
           <>
-            <button className="btn-ghost">{t.projects.cta_import}</button>
-            <Link href="/app/chat" className="btn-primary">
+            <button className="btn-ghost flex-1 !px-3 md:flex-none md:!px-5">{t.projects.cta_import}</button>
+            <Link href="/app/chat" className="btn-primary flex-1 !px-3 md:flex-none md:!px-5">
               <IconSparkles size={13} /> {t.projects.cta_new}
             </Link>
           </>
@@ -91,7 +91,7 @@ export default function ProjectsPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: EASE }}
-        className="flex items-center gap-3 px-5 pb-2 md:px-8"
+        className="flex flex-wrap items-center gap-2 px-5 pt-4 pb-2 md:gap-3 md:px-8"
       >
         {(["all", "live", "preview", "draft"] as const).map((f) => (
           <button
