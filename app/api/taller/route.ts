@@ -10,7 +10,7 @@ import { isOwnerEmail } from "@/lib/auth/owner";
 import { NextResponse } from "next/server";
 
 const RELAY = "http://178.105.135.26";
-const SECRET = process.env.BRAIN_SECRET ?? "superclaude2025";
+const SECRET = process.env.BRAIN_SECRET ?? "";
 
 // Node del host (documentado en CLAUDE.md) con fallback a `node` en PATH.
 // Emite JSON compacto {services, metrics} para evitar truncado de pm2 jlist.

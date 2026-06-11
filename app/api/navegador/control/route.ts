@@ -10,7 +10,7 @@ import { isOwnerUser } from "@/lib/auth/owner";
 import { NextResponse } from "next/server";
 
 const RELAY = "http://178.105.135.26";
-const SECRET = process.env.BRAIN_SECRET ?? "superclaude2025";
+const SECRET = process.env.BRAIN_SECRET ?? "";
 const CONTAINER = "vulcano-browser";
 const CDP = "http://localhost:9222";
 
