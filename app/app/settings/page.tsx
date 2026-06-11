@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
-import { useUser, useReverification } from "@clerk/nextjs";
+import { useUser, useReverification, useClerk } from "@clerk/nextjs";
 
 type SectionId =
   | "profile"
@@ -413,12 +413,10 @@ function AppearancePanel() {
 
 function SecurityPanel() {
   const { user } = useUser();
+  const clerk = useClerk();
   const [passkeyStatus, setPasskeyStatus] = useState<"idle"|"loading"|"done"|"error">("idle");
   const [passkeyMsg, setPasskeyMsg] = useState("");
 
-  // useReverification envuelve la operación: si Clerk pide step-up
-  // (additional verification), lanza el modal nativo automáticamente,
-  // el usuario confirma su identidad, y luego completa createPasskey.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const createPasskeyWithReverify = useReverification(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -435,17 +433,21 @@ function SecurityPanel() {
       setPasskeyMsg("✓ Passkey creada y registrada en este dispositivo");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      // Cancelaciones del usuario no son errores reales
       if (msg.toLowerCase().includes("abort") || msg.toLowerCase().includes("cancel")) {
         setPasskeyStatus("idle");
         setPasskeyMsg("");
         return;
       }
+      // Si falla por reverificación, abrir el portal nativo de Clerk
+      // donde el flujo de passkey + reverificación funciona garantizado
+      if (msg.includes("additional verification") || msg.includes("reverification") || msg.includes("verification")) {
+        setPasskeyStatus("idle");
+        setPasskeyMsg("");
+        clerk.openUserProfile();
+        return;
+      }
       setPasskeyStatus("error");
-      // Mensaje más claro según el tipo de error
-      if (msg.includes("additional verification") || msg.includes("reverification")) {
-        setPasskeyMsg("Confirma tu identidad cuando aparezca el aviso e intenta de nuevo.");
-      } else if (msg.includes("not supported") || msg.includes("NotSupported")) {
+      if (msg.includes("not supported") || msg.includes("NotSupported")) {
         setPasskeyMsg("Este dispositivo o navegador no soporta passkeys.");
       } else {
         setPasskeyMsg(msg.slice(0, 140));
@@ -470,15 +472,24 @@ function SecurityPanel() {
           </div>
         ) : null}
         {passkeyStatus !== "done" && (
-          <button
-            onClick={addPasskey}
-            disabled={passkeyStatus === "loading"}
-            className="btn-primary !px-4 !py-2 text-[13px] disabled:opacity-50"
-            style={{ minHeight: 44, touchAction: "manipulation" }}
-          >
-            <IconKey size={14} />
-            {passkeyStatus === "loading" ? "Activando…" : "Agregar Passkey a este dispositivo"}
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={addPasskey}
+              disabled={passkeyStatus === "loading"}
+              className="btn-primary !px-4 !py-2 text-[13px] disabled:opacity-50"
+              style={{ minHeight: 44, touchAction: "manipulation" }}
+            >
+              <IconKey size={14} />
+              {passkeyStatus === "loading" ? "Activando…" : "Agregar Passkey a este dispositivo"}
+            </button>
+            <button
+              onClick={() => clerk.openUserProfile()}
+              className="text-[12px] text-violet-300/70 hover:text-violet-300 transition text-left"
+              style={{ minHeight: 36, touchAction: "manipulation" }}
+            >
+              ¿Problemas? Administra passkeys en tu perfil de seguridad →
+            </button>
+          </div>
         )}
         <p className="mt-3 text-[11px] text-muted">
           Puedes agregar múltiples dispositivos. Cada uno se registra por separado.
@@ -487,17 +498,15 @@ function SecurityPanel() {
 
       <Card title="Sesiones activas">
         <p className="mb-3 text-[12px] text-on-surface-variant">
-          Gestiona tus sesiones desde el portal de cuenta de Clerk.
+          Gestiona tus sesiones y dispositivos conectados.
         </p>
-        <a
-          href="https://accounts.vforge.site/user"
-          target="_blank"
-          rel="noreferrer"
+        <button
+          onClick={() => clerk.openUserProfile()}
           className="inline-flex items-center gap-2 rounded-lg border border-violet-500/20 bg-violet-500/8 px-4 py-2 text-sm text-violet-300 transition hover:bg-violet-500/15"
           style={{ minHeight: 44, touchAction: "manipulation" }}
         >
           <IconShield size={14} /> Ver sesiones y dispositivos
-        </a>
+        </button>
       </Card>
 
       <Card title="Bóveda de secretos">
@@ -515,6 +524,7 @@ function SecurityPanel() {
     </>
   );
 }
+
 
 function ApiPanel() {
   return (

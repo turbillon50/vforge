@@ -28,16 +28,19 @@ const GAP = 12;
 function avoidCollision(p: { x: number; y: number }): { x: number; y: number } {
   if (typeof window === "undefined") return p;
   let { x, y } = p;
+  // Clamp dentro del viewport
   x = Math.max(8, Math.min(window.innerWidth - ORB - 8, x));
   y = Math.max(8, Math.min(window.innerHeight - ORB - 8, y));
+  // Solo evitar elementos visibles que realmente colisionan (ej: MobileNav)
+  // Evitar empujar de más: solo si el solapamiento es significativo
   const els = document.querySelectorAll<HTMLElement>("[data-vorb-avoid]");
   for (const el of Array.from(els)) {
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) continue;
-    const overlaps =
-      x < r.right + GAP && x + ORB > r.left - GAP &&
-      y < r.bottom + GAP && y + ORB > r.top - GAP;
-    if (overlaps) y = Math.max(8, r.top - ORB - GAP);
+    // Solo evitar si el centro de la esfera está dentro del elemento
+    const cx = x + ORB / 2, cy = y + ORB / 2;
+    const inside = cx > r.left && cx < r.right && cy > r.top && cy < r.bottom;
+    if (inside) y = Math.max(8, r.top - ORB - GAP);
   }
   return { x, y };
 }
@@ -72,11 +75,22 @@ export function VOrb() {
   const drag = useRef<{ moved: boolean; sx: number; sy: number; ox: number; oy: number } | null>(null);
 
   useEffect(() => {
+    // Posición inicial: esquina inferior derecha, con espacio para el MobileNav en móvil
+    const mobile = window.matchMedia("(max-width: 767px)").matches;
+    const bottomGap = mobile ? 90 : 28; // dejar espacio sobre el nav móvil
+    const defaultPos = { x: window.innerWidth - 76, y: window.innerHeight - 56 - bottomGap };
     try {
       const s = localStorage.getItem("vorb_pos");
-      if (s) { setPos(avoidCollision(JSON.parse(s))); return; }
+      if (s) {
+        const saved = JSON.parse(s);
+        // Validar que la posición guardada esté dentro del viewport actual
+        if (saved.x >= 0 && saved.x < window.innerWidth && saved.y >= 0 && saved.y < window.innerHeight) {
+          setPos(saved);
+          return;
+        }
+      }
     } catch {}
-    setPos(avoidCollision({ x: window.innerWidth - 78, y: window.innerHeight - 120 }));
+    setPos(defaultPos);
   }, []);
 
   useEffect(() => {
@@ -86,15 +100,16 @@ export function VOrb() {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
         if (drag.current) return;
-        const np = avoidCollision(pos);
-        if (np.x !== pos.x || np.y !== pos.y) setPos(np);
+        // Solo re-clamp en resize, sin perseguir cambios de DOM (evita el salto)
+        const clamped = {
+          x: Math.max(8, Math.min(window.innerWidth - ORB - 8, pos.x)),
+          y: Math.max(8, Math.min(window.innerHeight - ORB - 8, pos.y)),
+        };
+        if (clamped.x !== pos.x || clamped.y !== pos.y) setPos(clamped);
       });
     };
-    check();
-    const obs = new MutationObserver(check);
-    obs.observe(document.body, { childList: true, subtree: true });
     window.addEventListener("resize", check);
-    return () => { cancelAnimationFrame(raf); obs.disconnect(); window.removeEventListener("resize", check); };
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", check); };
   }, [pos]);
 
   function down(e: React.PointerEvent) {
