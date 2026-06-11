@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
+import { useUser } from "@clerk/nextjs";
 
 type SectionId =
   | "profile"
@@ -411,16 +412,16 @@ function AppearancePanel() {
 }
 
 function SecurityPanel() {
+  const { user } = useUser();
   const [passkeyStatus, setPasskeyStatus] = useState<"idle"|"loading"|"done"|"error">("idle");
   const [passkeyMsg, setPasskeyMsg] = useState("");
 
   async function addPasskey() {
     setPasskeyStatus("loading");
     try {
-      // @ts-ignore — Clerk useUser hook not imported here, use window.__clerk
-      const user = window.Clerk?.user;
-      if (!user) throw new Error("Sesión no disponible");
-      await user.createPasskey();
+      if (!user) throw new Error("Sesión no disponible — recarga la página");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (user as any).createPasskey();
       setPasskeyStatus("done");
       setPasskeyMsg("✓ Passkey creada y registrada en este dispositivo");
     } catch (e: unknown) {
@@ -540,6 +541,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 
 function MoreToolsCard() {
+  const { user: currentUser } = useUser();
   const tools = [
     { href: "/app/cockpit", label: "Centro de Mando", icon: IconLayout },
     { href: "/app/blueprint", label: "Blueprint", icon: IconMap },

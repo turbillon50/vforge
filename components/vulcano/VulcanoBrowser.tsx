@@ -26,6 +26,7 @@ export function VulcanoBrowser() {
   const [prov, setProv]     = useState(false);
   const [taking, setTaking] = useState(false);
   const [showProfiles, setShowProfiles] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0);
 
   const fetchInst = useCallback(async () => {
     try {
@@ -198,12 +199,32 @@ export function VulcanoBrowser() {
         )}
 
         {vncSrc ? (
-          <iframe
-            src={vncSrc}
-            style={{ width:"100%", height:"100%", border:0, display:"block" }}
-            allow="clipboard-read; clipboard-write; fullscreen"
-            title="Navegador Vulcano"
-          />
+          <>
+            <iframe
+              key={iframeKey}
+              src={vncSrc}
+              style={{ width:"100%", height:"100%", border:0, display:"block" }}
+              allow="clipboard-read; clipboard-write; fullscreen"
+              title="Navegador Vulcano"
+            />
+            {/* Botones flotantes para mobile o si el iframe falla */}
+            <div style={{ position:"absolute", bottom:12, left:"50%", transform:"translateX(-50%)",
+              zIndex:20, display:"flex", gap:8, pointerEvents:"auto" }}>
+              <a href={vncSrc} target="_blank" rel="noreferrer"
+                style={{ padding:"7px 14px", borderRadius:8, fontSize:12,
+                  fontWeight:600, cursor:"pointer", textDecoration:"none",
+                  background:"rgba(13,11,26,0.88)", color:"#a78bfa",
+                  border:"1px solid rgba(139,92,246,0.35)", backdropFilter:"blur(8px)" }}>
+                ↗ Abrir en pestaña
+              </a>
+              <button onClick={() => setIframeKey((k: number) => k+1)}
+                style={{ padding:"7px 14px", borderRadius:8, fontSize:12, cursor:"pointer",
+                  background:"rgba(13,11,26,0.88)", color:"#6b628f",
+                  border:"1px solid rgba(127,127,170,0.2)", backdropFilter:"blur(8px)" }}>
+                ↺
+              </button>
+            </div>
+          </>
         ) : (
           <div style={{ display:"flex", alignItems:"center", justifyContent:"center",
             height:"100%", color:"#444", flexDirection:"column", gap:8 }}>
