@@ -31,13 +31,9 @@ const NAV = [
   { href:"/app/deployments", label:"Despliegues",   Icon:IconRocket,   kbd:"D" },
   { href:"/app/vulcano",       label:"Navegador",    Icon:IconGlobe,    kbd:"N" },
   { href:"/app/taller",      label:"Taller",        Icon:IconCpu,      kbd:"O" },
-<<<<<<< Updated upstream
-  { href:"/app/automatizaciones", label:"Automatización", Icon:IconRocket, kbd:"U" },
-  { href:"/app/flujos",      label:"Flujos",        Icon:IconZap,      kbd:"F" },
-  { href:"/app/crm",         label:"CRM",           Icon:IconUsers,    kbd:"M" },
-=======
   { href:"/app/automatizaciones", label:"Automatización", Icon:IconActivity, kbd:"U" },
->>>>>>> Stashed changes
+  { href:"/app/flujos",      label:"Flujos",        Icon:IconRocket,   kbd:"F" },
+  { href:"/app/crm",         label:"CRM",           Icon:IconUsers,    kbd:"M" },
   { href:"/app/projects",    label:"Proyectos",     Icon:IconLayers,   kbd:"P" },
   { href:"/app/vault",       label:"Baul",          Icon:IconDatabase, kbd:"B" },
   { href:"/app/contracts",   label:"Contratos",     Icon:IconFile,     kbd:"T" },
