@@ -1,0 +1,50 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+import { currentUser } from "@clerk/nextjs/server";
+import { isOwnerEmail } from "@/lib/auth/owner";
+import { NextResponse } from "next/server";
+
+const RELAY = "http://178.105.135.26";
+const SECRET = process.env.BRAIN_SECRET ?? "superclaude2025";
+
+export async function GET() {
+  const user = await currentUser();
+  if (!isOwnerEmail(user?.emailAddresses?.[0]?.emailAddress)) {
+    return NextResponse.json({ error: "no auth" }, { status: 401 });
+  }
+
+  try {
+    const res = await fetch(`${RELAY}/brain/exec`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: SECRET,
+        cmd: "pm2 jlist 2>/dev/null | head -c 4000",
+      }),
+      cache: "no-store",
+    });
+
+    const data = await res.json();
+    const raw = typeof data?.output === "string" ? data.output : data;
+    const procs = typeof raw === "string" ? JSON.parse(raw) : raw;
+
+    const automations = (Array.isArray(procs) ? procs : []).map((p: any) => ({
+      name: p.name,
+      type: "daemon",
+      status: p.pm2_env?.status || "unknown",
+      detail: "",
+    }));
+
+    return NextResponse.json({ ok: true, live: true, automations });
+  } catch {
+    return NextResponse.json({
+      ok: false,
+      live: false,
+      automations: [
+        { name: "Daemon Vulcano", type: "daemon", status: "active", detail: "esferas" },
+        { name: "Auto-refresh token", type: "cron", status: "active", detail: "cada hora" },
+      ],
+    });
+  }
+}
