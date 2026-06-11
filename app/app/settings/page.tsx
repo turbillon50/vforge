@@ -411,32 +411,83 @@ function AppearancePanel() {
 }
 
 function SecurityPanel() {
+  const [passkeyStatus, setPasskeyStatus] = useState<"idle"|"loading"|"done"|"error">("idle");
+  const [passkeyMsg, setPasskeyMsg] = useState("");
+
+  async function addPasskey() {
+    setPasskeyStatus("loading");
+    try {
+      // @ts-ignore — Clerk useUser hook not imported here, use window.__clerk
+      const user = window.Clerk?.user;
+      if (!user) throw new Error("Sesión no disponible");
+      await user.createPasskey();
+      setPasskeyStatus("done");
+      setPasskeyMsg("✓ Passkey creada y registrada en este dispositivo");
+    } catch (e: unknown) {
+      setPasskeyStatus("error");
+      const msg = e instanceof Error ? e.message : String(e);
+      setPasskeyMsg(msg.includes("aborted") ? "Cancelado por el usuario" : msg.slice(0, 120));
+    }
+  }
+
   return (
     <>
-      <Card title="Operator token (vault)">
-        <p className="mb-3 text-[12px] text-on-surface-variant">
-          Token Bearer para desbloquear la bóveda de secretos en este navegador.
-          Cuando aterrice Clerk con cableado real al user_id, este token migra
-          a sesión Clerk.
+      <Card title="Passkey (Face ID / Touch ID)">
+        <p className="mb-4 text-[12px] text-on-surface-variant leading-relaxed">
+          Inicia sesión con tu huella, Face ID o llave de seguridad física.
+          Sin contraseña, sin SMS. Solo tú y tu dispositivo.
         </p>
-        <div className="rounded-md border border-app bg-void p-3 font-mono text-[11px] text-on-surface-variant">
-          Configurado vía /app/secrets → Unlock vault
-        </div>
+        {passkeyStatus === "done" ? (
+          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-400">
+            {passkeyMsg}
+          </div>
+        ) : passkeyStatus === "error" ? (
+          <div className="mb-3 rounded-lg border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-400">
+            {passkeyMsg}
+          </div>
+        ) : null}
+        {passkeyStatus !== "done" && (
+          <button
+            onClick={addPasskey}
+            disabled={passkeyStatus === "loading"}
+            className="btn-primary !px-4 !py-2 text-[13px] disabled:opacity-50"
+            style={{ minHeight: 44, touchAction: "manipulation" }}
+          >
+            <IconKey size={14} />
+            {passkeyStatus === "loading" ? "Activando…" : "Agregar Passkey a este dispositivo"}
+          </button>
+        )}
+        <p className="mt-3 text-[11px] text-muted">
+          Puedes agregar múltiples dispositivos. Cada uno se registra por separado.
+        </p>
       </Card>
 
       <Card title="Sesiones activas">
-        <p className="text-[12px] text-on-surface-variant">
-          Hoy la sesión se identifica con operator_luis hardcoded. Próximamente:
-          lista de devices con timestamps + revoke individual.
+        <p className="mb-3 text-[12px] text-on-surface-variant">
+          Gestiona tus sesiones desde el portal de cuenta de Clerk.
         </p>
+        <a
+          href="https://accounts.vforge.site/user"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 rounded-lg border border-violet-500/20 bg-violet-500/8 px-4 py-2 text-sm text-violet-300 transition hover:bg-violet-500/15"
+          style={{ minHeight: 44, touchAction: "manipulation" }}
+        >
+          <IconShield size={14} /> Ver sesiones y dispositivos
+        </a>
       </Card>
 
-      <Card title="Two-factor authentication">
-        <p className="text-[12px] text-on-surface-variant">
-          Llegará junto con Clerk (M11). Hoy V ejecuta directo y el audit log
-          registra cada acción; las irreversibles las avisa en el chat. Sin 2FA
-          adicional todavía.
+      <Card title="Bóveda de secretos">
+        <p className="mb-3 text-[12px] text-on-surface-variant">
+          Tus API keys viven encriptadas con AES-256-GCM. Solo tú puedes descifrarlas.
         </p>
+        <Link
+          href="/app/secrets"
+          className="inline-flex items-center gap-2 rounded-lg border border-app bg-tint-1 px-4 py-2 text-sm text-on-surface transition hover:bg-tint-2"
+          style={{ minHeight: 44, touchAction: "manipulation" }}
+        >
+          <IconKey size={14} className="text-violet-300" /> Abrir bóveda
+        </Link>
       </Card>
     </>
   );

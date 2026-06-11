@@ -6,10 +6,11 @@ import { VMark, VWordmark } from "@/components/brand/VMark";
 import {
   IconChat, IconBranch, IconActivity, IconLayers, IconFile,
   IconSearch, IconSettings, IconHome, IconUsers, IconBell,
-  IconChevR, IconLifeBuoy, IconRocket,
+  IconChevR, IconLifeBuoy, IconRocket, IconGlobe, IconDatabase, 
 } from "@/components/brand/VFIcons";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useClerkAppearance } from "@/lib/clerk-appearance";
+import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
 import { VPresence } from "@/components/brand/VPresence";
 import { VOrb } from "./VOrb";
 import { Icon3D } from "@/components/brand/Icon3D";
@@ -23,8 +24,9 @@ const NAV = [
   { href:"/app/chat",        label:"Conversación",  Icon:IconChat,     kbd:"C" },
   { href:"/app/repovision",  label:"RepoVisión",    Icon:IconBranch,   kbd:"R" },
   { href:"/app/deployments", label:"Despliegues",   Icon:IconRocket,   kbd:"D" },
-  { href:"/vulcano",          label:"Navegador",    Icon:IconBranch,   kbd:"N" },
+  { href:"/app/vulcano",       label:"Navegador",    Icon:IconGlobe,    kbd:"N" },
   { href:"/app/projects",    label:"Proyectos",     Icon:IconLayers,   kbd:"P" },
+  { href:"/app/vault",       label:"Baul",          Icon:IconDatabase, kbd:"B" },
   { href:"/app/contracts",   label:"Contratos",     Icon:IconFile,     kbd:"T" },
   { href:"/app/activity",    label:"Actividad",     Icon:IconActivity, kbd:"A" },
 ];
@@ -34,9 +36,11 @@ const NAV_BTM = [
 ];
 const MOBILE = [
   { href:"/app/chat",        label:"Chat",      orb:true },
-  { href:"/app/projects",    label:"Proyectos", icon3d:"projects"  as const },
-  { href:"/app/deployments", label:"Deploy",    icon3d:"rocket"    as const },
-  { href:"/app/settings",    label:"Ajustes",   icon3d:"settings"  as const },
+  { href:"/app/home",        label:"Inicio",    Icon:IconHome },
+  { href:"/app/projects",    label:"Proyectos", Icon:IconLayers },
+  { href:"/app/vulcano",      label:"Navegador", Icon:IconGlobe },
+  { href:"/app/deployments", label:"Deploy",    Icon:IconRocket },
+  { href:"/app/settings",    label:"Ajustes",   Icon:IconSettings },
 ];
 
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
@@ -111,8 +115,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 }
 
 function TopBar({ hiddenOnMobile, pathname }: { hiddenOnMobile?:boolean; pathname:string }) {
-  const { user } = useUser();
-  const ca = useClerkAppearance();
+  const clerkEnabled = hasClerkPublishableKey();
   return (
     <header className={cn("sticky top-0 z-30 border-b border-white/[0.05] bg-[#07070d]/85 backdrop-blur-2xl",hiddenOnMobile&&"hidden md:block")}
       style={{ paddingTop:"env(safe-area-inset-top,0px)" }}>
@@ -130,16 +133,35 @@ function TopBar({ hiddenOnMobile, pathname }: { hiddenOnMobile?:boolean; pathnam
           <button aria-label="Notificaciones" className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-white/35 transition hover:text-white/65">
             <IconBell size={13}/>
           </button>
-          <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.025] py-1 pl-1 pr-2.5">
-            <UserButton afterSignOutUrl="/" appearance={{...ca,elements:{...ca.elements,avatarBox:"h-6 w-6"}}}/>
-            <span className="hidden max-w-[90px] truncate font-display text-[12px] font-medium text-white/60 md:inline">
-              {user?.firstName??user?.username??""}
-            </span>
-            <span className="hidden rounded-full border border-violet-500/20 bg-violet-500/8 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-violet-300 md:inline">Owner</span>
-          </div>
+          {clerkEnabled ? <ClerkUserMenu /> : <ClerkOfflineUser />}
         </div>
       </div>
     </header>
+  );
+}
+
+function ClerkUserMenu() {
+  const { user } = useUser();
+  const ca = useClerkAppearance();
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.025] py-1 pl-1 pr-2.5">
+      <UserButton afterSignOutUrl="/" appearance={{...ca,elements:{...ca.elements,avatarBox:"h-6 w-6"}}}/>
+      <span className="hidden max-w-[90px] truncate font-display text-[12px] font-medium text-white/60 md:inline">
+        {user?.firstName??user?.username??""}
+      </span>
+      <span className="hidden rounded-full border border-violet-500/20 bg-violet-500/8 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-violet-300 md:inline">Owner</span>
+    </div>
+  );
+}
+
+function ClerkOfflineUser() {
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-1.5">
+      <span className="hidden max-w-[90px] truncate font-display text-[12px] font-medium text-white/60 md:inline">
+        Luis
+      </span>
+      <span className="hidden rounded-full border border-violet-500/20 bg-violet-500/8 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-violet-300 md:inline">Owner</span>
+    </div>
   );
 }
 
@@ -173,6 +195,20 @@ function MobileNav({ pathname }: { pathname:string }) {
             <span className={cn("font-mono text-[9px] uppercase tracking-widest",active?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-bold text-transparent":"")}>{item.label}</span>
           </Link>
         );
+        if("Icon" in item && item.Icon) {
+          const Icon = item.Icon;
+          return (
+            <Link key={item.href} href={item.href} className={cn("group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",active?"text-violet-300":"text-white/35")}>
+              {active&&<motion.span aria-hidden layoutId="vf-mob-halo" transition={{type:"spring",stiffness:380,damping:32}}
+                className="pointer-events-none absolute inset-x-2 -bottom-0.5 top-1 -z-10 rounded-xl"
+                style={{background:"radial-gradient(ellipse,rgba(139,92,246,0.4),transparent 70%)",filter:"blur(8px)"}}/>}
+              <motion.span className="inline-flex" animate={active?{scale:[1,1.08,1]}:{scale:1}} transition={active?{duration:2.4,repeat:Infinity,ease:"easeInOut"}:{duration:0.18}}>
+                <Icon size={24} className={cn("transition",active?"text-violet-300":"text-white/35 group-hover:text-white/65")}/>
+              </motion.span>
+              <span className={cn("font-mono text-[9px] uppercase tracking-widest",active?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-bold text-transparent":"")}>{item.label}</span>
+            </Link>
+          );
+        }
         return (
           <Link key={item.href} href={item.href} className={cn("group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",active?"text-violet-300":"text-white/35")}>
             {active&&<motion.span aria-hidden layoutId="vf-mob-halo" transition={{type:"spring",stiffness:380,damping:32}}

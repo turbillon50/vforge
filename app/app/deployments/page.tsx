@@ -9,13 +9,15 @@ import { useT } from "@/i18n/AppProviders";
 interface Project { id:string; name:string; category:string; status:string; github_repo:string|null; vercel_url:string|null; domain?:string|null; }
 type DS = "ready"|"preview"|"draft";
 function statusOf(p:Project):DS {
-  if(p.category==="produccion") return "ready";
-  if(p.category==="activo"||p.category==="en_revision") return "preview";
-  return "draft";
+  if(!p.vercel_url) return "draft";
+  // live = tiene dominio propio (no .vercel.app) O category produccion
+  const isCustomDomain = p.domain && !p.domain.includes("vercel.app");
+  if(p.category==="produccion" || isCustomDomain) return "ready";
+  return "preview";
 }
 const SM:Record<DS,{label:string;color:string;bg:string}> = {
-  ready:   {label:"live",    color:"#34d399", bg:"rgba(52,211,153,0.08)"},
-  preview: {label:"preview", color:"#22d3ee", bg:"rgba(34,211,238,0.08)"},
+  ready:   {label:"live",    color:"#34d399", bg:"rgba(52,211,153,0.10)"},
+  preview: {label:"preview", color:"#a78bfa", bg:"rgba(139,92,246,0.08)"},
   draft:   {label:"draft",   color:"#6b7280", bg:"rgba(107,114,128,0.08)"},
 };
 const EASE:[number,number,number,number]=[0.22,1,0.36,1];

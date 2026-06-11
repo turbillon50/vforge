@@ -6,6 +6,15 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  async redirects() {
+    return [
+      {
+        source: "/vulcano",
+        destination: "/app/vulcano",
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     // .well-known de OAuth (RFC 9728 / RFC 8414). Next ignora directorios que
     // empiezan con punto, así que servimos la metadata desde /api/mcp/oauth/* y
