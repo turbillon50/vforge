@@ -5,8 +5,10 @@ import { currentUser } from "@clerk/nextjs/server";
 import { isOwnerEmail } from "@/lib/auth/owner";
 import { NextResponse } from "next/server";
 
-const RELAY = "http://178.105.135.26";
-const SECRET = process.env.BRAIN_SECRET ?? "superclaude2025";
+const RELAY = process.env.RELAY_BASE_URL ?? "http://178.105.135.26";
+// El secreto del relay vive SOLO en env (BRAIN_SECRET, ya configurado en Vercel).
+// Sin fallback hardcodeado: si falta, el GET degrada con gracia a su catch.
+const SECRET = process.env.BRAIN_SECRET ?? "";
 
 export async function GET() {
   const user = await currentUser();

@@ -12,7 +12,7 @@ function getDb() {
   return neon(url);
 }
 const RELAY   = "http://178.105.135.26";
-const SECRET  = process.env.BRAIN_SECRET ?? "superclaude2025";
+const SECRET  = process.env.BRAIN_SECRET ?? "";
 const VNC_BASE = "https://vulcano.vmomentum.site";
 
 // Perfiles multi-cuenta al estilo Chrome — hardcodeados para el owner
