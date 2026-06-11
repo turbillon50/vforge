@@ -43,6 +43,14 @@ export function VulcanoBrowser() {
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [aiGoal, setAiGoal] = useState("");
   const [aiSending, setAiSending] = useState(false);
+  // Responsive: en celular apilamos en vez de columnas
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const fetchInst = useCallback(async () => {
     try {
@@ -274,16 +282,18 @@ export function VulcanoBrowser() {
 
         <div style={{ minWidth:0 }}>
           <div style={{ fontWeight:800, fontSize:14, letterSpacing:0.2, lineHeight:1.1 }}>Navegador Vulcano</div>
-          <div style={{ fontSize:10, color:"var(--color-on-surface-variant)", textTransform:"uppercase", letterSpacing:"0.4px" }}>
-            Chrome en la nube · VForge
-          </div>
+          {!isMobile && (
+            <div style={{ fontSize:10, color:"var(--color-on-surface-variant)", textTransform:"uppercase", letterSpacing:"0.4px" }}>
+              Chrome en la nube · VForge
+            </div>
+          )}
         </div>
 
         {/* Badge CONECTADO con tu cuenta */}
         <motion.div
           initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }}
-          style={{ marginLeft:"auto", display:"inline-flex", alignItems:"center", gap:8,
-            padding:"6px 12px", borderRadius:999,
+          style={{ marginLeft:"auto", display:"inline-flex", alignItems:"center", gap: isMobile ? 5 : 8,
+            padding: isMobile ? "5px 9px" : "6px 12px", borderRadius:999, flexShrink:0,
             background:`${GREEN}1a`, border:`1px solid ${GREEN}45` }}>
           <span style={{ position:"relative", display:"flex", width:8, height:8 }}>
             <motion.span
@@ -291,12 +301,12 @@ export function VulcanoBrowser() {
               style={{ position:"absolute", inset:0, borderRadius:"50%", background:GREEN,
                 boxShadow:`0 0 8px ${GREEN}` }} />
           </span>
-          <span style={{ color:GREEN, fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:5 }}>
+          <span style={{ color:GREEN, fontSize: isMobile ? 11 : 12, fontWeight:700, display:"flex", alignItems:"center", gap:5 }}>
             <IconCheck size={13} /> Conectado
           </span>
-          {ownerEmail && (
+          {ownerEmail && !isMobile && (
             <span style={{ color:"var(--color-on-surface-variant)", fontSize:11, fontWeight:500,
-              maxWidth:200, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+              maxWidth: 200, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
               borderLeft:"1px solid rgba(127,127,170,0.2)", paddingLeft:8 }}>
               {ownerEmail}
             </span>
@@ -395,7 +405,7 @@ export function VulcanoBrowser() {
           borderTop:"1px solid rgba(127,127,170,0.12)",
           borderBottom:"1px solid rgba(127,127,170,0.12)",
           background:"rgba(15,12,30,0.6)", backdropFilter:"blur(8px)", flexWrap:"wrap" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8, flex:"1 1 320px", minWidth:240,
+          <div style={{ display:"flex", alignItems:"center", gap:8, flex:"1 1 240px", minWidth: isMobile ? 0 : 240,
             padding:"6px 12px", borderRadius:10, background:"rgba(255,255,255,0.04)",
             border:`1px solid ${VIOLET}33` }}>
             <IconGlobe size={15} style={{ color:VIOLET, flexShrink:0 }} />
@@ -472,11 +482,12 @@ export function VulcanoBrowser() {
       )}
 
       {/* ── CUERPO: VNC + panel ── */}
-      <div style={{ flex:1, display:"grid", gridTemplateColumns:"1fr 320px", minHeight:0 }}>
+      <div style={{ flex:1, display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 320px", minHeight:0, overflowY: isMobile ? "auto" : "hidden" }}>
 
         {/* iframe Chrome */}
         <div style={{ position:"relative", background:"#0a0a0f",
-          borderRight:"1px solid rgba(127,127,170,0.12)", overflow:"hidden" }}>
+          borderRight:"1px solid rgba(127,127,170,0.12)", overflow:"hidden",
+          minHeight: isMobile ? "60vh" : 0 }}>
 
           {/* Pill driver */}
           <div style={{ position:"absolute", top:12, left:12, zIndex:20, pointerEvents:"none",
@@ -535,7 +546,9 @@ export function VulcanoBrowser() {
         </div>
 
         {/* Panel derecho */}
-        <div style={{ display:"flex", flexDirection:"column", minHeight:0, overflowY:"auto",
+        <div style={{ display:"flex", flexDirection:"column", minHeight: isMobile ? "auto" : 0,
+          maxHeight: isMobile ? "40vh" : "none", overflowY:"auto",
+          borderTop: isMobile ? "1px solid rgba(127,127,170,0.12)" : "none",
           background:"var(--color-surface)" }}>
 
           {/* Estado driver */}
