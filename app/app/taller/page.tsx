@@ -4,14 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/workspace/PageHeader";
 import { EsferasNucleo } from "@/components/cockpit/EsferasNucleo";
-import {
-  IconActivity,
-  IconBrain,
-  IconCode,
-  IconCpu,
-  IconGlobe,
-} from "@/components/brand/VFIcons";
-import type { EsferasPayload, EsferaState, FeedItem } from "@/components/cockpit/esferas-types";
+import { UtilizacionPanel } from "@/components/cockpit/UtilizacionPanel";
+import { IconActivity, IconCpu, IconShield } from "@/components/brand/VFIcons";
+import { TokenRiskBanner } from "@/components/workspace/TokenHealth";
+import { AGENT_LOGOS, LogoGrok } from "@/components/brand/AgentLogos";
+import type {
+  ActiveJob,
+  EsferasPayload,
+  FeedItem,
+  GrokVerdict,
+} from "@/components/cockpit/esferas-types";
 
 const HUE: Record<string, string> = {
   claude: "#a78bfa",
@@ -21,12 +23,11 @@ const HUE: Record<string, string> = {
   browser: "#38bdf8",
 };
 
-const ICONS: Record<string, typeof IconBrain> = {
-  claude: IconBrain,
-  codex: IconCode,
-  grok: IconCpu,
-  shell: IconActivity,
-  browser: IconGlobe,
+/** Color por veredicto Grok. */
+const VERDICT_HUE: Record<GrokVerdict, string> = {
+  APROBADO: "#34d399",
+  RECHAZADO: "#f87171",
+  REVISION: "#fbbf24",
 };
 
 const POLL_MS = 4000;
@@ -117,17 +118,14 @@ export default function TallerPage() {
     };
   }, []);
 
-  const esferas: EsferaState[] = data?.esferas ?? [];
+  const esferas = data?.esferas ?? [];
   const projects = data?.projects ?? [];
   const health = data?.health;
 
-  // Esferas trabajando filtradas por el proyecto seleccionado.
-  const working = useMemo(
-    () =>
-      esferas.filter(
-        (e) => e.status === "working" && (!selected || e.projectKey === selected),
-      ),
-    [esferas, selected],
+  // MULTI-ESFERA: jobs corriendo (uno por esfera central) filtrados por proyecto.
+  const jobs: ActiveJob[] = useMemo(
+    () => (data?.jobs ?? []).filter((j) => !selected || j.projectKey === selected),
+    [data, selected],
   );
   const pendingCount = esferas.filter(
     (e) => e.status === "pending" && (!selected || e.projectKey === selected),
@@ -186,7 +184,11 @@ export default function TallerPage() {
         }
       />
 
-      <div className="space-y-5 p-4 pb-10 sm:space-y-6 sm:p-5 md:p-8">
+      <TokenRiskBanner />
+
+      {/* pb amplio en móvil: la última fila del feed debe poder desplazarse por
+          encima de la esfera flotante (VOrb) y del nav inferior. */}
+      <div className="space-y-5 p-4 pb-28 sm:space-y-6 sm:p-5 sm:pb-28 md:p-8">
         {/* Hero con asset Higgsfield + overlay obsidian */}
         <div className="relative h-[140px] overflow-hidden rounded-2xl border border-white/10 sm:h-[180px]">
           <img
@@ -209,8 +211,8 @@ export default function TallerPage() {
               <IconActivity size={13} /> Cabina del operador
             </p>
             <h2 className="mt-1 font-display text-lg font-bold text-white/90 md:text-xl">
-              {working.length > 0
-                ? `${working.length} ${working.length === 1 ? "esfera construyendo" : "esferas construyendo"} ahora`
+              {jobs.length > 0
+                ? `${jobs.length} ${jobs.length === 1 ? "esfera construyendo" : "esferas construyendo"} ahora`
                 : "Esferas en reposo"}
             </h2>
           </div>
@@ -252,7 +254,7 @@ export default function TallerPage() {
 
         {/* Métricas vivas */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <LiveMetric value={working.length} label="Esferas activas" accent="#34d399" />
+          <LiveMetric value={jobs.length} label="Esferas activas" accent="#34d399" />
           <LiveMetric value={proyectosActivos} label="Proyectos activos" accent="#a78bfa" />
           <LiveMetric value={data?.queue?.running ?? 0} label="Jobs corriendo" accent="#22d3ee" />
           <LiveMetric value={pendingCount} label="En cola" accent="#fbbf24" />
@@ -263,6 +265,9 @@ export default function TallerPage() {
           <EsferasNucleo data={data} selectedProject={selected} error={error} />
         </div>
 
+        {/* Panel de utilización: ocupación real por agente (24h) + trabajo útil */}
+        <UtilizacionPanel />
+
         {/* Tablero: quién trabaja en qué */}
         <section className="glass relative overflow-hidden rounded-2xl border border-white/10 p-5">
           <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
@@ -271,7 +276,7 @@ export default function TallerPage() {
 
           <div className="mt-3 space-y-2">
             <AnimatePresence mode="popLayout" initial={false}>
-              {working.length === 0 ? (
+              {jobs.length === 0 ? (
                 <motion.p
                   key="empty"
                   initial={{ opacity: 0 }}
@@ -288,12 +293,12 @@ export default function TallerPage() {
                         : "Ninguna esfera está construyendo ahora mismo."}
                 </motion.p>
               ) : (
-                working.map((e, i) => {
-                  const hue = HUE[e.id] ?? "#22d3ee";
-                  const Icon = ICONS[e.id] ?? IconCpu;
+                jobs.map((j, i) => {
+                  const hue = (j.agent && HUE[j.agent]) || "#22d3ee";
+                  const Logo = j.agent ? AGENT_LOGOS[j.agent] : LogoGrok;
                   return (
                     <motion.div
-                      key={e.id}
+                      key={j.id}
                       layout
                       initial={{ opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -312,30 +317,30 @@ export default function TallerPage() {
                           background: `radial-gradient(circle at 50% 35%, ${hue}33, rgba(10,10,15,0.85))`,
                         }}
                       >
-                        <Icon size={18} style={{ color: hue }} />
+                        <Logo size={18} style={{ color: hue }} />
                       </motion.div>
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[13px] font-semibold text-on-surface">{e.name}</span>
-                          {e.project && (
+                          <span className="text-[13px] font-semibold text-on-surface">{j.agentName}</span>
+                          {j.project && (
                             <span
                               className="truncate rounded-full border px-2 py-0.5 text-[10px] font-medium"
                               style={{ borderColor: `${hue}40`, color: hue, background: `${hue}14` }}
                             >
-                              {e.project}
+                              {j.project}
                             </span>
                           )}
-                          {typeof e.progress === "number" && (
-                            <span className="text-[10px] text-muted">{e.progress}%</span>
+                          {typeof j.progress === "number" && (
+                            <span className="text-[10px] text-muted">{j.progress}%</span>
                           )}
                         </div>
                         <p className="mt-0.5 truncate text-[12px] text-muted">
-                          {truncate(e.task) || "Tarea en curso"}
+                          {truncate(j.task) || "Tarea en curso"}
                         </p>
                       </div>
 
-                      <span className="flex-none text-[11px] text-muted">{rel(e.since, now)}</span>
+                      <span className="flex-none text-[11px] text-muted">{rel(j.since, now)}</span>
                       <span
                         className="h-2 w-2 flex-none rounded-full"
                         style={{ background: hue, boxShadow: `0 0 8px ${hue}` }}
@@ -347,6 +352,45 @@ export default function TallerPage() {
             </AnimatePresence>
           </div>
         </section>
+
+        {/* Último veredicto del auditor Grok */}
+        {data?.lastVerdict && (
+          <section className="glass relative overflow-hidden rounded-2xl border border-white/10 p-5">
+            <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
+              <LogoGrok size={13} style={{ color: "#f472b6" }} /> Auditor Grok
+            </p>
+            <div className="mt-3 flex items-center gap-3">
+              <span
+                className="flex flex-none items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                style={{
+                  color: VERDICT_HUE[data.lastVerdict.verdict],
+                  background: `${VERDICT_HUE[data.lastVerdict.verdict]}1a`,
+                  border: `1px solid ${VERDICT_HUE[data.lastVerdict.verdict]}40`,
+                }}
+              >
+                <IconShield size={12} /> {data.lastVerdict.verdict}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] font-medium text-on-surface">
+                    Job #{data.lastVerdict.id}
+                  </span>
+                  {data.lastVerdict.project && (
+                    <span className="truncate text-[11px] text-cyber-cyan">
+                      {data.lastVerdict.project}
+                    </span>
+                  )}
+                </div>
+                {data.lastVerdict.notes && (
+                  <p className="mt-0.5 line-clamp-2 text-[12px] text-muted">
+                    {truncate(data.lastVerdict.notes, 180)}
+                  </p>
+                )}
+              </div>
+              <span className="flex-none text-[11px] text-muted">{rel(data.lastVerdict.ts, now)}</span>
+            </div>
+          </section>
+        )}
 
         {/* Feed de actividad reciente con timestamps relativos */}
         {feed.length > 0 && (
@@ -373,6 +417,19 @@ export default function TallerPage() {
                       </span>
                     )}
                     <span className="min-w-0 flex-1 truncate text-muted">{truncate(f.task, 64)}</span>
+                    {f.grokVerdict && (
+                      <span
+                        className="hidden flex-none items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold sm:inline-flex"
+                        style={{
+                          color: VERDICT_HUE[f.grokVerdict],
+                          background: `${VERDICT_HUE[f.grokVerdict]}1a`,
+                          border: `1px solid ${VERDICT_HUE[f.grokVerdict]}40`,
+                        }}
+                        title={f.grokNotes ?? f.grokVerdict}
+                      >
+                        <LogoGrok size={9} /> {f.grokVerdict}
+                      </span>
+                    )}
                     <span
                       className="flex-none rounded-full px-1.5 py-0.5 text-[9px] font-medium"
                       style={{ color: hue, background: `${hue}14`, border: `1px solid ${hue}33` }}

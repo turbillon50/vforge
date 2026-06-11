@@ -9,6 +9,7 @@ import { LocaleToggle } from "@/components/controls/LocaleToggle";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
 import { useUser, useReverification, useClerk } from "@clerk/nextjs";
+import { TokenReconnectCard } from "@/components/workspace/TokenHealth";
 
 type SectionId =
   | "profile"
@@ -75,6 +76,7 @@ export default function SettingsPage() {
           {active === "appearance" && <AppearancePanel />}
           {active === "security" && <SecurityPanel />}
           {active === "api" && <ApiPanel />}
+          <TokenReconnectCard />
           <McpCard />
           <MoreToolsCard />
         </section>

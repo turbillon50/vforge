@@ -13,6 +13,7 @@ import { UserButton, useUser } from "@clerk/nextjs";
 import { useClerkAppearance } from "@/lib/clerk-appearance";
 import { VPresence } from "@/components/brand/VPresence";
 import { VOrb } from "./VOrb";
+import { TokenHealthIndicator, TokenToastHost } from "./TokenHealth";
 import { Icon3D } from "@/components/brand/Icon3D";
 import { PageTransition } from "@/components/motion/PageTransition";
 import { cn } from "@/lib/utils";
@@ -58,11 +59,14 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
     <div className="fixed inset-0 flex overflow-hidden bg-[#050509]">
       {/* Sidebar */}
       <aside className="hidden h-dvh w-[248px] shrink-0 flex-col border-r border-white/[0.05] bg-[#07070d]/90 backdrop-blur-2xl md:flex">
-        <div className="flex items-center justify-between px-5 py-5">
-          <Link href="/app"><VWordmark /></Link>
-          <span className="flex items-center gap-1.5 font-mono text-[10px] text-white/25">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"/>online
-          </span>
+        <div className="px-5 py-5">
+          <div className="flex items-center justify-between">
+            <Link href="/app"><VWordmark /></Link>
+            <span className="flex items-center gap-1.5 font-mono text-[10px] text-white/25">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"/>online
+            </span>
+          </div>
+          <TokenHealthIndicator className="mt-3" />
         </div>
         <div className="px-3 pb-3">
           <button className="flex w-full items-center gap-2.5 rounded-xl border border-white/[0.05] bg-white/[0.025] px-3.5 py-2.5 text-[13px] text-white/25 transition hover:bg-white/[0.04]">
@@ -119,6 +123,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         <MobileNav pathname={pathname}/>
         <VOrb/>
       </div>
+      <TokenToastHost/>
     </div>
   );
 }

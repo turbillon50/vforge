@@ -22,6 +22,10 @@ export type EsferaState = {
   jobId: number | null;
   /** Avance reportado por el daemon (0-100) si existe. */
   progress: number | null;
+  /** Proyecto del último job COMPLETADO de este agente (solo se muestra en reposo). */
+  lastProject: string | null;
+  /** ISO del último job completado, para el texto "último: <tag> hace N días". */
+  lastSince: string | null;
 };
 
 export type ProjectRef = {
@@ -29,6 +33,30 @@ export type ProjectRef = {
   label: string;
   /** Cuántas esferas/jobs activos pertenecen a este proyecto. */
   active: number;
+};
+
+/** Veredicto del auditor Grok sobre un job. */
+export type GrokVerdict = "APROBADO" | "RECHAZADO" | "REVISION";
+
+/**
+ * Un JOB corriendo (status running) en dispatch_queue. El Taller renderiza UNA
+ * esfera por cada uno de estos en el centro del núcleo, conectada por un haz a
+ * la esfera del agente que lo ejecuta. A diferencia de EsferaState (1 por
+ * agente), aquí puede haber varios jobs del MISMO agente en paralelo.
+ */
+export type ActiveJob = {
+  id: number;
+  agent: EsferaId | null;
+  agentName: string;
+  /** Etiqueta legible del proyecto (gajo/source). */
+  project: string | null;
+  projectKey: string | null;
+  /** Resumen del prompt. */
+  task: string | null;
+  /** ISO del inicio (started_at/created_at). */
+  since: string | null;
+  /** Avance 0-100 si el daemon lo reporta. */
+  progress: number | null;
 };
 
 export type FeedItem = {
@@ -41,6 +69,10 @@ export type FeedItem = {
   status: string;
   /** ISO del timestamp más relevante del job (started/completed/created). */
   ts: string | null;
+  /** Veredicto Grok del job (si ya fue auditado). */
+  grokVerdict: GrokVerdict | null;
+  /** Notas del auditor Grok (recortadas). */
+  grokNotes: string | null;
 };
 
 export type DaemonProc = { alive: boolean; count: number };
@@ -73,7 +105,11 @@ export type EsferasPayload = {
   updatedAt: string;
   queue: { running: number; pending: number; total: number };
   esferas: EsferaState[];
+  /** Jobs corriendo ahora — una esfera central por cada uno (multi-esfera). */
+  jobs: ActiveJob[];
   projects: ProjectRef[];
   feed: FeedItem[];
+  /** Último veredicto Grok emitido (para el feed del Taller). */
+  lastVerdict: { id: number; verdict: GrokVerdict; notes: string | null; project: string | null; ts: string | null } | null;
   health: HealthState;
 };

@@ -3,24 +3,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { VulcanoCore } from "@/components/vulcano/VulcanoCore";
-import {
-  IconActivity,
-  IconBrain,
-  IconCode,
-  IconCpu,
-  IconGlobe,
-} from "@/components/brand/VFIcons";
-import type { EsferasPayload, EsferaState } from "@/components/cockpit/esferas-types";
+import { IconActivity } from "@/components/brand/VFIcons";
+import { AGENT_LOGOS } from "@/components/brand/AgentLogos";
+import type {
+  ActiveJob,
+  EsferaId,
+  EsferasPayload,
+  EsferaState,
+} from "@/components/cockpit/esferas-types";
 
 const ACCENT = "#22d3ee";
-
-const ICONS: Record<string, typeof IconBrain> = {
-  claude: IconBrain,
-  codex: IconCode,
-  grok: IconCpu,
-  shell: IconActivity,
-  browser: IconGlobe,
-};
 
 /** Color de acento por esfera para diferenciar nodos cuando trabajan. */
 const HUE: Record<string, string> = {
@@ -31,47 +23,86 @@ const HUE: Record<string, string> = {
   browser: "#38bdf8", // sky
 };
 
-// Geometría: lienzo cuadrado 100×100, núcleo en el centro, esferas en órbita.
+// Geometría: lienzo cuadrado 100×100, agentes en órbita, jobs en el centro.
 const CENTER = 50;
-const RADIUS = 37;
 
-function nodePos(i: number, total: number) {
+/**
+ * Radio orbital RESPONSIVE. Los nodos de agente son px FIJOS (~48px), así que en
+ * un lienzo chico ocupan una fracción mayor: con radio fijo 40 los nodos del
+ * perímetro (Browser/Code/Shell/Grok) chocan con el borde y sus etiquetas se
+ * recortan en pantalla vertical. Encogemos el radio en móvil para meter las 5
+ * esferas hacia adentro con aire suficiente; en desktop volvemos al radio amplio.
+ */
+function radiusForBox(boxW: number): number {
+  if (boxW < 360) return 32;
+  if (boxW < 440) return 36;
+  return 40;
+}
+
+/** Posición de un AGENTE en la órbita perimetral. */
+function agentPos(i: number, total: number, radius: number) {
   const angle = (-90 + (360 / total) * i) * (Math.PI / 180);
   return {
-    x: CENTER + RADIUS * Math.cos(angle),
-    y: CENTER + RADIUS * Math.sin(angle),
+    x: CENTER + radius * Math.cos(angle),
+    y: CENTER + radius * Math.sin(angle),
   };
 }
 
-/** Haz de energía con partículas que viajan núcleo → esfera mientras trabaja. */
+/**
+ * Posición de un JOB en el centro. Órbitas dinámicas según cuántos haya:
+ * 1 → centrada · 2-4 → distribuidas en anillo chico · 5+ → anillo más amplio.
+ */
+function jobPos(i: number, total: number) {
+  if (total <= 1) return { x: CENTER, y: CENTER };
+  const jr = total <= 4 ? 13 : 16;
+  const angle = (-90 + (360 / total) * i) * (Math.PI / 180);
+  return {
+    x: CENTER + jr * Math.cos(angle),
+    y: CENTER + jr * Math.sin(angle),
+  };
+}
+
+/** "hace N días/h" para el rótulo sutil de un agente en reposo. */
+function agoLabel(iso: string | null): string | null {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return null;
+  const ms = Date.now() - t;
+  const days = Math.floor(ms / 86_400_000);
+  if (days >= 1) return `hace ${days}d`;
+  const hrs = Math.floor(ms / 3_600_000);
+  return hrs >= 1 ? `hace ${hrs}h` : "hace minutos";
+}
+
+/** Haz de energía con partículas que viajan de un job hacia SU agente. */
 function EnergyBeam({
-  pos,
+  from,
+  to,
   hue,
 }: {
-  pos: { x: number; y: number };
+  from: { x: number; y: number };
+  to: { x: number; y: number };
   hue: string;
 }) {
-  const dx = pos.x - CENTER;
-  const dy = pos.y - CENTER;
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
   return (
     <g>
-      {/* Haz base brillante */}
       <line
-        x1={CENTER}
-        y1={CENTER}
-        x2={pos.x}
-        y2={pos.y}
+        x1={from.x}
+        y1={from.y}
+        x2={to.x}
+        y2={to.y}
         stroke={hue}
         strokeWidth={0.7}
         strokeOpacity={0.85}
         strokeLinecap="round"
       />
-      {/* Pulso que recorre el haz */}
       <motion.line
-        x1={CENTER}
-        y1={CENTER}
-        x2={pos.x}
-        y2={pos.y}
+        x1={from.x}
+        y1={from.y}
+        x2={to.x}
+        y2={to.y}
         stroke={hue}
         strokeWidth={1}
         strokeLinecap="round"
@@ -80,16 +111,15 @@ function EnergyBeam({
         animate={{ strokeDashoffset: [-8, 0] }}
         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
       />
-      {/* Partículas núcleo → esfera */}
       {[0, 1, 2].map((i) => (
         <motion.circle
           key={i}
           r={0.9}
           fill={hue}
-          initial={{ cx: CENTER, cy: CENTER, opacity: 0 }}
+          initial={{ cx: from.x, cy: from.y, opacity: 0 }}
           animate={{
-            cx: [CENTER, CENTER + dx],
-            cy: [CENTER, CENTER + dy],
+            cx: [from.x, to.x],
+            cy: [from.y, to.y],
             opacity: [0, 1, 1, 0],
           }}
           transition={{
@@ -105,18 +135,20 @@ function EnergyBeam({
   );
 }
 
-function EsferaNode({
+/** Nodo de un AGENTE en la órbita — con su logo oficial monocromo. */
+function AgentNode({
   esfera,
   pos,
+  working,
   dim,
 }: {
   esfera: EsferaState;
   pos: { x: number; y: number };
+  working: boolean;
   dim: boolean;
 }) {
-  const Icon = ICONS[esfera.id] ?? IconCpu;
-  const working = esfera.status === "working";
-  const pending = esfera.status === "pending";
+  const Logo = AGENT_LOGOS[esfera.id];
+  const pending = !working && esfera.status === "pending";
   const hue = HUE[esfera.id] ?? ACCENT;
 
   return (
@@ -142,8 +174,11 @@ function EsferaNode({
               : "rgba(255,255,255,0.04)",
           }}
         >
-          <Icon size={22} style={{ color: working ? hue : pending ? `${hue}aa` : "rgba(255,255,255,0.42)" }} />
-          {/* Punto de estado */}
+          {/* Logo oficial: hereda el color del estado vía currentColor */}
+          <Logo
+            size={22}
+            style={{ color: working ? hue : pending ? `${hue}aa` : "rgba(255,255,255,0.42)" }}
+          />
           <span
             className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-[#0a0a0f]"
             style={{
@@ -168,18 +203,63 @@ function EsferaNode({
           >
             {esfera.name}
           </p>
-          {(working || pending) && esfera.project ? (
+          {/* ANTI-STALE: en reposo NO se pinta tag de trabajo presente; solo un
+              rastro sutil del último job ya cerrado, si lo hubo. */}
+          {!working && !pending && esfera.lastProject && (
             <p
-              className="mt-0.5 max-w-[92px] truncate rounded-full border px-1.5 py-0.5 text-[9px] font-medium md:max-w-[110px]"
-              style={{ borderColor: `${hue}40`, color: hue, background: `${hue}14` }}
-              title={`${esfera.project}${esfera.task ? ` · ${esfera.task}` : ""}`}
+              className="mt-0.5 max-w-[88px] truncate text-[8px] text-white/30 md:max-w-[104px]"
+              title={`último: ${esfera.lastProject}`}
             >
-              {esfera.project}
+              último: {esfera.lastProject}
+              {agoLabel(esfera.lastSince) ? ` · ${agoLabel(esfera.lastSince)}` : ""}
             </p>
-          ) : (
-            <p className="mt-0.5 text-[9px] text-white/30">en reposo</p>
           )}
         </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/** Esfera de un JOB activo en el centro — orbe Vulcano + tag de proyecto. */
+function JobSphere({
+  job,
+  pos,
+  size,
+  dim,
+}: {
+  job: ActiveJob;
+  pos: { x: number; y: number };
+  size: number;
+  dim: boolean;
+}) {
+  const hue = (job.agent && HUE[job.agent]) || ACCENT;
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.6 }}
+      animate={{ opacity: dim ? 0.3 : 1, scale: dim ? 0.9 : 1 }}
+      exit={{ opacity: 0, scale: 0.6 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="absolute -translate-x-1/2 -translate-y-1/2"
+      style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+    >
+      <div className="flex flex-col items-center">
+        <VulcanoCore size={size} accent={hue} driving />
+        {(job.project || typeof job.progress === "number") && (
+          <div className="mt-1 flex flex-col items-center gap-0.5 text-center">
+            {job.project && (
+              <span
+                className="max-w-[110px] truncate rounded-full border px-1.5 py-0.5 text-[9px] font-medium md:max-w-[130px]"
+                style={{ borderColor: `${hue}40`, color: hue, background: `${hue}14` }}
+                title={`${job.agentName} · ${job.project}${job.task ? ` · ${job.task}` : ""}`}
+              >
+                {job.project}
+              </span>
+            )}
+            {typeof job.progress === "number" && (
+              <span className="text-[9px] font-medium text-white/55">{job.progress}%</span>
+            )}
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -224,27 +304,19 @@ export function EsferasNucleo({
   const payload = controlled ? data : internal;
   const err = controlled ? error : internalError;
   const esferas = useMemo(() => payload?.esferas ?? [], [payload]);
-  const positions = useMemo(
-    () => esferas.map((_, i) => nodePos(i, esferas.length || 1)),
-    [esferas],
+  const allJobs = useMemo(() => payload?.jobs ?? [], [payload]);
+
+  // Jobs visibles según el proyecto seleccionado.
+  const jobs = useMemo(
+    () =>
+      selectedProject
+        ? allJobs.filter((j) => j.projectKey === selectedProject)
+        : allJobs,
+    [allJobs, selectedProject],
   );
 
-  // ¿Una esfera está "encendida" para la selección actual?
-  const isOn = (e: EsferaState) =>
-    e.status === "working" &&
-    (!selectedProject || e.projectKey === selectedProject);
-  const isDim = (e: EsferaState) =>
-    Boolean(selectedProject) && e.projectKey !== selectedProject && e.status !== "idle";
-
-  const activos = esferas.filter(isOn).length;
-  const totalWorking = esferas.filter((e) => e.status === "working").length;
-
-  // Glow ambiental proporcional a la actividad.
-  const glowOpacity = Math.min(0.25 + activos * 0.14, 0.75);
-
-  // El núcleo central debe ESCALAR con el lienzo: en móvil el cuadro encoge y un
-  // orbe de px fijos se encimaba con las esferas. Medimos el ancho real y
-  // derivamos un tamaño proporcional para que orbe y esferas nunca colisionen.
+  // El núcleo/jobs/órbita deben ESCALAR con el lienzo para no colisionar en
+  // móvil. Medimos el ancho real del cuadro y derivamos el radio responsive.
   const boxRef = useRef<HTMLDivElement>(null);
   const [boxW, setBoxW] = useState(360);
   useEffect(() => {
@@ -257,11 +329,47 @@ export function EsferasNucleo({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const coreSize = Math.max(64, Math.min(140, Math.round(boxW * 0.26)));
+  const radius = radiusForBox(boxW);
+
+  // Posiciones de los agentes en la órbita (orden estable de la API).
+  const agentPositions = useMemo(
+    () => esferas.map((_, i) => agentPos(i, esferas.length || 1, radius)),
+    [esferas, radius],
+  );
+  const agentPosById = useMemo(() => {
+    const m = new Map<EsferaId, { x: number; y: number }>();
+    esferas.forEach((e, i) => agentPositions[i] && m.set(e.id, agentPositions[i]));
+    return m;
+  }, [esferas, agentPositions]);
+
+  // ¿Qué agentes están encendidos? Los que ejecutan algún job visible.
+  const activeAgents = useMemo(() => {
+    const s = new Set<EsferaId>();
+    for (const j of jobs) if (j.agent) s.add(j.agent);
+    return s;
+  }, [jobs]);
+
+  const isWorking = (e: EsferaState) => activeAgents.has(e.id);
+  const isDim = (e: EsferaState) =>
+    Boolean(selectedProject) && !activeAgents.has(e.id) && e.status !== "pending";
+
+  const activos = jobs.length;
+  const totalWorking = allJobs.length;
+
+  // Glow ambiental proporcional a la actividad.
+  const glowOpacity = Math.min(0.25 + activos * 0.14, 0.78);
+
+  const n = jobs.length;
+  const jobSize =
+    n <= 1
+      ? Math.max(72, Math.min(132, Math.round(boxW * 0.24)))
+      : n <= 4
+        ? Math.max(54, Math.min(98, Math.round(boxW * 0.16)))
+        : Math.max(44, Math.min(78, Math.round(boxW * 0.12)));
+  const idleSize = Math.max(64, Math.min(140, Math.round(boxW * 0.26)));
 
   return (
     <section className="glass relative overflow-hidden rounded-2xl border border-white/10 p-4 sm:p-5">
-      {/* Glow ambiental proporcional a la actividad */}
       <motion.div
         className="pointer-events-none absolute left-1/2 top-1/2 h-[130%] w-[130%] -translate-x-1/2 -translate-y-1/2"
         animate={{ opacity: [glowOpacity * 0.7, glowOpacity, glowOpacity * 0.7] }}
@@ -276,11 +384,11 @@ export function EsferasNucleo({
           <IconActivity size={13} /> Núcleo de operaciones
         </p>
         <span className="chip text-[10px] text-emerald-600 dark:text-emerald-300">
-          {activos} {activos === 1 ? "activa" : "activas"}
+          {activos} {activos === 1 ? "esfera" : "esferas"}
         </span>
       </div>
       <p className="relative mb-2 text-[12px] text-muted">
-        Cómo operan las esferas Vulcano en tiempo real — qué construye cada una ahora mismo.
+        Una esfera por job corriendo ahora mismo — cada haz conecta el job con su agente.
       </p>
 
       {/* Lienzo orbital — escala mobile-first: cuadro fluido que nunca desborda */}
@@ -293,15 +401,15 @@ export function EsferasNucleo({
           <circle
             cx={CENTER}
             cy={CENTER}
-            r={RADIUS}
+            r={radius}
             stroke="rgba(255,255,255,0.06)"
             strokeWidth={0.3}
             strokeDasharray="1.5 2.5"
           />
-          {/* Líneas en reposo (esferas idle / fuera de selección) */}
+          {/* Líneas base hacia agentes en reposo */}
           {esferas.map((e, i) => {
-            const p = positions[i];
-            if (!p || isOn(e)) return null;
+            const p = agentPositions[i];
+            if (!p || isWorking(e)) return null;
             return (
               <line
                 key={`base-${e.id}`}
@@ -315,23 +423,43 @@ export function EsferasNucleo({
               />
             );
           })}
-          {/* Haces de energía con partículas (esferas encendidas) */}
-          {esferas.map((e, i) => {
-            const p = positions[i];
-            if (!p || !isOn(e)) return null;
-            return <EnergyBeam key={`beam-${e.id}`} pos={p} hue={HUE[e.id] ?? ACCENT} />;
+          {/* Haces de energía: cada job conectado con SU agente */}
+          {jobs.map((j, i) => {
+            const from = jobPos(i, n);
+            const to = j.agent ? agentPosById.get(j.agent) : undefined;
+            if (!to) return null;
+            return (
+              <EnergyBeam
+                key={`beam-${j.id}`}
+                from={from}
+                to={to}
+                hue={(j.agent && HUE[j.agent]) || ACCENT}
+              />
+            );
           })}
         </svg>
 
-        {/* Núcleo central — pulso por actividad */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <VulcanoCore size={coreSize} accent={ACCENT} driving={totalWorking > 0} />
-        </div>
+        {/* Centro: idle core cuando no hay jobs; si no, una esfera por job */}
+        {n === 0 ? (
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <VulcanoCore size={idleSize} accent={ACCENT} driving={false} />
+          </div>
+        ) : (
+          jobs.map((j, i) => (
+            <JobSphere key={`job-${j.id}`} job={j} pos={jobPos(i, n)} size={jobSize} dim={false} />
+          ))
+        )}
 
-        {/* Nodos de esferas */}
+        {/* Nodos de agentes en la órbita */}
         {esferas.map((e, i) =>
-          positions[i] ? (
-            <EsferaNode key={e.id} esfera={e} pos={positions[i]} dim={isDim(e)} />
+          agentPositions[i] ? (
+            <AgentNode
+              key={e.id}
+              esfera={e}
+              pos={agentPositions[i]}
+              working={isWorking(e)}
+              dim={isDim(e)}
+            />
           ) : null,
         )}
 
@@ -344,6 +472,12 @@ export function EsferasNucleo({
           </div>
         )}
       </div>
+
+      {totalWorking === 0 && esferas.length > 0 && (
+        <p className="relative mt-2 text-center text-[11px] text-white/35">
+          Esferas en reposo — ningún job corriendo ahora mismo.
+        </p>
+      )}
     </section>
   );
 }
