@@ -105,57 +105,60 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  /* ── BLACK NACARADO — efecto nacar holográfico ── */
-  /* Fondo: negro con reflejo nacarado iridiscente, no blanco plano */
-  --color-void: #e8e4f4;
-  --color-ink: #ece9f6;
-  --color-background: #f0edf8;
-  --color-surface: #f5f2fc;
-  --color-surface-low: #f9f7fe;
-  --color-surface-high: #ede9f9;
-  --color-surface-elev: #e4dffa;
+  /* ── LIGHT MODE — blancos limpios, contraste AA real ── */
+  /* Superficies blancas que se distinguen entre sí por sombra + borde,
+     no por tintes lavanda casi invisibles */
+  --color-void: #f4f4f8;
+  --color-ink: #f7f7fb;
+  --color-background: #fafafe;
+  --color-surface: #ffffff;
+  --color-surface-low: #f4f4f8;
+  --color-surface-high: #ffffff;
+  --color-surface-elev: #ffffff;
 
-  /* Bordes con tono violeta suave */
-  --color-border: 109 40 217 / 0.12;
-  --color-border-strong: 109 40 217 / 0.22;
+  /* Bordes grises visibles para definir tarjetas y separar superficies */
+  --color-border: 24 24 40 / 0.15;
+  --color-border-strong: 24 24 40 / 0.24;
 
-  /* Texto con contraste Iron Man en light */
-  --color-on-surface: #0a0718;
-  --color-on-surface-variant: #3d2e72;
-  --color-muted: #6b5a9e;
+  /* Texto casi negro (AAA) + muted gris AA real sobre blanco */
+  --color-on-surface: #0a0a0f;
+  --color-on-surface-variant: #2c2c38;
+  --color-muted: #555560;
   --color-off-white: #ffffff;
 
-  /* Accents más saturados para AA contrast */
+  /* Accents saturados — todos pasan AA sobre blanco */
   --color-violet-300: #7c3aed;
   --color-violet-400: #6d28d9;
   --color-violet-500: #5b21b6;
-  --color-cyan-400: #0891b2;
-  --color-gold-arc: #d97706;
-  --color-electric-blue: #2563eb;
-  --color-success-emerald: #059669;
+  --color-cyan-400: #0e7490;
+  --color-gold-arc: #b45309;
+  --color-electric-blue: #1d4ed8;
+  --color-success-emerald: #047857;
   --color-error-crimson: #dc2626;
 
   /* HUD glows (más suaves en light) */
   --hud-glow-v: 0 0 12px rgba(109,40,217,0.25), 0 0 30px rgba(109,40,217,0.08);
-  --hud-glow-c: 0 0 12px rgba(8,145,178,0.25), 0 0 30px rgba(8,145,178,0.08);
-  --hud-glow-g: 0 0 12px rgba(217,119,6,0.2), 0 0 24px rgba(217,119,6,0.06);
-  --hud-line: rgba(109,40,217,0.18);
+  --hud-glow-c: 0 0 12px rgba(14,116,144,0.25), 0 0 30px rgba(14,116,144,0.08);
+  --hud-glow-g: 0 0 12px rgba(180,83,9,0.2), 0 0 24px rgba(180,83,9,0.06);
+  --hud-line: rgba(24,24,40,0.18);
 
   /* Effects */
-  --aura-opacity: 0.7;
-  --grid-opacity: 0.06;
-  --glass-bg: 245 242 252 / 0.75;
-  --glass-bg-strong: 245 242 252 / 0.92;
+  --aura-opacity: 0.5;
+  --grid-opacity: 0.05;
+  --glass-bg: 255 255 255 / 0.80;
+  --glass-bg-strong: 255 255 255 / 0.94;
   --scanlines-opacity: 0;
   --scanlines-blend: normal;
+  /* Sombras grises reales (no solo glow violeta) para profundidad + borde fino */
   --shadow-elev:
-    0 1px 0 rgba(255,255,255,0.9) inset,
-    0 0 0 1px rgba(109,40,217,0.12),
-    0 18px 48px rgba(10,7,24,0.10);
+    0 0 0 1px rgba(24,24,40,0.08),
+    0 1px 2px rgba(24,24,40,0.06),
+    0 8px 24px rgba(24,24,40,0.10),
+    0 18px 48px rgba(24,24,40,0.08);
 
   --tint-1: 109 40 217 / 0.03;
-  --tint-2: 109 40 217 / 0.06;
-  --tint-3: 109 40 217 / 0.10;
+  --tint-2: 109 40 217 / 0.05;
+  --tint-3: 109 40 217 / 0.08;
 }
 
 html {
