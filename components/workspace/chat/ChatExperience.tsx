@@ -441,11 +441,21 @@ export function ChatExperience() {
       // Historia previa como text-only (no replay de imágenes — costo).
       const history: { role: "user" | "assistant"; content: string | StructuredBlock[] }[] =
         messagesRef.current
-          .filter((m) => m.id !== "intro" && m.id !== aId)
-          .slice(-15)
+          .filter((m) => {
+            if (m.id === "intro" || m.id === aId) return false;
+            // Filtrar mensajes que parecen corruptos (alucinaciones previas)
+            if (!m.text || m.text.length === 0) return false;
+            const loopCheck = m.text.match(/(.{2,6})\1{8,}/);
+            if (loopCheck) return false;
+            const cjkRatio = (m.text.match(/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g) || []).length / Math.max(m.text.length, 1);
+            if (m.text.length > 50 && cjkRatio > 0.3) return false;
+            return true;
+          })
+          .slice(-12)
           .map((m) => ({
             role: m.role === "b" ? ("assistant" as const) : ("user" as const),
-            content: m.text,
+            // Truncar mensajes muy largos para no explotar el contexto
+            content: typeof m.text === "string" ? m.text.slice(0, 4000) : m.text,
           }));
 
       // Turno actual: si hay imagen, content es array Anthropic-style con
@@ -510,7 +520,9 @@ export function ChatExperience() {
               } else if (evt.type === "done" && evt.model) {
                 setModelLabel(friendlyModel(evt.model));
               } else if (evt.type === "text") {
-                const visible = visibleDelta(evt.value);
+                const cleaned = sanitizeModelDelta(evt.value);
+                if (!cleaned) continue;
+                const visible = visibleDelta(cleaned);
                 if (!visible) continue;
                 assembled += visible;
                 smooth.push(visible);
@@ -1652,27 +1664,56 @@ function stripReasoningDelta(
 
   while (text.length > 0) {
     if (state.isOpen) {
-      const end = text.search(/<\/(?:think|thinking|reasoning)>/i);
-      if (end === -1) return out;
-      text = text.slice(end).replace(/^<\/(?:think|thinking|reasoning)>/i, "");
+      const end = text.search(/<\/(?:think|thinking|reasoning|antml:thinking)>/i);
+      if (end === -1) return out; // aún dentro del bloque, descartar todo
+      text = text.slice(end).replace(/^<\/(?:think|thinking|reasoning|antml:thinking)>/i, "");
       state.setOpen(false);
       continue;
     }
 
-    const start = text.search(/<(?:think|thinking|reasoning)>/i);
+    const start = text.search(/<(?:think|thinking|reasoning|antml:thinking)>/i);
     if (start === -1) {
       out += text;
       break;
     }
     out += text.slice(0, start);
-    text = text.slice(start).replace(/^<(?:think|thinking|reasoning)>/i, "");
+    text = text.slice(start).replace(/^<(?:think|thinking|reasoning|antml:thinking)>/i, "");
     state.setOpen(true);
   }
 
   return out
     .split("\n")
-    .filter((line) => !/^\s*(pensando|proceso|razonamiento|chain of thought|thoughts?)\s*:/i.test(line))
+    .filter((line) => !/^\s*(pensando|proceso|razonamiento|chain of thought|thoughts?|Thinking)\s*[:\-]/i.test(line))
     .join("\n");
+}
+
+/**
+ * Detecta si un delta de texto parece output corrupto del modelo:
+ * loops de tokens, caracteres CJK repetitivos, tokens de relleno.
+ * Si hay señales de corrupción, devuelve string vacío para silenciarlo.
+ */
+function sanitizeModelDelta(text: string): string {
+  if (!text || text.length === 0) return text;
+
+  // Detectar loops: más de 8 repeticiones del mismo patrón corto (2-6 chars)
+  const loopMatch = text.match(/(.{2,6})\1{8,}/);
+  if (loopMatch) return "";
+
+  // Detectar avalancha de caracteres CJK (chino/japonés/coreano) fuera de contexto
+  // Un delta normal puede tener 1-2 pero no 20+ seguidos
+  const cjkRatio = (text.match(/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g) || []).length / text.length;
+  if (text.length > 15 && cjkRatio > 0.4) return "";
+
+  // Detectar tokens de relleno tipo "LLLL", "BCBC", "LCBC" repetidos
+  if (/([A-Z]{2,4})\1{5,}/.test(text)) return "";
+
+  // Token canal descartado
+  if (text.includes("|channel|") || text.includes("<|channel")) return "";
+
+  // Token especial stdio, nu_, etc en cantidad
+  if (/(stdio_|nuLL|_stdio|LL_L|_L_L){3,}/.test(text)) return "";
+
+  return text;
 }
 
 function AssistantActions({

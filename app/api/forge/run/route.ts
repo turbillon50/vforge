@@ -56,6 +56,31 @@ const MAX_TOOL_ROUNDS = 5;
 const MAX_CONTEXT_TURNS = 24;
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
+
+/**
+ * Filtra tokens de thinking del stream antes de enviarlos al cliente.
+ * Maneja el caso donde el tag viene fragmentado entre deltas.
+ */
+function filterThinkingToken(delta: string, state: { inThinking: boolean }): string {
+  let text = delta;
+  let out = "";
+  while (text.length > 0) {
+    if (state.inThinking) {
+      const end = text.search(/<\/(?:thinking|think|antml:thinking)>/i);
+      if (end === -1) return out; // todo el delta es thinking, descartar
+      text = text.slice(end).replace(/^<\/(?:thinking|think|antml:thinking)>/i, "");
+      state.inThinking = false;
+      continue;
+    }
+    const start = text.search(/<(?:thinking|think|antml:thinking)>/i);
+    if (start === -1) { out += text; break; }
+    out += text.slice(0, start);
+    text = text.slice(start).replace(/^<(?:thinking|think|antml:thinking)>/i, "");
+    state.inThinking = true;
+  }
+  return out;
+}
+
 export async function POST(req: Request) {
   let body: RunRequest;
   try {
@@ -690,9 +715,12 @@ async function runAnthropicDirect(args: {
       max_tokens: 3072,
       tools: anthTools,
     });
+    const thinkState = { inThinking: false };
     stream.on("text", (delta) => {
-      assistantTextBuffer += delta;
-      send({ type: "text", value: delta });
+      const clean = filterThinkingToken(delta, thinkState);
+      if (!clean) return;
+      assistantTextBuffer += clean;
+      send({ type: "text", value: clean });
     });
     const final = await stream.finalMessage();
     tokensIn += final.usage?.input_tokens ?? 0;
