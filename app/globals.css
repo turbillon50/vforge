@@ -1050,3 +1050,59 @@ body:not([data-theme="light"]) .hud-scanlines::after {
 ::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.6); }
 [data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(109,40,217,0.25); }
 [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(109,40,217,0.45); }
+
+
+/* ══════════════════════════════════════════
+   CHAT CONTRAST FIXES — burbujas legibles
+   ══════════════════════════════════════════ */
+
+/* Burbuja asistente: color sólido visible sobre fondo obsidian */
+.bubble-assistant {
+  background: #1c1930 !important;
+  border: 1px solid rgba(139,92,246,0.18) !important;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.4) !important;
+}
+
+/* Texto dentro de burbujas — forzar legibilidad */
+.bubble-assistant *,
+.bubble-assistant p,
+.bubble-assistant li,
+.bubble-assistant h1,
+.bubble-assistant h2,
+.bubble-assistant h3 {
+  color: #e8e4ff !important;
+}
+
+/* Código inline en burbujas */
+.bubble-assistant code {
+  background: rgba(139,92,246,0.15) !important;
+  color: #c4b5fd !important;
+  padding: 1px 5px !important;
+  border-radius: 4px !important;
+}
+
+/* Bloques de código */
+.bubble-assistant pre {
+  background: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(139,92,246,0.15) !important;
+  border-radius: 10px !important;
+}
+
+/* Prose dentro del markdown — forzar contraste */
+.prose-vforge {
+  --tw-prose-body: #e8e4ff;
+  --tw-prose-headings: #f0ecff;
+  --tw-prose-bold: #f0ecff;
+  --tw-prose-links: #a78bfa;
+  --tw-prose-code: #c4b5fd;
+  --tw-prose-quotes: #a89fd4;
+  color: #e8e4ff;
+}
+
+/* Nav sidebar items — texto visible */
+.nav-item-label {
+  color: #a89fd4;
+}
+.nav-item-label.active {
+  color: #e8e4ff;
+}

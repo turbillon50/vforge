@@ -7,6 +7,30 @@ import Link from "next/link";
 import { useT } from "@/i18n/AppProviders";
 import { VPresence } from "@/components/brand/VPresence";
 import { Markdown } from "./Markdown";
+
+/** Sanitiza output corrupto del modelo antes de renderizar */
+function sanitizeModelOutput(text: string): string {
+  if (!text) return text;
+  // Detectar loop de caracteres CJK (額額額... etc)
+  if (/(.){40,}/.test(text)) {
+    const match = text.match(/(.){40,}/);
+    const truncated = text.substring(0, text.indexOf(match![0]));
+    return truncated.trim() + (truncated.length > 0 ? "\n\n⚠ _Respuesta truncada — el modelo generó contenido corrupto._" : "⚠ _El modelo generó una respuesta corrupta. Intenta de nuevo._");
+  }
+  // Detectar repetición de secuencias (BCBCBC... LCBCLCBCLo...)
+  if (/([A-Z]{2,6}){20,}/.test(text)) {
+    const match = text.match(/([A-Z]{2,6}){20,}/);
+    const truncated = text.substring(0, text.indexOf(match![0]));
+    return truncated.trim() + (truncated.length > 0 ? "\n\n⚠ _Respuesta truncada — output repetitivo detectado._" : "⚠ _Output repetitivo detectado. Intenta de nuevo._");
+  }
+  // Detectar tokens de relleno de LLM (LLLyLLL, nuLnuLnu...)
+  if (/(?:LLL|nuL|doL){6,}/.test(text)) {
+    const match = text.match(/(?:LLL|nuL|doL){6,}/);
+    const truncated = text.substring(0, text.indexOf(match![0]));
+    return truncated.trim() + (truncated.length > 0 ? "\n\n⚠ _Respuesta truncada — modelo colapsó. Reduce el contexto o cambia el modelo._" : "⚠ _El modelo colapsó. Intenta de nuevo con menos contexto._");
+  }
+  return text;
+}
 import VersionCard from "./VersionCard";
 import { ThinkingIndicator, VOrb } from "./ThinkingIndicator";
 import { useSmoothStream, usePrefersReducedMotion } from "./useSmoothStream";
@@ -1486,7 +1510,7 @@ function MessageBubble({
         <div className="pt-1">
           <VOrb size={24} />
         </div>
-        <div className="min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md bg-surface/60 px-5 py-4 shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_8px_30px_rgba(0,0,0,0.10)] backdrop-blur-sm">
+        <div className="min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md px-5 py-4" style={{ background:"#1c1930", border:"1px solid rgba(139,92,246,0.18)", boxShadow:"0 2px 20px rgba(0,0,0,0.4)" }}>
           {msg.image && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -1495,7 +1519,7 @@ function MessageBubble({
               className="mb-2 max-h-64 w-full rounded-lg border border-app object-cover"
             />
           )}
-          {msg.text && <Markdown text={msg.text} />}
+          {msg.text && <Markdown text={sanitizeModelOutput(msg.text)} />}
           {msg.versionRef && (
             <VersionCard
               buildId={msg.versionRef.buildId}
@@ -1572,8 +1596,8 @@ function StreamingBubble({ text, image }: { text: string; image?: string }) {
         <VOrb size={24} />
       </div>
       <div
-        className="min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md bg-surface/60 px-5 py-4 shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_8px_30px_rgba(0,0,0,0.10)] backdrop-blur-sm"
-        style={{ contain: "layout style" }}
+        className="min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md px-5 py-4"
+        style={{ background:"#1c1930", border:"1px solid rgba(139,92,246,0.18)", boxShadow:"0 2px 20px rgba(0,0,0,0.4)", contain:"layout style" }}
       >
         {image && (
           // eslint-disable-next-line @next/next/no-img-element
