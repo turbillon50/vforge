@@ -295,6 +295,11 @@ export async function readDispatchState(): Promise<EsferasPayload> {
         since: null,
         jobId: null,
         progress: null,
+        status_raw: null,
+        source: null,
+        gajo: null,
+        grokVerdict: null,
+        grokNotes: null,
         lastProject: lastByAgent.get(id)?.project ?? null,
         lastSince: lastByAgent.get(id)?.since ?? null,
       };
@@ -314,6 +319,11 @@ export async function readDispatchState(): Promise<EsferasPayload> {
         typeof row.progress_pct === "number" && row.progress_pct > 0
           ? row.progress_pct
           : null,
+      status_raw: (row.status || "").toLowerCase() || null,
+      source: row.source,
+      gajo: row.gajo,
+      grokVerdict: normalizeVerdict(row.grok_verdict),
+      grokNotes: row.grok_notes ? row.grok_notes.slice(0, 280) : null,
       lastProject: null,
       lastSince: null,
     };
@@ -338,6 +348,11 @@ export async function readDispatchState(): Promise<EsferasPayload> {
           typeof row.progress_pct === "number" && row.progress_pct > 0
             ? row.progress_pct
             : null,
+        status_raw: (row.status || "").toLowerCase(),
+        source: row.source,
+        gajo: row.gajo,
+        grokVerdict: normalizeVerdict(row.grok_verdict),
+        grokNotes: row.grok_notes ? row.grok_notes.slice(0, 280) : null,
       };
     });
 

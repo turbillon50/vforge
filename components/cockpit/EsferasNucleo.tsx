@@ -1,16 +1,32 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { VulcanoCore } from "@/components/vulcano/VulcanoCore";
 import { IconActivity } from "@/components/brand/VFIcons";
 import { AGENT_LOGOS } from "@/components/brand/AgentLogos";
+import { EsferaDetail, type DetailTarget } from "@/components/cockpit/EsferaDetail";
 import type {
   ActiveJob,
   EsferaId,
   EsferasPayload,
   EsferaState,
 } from "@/components/cockpit/esferas-types";
+
+/**
+ * Sentido del haz de energía:
+ *  - "dispatch" → el NÚCLEO despacha trabajo al agente (núcleo → agente).
+ *  - "report"   → el agente reporta/termina hacia el núcleo (agente → núcleo).
+ * Se deriva de datos REALES: un job recién despachado fluye hacia el agente;
+ * cuando ya tiene veredicto Grok o avance alto, el agente reporta de vuelta.
+ */
+type FlowDir = "dispatch" | "report";
+
+function flowDirection(job: ActiveJob): FlowDir {
+  if (job.grokVerdict) return "report";
+  if (typeof job.progress === "number" && job.progress >= 80) return "report";
+  return "dispatch";
+}
 
 const ACCENT = "#22d3ee";
 
@@ -76,63 +92,112 @@ function agoLabel(iso: string | null): string | null {
   return hrs >= 1 ? `hace ${hrs}h` : "hace minutos";
 }
 
-/** Haz de energía con partículas que viajan de un job hacia SU agente. */
+/**
+ * Haz de energía DIRECCIONAL entre un job (centro) y SU agente (perímetro).
+ * El sentido es explícito: las partículas viajan tail→head, el gradiente va de
+ * cola tenue a cabeza brillante y una flecha apunta al destino. Así se entiende
+ * de un vistazo si el núcleo DESPACHA (→ agente) o el agente REPORTA (→ núcleo).
+ */
 function EnergyBeam({
-  from,
-  to,
+  id,
+  job, // posición del job (centro)
+  agent, // posición del agente (perímetro)
   hue,
+  dir,
 }: {
-  from: { x: number; y: number };
-  to: { x: number; y: number };
+  id: number;
+  job: { x: number; y: number };
+  agent: { x: number; y: number };
   hue: string;
+  dir: FlowDir;
 }) {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
+  // tail = origen del flujo, head = destino (donde apunta la flecha).
+  const tail = dir === "dispatch" ? job : agent;
+  const head = dir === "dispatch" ? agent : job;
+  const dx = head.x - tail.x;
+  const dy = head.y - tail.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  const ang = (Math.atan2(dy, dx) * 180) / Math.PI;
+  // La flecha se ancla un poco antes del nodo destino para no quedar tapada.
+  const back = 7;
+  const ax = head.x - ux * back;
+  const ay = head.y - uy * back;
+  const gid = `beamgrad-${id}-${dir}`;
+
   return (
     <g>
+      <defs>
+        <linearGradient
+          id={gid}
+          gradientUnits="userSpaceOnUse"
+          x1={tail.x}
+          y1={tail.y}
+          x2={head.x}
+          y2={head.y}
+        >
+          <stop offset="0%" stopColor={hue} stopOpacity={0.1} />
+          <stop offset="100%" stopColor={hue} stopOpacity={0.95} />
+        </linearGradient>
+      </defs>
+
+      {/* Riel base con gradiente cola→cabeza */}
       <line
-        x1={from.x}
-        y1={from.y}
-        x2={to.x}
-        y2={to.y}
-        stroke={hue}
-        strokeWidth={0.7}
-        strokeOpacity={0.85}
+        x1={tail.x}
+        y1={tail.y}
+        x2={head.x}
+        y2={head.y}
+        stroke={`url(#${gid})`}
+        strokeWidth={0.8}
         strokeLinecap="round"
       />
+
+      {/* Trazo punteado que avanza hacia la cabeza (refuerza el sentido) */}
       <motion.line
-        x1={from.x}
-        y1={from.y}
-        x2={to.x}
-        y2={to.y}
+        x1={tail.x}
+        y1={tail.y}
+        x2={head.x}
+        y2={head.y}
         stroke={hue}
         strokeWidth={1}
+        strokeOpacity={0.9}
         strokeLinecap="round"
         strokeDasharray="2 6"
-        initial={{ strokeDashoffset: 0 }}
-        animate={{ strokeDashoffset: [-8, 0] }}
+        initial={{ strokeDashoffset: 16 }}
+        animate={{ strokeDashoffset: 0 }}
         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
       />
+
+      {/* Partículas viajando tail→head */}
       {[0, 1, 2].map((i) => (
         <motion.circle
           key={i}
-          r={0.9}
+          r={0.95}
           fill={hue}
-          initial={{ cx: from.x, cy: from.y, opacity: 0 }}
+          initial={{ cx: tail.x, cy: tail.y, opacity: 0 }}
           animate={{
-            cx: [from.x, to.x],
-            cy: [from.y, to.y],
+            cx: [tail.x, head.x],
+            cy: [tail.y, head.y],
             opacity: [0, 1, 1, 0],
           }}
           transition={{
-            duration: 1.6,
+            duration: 1.5,
             repeat: Infinity,
-            ease: "easeIn",
-            delay: i * 0.53,
+            ease: "easeInOut",
+            delay: i * 0.5,
           }}
-          style={{ filter: `drop-shadow(0 0 1.4px ${hue})` }}
+          style={{ filter: `drop-shadow(0 0 1.6px ${hue})` }}
         />
       ))}
+
+      {/* Punta de flecha en el destino — el indicador inequívoco de dirección */}
+      <polygon
+        points="0,0 -2.6,-1.5 -2.6,1.5"
+        fill={hue}
+        transform={`translate(${ax} ${ay}) rotate(${ang})`}
+        style={{ filter: `drop-shadow(0 0 1.4px ${hue})` }}
+      />
     </g>
   );
 }
@@ -144,22 +209,28 @@ function AgentNode({
   working,
   dim,
   compact,
+  onSelect,
 }: {
   esfera: EsferaState;
   pos: { x: number; y: number };
   working: boolean;
   dim: boolean;
   compact: boolean;
+  onSelect: () => void;
 }) {
   const Logo = AGENT_LOGOS[esfera.id];
   const pending = !working && esfera.status === "pending";
   const hue = HUE[esfera.id] ?? ACCENT;
 
   return (
-    <motion.div
+    <motion.button
+      type="button"
+      onClick={onSelect}
+      whileTap={{ scale: 0.92 }}
       animate={{ opacity: dim ? 0.28 : 1, scale: dim ? 0.92 : 1 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="absolute -translate-x-1/2 -translate-y-1/2"
+      aria-label={`Ver detalle del agente ${esfera.name}`}
+      className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer"
       style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
     >
       <div className="flex flex-col items-center gap-1.5">
@@ -221,7 +292,7 @@ function AgentNode({
           )}
         </div>
       </div>
-    </motion.div>
+    </motion.button>
   );
 }
 
@@ -233,6 +304,7 @@ function JobSphere({
   dim,
   compact,
   showTag,
+  onSelect,
 }: {
   job: ActiveJob;
   pos: { x: number; y: number };
@@ -242,15 +314,20 @@ function JobSphere({
   /** En móvil con 3+ jobs el tag de proyecto se omite (colisiona en el anillo);
       el detalle completo vive en la lista "Quién trabaja en qué" justo debajo. */
   showTag: boolean;
+  onSelect: () => void;
 }) {
   const hue = (job.agent && HUE[job.agent]) || ACCENT;
   return (
-    <motion.div
+    <motion.button
+      type="button"
+      onClick={onSelect}
+      whileTap={{ scale: 0.92 }}
       initial={{ opacity: 0, scale: 0.6 }}
       animate={{ opacity: dim ? 0.3 : 1, scale: dim ? 0.9 : 1 }}
       exit={{ opacity: 0, scale: 0.6 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="absolute -translate-x-1/2 -translate-y-1/2"
+      aria-label={`Ver detalle de ${job.agentName}${job.project ? ` · ${job.project}` : ""}`}
+      className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer"
       style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
     >
       <div className="flex flex-col items-center">
@@ -272,7 +349,7 @@ function JobSphere({
           </div>
         )}
       </div>
-    </motion.div>
+    </motion.button>
   );
 }
 
@@ -325,6 +402,9 @@ export function EsferasNucleo({
         : allJobs,
     [allJobs, selectedProject],
   );
+
+  // Popup de detalle: job o agente seleccionado (datos reales del payload).
+  const [detail, setDetail] = useState<DetailTarget | null>(null);
 
   // El núcleo/jobs/órbita deben ESCALAR con el lienzo para no colisionar en
   // móvil. Medimos el ancho real del cuadro y derivamos el radio responsive.
@@ -406,6 +486,26 @@ export function EsferasNucleo({
         Una esfera por job corriendo ahora mismo — cada haz conecta el job con su agente.
       </p>
 
+      {/* Leyenda de dirección del flujo — qué significa cada sentido del haz */}
+      {n > 0 && (
+        <div className="relative mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-white/45">
+          <span className="inline-flex items-center gap-1.5">
+            <svg width="22" height="8" viewBox="0 0 22 8" aria-hidden>
+              <line x1="1" y1="4" x2="16" y2="4" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.45" />
+              <polygon points="21,4 15,1.4 15,6.6" fill="currentColor" />
+            </svg>
+            Despachando <span className="text-white/30">núcleo → agente</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <svg width="22" height="8" viewBox="0 0 22 8" aria-hidden>
+              <line x1="6" y1="4" x2="21" y2="4" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.45" />
+              <polygon points="1,4 7,1.4 7,6.6" fill="currentColor" />
+            </svg>
+            Reportando <span className="text-white/30">agente → núcleo</span>
+          </span>
+        </div>
+      )}
+
       {/* Lienzo orbital — escala mobile-first: cuadro fluido que nunca desborda */}
       <div
         ref={boxRef}
@@ -438,7 +538,7 @@ export function EsferasNucleo({
               />
             );
           })}
-          {/* Haces de energía: cada job conectado con SU agente */}
+          {/* Haces de energía DIRECCIONALES: cada job ↔ SU agente, con sentido */}
           {jobs.map((j, i) => {
             const from = jobPos(i, n, compact);
             const to = j.agent ? agentPosById.get(j.agent) : undefined;
@@ -446,9 +546,11 @@ export function EsferasNucleo({
             return (
               <EnergyBeam
                 key={`beam-${j.id}`}
-                from={from}
-                to={to}
+                id={j.id}
+                job={from}
+                agent={to}
                 hue={(j.agent && HUE[j.agent]) || ACCENT}
+                dir={flowDirection(j)}
               />
             );
           })}
@@ -469,6 +571,7 @@ export function EsferasNucleo({
               dim={false}
               compact={compact}
               showTag={!compact || n <= 2}
+              onSelect={() => setDetail({ kind: "job", job: j })}
             />
           ))
         )}
@@ -483,6 +586,7 @@ export function EsferasNucleo({
               working={isWorking(e)}
               dim={isDim(e)}
               compact={compact}
+              onSelect={() => setDetail({ kind: "agent", esfera: e })}
             />
           ) : null,
         )}
@@ -502,6 +606,17 @@ export function EsferasNucleo({
           Esferas en reposo — ningún job corriendo ahora mismo.
         </p>
       )}
+
+      {/* Popup de detalle con datos reales del job/agente seleccionado */}
+      <AnimatePresence>
+        {detail && (
+          <EsferaDetail
+            key={detail.kind === "job" ? `job-${detail.job.id}` : `agent-${detail.esfera.id}`}
+            target={detail}
+            onClose={() => setDetail(null)}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 }

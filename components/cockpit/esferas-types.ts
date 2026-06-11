@@ -22,6 +22,16 @@ export type EsferaState = {
   jobId: number | null;
   /** Avance reportado por el daemon (0-100) si existe. */
   progress: number | null;
+  /** Estado crudo del job activo (running/pending/…) para el popup de detalle. */
+  status_raw: string | null;
+  /** `source` crudo del job activo (de dónde vino: chat, daemon, etc.). */
+  source: string | null;
+  /** `gajo` crudo del job activo (sub-tarea del worktree) si aplica. */
+  gajo: string | null;
+  /** Veredicto Grok del job activo, si ya fue auditado. */
+  grokVerdict: GrokVerdict | null;
+  /** Notas del auditor Grok del job activo (recortadas). */
+  grokNotes: string | null;
   /** Proyecto del último job COMPLETADO de este agente (solo se muestra en reposo). */
   lastProject: string | null;
   /** ISO del último job completado, para el texto "último: <tag> hace N días". */
@@ -57,6 +67,16 @@ export type ActiveJob = {
   since: string | null;
   /** Avance 0-100 si el daemon lo reporta. */
   progress: number | null;
+  /** Estado crudo del row (running/in_progress/…) para el popup de detalle. */
+  status_raw: string;
+  /** `source` crudo del job (de dónde vino: chat, daemon, etc.). */
+  source: string | null;
+  /** `gajo` crudo del job (sub-tarea del worktree) si aplica. */
+  gajo: string | null;
+  /** Veredicto Grok del job, si ya fue auditado. */
+  grokVerdict: GrokVerdict | null;
+  /** Notas del auditor Grok del job (recortadas). */
+  grokNotes: string | null;
 };
 
 export type FeedItem = {
