@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Fijar la raíz del proyecto: hay un package-lock.json en /root que hacía que
+  // Turbopack infiriera /root como workspace root (y fallara al leer ese dir).
+  turbopack: {
+    root: import.meta.dirname,
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
