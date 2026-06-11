@@ -51,10 +51,12 @@ function agentPos(i: number, total: number, radius: number) {
 /**
  * Posición de un JOB en el centro. Órbitas dinámicas según cuántos haya:
  * 1 → centrada · 2-4 → distribuidas en anillo chico · 5+ → anillo más amplio.
+ * `compact` (viewport angosto) aprieta el anillo para que las esferas de job y
+ * sus etiquetas NO colisionen con los agentes del perímetro en móvil.
  */
-function jobPos(i: number, total: number) {
+function jobPos(i: number, total: number, compact: boolean) {
   if (total <= 1) return { x: CENTER, y: CENTER };
-  const jr = total <= 4 ? 13 : 16;
+  const jr = (total <= 4 ? 13 : 16) * (compact ? 0.7 : 1);
   const angle = (-90 + (360 / total) * i) * (Math.PI / 180);
   return {
     x: CENTER + jr * Math.cos(angle),
@@ -141,11 +143,13 @@ function AgentNode({
   pos,
   working,
   dim,
+  compact,
 }: {
   esfera: EsferaState;
   pos: { x: number; y: number };
   working: boolean;
   dim: boolean;
+  compact: boolean;
 }) {
   const Logo = AGENT_LOGOS[esfera.id];
   const pending = !working && esfera.status === "pending";
@@ -204,8 +208,9 @@ function AgentNode({
             {esfera.name}
           </p>
           {/* ANTI-STALE: en reposo NO se pinta tag de trabajo presente; solo un
-              rastro sutil del último job ya cerrado, si lo hubo. */}
-          {!working && !pending && esfera.lastProject && (
+              rastro sutil del último job ya cerrado, si lo hubo. En móvil
+              angosto (compact) se omite: colisiona con las esferas del centro. */}
+          {!compact && !working && !pending && esfera.lastProject && (
             <p
               className="mt-0.5 max-w-[88px] truncate text-[8px] text-white/30 md:max-w-[104px]"
               title={`último: ${esfera.lastProject}`}
@@ -226,11 +231,17 @@ function JobSphere({
   pos,
   size,
   dim,
+  compact,
+  showTag,
 }: {
   job: ActiveJob;
   pos: { x: number; y: number };
   size: number;
   dim: boolean;
+  compact: boolean;
+  /** En móvil con 3+ jobs el tag de proyecto se omite (colisiona en el anillo);
+      el detalle completo vive en la lista "Quién trabaja en qué" justo debajo. */
+  showTag: boolean;
 }) {
   const hue = (job.agent && HUE[job.agent]) || ACCENT;
   return (
@@ -244,11 +255,11 @@ function JobSphere({
     >
       <div className="flex flex-col items-center">
         <VulcanoCore size={size} accent={hue} driving />
-        {(job.project || typeof job.progress === "number") && (
+        {((job.project && showTag) || typeof job.progress === "number") && (
           <div className="mt-1 flex flex-col items-center gap-0.5 text-center">
-            {job.project && (
+            {job.project && showTag && (
               <span
-                className="max-w-[110px] truncate rounded-full border px-1.5 py-0.5 text-[9px] font-medium md:max-w-[130px]"
+                className={`${compact ? "max-w-[72px] text-[8px]" : "max-w-[110px] text-[9px] md:max-w-[130px]"} truncate rounded-full border px-1.5 py-0.5 font-medium`}
                 style={{ borderColor: `${hue}40`, color: hue, background: `${hue}14` }}
                 title={`${job.agentName} · ${job.project}${job.task ? ` · ${job.task}` : ""}`}
               >
@@ -330,6 +341,10 @@ export function EsferasNucleo({
     return () => ro.disconnect();
   }, []);
   const radius = radiusForBox(boxW);
+  // Viewport angosto (≈360–390px): el lienzo real ronda 290px, así que el
+  // anillo central de jobs y el perímetro de agentes están muy juntos. En
+  // compact apretamos el centro, achicamos esferas/tags y ocultamos sublíneas.
+  const compact = boxW < 380;
 
   // Posiciones de los agentes en la órbita (orden estable de la API).
   const agentPositions = useMemo(
@@ -362,10 +377,10 @@ export function EsferasNucleo({
   const n = jobs.length;
   const jobSize =
     n <= 1
-      ? Math.max(72, Math.min(132, Math.round(boxW * 0.24)))
+      ? Math.max(72, Math.min(132, Math.round(boxW * (compact ? 0.22 : 0.24))))
       : n <= 4
-        ? Math.max(54, Math.min(98, Math.round(boxW * 0.16)))
-        : Math.max(44, Math.min(78, Math.round(boxW * 0.12)));
+        ? Math.max(46, Math.min(98, Math.round(boxW * (compact ? 0.13 : 0.16))))
+        : Math.max(38, Math.min(78, Math.round(boxW * (compact ? 0.1 : 0.12))));
   const idleSize = Math.max(64, Math.min(140, Math.round(boxW * 0.26)));
 
   return (
@@ -425,7 +440,7 @@ export function EsferasNucleo({
           })}
           {/* Haces de energía: cada job conectado con SU agente */}
           {jobs.map((j, i) => {
-            const from = jobPos(i, n);
+            const from = jobPos(i, n, compact);
             const to = j.agent ? agentPosById.get(j.agent) : undefined;
             if (!to) return null;
             return (
@@ -446,7 +461,15 @@ export function EsferasNucleo({
           </div>
         ) : (
           jobs.map((j, i) => (
-            <JobSphere key={`job-${j.id}`} job={j} pos={jobPos(i, n)} size={jobSize} dim={false} />
+            <JobSphere
+              key={`job-${j.id}`}
+              job={j}
+              pos={jobPos(i, n, compact)}
+              size={jobSize}
+              dim={false}
+              compact={compact}
+              showTag={!compact || n <= 2}
+            />
           ))
         )}
 
@@ -459,6 +482,7 @@ export function EsferasNucleo({
               pos={agentPositions[i]}
               working={isWorking(e)}
               dim={isDim(e)}
+              compact={compact}
             />
           ) : null,
         )}
