@@ -17,6 +17,7 @@ const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 //      y endpoints como /api/admin/migrate.
 //   2) sesión Clerk de owner — para la UI (/activity health pill, cockpit…).
 const isAdminRoute = createRouteMatcher(["/api/admin/(.*)"]);
+const isTwilioWebhook = createRouteMatcher(["/api/v/voice/twilio(.*)"]);
 
 /**
  * Valida el operator token del header Authorization en el edge. Comparación de
@@ -73,6 +74,7 @@ const isProtected = createRouteMatcher([
   "/api/workspace(.*)",
   "/api/billing(.*)",
   "/api/v/bridge(.*)",
+  "/api/v/voice(.*)",
 ]);
 
 // Rutas exclusivas del owner (Luis): V, su cockpit y sus productos.
@@ -114,6 +116,9 @@ export default hasClerk
       // no es un JWT de Clerk, así que Clerk lo rechazaría con 401). Sin token
       // válido, la ruta cae al control de Clerk de abajo (la UI usa su sesión).
       if (isAdminRoute(req) && hasValidOperatorToken(req)) return;
+      // Webhooks de Twilio (llamada de voz a V): Twilio no pasa por Clerk; se
+      // autentican con X-Twilio-Signature dentro del propio handler.
+      if (isTwilioWebhook(req)) return;
       if (!isProtected(req)) return;
       const { userId, sessionClaims, redirectToSignIn } = await auth();
       const isApi = req.nextUrl.pathname.startsWith("/api");
