@@ -22,6 +22,8 @@ export type EsferaState = {
   jobId: number | null;
   /** Avance reportado por el daemon (0-100) si existe. */
   progress: number | null;
+  /** Cola de actividad en vivo (log_tail del daemon): qué hace AHORA mismo. */
+  logTail: string | null;
   /** Estado crudo del job activo (running/pending/…) para el popup de detalle. */
   status_raw: string | null;
   /** `source` crudo del job activo (de dónde vino: chat, daemon, etc.). */
@@ -67,6 +69,8 @@ export type ActiveJob = {
   since: string | null;
   /** Avance 0-100 si el daemon lo reporta. */
   progress: number | null;
+  /** Cola de actividad en vivo (log_tail del daemon): qué hace AHORA mismo. */
+  logTail: string | null;
   /** Estado crudo del row (running/in_progress/…) para el popup de detalle. */
   status_raw: string;
   /** `source` crudo del job (de dónde vino: chat, daemon, etc.). */
@@ -100,6 +104,12 @@ export type DaemonProc = { alive: boolean; count: number };
 export type HealthState = {
   /** El relay de Hetzner respondió. */
   relayUp: boolean;
+  /**
+   * Proceso del daemon Vulcano: true = vivo · false = caído · null = sin lectura
+   * (relay sin señal). El banner "núcleo pausado" se enciende SOLO cuando es
+   * `false` (caído confirmado), nunca por desconocido.
+   */
+  daemonAlive: boolean | null;
   /** Procesos daemon clave (claude_loop.py, vulcano_daemon.py). */
   daemons: {
     claude_loop: DaemonProc;

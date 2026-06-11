@@ -121,6 +121,13 @@ export function EsferaDetail({
   const since = target.kind === "job" ? target.job.since : target.esfera.since;
   const progress =
     target.kind === "job" ? target.job.progress : target.esfera.progress;
+  const logTail =
+    target.kind === "job" ? target.job.logTail : target.esfera.logTail;
+  const logLines = (logTail ?? "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .slice(-5);
   const source = target.kind === "job" ? target.job.source : target.esfera.source;
   const gajo = target.kind === "job" ? target.job.gajo : target.esfera.gajo;
   const statusRaw =
@@ -264,6 +271,36 @@ export function EsferaDetail({
                   </div>
                 )}
               </div>
+
+              {/* Actividad en vivo: las últimas líneas del log_tail real del
+                  daemon — QUÉ está haciendo el agente ahora mismo. CERO mock:
+                  si no hay log_tail, no se pinta nada. */}
+              {logLines.length > 0 && (
+                <div className="mt-3">
+                  <div className="mb-1.5 flex items-center gap-1.5">
+                    <span
+                      className="h-1.5 w-1.5 animate-pulse rounded-full"
+                      style={{ background: hue, boxShadow: `0 0 6px ${hue}` }}
+                    />
+                    <span className="label-caps text-[10px] text-muted">
+                      Actividad en vivo
+                    </span>
+                  </div>
+                  <div className="space-y-1 rounded-xl border border-white/[0.06] bg-black/30 p-3">
+                    {logLines.map((line, i) => (
+                      <p
+                        key={i}
+                        className={`truncate font-mono text-[11px] leading-relaxed ${
+                          i === logLines.length - 1 ? "text-on-surface" : "text-muted"
+                        }`}
+                        title={line}
+                      >
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Veredicto Grok si ya fue auditado */}
               {grokVerdict && (

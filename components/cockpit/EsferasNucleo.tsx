@@ -450,6 +450,10 @@ export function EsferasNucleo({
 
   const activos = jobs.length;
   const totalWorking = allJobs.length;
+  // Healthcheck honesto: si el proceso del daemon Vulcano NO está vivo, lo
+  // decimos sin rodeos. `daemonAlive===false` es caído confirmado (no "sin
+  // lectura"). Las esferas que sigan pintadas son el último estado conocido.
+  const daemonPaused = payload?.health?.daemonAlive === false;
 
   // Glow ambiental proporcional a la actividad.
   const glowOpacity = Math.min(0.25 + activos * 0.14, 0.78);
@@ -485,6 +489,18 @@ export function EsferasNucleo({
       <p className="relative mb-2 text-[12px] text-muted">
         Una esfera por job corriendo ahora mismo — cada haz conecta el job con su agente.
       </p>
+
+      {/* Banner honesto: daemon Vulcano caído → núcleo pausado */}
+      {daemonPaused && (
+        <div className="relative mb-3 flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2.5">
+          <span className="mt-0.5 h-2 w-2 flex-none rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]" />
+          <p className="text-[12px] leading-relaxed text-amber-200/90">
+            <span className="font-semibold">Núcleo pausado.</span> El daemon
+            Vulcano no está vivo ahora mismo — no se está despachando trabajo. Lo
+            que ves es el último estado conocido, no actividad en curso.
+          </p>
+        </div>
+      )}
 
       {/* Leyenda de dirección del flujo — qué significa cada sentido del haz */}
       {n > 0 && (

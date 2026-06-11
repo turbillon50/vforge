@@ -49,6 +49,7 @@ type Row = {
   source: string | null;
   gajo: string | null;
   progress_pct: number | null;
+  log_tail: string | null;
   started_at: string | null;
   created_at: string | null;
   completed_at: string | null;
@@ -88,22 +89,22 @@ function statusOf(raw: string | null): "working" | "pending" | "done" | "other" 
 }
 
 /**
- * REGLA ANTI-STALE: un row marcado `running` pero sin progreso desde hace
- * demasiado es un ZOMBIE (proceso muerto, daemon reiniciado). NO debe encender
- * esfera/tag/haz: pintaría trabajo que ya no ocurre. El barrido del daemon lo
- * marca `failed/error=stale` al iniciar; este guard protege el render aunque el
- * barrido todavía no haya corrido. Umbral configurable (default 3h, alineado al
- * criterio de la cola; el timeout duro de un job claude es mayor, así que esto
- * solo OCULTA del Taller — nunca cancela el job real).
+ * REGLA ANTI-STALE (fidelidad): SOLO un row `running` con started_at dentro de
+ * los últimos 90 min pinta esfera activa. Un `running` más viejo es un ZOMBIE
+ * (proceso muerto, daemon reiniciado) y NO debe encender esfera/tag/haz: pintaría
+ * trabajo que ya no ocurre. El barrido del daemon lo marca `failed/error=stale`,
+ * pero este guard protege el render aunque el barrido todavía no haya corrido.
+ * Ventana configurable (default 90 min); el timeout duro de un job claude puede
+ * ser mayor, así que esto solo OCULTA del Taller — nunca cancela el job real.
  */
-const STALE_HOURS = Number(process.env.TALLER_STALE_HOURS ?? 3);
-const STALE_MS = STALE_HOURS * 3600 * 1000;
+const ACTIVE_MAX_MIN = Number(process.env.TALLER_ACTIVE_MINUTES ?? 90);
+const ACTIVE_MAX_MS = ACTIVE_MAX_MIN * 60 * 1000;
 
 function isStaleRunning(row: Row): boolean {
   if (!RUNNING.has((row.status || "").toLowerCase())) return false;
   const t = Date.parse(row.started_at || row.created_at || "");
   if (Number.isNaN(t)) return true; // running sin marca de inicio = sospechoso
-  return Date.now() - t > STALE_MS;
+  return Date.now() - t > ACTIVE_MAX_MS;
 }
 
 /** Resumen corto del prompt: primer título/oración, sin ruido. */
@@ -116,6 +117,21 @@ function summarizePrompt(prompt: string | null): string | null {
   if (m) s = m[1].trim();
   if (s.length > 90) s = `${s.slice(0, 89)}…`;
   return s;
+}
+
+/**
+ * Limpia el log_tail del daemon para el popup: recorta y se queda con las
+ * últimas 5 líneas no vacías (lo que el agente hace AHORA mismo). Devuelve null
+ * si no hay nada real — CERO relleno.
+ */
+function cleanLogTail(raw: string | null): string | null {
+  if (!raw) return null;
+  const lines = raw
+    .split(/\r?\n/)
+    .map((l) => l.trimEnd())
+    .filter((l) => l.trim().length > 0);
+  if (lines.length === 0) return null;
+  return lines.slice(-5).join("\n").slice(0, 800);
 }
 
 /** Etiqueta legible del proyecto a partir de gajo/source. */
@@ -193,13 +209,17 @@ async function readHealth(hasRunningJobs: boolean): Promise<HealthState> {
     : null;
 
   const relayUp = Boolean(daemonRaw || statusRaw);
-  // Sano si los daemons reportan vivos, o si hay jobs corriendo (prueba viva).
-  const daemonsAlive =
-    (daemons?.claude_loop.alive && daemons?.vulcano_daemon.alive) || false;
-  const healthy = daemonsAlive || hasRunningJobs;
+  // El daemon Vulcano (el que despacha los jobs) es la pieza crítica del Taller.
+  // true = vivo · false = caído confirmado · null = sin lectura del relay.
+  const daemonAlive: boolean | null = daemons
+    ? daemons.vulcano_daemon.alive
+    : null;
+  // Sano si el daemon Vulcano reporta vivo, o si hay jobs corriendo (prueba viva).
+  const healthy = daemonAlive === true || hasRunningJobs;
 
   return {
     relayUp,
+    daemonAlive,
     daemons,
     server,
     agents,
@@ -215,7 +235,7 @@ export async function readDispatchState(): Promise<EsferasPayload> {
     try {
       const sql = neon(url);
       rows = (await sql`
-        SELECT id, status, agent, prompt, source, gajo, progress_pct,
+        SELECT id, status, agent, prompt, source, gajo, progress_pct, log_tail,
                started_at, created_at, completed_at, grok_verdict, grok_notes
         FROM dispatch_queue
         WHERE status IN ('running','in_progress','active','pending','queued')
@@ -295,6 +315,7 @@ export async function readDispatchState(): Promise<EsferasPayload> {
         since: null,
         jobId: null,
         progress: null,
+        logTail: null,
         status_raw: null,
         source: null,
         gajo: null,
@@ -319,6 +340,7 @@ export async function readDispatchState(): Promise<EsferasPayload> {
         typeof row.progress_pct === "number" && row.progress_pct > 0
           ? row.progress_pct
           : null,
+      logTail: cleanLogTail(row.log_tail),
       status_raw: (row.status || "").toLowerCase() || null,
       source: row.source,
       gajo: row.gajo,
@@ -348,6 +370,7 @@ export async function readDispatchState(): Promise<EsferasPayload> {
           typeof row.progress_pct === "number" && row.progress_pct > 0
             ? row.progress_pct
             : null,
+        logTail: cleanLogTail(row.log_tail),
         status_raw: (row.status || "").toLowerCase(),
         source: row.source,
         gajo: row.gajo,
