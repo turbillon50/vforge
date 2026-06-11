@@ -41,6 +41,8 @@ export function VulcanoBrowser() {
   const [cmdUrl, setCmdUrl] = useState("");
   const [sending, setSending] = useState(false);
   const [lastResult, setLastResult] = useState<string | null>(null);
+  const [aiGoal, setAiGoal] = useState("");
+  const [aiSending, setAiSending] = useState(false);
 
   const fetchInst = useCallback(async () => {
     try {
@@ -121,6 +123,31 @@ export function VulcanoBrowser() {
       setLastResult("No se pudo enviar la orden — reintenta");
     } finally {
       setSending(false);
+    }
+  };
+
+  // Modo IA: Luis dicta una meta en lenguaje natural, la IA la planea y navega sola
+  const pideALaIA = async (goal: string) => {
+    const g = goal.trim();
+    if (!g || aiSending) return;
+    setAiSending(true);
+    setLastResult(null);
+    try {
+      const r = await fetch("/api/navegador/agente", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goal: g }),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      setLastResult("Vulcano esta planeando \u2014 mira el panel y el navegador");
+      setAiGoal("");
+      // refresca el VNC un par de veces para ir viendo el progreso
+      setTimeout(() => setIframeKey(k => k + 1), 4000);
+      setTimeout(() => setIframeKey(k => k + 1), 12000);
+    } catch {
+      setLastResult("No se pudo enviar la orden a la IA");
+    } finally {
+      setAiSending(false);
     }
   };
 
@@ -404,6 +431,32 @@ export function VulcanoBrowser() {
               {d.label}
             </button>
           ))}
+          <div style={{ display:"flex", alignItems:"center", gap:8, flex:"1 1 100%", marginTop:8,
+            padding:"6px 12px", borderRadius:10, background:"rgba(167,139,250,0.06)",
+            border:`1px solid ${VIOLET}40` }}>
+            <span style={{ fontSize:11, fontWeight:700, color:VIOLET, flexShrink:0,
+              display:"inline-flex", alignItems:"center", gap:5 }}>
+              <IconActivity size={13} /> IA
+            </span>
+            <input
+              value={aiGoal}
+              onChange={(e) => setAiGoal(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") pideALaIA(aiGoal); }}
+              placeholder="Dile en tus palabras: busca vuelos a Cancun, abre mis apps de Clerk..."
+              style={{ flex:1, background:"transparent", border:"none", outline:"none",
+                color:"var(--color-on-surface)", fontSize:13 }}
+            />
+            <button
+              onClick={() => pideALaIA(aiGoal)}
+              disabled={aiSending || !aiGoal.trim()}
+              style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"6px 14px",
+                borderRadius:8, border:`1px solid ${VIOLET}`, flexShrink:0,
+                cursor: aiSending || !aiGoal.trim() ? "default" : "pointer",
+                background: aiSending ? "rgba(167,139,250,0.15)" : "transparent",
+                color: VIOLET, fontSize:12, fontWeight:700, opacity: aiSending ? 0.7 : 1 }}>
+              <IconActivity size={13} /> {aiSending ? "Pensando\u2026" : "Que lo haga la IA"}
+            </button>
+          </div>
           <AnimatePresence>
             {lastResult && (
               <motion.div
