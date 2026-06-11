@@ -1,10 +1,16 @@
+export const dynamic = "force-dynamic";
+
 // app/api/navegador/route.ts  v3
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { isOwnerUser } from "@/lib/auth/owner";
 import { neon } from "@neondatabase/serverless";
 
-const sql = neon(process.env.DATABASE_URL!);
+function getDb() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL not configured");
+  return neon(url);
+}
 const RELAY   = "http://178.105.135.26";
 const SECRET  = process.env.BRAIN_SECRET ?? "superclaude2025";
 const VNC_BASE = "https://vulcano.vmomentum.site";
@@ -27,7 +33,7 @@ export async function GET(req: Request) {
 
     if (owner) {
       // Owner → siempre la instancia Luis, actualizar clerk_user_id si cambió
-      const rows = await sql`
+      const rows = await getDb()`
         SELECT id, username, container, port, vnc_password, status
         FROM navegador_instances WHERE username = 'luis'
       `;
@@ -35,7 +41,7 @@ export async function GET(req: Request) {
       if (rows.length > 0) {
         const inst = rows[0];
         // Actualizar clerk_user_id con el real del turno actual
-        await sql`
+        await getDb()`
           UPDATE navegador_instances
           SET clerk_user_id = ${userId}, last_active = NOW(), owner_email = ${email}
           WHERE username = 'luis'
@@ -57,14 +63,14 @@ export async function GET(req: Request) {
     }
 
     // Usuario normal — buscar por userId
-    const rows = await sql`
+    const rows = await getDb()`
       SELECT id, username, container, port, vnc_password, status
       FROM navegador_instances WHERE clerk_user_id = ${userId}
     `;
 
     if (rows.length > 0) {
       const inst = rows[0];
-      await sql`UPDATE navegador_instances SET last_active=NOW() WHERE clerk_user_id=${userId}`;
+      await getDb()`UPDATE navegador_instances SET last_active=NOW() WHERE clerk_user_id=${userId}`;
       return NextResponse.json({
         ok: true,
         status: inst.status,
@@ -94,10 +100,10 @@ export async function POST(req: Request) {
       .replace(/[^a-z0-9]/gi, "").toLowerCase().slice(0, 20)
       + "_" + userId.slice(-6);
 
-    const existing = await sql`SELECT id FROM navegador_instances WHERE clerk_user_id=${userId}`;
+    const existing = await getDb()`SELECT id FROM navegador_instances WHERE clerk_user_id=${userId}`;
     if (existing.length > 0) return NextResponse.json({ ok: false, error: "Ya tienes una instancia" });
 
-    await sql`
+    await getDb()`
       INSERT INTO navegador_instances (clerk_user_id, username, container, port, vnc_password, status, owner_email)
       VALUES (${userId}, ${username}, ${"vulcano-browser-" + username}, 0, 'provisioning', 'provisioning', ${email})
     `;
