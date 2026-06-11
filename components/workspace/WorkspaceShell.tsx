@@ -7,7 +7,7 @@ import {
   IconChat, IconBranch, IconActivity, IconLayers, IconFile,
   IconSearch, IconSettings, IconHome, IconUsers, IconBell,
   IconChevR, IconLifeBuoy, IconRocket, IconGlobe, IconDatabase, IconCpu,
-  IconZap,
+  IconZap, IconWorkflow,
 } from "@/components/brand/VFIcons";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useClerkAppearance } from "@/lib/clerk-appearance";
@@ -32,11 +32,10 @@ const NAV = [
   { href:"/app/deployments", label:"Despliegues",   Icon:IconRocket,   kbd:"D" },
   { href:"/app/vulcano",       label:"Navegador",    Icon:IconGlobe,    kbd:"N" },
   { href:"/app/taller",      label:"Taller",        Icon:IconCpu,      kbd:"O" },
-  { href:"/app/automatizaciones", label:"Automatización", Icon:IconActivity, kbd:"U" },
-  { href:"/app/flujos",      label:"Flujos",        Icon:IconRocket,   kbd:"F" },
+  { href:"/app/blueprint",   label:"Blueprint",     Icon:IconWorkflow, kbd:"B" },
   { href:"/app/crm",         label:"CRM",           Icon:IconUsers,    kbd:"M" },
   { href:"/app/projects",    label:"Proyectos",     Icon:IconLayers,   kbd:"P" },
-  { href:"/app/vault",       label:"Baul",          Icon:IconDatabase, kbd:"B" },
+  { href:"/app/vault",       label:"Baul",          Icon:IconDatabase, kbd:"L" },
   { href:"/app/contracts",   label:"Contratos",     Icon:IconFile,     kbd:"T" },
   { href:"/app/activity",    label:"Actividad",     Icon:IconActivity, kbd:"A" },
 ];
@@ -45,12 +44,11 @@ const NAV_BTM = [
   { href:"/app/admin", label:"Usuarios", Icon:IconUsers },
 ];
 const MOBILE = [
-  { href:"/app/chat",        label:"Chat",      orb:true },
   { href:"/app/home",        label:"Inicio",    Icon:IconHome },
-  { href:"/app/projects",    label:"Proyectos", Icon:IconLayers },
+  { href:"/app/taller",      label:"Taller",    Icon:IconCpu },
+  { href:"/app/chat",        label:"Chat",      orb:true },
+  { href:"/app/blueprint",   label:"Blueprint", Icon:IconWorkflow },
   { href:"/app/vulcano",      label:"Navegador", Icon:IconGlobe },
-  { href:"/app/deployments", label:"Deploy",    Icon:IconRocket },
-  { href:"/app/settings",    label:"Ajustes",   Icon:IconSettings },
 ];
 
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {

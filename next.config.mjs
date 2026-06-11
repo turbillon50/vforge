@@ -18,6 +18,23 @@ const nextConfig = {
         destination: "/app/vulcano",
         permanent: false,
       },
+      // Blueprint = editor de flujos tipo n8n (canvas con nodos). Antes estaba
+      // fragmentado en 3 rutas; ahora todo apunta a /app/blueprint (308).
+      {
+        source: "/app/flujos",
+        destination: "/app/blueprint",
+        permanent: true,
+      },
+      {
+        source: "/app/automatizaciones",
+        destination: "/app/blueprint",
+        permanent: true,
+      },
+      {
+        source: "/app/cockpit",
+        destination: "/app/blueprint",
+        permanent: true,
+      },
     ];
   },
   async rewrites() {

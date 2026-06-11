@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { IconBell, IconBoxes, IconChevR, IconCreditCard, IconDownload, IconExtLink, IconFile, IconGlobe, IconKey, IconLayers, IconLayout, IconMap, IconShield, IconSparkles, IconUsers } from "@/components/brand/VFIcons";
+import { IconBell, IconBoxes, IconChevR, IconCreditCard, IconDownload, IconExtLink, IconFile, IconGlobe, IconKey, IconLayers, IconMap, IconShield, IconSparkles, IconUsers } from "@/components/brand/VFIcons";
 import { PageHeader } from "@/components/workspace/PageHeader";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
@@ -596,7 +596,6 @@ function Stat({ label, value }: { label: string; value: string }) {
 function MoreToolsCard() {
   const { user: currentUser } = useUser();
   const tools = [
-    { href: "/app/cockpit", label: "Centro de Mando", icon: IconLayout },
     { href: "/app/blueprint", label: "Blueprint", icon: IconMap },
     { href: "/app/marketplace", label: "Marketplace", icon: IconLayers },
     { href: "/app/integrations", label: "Integraciones", icon: IconBoxes },
