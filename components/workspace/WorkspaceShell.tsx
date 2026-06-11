@@ -23,6 +23,7 @@ const NAV = [
   { href:"/app/chat",        label:"Conversación",  Icon:IconChat,     kbd:"C" },
   { href:"/app/repovision",  label:"RepoVisión",    Icon:IconBranch,   kbd:"R" },
   { href:"/app/deployments", label:"Despliegues",   Icon:IconRocket,   kbd:"D" },
+  { href:"/vulcano",          label:"Navegador",    Icon:IconBranch,   kbd:"N" },
   { href:"/app/projects",    label:"Proyectos",     Icon:IconLayers,   kbd:"P" },
   { href:"/app/contracts",   label:"Contratos",     Icon:IconFile,     kbd:"T" },
   { href:"/app/activity",    label:"Actividad",     Icon:IconActivity, kbd:"A" },
