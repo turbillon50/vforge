@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/workspace/PageHeader";
 import { EsferasNucleo } from "@/components/cockpit/EsferasNucleo";
+import { Constelacion } from "@/components/cockpit/Constelacion";
 import { UtilizacionPanel } from "@/components/cockpit/UtilizacionPanel";
-import { IconActivity, IconCpu, IconShield } from "@/components/brand/VFIcons";
+import { IconActivity, IconCpu, IconShield, IconBoxes, IconMaximize } from "@/components/brand/VFIcons";
 import { TokenRiskBanner } from "@/components/workspace/TokenHealth";
 import { AGENT_LOGOS, LogoGrok } from "@/components/brand/AgentLogos";
 import type {
@@ -94,6 +95,11 @@ export default function TallerPage() {
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
+  // Vista del núcleo: "constelacion" (zoom out, supervisar TODO) vs "detalle"
+  // (un diagrama orbital). Por defecto arrancamos en constelación.
+  const [view, setView] = useState<"constelacion" | "detalle">("constelacion");
+  // Zoom-in: job al que entramos desde un mini de la constelación.
+  const [focusJob, setFocusJob] = useState<ActiveJob | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -137,6 +143,15 @@ export default function TallerPage() {
     () => (data?.feed ?? []).filter((f) => !selected || f.projectKey === selected),
     [data, selected],
   );
+
+  // Reposo: últimos N jobs CERRADOS (del feed) como minis apagados con su sello
+  // Grok. Dedupe por id, máximo 8 — alimenta la constelación cuando no hay vivos.
+  const restJobs: FeedItem[] = useMemo(() => {
+    const done = (data?.feed ?? []).filter(
+      (f) => !["running", "active", "in_progress", "pending", "queued"].includes(f.status),
+    );
+    return done.slice(0, 8);
+  }, [data]);
 
   const live = data?.source === "live";
   const idle = data && data.source === "empty";
@@ -260,9 +275,89 @@ export default function TallerPage() {
           <LiveMetric value={pendingCount} label="En cola" accent="#fbbf24" />
         </div>
 
-        {/* Pieza central: animación orbital de las esferas en tiempo real */}
+        {/* Toggle de vista del núcleo: Detalle (un diagrama) vs Constelación
+            (zoom out, un mini-núcleo por job para supervisar TODO) */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="inline-flex rounded-xl border border-white/10 bg-white/[0.03] p-1">
+            {([
+              { id: "detalle", label: "Detalle", Icon: IconMaximize },
+              { id: "constelacion", label: "Constelación", Icon: IconBoxes },
+            ] as const).map(({ id, label, Icon }) => {
+              const on = view === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => {
+                    setView(id);
+                    if (id === "constelacion") setFocusJob(null);
+                  }}
+                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition active:scale-95"
+                  style={{
+                    background: on ? "#22d3ee18" : "transparent",
+                    color: on ? "#22d3ee" : "rgba(255,255,255,0.55)",
+                  }}
+                  aria-pressed={on}
+                >
+                  <Icon size={14} /> {label}
+                </button>
+              );
+            })}
+          </div>
+          {view === "detalle" && focusJob && (
+            <button
+              onClick={() => {
+                setFocusJob(null);
+                setView("constelacion");
+              }}
+              className="chip inline-flex min-h-[40px] items-center gap-1.5 px-3 text-[11px] text-cyber-cyan transition active:scale-95"
+            >
+              <IconBoxes size={13} /> Volver a constelación
+            </button>
+          )}
+        </div>
+
+        {/* Pieza central: constelación (zoom out) o diagrama de detalle */}
         <div className="min-h-[300px] sm:min-h-[420px]">
-          <EsferasNucleo data={data} selectedProject={selected} error={error} />
+          <AnimatePresence mode="wait" initial={false}>
+            {view === "constelacion" ? (
+              <motion.div
+                key="constelacion"
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.03 }}
+                transition={{ duration: 0.32, ease: "easeOut" }}
+              >
+                <Constelacion
+                  jobs={jobs}
+                  esferas={esferas}
+                  restJobs={restJobs}
+                  now={now}
+                  error={error}
+                  daemonPaused={health?.daemonAlive === false}
+                  onZoom={(job) => {
+                    setFocusJob(job);
+                    setSelected(job.projectKey ?? null);
+                    setView("detalle");
+                  }}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="detalle"
+                initial={{ opacity: 0, scale: 1.03 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.32, ease: "easeOut" }}
+              >
+                <EsferasNucleo
+                  data={data}
+                  selectedProject={selected}
+                  focusJobId={focusJob?.id ?? null}
+                  error={error}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Panel de utilización: ocupación real por agente (24h) + trabajo útil */}
