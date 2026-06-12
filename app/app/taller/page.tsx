@@ -144,14 +144,13 @@ export default function TallerPage() {
     [data, selected],
   );
 
-  // Reposo: últimos N jobs CERRADOS (del feed) como minis apagados con su sello
-  // Grok. Dedupe por id, máximo 8 — alimenta la constelación cuando no hay vivos.
-  const restJobs: FeedItem[] = useMemo(() => {
-    const done = (data?.feed ?? []).filter(
-      (f) => !["running", "active", "in_progress", "pending", "queued"].includes(f.status),
-    );
-    return done.slice(0, 8);
-  }, [data]);
+  // Reposo: últimos N jobs CERRADOS de las últimas 24h (restRecent del backend)
+  // como minis apagados con su sello Grok. Filtrados por proyecto si hay uno
+  // seleccionado. Alimenta la constelación cuando no hay esferas vivas.
+  const restJobs: FeedItem[] = useMemo(
+    () => (data?.restRecent ?? []).filter((f) => !selected || f.projectKey === selected),
+    [data, selected],
+  );
 
   const live = data?.source === "live";
   const idle = data && data.source === "empty";
@@ -331,6 +330,7 @@ export default function TallerPage() {
                   jobs={jobs}
                   esferas={esferas}
                   restJobs={restJobs}
+                  lastJobAt={data?.lastJobAt ?? null}
                   now={now}
                   error={error}
                   daemonPaused={health?.daemonAlive === false}

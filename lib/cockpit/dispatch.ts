@@ -282,6 +282,46 @@ export async function readDispatchState(): Promise<EsferasPayload> {
     }
   }
 
+  // REPOSO FIEL: últimos jobs CERRADOS de las últimas 24h. La query principal
+  // solo mira 30 min, así que un job que terminó hace 1-2h no aparecería y la
+  // constelación caería al vacío. Esta query trae los últimos 8 cierres reales
+  // (done/failed/error/cancelled) para pintarlos como mini-núcleos apagados con
+  // su sello Grok. NUNCA enciende esfera: es historial, no trabajo presente.
+  let restRecent: FeedItem[] = [];
+  if (url) {
+    try {
+      const sql = neon(url);
+      const restRows = (await sql`
+        SELECT id, status, agent, prompt, source, gajo,
+               completed_at, started_at, created_at, grok_verdict, grok_notes
+        FROM dispatch_queue
+        WHERE status IN ('done','failed','error','cancelled')
+          AND COALESCE(completed_at, started_at, created_at) > NOW() - INTERVAL '24 hours'
+        ORDER BY COALESCE(completed_at, started_at, created_at) DESC
+        LIMIT 8
+      `) as Row[];
+      restRecent = restRows.map((row) => {
+        const agent = normalizeAgent(row.agent);
+        const key = projectKeyOf(row);
+        return {
+          id: row.id,
+          agent,
+          agentName: agent ? LABEL[agent] : row.agent || "—",
+          project: key ? projectLabel(key) : null,
+          projectKey: key,
+          task: summarizePrompt(row.prompt),
+          status: (row.status || "").toLowerCase(),
+          ts: row.completed_at || row.started_at || row.created_at,
+          grokVerdict: normalizeVerdict(row.grok_verdict),
+          grokNotes: row.grok_notes ? row.grok_notes.slice(0, 280) : null,
+        };
+      });
+    } catch {
+      /* best-effort: el reposo cae al estado vacío honesto */
+    }
+  }
+  const lastJobAt = restRecent[0]?.ts ?? null;
+
   // Job activo (o en cola) por agente — el más prioritario/reciente gana.
   const byAgent = new Map<EsferaId, Row>();
   for (const row of rows) {
@@ -445,6 +485,8 @@ export async function readDispatchState(): Promise<EsferasPayload> {
     jobs,
     projects,
     feed,
+    restRecent,
+    lastJobAt,
     lastVerdict,
     health,
   };

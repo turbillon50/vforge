@@ -234,7 +234,7 @@ function MiniRest({ item, now }: { item: FeedItem; now: number }) {
         <span className="truncate rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] font-medium text-white/45">
           {item.project || item.agentName}
         </span>
-        {verdict && (
+        {verdict ? (
           <span
             className="flex flex-none items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold"
             style={{
@@ -245,6 +245,13 @@ function MiniRest({ item, now }: { item: FeedItem; now: number }) {
             title={item.grokNotes ?? verdict}
           >
             <LogoGrok size={9} /> {verdict}
+          </span>
+        ) : (
+          <span
+            className="flex flex-none items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-1.5 py-0.5 text-[9px] font-medium text-white/35"
+            title="Job cerrado sin auditoría Grok"
+          >
+            <LogoGrok size={9} style={{ color: "#6b7280" }} /> sin auditar
           </span>
         )}
       </div>
@@ -276,6 +283,7 @@ export function Constelacion({
   jobs,
   esferas,
   restJobs,
+  lastJobAt = null,
   now,
   error = false,
   daemonPaused = false,
@@ -284,6 +292,7 @@ export function Constelacion({
   jobs: ActiveJob[];
   esferas: EsferaState[];
   restJobs: FeedItem[];
+  lastJobAt?: string | null;
   now: number;
   error?: boolean;
   daemonPaused?: boolean;
@@ -292,6 +301,8 @@ export function Constelacion({
   void esferas; // roster fijo; se mantiene la firma por si el orden cambia
   const live = jobs.length > 0;
   const big = jobs.length === 1;
+  // Marca de tiempo del cierre más reciente para el header en reposo.
+  const lastAgo = lastJobAt ? ago(lastJobAt, now) : null;
 
   return (
     <section className="glass relative overflow-hidden rounded-2xl border border-white/10 p-4 sm:p-5">
@@ -299,14 +310,24 @@ export function Constelacion({
         <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
           <IconActivity size={13} /> Constelación · supervisión total
         </p>
-        <span className="chip text-[10px] text-emerald-600 dark:text-emerald-300">
-          {jobs.length} {jobs.length === 1 ? "job vivo" : "jobs vivos"}
-        </span>
+        {live ? (
+          <span className="chip text-[10px] text-emerald-600 dark:text-emerald-300">
+            {jobs.length} {jobs.length === 1 ? "job vivo" : "jobs vivos"}
+          </span>
+        ) : lastAgo ? (
+          <span className="chip text-[10px] text-cyan-600 dark:text-cyan-300">
+            Último job {lastAgo === "ahora" ? "ahora" : lastAgo.startsWith("hace") ? lastAgo : `hace ${lastAgo}`}
+          </span>
+        ) : (
+          <span className="chip text-[10px] text-muted">En reposo</span>
+        )}
       </div>
       <p className="relative mb-3 text-[12px] text-muted">
         {live
           ? "Un mini-núcleo por job corriendo. Toca uno para hacer zoom a su diagrama de detalle."
-          : "Sin jobs activos — los últimos cierres en reposo, con su veredicto Grok."}
+          : restJobs.length > 0
+            ? "Sin jobs activos — los últimos cierres en reposo (24h), con su veredicto Grok."
+            : "Sin jobs activos — sin cierres en las últimas 24h."}
       </p>
 
       {daemonPaused && (

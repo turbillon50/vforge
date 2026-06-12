@@ -139,6 +139,14 @@ export type EsferasPayload = {
   jobs: ActiveJob[];
   projects: ProjectRef[];
   feed: FeedItem[];
+  /**
+   * Últimos jobs CERRADOS de las últimas 24h (done/failed/error/cancelled),
+   * para pintar los mini-núcleos apagados de la constelación en reposo aunque
+   * hayan terminado hace 1-2 horas. Ordenados por cierre desc, máx 8.
+   */
+  restRecent: FeedItem[];
+  /** ISO del último job cerrado (para el header "Último job hace X"). */
+  lastJobAt: string | null;
   /** Último veredicto Grok emitido (para el feed del Taller). */
   lastVerdict: { id: number; verdict: GrokVerdict; notes: string | null; project: string | null; ts: string | null } | null;
   health: HealthState;

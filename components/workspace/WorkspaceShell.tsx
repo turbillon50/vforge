@@ -1,13 +1,14 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { VMark, VWordmark } from "@/components/brand/VMark";
 import {
   IconChat, IconBranch, IconActivity, IconLayers, IconFile,
   IconSearch, IconSettings, IconHome, IconUsers, IconBell,
   IconChevR, IconLifeBuoy, IconRocket, IconGlobe, IconDatabase, IconCpu,
-  IconZap, IconWorkflow,
+  IconZap, IconWorkflow, IconBoxes, IconBag, IconKey, IconCreditCard, IconX,
 } from "@/components/brand/VFIcons";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useClerkAppearance } from "@/lib/clerk-appearance";
@@ -49,6 +50,48 @@ const MOBILE = [
   { href:"/app/chat",        label:"Chat",      orb:true },
   { href:"/app/blueprint",   label:"Blueprint", Icon:IconWorkflow },
   { href:"/app/vulcano",      label:"Navegador", Icon:IconGlobe },
+];
+
+/**
+ * PARIDAD MÓVIL/DESKTOP: TODAS las secciones que el sidebar desktop expone,
+ * agrupadas para el bottom-sheet "Más". El bottom nav solo cabe 5 atajos; este
+ * drawer abre el resto para que el móvil no esconda nada de la app.
+ */
+type IconCmp = typeof IconHome;
+const MORE_GROUPS: { title:string; items:{ href:string; label:string; desc:string; Icon:IconCmp; exact?:boolean }[] }[] = [
+  {
+    title: "Operación",
+    items: [
+      { href:"/app/home",        label:"Inicio",       desc:"Panel y resumen del workspace",     Icon:IconHome, exact:true },
+      { href:"/app/taller",      label:"Taller",       desc:"Esferas Vulcano construyendo en vivo", Icon:IconCpu },
+      { href:"/app/chat",        label:"Conversación", desc:"Chat operativo con el agente V",     Icon:IconChat },
+      { href:"/app/vulcano",     label:"Navegador",    desc:"Navegador autónomo en Hetzner",      Icon:IconGlobe },
+      { href:"/app/blueprint",   label:"Blueprint",    desc:"Flujos y automatizaciones n8n",      Icon:IconWorkflow },
+      { href:"/app/repovision",  label:"RepoVisión",   desc:"Estructura y ramas del repositorio", Icon:IconBranch },
+      { href:"/app/deployments", label:"Despliegues",  desc:"Builds y deploys de Vercel",         Icon:IconRocket },
+      { href:"/app/projects",    label:"Proyectos",    desc:"Forja y gestión de proyectos",       Icon:IconLayers },
+      { href:"/app/activity",    label:"Actividad",    desc:"Bitácora de eventos del sistema",    Icon:IconActivity },
+    ],
+  },
+  {
+    title: "Clientes y Ventas",
+    items: [
+      { href:"/app/crm",         label:"CRM",          desc:"Leads y pipeline de ventas",         Icon:IconUsers },
+      { href:"/app/contracts",   label:"Contratos",    desc:"Documentos legales automatizados",   Icon:IconFile },
+      { href:"/app/marketplace", label:"Marketplace",  desc:"Plantillas y módulos reutilizables", Icon:IconBag },
+    ],
+  },
+  {
+    title: "Configuración",
+    items: [
+      { href:"/app/vault",         label:"Baúl",          desc:"Evidencia y archivos vivos",       Icon:IconDatabase },
+      { href:"/app/secrets",       label:"Secrets",       desc:"Credenciales y llaves cifradas",   Icon:IconKey },
+      { href:"/app/integrations",  label:"Integraciones", desc:"Servicios y APIs conectadas",      Icon:IconZap },
+      { href:"/app/admin",         label:"Usuarios",      desc:"Miembros, roles y permisos",       Icon:IconUsers },
+      { href:"/app/admin/billing", label:"Facturación",   desc:"Planes, pagos y suscripción",      Icon:IconCreditCard },
+      { href:"/app/settings",      label:"Configuración", desc:"Ajustes de cuenta y workspace",    Icon:IconSettings },
+    ],
+  },
 ];
 
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
@@ -114,9 +157,9 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         <TopBar hiddenOnMobile={pathname.startsWith("/app/chat")||pathname.startsWith("/forge")||pathname.startsWith("/v")} pathname={pathname}/>
         <div data-app-scroll className={cn(
           "flex-1 min-h-0 min-w-0 max-w-full overflow-x-hidden",
-          (pathname.startsWith("/app/chat")||pathname.startsWith("/forge")||pathname.startsWith("/v"))?"overflow-y-hidden":"overflow-y-auto flex flex-col"
+          (pathname.startsWith("/app/chat")||pathname.startsWith("/app/vulcano")||pathname.startsWith("/forge")||pathname.startsWith("/v"))?"overflow-y-hidden":"overflow-y-auto flex flex-col"
         )}>
-          {pathname.startsWith("/app/chat")?children:<PageTransition>{children}</PageTransition>}
+          {(pathname.startsWith("/app/chat")||pathname.startsWith("/app/vulcano"))?children:<PageTransition>{children}</PageTransition>}
         </div>
         <MobileNav pathname={pathname}/>
         <VOrb/>
@@ -196,7 +239,12 @@ function Breadcrumbs({ pathname }: { pathname:string }) {
 }
 
 function MobileNav({ pathname }: { pathname:string }) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  // "Más" se considera activo cuando la ruta actual NO está entre los 5 atajos
+  // del bottom nav — así el usuario ve que está en una sección "del cajón".
+  const inMore = !MOBILE.some(m => pathname.startsWith(m.href));
   return (
+    <>
     <nav data-vorb-avoid className="flex flex-none items-stretch justify-between gap-0.5 border-t border-white/[0.05] bg-[#07070d]/90 px-2 backdrop-blur-2xl md:hidden"
       style={{ paddingBottom:"max(env(safe-area-inset-bottom,0px),12px)", minHeight:58 }}>
       {MOBILE.map(item=>{
@@ -233,6 +281,94 @@ function MobileNav({ pathname }: { pathname:string }) {
           </Link>
         );
       })}
+      {/* 6º atajo: "Más" abre el cajón con TODAS las secciones (paridad desktop) */}
+      <button onClick={()=>setMoreOpen(true)} aria-label="Más secciones" aria-haspopup="dialog" aria-expanded={moreOpen}
+        className={cn("group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",inMore?"text-violet-300":"text-white/35")}>
+        {inMore&&<motion.span aria-hidden layoutId="vf-mob-halo" transition={{type:"spring",stiffness:380,damping:32}}
+          className="pointer-events-none absolute inset-x-2 -bottom-0.5 top-1 -z-10 rounded-xl"
+          style={{background:"radial-gradient(ellipse,rgba(139,92,246,0.4),transparent 70%)",filter:"blur(8px)"}}/>}
+        <motion.span className="inline-flex" animate={moreOpen?{scale:[1,1.08,1]}:{scale:1}} transition={{duration:0.18}}>
+          <IconBoxes size={24} className={cn("transition",inMore?"text-violet-300":"text-white/35 group-hover:text-white/65")}/>
+        </motion.span>
+        <span className={cn("font-mono text-[9px] uppercase tracking-widest",inMore?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-bold text-transparent":"")}>Más</span>
+      </button>
     </nav>
+    <MoreDrawer open={moreOpen} onClose={()=>setMoreOpen(false)} pathname={pathname}/>
+    </>
+  );
+}
+
+function MoreDrawer({ open, onClose, pathname }: { open:boolean; onClose:()=>void; pathname:string }) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
+          transition={{ duration:0.2 }}
+          onClick={onClose}
+          role="dialog" aria-modal="true" aria-label="Todas las secciones"
+          className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm md:hidden"
+        >
+          <motion.div
+            initial={{ y:"100%" }} animate={{ y:0 }} exit={{ y:"100%" }}
+            transition={{ type:"spring", stiffness:360, damping:38 }}
+            onClick={(e)=>e.stopPropagation()}
+            className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#08080f] shadow-[0_-20px_60px_rgba(0,0,0,0.6)] no-scrollbar"
+            style={{ paddingBottom:"max(env(safe-area-inset-bottom,0px),20px)" }}
+          >
+            {/* borde superior con gradiente premium */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent"/>
+            {/* grabber */}
+            <div className="sticky top-0 z-10 flex flex-col items-center bg-[#08080f]/95 pt-2.5 backdrop-blur-xl">
+              <span className="h-1 w-10 rounded-full bg-white/15"/>
+              <div className="flex w-full items-center justify-between px-5 pb-3 pt-3">
+                <div className="flex items-center gap-2">
+                  <VMark size={18}/>
+                  <span className="font-display text-[15px] font-bold text-white/90">Todas las secciones</span>
+                </div>
+                <button onClick={onClose} aria-label="Cerrar"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-white/45 transition active:scale-90 hover:text-white/80">
+                  <IconX size={14}/>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-5 px-4 pb-4 pt-1">
+              {MORE_GROUPS.map((group)=>(
+                <div key={group.title}>
+                  <p className="mb-2 px-1 font-mono text-[10px] uppercase tracking-[0.18em] text-white/25">{group.title}</p>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {group.items.map(({ href, label, desc, Icon, exact })=>{
+                      const active = exact ? pathname===href : pathname.startsWith(href);
+                      return (
+                        <Link key={href} href={href} onClick={onClose}
+                          className={cn(
+                            "group flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition active:scale-[0.98]",
+                            active
+                              ? "border-violet-500/25 bg-violet-500/10"
+                              : "border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.04]"
+                          )}>
+                          <span className={cn(
+                            "grid h-10 w-10 flex-none place-items-center rounded-xl border transition",
+                            active ? "border-violet-400/30 bg-violet-500/15" : "border-white/[0.06] bg-white/[0.03]"
+                          )}>
+                            <Icon size={18} className={active?"text-violet-300":"text-white/45 group-hover:text-white/70"}/>
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className={cn("block truncate text-[13.5px] font-semibold",active?"text-violet-100":"text-white/80")}>{label}</span>
+                            <span className="block truncate text-[11px] text-white/35">{desc}</span>
+                          </span>
+                          <IconChevR size={14} className="flex-none text-white/20"/>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
