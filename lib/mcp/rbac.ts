@@ -67,7 +67,40 @@ export const TOOL_KIND: Record<string, ToolKind> = {
   vforge_deploy: "data",
   vforge_scaffold_project: "data",
   vforge_execute_skill: "data",
+
+  // ---- OPERADOR (fragua Vulcano) — rol Owner/Associate, NUNCA public ----
+  // Mapeo de roles: Owner → scope `admin` (operador), Associate → scope
+  // `client` (cuenta conectada con token válido). Ambos son "data": el gate
+  // de datos (admin|client) ya rebota a public/anon con 401, que es justo
+  // "Owner o Associate, nunca public". Ver OPERATOR_TOOLS abajo.
+  vulcano_taller_status: "data",
+  vulcano_dispatch: "data",
+  vulcano_brain_module: "data",
+  vulcano_salud: "data",
 };
+
+/**
+ * Tools de OPERADOR de la fragua. Son "data" (requieren token admin|client,
+ * nunca public), y además quedan marcadas aquí explícitamente para que el
+ * gate sea legible: estas tocan la cola real de trabajo de la empresa
+ * (dispatch_queue) y la doctrina/salud de la fábrica. Owner = admin,
+ * Associate = client. Un token public/ausente jamás las ve ni las llama.
+ */
+export const OPERATOR_TOOLS: ReadonlySet<string> = new Set([
+  "vulcano_taller_status",
+  "vulcano_dispatch",
+  "vulcano_brain_module",
+  "vulcano_salud",
+]);
+
+export function isOperatorTool(name: string): boolean {
+  return OPERATOR_TOOLS.has(name);
+}
+
+/** Owner (admin) o Associate (client) — el rol exigido por las tools de operador. */
+export function canUseOperatorTools(principal: McpPrincipal): boolean {
+  return principal.scope === "admin" || principal.scope === "client";
+}
 
 /** Fail-closed: unknown tools are treated as data (auth required). */
 export function toolKind(name: string): ToolKind {

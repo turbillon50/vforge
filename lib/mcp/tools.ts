@@ -142,6 +142,46 @@ export const MCP_TOOLS: McpToolDef[] = [
       },
     },
   },
+
+  /* ===================== TOOLS DE OPERADOR (fragua Vulcano) ===================== */
+  /* Owner/Associate (admin|client). NUNCA public. Ver OPERATOR_TOOLS en rbac.ts. */
+  {
+    name: "vulcano_taller_status",
+    description:
+      "OPERADOR (Owner/Associate): estado vivo de la fragua — qué está pasando AHORA en la empresa. Jobs corriendo, en cola y cerrados recientemente desde la cola real de despacho (dispatch_queue): agente, source, progreso, log en vivo y veredicto Grok (APROBADO/RECHAZADO/REVISION). Sin mock.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "vulcano_dispatch",
+    description:
+      "OPERADOR (Owner/Associate, ejecuta directo): encola un trabajo REAL a la fragua (INSERT en dispatch_queue). El source queda auditado como mcp:<tu userId de Clerk> — registro de quién ordenó qué. Devuelve el id de cola asignado.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        agent: { type: "string", description: "Agente que ejecuta: claude | codex | grok | shell | browser (default claude)" },
+        prompt: { type: "string", description: "La tarea a ejecutar en la fragua" },
+        priority: { type: "number", description: "Prioridad 1-100 (más alto = antes; default 5)" },
+      },
+      required: ["prompt"],
+    },
+  },
+  {
+    name: "vulcano_brain_module",
+    description:
+      "OPERADOR (Owner/Associate): lee un módulo de arranque del Brain por nombre — la doctrina completa de la fábrica. Módulos: proposito, contexto-minimo, marco-legal-entrega, publicidad, tipos-de-diseno, catalogo-forks, anatomia-arte, onboarding-operador. Sin 'name' lista los disponibles.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Nombre del módulo (ej. proposito). Vacío = lista los módulos." },
+      },
+    },
+  },
+  {
+    name: "vulcano_salud",
+    description:
+      "OPERADOR (Owner/Associate): el pulso de la fábrica en una sola llamada — token-health (horas restantes), daemon Vulcano vivo + claude_loop, y conteo de la cola (corriendo/pendiente/total). Sin mock.",
+    inputSchema: { type: "object", properties: {} },
+  },
 ];
 
 /** Tools visibles para un principal: public ve sólo las públicas; admin|client
@@ -395,6 +435,11 @@ function helpText(principal: McpPrincipal): string {
   lines.push("• vforge_recommend_stack — stack técnico recomendado.");
   lines.push("• vforge_create_repo / vforge_deploy / vforge_scaffold_project — ejecutables (two-step).");
   lines.push("• vforge_execute_skill — ejecuta una skill (sólo operador).");
+  lines.push("\n## De operador (fragua Vulcano — Owner/Associate, nunca public)");
+  lines.push("• vulcano_taller_status — qué está pasando ahora en la empresa (jobs vivos + veredicto Grok).");
+  lines.push("• vulcano_dispatch — encola un trabajo real a la fragua (auditado por userId).");
+  lines.push("• vulcano_brain_module — lee la doctrina del Brain por módulo.");
+  lines.push("• vulcano_salud — pulso de la fábrica: token, daemon y cola.");
   const scopeName =
     principal.scope === "admin" ? "admin (operador — ves todo)" :
     principal.scope === "client" ? "client (ves SOLO tu forge)" :
@@ -797,6 +842,113 @@ export async function runMcpTool(
       if (!res.ok) return err(`La ejecución falló: ${res.error ?? "error desconocido"}`);
       const out = typeof res.body === "string" ? res.body : JSON.stringify(res.body);
       return text(`Skill "${skill.name}" ejecutada.\n\nOutput (resumido):\n${out.slice(0, 2000)}`);
+    }
+
+    /* ---------------------- operador (fragua Vulcano) ---------------------- */
+    /* Gate Owner/Associate: ya cubierto por el GATE de datos de arriba (admin|client). */
+
+    case "vulcano_taller_status": {
+      const { tallerStatus } = await import("@/lib/vulcano/operator");
+      let st;
+      try {
+        st = await tallerStatus();
+      } catch (e) {
+        return err(`No pude leer la cola de la fragua: ${e instanceof Error ? e.message : "error desconocido"}`);
+      }
+      const fmtJob = (j: (typeof st.running)[number]) => {
+        const head = `• #${j.id} [${j.agent ?? "—"}] ${j.task ?? "(sin descripción)"}`;
+        const meta = [
+          j.progress != null ? `${j.progress}%` : null,
+          j.source ? `src:${j.source}` : null,
+          j.grokVerdict ? `Grok:${j.grokVerdict}` : null,
+        ].filter(Boolean).join(" · ");
+        const log = j.logTail ? `\n    ${j.logTail.replace(/\n/g, "\n    ")}` : "";
+        return meta ? `${head}\n    ${meta}${log}` : `${head}${log}`;
+      };
+      const sections: string[] = [];
+      sections.push(
+        `# Taller Vulcano — qué está pasando ahora\nCorriendo: ${st.counts.running} · En cola: ${st.counts.pending} · Activos totales: ${st.counts.total}`,
+      );
+      if (st.running.length) sections.push(`## 🔨 Corriendo (${st.running.length})\n${st.running.map(fmtJob).join("\n")}`);
+      if (st.pending.length) sections.push(`## ⏳ En cola (${st.pending.length})\n${st.pending.map(fmtJob).join("\n")}`);
+      if (st.recent.length) {
+        const lines = st.recent.map((j) => {
+          const v = j.grokVerdict ? ` · Grok:${j.grokVerdict}` : "";
+          return `• #${j.id} [${j.agent ?? "—"}] ${j.status} — ${j.task ?? ""}${v}`;
+        });
+        sections.push(`## ✅ Cerrados recientes (2h)\n${lines.join("\n")}`);
+      }
+      if (!st.running.length && !st.pending.length && !st.recent.length) {
+        sections.push("La fragua está en reposo: sin jobs corriendo, en cola ni cerrados en las últimas 2h.");
+      }
+      return text(sections.join("\n\n"));
+    }
+
+    case "vulcano_dispatch": {
+      const prompt = String(args.prompt ?? "").trim();
+      if (!prompt) return err("Falta 'prompt' (la tarea a ejecutar).");
+      const ALLOWED = ["claude", "codex", "grok", "shell", "browser"];
+      let agent = String(args.agent ?? "claude").trim().toLowerCase();
+      if (!ALLOWED.includes(agent)) agent = "claude";
+      let priority = Number(args.priority ?? 5);
+      if (!Number.isFinite(priority)) priority = 5;
+      priority = Math.max(1, Math.min(100, Math.round(priority)));
+      // AUDITORÍA: el source SIEMPRE registra el userId de Clerk — quién ordenó.
+      const source = `mcp:${userId || "unknown"}`;
+      const { dispatchJob } = await import("@/lib/vulcano/operator");
+      let res;
+      try {
+        res = await dispatchJob({ agent, prompt, priority, source });
+      } catch (e) {
+        return err(`No pude encolar el trabajo: ${e instanceof Error ? e.message : "error desconocido"}`);
+      }
+      return text(
+        `Trabajo encolado en la fragua.\n• id de cola: #${res.id}\n• agente: ${agent}\n• prioridad: ${priority}\n• source (auditoría): ${source}\nSigue su avance con vulcano_taller_status.`,
+      );
+    }
+
+    case "vulcano_brain_module": {
+      const { BRAIN_MODULES, isBrainModule, readBrainModule } = await import("@/lib/vulcano/operator");
+      const moduleName = String(args.name ?? "").trim().toLowerCase();
+      if (!moduleName) {
+        return text(
+          "Módulos de doctrina del Brain disponibles (pasa 'name'):\n" +
+            BRAIN_MODULES.map((m) => `• ${m}`).join("\n"),
+        );
+      }
+      if (!isBrainModule(moduleName)) {
+        return err(
+          `Módulo "${moduleName}" no reconocido. Válidos: ${BRAIN_MODULES.join(", ")}.`,
+        );
+      }
+      const content = await readBrainModule(moduleName);
+      if (!content) return err(`No pude leer el módulo "${moduleName}" del Brain (relay sin respuesta).`);
+      return text(`# Módulo Brain: ${moduleName}\n\n${content}`);
+    }
+
+    case "vulcano_salud": {
+      const { saludFabrica } = await import("@/lib/vulcano/operator");
+      const s = await saludFabrica();
+      const lines: string[] = ["# Salud de la fábrica"];
+      if (s.tokenHealth) {
+        const h = s.tokenHealth.hoursLeft;
+        const icon = h == null ? "⚪" : h < 1 ? "🔴" : h < 3 ? "🟡" : "🟢";
+        lines.push(
+          `${icon} Token: ${s.tokenHealth.status ?? "?"}${h != null ? ` · ${h}h restantes` : ""}${s.tokenHealth.checkedAt ? ` (checado ${s.tokenHealth.checkedAt})` : ""}`,
+        );
+      } else {
+        lines.push("⚫ Token: sin lectura (relay sin respuesta).");
+      }
+      if (s.daemon) {
+        lines.push(
+          `${s.daemon.vulcanoAlive ? "🟢" : "🔴"} Daemon Vulcano: ${s.daemon.vulcanoAlive ? "vivo" : "caído"} · claude_loop: ${s.daemon.claudeLoopAlive ? "vivo" : "caído"}`,
+        );
+      } else {
+        lines.push("⚫ Daemon: sin lectura (relay sin respuesta).");
+      }
+      lines.push(`📋 Cola: ${s.queue.running} corriendo · ${s.queue.pending} en cola · ${s.queue.total} activos`);
+      lines.push(`🔌 Relay: ${s.relayUp ? "arriba" : "sin respuesta"}`);
+      return text(lines.join("\n"));
     }
 
     default:
