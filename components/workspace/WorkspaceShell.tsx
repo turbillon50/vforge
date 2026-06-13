@@ -8,7 +8,7 @@ import {
   IconChat, IconBranch, IconActivity, IconLayers, IconFile,
   IconSearch, IconSettings, IconHome, IconUsers, IconBell,
   IconChevR, IconLifeBuoy, IconRocket, IconGlobe, IconDatabase, IconCpu,
-  IconZap, IconWorkflow, IconBoxes, IconBag, IconKey, IconCreditCard, IconX,
+  IconZap, IconWorkflow, IconBoxes, IconBag, IconKey, IconCreditCard, IconX, IconShare,
 } from "@/components/brand/VFIcons";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useClerkAppearance } from "@/lib/clerk-appearance";
@@ -39,6 +39,7 @@ const NAV = [
   { href:"/app/vault",       label:"Baul",          Icon:IconDatabase, kbd:"L" },
   { href:"/app/contracts",   label:"Contratos",     Icon:IconFile,     kbd:"T" },
   { href:"/app/activity",    label:"Actividad",     Icon:IconActivity, kbd:"A" },
+  { href:"/app/community",   label:"Community",     Icon:IconShare,    kbd:"K" },
 ];
 const NAV_BTM = [
   { href:"/app/home",  label:"Inicio",   Icon:IconHome,  exact:true },
@@ -79,6 +80,7 @@ const MORE_GROUPS: { title:string; items:{ href:string; label:string; desc:strin
       { href:"/app/crm",         label:"CRM",          desc:"Leads y pipeline de ventas",         Icon:IconUsers },
       { href:"/app/contracts",   label:"Contratos",    desc:"Documentos legales automatizados",   Icon:IconFile },
       { href:"/app/marketplace", label:"Marketplace",  desc:"Plantillas y módulos reutilizables", Icon:IconBag },
+      { href:"/app/community",  label:"Community",    desc:"Redes sociales · Revisión de posts",  Icon:IconShare },
     ],
   },
   {
