@@ -33,7 +33,7 @@ export function Credenciales() {
             target="_blank"
             rel="noopener noreferrer"
             title={`Verificar certificación · ${CERT_CODE}`}
-            className="group relative flex flex-col items-center gap-4 overflow-hidden rounded-3xl border border-app bg-surface/60 px-8 py-7 backdrop-blur-xl transition-colors hover:border-app-strong sm:flex-row sm:gap-6 sm:px-10"
+            className="group relative flex flex-col items-center gap-4 overflow-hidden rounded-3xl border border-app bg-[var(--color-surface-low)] px-8 py-7 backdrop-blur-xl transition-colors hover:border-app-strong sm:flex-row sm:gap-6 sm:px-10"
           >
             <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <span

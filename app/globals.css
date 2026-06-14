@@ -1245,3 +1245,27 @@ body:not([data-theme="light"]) .hud-scanlines::after {
   scrollbar-width: thin;
   scrollbar-color: rgb(var(--color-border)) transparent;
 }
+
+/* LIGHT MODE CARDS — diferenciacion visible sin depender de transparencias */
+[data-theme="light"] .bg-\[var\(--color-surface-low\)\] {
+  background: #f0f0f6 !important;
+}
+[data-theme="light"] .surface-deep {
+  background: #ffffff;
+  border-color: rgba(10,10,20,0.10) !important;
+}
+[data-theme="light"] .home-aurora::before {
+  opacity: 0.4;
+}
+[data-theme="light"] .card-lift {
+  background: #ffffff;
+  border-color: rgba(10,10,20,0.09) !important;
+}
+[data-theme="light"] .bg-\[var\(--color-surface\)\] {
+  background: #ffffff !important;
+}
+/* Light mode: gradient hero card visible */
+[data-theme="light"] .via-\[var\(--color-surface\)\] {
+  --tw-gradient-via-position: ;
+  --tw-gradient-stops: var(--tw-gradient-from), #f8f8ff var(--tw-gradient-via-position), var(--tw-gradient-to);
+}

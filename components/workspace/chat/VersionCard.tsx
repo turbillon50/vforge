@@ -118,7 +118,7 @@ export default function VersionCard({
       : active.summary;
 
   return (
-    <div className="mt-3 overflow-hidden rounded-2xl border border-violet-400/20 bg-surface/60 shadow-[0_1px_0_rgba(255,255,255,0.07)_inset,0_12px_40px_rgba(0,0,0,0.18)] backdrop-blur-sm">
+    <div className="mt-3 overflow-hidden rounded-2xl border border-violet-400/20 bg-[var(--color-surface-low)] shadow-[0_1px_0_rgba(255,255,255,0.07)_inset,0_12px_40px_rgba(0,0,0,0.18)] backdrop-blur-sm">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 px-4 pt-3.5">
         <p className="min-w-0 truncate text-[13.5px] text-on-surface">

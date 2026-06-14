@@ -63,7 +63,7 @@ export default async function AdminPage() {
           {error}
         </p>
       ) : (
-        <div className="mt-8 overflow-hidden rounded-2xl border border-app bg-surface/60 backdrop-blur-md">
+        <div className="mt-8 overflow-hidden rounded-2xl border border-app bg-[var(--color-surface-low)] backdrop-blur-md">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-app text-muted">

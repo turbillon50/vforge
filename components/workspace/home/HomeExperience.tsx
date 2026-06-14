@@ -73,7 +73,7 @@ export function HomeExperience({ name }: { name: string }) {
       >
         <Link href="/app/chat"
           data-vorb-avoid
-          className="surface-deep group relative block overflow-hidden rounded-3xl border border-app bg-gradient-to-b from-violet-500/[0.07] via-surface/60 to-surface/80 px-6 py-10 backdrop-blur-xl transition duration-300 hover:border-violet-400/30 hover:shadow-glow-violet active:scale-[0.99] md:px-12 md:py-14"
+          className="surface-deep group relative block overflow-hidden rounded-3xl border border-app bg-gradient-to-b from-violet-500/[0.07] via-[var(--color-surface)] to-[var(--color-surface)] px-6 py-10 backdrop-blur-xl transition duration-300 hover:border-violet-400/30 hover:shadow-glow-violet active:scale-[0.99] md:px-12 md:py-14"
         >
           <div
             aria-hidden
@@ -110,14 +110,14 @@ export function HomeExperience({ name }: { name: string }) {
               className="snap-start"
             >
               <Link href={s.href}
-                className="surface-deep card-lift group flex h-32 w-44 shrink-0 flex-col justify-between rounded-2xl border border-app bg-surface/60 p-4 backdrop-blur-md transition active:scale-[0.97] md:h-36 md:w-52"
+                className="surface-deep card-lift group flex h-32 w-44 shrink-0 flex-col justify-between rounded-2xl border border-app bg-[var(--color-surface-low)] p-4 backdrop-blur-md transition active:scale-[0.97] md:h-36 md:w-52"
               >
-                <s.Icon size={20} className="text-violet-300 transition group-hover:text-cyan-300" />
+                <s.Icon size={20} className="text-violet-500 transition group-hover:text-cyan-600" />
                 <div>
                   <p className="font-display text-[15px] font-semibold tracking-tight text-on-surface">
                     {s.label}
                   </p>
-                  <p className="mt-0.5 text-[12px] leading-snug text-muted">{s.desc}</p>
+                  <p className="mt-0.5 text-[12px] leading-snug text-[var(--fg-secondary)]">{s.desc}</p>
                 </div>
               </Link>
             </motion.div>
@@ -155,7 +155,7 @@ export function HomeExperience({ name }: { name: string }) {
               <Link
                 key={p.id}
                 href={`/app/projects`}
-                className="surface-deep card-lift group flex h-28 w-56 shrink-0 snap-start flex-col justify-between rounded-2xl border border-app bg-surface/60 p-4 backdrop-blur-md"
+                className="surface-deep card-lift group flex h-28 w-56 shrink-0 snap-start flex-col justify-between rounded-2xl border border-app bg-[var(--color-surface-low)] p-4 backdrop-blur-md"
               >
                 <div className="flex items-center justify-between">
                   <p className="truncate font-display text-[15px] font-semibold tracking-tight text-on-surface">
