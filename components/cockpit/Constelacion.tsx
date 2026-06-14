@@ -106,10 +106,10 @@ function AgentRing({
               top: `${p.y}%`,
               width: dotPx,
               height: dotPx,
-              borderColor: on ? `${hue}66` : "rgba(255,255,255,0.08)",
+              borderColor: on ? `${hue}66` : "var(--border-2)",
               background: on
                 ? `radial-gradient(circle at 50% 35%, ${hue}33, rgba(10,10,15,0.85))`
-                : "rgba(255,255,255,0.03)",
+                : "var(--surface-2)",
             }}
             animate={
               on && !dim
@@ -120,7 +120,7 @@ function AgentRing({
           >
             <Logo
               size={Math.round(dotPx * 0.52)}
-              style={{ color: on ? hue : "rgba(255,255,255,0.28)" }}
+              style={{ color: on ? hue : "var(--fg-muted)" }}
             />
           </motion.div>
         );

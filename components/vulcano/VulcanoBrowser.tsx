@@ -623,7 +623,7 @@ export function VulcanoBrowser() {
               <IconActivity size={11} /> Log en tiempo real
             </div>
             {logs.length === 0 ? (
-              <p style={{ fontSize:11, color:"rgba(184,176,224,0.4)" }}>Sin actividad aún…</p>
+              <p style={{ fontSize:11, color:"var(--fg-muted)" }}>Sin actividad aún…</p>
             ) : logs.map((ev, i) => (
               <div key={i} style={{ display:"flex", gap:7, padding:"5px 0",
                 borderBottom:"1px solid rgba(127,127,170,0.06)", fontSize:11 }}>
@@ -632,7 +632,7 @@ export function VulcanoBrowser() {
                 </span>
                 <span style={{ flex:1, color:ev.type === "need" ? "#f2c879" : "var(--color-on-surface-variant)",
                   lineHeight:1.4 }}>{ev.msg}</span>
-                <span style={{ color:"rgba(184,176,224,0.35)", fontSize:9, flexShrink:0 }}>
+                <span style={{ color:"var(--fg-muted)", fontSize:9, flexShrink:0 }}>
                   {new Date(ev.ts).toLocaleTimeString("es-MX", { hour12:false })}
                 </span>
               </div>

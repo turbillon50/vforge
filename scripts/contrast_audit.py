@@ -64,6 +64,23 @@ BG_PATTERNS = [
     (r'bg-\[rgba\((\d+),(\d+),(\d+),([\d.]+)\)\]', 'bg-rgba-inline'),
 ]
 
+# ── Detección de la capa de fix central (globals.css) ────────────────────────
+# Si globals.css ya remapea estos patrones en light mode, el escáner estático
+# NO debe seguir reportándolos: el render real ya está corregido. Esto evita
+# falsos positivos sobre superficies que el tema claro neutraliza globalmente.
+def _detect_central_fix():
+    try:
+        css = open('/root/vforge/app/globals.css').read()
+    except:
+        return {'bg_white': False, 'dark_hex': False}
+    return {
+        'bg_white': '[data-theme="light"] [class*="bg-white/"]' in css,
+        'dark_hex': '[data-theme="light"] [class*="bg-[#0' in css
+                    or '[data-theme="light"] [class*="bg-[#03020a]"]' in css,
+    }
+
+CENTRAL_FIX = _detect_central_fix()
+
 # ── Análisis de archivo ──────────────────────────────────────────────────────
 def analyze_file(path):
     issues = []
@@ -114,7 +131,10 @@ def analyze_file(path):
                 })
         
         # 3. bg-white/X muy bajo — superficie invisible en light
+        #    Suprimido si globals.css ya remapea bg-white/* en light mode.
         for m in re.finditer(r'bg-white/\[?([\d.]+)\]?', line):
+            if CENTRAL_FIX['bg_white']:
+                break
             val = m.group(1)
             alpha = float(val)/100 if float(val) > 1 else float(val)
             if alpha < 0.08:
@@ -129,33 +149,48 @@ def analyze_file(path):
                     'context': line.strip()[:80]
                 })
         
-        # 4. Inline style con rgba
-        for m in re.finditer(r'rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)', line):
+        # 4. rgba SOLO como color de TEXTO (`color: rgba(...)`).
+        #    El `(?<![\w-])` excluye borderColor/background-color; además se
+        #    descartan líneas de sombra/borde/relleno donde el rgba es decorativo
+        #    (glows de botón, hairlines) y NO afecta el contraste de texto.
+        #    Esto elimina los falsos positivos que inflaban el reporte.
+        ctx = line.strip()
+        # Si la regla CSS está acotada a un tema, sólo evaluar ese tema:
+        # un `color` oscuro dentro de [data-theme="light"] jamás se aplica en dark.
+        scope_light = '[data-theme="light"]' in line
+        scope_dark = '[data-theme="dark"]' in line
+        for m in re.finditer(r'(?<![\w-])color:\s*["\']?rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)', line):
             r,g,b,a = int(m.group(1)),int(m.group(2)),int(m.group(3)),float(m.group(4))
-            # Solo si parece ser color de texto (en className con text- o color:)
-            ctx = line.strip()
-            if ('color:' in ctx or 'text' in ctx) and a < 0.6:
-                # Mezclar sobre light bg
-                mixed_light = blend((r,g,b), a, LIGHT_BG)
-                ratio_l = cr(lum(*mixed_light), lum(*LIGHT_BG))
-                mixed_dark = blend((r,g,b), a, DARK_BG)
-                ratio_d = cr(lum(*mixed_dark), lum(*DARK_BG))
-                if ratio_l < 4.5 or ratio_d < 4.5:
-                    issues.append({
-                        'file': str(path).replace('/root/vforge/', ''),
-                        'line': i,
-                        'type': 'RGBA_LOW_CONTRAST',
-                        'code': m.group(0),
-                        'ratio_dark': round(ratio_d,1),
-                        'ratio_light': round(ratio_l,1),
-                        'fix': 'usar var(--fg-*) semántico',
-                        'context': ctx[:80]
-                    })
+            if a >= 0.7:
+                continue
+            mixed_light = blend((r,g,b), a, LIGHT_BG)
+            ratio_l = cr(lum(*mixed_light), lum(*LIGHT_BG))
+            mixed_dark = blend((r,g,b), a, DARK_BG)
+            ratio_d = cr(lum(*mixed_dark), lum(*DARK_BG))
+            fail_l = ratio_l < 4.5 and not scope_dark
+            fail_d = ratio_d < 4.5 and not scope_light
+            if fail_l or fail_d:
+                issues.append({
+                    'file': str(path).replace('/root/vforge/', ''),
+                    'line': i,
+                    'type': 'RGBA_LOW_CONTRAST',
+                    'code': f'rgba({r},{g},{b},{a})',
+                    'ratio_dark': round(ratio_d,1),
+                    'ratio_light': round(ratio_l,1),
+                    'fix': 'usar var(--fg-*) semántico',
+                    'context': ctx[:80]
+                })
 
-        # 5. opacity baja en elemento con texto
-        for m in re.finditer(r'opacity-([0-9]+)', line):
+        # 5. opacity baja en elemento con texto.
+        #    Excepción: opacity-0 + hover/group-hover:opacity-* es el patrón
+        #    "revelar al hover" (oculto a propósito), no un fallo de contraste.
+        # `(?<![\w:])` excluye variantes de estado (hover:/group-hover:/disabled:/
+        # focus:opacity-0) que ocultan el elemento a propósito; sólo cuenta la
+        # opacidad base aplicada siempre.
+        is_hover_reveal = 'group-hover:opacity' in line or 'hover:opacity' in line
+        for m in re.finditer(r'(?<![\w:])opacity-([0-9]+)', line):
             val = int(m.group(1))
-            if val <= 25 and ('text' in line or 'label' in line or 'span' in line.lower()):
+            if val <= 25 and not is_hover_reveal and ('text' in line or 'label' in line or 'span' in line.lower()):
                 issues.append({
                     'file': str(path).replace('/root/vforge/', ''),
                     'line': i,
@@ -190,7 +225,8 @@ files_scanned = 0
 
 for ext in ['*.tsx', '*.ts', '*.css']:
     for f in ROOT.rglob(ext):
-        if any(x in str(f) for x in ['node_modules','.next','dist','.git']):
+        # Excluir artefactos generados (no son código fuente auditable).
+        if any(x in str(f) for x in ['node_modules','.next','dist','.git','.vercel']):
             continue
         issues = analyze_file(f)
         all_issues.extend(issues)

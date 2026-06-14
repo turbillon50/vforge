@@ -876,6 +876,59 @@ body.keyboard-open .vf-mobile-nav {
   border-color: var(--border-1);
 }
 
+/* ════════════════════════════════════════════════════════════════
+   LIGHT MODE — FIX PROFUNDO (auditoría fix 3)
+   Remapea fondos/superficies oscuros hardcodeados (clases Tailwind
+   arbitrarias bg-[#...]) a tokens semánticos. Los var() se resuelven
+   por tema: cualquier sección anidada con [data-theme="dark"] vuelve
+   a oscuro automáticamente, así no rompemos las bandas dark de marketing.
+   ════════════════════════════════════════════════════════════════ */
+
+/* — Fondos de página (void profundo) hardcodeados → void claro — */
+[data-theme="light"] [class*="bg-[#03020a]"],
+[data-theme="light"] [class*="bg-[#050509]"],
+[data-theme="light"] [class*="bg-[#050505]"],
+[data-theme="light"] [class*="bg-[#02020d]"],
+[data-theme="light"] [class*="bg-[#070510]"] {
+  background-color: var(--color-void) !important;
+}
+
+/* — Tarjetas / paneles / modales oscuros → superficie clara — */
+[data-theme="light"] [class*="bg-[#0a0a12]"],
+[data-theme="light"] [class*="bg-[#0a0a0f]"],
+[data-theme="light"] [class*="bg-[#0a0a14]"],
+[data-theme="light"] [class*="bg-[#0a0a1a]"],
+[data-theme="light"] [class*="bg-[#0c0a18]"],
+[data-theme="light"] [class*="bg-[#0c0c18]"],
+[data-theme="light"] [class*="bg-[#0c0c14]"],
+[data-theme="light"] [class*="bg-[#0b0716]"],
+[data-theme="light"] [class*="bg-[#0b0b12]"],
+[data-theme="light"] [class*="bg-[#0b0614]"],
+[data-theme="light"] [class*="bg-[#06040f]"],
+[data-theme="light"] [class*="bg-[#0e0e18]"],
+[data-theme="light"] [class*="bg-[#0e0e16]"],
+[data-theme="light"] [class*="bg-[#0e0c1a]"] {
+  background-color: var(--color-surface) !important;
+  border-color: var(--border-1);
+}
+
+/* — Superficies translúcidas blancas (bg-white/0.0x): invisibles sobre
+     claro → tinte oscuro sutil. Se auto-corrige en secciones dark. — */
+[data-theme="light"] [class*="bg-white/"] {
+  background-color: var(--surface-2) !important;
+}
+
+/* — Bordes blancos decorativos → borde semántico visible — */
+[data-theme="light"] [class*="border-white/"] {
+  border-color: var(--border-2) !important;
+}
+
+/* — Glass / backdrop-blur SIN fondo propio: en claro el desenfoque queda
+     invisible. Sólo añadimos nácar translúcido donde no hay bg declarado. — */
+[data-theme="light"] [class*="backdrop-blur"]:not([class*="bg-"]) {
+  background-color: rgba(255,255,255,0.72);
+}
+
 /* ============================================
    Transición suave de tema (dark ⇄ light)
    Solo color/fondo/borde para no provocar jank.

@@ -38,7 +38,7 @@ export function BlogGrid({ posts }: { posts: Post[] }) {
               style={
                 active === key
                   ? { borderColor: `${cat.color}50`, background: `${cat.color}15`, color: cat.color }
-                  : { borderColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)" }
+                  : { borderColor: "var(--border-1)", color: "var(--fg-tertiary)" }
               }
             >
               {cat.label} ({count})

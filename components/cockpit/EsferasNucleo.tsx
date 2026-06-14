@@ -273,19 +273,19 @@ function AgentNode({
           transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
           className="relative grid h-12 w-12 place-items-center rounded-2xl border backdrop-blur-md md:h-14 md:w-14"
           style={{
-            borderColor: working ? `${hue}66` : pending ? `${hue}33` : "rgba(255,255,255,0.10)",
+            borderColor: working ? `${hue}66` : pending ? `${hue}33` : "var(--border-2)",
             background: working
               ? `radial-gradient(circle at 50% 35%, ${hue}33, rgba(10,10,15,0.85))`
-              : "rgba(255,255,255,0.04)",
+              : "var(--surface-2)",
           }}
         >
           {/* Logo oficial: hereda el color del estado vía currentColor */}
           <Logo
             size={22}
-            style={{ color: working ? hue : pending ? `${hue}aa` : "rgba(255,255,255,0.42)" }}
+            style={{ color: working ? hue : pending ? `${hue}aa` : "var(--fg-muted)" }}
           />
           <span
-            className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-[#0a0a0f]"
+            className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-[var(--color-surface)]"
             style={{
               background: working ? hue : pending ? `${hue}88` : "#6b7280",
               boxShadow: working ? `0 0 8px ${hue}` : "none",
@@ -304,7 +304,7 @@ function AgentNode({
         <div className="text-center leading-tight">
           <p
             className="text-[11px] font-semibold md:text-xs"
-            style={{ color: working ? "#fff" : "rgba(255,255,255,0.55)" }}
+            style={{ color: working ? "var(--fg-primary)" : "var(--fg-tertiary)" }}
           >
             {esfera.name}
           </p>
@@ -584,7 +584,7 @@ export function EsferasNucleo({
             cx={CENTER}
             cy={CENTER}
             r={radius}
-            stroke="rgba(255,255,255,0.06)"
+            stroke="var(--border-2)"
             strokeWidth={0.3}
             strokeDasharray="1.5 2.5"
           />
@@ -604,7 +604,7 @@ export function EsferasNucleo({
                 y1={CENTER + uy * coreR}
                 x2={p.x - ux * iconR}
                 y2={p.y - uy * iconR}
-                stroke="rgba(255,255,255,0.08)"
+                stroke="var(--border-2)"
                 strokeWidth={0.35}
                 strokeOpacity={isDim(e) ? 0.25 : 0.5}
               />

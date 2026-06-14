@@ -293,7 +293,7 @@ export default function TallerPage() {
                   className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition active:scale-95"
                   style={{
                     background: on ? "#22d3ee18" : "transparent",
-                    color: on ? "#22d3ee" : "rgba(255,255,255,0.55)",
+                    color: on ? "#22d3ee" : "var(--fg-tertiary)",
                   }}
                   aria-pressed={on}
                 >
