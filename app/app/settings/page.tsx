@@ -395,7 +395,7 @@ function NotificationsPanel() {
 }
 
 function AppearancePanel() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const email = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase() ?? "";
   const isOwner = email === "turbillon50@gmail.com" || email === "luisdelator@vmomentums.info";
 
@@ -425,7 +425,7 @@ function AppearancePanel() {
 }
 
 function SecurityPanel() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const clerk = useClerk();
   const [passkeyStatus, setPasskeyStatus] = useState<"idle"|"loading"|"done"|"error">("idle");
   const [passkeyMsg, setPasskeyMsg] = useState("");
