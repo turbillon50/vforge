@@ -184,7 +184,7 @@ export function VulcanoBrowser() {
   // ─── LOADING ───────────────────────────────────────────────────
   if (loading) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center",
-      height:"100dvh", background:"var(--color-void)" }}>
+      height:"100%", minHeight:0, background:"var(--color-void)" }}>
       <ObsidianLoader size="lg" label="Conectando al Navegador Vulcano…" />
     </div>
   );
@@ -192,7 +192,7 @@ export function VulcanoBrowser() {
   // ─── NO PROVISIONADO (solo para usuarios sin instancia, no owner) ──
   if (!inst?.ready && inst?.status !== "provisioning") return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center",
-      height:"100dvh", background:"var(--color-void)", color:"var(--color-on-surface)",
+      height:"100%", minHeight:0, background:"var(--color-void)", color:"var(--color-on-surface)",
       fontFamily:"Inter,-apple-system,sans-serif" }}>
       <motion.div
         initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.5 }}
@@ -250,7 +250,7 @@ export function VulcanoBrowser() {
   // ─── PROVISIONANDO ─────────────────────────────────────────────
   if (inst?.status === "provisioning") return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center",
-      height:"100dvh", background:"var(--color-void)" }}>
+      height:"100%", minHeight:0, background:"var(--color-void)" }}>
       <ObsidianLoader size="lg" label="Activando tu Chrome privado… (~30s)" />
     </div>
   );
@@ -258,7 +258,7 @@ export function VulcanoBrowser() {
   // ─── ACTIVO: conectado ─────────────────────────────────────────
   return (
     <div style={{ display:"flex", flexDirection:"column",
-      height:"100dvh", background:"var(--color-void)", color:"var(--color-on-surface)",
+      height:"100%", minHeight:0, background:"var(--color-void)", color:"var(--color-on-surface)",
       fontFamily:"Inter,-apple-system,sans-serif", overflow:"hidden" }}>
 
       {/* ── TOPBAR: estado de conexión ── */}
@@ -498,7 +498,7 @@ export function VulcanoBrowser() {
       )}
 
       {/* ── CUERPO: VNC + panel ── */}
-      <div style={{ flex:1, display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 320px", minHeight:0, overflowY: isMobile ? "auto" : "hidden" }}>
+      <div style={{ flex:1, display:"grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1fr) minmax(280px,340px)", minHeight:0, overflowY:"auto" }}>
 
         {/* iframe Chrome */}
         <div style={{ position:"relative", background:"#0a0a0f",

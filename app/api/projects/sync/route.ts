@@ -1,6 +1,10 @@
 import { sql } from "@/lib/db/client";
 import { listAllUserRepos } from "@/lib/github/client";
-import { listProjects as vercelListProjects } from "@/lib/vercel/client";
+import {
+  listProjects as vercelListProjects,
+  listProjectDomains,
+  pickCustomDomain,
+} from "@/lib/vercel/client";
 import {
   requireOperatorAuth,
   authFailureResponse,
@@ -56,6 +60,7 @@ export async function POST(req: Request) {
     github_url: string | null;
     vercel_project_id: string | null;
     vercel_url: string | null;
+    domain: string | null;
   };
   const byKey = new Map<string, Aggregated>();
 
@@ -72,6 +77,7 @@ export async function POST(req: Request) {
       github_url: repo.html_url,
       vercel_project_id: null,
       vercel_url: null,
+      domain: null,
     });
   }
 
@@ -81,12 +87,21 @@ export async function POST(req: Request) {
       ? `${(project.link as { repo: string; org: string }).org ?? ""}/${(project.link as { repo: string; org: string }).repo}`
       : null;
     const key = repoFullName ? repoFullName.toLowerCase() : `vercel:${project.name}`;
+    // Dominio CUSTOM real de Vercel (no *.vercel.app) — fiel a producción.
+    let customDomain: string | null = null;
+    try {
+      const domains = await listProjectDomains(project.id, { auditUserId: auth.userId });
+      customDomain = pickCustomDomain(domains);
+    } catch {
+      /* sin permiso o sin dominios: se deja null */
+    }
     const prevAgg = byKey.get(key);
     const merged: Aggregated = prevAgg
       ? {
           ...prevAgg,
           vercel_project_id: project.id,
           vercel_url: prevAgg.vercel_url ?? guessVercelUrl(project.name),
+          domain: customDomain ?? prevAgg.domain,
         }
       : {
           id: slugify(project.name),
@@ -99,6 +114,7 @@ export async function POST(req: Request) {
           github_url: null,
           vercel_project_id: project.id,
           vercel_url: guessVercelUrl(project.name),
+          domain: customDomain,
         };
     byKey.set(key, merged);
   }
@@ -121,7 +137,8 @@ export async function POST(req: Request) {
             github_language = COALESCE(${agg.github_language}, github_language),
             github_url = COALESCE(${agg.github_url}, github_url),
             vercel_project_id = COALESCE(${agg.vercel_project_id}, vercel_project_id),
-            vercel_url = COALESCE(${agg.vercel_url}, vercel_url)
+            vercel_url = COALESCE(${agg.vercel_url}, vercel_url),
+            domain = COALESCE(${agg.domain}, domain)
           WHERE id = ${agg.id}
         `;
         updated += 1;
@@ -131,12 +148,12 @@ export async function POST(req: Request) {
             id, name, description,
             github_repo, github_private, github_default_branch,
             github_language, github_url,
-            vercel_project_id, vercel_url
+            vercel_project_id, vercel_url, domain
           ) VALUES (
             ${agg.id}, ${agg.name}, ${agg.description},
             ${agg.github_repo}, ${agg.github_private}, ${agg.github_default_branch},
             ${agg.github_language}, ${agg.github_url},
-            ${agg.vercel_project_id}, ${agg.vercel_url}
+            ${agg.vercel_project_id}, ${agg.vercel_url}, ${agg.domain}
           )
         `;
         inserted += 1;

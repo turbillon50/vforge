@@ -18,6 +18,7 @@ import {
   IconWarn,
   IconSparkles,
 } from "@/components/brand/VFIcons";
+import { BrainLivePanel } from "@/components/forja/BrainLivePanel";
 
 type Service = "github" | "vercel" | "neon";
 type ConnStatus = "missing" | "unverified" | "verified" | "error";
@@ -196,6 +197,17 @@ export function EsferaDashboard() {
           </section>
         </>
       )}
+
+      {/* Brain — Fábrica en Vivo */}
+      <section className="mt-8">
+        <h2
+          className="mb-3 font-mono text-[10px] uppercase tracking-widest"
+          style={{ color: "#5a6480" }}
+        >
+          Brain — Fábrica en Vivo
+        </h2>
+        <BrainLivePanel />
+      </section>
     </div>
   );
 }

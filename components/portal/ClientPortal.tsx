@@ -16,6 +16,8 @@ import {
   IconWarn,
 } from "@/components/brand/VFIcons";
 import { money } from "@/components/contracts/types";
+import { PropositoPanel } from "@/components/portal/PropositoPanel";
+import { ProjectSphere } from "@/components/portal/ProjectSphere";
 
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 const fetcher = (u: string) =>
@@ -146,6 +148,8 @@ export function ClientPortal({ projectId }: { projectId: string }) {
       </div>
 
       <div className="mx-auto max-w-xl space-y-5 px-5 pt-6">
+        <ProjectSphere projectId={projectId} />
+        <PropositoPanel projectId={projectId} />
         {/* Progreso general */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}

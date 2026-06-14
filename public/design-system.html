@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V Momentum — Design Language</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   V MOMENTUM — DESIGN LANGUAGE MODULE v1.0
+   Incluir este bloque en CUALQUIER entregable
+   de la empresa. Copia todo este <style>.
+   ═══════════════════════════════════════════ */
+
+/* 1. RESET + COLOR SCHEME (CRÍTICO para iOS Safari) */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+/* FIX iOS: color-scheme en html Y body + bg explícito */
+html {
+  color-scheme: dark;
+  background: #03020a;
+  height: 100%;
+}
+
+body {
+  font-family: 'Hanken Grotesk', -apple-system, system-ui, sans-serif;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #03020a; /* SIEMPRE hex explícito, no solo var() */
+  background-color: #03020a !important;
+  color: #e8e4ff;
+  min-height: 100%;
+  color-scheme: dark;
+}
+
+/* 2. TOKENS DE DISEÑO */
+:root {
+  /* Superficies — obsidian stack */
+  --void:      #03020a;  /* fondo más profundo */
+  --ink:       #06050f;  /* segundo nivel */
+  --bg:        #0a0814;  /* superficie principal */
+  --surface:   #0d0b1a;  /* tarjetas base */
+  --surf-low:  #110f1f;  /* inputs, chips */
+  --surf-high: #16142a;  /* hover states */
+  --surf-elev: #1c1930;  /* modales, dropdowns */
+
+  /* Bordes HUD */
+  --border:   rgba(139,92,246,.14);
+  --border-s: rgba(139,92,246,.22);
+
+  /* Tipografía */
+  --on:      #e8e4ff;  /* texto principal */
+  --variant: #b8b0e0;  /* texto secundario */
+  --muted:   #8b82b3;  /* texto terciario */
+
+  /* Accents Iron Man HUD */
+  --v300: #c4b5fd;  /* violeta claro — texto destacado */
+  --v400: #a78bfa;  /* violeta medio */
+  --v500: #7c3aed;  /* violeta primario — CTAs */
+  --cyan: #22d3ee;  /* cyan acento */
+  --gold: #fbbf24;  /* gold arc reactor — highlights premium */
+  --ok:   #10b981;  /* emerald — éxito */
+  --err:  #ef4444;  /* crimson — error */
+
+  /* Glows HUD */
+  --glow-v: 0 0 20px rgba(124,58,237,.4), 0 0 60px rgba(124,58,237,.15);
+  --glow-c: 0 0 20px rgba(34,211,238,.4), 0 0 60px rgba(34,211,238,.12);
+  --glow-g: 0 0 20px rgba(251,191,36,.3), 0 0 40px rgba(251,191,36,.1);
+
+  /* Sombra elevación */
+  --shadow:
+    0 1px 0 rgba(139,92,246,.08) inset,
+    0 0 0 1px rgba(139,92,246,.12),
+    0 24px 60px rgba(0,0,0,.5);
+
+  /* Tipografía */
+  --font: 'Hanken Grotesk', -apple-system, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+/* 3. FONDO — Grid + Scanlines como divs reales (NO body::before/after — iOS bug) */
+/* Usar en HTML: <div class="vm-bg-grid"></div><div class="vm-bg-scan"></div> */
+.vm-bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(139,92,246,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139,92,246,.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.vm-bg-scan {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(139,92,246,.015) 2px, rgba(139,92,246,.015) 4px
+  );
+  mix-blend-mode: overlay;
+}
+
+/* 4. TIPOGRAFÍA */
+.vm-display { /* 56px — hero principal */
+  font-family: var(--font);
+  font-size: 56px; font-weight: 800;
+  letter-spacing: -.045em; line-height: 1.02;
+  color: var(--on); /* NUNCA background-clip en el elemento completo */
+}
+.vm-display .grad { /* Solo en span inline */
+  background: linear-gradient(135deg, var(--on) 40%, var(--v300));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.vm-h1 { font-size: 40px; font-weight: 700; letter-spacing: -.03em; line-height: 1.1; color: var(--on); }
+.vm-h2 { font-size: 28px; font-weight: 700; letter-spacing: -.025em; line-height: 1.15; color: var(--on); }
+.vm-h3 { font-size: 18px; font-weight: 600; letter-spacing: -.015em; color: var(--on); }
+.vm-body { font-size: 15px; font-weight: 300; line-height: 1.7; color: var(--variant); }
+.vm-small { font-size: 13px; font-weight: 300; line-height: 1.6; color: var(--muted); }
+.vm-label { /* eyebrow / caps label */
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .18em;
+  color: var(--v400);
+}
+.vm-mono { font-family: var(--mono); font-size: 12px; color: var(--v300); }
+
+/* 5. CARDS */
+.vm-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+.vm-card-low {
+  background: var(--surf-low);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.vm-card-p { padding: 24px; }
+.vm-card-ps { padding: 18px; }
+
+/* 6. TAGS / CHIPS */
+.vm-tag {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 4px;
+  font-size: 10px; font-weight: 600; font-family: var(--mono);
+  background: rgba(139,92,246,.1);
+  border: 1px solid rgba(139,92,246,.2);
+  color: var(--v300);
+}
+.vm-tag-cyan { background: rgba(34,211,238,.08); border-color: rgba(34,211,238,.2); color: var(--cyan); }
+.vm-tag-gold { background: rgba(251,191,36,.08); border-color: rgba(251,191,36,.2); color: var(--gold); }
+.vm-tag-ok   { background: rgba(16,185,129,.08);  border-color: rgba(16,185,129,.2);  color: var(--ok); }
+.vm-tag-err  { background: rgba(239,68,68,.08);   border-color: rgba(239,68,68,.2);   color: var(--err); }
+
+/* 7. BOTONES */
+.vm-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 20px; border-radius: 9px;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; transition: all .15s;
+  text-decoration: none;
+}
+.vm-btn:active { transform: scale(.97); }
+.vm-btn-primary {
+  background: linear-gradient(135deg, var(--v500), #5b21b6);
+  color: #fff; box-shadow: var(--glow-v);
+}
+.vm-btn-primary:hover { opacity: .88; }
+.vm-btn-secondary {
+  background: rgba(139,92,246,.1);
+  color: var(--v300);
+  border: 1px solid rgba(139,92,246,.25);
+}
+.vm-btn-secondary:hover { background: rgba(139,92,246,.18); box-shadow: var(--glow-v); }
+.vm-btn-ghost {
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border);
+}
+.vm-btn-ghost:hover { color: var(--on); border-color: var(--border-s); }
+
+/* 8. DIVIDERS */
+.vm-divider {
+  height: 1px;
+  background: linear-gradient(90deg, var(--v500), transparent);
+  opacity: .35; margin: 32px 0;
+}
+.vm-divider-full { background: var(--border); opacity: 1; }
+
+/* 9. SECTION EYEBROW */
+.vm-eyebrow {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .18em;
+  color: var(--v400); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.vm-eyebrow::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--border-s), transparent);
+}
+
+/* 10. GLOWS (aplicar vía box-shadow) */
+/* --glow-v → violeta, --glow-c → cyan, --glow-g → gold */
+
+/* 11. AURA / RADIAL BG (para secciones hero) */
+.vm-aura {
+  position: absolute; border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(124,58,237,.12) 0%, transparent 65%);
+}
+.vm-aura-cyan {
+  background: radial-gradient(circle, rgba(34,211,238,.1) 0%, transparent 65%);
+}
+
+/* ═══════════════════════════════════════════
+   FIN DEL MÓDULO — copy-paste ready
+   ═══════════════════════════════════════════ */
+
+
+/* ── DEMO PAGE STYLES (no copiar, solo para este doc) ── */
+.page { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 60px 32px 100px; }
+.demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.demo-section { margin-bottom: 56px; }
+.col3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.palette { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 8px; }
+.swatch { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+.sw-clr { height: 48px; }
+.sw-inf { padding: 8px 10px; background: var(--surf-low); }
+.sw-n { font-size: 11px; font-weight: 700; color: var(--on); }
+.sw-h { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+.sw-r { font-size: 10px; color: var(--variant); }
+.code-block {
+  background: var(--void);
+  border: 1px solid var(--border-s);
+  border-radius: 10px;
+  padding: 16px 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--v300);
+  line-height: 1.7;
+  overflow-x: auto;
+  margin-top: 8px;
+}
+.code-block .cm { color: var(--muted); }
+.code-block .cv { color: var(--cyan); }
+.code-block .cs { color: var(--ok); }
+.rule-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px; font-weight: 300; color: var(--variant);
+}
+.rule-row:last-child { border: none; }
+.rule-icon { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid; flex-shrink: 0; margin-top: 1px; }
+.rule-ok { border-color: var(--ok); }
+.rule-err { border-color: var(--err); }
+strong { font-weight: 600; color: var(--on); }
+@media (max-width:640px) {
+  .demo-grid, .col3, .palette { grid-template-columns: 1fr 1fr; }
+  .page { padding: 32px 20px 60px; }
+  .vm-display { font-size: 36px; }
+}
+</style>
+</head>
+<body>
+
+<!-- FIX iOS: divs reales, NO body::before/after -->
+<div class="vm-bg-grid"></div>
+<div class="vm-bg-scan"></div>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div style="margin-bottom:56px;padding-bottom:40px;border-bottom:1px solid var(--border)">
+    <p class="vm-label" style="margin-bottom:16px">V Momentum · Design Language · v1.0 · Jun 2026</p>
+    <h1 class="vm-display">Sistema de diseño<br><span class="grad">V Momentum.</span></h1>
+    <p class="vm-body" style="max-width:520px;margin-top:16px">Módulo reutilizable para cualquier entregable de la empresa. Copia el bloque <code style="font-family:var(--mono);color:var(--cyan);font-size:13px">&lt;style&gt;</code> y tienes el lenguaje visual completo.</p>
+  </div>
+
+  <!-- SECCIÓN: REGLA CRÍTICA -->
+  <div class="demo-section">
+    <p class="vm-eyebrow">00 · Regla Crítica</p>
+    <h2 class="vm-h2" style="margin-bottom:8px">Lo que NUNCA se hace</h2>
+    <p class="vm-body" style="margin-bottom:20px">Estas reglas no tienen excepciones. En ningún entregable, en ningún proyecto.</p>
+
+    <div class="vm-card" style="margin-bottom:12px;border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.03)">
+      <div style="padding:16px 20px 0">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--err);margin-bottom:12px">❌ Prohibido siempre</div>
+      </div>
+      <div style="padding:0 20px 16px">
+        <div class="rule-row"><div class="rule-icon rule-err"></div><div><strong>Lucide React</strong> — Solo VFIcons SVG inline de /root/vforge/components/brand/VFIcons.tsx</div></div>
+        <div class="rule-row"><div class="rule-icon rule-err"></div><div><strong>Colores genéricos</strong> — No #000, no #fff, no grays Tailwind, no shadcn. Solo tokens VForge.</div></div>
+        <div class="rule-row"><div class="rule-icon rule-err"></div><div><strong>shadcn/ui</strong> — Todo UI custom con este sistema. Sin librerías de componentes externas.</div></div>
+        <div class="rule-row"><div class="rule-icon rule-err"></div><div><strong>Placeholders / stock photos</strong> — Todo asset con Higgsfield AI. Sin excepciones.</div></div>
+        <div class="rule-row"><div class="rule-icon rule-err"></div><div><strong>background-clip:text en elemento completo</strong> — Solo en span inline. El padre lleva color sólido como fallback iOS.</div></div>
+        <div class="rule-row"><div class="rule-icon rule-err"></div><div><strong>body::before/after para backgrounds</strong> — Usar divs reales con position:fixed. iOS Safari ignora ::before/after en body con scroll.</div></div>
+      </div>
+    </div>
+
+    <div class="vm-card" style="border-color:rgba(16,185,129,.2);background:rgba(16,185,129,.03)">
+      <div style="padding:16px 20px 0">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ok);margin-bottom:12px">✓ Siempre así</div>
+      </div>
+      <div style="padding:0 20px 16px">
+        <div class="rule-row"><div class="rule-icon rule-ok"></div><div>VFIcons inline SVG · Tokens VForge · UI custom obsidian HUD · Higgsfield para assets · color-scheme:dark en html+body</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: COLOR -->
+  <div class="demo-section">
+    <p class="vm-eyebrow">01 · Color</p>
+    <h2 class="vm-h2" style="margin-bottom:8px">Paleta Iron Man HUD</h2>
+    <p class="vm-body" style="margin-bottom:20px">Obsidian como base, violeta como primario, cyan como acento secundario.</p>
+
+    <div class="palette">
+      <div class="swatch"><div class="sw-clr" style="background:#03020a;border-bottom:1px solid rgba(255,255,255,.04)"></div><div class="sw-inf"><div class="sw-n">Void</div><div class="sw-h">--void · #03020a</div><div class="sw-r">Base absoluta</div></div></div>
+      <div class="swatch"><div class="sw-clr" style="background:#0a0814"></div><div class="sw-inf"><div class="sw-n">Background</div><div class="sw-h">--bg · #0a0814</div><div class="sw-r">Superficie principal</div></div></div>
+      <div class="swatch"><div class="sw-clr" style="background:#0d0b1a"></div><div class="sw-inf"><div class="sw-n">Surface</div><div class="sw-h">--surface · #0d0b1a</div><div class="sw-r">Tarjetas</div></div></div>
+      <div class="swatch"><div class="sw-clr" style="background:#1c1930"></div><div class="sw-inf"><div class="sw-n">Elev</div><div class="sw-h">--surf-elev · #1c1930</div><div class="sw-r">Modales</div></div></div>
+      <div class="swatch"><div class="sw-clr" style="background:#7c3aed;box-shadow:0 0 16px rgba(124,58,237,.5)"></div><div class="sw-inf"><div class="sw-n">Violet 500</div><div class="sw-h">--v500 · #7c3aed</div><div class="sw-r">Primario CTAs</div></div></div>
+      <div class="swatch"><div class="sw-clr" style="background:#c4b5fd"></div><div class="sw-inf"><div class="sw-n">Violet 300</div><div class="sw-h">--v300 · #c4b5fd</div><div class="sw-r">Texto destacado</div></div></div>
+      <div class="swatch"><div class="sw-clr" style="background:#22d3ee;box-shadow:0 0 16px rgba(34,211,238,.4)"></div><div class="sw-inf"><div class="sw-n">Cyan 400</div><div class="sw-h">--cyan · #22d3ee</div><div class="sw-r">Acento</div></div></div>
+      <div class="swatch"><div class="sw-clr" style="background:#fbbf24;box-shadow:0 0 12px rgba(251,191,36,.3)"></div><div class="sw-inf"><div class="sw-n">Gold Arc</div><div class="sw-h">--gold · #fbbf24</div><div class="sw-r">Highlights premium</div></div></div>
+    </div>
+
+    <div class="code-block"><span class="cm">/* Usar SIEMPRE con hex fallback */</span>
+<span class="cv">background</span>: <span class="cs">var</span>(--void, #03020a);
+<span class="cv">color</span>:      <span class="cs">var</span>(--on, #e8e4ff);
+<span class="cv">border</span>:     1px solid <span class="cs">var</span>(--border); <span class="cm">/* rgba(139,92,246,.14) */</span></div>
+  </div>
+
+  <!-- SECCIÓN: TIPOGRAFÍA -->
+  <div class="demo-section">
+    <p class="vm-eyebrow">02 · Tipografía</p>
+    <h2 class="vm-h2" style="margin-bottom:20px">Escala tipográfica</h2>
+
+    <div class="vm-card vm-card-p" style="margin-bottom:12px">
+      <p class="vm-label" style="margin-bottom:16px">Hanken Grotesk + JetBrains Mono</p>
+      <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div class="vm-display" style="font-size:40px">Display — 56px / w800 / ls-.045em</div>
+        <div class="vm-mono" style="margin-top:4px">.vm-display · color sólido · grad solo en span</div>
+      </div>
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div class="vm-h1">H1 — 40px / w700 / ls-.03em</div>
+        <div class="vm-mono" style="margin-top:2px">.vm-h1</div>
+      </div>
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div class="vm-h2">H2 — 28px / w700 / ls-.025em</div>
+        <div class="vm-mono" style="margin-top:2px">.vm-h2</div>
+      </div>
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div class="vm-body">Body — 15px / w300 / lh1.7 — Texto de párrafos, descripciones, contenido general.</div>
+        <div class="vm-mono" style="margin-top:2px">.vm-body · color: var(--variant, #b8b0e0)</div>
+      </div>
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <p class="vm-label">Label caps — 10px / w700 / ls.18em / uppercase</p>
+        <div class="vm-mono" style="margin-top:2px">.vm-label · color: var(--v400)</div>
+      </div>
+      <div>
+        <div class="vm-mono">Mono — JetBrains 12px / código, tokens, hex values</div>
+        <div class="vm-mono" style="margin-top:2px">.vm-mono · color: var(--v300)</div>
+      </div>
+    </div>
+
+    <div class="code-block"><span class="cm">/* FIX CRÍTICO iOS — gradiente SOLO en span */</span>
+<span class="cv">h1</span> { color: #e8e4ff; } <span class="cm">/* fallback sólido */</span>
+<span class="cv">h1 span</span>.grad {
+  background: linear-gradient(135deg, #e8e4ff 40%, #c4b5fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}</div>
+  </div>
+
+  <!-- SECCIÓN: COMPONENTES -->
+  <div class="demo-section">
+    <p class="vm-eyebrow">03 · Componentes</p>
+    <h2 class="vm-h2" style="margin-bottom:20px">Cards, botones y tags</h2>
+
+    <div class="demo-grid" style="margin-bottom:16px">
+      <div class="vm-card vm-card-p">
+        <p class="vm-label" style="margin-bottom:8px">vm-card</p>
+        <p class="vm-body" style="font-size:13px">Card base — surface + border violeta + shadow elevation</p>
+      </div>
+      <div class="vm-card-low vm-card-ps">
+        <p class="vm-label" style="margin-bottom:8px">vm-card-low</p>
+        <p class="vm-body" style="font-size:13px">Card baja — surf-low, para inputs y chips</p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+      <button class="vm-btn vm-btn-primary">Primario <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+      <button class="vm-btn vm-btn-secondary">Secundario</button>
+      <button class="vm-btn vm-btn-ghost">Ghost</button>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+      <span class="vm-tag">#VMomentum</span>
+      <span class="vm-tag vm-tag-cyan">#MCP</span>
+      <span class="vm-tag vm-tag-gold">#Brain</span>
+      <span class="vm-tag vm-tag-ok">#BuildInPublic</span>
+      <span class="vm-tag vm-tag-err">Error</span>
+    </div>
+
+    <div class="code-block"><span class="cm">/* Border VForge — NUNCA solid color genérico */</span>
+border: 1px solid <span class="cs">rgba</span>(139, 92, 246, 0.14);   <span class="cm">/* --border */</span>
+border: 1px solid <span class="cs">rgba</span>(139, 92, 246, 0.22);   <span class="cm">/* --border-s (énfasis) */</span>
+
+<span class="cm">/* Glow en hover/focus */</span>
+box-shadow: <span class="cs">var</span>(--glow-v); <span class="cm">/* 0 0 20px rgba(124,58,237,.4) */</span></div>
+  </div>
+
+  <!-- SECCIÓN: FONDO -->
+  <div class="demo-section">
+    <p class="vm-eyebrow">04 · Background</p>
+    <h2 class="vm-h2" style="margin-bottom:8px">Grid + Scanlines (fix iOS)</h2>
+    <p class="vm-body" style="margin-bottom:20px">NO usar body::before/after en HTML exportado. iOS Safari los ignora cuando hay scroll nativo. Usar divs reales.</p>
+
+    <div class="code-block"><span class="cm">&lt;!-- SIEMPRE estos 2 divs al inicio del body --&gt;</span>
+&lt;div class=<span class="cs">"vm-bg-grid"</span>&gt;&lt;/div&gt;
+&lt;div class=<span class="cs">"vm-bg-scan"</span>&gt;&lt;/div&gt;
+
+<span class="cm">/* Y en html + body */</span>
+<span class="cv">html</span>, <span class="cv">body</span> {
+  color-scheme: dark;
+  background: #03020a <span class="cs">!important</span>;
+}</div>
+
+    <div class="code-block"><span class="cm">/* FIX background-clip:text iOS — el elemento raíz lleva color sólido */</span>
+<span class="cv">html</span> { color-scheme: dark; background: #03020a; }
+<span class="cv">body</span> { color-scheme: dark; background: #03020a <span class="cs">!important</span>; background-color: #03020a <span class="cs">!important</span>; }</div>
+  </div>
+
+  <!-- SECCIÓN: HIGGSFIELD -->
+  <div class="demo-section">
+    <p class="vm-eyebrow">05 · Assets Visuales</p>
+    <h2 class="vm-h2" style="margin-bottom:8px">Higgsfield AI — Reglas de uso</h2>
+    <p class="vm-body" style="margin-bottom:20px">Todo asset visual es generado con Higgsfield. Nunca placeholders, nunca stock photos. Cinematico, obsidian, premium.</p>
+
+    <div class="col3">
+      <div class="vm-card vm-card-ps">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--cyan);margin-bottom:8px">LinkedIn 1:1 / 4:5</div>
+        <div class="vm-mono" style="margin-bottom:6px">GPT Image 2</div>
+        <p class="vm-small">Cinematic dark tech, obsidian bg, violet+cyan HUD lines, no people, 8K</p>
+      </div>
+      <div class="vm-card vm-card-ps">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--v300);margin-bottom:8px">X / Twitter 16:9</div>
+        <div class="vm-mono" style="margin-bottom:6px">GPT Image 2</div>
+        <p class="vm-small">Wide cinematic banner, obsidian, violet→cyan gradient lines, minimal HUD</p>
+      </div>
+      <div class="vm-card vm-card-ps">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">Stories / Reels 9:16</div>
+        <div class="vm-mono" style="margin-bottom:6px">Seedance 2.0</div>
+        <p class="vm-small">Cinematic vertical video, obsidian void, violet+cyan particles drifting</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- USO -->
+  <div class="demo-section">
+    <p class="vm-eyebrow">06 · Implementación</p>
+    <h2 class="vm-h2" style="margin-bottom:8px">Cómo usar este módulo</h2>
+    <p class="vm-body" style="margin-bottom:20px">Para cualquier entregable nuevo — Brand Manual, Social Dashboard, PDF desde HTML, propuesta de cliente — copia el bloque <code style="font-family:var(--mono);color:var(--cyan)">&lt;style&gt;</code> de este archivo.</p>
+
+    <div class="code-block"><span class="cm">&lt;!-- Estructura base de cualquier entregable V Momentum --&gt;</span>
+&lt;!DOCTYPE html&gt;
+&lt;html lang=<span class="cs">"es"</span>&gt;
+&lt;head&gt;
+  <span class="cm">&lt;!-- 1. Link fonts --&gt;</span>
+  &lt;link href=<span class="cs">"https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"</span> rel=<span class="cs">"stylesheet"</span>&gt;
+  <span class="cm">&lt;!-- 2. Pegar el bloque &lt;style&gt; de vmomentum-design-system.html --&gt;</span>
+&lt;/head&gt;
+&lt;body&gt;
+  <span class="cm">&lt;!-- 3. SIEMPRE estos 2 divs primero (fix iOS Safari) --&gt;</span>
+  &lt;div class=<span class="cs">"vm-bg-grid"</span>&gt;&lt;/div&gt;
+  &lt;div class=<span class="cs">"vm-bg-scan"</span>&gt;&lt;/div&gt;
+  <span class="cm">&lt;!-- 4. Tu contenido con clases vm-* --&gt;</span>
+  &lt;div style=<span class="cs">"position:relative;z-index:1"</span>&gt;
+    &lt;h1 class=<span class="cs">"vm-display"</span>&gt;Título &lt;span class=<span class="cs">"grad"</span>&gt;con gradiente&lt;/span&gt;&lt;/h1&gt;
+    &lt;p class=<span class="cs">"vm-body"</span>&gt;Contenido&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/body&gt;</div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,12 +1,18 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import {
+  recordGithubPush,
+  recordGithubPR,
+  logWebhook,
+  type PushCommit,
+} from "@/lib/projects/live";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/webhooks/github — recibe eventos de la GitHub App
- * (push, installation, deployment, etc.). Verifica la firma HMAC-SHA256
- * con GITHUB_WEBHOOK_SECRET antes de procesar.
+ * POST /api/webhooks/github — eventos de la GitHub App (push, pull_request,
+ * deployment_status…). Verifica firma HMAC-SHA256 y vuelca actividad REAL al
+ * baúl del proyecto (multi-repo). Responde 200 rápido siempre.
  */
 export async function POST(req: Request) {
   const secret = process.env.GITHUB_WEBHOOK_SECRET;
@@ -19,19 +25,50 @@ export async function POST(req: Request) {
     const a = Buffer.from(sig);
     const b = Buffer.from(expected);
     if (a.length !== b.length || !timingSafeEqual(a, b)) {
-      return new Response(JSON.stringify({ error: "firma inválida" }), { status: 401 });
+      return json({ error: "firma inválida" }, 401);
     }
   }
 
-  // Por ahora registramos el evento; los handlers (sync de repos, deploys)
-  // se enganchan después. Responder 200 rápido para no reintentos.
+  let matched = false;
+  let payload: Record<string, unknown> = {};
   try {
-    const payload = JSON.parse(raw) as { action?: string; repository?: { full_name?: string } };
-    console.log(`[gh webhook] ${event} ${payload.action ?? ""} ${payload.repository?.full_name ?? ""}`);
-  } catch { /* ignore */ }
+    payload = JSON.parse(raw) as Record<string, unknown>;
+    const repo = (payload.repository as { full_name?: string } | undefined)?.full_name ?? null;
 
-  return new Response(JSON.stringify({ ok: true, event }), {
-    status: 200,
+    if (repo && event === "push") {
+      const ref = String(payload.ref ?? "");
+      const branch = ref.replace("refs/heads/", "") || "main";
+      const commitsRaw = Array.isArray(payload.commits) ? payload.commits : [];
+      const commits: PushCommit[] = commitsRaw.map((c) => ({
+        message: String((c as { message?: string }).message ?? ""),
+        sha: (c as { id?: string }).id,
+      }));
+      const headSha = String((payload.after as string) ?? "") || null;
+      matched = await recordGithubPush(repo, branch, commits, headSha);
+    } else if (repo && event === "pull_request") {
+      const action = String(payload.action ?? "");
+      const pr = (payload.pull_request as
+        | { title?: string; number?: number; merged?: boolean }
+        | undefined) ?? {};
+      matched = await recordGithubPR(
+        repo,
+        action,
+        String(pr.title ?? ""),
+        Boolean(pr.merged),
+        Number(pr.number ?? 0),
+      );
+    }
+  } catch {
+    /* ignore parse errors */
+  }
+
+  logWebhook("github", event, null, { matched }).catch(() => null);
+  return json({ ok: true, event, matched }, 200);
+}
+
+function json(body: unknown, status: number) {
+  return new Response(JSON.stringify(body), {
+    status,
     headers: { "Content-Type": "application/json" },
   });
 }

@@ -4,6 +4,7 @@
  */
 import { currentUser } from "@clerk/nextjs/server";
 import { queryOne } from "@/lib/db/client";
+import { isOwnerEmail } from "@/lib/auth/owner";
 
 export interface MemberContext {
   email: string;
@@ -17,6 +18,16 @@ export async function requireMember(
   const user = await currentUser();
   const email = user?.emailAddresses?.[0]?.emailAddress;
   if (!email) return null;
+
+  // OWNER BYPASS: Luis (owner de la plataforma) ve el baúl/PROPOSITO de
+  // CUALQUIER proyecto sin necesidad de ser miembro registrado.
+  if (isOwnerEmail(email)) {
+    const ownerName =
+      [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() ||
+      user?.username ||
+      email;
+    return { email, name: ownerName, role: "owner" };
+  }
 
   const member = await queryOne<{ role: string }>(
     `SELECT role FROM project_members

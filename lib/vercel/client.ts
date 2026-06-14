@@ -292,3 +292,36 @@ export async function getDomainConfig(
     teamId: team.id,
   });
 }
+
+export interface VercelDomain {
+  name: string;
+  apexName?: string;
+  verified?: boolean;
+  gitBranch?: string | null;
+}
+
+/** Lista los dominios de un proyecto de Vercel. */
+export async function listProjectDomains(
+  idOrName: string,
+  options: { auditUserId?: string } = {},
+): Promise<VercelDomain[]> {
+  const { token } = await getCreds(options);
+  const team = await getDefaultTeam(options);
+  const data = await vercelJson<{ domains: VercelDomain[] }>(
+    `/v9/projects/${encodeURIComponent(idOrName)}/domains?limit=50`,
+    { method: "GET", token, teamId: team.id },
+  );
+  return data.domains ?? [];
+}
+
+/** Elige el dominio CUSTOM de producción (no *.vercel.app), preferentemente
+ *  verificado y sin rama git asociada. Devuelve null si no hay custom. */
+export function pickCustomDomain(domains: VercelDomain[]): string | null {
+  const custom = domains.filter(
+    (d) => d.name && !/\.vercel\.app$/i.test(d.name),
+  );
+  if (custom.length === 0) return null;
+  const prod = custom.filter((d) => d.verified !== false && !d.gitBranch);
+  const apex = prod.find((d) => d.apexName && d.name === d.apexName);
+  return (apex?.name || prod[0]?.name || custom[0]?.name) ?? null;
+}

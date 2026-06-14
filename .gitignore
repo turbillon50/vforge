@@ -34,3 +34,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# backups y scratch (no deben entrar al repo)
+*.bak
+*.bak2
+*.bak.community
+.baul-build.log
+_audit_console.js
+_deploy/
+.taller-shots/
+bsd_*.py
+bsd-*.md
