@@ -149,22 +149,22 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           <TokenHealthIndicator className="mt-3" />
         </div>
         <div className="px-3 pb-3">
-          <button onClick={()=>window.dispatchEvent(new Event("vf:command-palette"))} className="flex w-full items-center gap-2.5 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3.5 py-2.5 text-[13px] text-[var(--fg-tertiary)] transition hover:bg-[var(--surface-2)]">
+          <button onClick={()=>window.dispatchEvent(new Event("vf:command-palette"))} className="group flex w-full items-center gap-2.5 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3.5 py-2.5 text-[13px] text-[var(--fg-subtle)] transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-secondary)]">
             <IconSearch size={14}/><span className="flex-1 text-left">Buscar</span>
             <kbd className="font-mono text-[10px] opacity-60">⌘K</kbd>
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 pb-2 no-scrollbar">
-          <p className="mb-2 px-2 font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--fg-muted)]">Workspace</p>
+          <p className="mb-2 px-2 font-mono text-[9px] uppercase tracking-[0.15em] text-[var(--fg-subtle)]">Workspace</p>
           {NAV.map(({ href, label, Icon, kbd }) => {
             const active = pathname.startsWith(href);
             return (
               <Link key={href} href={href} className={cn(
-                "group relative mb-0.5 flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all",
-                active ? "bg-violet-500/12 text-[var(--color-violet-300)] ring-1 ring-violet-500/25" : "text-[var(--fg-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]"
+                "group relative mb-0.5 flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] transition-all",
+                active ? "bg-violet-500/10 text-[var(--fg-primary)] font-medium" : "text-[var(--fg-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--fg-secondary)]"
               )}>
-                {active && <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-violet-400 opacity-80"/>}
-                <Icon size={15} className={active?"text-[var(--color-violet-300)]":"text-[var(--fg-muted)] group-hover:text-[var(--fg-secondary)]"}/>
+                {active && <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-violet-500 opacity-90"/>}
+                <Icon size={15} className={active?"text-violet-400":"text-[var(--fg-subtle)] group-hover:text-[var(--fg-tertiary)]"}/>
                 <span className="flex-1">{label}</span>
                 <span className="hidden font-mono text-[9px] tracking-widest text-[var(--fg-subtle)] group-hover:inline">{kbd}</span>
               </Link>
@@ -176,18 +176,18 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
             const active = exact ? pathname===href : pathname.startsWith(href);
             return (
               <Link key={href} href={href} className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium transition",
-                active?"bg-violet-500/12 text-[var(--color-violet-300)]":"text-[var(--fg-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]"
+                "group flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] transition",
+                active?"bg-violet-500/10 text-[var(--fg-primary)] font-medium":"text-[var(--fg-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--fg-secondary)]"
               )}>
-                <Icon size={14} className={active?"text-[var(--color-violet-300)]":"text-[var(--fg-muted)]"}/>{label}
+                <Icon size={14} className={active?"text-violet-400":"text-[var(--fg-subtle)] group-hover:text-[var(--fg-tertiary)]"}/>{label}
               </Link>
             );
           })}
-          <Link href="/app/settings" className="flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-[var(--fg-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]">
-            <IconSettings size={14} className="text-[var(--fg-muted)]"/>Configuración
+          <Link href="/app/settings" className="group flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-[var(--fg-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-secondary)]">
+            <IconSettings size={14} className="text-[var(--fg-subtle)] group-hover:text-[var(--fg-tertiary)]"/>Configuración
           </Link>
-          <a href="#" className="flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-[var(--fg-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]">
-            <IconLifeBuoy size={14} className="text-[var(--fg-muted)]"/>Ayuda
+          <a href="#" className="group flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-[var(--fg-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-secondary)]">
+            <IconLifeBuoy size={14} className="text-[var(--fg-subtle)] group-hover:text-[var(--fg-tertiary)]"/>Ayuda
           </a>
         </div>
       </aside>
