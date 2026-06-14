@@ -83,7 +83,7 @@ export function TokenToastHost() {
               >
                 <Icon size={13} />
               </span>
-              <span className="text-[12.5px] leading-snug text-white/80">{t.message}</span>
+              <span className="text-[12.5px] leading-snug text-[var(--fg-primary)]">{t.message}</span>
             </motion.div>
           );
         })}
@@ -246,16 +246,16 @@ export function TokenHealthIndicator({ className }: { className?: string }) {
   return (
     <div className={cn("group/th relative flex items-center gap-2", className)}>
       <PulseDot color={color} />
-      <span className="font-mono text-[10px] text-white/40">
+      <span className="font-mono text-[10px] text-[var(--fg-tertiary)]">
         Token <span style={{ color }}>{hoursLabel(health)}</span>
       </span>
       {showReconnect && <ReconnectButton reconnecting={reconnecting} onClick={reconnect} />}
 
       {/* Tooltip premium */}
       <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-[220px] rounded-lg border border-white/10 bg-[#0b0b12]/95 px-2.5 py-1.5 opacity-0 shadow-xl backdrop-blur-xl transition-opacity duration-150 group-hover/th:opacity-100">
-        <p className="text-[11px] leading-snug text-white/75">{tooltipText(health)}</p>
+        <p className="text-[11px] leading-snug text-[var(--fg-primary)]">{tooltipText(health)}</p>
         {health?.checked_at && (
-          <p className="mt-0.5 font-mono text-[9px] text-white/30">
+          <p className="mt-0.5 font-mono text-[9px] text-[var(--fg-muted)]">
             Verificado {new Date(health.checked_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
           </p>
         )}

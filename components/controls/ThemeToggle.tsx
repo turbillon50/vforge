@@ -15,7 +15,7 @@ export function ThemeToggle({ compact=false }: { compact?: boolean }) {
   const tog=()=>{ const n=t==="dark"?"light":"dark"; setT(n); apply(n); };
   return (
     <button onClick={tog} aria-label={t==="dark"?"Modo claro":"Modo oscuro"}
-      className={cn("flex items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.03] text-white/40 transition hover:border-white/12 hover:text-white/70",compact?"h-8 w-8":"h-9 w-9")}>
+      className={cn("flex items-center justify-center rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-tertiary)] transition hover:border-[var(--border-2)] hover:text-[var(--fg-primary)]",compact?"h-8 w-8":"h-9 w-9")}>
       {t==="dark"?<IconSun size={14}/>:<IconMoon size={14}/>}
     </button>
   );
