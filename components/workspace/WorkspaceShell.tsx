@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { VMark, VWordmark } from "@/components/brand/VMark";
 import {
@@ -21,6 +21,22 @@ import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
+import { CommandPalette } from "./CommandPalette";
+
+// Atajos "G + letra" estilo Linear (chord: pulsa G, luego la letra).
+const GOTO: Record<string, string> = {
+  c: "/app/chat",
+  t: "/app/taller",
+  b: "/app/blueprint",
+  r: "/app/repovision",
+  p: "/app/projects",
+};
+function isTypingTarget(el: EventTarget | null): boolean {
+  const t = el as HTMLElement | null;
+  if (!t) return false;
+  const tag = t.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || t.isContentEditable;
+}
 
 function hasClerkPublishableKey(): boolean {
   return /^pk_(test|live)_/.test(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "");
@@ -98,6 +114,27 @@ const MORE_GROUPS: { title:string; items:{ href:string; label:string; desc:strin
 
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
+  const router = useRouter();
+  const lastG = useRef(0);
+
+  // Atajos de teclado G+letra (sin abrir la paleta)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || isTypingTarget(e.target)) return;
+      const k = e.key.toLowerCase();
+      if (k === "g") { lastG.current = e.timeStamp; return; }
+      if (lastG.current && e.timeStamp - lastG.current < 1000) {
+        const href = GOTO[k];
+        lastG.current = 0;
+        if (href) { e.preventDefault(); router.push(href); }
+      } else {
+        lastG.current = 0;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [router]);
+
   return (
     <div className="fixed inset-0 flex overflow-hidden bg-[var(--color-void)]">
       {/* Sidebar — chrome theme-aware (tokens --chrome-bg / --fg-* / --border-* / --surface-*) */}
@@ -112,8 +149,8 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           <TokenHealthIndicator className="mt-3" />
         </div>
         <div className="px-3 pb-3">
-          <button className="flex w-full items-center gap-2.5 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3.5 py-2.5 text-[13px] text-[var(--fg-tertiary)] transition hover:bg-[var(--surface-2)]">
-            <IconSearch size={14}/><span className="flex-1">Buscar</span>
+          <button onClick={()=>window.dispatchEvent(new Event("vf:command-palette"))} className="flex w-full items-center gap-2.5 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3.5 py-2.5 text-[13px] text-[var(--fg-tertiary)] transition hover:bg-[var(--surface-2)]">
+            <IconSearch size={14}/><span className="flex-1 text-left">Buscar</span>
             <kbd className="font-mono text-[10px] opacity-60">⌘K</kbd>
           </button>
         </div>
@@ -167,6 +204,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         <VOrb/>
       </div>
       <TokenToastHost/>
+      <CommandPalette/>
     </div>
   );
 }
