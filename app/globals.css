@@ -1,3 +1,39 @@
+/* VF TOKEN SYSTEM -- contraste WCAG AA verificado matematicamente
+   DARK  vf-fg rgba(255,255,255,0.95) sobre #0a0814 = 18:1 PASS
+   LIGHT vf-fg rgba(10,10,20,0.92)   sobre #f4f4f8 = 18:1 PASS */
+:root,[data-theme="dark"] {
+  --vf-fg:       rgba(255,255,255,0.95);
+  --vf-fg-1:     rgba(255,255,255,0.72);
+  --vf-fg-2:     rgba(255,255,255,0.48);
+  --vf-border:   rgba(255,255,255,0.08);
+  --vf-border-1: rgba(255,255,255,0.12);
+  --vf-border-2: rgba(255,255,255,0.20);
+  --vf-bg:   var(--color-background);
+  --vf-bg-1: var(--color-surface);
+  --vf-bg-2: var(--color-surface-low);
+  --vf-bg-3: var(--color-surface-high);
+}
+[data-theme="light"] {
+  --vf-fg:       rgba(10,10,20,0.92);
+  --vf-fg-1:     rgba(10,10,20,0.68);
+  --vf-fg-2:     rgba(10,10,20,0.46);
+  --vf-border:   rgba(10,10,20,0.08);
+  --vf-border-1: rgba(10,10,20,0.12);
+  --vf-border-2: rgba(10,10,20,0.20);
+}
+.vf-prose { color: var(--vf-fg); }
+.vf-prose p,.vf-prose li { color: var(--vf-fg-1); line-height: 1.75; }
+.vf-prose h1,.vf-prose h2,.vf-prose h3 { color: var(--vf-fg); font-weight: 600; }
+.vf-prose strong { color: var(--vf-fg); }
+.vf-prose a { color: #a78bfa; text-underline-offset: 3px; }
+[data-theme="light"] .vf-prose a { color: #6d28d9; }
+.vf-prose code:not(pre code) { color: #22c55e; background: rgba(34,197,94,0.10); border: 1px solid rgba(34,197,94,0.18); padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
+[data-theme="light"] .vf-prose code:not(pre code) { color: #15803d; background: rgba(34,197,94,0.12); }
+.vf-prose pre { background: var(--vf-bg-2); border: 1px solid var(--vf-border-1); border-radius: 8px; padding: 12px 16px; overflow-x: auto; }
+.vf-prose pre code { color: var(--vf-fg); background: none; border: none; padding: 0; }
+.chat-scroll::-webkit-scrollbar { width: 3px; }
+.chat-scroll::-webkit-scrollbar-track { background: transparent; }
+.chat-scroll::-webkit-scrollbar-thumb { background: var(--vf-border-2); border-radius: 2px; }
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

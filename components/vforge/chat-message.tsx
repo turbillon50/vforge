@@ -41,7 +41,7 @@ interface ChatMessageProps {
  */
 function MarkdownContent({ children }: { children: string }) {
   return (
-    <div className="prose prose-invert prose-sm max-w-none vf-prose">
+    <div className="prose prose-sm max-w-none vf-prose">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
