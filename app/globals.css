@@ -1142,3 +1142,46 @@ body:not([data-theme="light"]) .hud-scanlines::after {
   background: rgba(22, 20, 42, 0.85) !important;
   border-color: rgba(139, 92, 246, 0.25) !important;
 }
+
+/* ═══════════════════════════════════════════
+   Chat /app/chat — burbujas legibles en dark Y light
+   El markdown usa text-on-surface (theme-aware): basta con que
+   el fondo de la burbuja también reaccione al tema.
+   ═══════════════════════════════════════════ */
+.chat-bubble-forge {
+  background: var(--color-surface-elev);            /* #1c1930 en dark */
+  border: 1px solid rgb(var(--color-border-strong));
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+  color: var(--color-on-surface);
+}
+[data-theme="light"] .chat-bubble-forge {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  color: #0f0e1a;
+}
+
+/* Burbuja del usuario (gradiente violet→cyan, texto blanco):
+   ya legible en ambos temas. En claro reforzamos el contraste del borde. */
+[data-theme="light"] .chat-bubble-user {
+  box-shadow: 0 2px 12px rgba(124, 58, 237, 0.18);
+}
+
+/* Scrollbar fina del contenedor del chat */
+.chat-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-border));
+  border-radius: 2px;
+}
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--color-border-strong));
+}
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--color-border)) transparent;
+}

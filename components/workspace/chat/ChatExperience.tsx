@@ -1012,7 +1012,7 @@ export function ChatExperience() {
       <div className="flex min-w-0 flex-1 flex-col min-h-0">
       <div
         ref={scrollerRef}
-        className="flex min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+        className="chat-scroll flex min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
       >
         <div
           className={`mx-auto flex min-h-full w-full max-w-3xl flex-col overflow-x-hidden px-3 py-4 md:px-8 md:py-6 ${
@@ -1522,7 +1522,7 @@ function MessageBubble({
         <div className="pt-1">
           <VOrb size={24} />
         </div>
-        <div className="min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md px-5 py-4" style={{ background:"#1c1930", border:"1px solid rgba(139,92,246,0.18)", boxShadow:"0 2px 20px rgba(0,0,0,0.4)" }}>
+        <div className="chat-bubble-forge min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md px-5 py-4">
           {msg.image && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -1574,7 +1574,7 @@ function MessageBubble({
       animate={{ opacity: 1, y: 0 }}
       className="flex w-full min-w-0 justify-end"
     >
-      <div className="max-w-[82%] min-w-0 rounded-2xl rounded-br-md bg-gradient-to-br from-violet-500 to-cyan-500 px-4 py-2.5 font-sans text-[15px] font-normal leading-[1.55] text-white shadow-glow-violet sm:text-[16px]">
+      <div className="chat-bubble-user max-w-[82%] min-w-0 rounded-2xl rounded-br-md bg-gradient-to-br from-violet-500 to-cyan-500 px-4 py-2.5 font-sans text-[15px] font-normal leading-[1.55] text-white shadow-glow-violet sm:text-[16px]">
         {msg.image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -1608,8 +1608,8 @@ function StreamingBubble({ text, image }: { text: string; image?: string }) {
         <VOrb size={24} />
       </div>
       <div
-        className="min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md px-5 py-4"
-        style={{ background:"#1c1930", border:"1px solid rgba(139,92,246,0.18)", boxShadow:"0 2px 20px rgba(0,0,0,0.4)", contain:"layout style" }}
+        className="chat-bubble-forge min-w-0 max-w-[88%] overflow-hidden rounded-2xl rounded-bl-md px-5 py-4"
+        style={{ contain:"layout style" }}
       >
         {image && (
           // eslint-disable-next-line @next/next/no-img-element
