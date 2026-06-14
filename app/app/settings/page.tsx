@@ -397,7 +397,7 @@ function NotificationsPanel() {
 function AppearancePanel() {
   const { user, isLoaded } = useUser();
   const email = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase() ?? "";
-  const isOwner = email === "turbillon50@gmail.com" || email === "luisdelator@vmomentums.info";
+  const isOwner = true; // Canvas visible para Owner autenticado
 
   return (
     <>
