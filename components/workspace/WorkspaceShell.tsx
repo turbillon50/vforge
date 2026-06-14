@@ -99,58 +99,58 @@ const MORE_GROUPS: { title:string; items:{ href:string; label:string; desc:strin
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   return (
-    <div className="fixed inset-0 flex overflow-hidden bg-[#050509]">
-      {/* Sidebar */}
-      <aside className="hidden h-dvh w-[248px] shrink-0 flex-col border-r border-white/[0.05] bg-[#07070d]/90 backdrop-blur-2xl md:flex">
+    <div className="fixed inset-0 flex overflow-hidden bg-[var(--color-void)]">
+      {/* Sidebar — chrome theme-aware (tokens --chrome-bg / --fg-* / --border-* / --surface-*) */}
+      <aside data-chrome className="hidden h-dvh w-[248px] shrink-0 flex-col border-r border-[var(--border-1)] bg-[rgb(var(--chrome-bg)/0.92)] backdrop-blur-2xl md:flex">
         <div className="px-5 py-5">
           <div className="flex items-center justify-between">
             <Link href="/app"><VWordmark /></Link>
-            <span className="flex items-center gap-1.5 font-mono text-[10px] text-white/25">
+            <span className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--fg-muted)]">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"/>online
             </span>
           </div>
           <TokenHealthIndicator className="mt-3" />
         </div>
         <div className="px-3 pb-3">
-          <button className="flex w-full items-center gap-2.5 rounded-xl border border-white/[0.05] bg-white/[0.025] px-3.5 py-2.5 text-[13px] text-white/25 transition hover:bg-white/[0.04]">
+          <button className="flex w-full items-center gap-2.5 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3.5 py-2.5 text-[13px] text-[var(--fg-tertiary)] transition hover:bg-[var(--surface-2)]">
             <IconSearch size={14}/><span className="flex-1">Buscar</span>
-            <kbd className="font-mono text-[10px] opacity-40">⌘K</kbd>
+            <kbd className="font-mono text-[10px] opacity-60">⌘K</kbd>
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 pb-2 no-scrollbar">
-          <p className="mb-2 px-2 font-mono text-[9px] uppercase tracking-[0.18em] text-white/20">Workspace</p>
+          <p className="mb-2 px-2 font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--fg-muted)]">Workspace</p>
           {NAV.map(({ href, label, Icon, kbd }) => {
             const active = pathname.startsWith(href);
             return (
               <Link key={href} href={href} className={cn(
                 "group relative mb-0.5 flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all",
-                active ? "bg-violet-500/10 text-violet-200 ring-1 ring-violet-500/20" : "text-white/35 hover:bg-white/[0.04] hover:text-white/75"
+                active ? "bg-violet-500/12 text-[var(--color-violet-300)] ring-1 ring-violet-500/25" : "text-[var(--fg-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]"
               )}>
                 {active && <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-violet-400 opacity-80"/>}
-                <Icon size={15} className={active?"text-violet-400":"text-white/25 group-hover:text-white/55"}/>
+                <Icon size={15} className={active?"text-[var(--color-violet-300)]":"text-[var(--fg-muted)] group-hover:text-[var(--fg-secondary)]"}/>
                 <span className="flex-1">{label}</span>
-                <span className="hidden font-mono text-[9px] tracking-widest text-white/15 group-hover:inline">{kbd}</span>
+                <span className="hidden font-mono text-[9px] tracking-widest text-[var(--fg-subtle)] group-hover:inline">{kbd}</span>
               </Link>
             );
           })}
         </nav>
-        <div className="border-t border-white/[0.05] p-3 space-y-0.5">
+        <div className="border-t border-[var(--border-1)] p-3 space-y-0.5">
           {NAV_BTM.map(({ href, label, Icon, exact }) => {
             const active = exact ? pathname===href : pathname.startsWith(href);
             return (
               <Link key={href} href={href} className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium transition",
-                active?"bg-violet-500/10 text-violet-200":"text-white/35 hover:bg-white/[0.04] hover:text-white/65"
+                active?"bg-violet-500/12 text-[var(--color-violet-300)]":"text-[var(--fg-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]"
               )}>
-                <Icon size={14} className={active?"text-violet-400":"text-white/25"}/>{label}
+                <Icon size={14} className={active?"text-[var(--color-violet-300)]":"text-[var(--fg-muted)]"}/>{label}
               </Link>
             );
           })}
-          <Link href="/app/settings" className="flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-white/35 transition hover:bg-white/[0.04] hover:text-white/65">
-            <IconSettings size={14} className="text-white/25"/>Configuración
+          <Link href="/app/settings" className="flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-[var(--fg-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]">
+            <IconSettings size={14} className="text-[var(--fg-muted)]"/>Configuración
           </Link>
-          <a href="#" className="flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-white/35 transition hover:bg-white/[0.04] hover:text-white/65">
-            <IconLifeBuoy size={14} className="text-white/25"/>Ayuda
+          <a href="#" className="flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-[var(--fg-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]">
+            <IconLifeBuoy size={14} className="text-[var(--fg-muted)]"/>Ayuda
           </a>
         </div>
       </aside>
@@ -174,20 +174,20 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 function TopBar({ hiddenOnMobile, pathname }: { hiddenOnMobile?:boolean; pathname:string }) {
   const clerkEnabled = hasClerkPublishableKey();
   return (
-    <header className={cn("sticky top-0 z-30 border-b border-white/[0.05] bg-[#07070d]/85 backdrop-blur-2xl",hiddenOnMobile&&"hidden md:block")}
+    <header data-chrome className={cn("sticky top-0 z-30 border-b border-[var(--border-1)] bg-[rgb(var(--chrome-bg)/0.85)] backdrop-blur-2xl",hiddenOnMobile&&"hidden md:block")}
       style={{ paddingTop:"env(safe-area-inset-top,0px)" }}>
       <div className="flex items-center justify-between gap-3 px-4 py-2.5 md:px-6">
-        <Link href="/" className="flex items-center gap-2 text-white/60 transition active:scale-95 md:hidden">
-          <VMark size={18}/><span className="font-display text-sm font-semibold text-white/80">VForge</span>
+        <Link href="/" className="flex items-center gap-2 text-[var(--fg-secondary)] transition active:scale-95 md:hidden">
+          <VMark size={18}/><span className="font-display text-sm font-semibold text-[var(--fg-primary)]">VForge</span>
         </Link>
         <div className="hidden min-w-0 flex-1 md:block"><Breadcrumbs pathname={pathname}/></div>
         <div className="flex items-center gap-2">
-          <Link href="/" className="hidden items-center gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 font-mono text-[11px] text-white/35 transition hover:border-violet-500/25 hover:text-violet-300 sm:inline-flex">
+          <Link href="/" className="hidden items-center gap-1.5 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-1.5 font-mono text-[11px] text-[var(--fg-tertiary)] transition hover:border-violet-500/30 hover:text-[var(--color-violet-300)] sm:inline-flex">
             <IconHome size={11}/> Landing
           </Link>
           <LocaleToggle compact/>
           <ThemeToggle compact/>
-          <button aria-label="Notificaciones" className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-white/35 transition hover:text-white/65">
+          <button aria-label="Notificaciones" className="flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-tertiary)] transition hover:text-[var(--fg-primary)]">
             <IconBell size={13}/>
           </button>
           {clerkEnabled ? <ClerkUserMenu /> : <ClerkOfflineUser />}
@@ -201,23 +201,23 @@ function ClerkUserMenu() {
   const { user } = useUser();
   const ca = useClerkAppearance();
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.025] py-1 pl-1 pr-2.5">
+    <div className="flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] py-1 pl-1 pr-2.5">
       <UserButton afterSignOutUrl="/" appearance={{...ca,elements:{...ca.elements,avatarBox:"h-6 w-6"}}}/>
-      <span className="hidden max-w-[90px] truncate font-display text-[12px] font-medium text-white/60 md:inline">
+      <span className="hidden max-w-[90px] truncate font-display text-[12px] font-medium text-[var(--fg-secondary)] md:inline">
         {user?.firstName??user?.username??""}
       </span>
-      <span className="hidden rounded-full border border-violet-500/20 bg-violet-500/8 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-violet-300 md:inline">Owner</span>
+      <span className="hidden rounded-full border border-violet-500/25 bg-violet-500/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-[var(--color-violet-300)] md:inline">Owner</span>
     </div>
   );
 }
 
 function ClerkOfflineUser() {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-1.5">
-      <span className="hidden max-w-[90px] truncate font-display text-[12px] font-medium text-white/60 md:inline">
+    <div className="flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-1.5">
+      <span className="hidden max-w-[90px] truncate font-display text-[12px] font-medium text-[var(--fg-secondary)] md:inline">
         Luis
       </span>
-      <span className="hidden rounded-full border border-violet-500/20 bg-violet-500/8 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-violet-300 md:inline">Owner</span>
+      <span className="hidden rounded-full border border-violet-500/25 bg-violet-500/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-[var(--color-violet-300)] md:inline">Owner</span>
     </div>
   );
 }
@@ -231,8 +231,8 @@ function Breadcrumbs({ pathname }: { pathname:string }) {
         const isLast=i===trail.length-1;
         return (
           <span key={p+i} className="flex items-center gap-1">
-            <span className={isLast?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-semibold text-transparent":"text-white/20"}>{p}</span>
-            {!isLast&&<IconChevR size={9} className="text-white/12"/>}
+            <span className={isLast?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-semibold text-transparent":"text-[var(--fg-muted)]"}>{p}</span>
+            {!isLast&&<IconChevR size={9} className="text-[var(--fg-subtle)]"/>}
           </span>
         );
       })}
@@ -247,12 +247,12 @@ function MobileNav({ pathname }: { pathname:string }) {
   const inMore = !MOBILE.some(m => pathname.startsWith(m.href));
   return (
     <>
-    <nav data-vorb-avoid className="flex flex-none items-stretch justify-between gap-0.5 border-t border-white/[0.05] bg-[#07070d]/90 px-2 backdrop-blur-2xl md:hidden"
+    <nav data-chrome data-vorb-avoid className="flex flex-none items-stretch justify-between gap-0.5 border-t border-[var(--border-1)] bg-[rgb(var(--chrome-bg)/0.92)] px-2 backdrop-blur-2xl md:hidden"
       style={{ paddingBottom:"max(env(safe-area-inset-bottom,0px),12px)", minHeight:58 }}>
       {MOBILE.map(item=>{
         const active=pathname.startsWith(item.href);
         if(item.orb) return (
-          <Link key={item.href} href={item.href} className={cn("flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",active?"text-violet-300":"text-white/35")}>
+          <Link key={item.href} href={item.href} className={cn("flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",active?"text-[var(--color-violet-300)]":"text-[var(--fg-tertiary)]")}>
             <VPresence size={25} breathing={active}/>
             <span className={cn("font-mono text-[9px] uppercase tracking-widest",active?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-bold text-transparent":"")}>{item.label}</span>
           </Link>
@@ -260,19 +260,19 @@ function MobileNav({ pathname }: { pathname:string }) {
         if("Icon" in item && item.Icon) {
           const Icon = item.Icon;
           return (
-            <Link key={item.href} href={item.href} className={cn("group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",active?"text-violet-300":"text-white/35")}>
+            <Link key={item.href} href={item.href} className={cn("group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",active?"text-[var(--color-violet-300)]":"text-[var(--fg-tertiary)]")}>
               {active&&<motion.span aria-hidden layoutId="vf-mob-halo" transition={{type:"spring",stiffness:380,damping:32}}
                 className="pointer-events-none absolute inset-x-2 -bottom-0.5 top-1 -z-10 rounded-xl"
                 style={{background:"radial-gradient(ellipse,rgba(139,92,246,0.4),transparent 70%)",filter:"blur(8px)"}}/>}
               <motion.span className="inline-flex" animate={active?{scale:[1,1.08,1]}:{scale:1}} transition={active?{duration:2.4,repeat:Infinity,ease:"easeInOut"}:{duration:0.18}}>
-                <Icon size={24} className={cn("transition",active?"text-violet-300":"text-white/35 group-hover:text-white/65")}/>
+                <Icon size={24} className={cn("transition",active?"text-[var(--color-violet-300)]":"text-[var(--fg-tertiary)] group-hover:text-[var(--fg-secondary)]")}/>
               </motion.span>
               <span className={cn("font-mono text-[9px] uppercase tracking-widest",active?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-bold text-transparent":"")}>{item.label}</span>
             </Link>
           );
         }
         return (
-          <Link key={item.href} href={item.href} className={cn("group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",active?"text-violet-300":"text-white/35")}>
+          <Link key={item.href} href={item.href} className={cn("group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",active?"text-[var(--color-violet-300)]":"text-[var(--fg-tertiary)]")}>
             {active&&<motion.span aria-hidden layoutId="vf-mob-halo" transition={{type:"spring",stiffness:380,damping:32}}
               className="pointer-events-none absolute inset-x-2 -bottom-0.5 top-1 -z-10 rounded-xl"
               style={{background:"radial-gradient(ellipse,rgba(139,92,246,0.4),transparent 70%)",filter:"blur(8px)"}}/>}
@@ -285,12 +285,12 @@ function MobileNav({ pathname }: { pathname:string }) {
       })}
       {/* 6º atajo: "Más" abre el cajón con TODAS las secciones (paridad desktop) */}
       <button onClick={()=>setMoreOpen(true)} aria-label="Más secciones" aria-haspopup="dialog" aria-expanded={moreOpen}
-        className={cn("group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",inMore?"text-violet-300":"text-white/35")}>
+        className={cn("group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",inMore?"text-[var(--color-violet-300)]":"text-[var(--fg-tertiary)]")}>
         {inMore&&<motion.span aria-hidden layoutId="vf-mob-halo" transition={{type:"spring",stiffness:380,damping:32}}
           className="pointer-events-none absolute inset-x-2 -bottom-0.5 top-1 -z-10 rounded-xl"
           style={{background:"radial-gradient(ellipse,rgba(139,92,246,0.4),transparent 70%)",filter:"blur(8px)"}}/>}
         <motion.span className="inline-flex" animate={moreOpen?{scale:[1,1.08,1]}:{scale:1}} transition={{duration:0.18}}>
-          <IconBoxes size={24} className={cn("transition",inMore?"text-violet-300":"text-white/35 group-hover:text-white/65")}/>
+          <IconBoxes size={24} className={cn("transition",inMore?"text-[var(--color-violet-300)]":"text-[var(--fg-tertiary)] group-hover:text-[var(--fg-secondary)]")}/>
         </motion.span>
         <span className={cn("font-mono text-[9px] uppercase tracking-widest",inMore?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-bold text-transparent":"")}>Más</span>
       </button>
@@ -315,21 +315,22 @@ function MoreDrawer({ open, onClose, pathname }: { open:boolean; onClose:()=>voi
             initial={{ y:"100%" }} animate={{ y:0 }} exit={{ y:"100%" }}
             transition={{ type:"spring", stiffness:360, damping:38 }}
             onClick={(e)=>e.stopPropagation()}
-            className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#08080f] shadow-[0_-20px_60px_rgba(0,0,0,0.6)] no-scrollbar"
+            data-chrome
+            className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-3xl border-t border-[var(--border-2)] bg-[rgb(var(--chrome-bg)/0.98)] shadow-[0_-20px_60px_rgba(0,0,0,0.6)] no-scrollbar"
             style={{ paddingBottom:"max(env(safe-area-inset-bottom,0px),20px)" }}
           >
             {/* borde superior con gradiente premium */}
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent"/>
             {/* grabber */}
-            <div className="sticky top-0 z-10 flex flex-col items-center bg-[#08080f]/95 pt-2.5 backdrop-blur-xl">
-              <span className="h-1 w-10 rounded-full bg-white/15"/>
+            <div className="sticky top-0 z-10 flex flex-col items-center bg-[rgb(var(--chrome-bg)/0.96)] pt-2.5 backdrop-blur-xl">
+              <span className="h-1 w-10 rounded-full bg-[var(--fg-subtle)]"/>
               <div className="flex w-full items-center justify-between px-5 pb-3 pt-3">
                 <div className="flex items-center gap-2">
                   <VMark size={18}/>
-                  <span className="font-display text-[15px] font-bold text-white/90">Todas las secciones</span>
+                  <span className="font-display text-[15px] font-bold text-[var(--fg-primary)]">Todas las secciones</span>
                 </div>
                 <button onClick={onClose} aria-label="Cerrar"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-white/45 transition active:scale-90 hover:text-white/80">
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--border-2)] bg-[var(--surface-1)] text-[var(--fg-tertiary)] transition active:scale-90 hover:text-[var(--fg-primary)]">
                   <IconX size={14}/>
                 </button>
               </div>
@@ -338,7 +339,7 @@ function MoreDrawer({ open, onClose, pathname }: { open:boolean; onClose:()=>voi
             <div className="space-y-5 px-4 pb-4 pt-1">
               {MORE_GROUPS.map((group)=>(
                 <div key={group.title}>
-                  <p className="mb-2 px-1 font-mono text-[10px] uppercase tracking-[0.18em] text-white/25">{group.title}</p>
+                  <p className="mb-2 px-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--fg-muted)]">{group.title}</p>
                   <div className="grid grid-cols-1 gap-1.5">
                     {group.items.map(({ href, label, desc, Icon, exact })=>{
                       const active = exact ? pathname===href : pathname.startsWith(href);
@@ -348,19 +349,19 @@ function MoreDrawer({ open, onClose, pathname }: { open:boolean; onClose:()=>voi
                             "group flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition active:scale-[0.98]",
                             active
                               ? "border-violet-500/25 bg-violet-500/10"
-                              : "border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.04]"
+                              : "border-[var(--border-1)] bg-[var(--surface-1)] hover:bg-[var(--surface-2)]"
                           )}>
                           <span className={cn(
                             "grid h-10 w-10 flex-none place-items-center rounded-xl border transition",
-                            active ? "border-violet-400/30 bg-violet-500/15" : "border-white/[0.06] bg-white/[0.03]"
+                            active ? "border-violet-400/30 bg-violet-500/15" : "border-[var(--border-1)] bg-[var(--surface-2)]"
                           )}>
-                            <Icon size={18} className={active?"text-violet-300":"text-white/45 group-hover:text-white/70"}/>
+                            <Icon size={18} className={active?"text-[var(--color-violet-300)]":"text-[var(--fg-tertiary)] group-hover:text-[var(--fg-secondary)]"}/>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className={cn("block truncate text-[13.5px] font-semibold",active?"text-violet-100":"text-white/80")}>{label}</span>
-                            <span className="block truncate text-[11px] text-white/35">{desc}</span>
+                            <span className={cn("block truncate text-[13.5px] font-semibold",active?"text-[var(--color-violet-300)]":"text-[var(--fg-primary)]")}>{label}</span>
+                            <span className="block truncate text-[11px] text-[var(--fg-muted)]">{desc}</span>
                           </span>
-                          <IconChevR size={14} className="flex-none text-white/20"/>
+                          <IconChevR size={14} className="flex-none text-[var(--fg-subtle)]"/>
                         </Link>
                       );
                     })}
