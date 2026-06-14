@@ -189,9 +189,9 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           <Link href="/app/settings" className="group flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-[var(--fg-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-secondary)]">
             <IconSettings size={14} className="text-[var(--fg-subtle)] group-hover:text-[var(--fg-tertiary)]"/>Configuración
           </Link>
-          <a href="#" className="group flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-[var(--fg-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-secondary)]">
+          <Link href="/support" className="group flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] text-[var(--fg-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-secondary)]">
             <IconLifeBuoy size={14} className="text-[var(--fg-subtle)] group-hover:text-[var(--fg-tertiary)]"/>Ayuda
-          </a>
+          </Link>
         </div>
       </aside>
       {/* Main */}
@@ -223,9 +223,9 @@ function TopBar({ hiddenOnMobile, pathname }: { hiddenOnMobile?:boolean; pathnam
         </Link>
         <div className="hidden min-w-0 flex-1 md:block"><Breadcrumbs pathname={pathname}/></div>
         <div className="flex items-center gap-2">
-          <Link href="/" className="hidden items-center gap-1.5 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-1.5 font-mono text-[11px] text-[var(--fg-tertiary)] transition hover:border-violet-500/30 hover:text-[var(--color-violet-300)] sm:inline-flex">
+          <a href="https://vforge.site" target="_blank" rel="noopener noreferrer" className="hidden items-center gap-1.5 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-1.5 font-mono text-[11px] text-[var(--fg-tertiary)] transition hover:border-violet-500/30 hover:text-[var(--color-violet-300)] sm:inline-flex">
             <IconHome size={11}/> Landing
-          </Link>
+          </a>
           <LocaleToggle compact/>
           <ThemeToggle compact/>
           <button aria-label="Notificaciones" className="flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-tertiary)] transition hover:text-[var(--fg-primary)]">

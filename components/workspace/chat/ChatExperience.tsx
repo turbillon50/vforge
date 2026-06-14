@@ -1073,7 +1073,7 @@ export function ChatExperience() {
           }`}
         >
           {messages.length <= 1 && (
-            <div className="mb-4 flex items-center gap-3 rounded-2xl border border-app bg-surface/35 px-4 py-3">
+            <div className="mb-4 flex items-center gap-3 rounded-2xl border border-app bg-[var(--color-surface-low)] px-4 py-3">
               <VOrb size={34} />
               <div>
                 <p className="bg-gradient-to-r from-violet-500 via-violet-400 to-cyan-400 bg-clip-text font-display text-lg font-semibold tracking-tight text-transparent">

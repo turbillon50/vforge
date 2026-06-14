@@ -237,8 +237,12 @@ export default function ConnectionsHealth({
 
         <button
           type="button"
-          // TODO: abrir flujo de OAuth para vincular una cuenta nueva (GitHub/Vercel)
-          onClick={() => {}}
+          // Vincula una cuenta nueva vía el flujo OAuth real (GitHub).
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              window.location.href = "/api/auth/github/start";
+            }
+          }}
           className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-vf-border-2 bg-transparent px-3 py-2 text-sm text-vf-fg-2 transition-colors hover:border-vf-green/50 hover:text-vf-fg"
         >
           <IconPlus size={16} />

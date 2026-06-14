@@ -31,10 +31,10 @@ export function MarketingFooter() {
         <div>
           <h4 className="label-caps mb-4 text-on-surface">{t.marketing.footer_company}</h4>
           <ul className="space-y-3 text-sm text-on-surface-variant">
-            <li><a className="hover:text-cyber-cyan" href="#">{t.marketing.footer_about}</a></li>
-            <li><a className="hover:text-cyber-cyan" href="#">{t.marketing.footer_manifesto}</a></li>
-            <li><a className="hover:text-cyber-cyan" href="#">{t.marketing.footer_security}</a></li>
-            <li><a className="hover:text-cyber-cyan" href="#">{t.marketing.footer_contact}</a></li>
+            <li><Link className="hover:text-cyber-cyan" href="/developers">{t.marketing.footer_about}</Link></li>
+            <li><Link className="hover:text-cyber-cyan" href="/blog">{t.marketing.footer_manifesto}</Link></li>
+            <li><Link className="hover:text-cyber-cyan" href="/status">{t.marketing.footer_security}</Link></li>
+            <li><Link className="hover:text-cyber-cyan" href="/support">{t.marketing.footer_contact}</Link></li>
           </ul>
         </div>
       </div>

@@ -55,10 +55,10 @@ export function ClientWorkspacePage() {
           <h1 className="mt-1 text-2xl font-bold text-white">Mi Proyecto</h1>
           <p className="mt-1 text-sm font-light text-[var(--fg-tertiary)]">PWA completa · Next.js + Clerk + Neon + Stripe</p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <a href="#" className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:bg-white/[0.12]">
+            <a href="/app/deployments" className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:bg-white/[0.12]">
               <IconGlobe size={12} className="text-cyan-400"/> Ver en vivo
             </a>
-            <a href="#" className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:bg-white/[0.12]">
+            <a href="/app/repovision" className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:bg-white/[0.12]">
               <IconBranch size={12} className="text-violet-300"/> Repositorio
             </a>
             <a href="/app/chat" className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:bg-white/[0.12]">
