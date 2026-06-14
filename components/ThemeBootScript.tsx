@@ -10,6 +10,10 @@ export function ThemeBootScript() {
     var l = m ? decodeURIComponent(m[1]) : (localStorage.getItem('vforge.locale') || (navigator.language||'es').slice(0,2));
     if (l !== 'es' && l !== 'en') l = 'es';
     document.documentElement.setAttribute('lang', l);
+    try {
+      var dp=localStorage.getItem('vf-design-preset');
+      if(dp){var p=JSON.parse(dp);if(p.accent)document.documentElement.style.setProperty('--color-violet-500',p.accent);}
+    }catch(e){}
   } catch(e) {
     document.documentElement.setAttribute('data-theme', 'dark');
   }

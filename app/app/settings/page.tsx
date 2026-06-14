@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/AppProviders";
 import { useUser, useReverification, useClerk } from "@clerk/nextjs";
 import { TokenReconnectCard } from "@/components/workspace/TokenHealth";
+import DesignCanvas from "@/components/workspace/DesignCanvas";
 
 type SectionId =
   | "profile"
@@ -394,8 +395,18 @@ function NotificationsPanel() {
 }
 
 function AppearancePanel() {
+  const { user } = useUser();
+  const email = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase() ?? "";
+  const isOwner = email === "turbillon50@gmail.com" || email === "luisdelator@vmomentums.info";
+
   return (
     <>
+      {isOwner && (
+        <Card title="Canvas de Diseno">
+          <DesignCanvas />
+        </Card>
+      )}
+
       <Card title="Tema">
         <p className="mb-3 text-[12px] text-on-surface-variant">
           Cambia entre modo día y noche. Se guarda en tu navegador.
