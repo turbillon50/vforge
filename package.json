@@ -6,7 +6,8 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "eslint ."
+        "lint": "eslint .",
+        "audit:contrast": "python3 scripts/contrast_audit.py"
     },
     "dependencies": {
         "@anthropic-ai/sdk": "^0.96.0",

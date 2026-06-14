@@ -1,0 +1,114 @@
+
+============================================================
+CONTRAST AUDIT — VForge (385 archivos)
+============================================================
+Total issues: 111
+
+[RGBA_LOW_CONTRAST] — 69 casos
+  components/workspace/VOrb.tsx:183
+    código:  rgba(255,255,255,0.12)
+    dark: 1.3:1 FAIL  |  light: 1.0:1 FAIL
+    fix:     usar var(--fg-*) semántico
+    ctx:     className={"group flex items-center gap-3 rounded-xl border px-3 py-2.
+  components/marketing/Hero.tsx:353
+    código:  rgba(124,58,237,0.45)
+    dark: 1.6:1 FAIL  |  light: 2.0:1 FAIL
+    fix:     usar var(--fg-*) semántico
+    ctx:     className="group relative flex w-full items-center justify-center gap-
+  components/marketing/MarketingHeader.tsx:48
+    código:  rgba(124,58,237,0.35)
+    dark: 1.4:1 FAIL  |  light: 1.7:1 FAIL
+    fix:     usar var(--fg-*) semántico
+    ctx:     <Link href="/sign-up" prefetch={false} className="rounded-xl bg-gradie
+  components/forja/EsferaDashboard.tsx:419
+    código:  rgba(124,58,237,0.3)
+    dark: 1.3:1 FAIL  |  light: 1.6:1 FAIL
+    fix:     usar var(--fg-*) semántico
+    ctx:     className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-gradient
+  components/forja/ForjaWizard.tsx:329
+    código:  rgba(124,58,237,0.35)
+    dark: 1.4:1 FAIL  |  light: 1.7:1 FAIL
+    fix:     usar var(--fg-*) semántico
+    ctx:     ? "bg-gradient-to-r from-violet-500 to-emerald-400 text-black shadow-[
+  ... y 64 más
+
+[BG_INVISIBLE_LIGHT] — 33 casos
+  components/marketing/Contratos.tsx:83
+    código:  bg-white/[0.06]
+    dark: 0.9:1 FAIL  |  light: 0.0:1 FAIL
+    fix:     bg-[var(--surface-1)]
+    ctx:     className="group flex items-start gap-3 rounded-2xl border border-[var
+  components/marketing/MarketingHeader.tsx:35
+    código:  bg-white/[0.06]
+    dark: 0.9:1 FAIL  |  light: 0.0:1 FAIL
+    fix:     bg-[var(--surface-1)]
+    ctx:     className="relative flex items-center gap-1.5 rounded-xl px-3 py-1.5 f
+  components/marketing/MarketingHeader.tsx:49
+    código:  bg-white/[0.025]
+    dark: 0.38:1 FAIL  |  light: 0.0:1 FAIL
+    fix:     bg-[var(--surface-1)]
+    ctx:     <button onClick={()=>setOpen(v=>!v)} className="flex items-center just
+  components/forja/ForjaWizard.tsx:185
+    código:  bg-white/[0.06]
+    dark: 0.9:1 FAIL  |  light: 0.0:1 FAIL
+    fix:     bg-[var(--surface-1)]
+    ctx:     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.
+  components/cockpit/Constelacion.tsx:204
+    código:  bg-white/[0.06]
+    dark: 0.9:1 FAIL  |  light: 0.0:1 FAIL
+    fix:     bg-[var(--surface-1)]
+    ctx:     <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/[0.06
+  ... y 28 más
+
+[LOW_OPACITY_TEXT] — 8 casos
+  components/userspace/ScopeWizard.tsx:281
+    código:  opacity-0
+    dark: 0.0:1 FAIL  |  light: 0.0:1 FAIL
+    fix:     usar text-[var(--fg-muted)] en vez de opacity baja
+    ctx:     className="flex min-h-[44px] items-center gap-2 rounded-full border bo
+  components/blog/BlogGrid.tsx:86
+    código:  opacity-0
+    dark: 0.0:1 FAIL  |  light: 0.0:1 FAIL
+    fix:     usar text-[var(--fg-muted)] en vez de opacity baja
+    ctx:     className="font-mono text-[10px] opacity-0 transition-all group-hover:
+  app/blog/page.tsx:87
+    código:  opacity-0
+    dark: 0.0:1 FAIL  |  light: 0.0:1 FAIL
+    fix:     usar text-[var(--fg-muted)] en vez de opacity baja
+    ctx:     <span className="font-mono text-[11px] text-violet-400 opacity-0 trans
+  .vercel/output/static/_next/static/chunks/0cjhmsrb.ric9.css:1
+    código:  opacity-0
+    dark: 0.0:1 FAIL  |  light: 0.0:1 FAIL
+    fix:     usar text-[var(--fg-muted)] en vez de opacity baja
+    ctx:     *,:before,:after,::backdrop{--tw-border-spacing-x:0;--tw-border-spacin
+  .vercel/output/static/_next/static/chunks/0cjhmsrb.ric9.css:1
+    código:  opacity-20
+    dark: 3.0:1 FAIL  |  light: 3.0:1 FAIL
+    fix:     usar text-[var(--fg-muted)] en vez de opacity baja
+    ctx:     *,:before,:after,::backdrop{--tw-border-spacing-x:0;--tw-border-spacin
+  ... y 3 más
+
+[TEXT_INVISIBLE_LIGHT] — 1 casos
+  components/automations/FlowCanvas.tsx:162
+    código:  text-white/95
+    dark: 17.7:1 OK  |  light: 1.1:1 FAIL
+    fix:     text-[var(--fg-primary)]
+    ctx:     <span className="text-white/95 drop-shadow">
+
+
+============================================================
+TOP 10 ARCHIVOS MÁS PROBLEMÁTICOS:
+============================================================
+   15 issues (15 FAIL light) — app/globals.css
+   12 issues (12 FAIL light) — components/workspace/community/CommunityExperience.tsx
+    5 issues (5 FAIL light) — app/pricing/page.tsx
+    5 issues (5 FAIL light) — .vercel/output/static/_next/static/chunks/0cjhmsrb.ric9.css
+    4 issues (4 FAIL light) — components/portal/ClientPortal.tsx
+    4 issues (4 FAIL light) — app/workspace/ClientWorkspacePage.tsx
+    4 issues (4 FAIL light) — app/app/integrations/page.tsx
+    4 issues (4 FAIL light) — app/api/docusign/callback/route.ts
+    3 issues (3 FAIL light) — components/marketing/MarketingHeader.tsx
+    3 issues (3 FAIL light) — components/graph/ProjectGraph.tsx
+
+Reporte completo en /tmp/contrast_report.json
+Listo para el enjambre.
