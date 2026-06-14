@@ -8,7 +8,7 @@ import {
   IconChat, IconBranch, IconActivity, IconLayers, IconFile,
   IconSearch, IconSettings, IconHome, IconUsers, IconBell,
   IconChevR, IconLifeBuoy, IconRocket, IconGlobe, IconDatabase, IconCpu,
-  IconZap, IconWorkflow, IconBoxes, IconBag, IconKey, IconCreditCard, IconX, IconShare,
+  IconZap, IconWorkflow, IconBoxes, IconBag, IconKey, IconCreditCard, IconX, IconShare, IconGithub,
 } from "@/components/brand/VFIcons";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useClerkAppearance } from "@/lib/clerk-appearance";
@@ -30,6 +30,7 @@ const GOTO: Record<string, string> = {
   b: "/app/blueprint",
   r: "/app/repovision",
   p: "/app/projects",
+  l: "/app/changelog",
 };
 function isTypingTarget(el: EventTarget | null): boolean {
   const t = el as HTMLElement | null;
@@ -52,9 +53,10 @@ const NAV = [
   { href:"/app/blueprint",   label:"Blueprint",     Icon:IconWorkflow, kbd:"B" },
   { href:"/app/crm",         label:"CRM",           Icon:IconUsers,    kbd:"M" },
   { href:"/app/projects",    label:"Proyectos",     Icon:IconLayers,   kbd:"P" },
-  { href:"/app/vault",       label:"Baul",          Icon:IconDatabase, kbd:"L" },
+  { href:"/app/vault",       label:"Baul",          Icon:IconDatabase, kbd:"V" },
   { href:"/app/contracts",   label:"Contratos",     Icon:IconFile,     kbd:"T" },
   { href:"/app/activity",    label:"Actividad",     Icon:IconActivity, kbd:"A" },
+  { href:"/app/changelog",   label:"Changelog",     Icon:IconGithub,   kbd:"L" },
   { href:"/app/community",   label:"Community",     Icon:IconShare,    kbd:"K" },
 ];
 const NAV_BTM = [
@@ -88,6 +90,7 @@ const MORE_GROUPS: { title:string; items:{ href:string; label:string; desc:strin
       { href:"/app/deployments", label:"Despliegues",  desc:"Builds y deploys de Vercel",         Icon:IconRocket },
       { href:"/app/projects",    label:"Proyectos",    desc:"Forja y gestión de proyectos",       Icon:IconLayers },
       { href:"/app/activity",    label:"Actividad",    desc:"Bitácora de eventos del sistema",    Icon:IconActivity },
+      { href:"/app/changelog",   label:"Changelog",    desc:"Cada mejora, desde los commits",     Icon:IconGithub },
     ],
   },
   {
