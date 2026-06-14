@@ -264,6 +264,10 @@ export function ChatExperience() {
   const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messagesRef = useRef<Msg[]>(messages);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  // Persistencia de scroll por conversación (sessionStorage: vf_scroll_<sid>).
+  const scrollKeyRef = useRef<string>("");
+  const restorePendingRef = useRef<boolean>(false);
+  const saveScrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ID of the assistant message currently streaming; null when idle.
   // The smooth-stream hook owns the live text while this is set, and the
@@ -297,13 +301,58 @@ export function ChatExperience() {
     const onScroll = () => {
       const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
       stickToBottomRef.current = dist < 120;
+      // No persistir mientras estamos restaurando una posición guardada.
+      if (restorePendingRef.current) return;
+      if (saveScrollTimerRef.current) clearTimeout(saveScrollTimerRef.current);
+      saveScrollTimerRef.current = setTimeout(() => {
+        const key = scrollKeyRef.current;
+        if (!key) return;
+        try {
+          // Si está al fondo (margen 100px) borramos la key: que abra al fondo.
+          const atBottom =
+            el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+          if (atBottom) window.sessionStorage.removeItem(key);
+          else window.sessionStorage.setItem(key, String(Math.round(el.scrollTop)));
+        } catch {
+          // ignore (sessionStorage no disponible)
+        }
+      }, 200);
     };
     el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      if (saveScrollTimerRef.current) clearTimeout(saveScrollTimerRef.current);
+    };
   }, []);
   useEffect(() => {
     const el = scrollerRef.current;
-    if (!el || !stickToBottomRef.current) return;
+    if (!el) return;
+    // Tras hidratar una conversación: restaurar la posición donde la dejó el
+    // usuario (una sola vez), en vez de pegarnos al fondo.
+    if (restorePendingRef.current) {
+      restorePendingRef.current = false;
+      const key = scrollKeyRef.current;
+      let saved: number | null = null;
+      try {
+        const raw = key ? window.sessionStorage.getItem(key) : null;
+        if (raw != null) {
+          const n = parseInt(raw, 10);
+          saved = Number.isNaN(n) ? null : n;
+        }
+      } catch {
+        saved = null;
+      }
+      if (saved != null) {
+        // Había una posición guardada (no estaba al fondo): restaurarla.
+        stickToBottomRef.current = false;
+        const restore = () => el.scrollTo({ top: saved, behavior: "auto" });
+        requestAnimationFrame(() => { restore(); requestAnimationFrame(restore); });
+        return;
+      }
+      // Sin posición guardada: estaba al fondo, seguimos pegados.
+      stickToBottomRef.current = true;
+    }
+    if (!stickToBottomRef.current) return;
     const toBottom = () => el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
     requestAnimationFrame(() => { toBottom(); requestAnimationFrame(toBottom); });
   }, [messages, smooth.displayed]);
@@ -359,6 +408,10 @@ export function ChatExperience() {
         sid = `s_${s}_${Date.now().toString(36)}`;
       }
       sessionIdRef.current = sid;
+      // Clave de scroll por conversación + marcar restauración pendiente:
+      // el siguiente render con los mensajes hidratados restaurará la posición.
+      scrollKeyRef.current = `vf_scroll_${sid}`;
+      restorePendingRef.current = true;
 
       try {
         const res = await fetch(
