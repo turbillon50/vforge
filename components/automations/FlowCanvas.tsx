@@ -78,7 +78,7 @@ export function FlowCanvas({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onClick={() => onSelect(null)}
-      className="relative h-full w-full overflow-auto rounded-2xl border border-white/[0.06]"
+      className="relative h-full w-full overflow-auto rounded-2xl border border-[var(--border-1)]"
       style={{
         minHeight: 520,
         background:
@@ -172,8 +172,8 @@ export function FlowCanvas({
               )}
             </div>
             <div className="mt-1.5 text-center">
-              <p className="truncate text-[11px] font-semibold text-white/85">{n.label}</p>
-              <p className="text-[9px] uppercase tracking-wider text-white/40">{meta.name}</p>
+              <p className="truncate text-[11px] font-semibold text-[var(--fg-primary)]">{n.label}</p>
+              <p className="text-[9px] uppercase tracking-wider text-[var(--fg-tertiary)]">{meta.name}</p>
             </div>
             {/* Handle de conexión */}
             <button
@@ -182,7 +182,7 @@ export function FlowCanvas({
                 onStartLink(n.key);
               }}
               title="Conectar →"
-              className="absolute -right-1 top-[38px] flex h-5 w-5 items-center justify-center rounded-full border border-white/20 bg-black/60 text-[10px] text-white/70 hover:border-violet-400 hover:text-violet-300"
+              className="absolute -right-1 top-[38px] flex h-5 w-5 items-center justify-center rounded-full border border-[var(--border-2)] bg-black/60 text-[10px] text-[var(--fg-secondary)] hover:border-violet-400 hover:text-violet-300"
               style={{ pointerEvents: "auto" }}
             >
               →
@@ -193,7 +193,7 @@ export function FlowCanvas({
 
       {nodes.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <p className="text-sm text-white/35">Lienzo vacío — agrega un nodo del panel para empezar.</p>
+          <p className="text-sm text-[var(--fg-muted)]">Lienzo vacío — agrega un nodo del panel para empezar.</p>
         </div>
       )}
     </div>

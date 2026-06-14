@@ -33,7 +33,7 @@ export function Modal({
             exit={{ opacity: 0, y: 30, scale: 0.98 }}
             transition={{ ease: EASE, duration: 0.3 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-white/10 bg-[#0a0a12] p-5 shadow-[0_-8px_60px_rgba(0,0,0,0.6)] sm:rounded-3xl"
+            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-[var(--border-1)] bg-[#0a0a12] p-5 shadow-[0_-8px_60px_rgba(0,0,0,0.6)] sm:rounded-3xl"
           >
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
             <div className="mb-4 flex items-start justify-between gap-3">
@@ -42,12 +42,12 @@ export function Modal({
                   {title}
                 </h2>
                 {subtitle && (
-                  <p className="mt-0.5 text-[12px] text-white/40">{subtitle}</p>
+                  <p className="mt-0.5 text-[12px] text-[var(--fg-tertiary)]">{subtitle}</p>
                 )}
               </div>
               <button
                 onClick={onClose}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 text-white/40 transition hover:text-white/80"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border-1)] text-[var(--fg-tertiary)] transition hover:text-[var(--fg-primary)]"
               >
                 <IconX size={14} />
               </button>
@@ -69,7 +69,7 @@ export function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/40">
+      <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-[var(--fg-tertiary)]">
         {label}
       </span>
       {children}
@@ -78,4 +78,4 @@ export function Field({
 }
 
 export const inputCls =
-  "w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white placeholder-white/25 outline-none transition focus:border-violet-500/50 focus:bg-white/[0.05]";
+  "w-full rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3.5 py-2.5 text-sm text-white placeholder-white/25 outline-none transition focus:border-violet-500/50 focus:bg-[var(--surface-1)]";

@@ -71,7 +71,7 @@ function agoLabel(iso: string | null, now: number): string | null {
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-t border-white/[0.06] py-2.5">
+    <div className="flex items-start justify-between gap-3 border-t border-[var(--border-1)] py-2.5">
       <span className="label-caps flex-none pt-0.5 text-[10px] text-muted">{label}</span>
       <span className="min-w-0 text-right text-[13px] text-on-surface">{value}</span>
     </div>
@@ -164,7 +164,7 @@ export function EsferaDetail({
         animate={{ y: 0, opacity: 1, scale: 1 }}
         exit={{ y: 40, opacity: 0, scale: 0.98 }}
         transition={{ type: "spring", stiffness: 320, damping: 30 }}
-        className="glass relative z-10 w-full max-w-[440px] overflow-hidden rounded-t-3xl border border-white/12 pb-[max(env(safe-area-inset-bottom),1rem)] sm:rounded-3xl sm:pb-0"
+        className="glass relative z-10 w-full max-w-[440px] overflow-hidden rounded-t-3xl border border-[var(--border-1)] pb-[max(env(safe-area-inset-bottom),1rem)] sm:rounded-3xl sm:pb-0"
         style={{ boxShadow: `0 -8px 60px ${hue}22, 0 0 0 1px ${hue}1a inset` }}
       >
         {/* Glow superior por color del agente */}
@@ -214,7 +214,7 @@ export function EsferaDetail({
             <button
               onClick={onClose}
               aria-label="Cerrar"
-              className="grid h-9 w-9 flex-none place-items-center rounded-xl border border-white/10 text-white/60 transition active:scale-95 hover:text-white"
+              className="grid h-9 w-9 flex-none place-items-center rounded-xl border border-[var(--border-1)] text-[var(--fg-secondary)] transition active:scale-95 hover:text-white"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -226,7 +226,7 @@ export function EsferaDetail({
           {working ? (
             <div className="mt-4">
               {task && (
-                <p className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-[13px] leading-relaxed text-on-surface">
+                <p className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3 text-[13px] leading-relaxed text-on-surface">
                   {task}
                 </p>
               )}
@@ -254,12 +254,12 @@ export function EsferaDetail({
                   }
                 />
                 {typeof progress === "number" && (
-                  <div className="border-t border-white/[0.06] py-2.5">
+                  <div className="border-t border-[var(--border-1)] py-2.5">
                     <div className="flex items-center justify-between">
                       <span className="label-caps text-[10px] text-muted">Avance</span>
                       <span className="text-[13px] font-medium text-on-surface">{progress}%</span>
                     </div>
-                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/8">
+                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--surface-2)]">
                       <motion.div
                         className="h-full rounded-full"
                         style={{ background: hue }}
@@ -286,7 +286,7 @@ export function EsferaDetail({
                       Actividad en vivo
                     </span>
                   </div>
-                  <div className="space-y-1 rounded-xl border border-white/[0.06] bg-black/30 p-3">
+                  <div className="space-y-1 rounded-xl border border-[var(--border-1)] bg-black/30 p-3">
                     {logLines.map((line, i) => (
                       <p
                         key={i}
@@ -335,7 +335,7 @@ export function EsferaDetail({
           ) : (
             /* Esfera en reposo */
             <div className="mt-4">
-              <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-[13px] text-muted">
+              <div className="flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3 text-[13px] text-muted">
                 <IconActivity size={14} />
                 En reposo — sin job corriendo ahora mismo.
               </div>
@@ -351,7 +351,7 @@ export function EsferaDetail({
                   />
                 </div>
               ) : (
-                <p className="mt-3 text-center text-[12px] text-white/35">
+                <p className="mt-3 text-center text-[12px] text-[var(--fg-muted)]">
                   Sin historial reciente para este agente.
                 </p>
               )}

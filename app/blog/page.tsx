@@ -31,7 +31,7 @@ export default function BlogPage() {
               Documentado.
             </span>
           </h1>
-          <p className="mt-4 max-w-xl text-[clamp(0.95rem,2vw,1.05rem)] font-light leading-relaxed text-white/40">
+          <p className="mt-4 max-w-xl text-[clamp(0.95rem,2vw,1.05rem)] font-light leading-relaxed text-[var(--fg-tertiary)]">
             La historia de VForge, el Método, el MCP, ahorros reales y casos de uso.
             {" "}{POSTS.length} artículos escritos por quien opera el sistema.
           </p>
@@ -57,7 +57,7 @@ export default function BlogPage() {
 
         {/* Featured */}
         <div className="mx-auto mt-16 max-w-5xl px-5">
-          <p className="mb-6 font-mono text-[10px] uppercase tracking-[0.2em] text-white/25">
+          <p className="mb-6 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">
             Destacados
           </p>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -67,7 +67,7 @@ export default function BlogPage() {
                 <Link
                   key={post.slug}
                   href={`/blog/${post.slug}`}
-                  className="group relative overflow-hidden rounded-2xl border border-white/8 bg-white/[0.02] p-6 transition-all duration-300 hover:border-violet-500/30 hover:bg-white/[0.04]"
+                  className="group relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] p-6 transition-all duration-300 hover:border-violet-500/30 hover:bg-[var(--surface-1)]"
                 >
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                   <span
@@ -79,11 +79,11 @@ export default function BlogPage() {
                   <h2 className="text-[15px] font-semibold leading-snug text-white transition-colors group-hover:text-violet-300">
                     {post.title}
                   </h2>
-                  <p className="mt-2 text-[13px] leading-relaxed text-white/40 line-clamp-2">
+                  <p className="mt-2 text-[13px] leading-relaxed text-[var(--fg-tertiary)] line-clamp-2">
                     {post.excerpt}
                   </p>
                   <div className="mt-4 flex items-center justify-between">
-                    <span className="font-mono text-[11px] text-white/25">{post.readingTime} min</span>
+                    <span className="font-mono text-[11px] text-[var(--fg-muted)]">{post.readingTime} min</span>
                     <span className="font-mono text-[11px] text-violet-400 opacity-0 transition-opacity group-hover:opacity-100">
                       Leer →
                     </span>

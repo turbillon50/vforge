@@ -53,14 +53,14 @@ export function JoinClient({ projectId }: { projectId: string }) {
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ ease: EASE }}
-        className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a12] p-8 text-center"
+        className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-[var(--border-1)] bg-[#0a0a12] p-8 text-center"
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
         {state === "accepting" && (
           <>
             <IconLoader size={30} className="mx-auto mb-4 animate-spin text-violet-400" />
             <h1 className="text-lg font-bold text-white">Uniéndote al proyecto…</h1>
-            <p className="mt-1 text-[13px] text-white/40">Un momento.</p>
+            <p className="mt-1 text-[13px] text-[var(--fg-tertiary)]">Un momento.</p>
           </>
         )}
         {state === "ok" && (
@@ -69,7 +69,7 @@ export function JoinClient({ projectId }: { projectId: string }) {
               <IconCheck size={26} className="text-emerald-400" />
             </div>
             <h1 className="text-lg font-bold text-white">¡Listo! Bienvenido</h1>
-            <p className="mt-1 flex items-center justify-center gap-1.5 text-[13px] text-white/40">
+            <p className="mt-1 flex items-center justify-center gap-1.5 text-[13px] text-[var(--fg-tertiary)]">
               Entrando a tu portal <IconArrowR size={13} />
             </p>
           </>
@@ -80,8 +80,8 @@ export function JoinClient({ projectId }: { projectId: string }) {
               <IconWarn size={24} className="text-amber-400" />
             </div>
             <h1 className="text-lg font-bold text-white">No pudimos entrar</h1>
-            <p className="mt-1 text-[13px] text-white/45">{message}</p>
-            <p className="mt-3 text-[11px] text-white/30">
+            <p className="mt-1 text-[13px] text-[var(--fg-tertiary)]">{message}</p>
+            <p className="mt-3 text-[11px] text-[var(--fg-muted)]">
               Verifica que iniciaste sesión con el correo al que te invitaron.
             </p>
           </>

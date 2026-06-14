@@ -189,7 +189,7 @@ export default function BlueprintCanvas({ scope }: Props) {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 backdrop-blur">
+          <div className="rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-1 backdrop-blur">
             <span className="font-mono text-[10px] text-muted">
               {nodes.filter((n) => n.kind === "feature").length} funciones ·{" "}
               {nodes.filter((n) => n.kind === "integration").length} integraciones
@@ -465,7 +465,7 @@ export default function BlueprintCanvas({ scope }: Props) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
-        className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-white/8 bg-white/4 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted backdrop-blur-sm"
+        className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted backdrop-blur-sm"
       >
         Arrastra · rueda zoom
       </motion.p>

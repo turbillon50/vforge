@@ -127,7 +127,7 @@ export default function AssistantChat() {
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#0a0a0f]">
       {/* Header */}
-      <div className="relative flex items-center gap-3 border-b border-white/6 px-5 py-4">
+      <div className="relative flex items-center gap-3 border-b border-[var(--border-1)] px-5 py-4">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
         {/* V avatar */}
         <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-cyan-500 shadow-glow">
@@ -148,7 +148,7 @@ export default function AssistantChat() {
           </p>
         </div>
         <div className="ml-auto">
-          <div className="flex items-center gap-1.5 rounded-full border border-white/8 bg-white/4 px-3 py-1">
+          <div className="flex items-center gap-1.5 rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-1">
             <IconZap size={10} className="text-violet-400" />
             <span className="font-mono text-[10px] text-muted">Claude Sonnet</span>
           </div>
@@ -220,7 +220,7 @@ export default function AssistantChat() {
                     {m.content}
                   </div>
                 ) : (
-                  <div className="relative max-w-[88%] overflow-hidden rounded-2xl rounded-bl-sm border border-white/8 bg-white/4 px-4 py-3 text-sm text-on-surface backdrop-blur-sm">
+                  <div className="relative max-w-[88%] overflow-hidden rounded-2xl rounded-bl-sm border border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-3 text-sm text-on-surface backdrop-blur-sm">
                     {/* Crystal sheen */}
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                     {m.content ? (
@@ -254,13 +254,13 @@ export default function AssistantChat() {
       </div>
 
       {/* Input */}
-      <div className="relative border-t border-white/6 p-4">
+      <div className="relative border-t border-[var(--border-1)] p-4">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/6 to-transparent" />
         <div
-          className={`flex items-end gap-3 overflow-hidden rounded-2xl border bg-white/4 px-4 py-3 backdrop-blur-sm transition-all duration-200 ${
+          className={`flex items-end gap-3 overflow-hidden rounded-2xl border bg-[var(--surface-1)] px-4 py-3 backdrop-blur-sm transition-all duration-200 ${
             busy
               ? "border-violet-500/30"
-              : "border-white/10 focus-within:border-violet-500/40 focus-within:bg-white/5"
+              : "border-[var(--border-1)] focus-within:border-violet-500/40 focus-within:bg-[var(--surface-1)]"
           }`}
         >
           <textarea

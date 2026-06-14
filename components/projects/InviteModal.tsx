@@ -218,13 +218,13 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ duration: 0.32, ease: EASE }}
             onClick={(e) => e.stopPropagation()}
-            className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-white/10 bg-[#0e0e16] shadow-2xl md:rounded-3xl"
+            className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-[var(--border-1)] bg-[#0e0e16] shadow-2xl md:rounded-3xl"
           >
             {/* Sheen */}
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
             {/* Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-white/8 px-5 py-4 md:px-6">
+            <div className="flex items-start justify-between gap-3 border-b border-[var(--border-1)] px-5 py-4 md:px-6">
               <div className="min-w-0">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-violet-400">
                   Invitar al proyecto
@@ -236,7 +236,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
               <button
                 onClick={onClose}
                 aria-label="Cerrar"
-                className="shrink-0 rounded-lg border border-white/10 bg-white/5 p-2 text-muted transition-colors hover:border-white/20 hover:text-on-surface"
+                className="shrink-0 rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] p-2 text-muted transition-colors hover:border-[var(--border-2)] hover:text-on-surface"
               >
                 <IconX size={15} />
               </button>
@@ -265,7 +265,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
                       className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
                         method === key
                           ? "border-violet-500/50 bg-violet-500/10 text-on-surface"
-                          : "border-white/8 bg-white/3 text-muted hover:border-white/16 hover:text-on-surface"
+                          : "border-[var(--border-1)] bg-[var(--surface-1)] text-muted hover:border-[var(--border-2)] hover:text-on-surface"
                       }`}
                     >
                       <Icon size={15} className={method === key ? "text-violet-300" : ""} />
@@ -280,7 +280,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
                 <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted">
                   {method === "whatsapp" ? "Número de WhatsApp" : "Correo electrónico"}
                 </p>
-                <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0a0f] px-3 py-2.5 focus-within:border-violet-500/50">
+                <div className="flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-[#0a0a0f] px-3 py-2.5 focus-within:border-violet-500/50">
                   {method === "whatsapp" ? (
                     <IconChat size={16} className="shrink-0 text-muted" />
                   ) : (
@@ -320,7 +320,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
                         key={key}
                         onClick={() => setScope(key)}
                         className={`flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all ${
-                          active ? "border-white/25 bg-white/8" : "border-white/8 bg-white/3 hover:border-white/16"
+                          active ? "border-white/25 bg-[var(--surface-2)]" : "border-[var(--border-1)] bg-[var(--surface-1)] hover:border-[var(--border-2)]"
                         }`}
                       >
                         <span
@@ -383,7 +383,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
               </button>
 
               {/* Miembros actuales */}
-              <div className="border-t border-white/8 pt-4">
+              <div className="border-t border-[var(--border-1)] pt-4">
                 <div className="mb-3 flex items-center gap-2">
                   <IconUsers size={14} className="text-muted" />
                   <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
@@ -394,7 +394,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
                 {loadingMembers ? (
                   <div className="space-y-2">
                     {[0, 1].map((i) => (
-                      <div key={i} className="h-11 animate-pulse rounded-xl border border-white/6 bg-white/3" />
+                      <div key={i} className="h-11 animate-pulse rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)]" />
                     ))}
                   </div>
                 ) : members.length === 0 ? (
@@ -404,7 +404,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
                     {members.map((m) => (
                       <li
                         key={m.id}
-                        className="flex items-center gap-3 rounded-xl border border-white/6 bg-white/3 px-3 py-2.5"
+                        className="flex items-center gap-3 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5"
                       >
                         <span
                           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold text-white"
@@ -433,7 +433,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
                             m.status === "active"
                               ? "border border-emerald-500/30 bg-emerald-500/8 text-emerald-400"
                               : m.status === "revoked"
-                                ? "border border-white/8 bg-white/3 text-muted"
+                                ? "border border-[var(--border-1)] bg-[var(--surface-1)] text-muted"
                                 : "border border-cyan-400/30 bg-cyan-400/8 text-cyan-400"
                           }`}
                         >

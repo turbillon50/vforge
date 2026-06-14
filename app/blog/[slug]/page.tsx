@@ -52,10 +52,10 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       <main className="min-h-screen bg-[#03020a] pb-32 pt-28">
         <div className="mx-auto max-w-2xl px-5">
           {/* Breadcrumb */}
-          <div className="mb-8 flex items-center gap-2 font-mono text-[11px] text-white/25">
-            <Link href="/" className="hover:text-white/50 transition-colors">VForge</Link>
+          <div className="mb-8 flex items-center gap-2 font-mono text-[11px] text-[var(--fg-muted)]">
+            <Link href="/" className="hover:text-[var(--fg-tertiary)] transition-colors">VForge</Link>
             <span>/</span>
-            <Link href="/blog" className="hover:text-white/50 transition-colors">Blog</Link>
+            <Link href="/blog" className="hover:text-[var(--fg-tertiary)] transition-colors">Blog</Link>
             <span>/</span>
             <span style={{ color: cat.color }}>{cat.label}</span>
           </div>
@@ -71,10 +71,10 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             <h1 className="text-[clamp(1.8rem,5vw,2.6rem)] font-bold leading-[1.1] tracking-[-0.03em] text-white">
               {post.title}
             </h1>
-            <p className="mt-4 text-[1.05rem] leading-relaxed text-white/50">
+            <p className="mt-4 text-[1.05rem] leading-relaxed text-[var(--fg-tertiary)]">
               {post.excerpt}
             </p>
-            <div className="mt-5 flex items-center gap-4 font-mono text-[11px] text-white/25">
+            <div className="mt-5 flex items-center gap-4 font-mono text-[11px] text-[var(--fg-muted)]">
               <span>{new Date(post.publishedAt).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}</span>
               <span>·</span>
               <span>{post.readingTime} min de lectura</span>
@@ -108,7 +108,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               </Link>
               <Link
                 href="/blog/vforge-mcp-instalacion"
-                className="rounded-xl border border-white/10 bg-white/4 px-5 py-2.5 text-sm text-white/70 hover:text-white transition-colors"
+                className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-5 py-2.5 text-sm text-[var(--fg-secondary)] hover:text-white transition-colors"
               >
                 Instalar VForge MCP
               </Link>
@@ -118,7 +118,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
           {/* Related */}
           {related.length > 0 && (
             <div className="mt-16">
-              <p className="mb-5 font-mono text-[10px] uppercase tracking-[0.2em] text-white/25">
+              <p className="mb-5 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">
                 También en {cat.label}
               </p>
               <div className="space-y-3">
@@ -126,11 +126,11 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                   <Link
                     key={r.slug}
                     href={`/blog/${r.slug}`}
-                    className="flex items-start justify-between gap-4 rounded-xl border border-white/6 bg-white/2 p-4 transition-all hover:border-white/12 hover:bg-white/4"
+                    className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border-1)] bg-white/2 p-4 transition-all hover:border-[var(--border-1)] hover:bg-[var(--surface-1)]"
                   >
                     <div>
                       <p className="text-[13px] font-medium text-white leading-snug">{r.title}</p>
-                      <p className="mt-1 font-mono text-[11px] text-white/30">{r.readingTime} min</p>
+                      <p className="mt-1 font-mono text-[11px] text-[var(--fg-muted)]">{r.readingTime} min</p>
                     </div>
                     <span className="shrink-0 font-mono text-[11px] text-violet-400 mt-0.5">→</span>
                   </Link>

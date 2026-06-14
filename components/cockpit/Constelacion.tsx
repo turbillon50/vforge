@@ -177,7 +177,7 @@ function MiniLive({
         >
           {job.project || job.agentName}
         </span>
-        <span className="flex flex-none items-center gap-1 text-[10px] font-medium text-white/55">
+        <span className="flex flex-none items-center gap-1 text-[10px] font-medium text-[var(--fg-tertiary)]">
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: hue, boxShadow: `0 0 6px ${hue}` }} />
           {elapsed(job.since, now)}
         </span>
@@ -196,7 +196,7 @@ function MiniLive({
         <div className="flex items-center justify-between gap-2">
           <span className="truncate text-[11px] font-medium text-on-surface">{job.agentName}</span>
           {typeof job.progress === "number" && (
-            <span className="flex-none text-[10px] text-white/55">{job.progress}%</span>
+            <span className="flex-none text-[10px] text-[var(--fg-tertiary)]">{job.progress}%</span>
           )}
         </div>
         <p className="mt-0.5 line-clamp-1 text-[10px] text-muted">{job.task || "Tarea en curso"}</p>
@@ -229,9 +229,9 @@ function MiniRest({ item, now }: { item: FeedItem; now: number }) {
   const active = useMemo(() => new Set<EsferaId | null>([item.agent]), [item.agent]);
   const verdict = item.grokVerdict;
   return (
-    <div className="glass relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.06] p-3 opacity-90 sm:p-4">
+    <div className="glass relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border-1)] p-3 opacity-90 sm:p-4">
       <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="truncate rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] font-medium text-white/45">
+        <span className="truncate rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-2 py-0.5 text-[10px] font-medium text-[var(--fg-tertiary)]">
           {item.project || item.agentName}
         </span>
         {verdict ? (
@@ -248,7 +248,7 @@ function MiniRest({ item, now }: { item: FeedItem; now: number }) {
           </span>
         ) : (
           <span
-            className="flex flex-none items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-1.5 py-0.5 text-[9px] font-medium text-white/35"
+            className="flex flex-none items-center gap-1 rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-1.5 py-0.5 text-[9px] font-medium text-[var(--fg-muted)]"
             title="Job cerrado sin auditoría Grok"
           >
             <LogoGrok size={9} style={{ color: "#6b7280" }} /> sin auditar
@@ -264,8 +264,8 @@ function MiniRest({ item, now }: { item: FeedItem; now: number }) {
       </div>
 
       <div className="mt-1">
-        <p className="line-clamp-1 text-[10px] text-white/40">{item.task || "Job finalizado"}</p>
-        <p className="mt-0.5 text-[10px] text-white/30">{ago(item.ts, now)}</p>
+        <p className="line-clamp-1 text-[10px] text-[var(--fg-tertiary)]">{item.task || "Job finalizado"}</p>
+        <p className="mt-0.5 text-[10px] text-[var(--fg-muted)]">{ago(item.ts, now)}</p>
       </div>
     </div>
   );
@@ -305,7 +305,7 @@ export function Constelacion({
   const lastAgo = lastJobAt ? ago(lastJobAt, now) : null;
 
   return (
-    <section className="glass relative overflow-hidden rounded-2xl border border-white/10 p-4 sm:p-5">
+    <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-4 sm:p-5">
       <div className="relative mb-1 flex items-center justify-between">
         <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
           <IconActivity size={13} /> Constelación · supervisión total

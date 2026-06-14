@@ -94,7 +94,7 @@ export function RegisterSW() {
         />
         <div className="min-w-0 flex-1">
           <p className="text-[13px] font-semibold text-white">Nueva versión disponible</p>
-          <p className="truncate text-[11px] text-white/55">Actualiza para ver lo último de VForge.</p>
+          <p className="truncate text-[11px] text-[var(--fg-tertiary)]">Actualiza para ver lo último de VForge.</p>
         </div>
         <button
           onClick={applyUpdate}

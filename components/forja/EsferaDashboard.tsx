@@ -125,7 +125,7 @@ export function EsferaDashboard() {
         <motion.span
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 0.9, ease: "linear" }}
-          className="text-white/40"
+          className="text-[var(--fg-tertiary)]"
         >
           <IconLoader size={26} />
         </motion.span>
@@ -152,7 +152,7 @@ export function EsferaDashboard() {
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <HealthPill health={health} />
-            <span className="inline-flex items-center gap-1 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-0.5 font-mono text-[10px] text-white/50">
+            <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-2.5 py-0.5 font-mono text-[10px] text-[var(--fg-tertiary)]">
               <IconSparkles size={10} /> {PLAN_LABEL[data?.tenant.plan ?? ""] ?? "Forja Libre"}
             </span>
           </div>
@@ -160,7 +160,7 @@ export function EsferaDashboard() {
         <button
           onClick={reverify}
           disabled={refreshing}
-          className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 text-xs font-medium text-white/70 transition-colors hover:border-white/20 hover:text-white disabled:opacity-50"
+          className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 text-xs font-medium text-[var(--fg-secondary)] transition-colors hover:border-[var(--border-2)] hover:text-white disabled:opacity-50"
         >
           <motion.span
             animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
@@ -214,7 +214,7 @@ export function EsferaDashboard() {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-3 font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">
+    <h2 className="mb-3 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--fg-muted)]">
       {children}
     </h2>
   );
@@ -248,11 +248,11 @@ function SavingsCard({ savings, liveCount }: { savings?: Savings; liveCount: num
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 120, damping: 20 }}
-      className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#0e0b1e]/90 to-[#0a0814]/90 p-6 backdrop-blur-xl md:p-7"
+      className="relative overflow-hidden rounded-3xl border border-[var(--border-1)] bg-gradient-to-br from-[#0e0b1e]/90 to-[#0a0814]/90 p-6 backdrop-blur-xl md:p-7"
     >
       <div className="pointer-events-none absolute right-[-10%] top-[-30%] h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
       <div className="relative">
-        <div className="flex items-center gap-2 text-white/50">
+        <div className="flex items-center gap-2 text-[var(--fg-tertiary)]">
           <IconArrowUp size={14} className="text-emerald-400" />
           <span className="font-mono text-[10px] uppercase tracking-[0.2em]">
             Ahorro del mes · vs infra tradicional
@@ -262,9 +262,9 @@ function SavingsCard({ savings, liveCount }: { savings?: Savings; liveCount: num
           <span className="font-display text-4xl font-bold tabular-nums text-white md:text-5xl">
             {MXN.format(monthly)}
           </span>
-          <span className="mb-1.5 font-mono text-xs text-white/40">/mes</span>
+          <span className="mb-1.5 font-mono text-xs text-[var(--fg-tertiary)]">/mes</span>
         </div>
-        <p className="mt-2 text-xs text-white/45">
+        <p className="mt-2 text-xs text-[var(--fg-tertiary)]">
           {liveCount > 0 ? (
             <>
               Equivale a <span className="text-emerald-300/90">{MXN.format(annual)}</span> al año con tus
@@ -276,18 +276,18 @@ function SavingsCard({ savings, liveCount }: { savings?: Savings; liveCount: num
         </p>
 
         {savings && savings.breakdown.length > 0 && (
-          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-white/[0.06] pt-4">
+          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-[var(--border-1)] pt-4">
             {savings.breakdown.map((b) => {
               const m = SERVICE_META[b.service];
               return (
                 <div key={b.service} className="flex flex-col gap-1">
-                  <span className="flex items-center gap-1.5 text-white/45">
+                  <span className="flex items-center gap-1.5 text-[var(--fg-tertiary)]">
                     <m.Icon size={13} />
                     <span className="font-mono text-[10px]">{m.label}</span>
                   </span>
                   <span
                     className={`font-mono text-xs tabular-nums ${
-                      b.verified ? "text-emerald-300/90" : "text-white/25"
+                      b.verified ? "text-emerald-300/90" : "text-[var(--fg-muted)]"
                     }`}
                   >
                     {b.verified ? MXN.format(b.monthlyMxn) : "—"}
@@ -312,7 +312,7 @@ function ConnectionCard({ conn, index }: { conn: Connection; index: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.06 }}
       className={`rounded-2xl border bg-[#0c0a18]/80 p-4 backdrop-blur-xl ${
-        ok ? "border-emerald-500/25" : err ? "border-red-500/25" : "border-white/[0.07]"
+        ok ? "border-emerald-500/25" : err ? "border-red-500/25" : "border-[var(--border-1)]"
       }`}
     >
       <div className="flex items-center justify-between">
@@ -322,7 +322,7 @@ function ConnectionCard({ conn, index }: { conn: Connection; index: number }) {
               ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
               : err
                 ? "border-red-500/30 bg-red-500/10 text-red-300"
-                : "border-white/[0.08] bg-white/[0.03] text-white/60"
+                : "border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-secondary)]"
           }`}
         >
           <m.Icon size={17} />
@@ -351,7 +351,7 @@ function ConnectionCard({ conn, index }: { conn: Connection; index: number }) {
           <IconWarn size={11} /> {conn.lastError ?? "error"}
         </p>
       ) : (
-        <p className="mt-0.5 font-mono text-[11px] text-white/30">sin conectar</p>
+        <p className="mt-0.5 font-mono text-[11px] text-[var(--fg-muted)]">sin conectar</p>
       )}
     </motion.div>
   );
@@ -360,14 +360,14 @@ function ConnectionCard({ conn, index }: { conn: Connection; index: number }) {
 function EventsList({ events }: { events: EventView[] }) {
   if (events.length === 0) {
     return (
-      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-6 text-center">
-        <IconActivity size={20} className="mx-auto text-white/20" />
-        <p className="mt-2 text-xs text-white/35">Sin actividad todavía.</p>
+      <div className="rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-6 text-center">
+        <IconActivity size={20} className="mx-auto text-[var(--fg-muted)]" />
+        <p className="mt-2 text-xs text-[var(--fg-muted)]">Sin actividad todavía.</p>
       </div>
     );
   }
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+    <div className="overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)]">
       <AnimatePresence initial={false}>
         {events.map((e, i) => {
           const tone =
@@ -381,12 +381,12 @@ function EventsList({ events }: { events: EventView[] }) {
               key={`${e.created_at}-${i}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex items-start gap-3 border-b border-white/[0.04] px-4 py-3 last:border-0"
+              className="flex items-start gap-3 border-b border-[var(--border-1)] px-4 py-3 last:border-0"
             >
               <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${tone.replace("text-", "bg-")}`} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs text-white/70">{e.message ?? e.kind}</p>
-                <p className="mt-0.5 font-mono text-[10px] text-white/30">
+                <p className="truncate text-xs text-[var(--fg-secondary)]">{e.message ?? e.kind}</p>
+                <p className="mt-0.5 font-mono text-[10px] text-[var(--fg-muted)]">
                   {e.service ? `${e.service} · ` : ""}
                   {fmtWhen(e.created_at)}
                 </p>
@@ -404,13 +404,13 @@ function EmptyState({ onForge }: { onForge: () => void }) {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl border border-white/[0.08] bg-[#0c0a18]/70 p-8 text-center backdrop-blur-xl md:p-12"
+      className="rounded-3xl border border-[var(--border-1)] bg-[#0c0a18]/70 p-8 text-center backdrop-blur-xl md:p-12"
     >
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/30 bg-violet-500/10 text-violet-300">
         <IconShield size={28} />
       </div>
       <h2 className="mt-5 font-display text-xl font-bold text-white">Tu esfera aún no está forjada</h2>
-      <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-white/45">
+      <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[var(--fg-tertiary)]">
         Conecta tu propia infraestructura — GitHub, Vercel y Neon — para encender tu esfera y empezar a
         ahorrar sobre tus free tiers.
       </p>

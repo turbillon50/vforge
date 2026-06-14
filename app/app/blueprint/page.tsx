@@ -251,12 +251,12 @@ export default function BlueprintPage() {
             <IconPlus size={16} /> Nuevo flujo
           </button>
 
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-2">
-            <p className="px-1 pb-1 text-[10px] uppercase tracking-wider text-white/40">Mis flujos</p>
+          <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-2">
+            <p className="px-1 pb-1 text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">Mis flujos</p>
             {loading ? (
-              <div className="flex justify-center py-4 text-white/40"><IconLoader size={18} /></div>
+              <div className="flex justify-center py-4 text-[var(--fg-tertiary)]"><IconLoader size={18} /></div>
             ) : flows.length === 0 ? (
-              <p className="px-1 py-3 text-xs text-white/35">Aún no hay flujos. Crea el primero.</p>
+              <p className="px-1 py-3 text-xs text-[var(--fg-muted)]">Aún no hay flujos. Crea el primero.</p>
             ) : (
               <ul className="space-y-1">
                 {flows.map((f) => (
@@ -265,14 +265,14 @@ export default function BlueprintPage() {
                       onClick={() => openFlow(f.id)}
                       className={
                         "flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs " +
-                        (flowId === f.id ? "bg-violet-500/15 text-white" : "text-white/70 hover:bg-white/[0.04]")
+                        (flowId === f.id ? "bg-violet-500/15 text-white" : "text-[var(--fg-secondary)] hover:bg-[var(--surface-1)]")
                       }
                     >
                       <span className="truncate">{f.name}</span>
                       <span
                         className={
                           "ml-2 shrink-0 rounded-full px-1.5 py-0.5 text-[9px] uppercase " +
-                          (f.status === "active" ? "bg-emerald-500/15 text-emerald-300" : "bg-white/[0.05] text-white/40")
+                          (f.status === "active" ? "bg-emerald-500/15 text-emerald-300" : "bg-[var(--surface-1)] text-[var(--fg-tertiary)]")
                         }
                       >
                         {f.status}
@@ -285,14 +285,14 @@ export default function BlueprintPage() {
           </div>
 
           {(nodes.length > 0 || flowId) && (
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-2">
-              <p className="px-1 pb-1.5 text-[10px] uppercase tracking-wider text-white/40">Agregar nodo</p>
+            <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-2">
+              <p className="px-1 pb-1.5 text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">Agregar nodo</p>
               <div className="grid grid-cols-2 gap-1.5">
                 {PALETTE.map((t) => (
                   <button
                     key={t}
                     onClick={() => addNode(t)}
-                    className="flex items-center gap-1.5 rounded-lg border border-white/[0.06] px-2 py-1.5 text-[11px] text-white/75 hover:border-white/20"
+                    className="flex items-center gap-1.5 rounded-lg border border-[var(--border-1)] px-2 py-1.5 text-[11px] text-[var(--fg-primary)] hover:border-[var(--border-2)]"
                   >
                     <span className="h-2.5 w-2.5 rounded-full" style={{ background: NODE_META[t].color }} />
                     {NODE_META[t].name}
@@ -310,12 +310,12 @@ export default function BlueprintPage() {
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-sm text-white outline-none focus:border-violet-400/50"
+                className="min-w-0 flex-1 rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-1.5 text-sm text-white outline-none focus:border-violet-400/50"
               />
               <button
                 onClick={save}
                 disabled={saving}
-                className="flex items-center gap-1.5 rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white/85 hover:bg-white/[0.08] disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-1.5 text-xs font-semibold text-[var(--fg-primary)] hover:bg-[var(--surface-2)] disabled:opacity-50"
               >
                 {saving ? <IconLoader size={14} /> : <IconCheck size={14} />} Guardar
               </button>
@@ -333,7 +333,7 @@ export default function BlueprintPage() {
                     "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold " +
                     (status === "active"
                       ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-200"
-                      : "border-white/[0.1] bg-white/[0.04] text-white/70 hover:bg-white/[0.08]")
+                      : "border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-secondary)] hover:bg-[var(--surface-2)]")
                   }
                 >
                   <IconZap size={14} /> {status === "active" ? "Activo" : "Activar"}
@@ -343,10 +343,10 @@ export default function BlueprintPage() {
           )}
 
           {nodes.length === 0 && !flowId ? (
-            <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.08] py-20 text-center">
+            <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border-1)] py-20 text-center">
               <span className="mb-3 text-violet-400"><IconZap size={34} /></span>
-              <p className="text-sm text-white/60">Selecciona un flujo o crea uno nuevo.</p>
-              <p className="mt-1 text-xs text-white/35">Conecta nodos esféricos para automatizar WhatsApp + CRM.</p>
+              <p className="text-sm text-[var(--fg-secondary)]">Selecciona un flujo o crea uno nuevo.</p>
+              <p className="mt-1 text-xs text-[var(--fg-muted)]">Conecta nodos esféricos para automatizar WhatsApp + CRM.</p>
             </div>
           ) : (
             <FlowCanvas
@@ -371,8 +371,8 @@ export default function BlueprintPage() {
           )}
 
           {logOutput && (
-            <div className="rounded-xl border border-white/[0.06] bg-black/40 p-3 font-mono text-[11px] text-white/70">
-              <p className="mb-1 text-[10px] uppercase tracking-wider text-white/40">Resultado de la corrida</p>
+            <div className="rounded-xl border border-[var(--border-1)] bg-black/40 p-3 font-mono text-[11px] text-[var(--fg-secondary)]">
+              <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">Resultado de la corrida</p>
               {logOutput.length === 0 ? <p>sin logs</p> : logOutput.map((l, i) => <div key={i}>{l}</div>)}
             </div>
           )}
@@ -380,11 +380,11 @@ export default function BlueprintPage() {
 
         {/* Derecha: inspector + corridas */}
         <div className="flex flex-col gap-3">
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-            <p className="pb-2 text-[10px] uppercase tracking-wider text-white/40">Inspector</p>
+          <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3">
+            <p className="pb-2 text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">Inspector</p>
             <AnimatePresence mode="wait">
               {!sel ? (
-                <motion.p key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-white/35">
+                <motion.p key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-[var(--fg-muted)]">
                   Selecciona un nodo para configurarlo.
                 </motion.p>
               ) : (
@@ -402,7 +402,7 @@ export default function BlueprintPage() {
                     </Field>
                   )}
                   {sel.type === "crm_upsert" && (
-                    <label className="flex items-center gap-2 text-xs text-white/70">
+                    <label className="flex items-center gap-2 text-xs text-[var(--fg-secondary)]">
                       <input type="checkbox" checked={Boolean(sel.config.createLead)} onChange={(e) => patchConfig(sel.key, { createLead: e.target.checked })} />
                       Crear lead en pipeline
                     </label>
@@ -428,15 +428,15 @@ export default function BlueprintPage() {
           </div>
 
           {runs.length > 0 && (
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-              <p className="pb-2 text-[10px] uppercase tracking-wider text-white/40">Últimas corridas</p>
+            <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3">
+              <p className="pb-2 text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">Últimas corridas</p>
               <ul className="space-y-1.5">
                 {runs.slice(0, 10).map((r) => (
                   <li key={r.id} className="flex items-center justify-between text-[11px]">
-                    <span className="flex items-center gap-1.5 text-white/60">
+                    <span className="flex items-center gap-1.5 text-[var(--fg-secondary)]">
                       <IconActivity size={12} /> {r.trigger_type}
                     </span>
-                    <span className={r.status === "success" ? "text-emerald-300" : r.status === "error" ? "text-red-400" : "text-white/50"}>
+                    <span className={r.status === "success" ? "text-emerald-300" : r.status === "error" ? "text-red-400" : "text-[var(--fg-tertiary)]"}>
                       {r.status}
                     </span>
                   </li>
@@ -451,12 +451,12 @@ export default function BlueprintPage() {
 }
 
 const inputCls =
-  "w-full rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-xs text-white outline-none focus:border-violet-400/50";
+  "w-full rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] px-2.5 py-1.5 text-xs text-white outline-none focus:border-violet-400/50";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] uppercase tracking-wider text-white/40">{label}</span>
+      <span className="mb-1 block text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">{label}</span>
       {children}
     </label>
   );
@@ -515,7 +515,7 @@ function WaSendFields({ node, patch }: { node: EditorNode; patch: (p: Record<str
       <Field label="Mensaje">
         <textarea value={String(node.config.message ?? "")} onChange={(e) => patch({ message: e.target.value })} rows={3} className={inputCls} />
       </Field>
-      <p className="text-[10px] text-white/35">Variables: {"{{from}}"}, {"{{body}}"}, {"{{pushName}}"}</p>
+      <p className="text-[10px] text-[var(--fg-muted)]">Variables: {"{{from}}"}, {"{{body}}"}, {"{{pushName}}"}</p>
     </>
   );
 }

@@ -89,7 +89,7 @@ function IntegrationPopup({ item, onClose }: { item: Integration; onClose: () =>
         exit={{ opacity:0, y:40, scale:0.95 }}
         transition={{ ease:EASE as any, duration:0.4 }}
         onClick={e => e.stopPropagation()}
-        className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a14]"
+        className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-[var(--border-1)] bg-[#0a0a14]"
         style={{ boxShadow:`0 0 80px ${item.accent}30, 0 40px 100px rgba(0,0,0,0.6)` }}>
         <div className="relative h-44 overflow-hidden">
           <img src={item.bgImg} alt={item.name} className="h-full w-full object-cover opacity-60" style={{ filter:"saturate(1.3)" }} 
@@ -97,28 +97,28 @@ function IntegrationPopup({ item, onClose }: { item: Integration; onClose: () =>
             />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a14] via-[#0a0a14]/40 to-transparent" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          <button onClick={onClose} className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white/60 backdrop-blur transition hover:text-white">✕</button>
+          <button onClick={onClose} className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-2)] bg-black/50 text-[var(--fg-secondary)] backdrop-blur transition hover:text-white">✕</button>
           <div className="absolute bottom-4 left-5 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a14]">
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[#0a0a14]">
               <img src={item.logo} alt={item.name} className="h-10 w-10 object-cover" 
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
             </div>
             <div>
               <p className="text-lg font-bold text-white leading-tight">{item.name}</p>
-              <p className="text-[11px] text-white/40">{item.category}</p>
+              <p className="text-[11px] text-[var(--fg-tertiary)]">{item.category}</p>
             </div>
           </div>
         </div>
         <div className="p-5">
-          <p className="text-sm font-semibold leading-relaxed text-white/80">{item.tagline}</p>
-          <p className="mt-2 text-[13px] leading-relaxed text-white/45">{item.desc}</p>
-          <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.03] p-3">
+          <p className="text-sm font-semibold leading-relaxed text-[var(--fg-primary)]">{item.tagline}</p>
+          <p className="mt-2 text-[13px] leading-relaxed text-[var(--fg-tertiary)]">{item.desc}</p>
+          <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3">
             <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background:item.accent, boxShadow:`0 0 6px ${item.accent}` }} />
-            <p className="text-[12px] text-white/50"><span className="font-semibold text-white/75">Rol en VForge:</span> {item.role}</p>
+            <p className="text-[12px] text-[var(--fg-tertiary)]"><span className="font-semibold text-[var(--fg-primary)]">Rol en VForge:</span> {item.role}</p>
           </div>
           <div className="mt-4 space-y-2">
-            <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/25">Cómo V lo integra</p>
+            <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">Cómo V lo integra</p>
             {item.steps.map((s, i) => (
               <motion.div key={i} initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }}
                 transition={{ delay:i*0.07, ease:EASE as any }}>
@@ -127,7 +127,7 @@ function IntegrationPopup({ item, onClose }: { item: Integration; onClose: () =>
                     style={{ background:`${item.accent}20`, color:item.accent, border:`1px solid ${item.accent}40` }}>
                     {i+1}
                   </span>
-                  <p className="text-[12px] text-white/55">{s}</p>
+                  <p className="text-[12px] text-[var(--fg-tertiary)]">{s}</p>
                 </div>
               </motion.div>
             ))}
@@ -153,17 +153,17 @@ function IntegrationCard({ item, onClick }: { item: Integration; onClick: () => 
         <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           style={{ background:`radial-gradient(ellipse at 50% 0%, ${item.accent}25, transparent 60%)` }} />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-        <div className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-white/[0.07] bg-[#0c0c18]">
+        <div className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-[var(--border-1)] bg-[#0c0c18]">
           <img src={item.logo} alt={item.name} className="h-9 w-9 object-cover" 
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
         </div>
-        <div className="absolute right-4 top-4 rounded-full border border-white/15 bg-black/50 px-2 py-0.5 backdrop-blur-sm">
-          <p className="font-mono text-[9px] uppercase tracking-widest text-white/60">{item.category}</p>
+        <div className="absolute right-4 top-4 rounded-full border border-[var(--border-1)] bg-black/50 px-2 py-0.5 backdrop-blur-sm">
+          <p className="font-mono text-[9px] uppercase tracking-widest text-[var(--fg-secondary)]">{item.category}</p>
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <p className="font-display text-[15px] font-bold text-white leading-tight">{item.name}</p>
-          <p className="mt-1 text-[11px] leading-snug text-white/50">{item.tagline}</p>
+          <p className="mt-1 text-[11px] leading-snug text-[var(--fg-tertiary)]">{item.tagline}</p>
           <div className="mt-3 flex items-center gap-1.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <span className="h-1 w-1 rounded-full" style={{ background:item.accent }} />
             <p className="font-mono text-[9px] uppercase tracking-widest" style={{ color:item.accent }}>Ver integración →</p>
@@ -211,7 +211,7 @@ export function Integraciones() {
             Un stack completo,<br />
             <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">conectado por V.</span>
           </h2>
-          <p className="mx-auto mt-3 max-w-md text-center text-sm font-light text-white/40">
+          <p className="mx-auto mt-3 max-w-md text-center text-sm font-light text-[var(--fg-tertiary)]">
             Cada integración se configura automáticamente. Tú no tocas DNS ni variables de entorno.
           </p>
         </motion.div>
@@ -219,7 +219,7 @@ export function Integraciones() {
           transition={{ delay:0.3, ease:EASE as any }}
           className="mt-10">
           <div className="flex items-center justify-between mb-4 px-1">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/25">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">
               {INTEGRATIONS.length} integraciones · Desliza para ver
             </p>
             <div className="flex items-center gap-1.5">
@@ -244,7 +244,7 @@ export function Integraciones() {
             ))}
             <div className="pointer-events-none sticky right-0 z-10 w-8 shrink-0 bg-gradient-to-l from-[#050509] to-transparent" />
           </div>
-          <p className="mt-3 text-center font-mono text-[10px] text-white/20">Toca cualquier tarjeta para ver cómo V la integra</p>
+          <p className="mt-3 text-center font-mono text-[10px] text-[var(--fg-muted)]">Toca cualquier tarjeta para ver cómo V la integra</p>
         </motion.div>
       </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />

@@ -13,7 +13,7 @@ export function Credenciales() {
     <section
       id="credenciales"
       aria-label="Credenciales y certificaciones"
-      data-theme="dark" className="border-b border-white/[0.05] bg-[#050509] py-12 md:py-14"
+      data-theme="dark" className="border-b border-[var(--border-1)] bg-[#050509] py-12 md:py-14"
     >
       <div className="mx-auto max-w-container px-5 md:px-margin-desktop">
         <p className="label-caps mb-3 text-center text-cyber-cyan">Confianza verificada</p>

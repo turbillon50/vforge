@@ -173,8 +173,8 @@ export function ForjaWizard() {
         <h1 className="font-display text-2xl font-bold text-white md:text-3xl">
           Conecta tu propia infraestructura
         </h1>
-        <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/45">
-          Tu esfera corre sobre <span className="text-white/70">tus cuentas</span> — tú eres el dueño.
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--fg-tertiary)]">
+          Tu esfera corre sobre <span className="text-[var(--fg-secondary)]">tus cuentas</span> — tú eres el dueño.
           Conecta GitHub, Vercel y Neon; verificamos cada una en vivo antes de encenderla. Cero humanos
           en el proceso.
         </p>
@@ -190,7 +190,7 @@ export function ForjaWizard() {
             transition={{ type: "spring", stiffness: 120, damping: 20 }}
           />
         </div>
-        <span className="font-mono text-[11px] tabular-nums text-white/50">
+        <span className="font-mono text-[11px] tabular-nums text-[var(--fg-tertiary)]">
           {verifiedCount}/{ORDER.length}
         </span>
       </div>
@@ -213,7 +213,7 @@ export function ForjaWizard() {
                   ? "border-emerald-500/30"
                   : errored
                     ? "border-red-500/30"
-                    : "border-white/[0.07]"
+                    : "border-[var(--border-1)]"
               }`}
             >
               <div className="flex items-start gap-3">
@@ -221,7 +221,7 @@ export function ForjaWizard() {
                   className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${
                     verified
                       ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                      : "border-white/[0.08] bg-white/[0.03] text-white/70"
+                      : "border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-secondary)]"
                   }`}
                 >
                   <m.Icon size={18} />
@@ -231,7 +231,7 @@ export function ForjaWizard() {
                     <h3 className="font-display text-sm font-semibold text-white">{m.label}</h3>
                     <StatusPill status={c.status} />
                   </div>
-                  <p className="mt-0.5 text-xs leading-relaxed text-white/40">{m.help}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-[var(--fg-tertiary)]">{m.help}</p>
 
                   {verified ? (
                     <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2">
@@ -246,7 +246,7 @@ export function ForjaWizard() {
                         <div className="relative flex-1">
                           <IconKey
                             size={14}
-                            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/30"
+                            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]"
                           />
                           <input
                             type="password"
@@ -256,7 +256,7 @@ export function ForjaWizard() {
                             onChange={(e) => setSecrets((p) => ({ ...p, [service]: e.target.value }))}
                             onKeyDown={(e) => e.key === "Enter" && connect(service)}
                             placeholder={m.placeholder}
-                            className="w-full rounded-xl border border-white/[0.08] bg-black/40 py-2 pl-9 pr-3 font-mono text-xs text-white placeholder:text-white/25 focus:border-violet-500/40 focus:outline-none"
+                            className="w-full rounded-xl border border-[var(--border-1)] bg-black/40 py-2 pl-9 pr-3 font-mono text-xs text-white placeholder:text-[var(--fg-muted)] focus:border-violet-500/40 focus:outline-none"
                           />
                         </div>
                         <button
@@ -285,7 +285,7 @@ export function ForjaWizard() {
                         href={m.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] text-white/35 hover:text-white/60"
+                        className="inline-flex items-center gap-1 text-[11px] text-[var(--fg-muted)] hover:text-[var(--fg-secondary)]"
                       >
                         ¿Dónde la obtengo? <IconExtLink size={11} />
                       </a>
@@ -299,10 +299,10 @@ export function ForjaWizard() {
       </div>
 
       {/* Baúl note */}
-      <div className="mt-5 flex items-start gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+      <div className="mt-5 flex items-start gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-3">
         <IconShield size={15} className="mt-0.5 shrink-0 text-violet-400/70" />
-        <p className="text-[11px] leading-relaxed text-white/40">
-          Tus credenciales se guardan en el <span className="text-white/60">Baúl</span> cifradas con una
+        <p className="text-[11px] leading-relaxed text-[var(--fg-tertiary)]">
+          Tus credenciales se guardan en el <span className="text-[var(--fg-secondary)]">Baúl</span> cifradas con una
           llave única de tu esfera (AES-256-GCM). Nunca viajan en claro ni quedan en logs.
         </p>
       </div>
@@ -327,7 +327,7 @@ export function ForjaWizard() {
               className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold transition-all ${
                 canActivate
                   ? "bg-gradient-to-r from-violet-500 to-emerald-400 text-black shadow-[0_0_40px_rgba(124,58,237,0.35)]"
-                  : "cursor-not-allowed border border-white/[0.07] bg-white/[0.02] text-white/30"
+                  : "cursor-not-allowed border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-muted)]"
               }`}
             >
               {activating ? (
@@ -356,7 +356,7 @@ function StatusPill({ status }: { status: ConnStatus }) {
     verified: { label: "Conectado", cls: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300", Icon: IconCheck },
     error: { label: "Error", cls: "border-red-500/30 bg-red-500/10 text-red-300", Icon: IconX },
     unverified: { label: "Sin verificar", cls: "border-amber-500/30 bg-amber-500/10 text-amber-300", Icon: null },
-    missing: { label: "Pendiente", cls: "border-white/10 bg-white/[0.03] text-white/40", Icon: null },
+    missing: { label: "Pendiente", cls: "border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-tertiary)]", Icon: null },
   };
   const s = map[status];
   return (

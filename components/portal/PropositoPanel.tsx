@@ -85,7 +85,7 @@ function ReadinessRing({ value }: { value: number }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-lg font-bold text-white">{value}%</span>
-        <span className="text-[8px] uppercase tracking-wide text-white/35">funcional</span>
+        <span className="text-[8px] uppercase tracking-wide text-[var(--fg-muted)]">funcional</span>
       </div>
     </div>
   );
@@ -95,8 +95,8 @@ function Field({ label, value }: { label: string; value: string | null }) {
   if (!value || !value.trim()) return null;
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wide text-white/35">{label}</p>
-      <p className="mt-0.5 text-[13px] leading-snug text-white/80">{value}</p>
+      <p className="text-[10px] uppercase tracking-wide text-[var(--fg-muted)]">{label}</p>
+      <p className="mt-0.5 text-[13px] leading-snug text-[var(--fg-primary)]">{value}</p>
     </div>
   );
 }
@@ -113,7 +113,7 @@ export function PropositoPanel({ projectId }: { projectId: string }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ease: EASE }}
-      className="relative overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-br from-[#0f0b1f] via-[#0a0a14] to-[#080610] p-5"
+      className="relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-gradient-to-br from-[#0f0b1f] via-[#0a0a14] to-[#080610] p-5"
     >
       <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-violet-600/20 blur-[70px]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/40 to-transparent" />
@@ -127,27 +127,27 @@ export function PropositoPanel({ projectId }: { projectId: string }) {
             <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-white">
               Propósito
             </p>
-            <p className="text-[10px] text-white/35">El porqué del negocio · estado real</p>
+            <p className="text-[10px] text-[var(--fg-muted)]">El porqué del negocio · estado real</p>
           </div>
         </div>
         {data && <ReadinessRing value={data.readiness} />}
       </div>
 
       {isLoading && (
-        <p className="relative mt-4 text-[12px] text-white/40">Cargando propósito…</p>
+        <p className="relative mt-4 text-[12px] text-[var(--fg-tertiary)]">Cargando propósito…</p>
       )}
 
       {data && (
         <div className="relative mt-4 space-y-4">
           {data.needs_input ? (
-            <div className="rounded-xl border border-dashed border-white/12 bg-white/[0.02] px-3.5 py-3">
-              <p className="text-[12px] text-white/55">
-                Entendimiento de negocio <span className="text-white/35">por capturar</span>.
+            <div className="rounded-xl border border-dashed border-[var(--border-1)] bg-[var(--surface-1)] px-3.5 py-3">
+              <p className="text-[12px] text-[var(--fg-tertiary)]">
+                Entendimiento de negocio <span className="text-[var(--fg-muted)]">por capturar</span>.
                 Aquí vivirá qué es, a quién sirve, qué problema resuelve y cómo gana dinero.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 rounded-xl border border-white/[0.05] bg-white/[0.015] px-3.5 py-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 rounded-xl border border-[var(--border-1)] bg-white/[0.015] px-3.5 py-3 sm:grid-cols-2">
               <Field label="Qué es" value={data.proposito?.summary ?? null} />
               <Field label="A quién sirve" value={data.proposito?.audience ?? null} />
               <Field label="Problema que resuelve" value={data.proposito?.problem ?? null} />
@@ -162,10 +162,10 @@ export function PropositoPanel({ projectId }: { projectId: string }) {
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-white/50">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-tertiary)]">
                 Para quedar al 100% funcional
               </p>
-              <span className="text-[10px] text-white/35">
+              <span className="text-[10px] text-[var(--fg-muted)]">
                 {data.present_total}/{data.required_total} listas
               </span>
             </div>
@@ -185,7 +185,7 @@ export function PropositoPanel({ projectId }: { projectId: string }) {
                       }`}
                     >
                       <Ico className={`h-3.5 w-3.5 ${i.present ? "text-emerald-300" : "text-amber-300"}`} />
-                      <span className="flex-1 truncate text-[11px] text-white/75">{i.label}</span>
+                      <span className="flex-1 truncate text-[11px] text-[var(--fg-primary)]">{i.label}</span>
                       {i.present ? (
                         <IconCheck className="h-3 w-3 text-emerald-300" />
                       ) : (
@@ -203,10 +203,10 @@ export function PropositoPanel({ projectId }: { projectId: string }) {
                 Falta para dejarla al cien:
               </p>
               {data.missing.map((m) => (
-                <div key={m.key} className="flex gap-2 text-[12px] text-white/70">
+                <div key={m.key} className="flex gap-2 text-[12px] text-[var(--fg-secondary)]">
                   <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-amber-300" />
                   <span>
-                    <span className="font-medium text-white/85">{m.label}.</span>{" "}
+                    <span className="font-medium text-[var(--fg-primary)]">{m.label}.</span>{" "}
                     {m.recommend}
                   </span>
                 </div>

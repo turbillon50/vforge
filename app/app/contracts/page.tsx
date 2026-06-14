@@ -99,7 +99,7 @@ export default function ContractsPage() {
             <h1 className="font-display text-xl font-bold text-white">
               Contratos
             </h1>
-            <p className="text-[12px] text-white/40">
+            <p className="text-[12px] text-[var(--fg-tertiary)]">
               Firma digital con respaldo legal · seguimiento de pagos
             </p>
           </div>
@@ -122,7 +122,7 @@ export default function ContractsPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05, ease: EASE }}
-            className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0a0a12] p-4"
+            className="relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[#0a0a12] p-4"
           >
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
             <p
@@ -131,7 +131,7 @@ export default function ContractsPage() {
             >
               {s.value}
             </p>
-            <p className="mt-1 text-[11px] text-white/40">{s.label}</p>
+            <p className="mt-1 text-[11px] text-[var(--fg-tertiary)]">{s.label}</p>
           </motion.div>
         ))}
       </div>
@@ -147,7 +147,7 @@ export default function ContractsPage() {
         </button>
         <button
           onClick={() => setNewProject(true)}
-          className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 text-sm font-semibold text-white/80 transition active:scale-[0.98] hover:text-white"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] py-3.5 text-sm font-semibold text-[var(--fg-primary)] transition active:scale-[0.98] hover:text-white"
         >
           <IconUsers size={15} /> Proyecto + invitación
         </button>
@@ -162,7 +162,7 @@ export default function ContractsPage() {
             className={`shrink-0 rounded-full border px-4 py-1.5 font-mono text-[10px] transition ${
               filter === f.key
                 ? "border-violet-500/40 bg-violet-500/12 text-violet-300"
-                : "border-white/[0.06] text-white/30 hover:text-white/60"
+                : "border-[var(--border-1)] text-[var(--fg-muted)] hover:text-[var(--fg-secondary)]"
             }`}
           >
             {f.label}
@@ -173,14 +173,14 @@ export default function ContractsPage() {
       {/* Lista */}
       <div className="space-y-2.5">
         {isLoading && (
-          <div className="flex items-center justify-center gap-2 py-10 text-white/30">
+          <div className="flex items-center justify-center gap-2 py-10 text-[var(--fg-muted)]">
             <IconLoader size={16} className="animate-spin" /> Cargando…
           </div>
         )}
         {!isLoading && filtered.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] py-12 text-center">
-            <IconFile size={22} className="mx-auto mb-2 text-white/20" />
-            <p className="text-sm text-white/40">
+          <div className="rounded-2xl border border-dashed border-[var(--border-1)] bg-[var(--surface-1)] py-12 text-center">
+            <IconFile size={22} className="mx-auto mb-2 text-[var(--fg-muted)]" />
+            <p className="text-sm text-[var(--fg-tertiary)]">
               {contracts.length === 0
                 ? "Aún no hay contratos. Genera el primero."
                 : "Sin contratos en este filtro."}
@@ -196,28 +196,28 @@ export default function ContractsPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i * 0.04, 0.3), ease: EASE }}
-              className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0a0a12] p-4 transition hover:border-white/10"
+              className="group relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[#0a0a12] p-4 transition hover:border-[var(--border-1)]"
             >
               <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/6 to-transparent" />
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.025]">
-                    <IconFile size={16} className="text-white/40" />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border-1)] bg-white/[0.025]">
+                    <IconFile size={16} className="text-[var(--fg-tertiary)]" />
                   </div>
                   <div>
-                    <p className="text-[13px] font-semibold text-white/85">
+                    <p className="text-[13px] font-semibold text-[var(--fg-primary)]">
                       {c.client_name}
                     </p>
-                    <p className="text-[11px] text-white/40">{c.product}</p>
+                    <p className="text-[11px] text-[var(--fg-tertiary)]">{c.product}</p>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className="font-mono text-[9px] text-white/25">
+                      <span className="font-mono text-[9px] text-[var(--fg-muted)]">
                         {c.project_id}
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <span className="text-[13px] font-bold text-white/80">
+                  <span className="text-[13px] font-bold text-[var(--fg-primary)]">
                     {money(c.amount)}
                   </span>
                   <span
@@ -236,10 +236,10 @@ export default function ContractsPage() {
               {/* Progreso de los 3 pagos V-Momentum */}
               <div className="mt-3">
                 <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-wide text-white/30">
+                  <span className="text-[10px] uppercase tracking-wide text-[var(--fg-muted)]">
                     Pagos · {c.paid_count}/3
                   </span>
-                  <span className="font-mono text-[10px] text-white/40">
+                  <span className="font-mono text-[10px] text-[var(--fg-tertiary)]">
                     {money(c.paid_mxn)} / {money(c.amount)}
                   </span>
                 </div>
@@ -265,7 +265,7 @@ export default function ContractsPage() {
 
               {/* Acción contextual */}
               <div className="mt-3 flex items-center justify-between">
-                <span className="font-mono text-[9px] text-white/25">
+                <span className="font-mono text-[9px] text-[var(--fg-muted)]">
                   {c.docusign_envelope_id
                     ? `DocuSign · ${c.docusign_envelope_id.slice(0, 8)}`
                     : c.status === "signed"
@@ -288,7 +288,7 @@ export default function ContractsPage() {
                 ) : (
                   <IconChevR
                     size={13}
-                    className="text-white/15 transition-transform group-hover:translate-x-0.5 group-hover:text-white/30"
+                    className="text-[var(--fg-subtle)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--fg-muted)]"
                   />
                 )}
               </div>
@@ -297,7 +297,7 @@ export default function ContractsPage() {
         })}
       </div>
 
-      <p className="mt-6 flex items-center justify-center gap-2 text-[11px] text-white/20">
+      <p className="mt-6 flex items-center justify-center gap-2 text-[11px] text-[var(--fg-muted)]">
         <IconShield size={11} /> Firma con validez legal vía DocuSign
       </p>
 

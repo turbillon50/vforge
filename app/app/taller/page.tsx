@@ -65,7 +65,7 @@ const STATUS_HUE: Record<string, string> = {
 /** Un número grande que late suavemente cada vez que cambia su valor. */
 function LiveMetric({ value, label, accent }: { value: number; label: string; accent: string }) {
   return (
-    <div className="glass relative overflow-hidden rounded-2xl border border-white/10 p-4">
+    <div className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-4">
       <div
         className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-50 blur-2xl"
         style={{ background: accent }}
@@ -204,7 +204,7 @@ export default function TallerPage() {
           encima de la esfera flotante (VOrb) y del nav inferior. */}
       <div className="space-y-5 p-4 pb-28 sm:space-y-6 sm:p-5 sm:pb-28 md:p-8">
         {/* Hero con asset Higgsfield + overlay obsidian */}
-        <div className="relative h-[140px] overflow-hidden rounded-2xl border border-white/10 sm:h-[180px]">
+        <div className="relative h-[140px] overflow-hidden rounded-2xl border border-[var(--border-1)] sm:h-[180px]">
           <img
             src="/taller/taller-hero.png"
             alt=""
@@ -224,7 +224,7 @@ export default function TallerPage() {
             <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
               <IconActivity size={13} /> Cabina del operador
             </p>
-            <h2 className="mt-1 font-display text-lg font-bold text-white/90 md:text-xl">
+            <h2 className="mt-1 font-display text-lg font-bold text-[var(--fg-primary)] md:text-xl">
               {jobs.length > 0
                 ? `${jobs.length} ${jobs.length === 1 ? "esfera construyendo" : "esferas construyendo"} ahora`
                 : "Esferas en reposo"}
@@ -277,7 +277,7 @@ export default function TallerPage() {
         {/* Toggle de vista del núcleo: Detalle (un diagrama) vs Constelación
             (zoom out, un mini-núcleo por job para supervisar TODO) */}
         <div className="flex items-center justify-between gap-3">
-          <div className="inline-flex rounded-xl border border-white/10 bg-white/[0.03] p-1">
+          <div className="inline-flex rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-1">
             {([
               { id: "detalle", label: "Detalle", Icon: IconMaximize },
               { id: "constelacion", label: "Constelación", Icon: IconBoxes },
@@ -364,7 +364,7 @@ export default function TallerPage() {
         <UtilizacionPanel />
 
         {/* Tablero: quién trabaja en qué */}
-        <section className="glass relative overflow-hidden rounded-2xl border border-white/10 p-5">
+        <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
           <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
             <IconActivity size={13} /> Quién trabaja en qué
           </p>
@@ -399,7 +399,7 @@ export default function TallerPage() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 12 }}
                       transition={{ duration: 0.3, delay: i * 0.07, ease: "easeOut" }}
-                      className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"
+                      className="flex items-center gap-3 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3"
                     >
                       <motion.div
                         animate={{
@@ -450,7 +450,7 @@ export default function TallerPage() {
 
         {/* Último veredicto del auditor Grok */}
         {data?.lastVerdict && (
-          <section className="glass relative overflow-hidden rounded-2xl border border-white/10 p-5">
+          <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
             <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
               <LogoGrok size={13} style={{ color: "#f472b6" }} /> Auditor Grok
             </p>
@@ -489,7 +489,7 @@ export default function TallerPage() {
 
         {/* Feed de actividad reciente con timestamps relativos */}
         {feed.length > 0 && (
-          <section className="glass relative overflow-hidden rounded-2xl border border-white/10 p-5">
+          <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
             <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
               <IconActivity size={13} /> Actividad reciente
             </p>

@@ -146,7 +146,7 @@ export function ProductCarousel() {
           Una fábrica completa de<br />
           <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">tecnología e IA.</span>
         </h2>
-        <p className="mx-auto mt-3 max-w-md text-center text-sm font-light text-white/50">
+        <p className="mx-auto mt-3 max-w-md text-center text-sm font-light text-[var(--fg-tertiary)]">
           Desliza. Toca cualquier producto para ver todo el proceso.
         </p>
       </div>
@@ -209,7 +209,7 @@ export function ProductCarousel() {
                   </span>
                 ) : <span />}
                 {p.badge && (
-                  <span className="rounded-full border border-white/20 bg-black/50 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-xl">
+                  <span className="rounded-full border border-[var(--border-2)] bg-black/50 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-xl">
                     {p.badge}
                   </span>
                 )}
@@ -256,7 +256,7 @@ export function ProductCarousel() {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#06040f] via-[#06040f]/40 to-transparent" />
-                  <button onClick={() => setActive(null)} className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-xl transition hover:bg-black/70">
+                  <button onClick={() => setActive(null)} className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-2)] bg-black/50 text-white backdrop-blur-xl transition hover:bg-black/70">
                     <IconX size={16} />
                   </button>
                   <div className="absolute bottom-4 left-5 right-5">
@@ -267,16 +267,16 @@ export function ProductCarousel() {
                 </div>
 
                 <div className="p-6">
-                  <div className="mb-5 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
-                    <span className="text-sm text-white/50">Inversión</span>
+                  <div className="mb-5 flex items-center justify-between rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] px-5 py-4">
+                    <span className="text-sm text-[var(--fg-tertiary)]">Inversión</span>
                     <span className="text-2xl font-bold" style={{ color: activeProduct.accent }}>{activeProduct.priceLabel}</span>
                   </div>
 
-                  <p className="text-sm font-light leading-relaxed text-white/70">{activeProduct.fullDesc}</p>
+                  <p className="text-sm font-light leading-relaxed text-[var(--fg-secondary)]">{activeProduct.fullDesc}</p>
 
                   {activeProduct.timeline && (
                     <div className="mt-6">
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-white/40">Proceso y pagos</p>
+                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-[var(--fg-tertiary)]">Proceso y pagos</p>
                       <div className="space-y-3">
                         {activeProduct.timeline.map((t, i) => (
                           <div key={i} className="flex items-start gap-3">
@@ -286,7 +286,7 @@ export function ProductCarousel() {
                                 <p className="text-sm font-semibold text-white">{t.phase}</p>
                                 {t.pay && <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-bold text-white">{t.pay}</span>}
                               </div>
-                              <p className="text-xs text-white/50">{t.detail}</p>
+                              <p className="text-xs text-[var(--fg-tertiary)]">{t.detail}</p>
                             </div>
                           </div>
                         ))}
@@ -296,10 +296,10 @@ export function ProductCarousel() {
 
                   {activeProduct.includes && (
                     <div className="mt-6">
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-white/40">Incluye</p>
+                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-[var(--fg-tertiary)]">Incluye</p>
                       <div className="grid grid-cols-2 gap-2">
                         {activeProduct.includes.map((f) => (
-                          <div key={f} className="flex items-center gap-2 text-xs text-white/70">
+                          <div key={f} className="flex items-center gap-2 text-xs text-[var(--fg-secondary)]">
                             <IconCheck size={12} style={{ color: activeProduct.accent }} className="shrink-0" />{f}
                           </div>
                         ))}
@@ -309,10 +309,10 @@ export function ProductCarousel() {
 
                   {activeProduct.capabilities && (
                     <div className="mt-6">
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-white/40">Capacidades</p>
+                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-[var(--fg-tertiary)]">Capacidades</p>
                       <div className="flex flex-wrap gap-2">
                         {activeProduct.capabilities.map((c) => (
-                          <span key={c} className="rounded-full border px-3 py-1.5 text-xs text-white/70" style={{ borderColor: `${activeProduct.accent}30`, background: `${activeProduct.accent}10` }}>{c}</span>
+                          <span key={c} className="rounded-full border px-3 py-1.5 text-xs text-[var(--fg-secondary)]" style={{ borderColor: `${activeProduct.accent}30`, background: `${activeProduct.accent}10` }}>{c}</span>
                         ))}
                       </div>
                     </div>
@@ -320,7 +320,7 @@ export function ProductCarousel() {
 
                   {activeProduct.note && (
                     <div className="mt-5 rounded-2xl border px-4 py-3" style={{ borderColor: `${activeProduct.accent}40`, background: `${activeProduct.accent}12` }}>
-                      <p className="flex items-start gap-2 text-xs font-light leading-relaxed text-white/80">
+                      <p className="flex items-start gap-2 text-xs font-light leading-relaxed text-[var(--fg-primary)]">
                         <IconSparkles size={13} style={{ color: activeProduct.accent }} className="mt-0.5 shrink-0" />{activeProduct.note}
                       </p>
                     </div>

@@ -15,7 +15,7 @@ export function CTA() {
           <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight md:text-5xl text-balance">
             {t.marketing.cta_title}
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-white/75">{t.marketing.cta_body}</p>
+          <p className="mx-auto mt-4 max-w-xl text-[var(--fg-primary)]">{t.marketing.cta_body}</p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/sign-up" prefetch={false} className="btn-primary">
               {t.marketing.cta_primary}

@@ -1131,13 +1131,13 @@ export function ChatExperience() {
             className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-[2px]"
             onClick={() => setSessionsOpen(false)}
           />
-          <div className="fixed inset-y-0 right-0 z-[71] flex w-[88vw] max-w-sm flex-col border-l border-white/15 bg-[#0b0716]/85 shadow-[0_0_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+          <div className="fixed inset-y-0 right-0 z-[71] flex w-[88vw] max-w-sm flex-col border-l border-[var(--border-1)] bg-[#0b0716]/85 shadow-[0_0_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
+            <div className="flex items-center justify-between border-b border-[var(--border-1)] px-4 py-3">
               <p className="font-display text-sm font-semibold text-white">Tus chats</p>
               <button
                 type="button"
                 onClick={() => setSessionsOpen(false)}
-                className="flex h-7 w-7 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+                className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--fg-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]"
               >
                 <IconX size={15} />
               </button>
@@ -1155,12 +1155,12 @@ export function ChatExperience() {
             </div>
             <div className="mt-2 flex-1 overflow-y-auto px-3 pb-4">
               {sessionsLoading && (
-                <p className="px-2 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-white/50">
+                <p className="px-2 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--fg-tertiary)]">
                   Cargando chats…
                 </p>
               )}
               {!sessionsLoading && sessions.length === 0 && (
-                <p className="px-2 py-3 text-sm text-white/50">Sin chats todavía.</p>
+                <p className="px-2 py-3 text-sm text-[var(--fg-tertiary)]">Sin chats todavía.</p>
               )}
               {sessions.map((sess) => (
                 <button
@@ -1170,11 +1170,11 @@ export function ChatExperience() {
                   className={`mt-1.5 flex w-full flex-col gap-0.5 rounded-xl border px-3 py-2.5 text-left transition ${
                     sess.session_id === sessionIdRef.current
                       ? "border-violet-400/50 bg-violet-500/20 text-white"
-                      : "border-transparent bg-white/[0.05] text-white/85 hover:bg-white/[0.12] hover:text-white"
+                      : "border-transparent bg-[var(--surface-1)] text-[var(--fg-primary)] hover:bg-white/[0.12] hover:text-white"
                   }`}
                 >
                   <span className="truncate text-sm font-medium">{sess.title}</span>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--fg-tertiary)]">
                     {new Date(sess.last_at).toLocaleString("es-MX", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })} · {sess.count} msgs
                   </span>
                 </button>
@@ -1633,7 +1633,7 @@ function MessageBubble({
           <img
             src={msg.image}
             alt="adjunto"
-            className="mb-2 max-h-64 w-full rounded-lg border border-white/20 object-cover"
+            className="mb-2 max-h-64 w-full rounded-lg border border-[var(--border-2)] object-cover"
           />
         )}
         {msg.text && (

@@ -125,7 +125,7 @@ export default function PricingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.25 }}
-            className="mx-auto mt-4 max-w-lg text-base font-light text-white/40"
+            className="mx-auto mt-4 max-w-lg text-base font-light text-[var(--fg-tertiary)]"
           >
             Sin contratos, sin sorpresas. Cancela cuando quieras.
           </motion.p>
@@ -135,17 +135,17 @@ export default function PricingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.35 }}
-            className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-1 backdrop-blur-sm"
+            className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] p-1 backdrop-blur-sm"
           >
             <button
               onClick={() => setAnnual(false)}
-              className={`rounded-xl px-5 py-2 text-sm font-medium transition-all ${!annual ? "bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]" : "text-white/40 hover:text-white/70"}`}
+              className={`rounded-xl px-5 py-2 text-sm font-medium transition-all ${!annual ? "bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]" : "text-[var(--fg-tertiary)] hover:text-[var(--fg-secondary)]"}`}
             >
               Mensual
             </button>
             <button
               onClick={() => setAnnual(true)}
-              className={`flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-medium transition-all ${annual ? "bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]" : "text-white/40 hover:text-white/70"}`}
+              className={`flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-medium transition-all ${annual ? "bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]" : "text-[var(--fg-tertiary)] hover:text-[var(--fg-secondary)]"}`}
             >
               Anual
               <span className="rounded-full bg-cyan-400/20 px-2 py-0.5 text-[10px] font-bold text-cyan-400">-20%</span>
@@ -164,7 +164,7 @@ export default function PricingPage() {
               className={`relative flex flex-col overflow-hidden rounded-3xl border p-7 transition-all ${
                 plan.highlight
                   ? "border-violet-400/50 bg-gradient-to-b from-violet-600/15 to-[#080614] shadow-[0_0_80px_rgba(124,58,237,0.2),0_0_0_1px_rgba(124,58,237,0.3)] scale-[1.03]"
-                  : "border-white/[0.08] bg-white/[0.02] hover:border-white/15"
+                  : "border-[var(--border-1)] bg-[var(--surface-1)] hover:border-[var(--border-1)]"
               }`}
             >
               {plan.badge && (
@@ -177,11 +177,11 @@ export default function PricingPage() {
 
               <div className="flex items-start justify-between">
                 <div>
-                  <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] ${plan.iconColor}`}>
+                  <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-1)] bg-white/[0.06] ${plan.iconColor}`}>
                     <plan.icon size={16} />
                   </div>
                   <p className="text-lg font-bold text-white">{plan.name}</p>
-                  <p className="mt-1 text-xs font-light text-white/40">{plan.blurb}</p>
+                  <p className="mt-1 text-xs font-light text-[var(--fg-tertiary)]">{plan.blurb}</p>
                 </div>
               </div>
 
@@ -189,14 +189,14 @@ export default function PricingPage() {
                 <span className="text-4xl font-bold tracking-tight text-white">
                   {annual ? plan.price.annual : plan.price.monthly}
                 </span>
-                <span className="ml-1 text-sm text-white/30">{plan.cadence}</span>
+                <span className="ml-1 text-sm text-[var(--fg-muted)]">{plan.cadence}</span>
               </div>
 
               <Link href={plan.ctaHref}
                 className={`mt-6 flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold transition-all ${
                   plan.highlight
                     ? "bg-gradient-to-r from-violet-600 to-violet-500 text-white shadow-[0_0_30px_rgba(124,58,237,0.4)] hover:shadow-[0_0_50px_rgba(124,58,237,0.6)] hover:scale-[1.02]"
-                    : "border border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.09] hover:text-white"
+                    : "border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-secondary)] hover:bg-white/[0.09] hover:text-white"
                 }`}
               >
                 {plan.cta}
@@ -205,7 +205,7 @@ export default function PricingPage() {
 
               <ul className="mt-6 space-y-2.5">
                 {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-white/60">
+                  <li key={f} className="flex items-start gap-2.5 text-sm text-[var(--fg-secondary)]">
                     <IconCheck size={13} className="mt-0.5 shrink-0 text-cyan-400" />
                     {f}
                   </li>
@@ -217,22 +217,22 @@ export default function PricingPage() {
 
         {/* Tabla comparativa */}
         <div className="mx-auto mt-20 max-w-4xl px-5">
-          <p className="mb-6 text-center text-[11px] font-semibold tracking-[0.2em] text-white/25 uppercase">Comparativa detallada</p>
-          <div className="overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm">
+          <p className="mb-6 text-center text-[11px] font-semibold tracking-[0.2em] text-[var(--fg-muted)] uppercase">Comparativa detallada</p>
+          <div className="overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] backdrop-blur-sm">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/[0.07]">
-                  <th className="px-5 py-4 text-left text-xs font-semibold text-white/30 uppercase tracking-widest">Feature</th>
-                  <th className="px-4 py-4 text-center text-xs font-semibold text-white/30 uppercase tracking-widest">Explorer</th>
+                <tr className="border-b border-[var(--border-1)]">
+                  <th className="px-5 py-4 text-left text-xs font-semibold text-[var(--fg-muted)] uppercase tracking-widest">Feature</th>
+                  <th className="px-4 py-4 text-center text-xs font-semibold text-[var(--fg-muted)] uppercase tracking-widest">Explorer</th>
                   <th className="px-4 py-4 text-center text-xs font-semibold text-violet-300 uppercase tracking-widest">Studio</th>
                   <th className="px-4 py-4 text-center text-xs font-semibold text-yellow-300/70 uppercase tracking-widest">Forge</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON.map((row, i) => (
-                  <tr key={row.feature} className={`border-b border-white/[0.04] ${i % 2 === 0 ? "" : "bg-white/[0.01]"}`}>
-                    <td className="px-5 py-3.5 text-white/60">{row.feature}</td>
-                    <td className="px-4 py-3.5 text-center text-white/35">{row.free}</td>
+                  <tr key={row.feature} className={`border-b border-[var(--border-1)] ${i % 2 === 0 ? "" : "bg-[var(--surface-1)]"}`}>
+                    <td className="px-5 py-3.5 text-[var(--fg-secondary)]">{row.feature}</td>
+                    <td className="px-4 py-3.5 text-center text-[var(--fg-muted)]">{row.free}</td>
                     <td className="px-4 py-3.5 text-center text-violet-300">{row.studio}</td>
                     <td className="px-4 py-3.5 text-center text-yellow-300/70">{row.forge}</td>
                   </tr>
@@ -244,7 +244,7 @@ export default function PricingPage() {
 
         {/* FAQ mínimo */}
         <div className="mx-auto mt-16 max-w-2xl px-5 text-center">
-          <p className="text-sm text-white/30">
+          <p className="text-sm text-[var(--fg-muted)]">
             ¿Tienes dudas? Habla con <Link href="/sign-up" prefetch={false} className="text-violet-400 hover:underline">V directamente</Link> — te explica todo en segundos.
           </p>
         </div>

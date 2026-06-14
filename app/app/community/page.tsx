@@ -59,15 +59,15 @@ export default function CommunityPage() {
         {loading && (
           <div className="space-y-2">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-[88px] animate-pulse rounded-xl border border-white/[0.04] bg-white/[0.015]" />
+              <div key={i} className="h-[88px] animate-pulse rounded-xl border border-[var(--border-1)] bg-white/[0.015]" />
             ))}
           </div>
         )}
         {!loading && posts.length === 0 && !error && (
           <div className="py-16 text-center">
-            <IconShare size={22} className="mx-auto text-white/20" />
-            <p className="mt-3 font-display text-lg text-white/50">Sin publicaciones todavía.</p>
-            <p className="mt-2 text-sm text-white/25">Cuando agendes o publiques en tus redes, aparecerán aquí para revisión.</p>
+            <IconShare size={22} className="mx-auto text-[var(--fg-muted)]" />
+            <p className="mt-3 font-display text-lg text-[var(--fg-tertiary)]">Sin publicaciones todavía.</p>
+            <p className="mt-2 text-sm text-[var(--fg-muted)]">Cuando agendes o publiques en tus redes, aparecerán aquí para revisión.</p>
           </div>
         )}
         {!loading && posts.length > 0 && (
@@ -77,16 +77,16 @@ export default function CommunityPage() {
               return (
                 <li
                   key={p.id}
-                  className="overflow-hidden rounded-xl border border-white/[0.05] bg-[#0a0a12] p-4 transition hover:border-white/[0.08]"
+                  className="overflow-hidden rounded-xl border border-[var(--border-1)] bg-[#0a0a12] p-4 transition hover:border-[var(--border-1)]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] font-mono text-[10px] uppercase text-white/60">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] font-mono text-[10px] uppercase text-[var(--fg-secondary)]">
                         {p.platform.slice(0, 2)}
                       </span>
                       <div className="min-w-0">
-                        <p className="font-display text-[13px] font-semibold capitalize text-white/80">{p.platform}</p>
-                        {p.created_by && <p className="truncate font-mono text-[10px] text-white/25">{p.created_by}</p>}
+                        <p className="font-display text-[13px] font-semibold capitalize text-[var(--fg-primary)]">{p.platform}</p>
+                        {p.created_by && <p className="truncate font-mono text-[10px] text-[var(--fg-muted)]">{p.created_by}</p>}
                       </div>
                     </div>
                     <span className="flex shrink-0 items-center gap-1.5 font-mono text-[10px]" style={{ color: tone.color }}>
@@ -94,8 +94,8 @@ export default function CommunityPage() {
                       {tone.label}
                     </span>
                   </div>
-                  <p className="mt-2.5 whitespace-pre-wrap text-[13px] leading-relaxed text-white/70">{p.content}</p>
-                  <p className="mt-2 font-mono text-[10px] text-white/20">{timeAgo(p.scheduled_at)}</p>
+                  <p className="mt-2.5 whitespace-pre-wrap text-[13px] leading-relaxed text-[var(--fg-secondary)]">{p.content}</p>
+                  <p className="mt-2 font-mono text-[10px] text-[var(--fg-muted)]">{timeAgo(p.scheduled_at)}</p>
                 </li>
               );
             })}

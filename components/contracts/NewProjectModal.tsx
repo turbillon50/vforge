@@ -146,7 +146,7 @@ export function NewProjectModal({
                   className={`flex-1 rounded-xl border px-3 py-2 text-xs font-medium capitalize transition ${
                     method === m
                       ? "border-violet-500/40 bg-violet-500/12 text-violet-200"
-                      : "border-white/10 text-white/40"
+                      : "border-[var(--border-1)] text-[var(--fg-tertiary)]"
                   }`}
                 >
                   {m}
@@ -181,7 +181,7 @@ export function NewProjectModal({
       ) : (
         <div className="space-y-4">
           <div className="flex justify-center">
-            <div className="rounded-2xl border border-white/10 bg-white p-3">
+            <div className="rounded-2xl border border-[var(--border-1)] bg-white p-3">
               {/* QR servido por el endpoint owner */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -193,8 +193,8 @@ export function NewProjectModal({
               />
             </div>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="mb-1 text-[10px] uppercase tracking-wide text-white/30">
+          <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3">
+            <p className="mb-1 text-[10px] uppercase tracking-wide text-[var(--fg-muted)]">
               Liga de invitación
             </p>
             <p className="break-all font-mono text-[12px] text-violet-300">
@@ -203,12 +203,12 @@ export function NewProjectModal({
           </div>
           <button
             onClick={copy}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-2.5 text-sm font-medium text-white/80 transition hover:text-white"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] py-2.5 text-sm font-medium text-[var(--fg-primary)] transition hover:text-white"
           >
             {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
             {copied ? "Copiada" : "Copiar liga"}
           </button>
-          <p className="text-center text-[11px] text-white/30">
+          <p className="text-center text-[11px] text-[var(--fg-muted)]">
             El cliente abre la liga, inicia sesión y entra a su portal.
           </p>
         </div>

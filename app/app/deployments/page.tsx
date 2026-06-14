@@ -42,14 +42,14 @@ export default function DeploymentsPage() {
         {error&&<div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">⚠ {error}</div>}
         {loading&&(
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {[0,1,2,3].map(i=><div key={i} className="h-[140px] rounded-2xl border border-white/[0.05] bg-white/[0.02] animate-pulse"/>)}
+            {[0,1,2,3].map(i=><div key={i} className="h-[140px] rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] animate-pulse"/>)}
           </div>
         )}
         {!loading&&projects.length===0&&(
           <div className="flex flex-col items-center gap-4 py-16 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.02]"><Icon3D name="rocket" size={34} glow/></div>
-            <p className="font-display text-lg text-white/70">Ningún proyecto desplegado todavía</p>
-            <p className="max-w-sm text-sm text-white/30">Cuando V despliegue un proyecto en Vercel, aparece aquí.</p>
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)]"><Icon3D name="rocket" size={34} glow/></div>
+            <p className="font-display text-lg text-[var(--fg-secondary)]">Ningún proyecto desplegado todavía</p>
+            <p className="max-w-sm text-sm text-[var(--fg-muted)]">Cuando V despliegue un proyecto en Vercel, aparece aquí.</p>
           </div>
         )}
         {!loading&&projects.length>0&&(
@@ -62,19 +62,19 @@ export default function DeploymentsPage() {
                 <motion.a key={p.id} href={p.vercel_url!} target="_blank" rel="noreferrer"
                   initial={{opacity:0,y:14}} animate={{opacity:1,y:0}}
                   transition={{delay:Math.min(idx*0.04,0.3),duration:0.4,ease:EASE}}
-                  className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0a0a12] p-5 transition-all hover:border-white/10 hover:shadow-[0_0_30px_rgba(139,92,246,0.12)]">
+                  className="group relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[#0a0a12] p-5 transition-all hover:border-[var(--border-1)] hover:shadow-[0_0_30px_rgba(139,92,246,0.12)]">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent"/>
                   {/* Glow halo */}
                   <span aria-hidden className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-30 blur-2xl transition group-hover:opacity-60"
                     style={{background:`radial-gradient(circle,${m.color},transparent 70%)`}}/>
                   <div className="relative flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.03]">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)]">
                         <Icon3D name="rocket" size={24} glow={s==="ready"}/>
                       </div>
                       <div>
-                        <p className="font-display text-[14px] font-semibold text-white/90 truncate max-w-[140px]">{p.name}</p>
-                        <p className="flex items-center gap-1 font-mono text-[10px] text-white/30 mt-0.5">
+                        <p className="font-display text-[14px] font-semibold text-[var(--fg-primary)] truncate max-w-[140px]">{p.name}</p>
+                        <p className="flex items-center gap-1 font-mono text-[10px] text-[var(--fg-muted)] mt-0.5">
                           <IconBranch size={9}/> {repo}
                         </p>
                       </div>
@@ -85,10 +85,10 @@ export default function DeploymentsPage() {
                       {m.label}
                     </span>
                   </div>
-                  <div className="relative mt-3.5 flex items-center gap-2 rounded-xl border border-white/[0.05] bg-white/[0.02] px-3 py-2">
+                  <div className="relative mt-3.5 flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2">
                     <IconGlobe size={11} className="shrink-0 text-cyan-400/60"/>
-                    <span className="flex-1 truncate font-mono text-[11px] text-white/40">{host}</span>
-                    <IconExtLink size={12} className="shrink-0 text-white/20 transition group-hover:text-violet-300"/>
+                    <span className="flex-1 truncate font-mono text-[11px] text-[var(--fg-tertiary)]">{host}</span>
+                    <IconExtLink size={12} className="shrink-0 text-[var(--fg-muted)] transition group-hover:text-violet-300"/>
                   </div>
                 </motion.a>
               );

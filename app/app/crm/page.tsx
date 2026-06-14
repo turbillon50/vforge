@@ -97,19 +97,19 @@ export default function CrmPage() {
             onClick={() => setTab(t)}
             className={
               "rounded-lg px-3 py-1.5 text-xs font-semibold capitalize " +
-              (tab === t ? "bg-violet-500/15 text-violet-200" : "text-white/55 hover:bg-white/[0.04]")
+              (tab === t ? "bg-violet-500/15 text-violet-200" : "text-[var(--fg-tertiary)] hover:bg-[var(--surface-1)]")
             }
           >
             {t}
           </button>
         ))}
-        <span className="ml-auto text-[11px] text-white/35">
+        <span className="ml-auto text-[11px] text-[var(--fg-muted)]">
           {contacts.length} contactos · {leads.length} leads abiertos
         </span>
       </div>
 
       {loading ? (
-        <div className="flex flex-1 items-center justify-center text-white/40"><IconLoader size={22} /></div>
+        <div className="flex flex-1 items-center justify-center text-[var(--fg-tertiary)]"><IconLoader size={22} /></div>
       ) : tab === "pipeline" ? (
         leads.length === 0 ? (
           <Empty />
@@ -118,27 +118,27 @@ export default function CrmPage() {
             {stages.map((s) => {
               const col = leads.filter((l) => (l.stage_id ?? "stage_nuevo") === s.id);
               return (
-                <div key={s.id} className="flex w-64 shrink-0 flex-col rounded-xl border border-white/[0.06] bg-white/[0.02]">
-                  <div className="flex items-center justify-between border-b border-white/[0.06] px-3 py-2">
-                    <span className="flex items-center gap-2 text-xs font-semibold text-white/80">
+                <div key={s.id} className="flex w-64 shrink-0 flex-col rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)]">
+                  <div className="flex items-center justify-between border-b border-[var(--border-1)] px-3 py-2">
+                    <span className="flex items-center gap-2 text-xs font-semibold text-[var(--fg-primary)]">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} />
                       {s.name}
                     </span>
-                    <span className="text-[10px] text-white/40">{col.length}</span>
+                    <span className="text-[10px] text-[var(--fg-tertiary)]">{col.length}</span>
                   </div>
                   <div className="flex-1 space-y-2 p-2">
                     {col.map((l) => (
                       <motion.div
                         layout
                         key={l.id}
-                        className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-2.5"
+                        className="rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] p-2.5"
                       >
-                        <p className="truncate text-xs font-semibold text-white/85">{displayName(l)}</p>
-                        {l.contact_wa && <p className="text-[10px] text-white/40">+{l.contact_wa}</p>}
+                        <p className="truncate text-xs font-semibold text-[var(--fg-primary)]">{displayName(l)}</p>
+                        {l.contact_wa && <p className="text-[10px] text-[var(--fg-tertiary)]">+{l.contact_wa}</p>}
                         <select
                           value={s.id}
                           onChange={(e) => moveLead(l.id, e.target.value)}
-                          className="mt-2 w-full rounded-md border border-white/[0.08] bg-black/30 px-1.5 py-1 text-[10px] text-white/70 outline-none"
+                          className="mt-2 w-full rounded-md border border-[var(--border-1)] bg-black/30 px-1.5 py-1 text-[10px] text-[var(--fg-secondary)] outline-none"
                         >
                           {stages.map((st) => (
                             <option key={st.id} value={st.id}>{st.name}</option>
@@ -146,7 +146,7 @@ export default function CrmPage() {
                         </select>
                       </motion.div>
                     ))}
-                    {col.length === 0 && <p className="py-3 text-center text-[10px] text-white/25">vacío</p>}
+                    {col.length === 0 && <p className="py-3 text-center text-[10px] text-[var(--fg-muted)]">vacío</p>}
                   </div>
                 </div>
               );
@@ -157,9 +157,9 @@ export default function CrmPage() {
         <Empty />
       ) : (
         <div className="flex-1 overflow-auto p-3">
-          <div className="overflow-hidden rounded-xl border border-white/[0.06]">
+          <div className="overflow-hidden rounded-xl border border-[var(--border-1)]">
             <table className="w-full text-left text-xs">
-              <thead className="bg-white/[0.03] text-[10px] uppercase tracking-wider text-white/40">
+              <thead className="bg-[var(--surface-1)] text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">
                 <tr>
                   <th className="px-3 py-2">Contacto</th>
                   <th className="px-3 py-2">WhatsApp</th>
@@ -173,13 +173,13 @@ export default function CrmPage() {
                   <tr
                     key={c.id}
                     onClick={() => openDetail(c)}
-                    className="cursor-pointer border-t border-white/[0.04] hover:bg-white/[0.03]"
+                    className="cursor-pointer border-t border-[var(--border-1)] hover:bg-[var(--surface-1)]"
                   >
-                    <td className="px-3 py-2 font-medium text-white/85">{c.name || c.push_name || "—"}</td>
-                    <td className="px-3 py-2 text-white/60">{c.wa_number ? `+${c.wa_number}` : "—"}</td>
-                    <td className="max-w-[260px] truncate px-3 py-2 text-white/50">{c.last_message || "—"}</td>
-                    <td className="px-3 py-2 text-white/60">{c.interactions}</td>
-                    <td className="px-3 py-2 text-white/40">{timeAgo(c.last_seen)}</td>
+                    <td className="px-3 py-2 font-medium text-[var(--fg-primary)]">{c.name || c.push_name || "—"}</td>
+                    <td className="px-3 py-2 text-[var(--fg-secondary)]">{c.wa_number ? `+${c.wa_number}` : "—"}</td>
+                    <td className="max-w-[260px] truncate px-3 py-2 text-[var(--fg-tertiary)]">{c.last_message || "—"}</td>
+                    <td className="px-3 py-2 text-[var(--fg-secondary)]">{c.interactions}</td>
+                    <td className="px-3 py-2 text-[var(--fg-tertiary)]">{timeAgo(c.last_seen)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -203,19 +203,19 @@ export default function CrmPage() {
               exit={{ x: 360 }}
               transition={{ type: "spring", stiffness: 280, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="flex h-full w-[360px] flex-col border-l border-white/[0.08] bg-[#0a0a0f] p-4"
+              className="flex h-full w-[360px] flex-col border-l border-[var(--border-1)] bg-[#0a0a0f] p-4"
             >
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-semibold text-white">{openContact.name || openContact.push_name || "Contacto"}</p>
-                  {openContact.wa_number && <p className="text-xs text-white/50">+{openContact.wa_number}</p>}
+                  {openContact.wa_number && <p className="text-xs text-[var(--fg-tertiary)]">+{openContact.wa_number}</p>}
                 </div>
-                <button onClick={() => setOpenContact(null)} className="text-white/40 hover:text-white"><IconX size={16} /></button>
+                <button onClick={() => setOpenContact(null)} className="text-[var(--fg-tertiary)] hover:text-white"><IconX size={16} /></button>
               </div>
-              <p className="mt-4 mb-2 text-[10px] uppercase tracking-wider text-white/40">Historial de interacciones</p>
+              <p className="mt-4 mb-2 text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">Historial de interacciones</p>
               <div className="flex-1 space-y-2 overflow-auto">
                 {interactions.length === 0 ? (
-                  <p className="text-xs text-white/35">Sin interacciones registradas.</p>
+                  <p className="text-xs text-[var(--fg-muted)]">Sin interacciones registradas.</p>
                 ) : (
                   interactions.map((it) => (
                     <div
@@ -224,10 +224,10 @@ export default function CrmPage() {
                         "rounded-lg border p-2.5 text-xs " +
                         (it.direction === "out"
                           ? "border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-100"
-                          : "border-white/[0.06] bg-white/[0.03] text-white/75")
+                          : "border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-primary)]")
                       }
                     >
-                      <div className="mb-1 flex items-center gap-1.5 text-[10px] text-white/40">
+                      <div className="mb-1 flex items-center gap-1.5 text-[10px] text-[var(--fg-tertiary)]">
                         {it.direction === "out" ? <IconSend size={11} /> : <IconActivity size={11} />}
                         {it.direction === "out" ? "Enviado" : "Recibido"} · {timeAgo(it.created_at)}
                       </div>
@@ -248,8 +248,8 @@ function Empty() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
       <span className="mb-3 text-violet-400"><IconUsers size={32} /></span>
-      <p className="text-sm text-white/60">Aún no hay datos en el CRM.</p>
-      <p className="mt-1 text-xs text-white/35">En cuanto entre un WhatsApp, el contacto y su lead aparecen aquí solos.</p>
+      <p className="text-sm text-[var(--fg-secondary)]">Aún no hay datos en el CRM.</p>
+      <p className="mt-1 text-xs text-[var(--fg-muted)]">En cuanto entre un WhatsApp, el contacto y su lead aparecen aquí solos.</p>
     </div>
   );
 }

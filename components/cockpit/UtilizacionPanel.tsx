@@ -60,7 +60,7 @@ export function UtilizacionPanel() {
   const maxPct = Math.max(1, ...agents.map((a) => a.occupancyPct));
 
   return (
-    <section className="glass relative overflow-hidden rounded-2xl border border-white/10 p-5">
+    <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
       <div className="flex items-center justify-between gap-2">
         <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
           <IconActivity size={13} /> Utilización · últimas 24h
@@ -121,7 +121,7 @@ export function UtilizacionPanel() {
                     )}
                   </span>
                 </div>
-                <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/[0.05]">
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-[var(--surface-1)]">
                   <motion.div
                     className="h-full rounded-full"
                     initial={{ width: 0 }}

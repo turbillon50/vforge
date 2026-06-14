@@ -49,32 +49,32 @@ export default function ActivityPage() {
         actions={<button className="btn-ghost">{t.activity.export}</button>}/>
       <div className="mx-auto max-w-2xl px-5 py-6 md:px-8">
         {error&&<div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">⚠ {error}</div>}
-        {loading&&<div className="space-y-2">{[0,1,2,3,4].map(i=><div key={i} className="h-[68px] rounded-xl border border-white/[0.04] bg-white/[0.015] animate-pulse"/>)}</div>}
+        {loading&&<div className="space-y-2">{[0,1,2,3,4].map(i=><div key={i} className="h-[68px] rounded-xl border border-[var(--border-1)] bg-white/[0.015] animate-pulse"/>)}</div>}
         {!loading&&events.length===0&&!error&&(
           <div className="py-16 text-center">
-            <p className="font-display text-lg text-white/50">Sin eventos todavía.</p>
-            <p className="mt-2 text-sm text-white/25">Cuando V actúe sobre tus proyectos, los registros aparecen aquí.</p>
+            <p className="font-display text-lg text-[var(--fg-tertiary)]">Sin eventos todavía.</p>
+            <p className="mt-2 text-sm text-[var(--fg-muted)]">Cuando V actúe sobre tus proyectos, los registros aparecen aquí.</p>
           </div>
         )}
         {!loading&&events.length>0&&(
-          <ol className="relative space-y-2 border-l border-white/[0.06] pl-5">
+          <ol className="relative space-y-2 border-l border-[var(--border-1)] pl-5">
             {events.map(ev=>{
               const {Icon,color}=iconFor(ev.action);
               return (
                 <li key={ev.id} className="relative">
                   <span className="absolute -left-[22px] top-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full ring-2 ring-[#050509]"
                     style={{background:color}}/>
-                  <div className="overflow-hidden rounded-xl border border-white/[0.05] bg-[#0a0a12] p-4 transition hover:border-white/[0.08]">
+                  <div className="overflow-hidden rounded-xl border border-[var(--border-1)] bg-[#0a0a12] p-4 transition hover:border-[var(--border-1)]">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Icon size={14} style={{color,flexShrink:0}}/>
-                        <p className="font-display text-[13px] font-semibold text-white/80 truncate">{ev.action}</p>
-                        {ev.ring!==null&&<span className="font-mono text-[9px] text-white/20 shrink-0">ring {ev.ring}</span>}
+                        <p className="font-display text-[13px] font-semibold text-[var(--fg-primary)] truncate">{ev.action}</p>
+                        {ev.ring!==null&&<span className="font-mono text-[9px] text-[var(--fg-muted)] shrink-0">ring {ev.ring}</span>}
                       </div>
-                      <span className="font-mono text-[10px] text-white/20 shrink-0">{timeAgo(ev.created_at)}</span>
+                      <span className="font-mono text-[10px] text-[var(--fg-muted)] shrink-0">{timeAgo(ev.created_at)}</span>
                     </div>
                     {(ev.resource_type||ev.resource_id)&&(
-                      <p className="mt-1.5 font-mono text-[11px] text-white/30">
+                      <p className="mt-1.5 font-mono text-[11px] text-[var(--fg-muted)]">
                         {[ev.resource_type,ev.resource_id].filter(Boolean).join(" · ")}
                       </p>
                     )}

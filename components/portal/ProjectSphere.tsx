@@ -30,8 +30,8 @@ function Sig({ label, v }: { label: string; v: number }) {
   return (
     <div className="flex-1">
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-wide text-white/40">{label}</span>
-        <span className="text-[9px] font-semibold text-white/55">{v}%</span>
+        <span className="text-[9px] uppercase tracking-wide text-[var(--fg-tertiary)]">{label}</span>
+        <span className="text-[9px] font-semibold text-[var(--fg-tertiary)]">{v}%</span>
       </div>
       <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
         <motion.div
@@ -63,13 +63,13 @@ export function ProjectSphere({ projectId }: { projectId: string }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ease: EASE }}
-      className="relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#070510] p-5"
+      className="relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[#070510] p-5"
     >
       <div className="pointer-events-none absolute inset-0 opacity-70"
         style={{ background: `radial-gradient(120% 80% at 50% 0%, ${halo} 0%, transparent 60%)` }} />
 
       <div className="relative flex flex-col items-center">
-        <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">Esfera del proyecto</p>
+        <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--fg-tertiary)]">Esfera del proyecto</p>
 
         {/* Orbe */}
         <div className="relative my-3 grid h-[160px] w-[160px] place-items-center">
@@ -97,7 +97,7 @@ export function ProjectSphere({ projectId }: { projectId: string }) {
         </div>
 
         <p className="text-sm font-bold text-white">{stage}</p>
-        <p className="text-[10px] text-white/40">nivel calculado del avance real</p>
+        <p className="text-[10px] text-[var(--fg-tertiary)]">nivel calculado del avance real</p>
 
         <div className="mt-4 flex w-full gap-3">
           <Sig label="Integr." v={sig.readiness} />

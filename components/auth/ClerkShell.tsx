@@ -34,7 +34,7 @@ export function ClerkShell({ children }: { children: React.ReactNode }) {
           fontFamily: "var(--font-hanken), Hanken Grotesk, system-ui, sans-serif",
         },
         elements: {
-          card: "bg-surface border border-white/10 shadow-glow-violet",
+          card: "bg-surface border border-[var(--border-1)] shadow-glow-violet",
           formButtonPrimary:
             "bg-gradient-to-r from-violet-600 to-cyan-400 hover:opacity-95",
         },

@@ -23,7 +23,7 @@ export function BlogGrid({ posts }: { posts: Post[] }) {
           className={`rounded-full border px-3 py-1.5 font-mono text-[11px] transition-all ${
             active === "all"
               ? "border-violet-500/50 bg-violet-500/10 text-violet-300"
-              : "border-white/8 text-white/30 hover:text-white/60"
+              : "border-[var(--border-1)] text-[var(--fg-muted)] hover:text-[var(--fg-secondary)]"
           }`}
         >
           Todos ({posts.length})
@@ -60,7 +60,7 @@ export function BlogGrid({ posts }: { posts: Post[] }) {
             >
               <Link
                 href={`/blog/${post.slug}`}
-                className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/6 bg-[#0a0a12] p-5 transition-all duration-300 hover:border-white/12 hover:bg-[#0e0e18]"
+                className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[#0a0a12] p-5 transition-all duration-300 hover:border-[var(--border-1)] hover:bg-[#0e0e18]"
               >
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
                 {/* Accent line left */}
@@ -74,14 +74,14 @@ export function BlogGrid({ posts }: { posts: Post[] }) {
                 >
                   {cat.label}
                 </span>
-                <h3 className="flex-1 text-[14px] font-semibold leading-snug text-white/90 transition-colors group-hover:text-white">
+                <h3 className="flex-1 text-[14px] font-semibold leading-snug text-[var(--fg-primary)] transition-colors group-hover:text-white">
                   {post.title}
                 </h3>
-                <p className="mt-2 text-[12px] leading-relaxed text-white/35 line-clamp-2">
+                <p className="mt-2 text-[12px] leading-relaxed text-[var(--fg-muted)] line-clamp-2">
                   {post.excerpt}
                 </p>
                 <div className="mt-4 flex items-center justify-between">
-                  <span className="font-mono text-[10px] text-white/20">{post.readingTime} min</span>
+                  <span className="font-mono text-[10px] text-[var(--fg-muted)]">{post.readingTime} min</span>
                   <span
                     className="font-mono text-[10px] opacity-0 transition-all group-hover:opacity-100"
                     style={{ color: cat.color }}

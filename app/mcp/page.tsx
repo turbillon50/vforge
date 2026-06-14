@@ -108,7 +108,7 @@ export default function MCPDocsPage() {
               con tu fábrica de apps.
             </span>
           </h1>
-          <p className="mx-auto mt-5 max-w-lg text-[1rem] font-light leading-relaxed text-white/40">
+          <p className="mx-auto mt-5 max-w-lg text-[1rem] font-light leading-relaxed text-[var(--fg-tertiary)]">
             VForge MCP expone 14 herramientas que permiten a Claude operar tu infraestructura real.
             Proyectos, despliegues, contratos y más — desde cualquier conversación.
           </p>
@@ -122,19 +122,19 @@ export default function MCPDocsPage() {
 
         {/* ── SAVINGS CARDS ── */}
         <div className="mx-auto mt-16 max-w-4xl px-5">
-          <p className="mb-6 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-white/25">
+          <p className="mb-6 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">
             Lo que cambia cuando instalas VForge MCP
           </p>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {SAVINGS.map((s) => (
               <div
                 key={s.pct}
-                className="relative overflow-hidden rounded-2xl border border-white/8 bg-white/[0.025] p-5 text-center"
+                className="relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-white/[0.025] p-5 text-center"
               >
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/15 to-transparent" />
                 <p className="text-[2rem] font-bold leading-none tracking-tight text-white">{s.pct}</p>
-                <p className="mt-2 text-[11px] font-semibold text-white/70">{s.label}</p>
-                <p className="mt-1 text-[10px] leading-relaxed text-white/30">{s.desc}</p>
+                <p className="mt-2 text-[11px] font-semibold text-[var(--fg-secondary)]">{s.label}</p>
+                <p className="mt-1 text-[10px] leading-relaxed text-[var(--fg-muted)]">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -142,7 +142,7 @@ export default function MCPDocsPage() {
 
         {/* ── INSTALLATION STEPS ── */}
         <div className="mx-auto mt-20 max-w-2xl px-5">
-          <p className="mb-10 font-mono text-[10px] uppercase tracking-[0.2em] text-white/25">
+          <p className="mb-10 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">
             Instalación — 5 minutos
           </p>
           <div className="space-y-6">
@@ -159,9 +159,9 @@ export default function MCPDocsPage() {
                   </div>
                   <div className="flex-1 pb-2">
                     <h3 className="font-semibold text-white">{step.title}</h3>
-                    <p className="mt-1 text-[13px] leading-relaxed text-white/45">{step.body}</p>
+                    <p className="mt-1 text-[13px] leading-relaxed text-[var(--fg-tertiary)]">{step.body}</p>
                     {step.code && (
-                      <pre className="mt-3 overflow-x-auto rounded-xl border border-white/8 bg-white/4 p-4 font-mono text-[12px] leading-relaxed text-emerald-300/80">
+                      <pre className="mt-3 overflow-x-auto rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-4 font-mono text-[12px] leading-relaxed text-emerald-300/80">
                         {step.code}
                       </pre>
                     )}
@@ -184,23 +184,23 @@ export default function MCPDocsPage() {
         <div className="mx-auto mt-24 max-w-4xl px-5">
           <div className="mb-8 flex items-end justify-between">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/25 mb-1">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)] mb-1">
                 Herramientas disponibles
               </p>
               <h2 className="text-2xl font-bold text-white">14 herramientas reales</h2>
             </div>
-            <span className="font-mono text-[11px] text-white/25">{TOOLS.length} herramientas</span>
+            <span className="font-mono text-[11px] text-[var(--fg-muted)]">{TOOLS.length} herramientas</span>
           </div>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             {TOOLS.map((tool) => (
               <div
                 key={tool.name}
-                className="group flex items-start gap-3 rounded-xl border border-white/6 bg-white/[0.02] px-4 py-3 transition-all hover:border-violet-500/25 hover:bg-violet-500/4"
+                className="group flex items-start gap-3 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-3 transition-all hover:border-violet-500/25 hover:bg-violet-500/4"
               >
                 <code className="mt-0.5 shrink-0 rounded-lg bg-violet-500/12 px-2 py-0.5 font-mono text-[11px] text-violet-400">
                   {tool.name}
                 </code>
-                <p className="text-[12px] text-white/45 leading-relaxed">{tool.desc}</p>
+                <p className="text-[12px] text-[var(--fg-tertiary)] leading-relaxed">{tool.desc}</p>
               </div>
             ))}
           </div>
@@ -208,7 +208,7 @@ export default function MCPDocsPage() {
 
         {/* ── EJEMPLO DE USO ── */}
         <div className="mx-auto mt-24 max-w-2xl px-5">
-          <p className="mb-6 font-mono text-[10px] uppercase tracking-[0.2em] text-white/25">
+          <p className="mb-6 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">
             Ejemplo real de conversación con MCP activo
           </p>
           <div className="space-y-3">
@@ -230,7 +230,7 @@ export default function MCPDocsPage() {
                   className={`max-w-[82%] rounded-xl px-4 py-2.5 text-[13px] leading-relaxed ${
                     msg.from === "user"
                       ? "bg-gradient-to-br from-violet-600 to-violet-500 text-white"
-                      : "border border-white/8 bg-white/4 text-white/70"
+                      : "border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-secondary)]"
                   }`}
                 >
                   {msg.text}
@@ -250,7 +250,7 @@ export default function MCPDocsPage() {
             <h2 className="text-2xl font-bold text-white mb-2">
               Tu primera conversación operacional
             </h2>
-            <p className="text-sm text-white/40 mb-6">
+            <p className="text-sm text-[var(--fg-tertiary)] mb-6">
               Crea tu cuenta, instala el MCP y dile a Claude que liste tus proyectos.
               Todo en menos de 5 minutos.
             </p>
@@ -263,7 +263,7 @@ export default function MCPDocsPage() {
               </Link>
               <Link
                 href="/blog/que-es-mcp"
-                className="flex items-center justify-center gap-2 rounded-2xl border border-white/8 bg-white/3 py-4 text-sm text-white/50 transition-all hover:text-white/80"
+                className="flex items-center justify-center gap-2 rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] py-4 text-sm text-[var(--fg-tertiary)] transition-all hover:text-[var(--fg-primary)]"
               >
                 Leer qué es MCP primero
               </Link>

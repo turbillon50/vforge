@@ -129,7 +129,7 @@ export function NewContractModal({
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
           />
-          <span className="mt-1 block text-[11px] text-white/30">
+          <span className="mt-1 block text-[11px] text-[var(--fg-muted)]">
             3 pagos de {money(Math.floor(amount / 3))} (esquema V-Momentum)
           </span>
         </Field>
@@ -167,7 +167,7 @@ export function NewContractModal({
           <button
             disabled={!!busy}
             onClick={() => submit(false)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-2.5 text-sm font-medium text-white/70 transition hover:text-white disabled:opacity-50"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] py-2.5 text-sm font-medium text-[var(--fg-secondary)] transition hover:text-white disabled:opacity-50"
           >
             {busy === "draft" ? <IconLoader size={14} className="animate-spin" /> : <IconFile size={14} />}
             Borrador

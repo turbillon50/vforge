@@ -61,7 +61,7 @@ export default function DeveloperPage() {
               Portal<br />
               <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">Desarrolladores</span>
             </h1>
-            <p className="mx-auto mt-4 max-w-md text-base font-light text-white/40">
+            <p className="mx-auto mt-4 max-w-md text-base font-light text-[var(--fg-tertiary)]">
               Estamos construyendo el espacio definitivo para desarrolladores que quieren integrar, extender y monetizar con V.
             </p>
           </motion.div>
@@ -74,7 +74,7 @@ export default function DeveloperPage() {
             className="mt-8 space-y-2.5 text-left"
           >
             {FEATURES_COMING.map((f, i) => (
-              <li key={i} className="flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-sm text-white/55">
+              <li key={i} className="flex items-start gap-3 rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-3 text-sm text-[var(--fg-tertiary)]">
                 <IconSparkles size={13} className="mt-0.5 shrink-0 text-violet-400/60" />
                 {f}
               </li>
@@ -94,12 +94,12 @@ export default function DeveloperPage() {
                   <IconCheck size={20} className="text-emerald-400" />
                 </div>
                 <p className="font-semibold text-white">¡Estás en la lista!</p>
-                <p className="text-sm text-white/40">Te avisamos cuando abra el portal de desarrolladores. Serás de los primeros.</p>
+                <p className="text-sm text-[var(--fg-tertiary)]">Te avisamos cuando abra el portal de desarrolladores. Serás de los primeros.</p>
               </div>
             ) : (
               <>
                 <p className="mb-1 font-semibold text-white">Únete a la lista de espera</p>
-                <p className="mb-5 text-sm text-white/35">Sé de los primeros cuando abramos acceso.</p>
+                <p className="mb-5 text-sm text-[var(--fg-muted)]">Sé de los primeros cuando abramos acceso.</p>
                 <form onSubmit={handleSubmit} className="flex gap-2">
                   <input
                     type="email"
@@ -107,7 +107,7 @@ export default function DeveloperPage() {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="tu@email.com"
-                    className="flex-1 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-violet-400/50 focus:bg-white/[0.08]"
+                    className="flex-1 rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-violet-400/50 focus:bg-white/[0.08]"
                   />
                   <button
                     type="submit"

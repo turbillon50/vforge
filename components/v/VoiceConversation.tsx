@@ -262,7 +262,7 @@ export function VoiceConversation() {
               className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                 t.role === "user"
                   ? "bg-violet-600/30 text-white border border-violet-400/30"
-                  : "bg-white/[0.06] text-white/90 border border-white/10"
+                  : "bg-white/[0.06] text-[var(--fg-primary)] border border-[var(--border-1)]"
               }`}
             >
               {t.text}
@@ -327,7 +327,7 @@ export function VoiceConversation() {
           </button>
         </div>
 
-        <p className="text-center text-sm font-medium text-white/70">
+        <p className="text-center text-sm font-medium text-[var(--fg-secondary)]">
           {started ? statusLabel[phase] : "Toca el orbe para despertar a V"}
         </p>
 
@@ -340,7 +340,7 @@ export function VoiceConversation() {
               setTurns([]);
               cancelAnimationFrame(rafRef.current);
             }}
-            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/50 hover:text-white/80"
+            className="flex items-center gap-1.5 rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-1.5 text-xs text-[var(--fg-tertiary)] hover:text-[var(--fg-primary)]"
           >
             <IconX size={13} /> Terminar
           </button>

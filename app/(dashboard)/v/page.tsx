@@ -211,16 +211,16 @@ export default function VChatPage() {
               setDrawerOpen(true);
             }}
             aria-label="Conversaciones guardadas"
-            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/70 transition hover:text-white active:scale-95"
+            className="flex items-center gap-1.5 rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:text-white active:scale-95"
           >
             <IconHistory size={14} /> <span className="hidden sm:inline">Hilos</span>
           </button>
           {/* Toggle Texto | Voz */}
-          <div className="flex rounded-full border border-white/10 bg-white/[0.04] p-1 text-xs">
+          <div className="flex rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] p-1 text-xs">
             <button
               onClick={() => setMode("text")}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-medium transition ${
-                mode === "text" ? "bg-violet-600/40 text-white" : "text-white/55 hover:text-white/80"
+                mode === "text" ? "bg-violet-600/40 text-white" : "text-[var(--fg-tertiary)] hover:text-[var(--fg-primary)]"
               }`}
             >
               <IconChat size={14} /> Texto
@@ -228,7 +228,7 @@ export default function VChatPage() {
             <button
               onClick={() => setMode("voice")}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-medium transition ${
-                mode === "voice" ? "bg-violet-600/40 text-white" : "text-white/55 hover:text-white/80"
+                mode === "voice" ? "bg-violet-600/40 text-white" : "text-[var(--fg-tertiary)] hover:text-[var(--fg-primary)]"
               }`}
             >
               <IconMic size={14} /> Voz
@@ -321,7 +321,7 @@ export default function VChatPage() {
               animate={{ x: 0 }}
               exit={{ x: -360 }}
               transition={{ type: "spring", stiffness: 320, damping: 34 }}
-              className="glass relative z-10 flex h-full w-[86%] max-w-[340px] flex-col border-r border-white/12 bg-[#0a0a0f]/95 pb-[max(env(safe-area-inset-bottom),1rem)]"
+              className="glass relative z-10 flex h-full w-[86%] max-w-[340px] flex-col border-r border-[var(--border-1)] bg-[#0a0a0f]/95 pb-[max(env(safe-area-inset-bottom),1rem)]"
             >
               <div className="flex items-center justify-between px-4 pb-3 pt-5">
                 <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
@@ -330,7 +330,7 @@ export default function VChatPage() {
                 <button
                   onClick={() => setDrawerOpen(false)}
                   aria-label="Cerrar"
-                  className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 text-white/60 transition hover:text-white active:scale-95"
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-[var(--border-1)] text-[var(--fg-secondary)] transition hover:text-white active:scale-95"
                 >
                   <IconX size={15} />
                 </button>
@@ -347,7 +347,7 @@ export default function VChatPage() {
 
               <div className="flex-1 overflow-y-auto px-2 pb-4">
                 {sessions.length === 0 ? (
-                  <p className="px-3 py-6 text-center text-[12px] text-white/35">
+                  <p className="px-3 py-6 text-center text-[12px] text-[var(--fg-muted)]">
                     Aún no hay conversaciones guardadas. Escríbele a V y este hilo
                     aparecerá aquí.
                   </p>
@@ -362,15 +362,15 @@ export default function VChatPage() {
                             className={`w-full rounded-xl border px-3 py-2.5 text-left transition active:scale-[0.99] ${
                               active
                                 ? "border-violet-500/50 bg-violet-600/15"
-                                : "border-transparent hover:border-white/10 hover:bg-white/[0.04]"
+                                : "border-transparent hover:border-[var(--border-1)] hover:bg-[var(--surface-1)]"
                             }`}
                           >
-                            <p className="truncate text-[13px] font-medium text-white/90">
+                            <p className="truncate text-[13px] font-medium text-[var(--fg-primary)]">
                               {s.titulo}
                             </p>
-                            <p className="mt-0.5 flex items-center gap-2 text-[11px] text-white/40">
+                            <p className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--fg-tertiary)]">
                               <span>{whenLabel(s.last_at)}</span>
-                              <span className="text-white/20">·</span>
+                              <span className="text-[var(--fg-muted)]">·</span>
                               <span>{s.count} {s.count === 1 ? "mensaje" : "mensajes"}</span>
                             </p>
                           </button>

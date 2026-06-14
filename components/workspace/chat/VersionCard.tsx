@@ -133,7 +133,7 @@ export default function VersionCard({
           type="button"
           onClick={() => setFullscreen(true)}
           aria-label="Expandir preview"
-          className="flex h-11 w-11 flex-none items-center justify-center rounded-xl text-on-surface-variant transition hover:bg-white/10 hover:text-white md:h-9 md:w-9"
+          className="flex h-11 w-11 flex-none items-center justify-center rounded-xl text-on-surface-variant transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)] md:h-9 md:w-9"
         >
           <IconMaximize size={15} />
         </button>
@@ -141,7 +141,7 @@ export default function VersionCard({
 
       {/* Preview */}
       <div ref={frameHostRef} className="px-4 pt-2.5">
-        <div className="aspect-[16/10] w-full overflow-hidden rounded-xl border border-white/10 bg-[#0b0716]">
+        <div className="aspect-[16/10] w-full overflow-hidden rounded-xl border border-[var(--border-1)] bg-[#0b0716]">
           {visible ? (
             <iframe
               key={active.id}
@@ -172,7 +172,7 @@ export default function VersionCard({
                 className={`flex h-11 min-w-[44px] flex-none items-center justify-center rounded-full px-3.5 text-[12.5px] transition md:h-8 ${
                   isActive
                     ? "bg-gradient-to-r from-violet-500/35 to-cyan-500/25 text-white ring-1 ring-violet-400/40"
-                    : "bg-white/[0.05] text-on-surface-variant hover:bg-white/10 hover:text-white"
+                    : "bg-[var(--surface-1)] text-on-surface-variant hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]"
                 }`}
               >
                 v{v.n}
@@ -185,7 +185,7 @@ export default function VersionCard({
       {/* Acciones */}
       <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5">
         {confirmShip ? (
-          <div className="flex items-center gap-2 rounded-xl bg-white/[0.05] px-3 py-1.5 text-[13px] text-on-surface">
+          <div className="flex items-center gap-2 rounded-xl bg-[var(--surface-1)] px-3 py-1.5 text-[13px] text-on-surface">
             ¿Publico la versión {active.n}?
             <button
               type="button"
@@ -197,7 +197,7 @@ export default function VersionCard({
             <button
               type="button"
               onClick={() => setConfirmShip(false)}
-              className="flex h-11 items-center rounded-lg px-3 text-on-surface-variant transition hover:bg-white/10 hover:text-white md:h-8"
+              className="flex h-11 items-center rounded-lg px-3 text-on-surface-variant transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)] md:h-8"
             >
               No
             </button>
@@ -238,7 +238,7 @@ export default function VersionCard({
               type="button"
               onClick={() => setFullscreen(false)}
               aria-label="Cerrar preview"
-              className="flex h-11 w-11 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-[var(--fg-primary)] transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]"
             >
               <IconX size={17} />
             </button>
@@ -247,7 +247,7 @@ export default function VersionCard({
             src={previewSrc}
             sandbox="allow-scripts"
             title={`Preview completo versión ${active.n}`}
-            className="m-3 mt-0 flex-1 rounded-2xl border border-white/10 bg-white"
+            className="m-3 mt-0 flex-1 rounded-2xl border border-[var(--border-1)] bg-white"
           />
         </div>
       )}

@@ -58,7 +58,7 @@ export default function MarketplacePage() {
       <main className="min-h-screen bg-[#03020a] pb-24 pt-20">
 
         {/* Hero del shop */}
-        <div className="relative overflow-hidden border-b border-white/[0.06] bg-gradient-to-b from-violet-600/8 to-transparent py-16 text-center">
+        <div className="relative overflow-hidden border-b border-[var(--border-1)] bg-gradient-to-b from-violet-600/8 to-transparent py-16 text-center">
           <div className="pointer-events-none absolute inset-0">
             <img src={HF_SPHERE} alt="" className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full object-cover opacity-[0.06] blur-[60px]" />
           </div>
@@ -68,7 +68,7 @@ export default function MarketplacePage() {
               Todo lo que necesita<br />
               <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">tu próxima app.</span>
             </h1>
-            <p className="mx-auto mt-3 max-w-md text-sm font-light text-white/35">
+            <p className="mx-auto mt-3 max-w-md text-sm font-light text-[var(--fg-muted)]">
               Apps listas, integraciones, LLMs y plantillas. V los conecta a tu proyecto en segundos.
             </p>
           </motion.div>
@@ -81,7 +81,7 @@ export default function MarketplacePage() {
               <button
                 key={c.id}
                 onClick={() => setCat(c.id)}
-                className={`shrink-0 rounded-2xl px-5 py-2 text-sm font-medium transition-all ${cat === c.id ? "bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]" : "border border-white/[0.08] bg-white/[0.03] text-white/50 hover:text-white/80"}`}
+                className={`shrink-0 rounded-2xl px-5 py-2 text-sm font-medium transition-all ${cat === c.id ? "bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]" : "border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-tertiary)] hover:text-[var(--fg-primary)]"}`}
               >
                 {c.label}
               </button>
@@ -100,7 +100,7 @@ export default function MarketplacePage() {
                   exit={{ opacity: 0, scale: 0.92 }}
                   transition={{ delay: i * 0.04, ease: EASE }}
                   onClick={() => setActive(item.id)}
-                  className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 text-left transition-all hover:border-violet-400/30 hover:bg-white/[0.05]"
+                  className="group relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] p-4 text-left transition-all hover:border-violet-400/30 hover:bg-[var(--surface-1)]"
                 >
                   {item.img && (
                     <div className="mb-3 h-24 w-full overflow-hidden rounded-xl">
@@ -109,17 +109,17 @@ export default function MarketplacePage() {
                     </div>
                   )}
                   {!item.img && (
-                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-2xl">
+                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] text-2xl">
                       {item.icon}
                     </div>
                   )}
                   <p className="text-sm font-semibold text-white leading-tight">{item.name}</p>
-                  <p className="mt-0.5 text-[11px] text-white/40 leading-tight">{item.sub}</p>
+                  <p className="mt-0.5 text-[11px] text-[var(--fg-tertiary)] leading-tight">{item.sub}</p>
                   <div className="mt-2 flex items-center justify-between">
                     <span className={`text-[10px] font-semibold ${item.status === "live" ? "text-emerald-400" : "text-violet-300/60"}`}>
                       {item.status === "live" ? "● Disponible" : "◌ Próximamente"}
                     </span>
-                    <span className="text-[10px] text-white/25">{item.price}</span>
+                    <span className="text-[10px] text-[var(--fg-muted)]">{item.price}</span>
                   </div>
                 </motion.button>
               ))}
@@ -143,22 +143,22 @@ export default function MarketplacePage() {
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ ease: EASE, duration: 0.4 }}
-                className="fixed bottom-0 left-0 right-0 z-50 max-h-[75vh] overflow-auto rounded-t-3xl border-t border-white/10 bg-[#0b0614]/95 p-6 backdrop-blur-2xl"
+                className="fixed bottom-0 left-0 right-0 z-50 max-h-[75vh] overflow-auto rounded-t-3xl border-t border-[var(--border-1)] bg-[#0b0614]/95 p-6 backdrop-blur-2xl"
               >
                 <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20" />
                 <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-3xl">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] text-3xl">
                     {activeItem.icon}
                   </div>
                   <div className="flex-1">
                     <p className="text-lg font-bold text-white">{activeItem.name}</p>
-                    <p className="text-sm text-white/40">{activeItem.sub}</p>
+                    <p className="text-sm text-[var(--fg-tertiary)]">{activeItem.sub}</p>
                     <span className={`mt-1 inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${activeItem.status === "live" ? "bg-emerald-500/15 text-emerald-400" : "bg-violet-500/15 text-violet-300"}`}>
                       {activeItem.status === "live" ? "Disponible" : "Próximamente"}
                     </span>
                   </div>
                 </div>
-                <p className="mt-4 text-sm font-light leading-relaxed text-white/55">{activeItem.desc}</p>
+                <p className="mt-4 text-sm font-light leading-relaxed text-[var(--fg-tertiary)]">{activeItem.desc}</p>
                 <div className="mt-4 flex items-center gap-3">
                   {activeItem.status === "live" ? (
                     <Link href="/sign-up" prefetch={false}
@@ -172,7 +172,7 @@ export default function MarketplacePage() {
                       <IconShield size={13} /> Notificarme cuando esté listo
                     </button>
                   )}
-                  <button onClick={() => setActive(null)} className="rounded-2xl border border-white/10 px-4 py-3.5 text-sm text-white/40 hover:text-white/70">
+                  <button onClick={() => setActive(null)} className="rounded-2xl border border-[var(--border-1)] px-4 py-3.5 text-sm text-[var(--fg-tertiary)] hover:text-[var(--fg-secondary)]">
                     Cerrar
                   </button>
                 </div>

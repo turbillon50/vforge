@@ -313,7 +313,7 @@ function AgentNode({
               angosto (compact) se omite: colisiona con las esferas del centro. */}
           {!compact && !working && !pending && esfera.lastProject && (
             <p
-              className="mt-0.5 max-w-[88px] truncate text-[8px] text-white/30 md:max-w-[104px]"
+              className="mt-0.5 max-w-[88px] truncate text-[8px] text-[var(--fg-muted)] md:max-w-[104px]"
               title={`último: ${esfera.lastProject}`}
             >
               último: {esfera.lastProject}
@@ -374,7 +374,7 @@ function JobSphere({
               </span>
             )}
             {typeof job.progress === "number" && (
-              <span className="text-[9px] font-medium text-white/55">{job.progress}%</span>
+              <span className="text-[9px] font-medium text-[var(--fg-tertiary)]">{job.progress}%</span>
             )}
           </div>
         )}
@@ -519,7 +519,7 @@ export function EsferasNucleo({
   const coreR = n === 0 ? (idleSize / 2) * px2vb + 1.2 : 4; // arranque de líneas base
 
   return (
-    <section className="glass relative overflow-hidden rounded-2xl border border-white/10 p-4 sm:p-5">
+    <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-4 sm:p-5">
       <motion.div
         className="pointer-events-none absolute left-1/2 top-1/2 h-[130%] w-[130%] -translate-x-1/2 -translate-y-1/2"
         animate={{ opacity: [glowOpacity * 0.7, glowOpacity, glowOpacity * 0.7] }}
@@ -555,20 +555,20 @@ export function EsferasNucleo({
 
       {/* Leyenda de dirección del flujo — qué significa cada sentido del haz */}
       {n > 0 && (
-        <div className="relative mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-white/45">
+        <div className="relative mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-[var(--fg-tertiary)]">
           <span className="inline-flex items-center gap-1.5">
             <svg width="22" height="8" viewBox="0 0 22 8" aria-hidden>
               <line x1="1" y1="4" x2="16" y2="4" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.45" />
               <polygon points="21,4 15,1.4 15,6.6" fill="currentColor" />
             </svg>
-            Despachando <span className="text-white/30">núcleo → agente</span>
+            Despachando <span className="text-[var(--fg-muted)]">núcleo → agente</span>
           </span>
           <span className="inline-flex items-center gap-1.5">
             <svg width="22" height="8" viewBox="0 0 22 8" aria-hidden>
               <line x1="6" y1="4" x2="21" y2="4" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.45" />
               <polygon points="1,4 7,1.4 7,6.6" fill="currentColor" />
             </svg>
-            Reportando <span className="text-white/30">agente → núcleo</span>
+            Reportando <span className="text-[var(--fg-muted)]">agente → núcleo</span>
           </span>
         </div>
       )}
@@ -681,7 +681,7 @@ export function EsferasNucleo({
       </div>
 
       {totalWorking === 0 && esferas.length > 0 && (
-        <p className="relative mt-2 text-center text-[11px] text-white/35">
+        <p className="relative mt-2 text-center text-[11px] text-[var(--fg-muted)]">
           Esferas en reposo — ningún job corriendo ahora mismo.
         </p>
       )}

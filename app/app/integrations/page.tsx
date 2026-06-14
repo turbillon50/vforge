@@ -88,7 +88,7 @@ export default function IntegrationsPage() {
             <motion.div initial={{width:0}} animate={{width:`${(connected/SERVICES.length)*100}%`}}
               transition={{duration:0.8,ease:EASE}} className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"/>
           </div>
-          <span className="font-mono text-[11px] text-white/30">{connected}/{SERVICES.length} conectados</span>
+          <span className="font-mono text-[11px] text-[var(--fg-muted)]">{connected}/{SERVICES.length} conectados</span>
         </div>
       </div>
 
@@ -106,19 +106,19 @@ export default function IntegrationsPage() {
           const err=errors[id];
           return (
             <motion.div key={id} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:i*0.04,ease:EASE}}
-              className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0a0a12] p-5 transition hover:border-white/[0.09]">
+              className="relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[#0a0a12] p-5 transition hover:border-[var(--border-1)]">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/6 to-transparent"/>
               {conn&&<span className="absolute inset-x-0 top-0 h-0.5 rounded-t-2xl" style={{background:`linear-gradient(90deg,transparent,${color}60,transparent)`}}/>}
 
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   {/* Logo container */}
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.07] bg-[#0e0e18]">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--border-1)] bg-[#0e0e18]">
                     <Logo className="h-5 w-5" style={{color}} aria-label={name}/>
                   </div>
                   <div>
-                    <p className="text-[13px] font-semibold text-white/85">{name}</p>
-                    <p className="text-[11px] text-white/35">{desc}</p>
+                    <p className="text-[13px] font-semibold text-[var(--fg-primary)]">{name}</p>
+                    <p className="text-[11px] text-[var(--fg-muted)]">{desc}</p>
                   </div>
                 </div>
                 {conn ? (
@@ -126,7 +126,7 @@ export default function IntegrationsPage() {
                     <IconCheck size={10}/> Conectado
                   </span>
                 ) : (
-                  <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/[0.07] bg-white/[0.025] px-2.5 py-1 font-mono text-[10px] text-white/30">
+                  <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--border-1)] bg-white/[0.025] px-2.5 py-1 font-mono text-[10px] text-[var(--fg-muted)]">
                     Sin conectar
                   </span>
                 )}
@@ -137,7 +137,7 @@ export default function IntegrationsPage() {
                 <div className="mt-4">
                   {svc.oauthKey && (
                     <a href={`/api/auth/${svc.oauthKey}/start`}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.025] py-2.5 font-mono text-[11px] text-white/45 transition hover:border-violet-500/30 hover:text-violet-300">
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] bg-white/[0.025] py-2.5 font-mono text-[11px] text-[var(--fg-tertiary)] transition hover:border-violet-500/30 hover:text-violet-300">
                       <IconLink size={12}/> Conectar con {name}
                     </a>
                   )}
@@ -145,7 +145,7 @@ export default function IntegrationsPage() {
                     <div className="flex gap-2">
                       <input value={pasteValues[svc.pasteKey!]||""} onChange={e=>setPasteValues(v=>({...v,[svc.pasteKey!]:e.target.value}))}
                         placeholder={`Pega tu ${name} API key`}
-                        className="flex-1 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2.5 font-mono text-[11px] text-white/60 outline-none placeholder:text-white/20 focus:border-violet-500/40"/>
+                        className="flex-1 rounded-xl border border-[var(--border-1)] bg-white/[0.025] px-3 py-2.5 font-mono text-[11px] text-[var(--fg-secondary)] outline-none placeholder:text-[var(--fg-muted)] focus:border-violet-500/40"/>
                       <button onClick={()=>connectPaste(svc.pasteKey!)} disabled={st==="saving"||!pasteValues[svc.pasteKey!]}
                         className="flex items-center gap-1.5 rounded-xl bg-violet-600/80 px-4 py-2.5 font-mono text-[11px] text-white disabled:opacity-40 hover:bg-violet-600">
                         {st==="saving"?<span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"/>:<IconKey size={12}/>}
@@ -154,7 +154,7 @@ export default function IntegrationsPage() {
                     </div>
                   )}
                   {svc.manual && (
-                    <p className="text-center font-mono text-[10px] text-white/20">Configurar en Settings → Secrets</p>
+                    <p className="text-center font-mono text-[10px] text-[var(--fg-muted)]">Configurar en Settings → Secrets</p>
                   )}
                   {err&&<p className="mt-2 text-center text-[11px] text-red-400">⚠ {err}</p>}
                 </div>

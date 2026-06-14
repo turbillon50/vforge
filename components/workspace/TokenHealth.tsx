@@ -252,7 +252,7 @@ export function TokenHealthIndicator({ className }: { className?: string }) {
       {showReconnect && <ReconnectButton reconnecting={reconnecting} onClick={reconnect} />}
 
       {/* Tooltip premium */}
-      <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-[220px] rounded-lg border border-white/10 bg-[#0b0b12]/95 px-2.5 py-1.5 opacity-0 shadow-xl backdrop-blur-xl transition-opacity duration-150 group-hover/th:opacity-100">
+      <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-[220px] rounded-lg border border-[var(--border-1)] bg-[#0b0b12]/95 px-2.5 py-1.5 opacity-0 shadow-xl backdrop-blur-xl transition-opacity duration-150 group-hover/th:opacity-100">
         <p className="text-[11px] leading-snug text-[var(--fg-primary)]">{tooltipText(health)}</p>
         {health?.checked_at && (
           <p className="mt-0.5 font-mono text-[9px] text-[var(--fg-muted)]">

@@ -159,7 +159,7 @@ export default function ProjectsPage() {
                   : f === "preview"
                   ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400"
                   : "border-violet-500/50 bg-violet-500/10 text-violet-300"
-                : "border-white/8 text-muted hover:border-white/16 hover:text-on-surface"
+                : "border-[var(--border-1)] text-muted hover:border-[var(--border-2)] hover:text-on-surface"
             }`}
           >
             {f === "all" ? `Todos (${projects.length})` : f === "live" ? `● Live (${liveCount})` : f === "preview" ? `● Preview (${previewCount})` : "Draft"}
@@ -178,7 +178,7 @@ export default function ProjectsPage() {
           {[0, 1, 2, 4, 5].map((i) => (
             <div
               key={i}
-              className="h-[300px] rounded-2xl border border-white/6 bg-white/3 animate-pulse"
+              className="h-[300px] rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] animate-pulse"
             />
           ))}
         </div>
@@ -215,7 +215,7 @@ export default function ProjectsPage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: EASE, delay: idx * 0.05 }}
-              className="group relative overflow-hidden rounded-2xl border border-white/8 bg-[#0e0e16] transition-all duration-300 hover:border-violet-500/30 hover:shadow-glow-violet"
+              className="group relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[#0e0e16] transition-all duration-300 hover:border-violet-500/30 hover:shadow-glow-violet"
             >
               {/* Crystal sheen top */}
               <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
@@ -253,13 +253,13 @@ export default function ProjectsPage() {
                       </span>
                     )}
                     {status === "draft" && (
-                      <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/4 px-2.5 py-1 font-mono text-[10px] text-muted">
+                      <span className="flex items-center gap-1.5 rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-2.5 py-1 font-mono text-[10px] text-muted">
                         <span className="h-1.5 w-1.5 rounded-full bg-muted" />
                         Draft
                       </span>
                     )}
                     {status === "archived" && (
-                      <span className="rounded-full border border-white/8 bg-white/3 px-2.5 py-1 font-mono text-[10px] text-muted">
+                      <span className="rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-2.5 py-1 font-mono text-[10px] text-muted">
                         Archivo
                       </span>
                     )}
@@ -274,7 +274,7 @@ export default function ProjectsPage() {
                     </span>
                     <span className="font-mono text-[10px] text-muted">{progress}%</span>
                   </div>
-                  <div className="h-1 overflow-hidden rounded-full bg-white/6">
+                  <div className="h-1 overflow-hidden rounded-full bg-[var(--surface-2)]">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
@@ -294,7 +294,7 @@ export default function ProjectsPage() {
 
                 {/* Stats grid */}
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  <div className="rounded-xl border border-white/6 bg-white/3 px-3 py-2.5">
+                  <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5">
                     <p className="font-mono text-[9px] uppercase tracking-widest text-muted">Stack</p>
                     <p className="mt-1 flex items-center gap-1.5 text-[12px] font-medium text-on-surface">
                       <span
@@ -304,7 +304,7 @@ export default function ProjectsPage() {
                       {p.github_language ?? "—"}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-white/6 bg-white/3 px-3 py-2.5">
+                  <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5">
                     <p className="font-mono text-[9px] uppercase tracking-widest text-muted">Deploy</p>
                     <p className="mt-1 flex items-center gap-1.5 text-[12px] font-medium text-on-surface">
                       <IconActivity size={11} className={status === "live" ? "text-emerald-400" : "text-muted"} />
@@ -315,7 +315,7 @@ export default function ProjectsPage() {
 
                 {/* Repo */}
                 {p.github_repo && (
-                  <div className="mt-3 flex items-center gap-1.5 rounded-xl border border-white/6 bg-white/3 px-3 py-2">
+                  <div className="mt-3 flex items-center gap-1.5 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2">
                     <IconBranch size={11} className="shrink-0 text-muted" />
                     <span className="truncate font-mono text-[11px] text-muted">
                       {p.github_repo}
@@ -341,10 +341,10 @@ export default function ProjectsPage() {
               </div>
 
               {/* Footer — acciones por proyecto */}
-              <div className="flex items-center gap-2 border-t border-white/6 px-5 py-3">
+              <div className="flex items-center gap-2 border-t border-[var(--border-1)] px-5 py-3">
                 <button
                   onClick={() => setDetailProject(p)}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-on-surface transition-all hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-200"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-on-surface transition-all hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-200"
                 >
                   <IconExtLink size={11} />
                   Abrir
@@ -382,11 +382,11 @@ export default function ProjectsPage() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 80, opacity: 0 }}
               transition={{ duration: 0.34, ease: EASE }}
-              className="relative z-10 flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-white/10 bg-[#0c0c14] shadow-2xl"
+              className="relative z-10 flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-[var(--border-1)] bg-[#0c0c14] shadow-2xl"
             >
               <div className="pointer-events-none absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-violet-400/40 to-transparent" />
 
-              <div className="flex items-start justify-between gap-3 border-b border-white/8 px-6 py-5">
+              <div className="flex items-start justify-between gap-3 border-b border-[var(--border-1)] px-6 py-5">
                 <div className="min-w-0">
                   <p className="font-mono text-[10px] uppercase tracking-widest text-violet-400">
                     Detalle de proyecto
@@ -403,7 +403,7 @@ export default function ProjectsPage() {
                 </div>
                 <button
                   onClick={() => setDetailProject(null)}
-                  className="shrink-0 rounded-lg border border-white/10 bg-white/5 p-2 text-muted transition-colors hover:border-white/20 hover:text-on-surface"
+                  className="shrink-0 rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] p-2 text-muted transition-colors hover:border-[var(--border-2)] hover:text-on-surface"
                 >
                   <IconX size={15} />
                 </button>
@@ -411,13 +411,13 @@ export default function ProjectsPage() {
 
               <div className="space-y-3 px-6 py-6">
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl border border-white/6 bg-white/3 px-3 py-2.5">
+                  <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5">
                     <p className="font-mono text-[9px] uppercase tracking-widest text-muted">Estado</p>
                     <p className="mt-1 text-[13px] font-medium capitalize text-on-surface">
                       {STATUS_FROM_CATEGORY[detailProject.category] ?? "draft"}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-white/6 bg-white/3 px-3 py-2.5">
+                  <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5">
                     <p className="font-mono text-[9px] uppercase tracking-widest text-muted">Stack</p>
                     <p className="mt-1 text-[13px] font-medium text-on-surface">
                       {detailProject.github_language ?? "—"}
@@ -426,7 +426,7 @@ export default function ProjectsPage() {
                 </div>
 
                 {detailProject.github_repo && (
-                  <div className="flex items-center gap-2 rounded-xl border border-white/6 bg-white/3 px-3 py-2.5">
+                  <div className="flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5">
                     <IconCode size={13} className="shrink-0 text-muted" />
                     <span className="truncate font-mono text-[12px] text-muted">{detailProject.github_repo}</span>
                   </div>
@@ -438,7 +438,7 @@ export default function ProjectsPage() {
                       href={detailProject.vercel_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-on-surface transition-all hover:border-white/20 hover:bg-white/8"
+                      className="flex items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-3 text-sm font-medium text-on-surface transition-all hover:border-[var(--border-2)] hover:bg-[var(--surface-2)]"
                     >
                       <IconExtLink size={14} /> Abrir deploy
                     </a>
@@ -454,14 +454,14 @@ export default function ProjectsPage() {
                   </button>
                   <Link
                     href="/app/chat"
-                    className="flex items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-violet-300 transition-all hover:bg-white/5"
+                    className="flex items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] px-4 py-3 text-sm font-medium text-violet-300 transition-all hover:bg-[var(--surface-1)]"
                   >
                     <IconSparkles size={14} /> {interpolate(t.projects.ask_b, { name: detailProject.name.split(" ")[0] })}
                   </Link>
                 </div>
 
                 {/* Participantes del proyecto */}
-                <div className="border-t border-white/8 pt-4">
+                <div className="border-t border-[var(--border-1)] pt-4">
                   <div className="mb-3 flex items-center gap-2">
                     <IconUsers size={14} className="text-muted" />
                     <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
@@ -476,7 +476,7 @@ export default function ProjectsPage() {
                       {detailMembers.map((m) => (
                         <li
                           key={m.id}
-                          className="flex items-center gap-3 rounded-xl border border-white/6 bg-white/3 px-3 py-2.5"
+                          className="flex items-center gap-3 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5"
                         >
                           <span
                             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold text-white"
@@ -498,7 +498,7 @@ export default function ProjectsPage() {
                               m.status === "active"
                                 ? "border border-emerald-500/30 bg-emerald-500/8 text-emerald-400"
                                 : m.status === "revoked"
-                                  ? "border border-white/8 bg-white/3 text-muted"
+                                  ? "border border-[var(--border-1)] bg-[var(--surface-1)] text-muted"
                                   : "border border-cyan-400/30 bg-cyan-400/8 text-cyan-400"
                             }`}
                           >

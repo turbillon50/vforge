@@ -110,7 +110,7 @@ export function ClientPortal({ projectId }: { projectId: string }) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#03020a] px-6 text-center">
         <IconWarn size={28} className="text-amber-400" />
-        <p className="text-sm text-white/60">
+        <p className="text-sm text-[var(--fg-secondary)]">
           No tienes acceso a este proyecto o aún no aceptas tu invitación.
         </p>
         <a
@@ -131,13 +131,13 @@ export function ClientPortal({ projectId }: { projectId: string }) {
   return (
     <div className="min-h-screen bg-[#03020a] pb-28">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-white/[0.06] bg-[#03020a]/85 backdrop-blur-2xl">
+      <div className="sticky top-0 z-10 border-b border-[var(--border-1)] bg-[#03020a]/85 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-xl items-center justify-between px-5 py-4">
           <div>
             <p className="text-sm font-semibold text-white">
               {data.project.name}
             </p>
-            <p className="text-[11px] text-white/35">
+            <p className="text-[11px] text-[var(--fg-muted)]">
               Portal del cliente · {data.me.name}
             </p>
           </div>
@@ -155,17 +155,17 @@ export function ClientPortal({ projectId }: { projectId: string }) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ ease: EASE }}
-          className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-gradient-to-br from-[#0d0b1a] to-[#0a0a12] p-5"
+          className="relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-gradient-to-br from-[#0d0b1a] to-[#0a0a12] p-5"
         >
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-[11px] uppercase tracking-wide text-white/40">
+              <p className="text-[11px] uppercase tracking-wide text-[var(--fg-tertiary)]">
                 Avance de pago
               </p>
               <p className="mt-1 text-3xl font-bold text-white">
                 {money(paid)}{" "}
-                <span className="text-sm font-medium text-white/30">
+                <span className="text-sm font-medium text-[var(--fg-muted)]">
                   / {money(total)}
                 </span>
               </p>
@@ -181,7 +181,7 @@ export function ClientPortal({ projectId }: { projectId: string }) {
             />
           </div>
           {data.status?.next_milestone && (
-            <p className="mt-3 flex items-center gap-1.5 text-[12px] text-white/45">
+            <p className="mt-3 flex items-center gap-1.5 text-[12px] text-[var(--fg-tertiary)]">
               <IconSparkles size={12} className="text-violet-400" />
               {data.status.next_milestone}
             </p>
@@ -194,10 +194,10 @@ export function ClientPortal({ projectId }: { projectId: string }) {
             {data.contracts.map((c) => (
               <div
                 key={c.id}
-                className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5"
+                className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3.5"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] font-semibold text-white/80">
+                  <span className="text-[13px] font-semibold text-[var(--fg-primary)]">
                     {money(c.amount)}
                   </span>
                   <span
@@ -227,7 +227,7 @@ export function ClientPortal({ projectId }: { projectId: string }) {
                     </div>
                   ))}
                 </div>
-                <p className="mt-1.5 text-[10px] text-white/30">
+                <p className="mt-1.5 text-[10px] text-[var(--fg-muted)]">
                   {c.paid_count}/3 pagos · {money(c.paid_mxn)} cubierto
                 </p>
               </div>
@@ -240,13 +240,13 @@ export function ClientPortal({ projectId }: { projectId: string }) {
           icon={<IconClock size={14} />}
           title="Avance en vivo"
           right={
-            <span className="text-[10px] text-white/30">
+            <span className="text-[10px] text-[var(--fg-muted)]">
               {doneCount}/{data.timeline.length} hitos
             </span>
           }
         >
           {data.timeline.length === 0 ? (
-            <p className="px-1 py-4 text-center text-[12px] text-white/30">
+            <p className="px-1 py-4 text-center text-[12px] text-[var(--fg-muted)]">
               Aún no hay actividad registrada.
             </p>
           ) : (
@@ -264,13 +264,13 @@ export function ClientPortal({ projectId }: { projectId: string }) {
                     <span className="mt-1 w-px flex-1 bg-white/[0.06]" />
                   </div>
                   <div className="-mt-0.5 pb-1">
-                    <p className="text-[13px] font-medium text-white/80">
+                    <p className="text-[13px] font-medium text-[var(--fg-primary)]">
                       {t.title}
                     </p>
                     {t.detail && (
-                      <p className="text-[11px] text-white/40">{t.detail}</p>
+                      <p className="text-[11px] text-[var(--fg-tertiary)]">{t.detail}</p>
                     )}
-                    <p className="mt-0.5 text-[10px] text-white/25">
+                    <p className="mt-0.5 text-[10px] text-[var(--fg-muted)]">
                       {t.stage} · {timeAgo(t.created_at)}
                     </p>
                   </div>
@@ -292,7 +292,7 @@ export function ClientPortal({ projectId }: { projectId: string }) {
                     href={e.raw_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="group relative aspect-square overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02]"
+                    className="group relative aspect-square overflow-hidden rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)]"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -307,7 +307,7 @@ export function ClientPortal({ projectId }: { projectId: string }) {
                 ) : (
                   <div
                     key={e.id}
-                    className="flex aspect-square items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.02] p-2 text-center text-[10px] text-white/40"
+                    className="flex aspect-square items-center justify-center rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-2 text-center text-[10px] text-[var(--fg-tertiary)]"
                   >
                     {e.transcript.slice(0, 40)}
                   </div>
@@ -324,29 +324,29 @@ export function ClientPortal({ projectId }: { projectId: string }) {
             {data.feedback.map((f) => (
               <div
                 key={f.id}
-                className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"
+                className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3"
               >
                 <div className="mb-1 flex items-center gap-2">
                   <span
                     className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
                       f.kind === "suggestion"
                         ? "bg-violet-500/15 text-violet-300"
-                        : "bg-white/[0.06] text-white/50"
+                        : "bg-white/[0.06] text-[var(--fg-tertiary)]"
                     }`}
                   >
                     {f.kind === "suggestion" ? "Sugerencia" : "Comentario"}
                   </span>
-                  <span className="text-[10px] text-white/30">
+                  <span className="text-[10px] text-[var(--fg-muted)]">
                     {f.author_name ?? "Cliente"} · {timeAgo(f.created_at)}
                   </span>
                 </div>
-                <p className="text-[13px] text-white/75">{f.body}</p>
+                <p className="text-[13px] text-[var(--fg-primary)]">{f.body}</p>
               </div>
             ))}
           </div>
         </Section>
 
-        <p className="flex items-center justify-center gap-2 pt-2 text-[11px] text-white/20">
+        <p className="flex items-center justify-center gap-2 pt-2 text-[11px] text-[var(--fg-muted)]">
           <IconCheck size={11} /> Actualizado en tiempo real
         </p>
       </div>
@@ -370,13 +370,13 @@ function Section({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ease: EASE }}
-      className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0a0a12] p-4"
+      className="relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[#0a0a12] p-4"
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2 text-violet-300">
           {icon}
-          <span className="text-[13px] font-semibold text-white/80">
+          <span className="text-[13px] font-semibold text-[var(--fg-primary)]">
             {title}
           </span>
         </div>
@@ -435,13 +435,13 @@ function EvidenceUploader({
       <div className="flex gap-2">
         <button
           onClick={() => camRef.current?.click()}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-2.5 text-[12px] font-medium text-white/70 transition active:scale-95"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] py-2.5 text-[12px] font-medium text-[var(--fg-secondary)] transition active:scale-95"
         >
           <IconCamera size={14} /> Cámara
         </button>
         <button
           onClick={() => fileRef.current?.click()}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-2.5 text-[12px] font-medium text-white/70 transition active:scale-95"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] py-2.5 text-[12px] font-medium text-[var(--fg-secondary)] transition active:scale-95"
         >
           <IconUpload size={14} /> Archivo
         </button>
@@ -470,7 +470,7 @@ function EvidenceUploader({
         onChange={(e) => setCaption(e.target.value)}
         rows={2}
         placeholder="Describe la evidencia o deja una nota…"
-        className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[13px] text-white placeholder-white/25 outline-none focus:border-violet-500/50"
+        className="w-full resize-none rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5 text-[13px] text-white placeholder-white/25 outline-none focus:border-violet-500/50"
       />
       <button
         onClick={upload}
@@ -480,7 +480,7 @@ function EvidenceUploader({
         {busy ? <IconLoader size={14} className="animate-spin" /> : <IconSend size={14} />}
         Enviar evidencia
       </button>
-      {msg && <p className="text-center text-[11px] text-white/50">{msg}</p>}
+      {msg && <p className="text-center text-[11px] text-[var(--fg-tertiary)]">{msg}</p>}
     </div>
   );
 }
@@ -524,7 +524,7 @@ function FeedbackBox({
             className={`flex-1 rounded-xl border py-2 text-[12px] font-medium transition ${
               kind === k
                 ? "border-violet-500/40 bg-violet-500/12 text-violet-200"
-                : "border-white/10 text-white/40"
+                : "border-[var(--border-1)] text-[var(--fg-tertiary)]"
             }`}
           >
             {k === "comment" ? "Comentario" : "Sugerencia"}
@@ -540,12 +540,12 @@ function FeedbackBox({
             ? "¿Qué te gustaría mejorar?"
             : "Escribe tu comentario…"
         }
-        className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[13px] text-white placeholder-white/25 outline-none focus:border-violet-500/50"
+        className="w-full resize-none rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5 text-[13px] text-white placeholder-white/25 outline-none focus:border-violet-500/50"
       />
       <button
         onClick={send}
         disabled={busy || !body.trim()}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-2.5 text-[13px] font-semibold text-white/80 transition active:scale-[0.98] disabled:opacity-40"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] py-2.5 text-[13px] font-semibold text-[var(--fg-primary)] transition active:scale-[0.98] disabled:opacity-40"
       >
         {busy ? <IconLoader size={14} className="animate-spin" /> : <IconChat size={14} />}
         Enviar
