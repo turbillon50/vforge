@@ -45,3 +45,5 @@ _deploy/
 .taller-shots/
 bsd_*.py
 bsd-*.md
+__pycache__/
+*.pyc
