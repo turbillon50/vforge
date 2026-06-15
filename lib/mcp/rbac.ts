@@ -69,6 +69,14 @@ export const TOOL_KIND: Record<string, ToolKind> = {
   vforge_execute_skill: "data",
 
   // ---- OPERADOR (fragua Vulcano) — rol Owner/Associate, NUNCA public ----
+  // ---- AGENT TOOLS (vulcano_boot, brain_exec, etc.) — solo admin ----
+  vulcano_boot: "data",
+  vulcano_brain_exec: "data",
+  vulcano_brain_query: "data",
+  vulcano_update_project: "data",
+  vulcano_save_lesson: "data",
+  vulcano_memory_search: "data",
+
   // Mapeo de roles: Owner → scope `admin` (operador), Associate → scope
   // `client` (cuenta conectada con token válido). Ambos son "data": el gate
   // de datos (admin|client) ya rebota a public/anon con 401, que es justo
@@ -91,6 +99,13 @@ export const OPERATOR_TOOLS: ReadonlySet<string> = new Set([
   "vulcano_dispatch",
   "vulcano_brain_module",
   "vulcano_salud",
+  // Agent tools — solo admin (Owner)
+  "vulcano_boot",
+  "vulcano_brain_exec",
+  "vulcano_brain_query",
+  "vulcano_update_project",
+  "vulcano_save_lesson",
+  "vulcano_memory_search",
 ]);
 
 export function isOperatorTool(name: string): boolean {
@@ -111,9 +126,11 @@ export function isPublicTool(name: string): boolean {
   return toolKind(name) === "public";
 }
 
-/** Can this principal CALL this tool? Public tools: always. Data: admin|client. */
+/** Can this principal CALL this tool? Public tools: always. Data: admin|client. Operator tools: admin ONLY. */
 export function canCallTool(principal: McpPrincipal, name: string): boolean {
   if (isPublicTool(name)) return true;
+  // Tools de operador (brain_exec, brain_query, shell, deploy real) — solo admin (Luis)
+  if (isOperatorTool(name)) return principal.scope === "admin";
   return principal.scope === "admin" || principal.scope === "client";
 }
 
