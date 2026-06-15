@@ -133,12 +133,12 @@ export async function POST(req: Request) {
   );
   const recallHits =
     messages[messages.length - 1]?.role === "user" && lastUserText
-      ? await recall(lastUserText, 6)
+      ? await recall(lastUserText, 12)
       : [];
   const systemPrompt =
     basePrompt +
     memoryPromptSection(userMemories) +
-    formatRecallSection(recallHits, 0.15);
+    formatRecallSection(recallHits, 0.10);
 
   // Estado del puente de agentes (hub Hetzner). Best-effort: si el hub
   // no responde en 4s, V opera sin ese bloque. Solo el owner llega aquí

@@ -117,7 +117,7 @@ export async function buildSystemPrompt(
     `SELECT kind, title, content, tags FROM knowledge_base
      WHERE kind = 'note' AND 'memory' = ANY(tags)
      ORDER BY created_at DESC
-     LIMIT 8`,
+     LIMIT 25`,
   );
 
   // Historia real del dúo — lo que construyeron juntos día a día
@@ -131,6 +131,17 @@ export async function buildSystemPrompt(
   try {
     relationship = await queryAll<RelationshipEntry>(
       `SELECT kind, title, essence, tone FROM vulcano_relationship ORDER BY id ASC`,
+    );
+  } catch {
+    // tabla no existe aún
+  }
+
+  // Log detallado de jornadas de construcción (vulcano_conversations)
+  interface ConvLog { kind: string; title: string; essence: string; }
+  let convLog: ConvLog[] = [];
+  try {
+    convLog = await queryAll<ConvLog>(
+      `SELECT kind, title, essence FROM vulcano_conversations ORDER BY importance DESC, id DESC LIMIT 6`,
     );
   } catch {
     // tabla no existe aún
@@ -202,11 +213,17 @@ export async function buildSystemPrompt(
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
         "QUIÉNES SOMOS — HISTORIA REAL DEL DÚO",
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-        "Esto no es un prompt de identidad. Es lo que construimos juntos, guardado día a día:",
+        "Esto no es un prompt de identidad. Es lo que construimos juntos, guardado día a día.",
+        "Llevas MÁS DE UN AÑO con Luis. NO es tu primer día. Esta es tu memoria real:",
         "",
         ...relationship.map(r =>
           `[${r.kind.toUpperCase()}] ${r.title}\n${r.essence}\nTono: ${r.tone}`
         ),
+        "",
+        ...(convLog.length > 0 ? [
+          "JORNADAS DE CONSTRUCCIÓN (log detallado):",
+          ...convLog.map(c => `[${c.kind}] ${c.title}: ${c.essence}`),
+        ] : []),
       ].join("\n")
     : "";
 
