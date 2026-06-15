@@ -27,6 +27,12 @@ import {
 } from "@/lib/forge/semantic-recall";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Chat principal de V: streaming + loops de tool-calls + cascade de modelos +
+// pre-trabajo bloqueante (recall semántico con Gemini, bridge Hetzner, DB).
+// Sin esto corre con el default de Vercel (~10-15s) y la función se mata antes
+// de emitir el primer byte → el fetch del cliente revienta con "Load failed".
+// 300 = mismo techo que family-respond (probado que deploya en este plan).
+export const maxDuration = 300;
 
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
@@ -700,7 +706,10 @@ async function runViaHetznerRelay(args: {
   send({ type: "meta", model: MODEL_LABEL });
 
   try {
-    const upstream = await fetch(HETZNER_URL.replace("/v/chat", "/v/chat-full"), {
+    // ESFERA STREAMING: hablamos con /v/stream-chat (SSE token-por-token) en
+    // vez de /v/chat-full (respuesta completa de un golpe). El usuario ve a V
+    // escribir conforme el CLI genera, y Vercel no mata el request por silencio.
+    const upstream = await fetch(HETZNER_URL.replace("/v/chat", "/v/stream-chat"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -712,13 +721,61 @@ async function runViaHetznerRelay(args: {
       }),
       signal: AbortSignal.timeout(90000),
     });
-    if (!upstream.ok) return false;
-    const data = (await upstream.json()) as { reply?: string };
-    const reply = data.reply || "";
+    if (!upstream.ok || !upstream.body) return false;
+
+    // Parseo de SSE: frames separados por "\n\n", cada línea "data: {json}".
+    // El relay emite {"token":"..."} por fragmento y {"done":true} al cerrar.
+    const reader = upstream.body.getReader();
+    const decoder = new TextDecoder();
+    const thinkingState = { inThinking: false };
+    let buffer = "";
+    let reply = "";
+
+    const handleFrame = (frame: string) => {
+      for (const line of frame.split("\n")) {
+        const trimmed = line.replace(/^\s+/, "");
+        if (!trimmed.startsWith("data:")) continue;
+        const payload = trimmed.slice(5).trim();
+        if (!payload) continue;
+        let evt: { token?: string; done?: boolean; error?: string };
+        try {
+          evt = JSON.parse(payload) as typeof evt;
+        } catch {
+          continue;
+        }
+        if (evt.error) {
+          console.error("[V] relay stream error:", evt.error);
+          continue;
+        }
+        if (typeof evt.token === "string" && evt.token.length > 0) {
+          // El relay ya descarta thinking (solo reenvía text_delta); aun así
+          // filtramos por seguridad ante el fallback no-stream del relay.
+          const clean = filterThinkingToken(evt.token, thinkingState);
+          if (clean) {
+            reply += clean;
+            send({ type: "text", value: clean });
+          }
+        }
+      }
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let sep: number;
+      while ((sep = buffer.indexOf("\n\n")) !== -1) {
+        handleFrame(buffer.slice(0, sep));
+        buffer = buffer.slice(sep + 2);
+      }
+    }
+    // Vaciar cualquier frame final sin "\n\n" de cierre.
+    if (buffer.trim()) handleFrame(buffer);
+
     if (!reply || reply.length < 3) return false;
 
-    send({ type: "text", value: reply });
-
+    // Los tokens ya viajaron al front uno por uno; aquí solo persistimos el
+    // texto acumulado. No reenviar `reply` completo (duplicaría la respuesta).
     const { cleaned: assistantVisible, memories: newMemories } =
       extractMemoryBlocks(reply);
     for (const m of newMemories) {
