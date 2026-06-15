@@ -115,9 +115,9 @@ export async function POST(req: Request) {
           model: MODEL,
           max_tokens: 1536,
           system: systemPrompt,
-          messages: history.filter(m => m.role !== "system").concat([
+          messages: history.filter((m): m is {role: "user"|"assistant", content: string} => m.role === "user" || m.role === "assistant").concat([
             { role: "user", content: userText }
-          ]) as {role: "user"|"assistant", content: string}[],
+          ]),
         });
 
         for await (const chunk of stream) {

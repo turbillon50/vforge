@@ -240,8 +240,8 @@ export async function runFlow(flowId: string, opts: RunFlowOptions = {}): Promis
       steps++;
       const result = await runNode(current, rc);
       if (result.vars) Object.assign(rc.ctx, result.vars);
-      const nextKeys = result.branch === "alt" ? current.next_alt : current.next;
-      const nextKey = nextKeys[0];
+      const nextKeys: string[] = result.branch === "alt" ? (current.next_alt ?? []) : (current.next ?? []);
+      const nextKey: string | undefined = nextKeys[0];
       current = nextKey ? byKey.get(nextKey) : undefined;
     }
     if (steps >= MAX_STEPS) log(rc, "engine", "warn", "Límite de pasos alcanzado");
