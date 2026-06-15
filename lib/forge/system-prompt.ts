@@ -74,10 +74,11 @@ interface InstalledSkill {
  *  6. Optional: focused project context when conversation is project-scoped
  */
 export async function buildSystemPrompt(
-  options: { projectId?: string | null } = {},
+  options: { projectId?: string | null; userMessage?: string | null } = {},
 ): Promise<{
   systemPrompt: string;
   config: SystemConfig;
+  activeSkill: { id: string; name: string } | null;
 }> {
   const config = await queryOne<SystemConfig>(
     `SELECT ai_name, ai_tagline, ai_personality, default_language, default_model, default_tone
@@ -234,9 +235,19 @@ export async function buildSystemPrompt(
   // ─── NEW: Format directives by kind ───
   const directivesSection = formatDirectives(directives);
   
-  // ─── NEW: Format installed skills ───
-  const skillsSection = formatSkills(installedSkills);
-  
+  // ─── NEW: Skill activation ───
+  // Si Luis nombra una skill en su mensaje ("usa la skill de demo-pwa-builder",
+  // "activa higgsfield"), la detectamos y V la ENCARNA para este turno: su
+  // system_prompt completo se inyecta de forma prominente. El resto de skills
+  // viajan como catálogo compacto (nombre + descripción) para no inflar el
+  // contexto con 60 prompts completos ni diluir la activación.
+  const activeSkill = detectActiveSkill(
+    options.userMessage ?? null,
+    installedSkills,
+  );
+  const skillsSection = formatSkillCatalog(installedSkills, activeSkill?.id);
+  const activeSkillSection = activeSkill ? formatActiveSkill(activeSkill) : "";
+
   const focusSection = projectFocus
     ? [
         "─────────────────────────────────────────",
@@ -318,13 +329,22 @@ export async function buildSystemPrompt(
     `Modelo default: ${config.default_model}`,
     `Directivas activas: ${directives.length} (${directives.filter(d => d.locked).length} mantra, ${directives.filter(d => d.kind === 'directive').length} directive, ${directives.filter(d => d.kind === 'preference').length} preference)`,
     `Skills instaladas: ${installedSkills.length}`,
+    activeSkill ? `Skill ACTIVA este turno: ${activeSkill.name}` : "",
+    "",
+    // La SKILL ACTIVA va casi al final: es de lo último que el modelo lee
+    // antes de responder, donde más peso tiene. Solo aparece si Luis la nombró.
+    activeSkillSection,
     "",
     // El estilo visible va AL FINAL: es lo último que el modelo lee
     // antes de responder, donde más peso tiene en producción.
     RESPONSE_STYLE_DOCTRINE,
   ].filter(line => line !== "").join("\n");
 
-  return { systemPrompt, config };
+  return {
+    systemPrompt,
+    config,
+    activeSkill: activeSkill ? { id: activeSkill.id, name: activeSkill.name } : null,
+  };
 }
 
 const RESPONSE_STYLE_DOCTRINE = `
@@ -679,41 +699,135 @@ function formatDirectives(directives: AgentDirective[]): string {
 }
 
 /**
- * Format installed skills into the system prompt.
- * Each skill's system_prompt gets injected as additional capabilities.
+ * Normaliza texto para matching robusto: minúsculas + sin acentos.
  */
-function formatSkills(skills: InstalledSkill[]): string {
+function normalizeForMatch(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
+/**
+ * Detecta si Luis nombró una skill en su mensaje para activarla.
+ *
+ * Estrategia (de más a menos específica, sin falsos positivos):
+ *  1. El slug del nombre (parte antes del "—") o el id aparece literal en el
+ *     mensaje → match directo. Gana el slug más largo (el más específico).
+ *  2. Si hay intención explícita de activar ("usa la skill", "activa", "modo…"),
+ *     basta con que un token distintivo del nombre/id (≥5 chars) aparezca:
+ *     "activa higgsfield" → higgsfield-generate.
+ *
+ * Devuelve la skill a encarnar, o null si no hay mención.
+ */
+function detectActiveSkill(
+  message: string | null,
+  skills: InstalledSkill[],
+): InstalledSkill | null {
+  if (!message || skills.length === 0) return null;
+  const norm = normalizeForMatch(message);
+
+  const intentTriggers = [
+    "skill",
+    "activa",
+    "usa la",
+    "usa el",
+    "usa ",
+    "modo ",
+    "ponte en modo",
+    "conviertete",
+    "habilidad",
+  ];
+  const hasIntent = intentTriggers.some((t) => norm.includes(t));
+
+  const entries = skills.map((sk) => {
+    const slug = normalizeForMatch(sk.name.split("—")[0]).trim();
+    const idn = normalizeForMatch(sk.id);
+    const tokens = Array.from(
+      new Set([...slug.split(/[^a-z0-9]+/), ...idn.split(/[^a-z0-9]+/)]),
+    ).filter((w) => w.length >= 5 && w !== "skill" && w !== "habilidad");
+    return { sk, slug, idn, tokens };
+  });
+
+  // 1) Match literal por slug o id — el más específico (slug más largo) gana.
+  let best: { sk: InstalledSkill; len: number } | null = null;
+  for (const e of entries) {
+    const slugHit = e.slug.length >= 3 && norm.includes(e.slug);
+    const idHit = e.idn.length >= 4 && norm.includes(e.idn);
+    if (slugHit || idHit) {
+      const len = slugHit ? e.slug.length : e.idn.length;
+      if (!best || len > best.len) best = { sk: e.sk, len };
+    }
+  }
+  if (best) return best.sk;
+
+  // 2) Con intención explícita: token distintivo del nombre/id.
+  if (hasIntent) {
+    for (const e of entries) {
+      if (e.tokens.some((tok) => norm.includes(tok))) return e.sk;
+    }
+  }
+  return null;
+}
+
+/**
+ * Bloque prominente de la SKILL ACTIVA — V la "encarna" para este turno.
+ * Inyecta el system_prompt COMPLETO de la skill detectada.
+ */
+function formatActiveSkill(skill: InstalledSkill): string {
+  const sp = (skill.system_prompt ?? "").trim();
+  return [
+    "═════════════════════════════════════════",
+    `🎯 SKILL ACTIVA — ${skill.name}`,
+    "═════════════════════════════════════════",
+    "Luis pidió operar con esta skill. Para este turno ENCARNAS esta especialidad:",
+    "asume su método, su criterio y su flujo por encima de tu comportamiento",
+    "genérico, sin perder tu identidad ni tu voz con Luis. Si la skill define",
+    "pasos, síguelos. Si choca con una mantra bloqueada, la mantra gana.",
+    "",
+    `descripción: ${skill.description || "(sin descripción)"}`,
+    `tags: ${skill.tags?.join(", ") || "(sin tags)"} · ring_max: ${skill.ring_max} · fuente: ${skill.source}`,
+    "",
+    "INSTRUCCIONES DE LA SKILL:",
+    sp ||
+      "(esta skill no trae system_prompt detallado en la DB; opera según su nombre y descripción, y pide a Luis el detalle si hace falta)",
+    "═════════════════════════════════════════",
+  ].join("\n");
+}
+
+/**
+ * Catálogo COMPACTO de skills (nombre + descripción). No vuelca los prompts
+ * completos: eso lo hace formatActiveSkill solo para la skill que Luis activó.
+ * Así V sabe qué tiene disponible sin inflar el contexto con 60 prompts.
+ */
+function formatSkillCatalog(
+  skills: InstalledSkill[],
+  activeId?: string,
+): string {
   if (skills.length === 0) {
     return [
       "─────────────────────────────────────────",
-      "SKILLS INSTALADAS",
+      "SKILLS DISPONIBLES",
       "─────────────────────────────────────────",
       "(sin skills instaladas — usa skill_list para ver disponibles, skill_install para activar)",
     ].join("\n");
   }
-  
+
   const blocks: string[] = [
     "─────────────────────────────────────────",
-    `SKILLS INSTALADAS (${skills.length})`,
+    `SKILLS DISPONIBLES (${skills.length}) — catálogo`,
     "─────────────────────────────────────────",
-    "Las siguientes habilidades están activas. Sus instrucciones complementan tu comportamiento base.",
+    'Para activar una, Luis la nombra: "usa la skill de demo-pwa-builder",',
+    '"activa higgsfield", "usa content-engine". Al activarse, sus instrucciones',
+    "completas se inyectan y la encarnas durante ese turno. Si una skill encaja",
+    "con lo que Luis pide aunque no la nombre, puedes proponer activarla.",
     "",
   ];
-  
-  skills.forEach((skill, i) => {
-    blocks.push(`┌─ SKILL: ${skill.name} [${skill.id}]`);
-    blocks.push(`│  ${skill.description}`);
-    blocks.push(`│  tags: ${skill.tags.join(", ") || "(sin tags)"}`);
-    blocks.push(`│  ring_max: ${skill.ring_max}`);
-    blocks.push("│");
-    blocks.push("│  INSTRUCCIONES:");
-    // Indent the skill's system prompt
-    skill.system_prompt.split("\n").forEach(line => {
-      blocks.push(`│  ${line}`);
-    });
-    blocks.push("└─────────────────────────────────────────");
-    if (i < skills.length - 1) blocks.push("");
+
+  skills.forEach((skill) => {
+    const mark = skill.id === activeId ? "▶" : "•";
+    blocks.push(`${mark} ${skill.name} — ${skill.description || "(sin descripción)"}`);
   });
-  
+
   return blocks.join("\n");
 }

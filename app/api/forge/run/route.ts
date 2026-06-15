@@ -127,16 +127,23 @@ export async function POST(req: Request) {
     return jsonError("ANTHROPIC_API_KEY not configured", 500);
   }
 
-  const { systemPrompt: basePrompt, config } = await buildSystemPrompt({
-    projectId: body.projectId ?? null,
-  });
+  // Texto del último turno del usuario. Se calcula ANTES de construir el
+  // system prompt porque la activación de skills depende de él (V detecta
+  // "usa la skill de X" / "activa X" y encarna esa especialidad este turno).
+  const lastUserText = stringifyUserTurn(
+    messages[messages.length - 1]?.content ?? "",
+  );
+  const lastTurnIsUser = messages[messages.length - 1]?.role === "user";
+
+  const { systemPrompt: basePrompt, config, activeSkill } =
+    await buildSystemPrompt({
+      projectId: body.projectId ?? null,
+      userMessage: lastTurnIsUser ? lastUserText : null,
+    });
   // Memoria por cuenta (independiente de la sesion de chat).
   const userMemories = await getUserMemories(memoryUserId);
   // Memoria semántica: recuerdos relevantes al último turno del usuario.
   // Silencioso ante fallo — recall() nunca lanza.
-  const lastUserText = stringifyUserTurn(
-    messages[messages.length - 1]?.content ?? "",
-  );
   const recallHits =
     messages[messages.length - 1]?.role === "user" && lastUserText
       ? await recall(lastUserText, 12)
@@ -269,6 +276,10 @@ export async function POST(req: Request) {
       let lastStopReason: string | null = null;
       // El UI muestra discreto qué modelo responde: nunca más dudar quién escribe.
       send({ type: "meta", model: actualModel });
+      // Si Luis activó una skill nombrándola, anunciarlo discreto: V la encarna.
+      if (activeSkill) {
+        send({ type: "skill_active", id: activeSkill.id, name: activeSkill.name });
+      }
 
       // MOTOR DE V: si la config apunta a un modelo Anthropic, vamos DIRECTO
       // al relay de Hetzner (claude CLI, cuenta Max, sin API key) — doctrina
@@ -717,7 +728,7 @@ async function runViaHetznerRelay(args: {
         message: userMessage,
         history,
         session_id: sessionId,
-        system_prompt: args.systemPrompt.slice(0, 12000), // VForge context rico
+        system_prompt: args.systemPrompt.slice(0, 16000), // VForge context rico + SKILL ACTIVA (va al final)
       }),
       signal: AbortSignal.timeout(90000),
     });

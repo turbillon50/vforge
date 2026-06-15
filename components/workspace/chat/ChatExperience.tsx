@@ -36,6 +36,41 @@ import { ThinkingIndicator, VOrb } from "./ThinkingIndicator";
 import { useSmoothStream, usePrefersReducedMotion } from "./useSmoothStream";
 
 type Action = { label: string; status: "done" | "running" | "queued" };
+
+// Intención de construir a partir de una imagen: "haz esta app", "replica
+// este diseño", "clona", "constrúyelo igual"… Cuando se detecta junto con una
+// imagen, V primero saca un brief técnico (vision → brief) y arranca con él.
+const BUILD_INTENT =
+  /\b(constru(?:ye|ir|íme|yelo|íyelo)|constr[uú]y|haz(?:me)?|hazlo|recrea|replica|clona|cl[oó]nalo|copia|c[oó]piala|arma(?:me)?|crea(?:me)?|dise[ñn][ao]|igual a esto|como esto|as[ií] mismo|build|clone|recreate|rebuild)\b/i;
+
+// Llama a /api/forge/vision y devuelve el brief técnico (o null si falla).
+// El endpoint además persiste el brief en knowledge_base (kind='vision_brief').
+async function fetchVisionBrief(
+  att: { base64: string; mediaType: string },
+  note: string,
+  projectId: string | null,
+  signal: AbortSignal,
+): Promise<string | null> {
+  try {
+    const res = await fetch("/api/forge/vision", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageBase64: att.base64,
+        mediaType: att.mediaType,
+        note,
+        projectId,
+      }),
+      signal,
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { brief?: string };
+    return data.brief?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 type Attachment = {
   /** original filename for UI */
   name: string;
@@ -511,6 +546,32 @@ export function ChatExperience() {
             content: typeof m.text === "string" ? m.text.slice(0, 4000) : m.text,
           }));
 
+      abortRef.current?.abort();
+      const ctrl = new AbortController();
+      abortRef.current = ctrl;
+
+      // Pre-pass de visión: si la imagen es de una app/diseño y Luis pide
+      // construirla, V primero saca un brief técnico con claude-sonnet-4-6.
+      // El brief viaja como marcador [VISION_BRIEF:...] para que V (y el relay)
+      // arranquen la construcción desde ahí en vez de adivinar.
+      let outgoingText = trimmed;
+      if (att && att.mediaType.startsWith("image/") && (BUILD_INTENT.test(trimmed) || !trimmed)) {
+        setMessages((m) =>
+          m.map((x) => (x.id === aId ? { ...x, text: "🔍 Analizando el diseño…" } : x)),
+        );
+        const brief = await fetchVisionBrief(
+          att,
+          trimmed,
+          scope === "general" ? null : scope,
+          ctrl.signal,
+        );
+        if (brief) {
+          outgoingText = `[VISION_BRIEF: ${brief}]${trimmed ? `\n\n${trimmed}` : ""}`;
+        }
+        // Limpiamos el placeholder; el stream de V llenará la burbuja.
+        setMessages((m) => m.map((x) => (x.id === aId ? { ...x, text: "" } : x)));
+      }
+
       // Turno actual: si hay imagen, content es array Anthropic-style con
       // image block + text block. Si no, string plano.
       const currentContent: string | StructuredBlock[] = att
@@ -519,14 +580,10 @@ export function ChatExperience() {
               type: "image" as const,
               source: { type: "base64" as const, media_type: att.mediaType, data: att.base64 },
             },
-            ...(trimmed ? [{ type: "text" as const, text: trimmed }] : []),
+            ...(outgoingText ? [{ type: "text" as const, text: outgoingText }] : []),
           ]
-        : trimmed;
+        : outgoingText;
       history.push({ role: "user", content: currentContent });
-
-      abortRef.current?.abort();
-      const ctrl = new AbortController();
-      abortRef.current = ctrl;
 
       try {
         const res = await fetch("/api/forge/run", {
