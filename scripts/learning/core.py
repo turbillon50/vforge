@@ -11,7 +11,7 @@ import psycopg2
 import psycopg2.extras
 
 # ── Config ────────────────────────────────────────────────────────────────
-DB_URL = "postgresql://neondb_owner:npg_41DvuXKWyaHJ@ep-super-glitter-aqj6d5g0-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require"
+DB_URL = "postgresql://neondb_owner:REDACTED_BRAIN_DB@ep-super-glitter-aqj6d5g0-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require"
 BRAIN_LOCAL = "http://127.0.0.1:9000"
 ENGINE_NOTIFY = "http://127.0.0.1:3003/notify"   # V Momentum Engine → WhatsApp Luis
 OLLAMA = "http://127.0.0.1:11434/api/generate"

@@ -202,6 +202,19 @@ export const MCP_TOOLS: McpToolDef[] = [
     },
   },
   {
+    name: "v_instruct",
+    description:
+      "OPERADOR (Owner): da una instrucción directa a V, el cerebro orquestador. V detecta el intent y, si aplica, despacha al agente correcto (Vulcano/Tanit/Breack/Goossip/Enjambre) encolando el job real en dispatch_queue; si no, responde ella misma. Es el canal Claude → V → agentes.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        message: { type: "string", description: "La instrucción o mensaje para V, en lenguaje natural." },
+        session_id: { type: "string", description: "Sesión de V (default: claude-mcp). Aísla la memoria conversacional." },
+      },
+      required: ["message"],
+    },
+  },
+  {
     name: "vulcano_brain_query",
     description:
       "OPERADOR (Owner): ejecuta SQL en Neon (Brain DB) desde el MCP. Permite SELECT libre + INSERT en lessons/patterns + UPDATE en projects/dispatch_queue.",
@@ -990,6 +1003,33 @@ export async function runMcpTool(
       return text(
         `Trabajo encolado en la fragua.\n• id de cola: #${res.id}\n• agente: ${agent}\n• prioridad: ${priority}\n• source (auditoría): ${source}\nSigue su avance con vulcano_taller_status.`,
       );
+    }
+
+    case "v_instruct": {
+      // Claude → V (cerebro orquestador) → router de intent → agente correcto.
+      // SOLO admin (Owner). Habla con el endpoint /v/chat-full que ya enruta.
+      if (!isAdmin(principal)) return err("401: v_instruct es solo para el Owner (admin). Tu token no tiene ese nivel.");
+      const message = String((args as Record<string, unknown>).message || "").trim();
+      if (!message) return err("Falta 'message' (la instrucción para V).");
+      if (message.length > 4000) return err("message demasiado largo (max 4000 chars).");
+      const session_id = String((args as Record<string, unknown>).session_id || "claude-mcp").trim() || "claude-mcp";
+      const BRAIN = "http://178.105.135.26";
+      const SECRET = process.env.BRAIN_SECRET || process.env.HETZNER_SECRET || "superclaude2025";
+      try {
+        const r = await fetch(`${BRAIN}/v/chat-full`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ secret: SECRET, message, session_id }),
+          signal: AbortSignal.timeout(120000),
+        });
+        if (!r.ok) return err(`V no respondió: HTTP ${r.status}`);
+        const d = (await r.json()) as { reply?: string; intent?: string };
+        const intent = d.intent && d.intent !== "v" ? d.intent : null;
+        const head = intent ? `V despachó a ${intent.toUpperCase()} ✓ (job en dispatch_queue)` : "V respondió directamente";
+        return text(`${head}\n\n${d.reply || "(sin texto)"}`);
+      } catch (e: unknown) {
+        return err(`Timeout o error hablando con V: ${String(e).slice(0, 120)}`);
+      }
     }
 
     case "vulcano_brain_module": {

@@ -85,6 +85,7 @@ export const TOOL_KIND: Record<string, ToolKind> = {
   vulcano_dispatch: "data",
   vulcano_brain_module: "data",
   vulcano_salud: "data",
+  v_instruct: "data",
 };
 
 /**
@@ -106,6 +107,7 @@ export const OPERATOR_TOOLS: ReadonlySet<string> = new Set([
   "vulcano_update_project",
   "vulcano_save_lesson",
   "vulcano_memory_search",
+  "v_instruct",
 ]);
 
 export function isOperatorTool(name: string): boolean {
