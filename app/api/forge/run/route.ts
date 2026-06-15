@@ -54,7 +54,7 @@ const MAX_TOOL_ROUNDS = 5;
 // en la DB y en la UI, pero un contexto kilométrico (y contaminado de
 // estilos viejos) hace que V imite su pasado en vez de su doctrina.
 const MAX_CONTEXT_TURNS = 24;
-const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+// Usando Anthropic SDK directo
 
 
 /**
@@ -116,11 +116,9 @@ export async function POST(req: Request) {
     return jsonError("sessionId (string) required", 400);
   }
 
-  const apiKey = await getOperatorSecret("OPENROUTER_API_KEY", {
-    auditUserId: userId,
-  });
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return jsonError("OPENROUTER_API_KEY not configured (vault or env)", 500);
+    return jsonError("ANTHROPIC_API_KEY not configured", 500);
   }
 
   const { systemPrompt: basePrompt, config } = await buildSystemPrompt({
