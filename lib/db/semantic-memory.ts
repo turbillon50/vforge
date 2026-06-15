@@ -78,7 +78,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
       body: JSON.stringify({
         model: "models/gemini-embedding-001",
         content: { parts: [{ text: text.slice(0, 2000) }] },
-        outputDimensionality: 1536,
+        outputDimensionality: 384,
       }),
     });
     if (!res.ok) throw new Error(`Gemini embed HTTP ${res.status}`);
@@ -86,7 +86,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
     return data.embedding.values;
   } catch (e) {
     console.error("[V semantic memory] Gemini embedding falló:", e);
-    return Array(1536).fill(0);
+    return Array(384).fill(0);
   }
 }
 
