@@ -5,10 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Brain dispatch DB (Neon). Override via BRAIN_DATABASE_URL in prod.
-const BRAIN_DATABASE_URL =
-  process.env.BRAIN_DATABASE_URL ??
-  "os.environ.get("BRAIN_DATABASE_URL","")s-east-1.aws.neon.tech/neondb?sslmode=require";
-
+const BRAIN_DATABASE_URL = process.env.BRAIN_DATABASE_URL ?? "";
 /**
  * GET /api/brain/models
  *
