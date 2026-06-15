@@ -25,10 +25,10 @@ import {
   rememberTurn,
   formatRecallSection,
 } from "@/lib/forge/semantic-recall";
-import Anthropic from "@anthropic-ai/sdk";
-
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 type StructuredBlock =
   | { type: "text"; text: string }
@@ -265,11 +265,11 @@ export async function POST(req: Request) {
       send({ type: "meta", model: actualModel });
 
       // MOTOR DE V: si la config apunta a un modelo Anthropic, vamos DIRECTO
-      // al cerebro Anthropic (con tools) — OpenRouter está sin saldo y solo
-      // produciría un fallback por turno. Config = realidad, cero churn.
+      // al relay de Hetzner (claude CLI, cuenta Max, sin API key) — doctrina
+      // cero ANTHROPIC_API_KEY. Config = realidad, cero churn.
       if (configuredModel.startsWith("anthropic/")) {
         try {
-          const handled = await runAnthropicDirect({
+          const handled = await runViaHetznerRelay({
             systemPrompt,
             turns: trimmedMessages,
             send,
@@ -282,7 +282,7 @@ export async function POST(req: Request) {
             return;
           }
         } catch (e) {
-          console.error("[V] Anthropic directo (primario) falló, intento OpenRouter:", e);
+          console.error("[V] Relay Hetzner (primario) falló, intento OpenRouter:", e);
         }
       }
       // BUILDER (v0-sin-v0): cuando la tool `design_version` se ejecute en
@@ -543,7 +543,7 @@ export async function POST(req: Request) {
           console.error("[V] fallback Gemini directo falló:", eg);
         }
         try {
-          const handled = await runAnthropicDirect({
+          const handled = await runViaHetznerRelay({
             systemPrompt,
             turns: trimmedMessages,
             send,
@@ -556,7 +556,7 @@ export async function POST(req: Request) {
             return;
           }
         } catch (e2) {
-          console.error("[V] fallback Anthropic directo falló:", e2);
+          console.error("[V] fallback relay Hetzner falló:", e2);
         }
         const message = err instanceof Error ? err.message : String(err);
         send({ type: "error", message });
@@ -660,11 +660,13 @@ async function runGeminiDirect(args: {
 }
 
 /**
- * Vía de emergencia: habla con Claude DIRECTO (sin OpenRouter, sin tools).
- * Devuelve true si pudo responder; false si no hay key o falla antes de
- * emitir nada útil. Emite los mismos eventos SSE {meta|text|done}.
+ * Motor de V SIN API key: habla con Claude vía el relay de Hetzner
+ * (http://178.105.135.26/v/chat) que corre el `claude` CLI con la cuenta
+ * Max de Luis. Doctrina: cero ANTHROPIC_API_KEY en el código. Devuelve
+ * true si respondió; false si no hay secreto o el relay falla. Emite los
+ * mismos eventos SSE {meta|text|done}.
  */
-async function runAnthropicDirect(args: {
+async function runViaHetznerRelay(args: {
   systemPrompt: string;
   turns: ChatTurn[];
   send: (event: Record<string, unknown>) => void;
@@ -672,116 +674,73 @@ async function runAnthropicDirect(args: {
   userId: string;
   memoryUserId: string;
 }): Promise<boolean> {
-  const { systemPrompt, turns, send, sessionId, userId, memoryUserId } = args;
-  const anthropicKey = await getOperatorSecret("ANTHROPIC_API_KEY", {
-    auditUserId: userId,
-  });
-  if (!anthropicKey) return false;
+  const { turns, send, sessionId, userId, memoryUserId } = args;
+  const HETZNER_URL = process.env.HETZNER_V_URL || "http://178.105.135.26/v/chat";
+  const HETZNER_SECRET = process.env.HETZNER_SECRET || "";
+  if (!HETZNER_SECRET) return false;
 
-  const client = new Anthropic({ apiKey: anthropicKey });
-  const model = "claude-sonnet-4-6";
-  const MODEL_LABEL = "anthropic/claude-sonnet-4.6";
+  // Texto plano de un turno (string o bloques): el relay solo come texto.
+  const textFromContent = (c: string | StructuredBlock[]): string =>
+    typeof c === "string"
+      ? c
+      : c
+          .filter((b): b is Extract<StructuredBlock, { type: "text" }> => b.type === "text")
+          .map((b) => b.text)
+          .join("\n");
 
-  // Tools en formato Anthropic (TOOLS ya trae name/description/input_schema).
-  const anthTools = TOOLS.map((t) => ({
-    name: t.name,
-    description: t.description,
-    input_schema: t.input_schema as Anthropic.Tool.InputSchema,
-  }));
-
-  // Mensajes iniciales del FE (texto o bloques imagen base64).
-  const messages: Anthropic.MessageParam[] = turns.map((t) => ({
+  // Extraer último mensaje de usuario y construir history.
+  const lastTurn = turns[turns.length - 1];
+  const userMessage = textFromContent(lastTurn.content);
+  const history = turns.slice(0, -1).map((t) => ({
     role: t.role,
-    content:
-      typeof t.content === "string"
-        ? t.content
-        : (t.content as unknown as Anthropic.ContentBlockParam[]),
+    content: textFromContent(t.content),
   }));
 
+  const MODEL_LABEL = "anthropic/claude-sonnet-4-6";
   send({ type: "meta", model: MODEL_LABEL });
 
-  let assistantTextBuffer = "";
-  let tokensIn = 0;
-  let tokensOut = 0;
-
-  // Loop de tool-use: V conserva sus 73 manos también por el camino directo.
-  for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-    const stream = client.messages.stream({
-      model,
-      system: systemPrompt,
-      messages,
-      max_tokens: 3072,
-      tools: anthTools,
-    });
-    const thinkState = { inThinking: false };
-    stream.on("text", (delta) => {
-      const clean = filterThinkingToken(delta, thinkState);
-      if (!clean) return;
-      assistantTextBuffer += clean;
-      send({ type: "text", value: clean });
-    });
-    const final = await stream.finalMessage();
-    tokensIn += final.usage?.input_tokens ?? 0;
-    tokensOut += final.usage?.output_tokens ?? 0;
-
-    const toolUses = final.content.filter(
-      (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
-    );
-    if (final.stop_reason !== "tool_use" || toolUses.length === 0) {
-      break;
-    }
-
-    // Ejecuta cada tool y arma los tool_result para la siguiente vuelta.
-    messages.push({ role: "assistant", content: final.content });
-    const results: Anthropic.ContentBlockParam[] = [];
-    for (const tu of toolUses) {
-      send({ type: "tool_use_start", id: tu.id, name: tu.name });
-      let out: { ok: boolean; content: string; summary: string };
-      try {
-        out = await executeTool(tu.name, (tu.input ?? {}) as Record<string, unknown>, {
-          userId,
-          sessionId,
-        });
-      } catch (e) {
-        out = { ok: false, content: String(e).slice(0, 500), summary: "error" };
-      }
-      send({ type: "tool_use_result", id: tu.id, ok: out.ok, summary: out.summary });
-      results.push({
-        type: "tool_result",
-        tool_use_id: tu.id,
-        content: out.content.slice(0, 8000),
-        is_error: !out.ok,
-      });
-    }
-    messages.push({ role: "user", content: results });
-  }
-
-  const { cleaned: assistantVisible, memories: newMemories } =
-    extractMemoryBlocks(assistantTextBuffer);
-  for (const m of newMemories) {
-    await saveUserMemory(memoryUserId, m.key, m.value).catch(() => undefined);
-  }
-
   try {
+    const upstream = await fetch(HETZNER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: HETZNER_SECRET,
+        message: userMessage,
+        history,
+        session_id: sessionId,
+      }),
+      signal: AbortSignal.timeout(90000),
+    });
+    if (!upstream.ok) return false;
+    const data = (await upstream.json()) as { reply?: string };
+    const reply = data.reply || "";
+    if (!reply || reply.length < 3) return false;
+
+    send({ type: "text", value: reply });
+
+    const { cleaned: assistantVisible, memories: newMemories } =
+      extractMemoryBlocks(reply);
+    for (const m of newMemories) {
+      await saveUserMemory(memoryUserId, m.key, m.value).catch(() => undefined);
+    }
     await sql`
       INSERT INTO conversations (
         user_id, session_id, role, content, model, tokens_in, tokens_out, cost_usd
       )
       VALUES (
         ${userId}, ${sessionId}, 'assistant', ${assistantVisible},
-        ${MODEL_LABEL}, ${tokensIn}, ${tokensOut}, NULL
+        ${MODEL_LABEL}, 0, 0, NULL
       )
     `;
+    rememberTurn({ role: "assistant", content: assistantVisible, sessionId }).catch(
+      () => undefined,
+    );
+    send({ type: "done", tokensIn: 0, tokensOut: 0, model: MODEL_LABEL });
+    return true;
   } catch (e) {
-    console.error("conversations insert (directo) failed:", e);
+    console.error("[V] Hetzner relay error:", e);
+    return false;
   }
-
-  rememberTurn({ role: "assistant", content: assistantVisible, sessionId }).catch(
-    () => undefined,
-  );
-
-  send({ type: "done", tokensIn, tokensOut, model: MODEL_LABEL });
-  return true;
 }
 
 /**
