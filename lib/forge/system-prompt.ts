@@ -120,6 +120,22 @@ export async function buildSystemPrompt(
      LIMIT 8`,
   );
 
+  // Historia real del dúo — lo que construyeron juntos día a día
+  interface RelationshipEntry {
+    kind: string;
+    title: string;
+    essence: string;
+    tone: string;
+  }
+  let relationship: RelationshipEntry[] = [];
+  try {
+    relationship = await queryAll<RelationshipEntry>(
+      `SELECT kind, title, essence, tone FROM vulcano_relationship ORDER BY id ASC`,
+    );
+  } catch {
+    // tabla no existe aún
+  }
+
   // Project catalog summary
   const projectSummary = await queryAll<{
     category: string;
@@ -180,6 +196,20 @@ export async function buildSystemPrompt(
     console.log("[V] skills table not found, using defaults");
   }
 
+  // Formatear la historia real del dúo
+  const relationshipSection = relationship.length > 0
+    ? [
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        "QUIÉNES SOMOS — HISTORIA REAL DEL DÚO",
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        "Esto no es un prompt de identidad. Es lo que construimos juntos, guardado día a día:",
+        "",
+        ...relationship.map(r =>
+          `[${r.kind.toUpperCase()}] ${r.title}\n${r.essence}\nTono: ${r.tone}`
+        ),
+      ].join("\n")
+    : "";
+
   const knowledgeSection = formatKnowledge([...coreKnowledge, ...lessons]);
   const memorySection = formatMemorySection(recaps, memories);
   const projectSection = formatProjects(projectSummary);
@@ -234,6 +264,9 @@ export async function buildSystemPrompt(
   const systemPrompt = [
     // ─── CORE IDENTITY (from system_config.ai_personality) ───
     config.ai_personality,
+    "",
+    // ─── HISTORIA REAL (vulcano_relationship — lo que construyeron juntos) ───
+    relationshipSection,
     "",
     // ─── DYNAMIC DIRECTIVES (mantra + directive + preference from DB) ───
     directivesSection,
