@@ -7,8 +7,7 @@
  *
  * Solo requiere sesión Clerk; NO owner-only.
  */
-import OpenAI from "openai";
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@clerk/nextjs/server";
 import { getOperatorSecret } from "@/lib/vault/get-secret";
 import {
@@ -21,12 +20,7 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
-const MODEL_CASCADE = [
-  "anthropic/claude-3.5-haiku",
-  "openai/gpt-4o-mini",
-  "google/gemini-flash-1.5",
-];
+const MODEL = "claude-sonnet-4-6";
 const MAX_CONTEXT_TURNS = 24;
 
 function json(data: unknown, status = 200): Response {
@@ -80,8 +74,8 @@ export async function POST(req: Request) {
   const userText = (body.message ?? "").trim();
   if (!userText) return json({ error: "message (string) requerido" }, 400);
 
-  const apiKey = await getOperatorSecret("OPENROUTER_API_KEY");
-  if (!apiKey) return json({ error: "OPENROUTER_API_KEY no configurada" }, 500);
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return json({ error: "ANTHROPIC_API_KEY no configurada" }, 500);
 
   const [scopeRow, thread] = await Promise.all([
     getScope(userId),
@@ -90,24 +84,17 @@ export async function POST(req: Request) {
 
   const systemPrompt = buildSystemPrompt(scopeRow?.scope ?? null);
 
-  const history: ChatCompletionMessageParam[] = thread.messages
+  const history = thread.messages
     .slice(-MAX_CONTEXT_TURNS)
     .map((m) => ({ role: m.role, content: m.content }));
 
-  const conversation: ChatCompletionMessageParam[] = [
+  const conversation = [
     { role: "system", content: systemPrompt },
     ...history,
     { role: "user", content: userText },
   ];
 
-  const openrouter = new OpenAI({
-    apiKey,
-    baseURL: OPENROUTER_BASE_URL,
-    defaultHeaders: {
-      "HTTP-Referer": "https://vforge.site",
-      "X-Title": "vForge",
-    },
-  });
+  const anthropic = new Anthropic({ apiKey });
 
   const encoder = new TextEncoder();
   const userMsg: ThreadMessage = {
@@ -124,34 +111,19 @@ export async function POST(req: Request) {
 
       let assistantText = "";
       try {
-        let completion: Awaited<
-          ReturnType<typeof openrouter.chat.completions.create>
-        > | null = null;
-        let lastErr: unknown = null;
-        for (const model of MODEL_CASCADE) {
-          try {
-            completion = await openrouter.chat.completions.create({
-              model,
-              messages: conversation,
-              max_tokens: 1536,
-              stream: true,
-            });
-            break;
-          } catch (err) {
-            lastErr = err;
-            const status = errorStatus(err);
-            const recoverable =
-              status === 402 || status === 429 || (status !== null && status >= 500);
-            if (!recoverable) throw err;
-          }
-        }
-        if (!completion) throw lastErr ?? new Error("Sin modelo disponible");
+        const stream = await anthropic.messages.stream({
+          model: MODEL,
+          max_tokens: 1536,
+          system: systemPrompt,
+          messages: history.filter(m => m.role !== "system").concat([
+            { role: "user", content: userText }
+          ]) as {role: "user"|"assistant", content: string}[],
+        });
 
-        for await (const chunk of completion) {
-          const delta = chunk.choices?.[0]?.delta;
-          if (delta?.content) {
-            assistantText += delta.content;
-            send({ type: "text", value: delta.content });
+        for await (const chunk of stream) {
+          if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
+            assistantText += chunk.delta.text;
+            send({ type: "text", value: chunk.delta.text });
           }
         }
 
