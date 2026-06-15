@@ -28,7 +28,7 @@ DB_URL = os.environ.get(
 
 OPENROUTER_KEY = os.environ.get(
     "OPENROUTER_API_KEY",
-    "REDACTED_OR_KEY",
+    "os.environ.get("OPENROUTER_API_KEY","")",
 )
 # Modelo barato y rápido para síntesis interna (no es el motor de chat de V).
 SYNTH_MODEL = os.environ.get("VULCANO_SYNTH_MODEL", "anthropic/claude-3.5-haiku")
@@ -36,7 +36,7 @@ SYNTH_MODEL = os.environ.get("VULCANO_SYNTH_MODEL", "anthropic/claude-3.5-haiku"
 # Puente WhatsApp personal de Luis (Baileys, ver CLAUDE.md).
 BAILEYS_URL = os.environ.get("BAILEYS_URL", "http://178.105.135.26:3001")
 BAILEYS_SECRET = os.environ.get(
-    "BAILEYS_SECRET", "REDACTED_BAILEYS")
+    "BAILEYS_SECRET", "os.environ.get("BAILEYS_SECRET","")")
 LUIS_WA = os.environ.get("LUIS_WA", "5219984292748")
 
 
