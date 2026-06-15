@@ -18,6 +18,9 @@ const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 //   2) sesión Clerk de owner — para la UI (/activity health pill, cockpit…).
 const isAdminRoute = createRouteMatcher(["/api/admin/(.*)"]);
 const isTwilioWebhook = createRouteMatcher(["/api/v/voice/twilio(.*)"]);
+// Rutas MCP: Clerk NO debe validar el Bearer (son tokens vfmcp_* propios,
+// no JWTs de Clerk). El handler MCP hace su propia autenticación.
+const isMcpRoute = createRouteMatcher(["/api/mcp", "/api/mcp/(.*)", "/api/mcp/public", "/api/mcp/public/(.*)"]);
 
 /**
  * Valida el operator token del header Authorization en el edge. Comparación de
@@ -119,6 +122,10 @@ export default hasClerk
       // Webhooks de Twilio (llamada de voz a V): Twilio no pasa por Clerk; se
       // autentican con X-Twilio-Signature dentro del propio handler.
       if (isTwilioWebhook(req)) return;
+      // MCP endpoints: los tokens vfmcp_* y tokens OAuth propios NO son JWTs
+      // de Clerk. Clerk los rechaza con token-invalid. El handler MCP (/api/mcp)
+      // hace su propia autenticación interna. Dejar pasar siempre.
+      if (isMcpRoute(req)) return;
       if (!isProtected(req)) return;
       const { userId, sessionClaims, redirectToSignIn } = await auth();
       const isApi = req.nextUrl.pathname.startsWith("/api");

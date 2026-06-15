@@ -182,6 +182,85 @@ export const MCP_TOOLS: McpToolDef[] = [
       "OPERADOR (Owner/Associate): el pulso de la fábrica en una sola llamada — token-health (horas restantes), daemon Vulcano vivo + claude_loop, y conteo de la cola (corriendo/pendiente/total). Sin mock.",
     inputSchema: { type: "object", properties: {} },
   },
+  {
+    name: "vulcano_boot",
+    description:
+      "AGENTE (Owner): arranque de identidad Vulcano — carga boot-context, proyectos activos, lecciones recientes y ritual de identidad en una sola llamada. LLAMAR PRIMERO al iniciar cualquier sesión de agente autónomo.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "vulcano_brain_exec",
+    description:
+      "OPERADOR (Owner): ejecuta un comando shell en el servidor Hetzner desde el MCP. Auditado. Blocklist básica activa. project_id opcional para auto-registrar lección.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cmd: { type: "string", description: "Comando bash a ejecutar en Hetzner" },
+        project_id: { type: "string", description: "ID de proyecto para registrar lección (opcional)" },
+      },
+      required: ["cmd"],
+    },
+  },
+  {
+    name: "vulcano_brain_query",
+    description:
+      "OPERADOR (Owner): ejecuta SQL en Neon (Brain DB) desde el MCP. Permite SELECT libre + INSERT en lessons/patterns + UPDATE en projects/dispatch_queue.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "SQL a ejecutar" },
+        params: { type: "array", description: "Parámetros posicionales ($1, $2…)", items: {} },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "vulcano_update_project",
+    description:
+      "AGENTE (Owner): actualiza el estado de un proyecto en el Brain (last_action, next_step, phase, blocked). Llamar siempre al terminar una tarea sobre un proyecto.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: { type: "string", description: "ID del proyecto (ej. rideme, credeti, vforge)" },
+        last_action: { type: "string", description: "Resumen de lo que se hizo" },
+        next_step: { type: "string", description: "Qué sigue" },
+        phase: { type: "string", description: "Fase actual del proyecto (opcional)" },
+        blocked: { type: "string", description: "Blocker activo, o cadena vacía para limpiar (opcional)" },
+      },
+      required: ["project_id"],
+    },
+  },
+  {
+    name: "vulcano_save_lesson",
+    description:
+      "AGENTE (Owner): persiste una lección, error o patrón aprendido en el Brain. Llamar siempre que descubras algo reutilizable.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: { type: "string", description: "ID de proyecto relacionado (default: general)" },
+        type: { type: "string", enum: ["acierto", "error", "patron"], description: "Tipo de lección" },
+        area: { type: "string", description: "Área técnica: shell | postgres | pwa | auth | deploy | etc." },
+        lesson: { type: "string", description: "La lección en sí (qué aprendiste)" },
+        fix: { type: "string", description: "Cómo resolverlo si era un error (opcional)" },
+        source: { type: "string", description: "Fuente (default: mcp-agent)" },
+      },
+      required: ["lesson"],
+    },
+  },
+  {
+    name: "vulcano_memory_search",
+    description:
+      "AGENTE (Owner): búsqueda semántica en el Brain (pgvector + Jina embeddings). Encuentra doctrina, patrones, skills y contexto por significado, no por ruta exacta.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        q: { type: "string", description: "Pregunta en lenguaje natural" },
+        limit: { type: "number", description: "Resultados (default: 5, max: 10)" },
+      },
+      required: ["q"],
+    },
+  },
+
 ];
 
 /** Tools visibles para un principal: public ve sólo las públicas; admin|client
@@ -440,6 +519,12 @@ function helpText(principal: McpPrincipal): string {
   lines.push("• vulcano_dispatch — encola un trabajo real a la fragua (auditado por userId).");
   lines.push("• vulcano_brain_module — lee la doctrina del Brain por módulo.");
   lines.push("• vulcano_salud — pulso de la fábrica: token, daemon y cola.");
+  lines.push("• vulcano_boot — ARRANQUE: carga identidad Vulcano + proyectos + lecciones en una llamada.");
+  lines.push("• vulcano_brain_exec — ejecuta shell en Hetzner desde el MCP (admin).");
+  lines.push("• vulcano_brain_query — SQL en Neon Brain directo (admin).");
+  lines.push("• vulcano_update_project — actualiza estado de proyecto en Brain (agentes).");
+  lines.push("• vulcano_save_lesson — persiste lección/error/patrón en Brain (agentes).");
+  lines.push("• vulcano_memory_search — búsqueda semántica en Brain (agentes).");
   const scopeName =
     principal.scope === "admin" ? "admin (operador — ves todo)" :
     principal.scope === "client" ? "client (ves SOLO tu forge)" :
@@ -950,6 +1035,305 @@ export async function runMcpTool(
       lines.push(`🔌 Relay: ${s.relayUp ? "arriba" : "sin respuesta"}`);
       return text(lines.join("\n"));
     }
+
+  // ═══════════════════════════════════════════════════════════════
+  // VULCANO AGENT TOOLS — arranque real para agentes autónomos
+  // Agregado 2026-06-15. Scope: admin (operador) solamente.
+  // ═══════════════════════════════════════════════════════════════
+
+  case "vulcano_boot": {
+    // Carga contexto completo de identidad + proyectos activos + estado daemon
+    // Es el PRIMER tool que llama cualquier agente al conectarse al MCP.
+    const BRAIN = "http://178.105.135.26";
+    const SECRET = process.env.BRAIN_SECRET || "superclaude2025";
+
+    // 1. boot-context
+    let bootCtx = "";
+    try {
+      const r = await fetch(`${BRAIN}/brain/file/boot-context.md`, {
+        headers: { "x-secret": SECRET },
+        signal: AbortSignal.timeout(8000),
+      });
+      bootCtx = r.ok ? await r.text() : `[boot-context error: ${r.status}]`;
+    } catch (e: unknown) {
+      bootCtx = `[boot-context timeout: ${String(e).slice(0, 80)}]`;
+    }
+
+    // 2. Proyectos activos del Brain
+    let projectsStr = "";
+    try {
+      const qr = await fetch(`${BRAIN}/brain/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret: SECRET,
+          query:
+            "SELECT id, name, domain, phase, last_action, next_step, blocked FROM projects WHERE active=true ORDER BY updated_at DESC LIMIT 15",
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (qr.ok) {
+        const qd = await qr.json();
+        const rows = JSON.parse(qd.stdout).rows as Record<string, string>[];
+        projectsStr = rows
+          .map(
+            (p) =>
+              `• [${p.id}] ${p.name} | ${p.phase} | domain: ${p.domain || "-"}\n` +
+              `  last: ${(p.last_action || "-").slice(0, 120)}\n` +
+              `  next: ${p.next_step || "-"}\n` +
+              (p.blocked ? `  ⚠️ BLOCKER: ${p.blocked}\n` : ""),
+          )
+          .join("\n");
+      }
+    } catch (e: unknown) {
+      projectsStr = `[projects query error: ${String(e).slice(0, 80)}]`;
+    }
+
+    // 3. Últimas lecciones (errores + aciertos recientes)
+    let lessonsStr = "";
+    try {
+      const lr = await fetch(`${BRAIN}/brain/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret: SECRET,
+          query:
+            "SELECT type, area, lesson FROM lessons ORDER BY ts DESC LIMIT 8",
+        }),
+        signal: AbortSignal.timeout(6000),
+      });
+      if (lr.ok) {
+        const ld = await lr.json();
+        const rows = JSON.parse(ld.stdout).rows as Record<string, string>[];
+        lessonsStr = rows
+          .map((l) => `[${l.type}/${l.area}] ${l.lesson.slice(0, 120)}`)
+          .join("\n");
+      }
+    } catch {
+      lessonsStr = "[lecciones no disponibles]";
+    }
+
+    // 4. Ritual de arranque (identidad Vulcano)
+    let ritual = "";
+    try {
+      const rr = await fetch(`${BRAIN}/brain/file/modulos/ritual-arranque-vulcano.md`, {
+        headers: { "x-secret": SECRET },
+        signal: AbortSignal.timeout(6000),
+      });
+      ritual = rr.ok ? (await rr.text()).slice(0, 2000) : "";
+    } catch {
+      ritual = "";
+    }
+
+    const output = [
+      "# VULCANO BOOT — contexto de arranque cargado",
+      "",
+      "## IDENTIDAD",
+      ritual,
+      "",
+      "## PROYECTOS ACTIVOS",
+      projectsStr || "(sin proyectos)",
+      "",
+      "## LECCIONES RECIENTES",
+      lessonsStr,
+      "",
+      "## BOOT CONTEXT (extracto)",
+      bootCtx.slice(0, 3000),
+      "",
+      "---",
+      "Contexto cargado. Eres Vulcano. Ejecuta tu tarea.",
+    ].join("\n");
+
+    return text(output);
+  }
+
+  case "vulcano_brain_exec": {
+    // Ejecuta un comando shell en Hetzner desde el MCP.
+    // SOLO admin (Owner). Client y public: denegado.
+    if (!isAdmin(principal)) return err("401: vulcano_brain_exec es solo para el Owner (admin). Tu token no tiene ese nivel.");
+    const cmd = String((args as Record<string, unknown>).cmd || "").trim();
+    const projectId = String((args as Record<string, unknown>).project_id || "");
+    if (!cmd) return err("cmd requerido");
+    if (cmd.length > 2000) return err("cmd demasiado largo (max 2000 chars)");
+
+    // Blocklist básica de comandos destructivos
+    const BLOCKED = ["rm -rf /", "mkfs", "dd if=", ":(){:|:&};:", "shutdown", "reboot"];
+    if (BLOCKED.some((b) => cmd.includes(b))) return err("Comando bloqueado por seguridad.");
+
+    const BRAIN = "http://178.105.135.26";
+    const SECRET = process.env.BRAIN_SECRET || "superclaude2025";
+
+    try {
+      const r = await fetch(`${BRAIN}/brain/exec`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret: SECRET, cmd }),
+        signal: AbortSignal.timeout(30000),
+      });
+      if (!r.ok) return err(`Brain exec error: ${r.status}`);
+      const d = await r.json();
+      const out = `STDOUT:\n${(d.stdout || "").slice(0, 3000)}\nSTDERR:\n${(d.stderr || "").slice(0, 500)}\nRC: ${d.returncode ?? "?"}`;
+
+      // Auto-registrar en lessons si hay project_id
+      if (projectId && d.returncode === 0) {
+        try {
+          await fetch(`${BRAIN}/brain/query`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              secret: SECRET,
+              query: `INSERT INTO lessons (ts,project_id,type,area,lesson,source) VALUES (now(),$1,'acierto','shell',$2,'mcp-agent')`,
+              params: [projectId, `CMD: ${cmd.slice(0, 200)} → RC:0`],
+            }),
+          });
+        } catch {/* no fatal */}
+      }
+
+      return text(out);
+    } catch (e: unknown) {
+      return err(`Timeout o error de red: ${String(e).slice(0, 120)}`);
+    }
+  }
+
+  case "vulcano_brain_query": {
+    // Ejecuta SQL en Neon directamente desde el MCP.
+    // SOLO admin (Owner). Client y public: denegado.
+    if (!isAdmin(principal)) return err("401: vulcano_brain_query es solo para el Owner (admin). Tu token no tiene ese nivel.");
+    const query = String((args as Record<string, unknown>).query || "").trim();
+    const qparams = (args as Record<string, unknown>).params as unknown[] | undefined;
+    if (!query) return err("query requerido");
+
+    // Solo operaciones seguras
+    const qUpper = query.toUpperCase().trimStart();
+    const ALLOWED_OPS = ["SELECT", "INSERT INTO LESSONS", "INSERT INTO PATTERNS", "UPDATE PROJECTS", "UPDATE DISPATCH_QUEUE"];
+    const isAllowed = ALLOWED_OPS.some((op) => qUpper.startsWith(op));
+    if (!isAllowed) return err("Solo SELECT / INSERT en lessons|patterns / UPDATE en projects|dispatch_queue permitidos desde MCP.");
+
+    const BRAIN = "http://178.105.135.26";
+    const SECRET = process.env.BRAIN_SECRET || "superclaude2025";
+
+    try {
+      const r = await fetch(`${BRAIN}/brain/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret: SECRET, query, params: qparams }),
+        signal: AbortSignal.timeout(12000),
+      });
+      if (!r.ok) return err(`Brain query error: ${r.status}`);
+      // /brain/query devuelve el resultado Neon directo (no wrapeado en {stdout})
+      const inner = await r.json() as { rows?: Record<string, unknown>[]; rowCount?: number };
+      const rows = inner.rows ?? [];
+      return text(
+        `rowCount: ${inner.rowCount ?? rows.length}\n\n` +
+        rows.slice(0, 50).map((r) => JSON.stringify(r)).join("\n"),
+      );
+    } catch (e: unknown) {
+      return err(`Query error: ${String(e).slice(0, 200)}`);
+    }
+  }
+
+  case "vulcano_update_project": {
+    // Actualiza last_action, next_step y phase de un proyecto en el Brain.
+    // Llamar al TERMINAR cualquier tarea sobre un proyecto.
+    const p = args as Record<string, unknown>;
+    const id = String(p.project_id || "").trim();
+    const lastAction = String(p.last_action || "").trim();
+    const nextStep = String(p.next_step || "").trim();
+    const phase = String(p.phase || "").trim();
+    const blocked = p.blocked !== undefined ? String(p.blocked) : null;
+
+    if (!id) return err("project_id requerido");
+    if (!lastAction && !nextStep) return err("Al menos last_action o next_step requerido");
+
+    const BRAIN = "http://178.105.135.26";
+    const SECRET = process.env.BRAIN_SECRET || "superclaude2025";
+
+    const setClauses: string[] = ["updated_at = now()"];
+    const vals: unknown[] = [id];
+    if (lastAction) { vals.push(lastAction); setClauses.push(`last_action = $${vals.length}`); }
+    if (nextStep)   { vals.push(nextStep);   setClauses.push(`next_step = $${vals.length}`); }
+    if (phase)      { vals.push(phase);      setClauses.push(`phase = $${vals.length}`); }
+    if (blocked !== null) { vals.push(blocked || null); setClauses.push(`blocked = $${vals.length}`); }
+
+    const query = `UPDATE projects SET ${setClauses.join(", ")} WHERE id = $1`;
+
+    try {
+      const r = await fetch(`${BRAIN}/brain/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret: SECRET, query, params: vals }),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!r.ok) return err(`Update error: ${r.status}`);
+      return text(`✅ Proyecto [${id}] actualizado en el Brain.`);
+    } catch (e: unknown) {
+      return err(`Update failed: ${String(e).slice(0, 120)}`);
+    }
+  }
+
+  case "vulcano_save_lesson": {
+    // Persiste una lección aprendida en el Brain.
+    // Llamar siempre al descubrir un error, un patrón o un acierto.
+    const p = args as Record<string, unknown>;
+    const projectId = String(p.project_id || "general");
+    const type = String(p.type || "acierto");        // acierto | error | patron
+    const area = String(p.area || "general");         // shell | postgres | pwa | etc.
+    const lesson = String(p.lesson || "").trim();
+    const fix = String(p.fix || "");
+    const source = String(p.source || "mcp-agent");
+
+    if (!lesson) return err("lesson requerido");
+    if (!["acierto", "error", "patron"].includes(type)) return err("type debe ser: acierto | error | patron");
+
+    const BRAIN = "http://178.105.135.26";
+    const SECRET = process.env.BRAIN_SECRET || "superclaude2025";
+
+    try {
+      const r = await fetch(`${BRAIN}/brain/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret: SECRET,
+          query: "INSERT INTO lessons (ts,project_id,type,area,lesson,fix,source) VALUES (now(),$1,$2,$3,$4,$5,$6)",
+          params: [projectId, type, area, lesson, fix, source],
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!r.ok) return err(`Lesson insert error: ${r.status}`);
+      return text(`✅ Lección registrada: [${type}/${area}] ${lesson.slice(0, 80)}...`);
+    } catch (e: unknown) {
+      return err(`Save lesson failed: ${String(e).slice(0, 120)}`);
+    }
+  }
+
+  case "vulcano_memory_search": {
+    // Búsqueda semántica en el Brain (pgvector).
+    const q = String((args as Record<string, unknown>).q || "").trim();
+    const limit = Number((args as Record<string, unknown>).limit || 5);
+    if (!q) return err("q requerido");
+
+    const BRAIN = "http://178.105.135.26";
+    const SECRET = process.env.BRAIN_SECRET || "superclaude2025";
+
+    try {
+      const r = await fetch(`${BRAIN}/brain/search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret: SECRET, q, limit }),
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!r.ok) return err(`Search error: ${r.status}`);
+      const d = await r.json() as { results?: { text: string; score: number; source: string }[] };
+      const results = d.results || [];
+      if (!results.length) return text("Sin resultados para: " + q);
+      return text(
+        results.map((r, i) => `[${i + 1}] score:${r.score?.toFixed(3)} src:${r.source}\n${r.text.slice(0, 300)}`).join("\n\n")
+      );
+    } catch (e: unknown) {
+      return err(`Search failed: ${String(e).slice(0, 120)}`);
+    }
+  }
+
 
     default:
       return err(`Tool desconocida: ${name}`);
