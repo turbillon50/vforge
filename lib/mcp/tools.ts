@@ -4,7 +4,7 @@ import { recall } from "@/lib/forge/semantic-recall";
 import { resolveAccessForUser } from "@/lib/connect/resolve-token";
 import { githubClientFromToken } from "@/lib/github/client";
 import { randomBytes } from "node:crypto";
-import { type McpPrincipal, isPublicTool } from "./rbac";
+import { type McpPrincipal, isPublicTool, isAdmin } from "./rbac";
 
 export interface McpToolDef {
   name: string;
