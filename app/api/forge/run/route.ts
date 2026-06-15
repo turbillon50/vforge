@@ -674,7 +674,7 @@ async function runViaHetznerRelay(args: {
   userId: string;
   memoryUserId: string;
 }): Promise<boolean> {
-  const { turns, send, sessionId, userId, memoryUserId } = args;
+  const { systemPrompt, turns, send, sessionId, userId, memoryUserId } = args;
   const HETZNER_URL = process.env.HETZNER_V_URL || "http://178.105.135.26/v/chat";
   const HETZNER_SECRET = process.env.HETZNER_SECRET || "";
   if (!HETZNER_SECRET) return false;
@@ -700,7 +700,7 @@ async function runViaHetznerRelay(args: {
   send({ type: "meta", model: MODEL_LABEL });
 
   try {
-    const upstream = await fetch(HETZNER_URL, {
+    const upstream = await fetch(HETZNER_URL.replace("/v/chat", "/v/chat-full"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -708,6 +708,7 @@ async function runViaHetznerRelay(args: {
         message: userMessage,
         history,
         session_id: sessionId,
+        system_prompt: args.systemPrompt.slice(0, 12000), // VForge context rico
       }),
       signal: AbortSignal.timeout(90000),
     });
