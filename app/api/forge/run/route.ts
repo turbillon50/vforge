@@ -717,10 +717,11 @@ async function runViaHetznerRelay(args: {
   send({ type: "meta", model: MODEL_LABEL });
 
   try {
-    // ESFERA STREAMING: hablamos con /v/stream-chat (SSE token-por-token) en
-    // vez de /v/chat-full (respuesta completa de un golpe). El usuario ve a V
-    // escribir conforme el CLI genera, y Vercel no mata el request por silencio.
-    const upstream = await fetch(HETZNER_URL.replace("/v/chat", "/v/stream-chat"), {
+    // Llamada directa a /v/chat-full — respuesta JSON completa, sin SSE.
+    const chatUrl = HETZNER_URL.endsWith("/v/chat-full")
+      ? HETZNER_URL
+      : HETZNER_URL.replace(/\/v\/chat.*/, "/v/chat-full");
+    const upstream = await fetch(chatUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -728,89 +729,29 @@ async function runViaHetznerRelay(args: {
         message: userMessage,
         history,
         session_id: sessionId,
-        system_prompt: args.systemPrompt.slice(0, 16000), // VForge context rico + SKILL ACTIVA (va al final)
+        system_prompt: args.systemPrompt.slice(0, 16000),
       }),
       signal: AbortSignal.timeout(90000),
     });
-    if (!upstream.ok || !upstream.body) return false;
+    if (!upstream.ok) return false;
 
-    // Parseo de SSE: frames separados por "\n\n", cada línea "data: {json}".
-    // El relay emite {"token":"..."} por fragmento y {"done":true} al cerrar.
-    const reader = upstream.body.getReader();
-    const decoder = new TextDecoder();
-    const thinkingState = { inThinking: false };
-    let buffer = "";
-    let reply = "";
+    const vData = await upstream.json() as { reply?: string; error?: string };
+    if (!vData.reply) return false;
 
-    const handleFrame = (frame: string) => {
-      for (const line of frame.split("\n")) {
-        const trimmed = line.replace(/^\s+/, "");
-        if (!trimmed.startsWith("data:")) continue;
-        const payload = trimmed.slice(5).trim();
-        if (!payload) continue;
-        let evt: { token?: string; done?: boolean; error?: string };
-        try {
-          evt = JSON.parse(payload) as typeof evt;
-        } catch {
-          continue;
-        }
-        if (evt.error) {
-          console.error("[V] relay stream error:", evt.error);
-          continue;
-        }
-        if (typeof evt.token === "string" && evt.token.length > 0) {
-          // El relay ya descarta thinking (solo reenvía text_delta); aun así
-          // filtramos por seguridad ante el fallback no-stream del relay.
-          const clean = filterThinkingToken(evt.token, thinkingState);
-          if (clean) {
-            reply += clean;
-            send({ type: "text", value: clean });
-          }
-        }
-      }
-    };
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      let sep: number;
-      while ((sep = buffer.indexOf("\n\n")) !== -1) {
-        handleFrame(buffer.slice(0, sep));
-        buffer = buffer.slice(sep + 2);
-      }
+    // Simular streaming enviando la respuesta completa en chunks pequeños
+    const reply = vData.reply;
+    const chunkSize = 8;
+    for (let i = 0; i < reply.length; i += chunkSize) {
+      send({ type: "text", text: reply.slice(i, i + chunkSize) });
     }
-    // Vaciar cualquier frame final sin "\n\n" de cierre.
-    if (buffer.trim()) handleFrame(buffer);
-
-    if (!reply || reply.length < 3) return false;
-
-    // Los tokens ya viajaron al front uno por uno; aquí solo persistimos el
-    // texto acumulado. No reenviar `reply` completo (duplicaría la respuesta).
-    const { cleaned: assistantVisible, memories: newMemories } =
-      extractMemoryBlocks(reply);
-    for (const m of newMemories) {
-      await saveUserMemory(memoryUserId, m.key, m.value).catch(() => undefined);
-    }
-    await sql`
-      INSERT INTO conversations (
-        user_id, session_id, role, content, model, tokens_in, tokens_out, cost_usd
-      )
-      VALUES (
-        ${userId}, ${sessionId}, 'assistant', ${assistantVisible},
-        ${MODEL_LABEL}, 0, 0, NULL
-      )
-    `;
-    rememberTurn({ role: "assistant", content: assistantVisible, sessionId }).catch(
-      () => undefined,
-    );
-    send({ type: "done", tokensIn: 0, tokensOut: 0, model: MODEL_LABEL });
+    send({ type: "done" });
     return true;
   } catch (e) {
-    console.error("[V] Hetzner relay error:", e);
+    console.error("[V] chat-full error:", e);
     return false;
   }
 }
+
 
 /**
  * Convert a FE-supplied ChatTurn to OpenAI's ChatCompletionMessageParam.
