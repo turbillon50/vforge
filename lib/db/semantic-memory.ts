@@ -62,19 +62,30 @@ export async function initializeSemanticMemory(): Promise<void> {
  * Generate embedding for text using Claude
  */
 async function generateEmbedding(text: string): Promise<number[]> {
-  try {
-    // Use Claude's embedding capability via API
-    // For now, use a simple hash-based approach as fallback
-    // In production, use Anthropic's embedding API or OpenAI
-
-    // Placeholder: return mock embedding (in production, call real embedding API)
+  const GEMINI_KEY = process.env.GEMINI_API_KEY;
+  if (!GEMINI_KEY) {
+    console.error("[V semantic memory] No GEMINI_API_KEY — usando fallback hash");
     const hash = text.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
     const seed = Math.abs(hash);
     const rng = (i: number) => Math.sin(seed + i) * 10000 - Math.floor(Math.sin(seed + i) * 10000);
-
     return Array.from({ length: 1536 }, (_, i) => (rng(i) % 1));
+  }
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${GEMINI_KEY}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "models/gemini-embedding-001",
+        content: { parts: [{ text: text.slice(0, 2000) }] },
+        outputDimensionality: 1536,
+      }),
+    });
+    if (!res.ok) throw new Error(`Gemini embed HTTP ${res.status}`);
+    const data = await res.json() as { embedding: { values: number[] } };
+    return data.embedding.values;
   } catch (e) {
-    console.error("[V semantic memory] Embedding generation failed:", e);
+    console.error("[V semantic memory] Gemini embedding falló:", e);
     return Array(1536).fill(0);
   }
 }
