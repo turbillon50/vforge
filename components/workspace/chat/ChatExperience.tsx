@@ -1181,7 +1181,7 @@ export function ChatExperience() {
         style={{ opacity: ready ? 1 : 0, transition: "opacity 0.2s ease-out" }}
       >
         <div
-          className={`mx-auto flex min-h-full w-full max-w-3xl flex-col overflow-x-hidden px-3 py-4 md:px-8 md:py-6 ${
+          className={`mx-auto flex min-h-full w-full max-w-3xl flex-col px-3 py-4 md:px-8 md:py-6 ${
             messages.length <= 4 ? "justify-end" : ""
           }`}
         >
