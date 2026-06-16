@@ -78,23 +78,36 @@ export function VOrb() {
   const chunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
-    // Posición inicial: esquina inferior derecha, con espacio para el MobileNav en móvil
+    // Posición inicial: esquina inferior derecha, con espacio para el MobileNav en móvil.
+    // En el chat SIEMPRE pegada a la franja inferior, encima del composer (nunca sobre el texto).
     const mobile = window.matchMedia("(max-width: 767px)").matches;
-    const bottomGap = mobile ? 90 : 28; // dejar espacio sobre el nav móvil
-    const defaultPos = { x: window.innerWidth - 76, y: window.innerHeight - 56 - bottomGap };
+    const onChat = window.location.pathname.startsWith("/app/chat");
+    const bottomGap = onChat ? 96 : mobile ? 90 : 28; // chat: arriba del composer; móvil: sobre el nav
+    const bottomLockedY = window.innerHeight - ORB - bottomGap;
+    const defaultPos = { x: window.innerWidth - 76, y: bottomLockedY };
     try {
-      const s = localStorage.getItem("vorb_pos");
+      const s = localStorage.getItem("vorb_pos_v3");
       if (s) {
         const saved = JSON.parse(s);
         // Validar que la posición guardada esté dentro del viewport actual
         if (saved.x >= 0 && saved.x < window.innerWidth && saved.y >= 0 && saved.y < window.innerHeight) {
-          setPos(saved);
+          // En el chat ignorar la Y guardada: forzar franja inferior para no tapar el texto
+          setPos(onChat ? { x: saved.x, y: bottomLockedY } : saved);
           return;
         }
       }
     } catch {}
     setPos(defaultPos);
   }, []);
+
+  // Al entrar/cambiar a /app/chat, anclar la esfera a la franja inferior (nunca sobre el texto).
+  // El VOrb se monta una vez en el shell, así que este efecto reactiva el anclaje al navegar.
+  useEffect(() => {
+    const onChat = pathname?.startsWith("/app/chat") ?? false;
+    if (!onChat) return;
+    const bottomLockedY = window.innerHeight - ORB - 96;
+    setPos((p) => (p.x < 0 ? p : { x: p.x, y: bottomLockedY }));
+  }, [pathname]);
 
   useEffect(() => {
     if (pos.x < 0) return;
@@ -266,11 +279,15 @@ export function VOrb() {
     if (!d.moved) {
       setOpen((o) => !o);
     } else {
-      // Caso 3: arrastre → snap al borde más cercano evitando colisiones
+      // Caso 3: arrastre → snap al borde más cercano evitando colisiones.
+      // En el chat la Y queda SIEMPRE pegada arriba del composer (nunca sobre el texto);
+      // fuera del chat se respeta la altura donde se soltó.
+      const onChat = pathname?.startsWith("/app/chat") ?? false;
       const snapX = pos.x + 28 < window.innerWidth / 2 ? 12 : window.innerWidth - 68;
-      const np = avoidCollision({ x: snapX, y: pos.y });
+      const bottomLockedY = window.innerHeight - ORB - 96; // arriba del composer (~80px + safe area)
+      const np = onChat ? { x: snapX, y: bottomLockedY } : avoidCollision({ x: snapX, y: pos.y });
       setPos(np);
-      try { localStorage.setItem("vorb_pos", JSON.stringify(np)); } catch {}
+      try { localStorage.setItem("vorb_pos_v3", JSON.stringify(np)); } catch {}
     }
     drag.current = null;
   }
