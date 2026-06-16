@@ -305,6 +305,7 @@ export function ChatExperience() {
   const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messagesRef = useRef<Msg[]>(messages);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const revealObsRef = useRef<ResizeObserver | null>(null);
   // Persistencia de scroll por conversación (sessionStorage: vf_scroll_<sid>).
   const scrollKeyRef = useRef<string>("");
   const restorePendingRef = useRef<boolean>(false);
@@ -398,14 +399,43 @@ export function ChatExperience() {
         setTimeout(reveal, 600);
         return;
       }
-      // Sin posición guardada: estaba al fondo. Forzamos el fondo en varios
-      // frames + timeouts porque el contenido (markdown, fuentes) cambia de
-      // altura tras montar y un doble rAF no basta para asentar el layout.
+      // Sin posición guardada: estaba al fondo. NIVEL PRADA: el chat permanece
+      // invisible (opacity 0) y pegado al fondo mientras el contenido (markdown,
+      // fuentes) asienta su altura; se revela SOLO cuando está confirmadamente
+      // al fondo. Así el usuario nunca ve el inicio "saltar": aparece directo en
+      // el ultimo mensaje. Un ResizeObserver mantiene el fondo mientras crece.
       stickToBottomRef.current = true;
-      toBottom();
-      requestAnimationFrame(() => { toBottom(); requestAnimationFrame(() => { toBottom(); reveal(); }); });
-      [60, 160, 320, 550].forEach((ms) => setTimeout(toBottom, ms));
-      setTimeout(reveal, 600);
+      revealObsRef.current?.disconnect();
+      revealObsRef.current = null;
+      let revealed = false;
+      const settle = () => el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+      const tryReveal = () => {
+        settle();
+        if (!revealed && el.scrollHeight - el.scrollTop - el.clientHeight < 8) {
+          revealed = true;
+          reveal();
+          revealObsRef.current?.disconnect();
+          revealObsRef.current = null;
+        }
+      };
+      const content = el.firstElementChild as HTMLElement | null;
+      if (content && typeof ResizeObserver !== "undefined") {
+        const ro = new ResizeObserver(() => tryReveal());
+        ro.observe(content);
+        revealObsRef.current = ro;
+      }
+      settle();
+      requestAnimationFrame(() => { settle(); requestAnimationFrame(tryReveal); });
+      [60, 160, 320, 550, 900, 1300].forEach((ms) => setTimeout(tryReveal, ms));
+      // Red de seguridad dura: revelar pase lo que pase, nunca dejar el chat oculto.
+      setTimeout(() => {
+        if (!revealed) {
+          revealed = true;
+          reveal();
+          revealObsRef.current?.disconnect();
+          revealObsRef.current = null;
+        }
+      }, 2000);
       return;
     }
     if (!stickToBottomRef.current) return;
