@@ -91,8 +91,9 @@ export function VOrb() {
         const saved = JSON.parse(s);
         // Validar que la posición guardada esté dentro del viewport actual
         if (saved.x >= 0 && saved.x < window.innerWidth && saved.y >= 0 && saved.y < window.innerHeight) {
-          // En el chat ignorar la Y guardada: forzar franja inferior para no tapar el texto
-          setPos(onChat ? { x: saved.x, y: bottomLockedY } : saved);
+          // Respetar la posicion libre donde el usuario dejo la esfera (tambien en el
+          // chat). avoidCollision solo evita que tape el composer/nav, no la clava.
+          setPos(avoidCollision(saved));
           return;
         }
       }
@@ -105,8 +106,9 @@ export function VOrb() {
   useEffect(() => {
     const onChat = pathname?.startsWith("/app/chat") ?? false;
     if (!onChat) return;
-    const bottomLockedY = window.innerHeight - ORB - 96;
-    setPos((p) => (p.x < 0 ? p : { x: p.x, y: bottomLockedY }));
+    // Al entrar al chat NO clavamos la esfera abajo: respetamos su posicion libre,
+    // solo evitamos que tape el composer/nav si justo cae encima.
+    setPos((p) => (p.x < 0 ? p : avoidCollision(p)));
   }, [pathname]);
 
   useEffect(() => {
@@ -279,13 +281,10 @@ export function VOrb() {
     if (!d.moved) {
       setOpen((o) => !o);
     } else {
-      // Caso 3: arrastre → snap al borde más cercano evitando colisiones.
-      // En el chat la Y queda SIEMPRE pegada arriba del composer (nunca sobre el texto);
-      // fuera del chat se respeta la altura donde se soltó.
-      const onChat = pathname?.startsWith("/app/chat") ?? false;
-      const snapX = pos.x + 28 < window.innerWidth / 2 ? 12 : window.innerWidth - 68;
-      const bottomLockedY = window.innerHeight - ORB - 96; // arriba del composer (~80px + safe area)
-      const np = onChat ? { x: snapX, y: bottomLockedY } : avoidCollision({ x: snapX, y: pos.y });
+      // Caso 3: arrastre → la esfera se queda LIBRE donde el usuario la solto.
+      // Sin snap a esquinas ni franja inferior forzada. avoidCollision solo hace
+      // clamp al viewport y la sube si justo cae sobre el composer/nav.
+      const np = avoidCollision({ x: pos.x, y: pos.y });
       setPos(np);
       try { localStorage.setItem("vorb_pos_v3", JSON.stringify(np)); } catch {}
     }
