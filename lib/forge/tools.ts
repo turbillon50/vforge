@@ -743,7 +743,6 @@ required: ["repo", "sha"],
 
   // ─── Model routing + cost observability (M3.5) ────────────────────
   {
-  {
     name: "hetzner_exec",
     description: "Ejecuta comando bash en Hetzner via relay. Usar para: pwa_checker, git, tsc. SIEMPRE correr pwa_checker antes de DONE.",
     input_schema: {
