@@ -78,7 +78,7 @@ export function VPresence({
       {/* separación — apenas una hairline entre anillo y núcleo */}
       <span
         className="absolute rounded-full"
-        style={{ inset: Math.max(1, size * 0.018), background: "var(--color-void)" }}
+        style={{ inset: Math.max(1, size * 0.018), background: "#03020a" }}
       />
       {/* núcleo — domina el orbe: bola de luz, no aro */}
       <span

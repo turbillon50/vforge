@@ -45,7 +45,7 @@ export function HomeExperience({ name }: { name: string }) {
   }, []);
 
   return (
-    <main className="grain relative mx-auto w-full max-w-5xl overflow-hidden px-5 pb-28 pt-10 md:px-8 md:pt-16" style={{ background: "var(--void, #03020a)" }}>
+    <main className="grain relative mx-auto w-full max-w-5xl overflow-hidden px-5 pb-28 pt-10 md:px-8 md:pt-16" style={{ minHeight: "100vh", background: "#03020a" }}>
       {/* Fondos de profundidad — gradientes difusos */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div
