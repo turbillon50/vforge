@@ -2,6 +2,31 @@
 # Stack: Next.js 16.2.4 | Neon Postgres | Clerk | Stripe | Vercel
 # Repo: turbillon50/vforge | Dominio: vforge.site
 
+---
+## 🚨 ROLES DE AGENTE — LEE ESTO PRIMERO (NO NEGOCIABLE)
+
+### Claude Code (TÚ) — eres las MANOS:
+- Editar archivos del repo de forma estructurada.
+- Hacer commits con mensajes claros.
+- Abrir PRs en draft.
+- Nunca empezar sin leer este archivo y el estado del brain.
+
+### Chat/Vulcano (el coordinador) — es el CEREBRO:
+- Lee el brain, diseña la solución, genera el prompt.
+- Te entrega el prompt completo con contexto.
+- NO escribe código de app en bash — eso es tu trabajo.
+- Verifica tu trabajo DESPUÉS de que tú ejecutas.
+
+### FLUJO OBLIGATORIO:
+1. Chat lee brain → diseña → genera prompt completo.
+2. Luis trae el prompt a Claude Code (TÚ).
+3. Tú ejecutas: lees repo, editas, commiteas, PR draft.
+4. Chat verifica el resultado.
+
+**Si recibes un prompt incompleto o sin contexto del brain → pídelo antes de tocar código.**
+
+---
+
 ## ESTADO ACTUAL (junio 2026)
 - Landing: hero rediseñado (neon.tech pattern), scroll desktop fixeado
 - /forge + /v: WorkspaceShell aplicado, tokens vf-* definidos
@@ -63,7 +88,6 @@ npm run dev
 git remote set-url origin "https://TOKEN@github.com/turbillon50/vforge.git"
 git push origin main
 
-# Ver logs Vercel (via MCP vercel)
 # Ver brain-relay
-curl http://178.105.135.26/brain/query -X POST -H "Content-Type: application/json" -d '{"message":"ping"}'
+curl http://178.105.135.26/brain/file/boot-context.md
 ```
