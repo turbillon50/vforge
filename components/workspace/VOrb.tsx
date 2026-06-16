@@ -130,7 +130,9 @@ export function VOrb() {
     drag.current = null;
   }
 
-  const HIDE_ON = ["/app/home"];
+  // En /app/chat el flotante SOBRA: el chat ya tiene su esfera de V en el header
+  // y junto a cada mensaje. Ocultarlo evita que tape el texto de la conversación.
+  const HIDE_ON = ["/app/home", "/app/chat"];
   if (pathname === "/app" || HIDE_ON.some((p) => pathname?.startsWith(p))) return null;
   if (pos.x < 0) return null;
   const onLeft = pos.x + 28 < (typeof window !== "undefined" ? window.innerWidth / 2 : 200);

@@ -419,8 +419,24 @@ export function ChatExperience() {
     const ctrl = new AbortController();
     setIsHydrating(true);
 
+    async function fetchHistory(sid: string): Promise<Msg[]> {
+      const res = await fetch(
+        `/api/forge/conversations?sessionId=${encodeURIComponent(sid)}&limit=100`,
+        { cache: "no-store", signal: ctrl.signal },
+      );
+      if (!res.ok) return [];
+      const data = (await res.json()) as { turns: IconHistory[] };
+      return (data.turns ?? [])
+        .filter((tn) => tn.role === "user" || tn.role === "assistant")
+        .map((tn) => ({
+          id: tn.id,
+          role: tn.role === "assistant" ? ("b" as const) : ("user" as const),
+          text: tn.content,
+        }));
+    }
+
     async function init(s: string) {
-      let sid = "";
+      let serverSid = "";
       let serverLastAt = 0;
       try {
         const res = await fetch(
@@ -429,7 +445,7 @@ export function ChatExperience() {
         );
         if (res.ok) {
           const data = (await res.json()) as { sessionId?: string; last_at?: string };
-          if (data?.sessionId) sid = data.sessionId;
+          if (data?.sessionId) serverSid = data.sessionId;
           if (data?.last_at) serverLastAt = Date.parse(data.last_at) || 0;
         }
       } catch {
@@ -437,39 +453,39 @@ export function ChatExperience() {
       }
       // Si el usuario abrió un hilo nuevo en este dispositivo (newChat) y el
       // server aún no lo conoce (no hay rows), gana el local más reciente.
+      let sid = serverSid;
       const local = recallLocalSession(s);
-      if (local && local.sid !== sid && local.at > serverLastAt) {
+      if (local && local.sid !== serverSid && local.at > serverLastAt) {
         sid = local.sid;
       }
       if (!sid) {
         sid = `s_${s}_${Date.now().toString(36)}`;
       }
-      sessionIdRef.current = sid;
-      // Clave de scroll por conversación + marcar restauración pendiente:
-      // el siguiente render con los mensajes hidratados restaurará la posición.
-      scrollKeyRef.current = `vf_scroll_${sid}`;
-      restorePendingRef.current = true;
 
       try {
-        const res = await fetch(
-          `/api/forge/conversations?sessionId=${encodeURIComponent(sid)}&limit=100`,
-          { cache: "no-store", signal: ctrl.signal },
-        );
-        if (res.ok) {
-          const data = (await res.json()) as { turns: IconHistory[] };
-          const hydrated: Msg[] = (data.turns ?? [])
-            .filter((tn) => tn.role === "user" || tn.role === "assistant")
-            .map((tn) => ({
-              id: tn.id,
-              role: tn.role === "assistant" ? "b" : "user",
-              text: tn.content,
-            }));
-          if (hydrated.length > 0) {
-            setMessages(hydrated);
-          } else {
-            setMessages([{ id: "intro", role: "b", text: t.chat.intro }]);
+        let hydrated = await fetchHistory(sid);
+        // Si el hilo elegido está vacío pero el server SÍ tiene una conversación
+        // con historial (caso típico: un "hilo nuevo" local vacío tapaba la
+        // conversación previa), recuperamos esa conversación en vez de mostrar
+        // el welcome. El usuario siempre debe continuar donde se quedó.
+        if (hydrated.length === 0 && serverSid && serverSid !== sid) {
+          const serverHydrated = await fetchHistory(serverSid);
+          if (serverHydrated.length > 0) {
+            sid = serverSid;
+            hydrated = serverHydrated;
           }
         }
+        sessionIdRef.current = sid;
+        // Clave de scroll por conversación + marcar restauración pendiente:
+        // el siguiente render con los mensajes hidratados hará scroll al fondo
+        // (último mensaje) o restaurará la posición guardada.
+        scrollKeyRef.current = `vf_scroll_${sid}`;
+        restorePendingRef.current = true;
+        setMessages(
+          hydrated.length > 0
+            ? hydrated
+            : [{ id: "intro", role: "b", text: t.chat.intro }],
+        );
       } catch {
         // keep current
       } finally {
@@ -865,8 +881,8 @@ export function ChatExperience() {
   return (
     <div className="flex h-full min-h-0 flex-col" style={{ background: "#000000" }}>
       <div
-        className="sticky top-0 z-40 flex-shrink-0 border-b border-app bg-void/70 backdrop-blur-xl"
-        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        className="sticky top-0 z-40 flex-shrink-0 border-b border-app backdrop-blur-xl"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)", background: "rgba(0,0,0,0.72)" }}
       >
         <div className="mx-auto flex h-12 max-w-3xl items-center gap-1 px-2 sm:px-3 md:px-8">
           {/* Volver (solo móvil) */}
@@ -1250,7 +1266,8 @@ export function ChatExperience() {
       )}
 
       <div
-        className="vf-composer-pad flex-shrink-0 border-t border-app bg-void/95 backdrop-blur-xl"
+        className="vf-composer-pad flex-shrink-0 border-t border-app backdrop-blur-xl"
+        style={{ background: "rgba(0,0,0,0.96)" }}
       >
         <div className="mx-auto max-w-3xl px-3 pb-2 pt-2 sm:px-4 md:px-8">
           {messages.length <= 1 && (
