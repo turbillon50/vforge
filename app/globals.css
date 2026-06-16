@@ -92,6 +92,15 @@
   --tint-1: 139 92 246 / 0.03;
   --tint-2: 139 92 246 / 0.06;
   --tint-3: 139 92 246 / 0.10;
+
+  /* ── VULCANO PWA STANDARD v2 — design tokens (spacing/radius/anim) ── */
+  --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 32px;
+  --r-sm: 8px; --r-md: 16px; --r-lg: 24px;
+  --anim-fast: 150ms; --anim-normal: 250ms;
+  --void: #03020a; --bg: #0a0814; --surface: #100d1e;
+  --text-primary: #f0f4ff; --text-secondary: #a8b4d0;
+  --accent: #2f6bff; --cyan: #22d3ee;
+  --border: rgba(255,255,255,0.08);
 }
 
 
@@ -407,6 +416,12 @@ img, svg, video, canvas {
      que el composer NO reserva su altura (evita el doble padding / hueco). */
   padding-bottom: 8px;
 }
+/* VULCANO PWA STANDARD v2 — safe area para cualquier bottom nav genérico.
+   El .vf-mobile-nav ya maneja su propio safe-area inline; esta regla cubre
+   el selector estándar .bottom-nav sin tocar el body (evita doble hueco). */
+.bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
 @media (min-width: 768px) {
   /* Desktop has the sidebar instead of MobileNav — no clearance needed. */
   .vf-composer-pad {
@@ -542,6 +557,14 @@ body.keyboard-open .vf-mobile-nav {
 }
 @keyframes vfShimmer {
   100% { transform: translateX(100%); }
+}
+/* Barras de "voz hablando" — usado en el botón de altavoz de V (TTS) */
+@keyframes vfSpeak {
+  0%, 100% { transform: scaleY(0.4); }
+  50%      { transform: scaleY(1.4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="vfSpeak"] { animation: none !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   .vf-skeleton::after { animation: none; }

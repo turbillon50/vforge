@@ -524,6 +524,20 @@ async function ensureVChat(): Promise<void> {
 }
 
 /**
+ * Sistema de plugins de V: tabla v_plugins + siembra de los 5 nativos.
+ * Import diferido para no acoplar el heal al árbol de catálogo/handlers.
+ */
+async function ensureVPlugins(): Promise<void> {
+  try {
+    const { ensureVPluginsTable, seedNativePlugins } = await import("@/lib/v/plugins/registry");
+    await ensureVPluginsTable();
+    await seedNativePlugins();
+  } catch (e) {
+    console.error("[V auto-heal] v_plugins seed failed:", e);
+  }
+}
+
+/**
  * Heal the database schema. Runs once per process.
  * Call this from api routes or middleware that execute early.
  */
@@ -543,6 +557,7 @@ export async function healDatabase(): Promise<void> {
     await ensureOperatorScope();
     await ensureContractsPortal();
     await ensureVChat();
+    await ensureVPlugins();
   } catch (e) {
     // Silently fail - don't crash the app if database healing fails
     console.error("[V auto-heal] Database healing failed:", e);

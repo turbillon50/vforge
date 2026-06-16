@@ -80,6 +80,25 @@ Proceso systemd, ciclo de 5 min:
 - `validate(chain, ok)` — Luis confirma → sube `confidence` y genera feedback para la
   capa 2. El razonamiento mejora con el uso.
 
+### 6. Sueño cognitivo — `dream.py`  *(aprendizaje NO supervisado)*
+El salto de "V aprende cuando Luis la corrige" a "V aprende sola". A las **~3am** el
+daemon dispara `dream(day)`, que sin chats abiertos ni prisa:
+1. **Revive** las conversaciones del día (`conversations`) agrupadas por sesión y las
+   destila en episodios profundos (releyendo el transcript, no solo los ratings).
+2. **Se auto-evalúa** 1-10 por sesión SIN Luis, con sus tres indicadores anclados en el
+   **comportamiento real** de Luis (¿avanzó o repitió la pregunta? ¿<3 turnos?), no en el
+   texto de V. Eso evita el bucle de auto-confirmación.
+3. **Extrae patrones latentes** transversales que no eran obvios en el momento → nodos
+   `Pattern` + heurísticas suaves.
+4. **Consolida**: la auto-evaluación genera `feedback.auto=true` con `confidence<1` que
+   alimenta el MISMO bucle de la capa 2, pero **amortiguado** y topado en
+   `AUTO_WEIGHT_CAP` — una sola corrección real de Luis siempre domina. Luego `decay` y
+   poda de heurísticas muertas.
+5. **Despierta** con un reporte ("anoche aprendí X") → `dream_cycles` + WhatsApp opcional.
+
+Idempotente por día (`dream_cycles.day` único). Si Luis ya calificó una sesión, su señal
+se respeta y la auto-evaluación no la pisa. CLI: `python3 dream.py [YYYY-MM-DD|last]`.
+
 ### Pegamento — `boot.py`
 `build_context(question, project)` ensambla las 5 capas en un bloque de contexto que
 el brain-relay inyecta al system prompt **cada turno**. Barato e idempotente; si una
@@ -88,9 +107,10 @@ capa falla, sigue con el resto.
 ---
 
 ## Esquema de datos
-Todo en `migrations/021_cognition.sql` (Neon `public`, idempotente). Tablas:
-`kg_nodes`, `kg_edges`, `feedback`, `heuristics`, `dispatch_queue`, `observations`,
-`episodes`, `reasoning_chains` + vista `v_active_mind`.
+En `migrations/021_cognition.sql` + `023_dream.sql` (Neon `public`, idempotente). Tablas:
+`kg_nodes`, `kg_edges`, `feedback` (+`auto`/`confidence`), `heuristics`, `dispatch_queue`,
+`observations`, `episodes`, `reasoning_chains`, `self_evaluations`, `dream_cycles`
++ vistas `v_active_mind`, `v_last_dream`.
 
 ---
 
@@ -99,6 +119,7 @@ Todo en `migrations/021_cognition.sql` (Neon `public`, idempotente). Tablas:
 ```bash
 # 1. Migración en Neon
 psql "$NEON_DATABASE_URL" -f migrations/021_cognition.sql
+psql "$NEON_DATABASE_URL" -f migrations/023_dream.sql
 
 # 2. Código a Hetzner
 rsync -az cognition/ root@178.105.135.26:/root/agents/cognition/

@@ -31,6 +31,17 @@ from db import q, one, run, notify_luis
 import world_model as wm
 import episodic
 import learning
+import dream
+
+# Capas del enjambre — guardadas: si falta un módulo, el daemon NO se cae.
+try:
+    import enjambre2            # 2.0: rutea/compite/divide/sintetiza jobs (eje HOW)
+except Exception as _e:         # noqa: BLE001
+    enjambre2 = None
+try:
+    import esfera               # 3.0: esferas de dominio + bus + decisiones (eje WHO)
+except Exception as _e:         # noqa: BLE001
+    esfera = None
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,6 +51,8 @@ log = logging.getLogger("vulcano.daemon")
 CYCLE_SECONDS = int(os.environ.get("VULCANO_CYCLE", "300"))   # 5 min
 STALE_DAYS = int(os.environ.get("VULCANO_STALE_DAYS", "7"))
 HETZNER = os.environ.get("HETZNER_URL", "http://178.105.135.26")
+# Hora UTC en que V "sueña". 8 UTC = 3am en Cancún (UTC-5). Configurable.
+DREAM_UTC_HOUR = int(os.environ.get("VULCANO_DREAM_UTC_HOUR", "8"))
 
 
 # ---------------------------------------------------- registro de anomalías ---
@@ -73,7 +86,7 @@ def observe(kind, subject, severity, detail, data=None):
 def enqueue(prompt, task_type="CODE", priority=5, meta=None):
     """Encola una tarea para el enjambre. La fuente queda marcada como 'daemon'."""
     run(
-        """INSERT INTO dispatch_queue (task_type, prompt, priority, source, meta)
+        """INSERT INTO dispatch_queue (task_type, prompt, priority, source, metadata)
            VALUES (%s,%s,%s,'daemon',%s)""",
         (task_type, prompt, priority, json.dumps(meta or {})),
     )
@@ -194,6 +207,22 @@ def daily_maintenance():
         log.warning("síntesis diaria falló: %s", e)
 
 
+# ------------------------------------------------------------ sueño nocturno --
+def nightly():
+    """Sueño cognitivo: a las ~3am V revive el día y aprende sola (mecanismo 3).
+
+    Idempotente por día vía dream_cycles; aunque el daemon cicle varias veces
+    dentro de la hora, solo sueña una vez. Consolida el día que acaba de cerrar.
+    """
+    log.info("🌙 ventana de sueño — consolidando el día anterior")
+    try:
+        report = dream.dream(day=dt.date.today() - dt.timedelta(days=1))
+        if report:
+            log.info("sueño completado")
+    except Exception as e:  # noqa: BLE001
+        log.warning("sueño falló: %s", e)
+
+
 # ----------------------------------------------------------------- ciclo ------
 def cycle(state):
     """Un ciclo de conciencia. `state` persiste entre ciclos (último día corrido)."""
@@ -204,10 +233,31 @@ def cycle(state):
         except Exception as e:  # noqa: BLE001
             log.warning("%s falló: %s", check.__name__, e)
 
+    # Enjambre 2.0 — organiza y aprende sobre los jobs (eje HOW: qué modelo).
+    if enjambre2 is not None:
+        try:
+            enjambre2.tick()
+        except Exception as e:  # noqa: BLE001
+            log.warning("enjambre2.tick falló: %s", e)
+
+    # Enjambre 3.0 — esferas de dominio: monitoreo, bus y decisiones (eje WHO).
+    if esfera is not None:
+        try:
+            esfera.tick_all()         # cada esfera monitorea + drena su inbox del bus
+            esfera.arbitrate_tactical()  # V-CEO arbitra lo táctico ($10k–$100k)
+        except Exception as e:  # noqa: BLE001
+            log.warning("esfera.tick falló: %s", e)
+
     today = dt.date.today().isoformat()
     if state.get("last_daily") != today:
         daily_maintenance()
         state["last_daily"] = today
+
+    # Sueño cognitivo: una vez al día, dentro de la ventana de las 3am (local).
+    now_utc = dt.datetime.now(dt.timezone.utc)
+    if now_utc.hour == DREAM_UTC_HOUR and state.get("last_dream") != today:
+        nightly()
+        state["last_dream"] = today
 
 
 def main():

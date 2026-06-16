@@ -1,5 +1,6 @@
-import { queryAll } from "@/lib/db/client";
+import { queryAll, sql } from "@/lib/db/client";
 import { resolveAccess } from "@/lib/connect/resolve-token";
+import { createRepo } from "@/lib/github/client";
 import { neon } from "@neondatabase/serverless";
 
 export const runtime = "nodejs";
@@ -84,6 +85,7 @@ export async function POST(req: Request) {
     vercel_url?: string | null;
     domain?: string | null;
     category?: string;
+    create_repo?: boolean;
   };
   try {
     body = await req.json();
@@ -149,6 +151,29 @@ export async function POST(req: Request) {
       `,
     ]);
 
+    // Crear repo en GitHub si el modal pidió create_repo. No es fatal:
+    // el proyecto ya quedó dado de alta; si GitHub falla solo lo logueamos.
+    let createdRepo: { full_name: string; url: string } | null = null;
+    let repoError: string | null = null;
+    if (body.create_repo && !github_repo) {
+      try {
+        const repo = await createRepo({
+          name: id, // `id` ya está validado como slug GitHub-compatible
+          description: description ?? undefined,
+          private: true,
+        });
+        createdRepo = { full_name: repo.full_name, url: repo.url };
+        await sql`
+          UPDATE projects
+          SET github_repo = ${repo.full_name}, github_url = ${repo.url}
+          WHERE id = ${id}
+        `;
+      } catch (e) {
+        repoError = e instanceof Error ? e.message : String(e);
+        console.error("[projects] createRepo failed:", repoError);
+      }
+    }
+
     // Notify V Momentum engine
     fetch("http://178.105.135.26:3003/notify", {
       method: "POST",
@@ -160,10 +185,19 @@ export async function POST(req: Request) {
       }),
     }).catch(() => {});
 
-    return new Response(JSON.stringify({ id, name }), {
-      status: 201,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        id,
+        name,
+        github_repo: createdRepo?.full_name ?? null,
+        github_url: createdRepo?.url ?? null,
+        repo_error: repoError,
+      }),
+      {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (message.includes("duplicate") || message.includes("unique")) {

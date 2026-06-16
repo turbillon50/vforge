@@ -9,6 +9,7 @@ import {
   getCachedOwner,
   setCachedOwner,
 } from "@/lib/auth/owner";
+import { resolveOnboardingComplete } from "@/lib/auth/onboarding";
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -62,6 +63,8 @@ const isProtected = createRouteMatcher([
   "/api/auth/neon(.*)",
   "/api/auth/stripe(.*)",
   "/workspace(.*)",
+  "/onboarding",
+  "/onboarding/(.*)",
   "/vulcano",
   "/vulcano/(.*)",
   "/api/navegador(.*)",
@@ -145,22 +148,60 @@ export default hasClerk
         return redirectToSignIn({ returnBackUrl: req.url });
       }
 
-      if (isOwnerOnly(req)) {
-        const claimRole = (
-          sessionClaims?.publicMetadata as { role?: string } | undefined
-        )?.role;
-        const owner =
-          claimRole === "owner" ? true : await resolveOwner(userId);
-        if (!owner) {
-          if (isApi) {
+      const claimRole = (
+        sessionClaims?.publicMetadata as { role?: string } | undefined
+      )?.role;
+
+      // --- Rutas API ---
+      // Solo las owner-only necesitan gating extra; el resto ya pasó el auth
+      // de arriba. El onboarding NO bloquea APIs (rompería /api/onboarding/*
+      // y /api/user/complete-onboarding, que el flujo necesita).
+      if (isApi) {
+        if (isOwnerOnly(req)) {
+          const owner =
+            claimRole === "owner" ? true : await resolveOwner(userId);
+          if (!owner) {
             return new NextResponse(JSON.stringify({ error: "forbidden" }), {
               status: 403,
               headers: { "Content-Type": "application/json" },
             });
           }
-          // Usuarios no-owner van a su propio workspace.
-          return NextResponse.redirect(new URL("/workspace", req.url));
         }
+        return;
+      }
+
+      // --- Rutas de página: los 3 tipos de usuario ---
+      const owner = claimRole === "owner" ? true : await resolveOwner(userId);
+      const onOnboarding = req.nextUrl.pathname.startsWith("/onboarding");
+
+      // Tipo 1 — Owner (Luis/Jaime): acceso total a todo, nunca onboarding.
+      if (owner) {
+        if (onOnboarding) {
+          return NextResponse.redirect(new URL("/app/chat", req.url));
+        }
+        return;
+      }
+
+      // Tipo 2 — Cliente intentando entrar a una ruta exclusiva del owner
+      // (/app, /forge, /v): se le redirige a su propio workspace.
+      if (isOwnerOnly(req)) {
+        return NextResponse.redirect(new URL("/workspace", req.url));
+      }
+
+      // Tipo 2 — Cliente en su propio espacio: gate de onboarding.
+      //   sin onboarding  → /onboarding
+      //   con onboarding y cae en /onboarding → /workspace
+      const claimOnboard = (
+        sessionClaims?.publicMetadata as
+          | { onboardingComplete?: boolean }
+          | undefined
+      )?.onboardingComplete;
+      const onboarded = await resolveOnboardingComplete(userId, claimOnboard);
+      if (!onboarded && !onOnboarding) {
+        return NextResponse.redirect(new URL("/onboarding", req.url));
+      }
+      if (onboarded && onOnboarding) {
+        return NextResponse.redirect(new URL("/workspace", req.url));
       }
     }, { signInUrl: "/sign-in", signUpUrl: "/sign-up" })
   : () => NextResponse.next();

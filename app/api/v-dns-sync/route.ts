@@ -1,6 +1,16 @@
+import { currentUser } from "@clerk/nextjs/server";
+import { isOwnerEmail } from "@/lib/auth/owner";
 import { upsertRecord } from "@/lib/namecom/client";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
+  const user = await currentUser();
+  if (!isOwnerEmail(user?.emailAddresses?.[0]?.emailAddress)) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
+  }
+
   try {
     const domain = "vforge.site";
 

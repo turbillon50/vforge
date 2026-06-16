@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 const ENGINE_URL = "http://178.105.135.26:3003";
 
 export async function POST(req: NextRequest) {

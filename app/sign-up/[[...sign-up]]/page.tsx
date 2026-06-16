@@ -1,6 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { SignUp } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { ClerkPlaceholder } from "@/components/auth/ClerkPlaceholder";
 import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
 
@@ -29,6 +30,8 @@ export default function SignUpPage() {
         {clerkEnabled ? (
           <SignUp
             appearance={{
+              baseTheme: dark,
+              variables: { colorPrimary: "#8b5cf6", colorBackground: "transparent", borderRadius: "14px" },
               elements: {
                 rootBox: "w-full",
                 card: "bg-[#0e0c1a]/90 border border-[var(--border-1)] shadow-[0_0_80px_rgba(124,58,237,0.2)] backdrop-blur-2xl rounded-2xl",

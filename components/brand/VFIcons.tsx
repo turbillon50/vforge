@@ -49,6 +49,8 @@ export const IconInfo      = ({size=20,...p}:IP)=><svg {...b(size,p)}><circle cx
 export const IconSend      = ({size=20,...p}:IP)=><svg {...b(size,p)}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
 export const IconMic       = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>;
 export const IconCamera    = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>;
+export const IconSpeaker   = ({size=20,...p}:IP)=><svg {...b(size,p)}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>;
+export const IconSpeakerOff= ({size=20,...p}:IP)=><svg {...b(size,p)}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>;
 export const IconClip      = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>;
 export const IconPlay      = ({size=20,...p}:IP)=><svg {...b(size,p)}><polygon points="5 3 19 12 5 21 5 3"/></svg>;
 export const IconPause     = ({size=20,...p}:IP)=><svg {...b(size,p)}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>;

@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // app/api/navegador/route.ts  v3
@@ -84,8 +85,8 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({ ok: true, status: "not_provisioned", ready: false });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }
 
@@ -118,7 +119,7 @@ export async function POST(req: Request) {
     }).catch(() => {});
 
     return NextResponse.json({ ok: true, status: "provisioning", username, eta_seconds: 30 });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }

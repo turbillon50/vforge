@@ -17,7 +17,8 @@ export default async function HomePage() {
   // El middleware decide owner (/app) vs usuario normal (/workspace).
   if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
     const { userId } = await auth();
-    if (userId) redirect("/app");
+    // V es el home: el owner aterriza directo en el chat (sin pantalla intermedia).
+    if (userId) redirect("/app/chat");
   }
   return (
     <div className="min-h-screen" style={{background:"rgb(var(--color-void))"}}>

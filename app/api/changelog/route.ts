@@ -5,10 +5,21 @@ import { NextResponse } from "next/server";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "";
 const REPO = "turbillon50/vforge";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 type CommitCategory = "feat" | "fix" | "perf" | "refactor" | "other";
+
+interface ChangelogCommit {
+  sha: string;
+  html_url: string;
+  commit: {
+    message: string;
+    author?: { name?: string; date: string };
+  };
+  author?: { login?: string } | null;
+}
 
 function categorize(msg: string): CommitCategory {
   if (msg.startsWith("feat")) return "feat";
@@ -44,14 +55,14 @@ export async function GET(req: Request) {
     if (!r.ok) throw new Error(`GitHub API ${r.status}: ${await r.text()}`);
     const commits = await r.json();
 
-    const entries = commits
-      .filter((c: any) => {
+    const entries = (commits as ChangelogCommit[])
+      .filter((c) => {
         const msg = (c.commit?.message || "").toLowerCase();
         return !msg.startsWith("merge") && !msg.startsWith("wip") && msg.length > 10;
       })
-      .map((c: any) => ({
+      .map((c) => ({
         sha: c.sha.slice(0, 7),
-        date: c.commit.author.date,
+        date: c.commit.author?.date,
         message: clean(c.commit.message),
         category: categorize(c.commit.message.toLowerCase()),
         url: c.html_url,

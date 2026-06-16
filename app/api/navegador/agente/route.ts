@@ -64,9 +64,9 @@ export async function POST(req: Request) {
       status: "ejecutando",
       msg: "La IA esta planeando y navegara en el VNC. Mira el panel Vulcano conduciendo.",
     });
-  } catch (e: any) {
+  } catch (e) {
     return NextResponse.json(
-      { ok: false, error: e?.message ?? "error desconocido" },
+      { ok: false, error: e instanceof Error ? e.message : String(e) },
       { status: 500 },
     );
   }

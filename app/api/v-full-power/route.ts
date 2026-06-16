@@ -1,3 +1,5 @@
+import { currentUser } from "@clerk/nextjs/server";
+import { isOwnerEmail } from "@/lib/auth/owner";
 import { sql } from "@/lib/db/client";
 
 export const runtime = "nodejs";
@@ -10,6 +12,11 @@ export const dynamic = "force-dynamic";
  * V becomes a fully autonomous system with complete domain coverage
  */
 export async function POST() {
+  const user = await currentUser();
+  if (!isOwnerEmail(user?.emailAddresses?.[0]?.emailAddress)) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
+  }
+
   try {
     // Ensure skills table has correct structure
     await sql`

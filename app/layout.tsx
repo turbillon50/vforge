@@ -7,6 +7,7 @@ import { ClerkShell } from "@/components/auth/ClerkShell";
 import { RegisterSW } from "@/components/pwa/RegisterSW";
 import { AppProviders } from "@/i18n/AppProviders";
 import { ThemeBootScript } from "@/components/ThemeBootScript";
+import SplashScreen from "@/components/SplashScreen";
 
 const hanken = Hanken_Grotesk({
   subsets: ["latin"],
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeBootScript />
       </head>
       <body className="font-sans bg-void text-on-surface min-h-dvh scanlines">
+        <SplashScreen />
         <AppProviders>
           <ClerkShell>{children}</ClerkShell>
         </AppProviders>

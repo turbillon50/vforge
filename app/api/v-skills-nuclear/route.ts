@@ -1,3 +1,5 @@
+import { currentUser } from "@clerk/nextjs/server";
+import { isOwnerEmail } from "@/lib/auth/owner";
 import { sql } from "@/lib/db/client";
 
 export const runtime = "nodejs";
@@ -9,6 +11,11 @@ export const dynamic = "force-dynamic";
  * NUCLEAR OPTION: Drop and recreate skills table, then inject all 90 skills cleanly
  */
 export async function POST() {
+  const user = await currentUser();
+  if (!isOwnerEmail(user?.emailAddresses?.[0]?.emailAddress)) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
+  }
+
   try {
     console.log("[skills-nuclear] Starting nuclear skills reset...");
 

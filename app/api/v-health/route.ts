@@ -1,3 +1,5 @@
+import { currentUser } from "@clerk/nextjs/server";
+import { isOwnerEmail } from "@/lib/auth/owner";
 import { sql } from "@/lib/db/client";
 import { ensureDatabaseHealed } from "@/lib/db/client";
 
@@ -11,6 +13,11 @@ export const dynamic = "force-dynamic";
  * Automatically triggers database healing if needed.
  */
 export async function GET() {
+  const user = await currentUser();
+  if (!user || !isOwnerEmail(user.emailAddresses[0]?.emailAddress)) {
+    return new Response(JSON.stringify({ error: "forbidden" }), { status: 403 });
+  }
+
   // Ensure database is healed before checking
   await ensureDatabaseHealed();
 

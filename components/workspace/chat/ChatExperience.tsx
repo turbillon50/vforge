@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { IconActivity, IconArrowUp, IconBranch, IconChat, IconCheck, IconChevD, IconChevL, IconCopy, IconGlobe, IconHistory, IconHome, IconMic, IconPaperclip, IconPlus, IconRefresh, IconRocket, IconShield, IconSparkles, IconStop, IconThumb, IconThumbDown, IconWand, IconX } from "@/components/brand/VFIcons";
+import { IconActivity, IconArrowUp, IconBranch, IconChat, IconCheck, IconChevD, IconChevL, IconCopy, IconGlobe, IconHistory, IconHome, IconMic, IconPaperclip, IconPlus, IconRefresh, IconRocket, IconShield, IconSpeaker, IconSparkles, IconStop, IconThumb, IconThumbDown, IconWand, IconX } from "@/components/brand/VFIcons";
 import Link from "next/link";
 import { useT } from "@/i18n/AppProviders";
 import { VPresence } from "@/components/brand/VPresence";
@@ -90,6 +90,8 @@ type Msg = {
   image?: string;
   /** referencia a una versión del builder: pinta <VersionCard/> */
   versionRef?: { buildId: string; versionId: string; n: number; summary: string };
+  /** trigger "di:" — V responde solo con voz; la burbuja se reproduce sola y oculta el texto */
+  audioOnly?: boolean;
 };
 
 const SCOPE_KEY = "vforge_chat_scope";
@@ -498,6 +500,11 @@ export function ChatExperience() {
       }
       lastSendAtRef.current = Date.now();
 
+      // Trigger de voz: "di: ..." → V responde SOLO con audio, sin texto visible.
+      const voiceMatch = trimmed.match(/^di\s*:\s*([\s\S]+)$/i);
+      const audioOnly = !!voiceMatch;
+      const promptText = voiceMatch ? voiceMatch[1].trim() : trimmed;
+
       const att = attachment;
       const userMsg: Msg = {
         id: `u_${Date.now()}`,
@@ -506,7 +513,7 @@ export function ChatExperience() {
         image: att?.preview ?? undefined,
       };
       const aId = `b_${Date.now()}`;
-      const aMsg: Msg = { id: aId, role: "b", text: "" };
+      const aMsg: Msg = { id: aId, role: "b", text: "", audioOnly };
       setMessages((m) => [...m, userMsg, aMsg]);
       setInput("");
       setAttachment(null);
@@ -554,19 +561,19 @@ export function ChatExperience() {
       // construirla, V primero saca un brief técnico con claude-sonnet-4-6.
       // El brief viaja como marcador [VISION_BRIEF:...] para que V (y el relay)
       // arranquen la construcción desde ahí en vez de adivinar.
-      let outgoingText = trimmed;
-      if (att && att.mediaType.startsWith("image/") && (BUILD_INTENT.test(trimmed) || !trimmed)) {
+      let outgoingText = promptText;
+      if (att && att.mediaType.startsWith("image/") && (BUILD_INTENT.test(promptText) || !promptText)) {
         setMessages((m) =>
           m.map((x) => (x.id === aId ? { ...x, text: "🔍 Analizando el diseño…" } : x)),
         );
         const brief = await fetchVisionBrief(
           att,
-          trimmed,
+          promptText,
           scope === "general" ? null : scope,
           ctrl.signal,
         );
         if (brief) {
-          outgoingText = `[VISION_BRIEF: ${brief}]${trimmed ? `\n\n${trimmed}` : ""}`;
+          outgoingText = `[VISION_BRIEF: ${brief}]${promptText ? `\n\n${promptText}` : ""}`;
         }
         // Limpiamos el placeholder; el stream de V llenará la burbuja.
         setMessages((m) => m.map((x) => (x.id === aId ? { ...x, text: "" } : x)));
@@ -1159,6 +1166,7 @@ export function ChatExperience() {
                     key={m.id}
                     text={smooth.displayed}
                     image={m.image}
+                    audioOnly={m.audioOnly}
                   />
                 ) : (
                   <MessageBubble
@@ -1622,6 +1630,23 @@ function MessageBubble({
   onVersionChangeRequest?: (prefix: string) => void;
 }) {
   const isB = msg.role === "b";
+  if (isB && msg.audioOnly && msg.text) {
+    // Trigger "di:" — V respondió solo con voz: ocultamos el texto y autoplay.
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="group/msg flex w-full min-w-0 items-start gap-3"
+      >
+        <div className="pt-1">
+          <VOrb size={24} />
+        </div>
+        <div className="chat-bubble-forge min-w-0 rounded-2xl rounded-bl-md px-4 py-3">
+          <SpeakButton text={msg.text} autoPlay large />
+        </div>
+      </motion.div>
+    );
+  }
   if (isB) {
     return (
       <motion.div
@@ -1706,7 +1731,27 @@ function MessageBubble({
   );
 }
 
-function StreamingBubble({ text, image }: { text: string; image?: string }) {
+function StreamingBubble({ text, image, audioOnly }: { text: string; image?: string; audioOnly?: boolean }) {
+  if (audioOnly) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex w-full min-w-0 items-start gap-3"
+        style={{ contain: "layout style" }}
+      >
+        <div className="pt-1">
+          <VOrb size={24} />
+        </div>
+        <div className="chat-bubble-forge flex min-w-0 items-center gap-2 rounded-2xl rounded-bl-md px-5 py-4">
+          <IconSpeaker size={16} className="text-cyan-300" />
+          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">
+            {text.length === 0 ? "V está pensando…" : "Preparando voz…"}
+          </span>
+        </div>
+      </motion.div>
+    );
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -1826,6 +1871,140 @@ function sanitizeModelDelta(text: string): string {
   return text;
 }
 
+/**
+ * Hook de voz de V: pide el audio a /api/forge/tts (ElevenLabs), lo cachea
+ * por mensaje y lo reproduce. Toggle: si está sonando, lo detiene.
+ */
+function useVoice(text: string) {
+  const [state, setState] = useState<"idle" | "loading" | "playing" | "error">("idle");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const cacheRef = useRef<string | null>(null);
+
+  const stop = useCallback(() => {
+    const a = audioRef.current;
+    if (a) {
+      a.pause();
+      a.currentTime = 0;
+    }
+    setState("idle");
+  }, []);
+
+  const play = useCallback(async () => {
+    if (state === "playing") {
+      stop();
+      return;
+    }
+    const clean = text.trim();
+    if (!clean) return;
+    try {
+      setState("loading");
+      let url = cacheRef.current;
+      if (!url) {
+        const res = await fetch("/api/forge/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: clean }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = (await res.json()) as { audio: string; mime?: string };
+        url = `data:${data.mime || "audio/mpeg"};base64,${data.audio}`;
+        cacheRef.current = url;
+      }
+      const audio = audioRef.current ?? new Audio();
+      audioRef.current = audio;
+      audio.src = url;
+      audio.onended = () => setState("idle");
+      audio.onerror = () => setState("error");
+      await audio.play();
+      setState("playing");
+    } catch {
+      setState("error");
+    }
+  }, [state, stop, text]);
+
+  useEffect(
+    () => () => {
+      audioRef.current?.pause();
+    },
+    [],
+  );
+
+  return { state, play, stop };
+}
+
+/** Botón de altavoz: anima mientras V habla. autoPlay para el trigger "di:". */
+function SpeakButton({
+  text,
+  autoPlay,
+  large,
+}: {
+  text: string;
+  autoPlay?: boolean;
+  large?: boolean;
+}) {
+  const { state, play } = useVoice(text);
+  const triggered = useRef(false);
+
+  useEffect(() => {
+    if (autoPlay && !triggered.current && text.trim()) {
+      triggered.current = true;
+      void play();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPlay, text]);
+
+  const label =
+    state === "loading" ? "Cargando" : state === "playing" ? "Hablando" : state === "error" ? "Error" : "Escuchar";
+
+  if (large) {
+    return (
+      <button
+        type="button"
+        onClick={() => void play()}
+        aria-label={state === "playing" ? "Detener voz de V" : "Reproducir voz de V"}
+        className="flex items-center gap-2.5 rounded-full border border-cyan-400/30 bg-cyan-500/[0.08] px-3.5 py-2 text-cyan-200 transition hover:border-cyan-400/50 hover:bg-cyan-500/[0.14]"
+      >
+        {state === "loading" ? (
+          <IconActivity size={16} className="animate-pulse text-cyan-300" />
+        ) : (
+          <IconSpeaker size={16} className={state === "playing" ? "animate-pulse text-cyan-300" : "text-cyan-300"} />
+        )}
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em]">
+          {state === "playing" ? "Hablando…" : state === "loading" ? "Cargando…" : "Mensaje de voz"}
+        </span>
+        {state === "playing" && (
+          <span className="flex items-end gap-[2px]" aria-hidden>
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="w-[2px] rounded-full bg-cyan-300"
+                style={{ height: 10, animation: `vfSpeak 0.9s ease-in-out ${i * 0.15}s infinite` }}
+              />
+            ))}
+          </span>
+        )}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void play()}
+      aria-label={state === "playing" ? "Detener voz" : "Escuchar respuesta de V"}
+      title="Escuchar con la voz de V"
+      className="flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1 px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-cyan-400/40 hover:text-cyan-300"
+    >
+      {state === "loading" ? (
+        <IconActivity size={11} className="animate-pulse" />
+      ) : (
+        <IconSpeaker size={11} className={state === "playing" ? "animate-pulse text-cyan-300" : ""} />
+      )}
+      <span>{label}</span>
+    </button>
+  );
+}
+
 function AssistantActions({
   messageId,
   text,
@@ -1872,6 +2051,7 @@ function AssistantActions({
         {copied ? <IconCheck size={11} /> : <IconCopy size={11} />}
         <span>{copied ? "Copiado" : "Copy"}</span>
       </button>
+      <SpeakButton text={text} />
       {onRegenerate && (
         <button
           type="button"

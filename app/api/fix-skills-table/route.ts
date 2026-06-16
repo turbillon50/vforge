@@ -95,7 +95,7 @@ export async function POST() {
         ok: true,
         message: "Skills table completely rebuilt and restored",
         skillCount: count[0]?.n ?? 0,
-        columns: cols.map((c: any) => c.column_name),
+        columns: (cols as { column_name: string }[]).map((c) => c.column_name),
       },
       { status: 200 },
     );

@@ -4,7 +4,27 @@
 import { NextResponse } from "next/server";
 import { queryAll, queryOne } from "@/lib/db/client";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export const maxDuration = 30;
+
+interface ProjectRow {
+  name: string;
+  phase: string;
+  domain: string | null;
+  next_step: string | null;
+  blocked: boolean;
+  updated_at: string;
+}
+
+interface JobRow {
+  id: number;
+  agent: string;
+  source: string;
+  status: string;
+  result_preview: string | null;
+  created_at: string;
+}
 
 async function fetchBrain(path: string, body?: object) {
   const BRAIN = process.env.RELAY_BASE_URL || "http://178.105.135.26";
@@ -30,9 +50,9 @@ export async function GET() {
     episodes,
     recentConvs,
   ] = await Promise.all([
-    queryAll(`SELECT name, phase, domain, next_step, blocked, updated_at 
-              FROM projects WHERE phase IN ('produccion','activo') 
-              ORDER BY updated_at DESC LIMIT 20`).catch(() => []),
+    queryAll<ProjectRow>(`SELECT name, phase, domain, next_step, blocked, updated_at
+              FROM projects WHERE phase IN ('produccion','activo')
+              ORDER BY updated_at DESC LIMIT 20`).catch(() => [] as ProjectRow[]),
     queryOne(`SELECT * FROM v_internal_state ORDER BY id DESC LIMIT 1`).catch(() => null),
     queryAll(`SELECT key, value FROM v_user_memory LIMIT 10`).catch(() => []),
     queryAll(`SELECT suggestion, priority, status, created_at 
@@ -58,7 +78,7 @@ export async function GET() {
       proactive: vProactive,
       episodes,
     },
-    projects: projects.map((p: any) => ({
+    projects: projects.map((p) => ({
       ...p,
       health: p.blocked ? "blocked" : p.phase === "produccion" ? "live" : "building",
     })),
@@ -70,10 +90,10 @@ export async function GET() {
       top_lessons: brainData?.lessons?.slice(0, 5) || [],
     },
     enjambre: {
-      jobs: enjambreData?.rows || [],
-      done: enjambreData?.rows?.filter((j: any) => j.status === "done").length || 0,
-      running: enjambreData?.rows?.filter((j: any) => j.status === "running").length || 0,
-      pending: enjambreData?.rows?.filter((j: any) => j.status === "pending").length || 0,
+      jobs: (enjambreData?.rows ?? []) as JobRow[],
+      done: ((enjambreData?.rows ?? []) as JobRow[]).filter((j) => j.status === "done").length,
+      running: ((enjambreData?.rows ?? []) as JobRow[]).filter((j) => j.status === "running").length,
+      pending: ((enjambreData?.rows ?? []) as JobRow[]).filter((j) => j.status === "pending").length,
     },
     conversations: recentConvs,
   });

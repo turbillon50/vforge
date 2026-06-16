@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 import { IconPaperclip, IconCamera, IconMic, IconX, IconSend } from "@/components/brand/VFIcons";
 import { cn } from "@/lib/utils";
 import {
@@ -46,6 +47,9 @@ function makeId() {
 export function Composer({ onSend, disabled = false }: ComposerProps) {
   const [value, setValue] = useState("");
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
+  const [focused, setFocused] = useState(false);
+  // Bumped on every send so the send button can flash (opacity pulse).
+  const [sendPulse, setSendPulse] = useState(0);
   const [showCamera, setShowCamera] = useState(false);
   const [showVoice, setShowVoice] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
@@ -164,6 +168,7 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
   const handleSubmit = () => {
     if ((!value.trim() && attachments.length === 0) || disabled) return;
     onSend(value.trim(), attachments.length > 0 ? attachments : undefined);
+    setSendPulse((p) => p + 1);
     setValue("");
     // Revoke preview URLs to free memory
     attachments.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl));
@@ -299,20 +304,25 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
           />
         </div>
 
-        {/* Textarea */}
-        <div className="flex-1">
+        {/* Textarea — borde sutil que se ilumina en azul acento al focus */}
+        <div
+          className="flex-1 rounded-md transition-shadow duration-150"
+          style={{ boxShadow: focused ? "0 0 0 1px #2f6bff" : "none" }}
+        >
           <textarea
             ref={textareaRef}
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Dile a V que hacer...  Ctrl/Command + Enter para enviar"
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder="Pregunta algo a V…"
             disabled={disabled}
             rows={1}
             enterKeyHint="enter"
             className={cn(
               "w-full bg-vf-bg-2 border border-vf-border-1 rounded-md",
-              "px-4 py-3 text-sm text-vf-fg placeholder:text-vf-fg-2",
+              "px-4 py-3 text-sm text-vf-fg placeholder:text-[var(--text-secondary)]",
               "focus:outline-none focus:border-vf-border-2",
               "resize-none transition-colors duration-150",
               "min-h-[44px] max-h-[120px]",
@@ -337,22 +347,29 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
           >
             <IconMic className="w-5 h-5" />
           </button>
-          <button
+          <motion.button
+            key={`send-${sendPulse}`}
             type="button"
             onClick={handleSubmit}
             disabled={disabled || (!value.trim() && attachments.length === 0)}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: [1, 0.45, 1] }}
+            transition={{ duration: 0.28 }}
+            whileTap={{ scale: 0.92 }}
             className={cn(
-              "w-10 h-10 flex items-center justify-center rounded-full",
-              "bg-vf-green text-black",
-              "hover:bg-vf-green/90 transition-colors duration-150",
-              "voice-button green-glow-sm",
-              "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-vf-green",
+              "w-10 h-10 flex items-center justify-center rounded-full text-white",
+              "transition-[background,box-shadow] duration-150",
+              "disabled:opacity-40 disabled:cursor-not-allowed",
             )}
+            style={{
+              background: "#2f6bff",
+              boxShadow: "0 0 16px rgba(47,107,255,0.45)",
+            }}
             aria-label="Enviar mensaje"
             title="Enviar (⌘/Ctrl + Enter)"
           >
             <IconSend className="w-5 h-5" />
-          </button>
+          </motion.button>
         </div>
       </div>
 

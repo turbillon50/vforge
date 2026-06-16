@@ -1,3 +1,5 @@
+import { currentUser } from "@clerk/nextjs/server";
+import { isOwnerEmail } from "@/lib/auth/owner";
 import { sql } from "@/lib/db/client";
 
 export const runtime = "nodejs";
@@ -19,6 +21,11 @@ export const dynamic = "force-dynamic";
  * Idempotent - safe for V to call multiple times.
  */
 export async function POST() {
+  const user = await currentUser();
+  if (!isOwnerEmail(user?.emailAddresses?.[0]?.emailAddress)) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
+  }
+
   const results: Record<string, { ok: boolean; error?: string }> = {};
 
   // 1. SKILLS TABLE - skill_list and skill_install depend on this

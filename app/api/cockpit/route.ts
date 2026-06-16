@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { resolveAccess } from "@/lib/connect/resolve-token";
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const T = "pnl_7Qx2Lm9Zt4Vb8RkW3eH";
 const BRAIN = "http://178.105.135.26/brain/panel";

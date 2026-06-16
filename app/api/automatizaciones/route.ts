@@ -10,6 +10,11 @@ const RELAY = process.env.RELAY_BASE_URL ?? "http://178.105.135.26";
 // Sin fallback hardcodeado: si falta, el GET degrada con gracia a su catch.
 const SECRET = process.env.BRAIN_SECRET ?? "";
 
+interface Pm2Proc {
+  name: string;
+  pm2_env?: { status?: string };
+}
+
 export async function GET() {
   const user = await currentUser();
   if (!isOwnerEmail(user?.emailAddresses?.[0]?.emailAddress)) {
@@ -31,7 +36,7 @@ export async function GET() {
     const raw = typeof data?.output === "string" ? data.output : data;
     const procs = typeof raw === "string" ? JSON.parse(raw) : raw;
 
-    const automations = (Array.isArray(procs) ? procs : []).map((p: any) => ({
+    const automations = (Array.isArray(procs) ? procs : []).map((p: Pm2Proc) => ({
       name: p.name,
       type: "daemon",
       status: p.pm2_env?.status || "unknown",

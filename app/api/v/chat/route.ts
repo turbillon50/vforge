@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { voiceBrain, type ChatTurn } from "@/lib/forge/v-voice-brain";
 import { persistVTurn } from "@/lib/v-chat/store";
+import { matchPlugins } from "@/lib/v/plugins/registry";
+import { runMatchedPlugins } from "@/lib/v/plugins/runner";
+import { ensureDatabaseHealed } from "@/lib/db/client";
 
 export const runtime = "nodejs";
 
@@ -43,6 +46,51 @@ export async function POST(req: NextRequest) {
         }).catch(() => {});
       }
       return NextResponse.json({ ok: true, reply, mode: "voice", session_id: session_id || "voice" });
+    }
+
+    // ─── PLUGINS: ¿el mensaje activa alguna capacidad extendida? ─────────────
+    // Antes de molestar al cerebro, vemos si un plugin (registry v_plugins) hace
+    // match con el mensaje. Si lo hay, V ejecuta el/los plugin(s) e incorpora su
+    // respuesta. Best-effort total: cualquier falla cae al flujo normal.
+    try {
+      await ensureDatabaseHealed();
+      const matches = await matchPlugins(message);
+      if (matches.length > 0) {
+        const results = await runMatchedPlugins(matches, {
+          message,
+          sessionId: typeof session_id === "string" ? session_id : undefined,
+        });
+        const reply = results
+          .map(({ result }) => result.reply)
+          .filter((r) => r && r.trim())
+          .join("\n\n");
+
+        if (reply.trim()) {
+          if (persistable) {
+            await persistVTurn({
+              sessionId: session_id,
+              userText: message,
+              assistantText: reply,
+              model: "v-plugin",
+            }).catch(() => {});
+          }
+          return NextResponse.json({
+            ok: true,
+            reply,
+            mode: "plugin",
+            plugins: results.map(({ plugin, result }) => ({
+              slug: plugin.slug,
+              ok: result.ok,
+              data: result.data,
+              error: result.error,
+            })),
+            session_id: session_id || "default",
+          });
+        }
+      }
+    } catch (e) {
+      // Plugin layer caído → seguimos al cerebro normal, no rompemos el chat.
+      console.error("[V plugins] dispatch failed:", e);
     }
 
     // ─── MODO TEXTO (existente): proxy al cerebro de Hetzner ─────────────────

@@ -217,7 +217,7 @@ function TopBar({ hiddenOnMobile, pathname }: { hiddenOnMobile?:boolean; pathnam
   return (
     <header data-chrome className={cn("sticky top-0 z-30 border-b border-[var(--border-1)] bg-[rgb(var(--chrome-bg)/0.85)] backdrop-blur-2xl",hiddenOnMobile&&"hidden md:block")}
       style={{ paddingTop:"env(safe-area-inset-top,0px)" }}>
-      <div className="flex items-center justify-between gap-3 px-4 py-2.5 md:px-6">
+      <div className="flex h-[52px] items-center justify-between gap-3 px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2 text-[var(--fg-secondary)] transition active:scale-95 md:hidden">
           <VMark size={18}/><span className="font-display text-sm font-semibold text-[var(--fg-primary)]">VForge</span>
         </Link>

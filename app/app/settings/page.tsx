@@ -429,13 +429,23 @@ function SecurityPanel() {
   const clerk = useClerk();
   const [passkeyStatus, setPasskeyStatus] = useState<"idle"|"loading"|"done"|"error">("idle");
   const [passkeyMsg, setPasskeyMsg] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const existingPasskeys: { id: string; name?: string }[] = ((user as any)?.passkeys ?? []).map((p: any) => ({ id: p.id, name: p.name }));
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // Clerk no expone `passkeys`/`createPasskey` en el tipo público de UserResource
+  // según la versión, así que estrechamos a una forma mínima y tipada.
+  type PasskeyLike = { id: string; name?: string };
+  type UserWithPasskeys = {
+    passkeys?: PasskeyLike[];
+    createPasskey: () => Promise<unknown>;
+  };
+  const passkeyUser = user as unknown as UserWithPasskeys | null;
+
+  const existingPasskeys: PasskeyLike[] = (passkeyUser?.passkeys ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+  }));
+
   const createPasskeyWithReverify = useReverification(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    () => (user as any)!.createPasskey()
+    () => passkeyUser!.createPasskey()
   );
 
   async function addPasskey() {

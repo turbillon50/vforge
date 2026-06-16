@@ -1,3 +1,5 @@
+import { currentUser } from "@clerk/nextjs/server";
+import { isOwnerEmail } from "@/lib/auth/owner";
 import { sql } from "@/lib/db/client";
 
 export const runtime = "nodejs";
@@ -11,6 +13,11 @@ export const dynamic = "force-dynamic";
  * Idempotent - safe to call multiple times.
  */
 export async function POST() {
+  const user = await currentUser();
+  if (!user || !isOwnerEmail(user.emailAddresses[0]?.emailAddress)) {
+    return new Response(JSON.stringify({ error: "forbidden" }), { status: 403 });
+  }
+
   const steps: Array<{ step: string; status: "ok" | "error"; detail?: string }> = [];
 
   async function run(label: string, fn: () => Promise<unknown>) {
