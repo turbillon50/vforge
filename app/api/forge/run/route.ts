@@ -122,9 +122,16 @@ export async function POST(req: Request) {
     return jsonError("sessionId (string) required", 400);
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return jsonError("ANTHROPIC_API_KEY not configured", 500);
+  // Motor de V: cero ANTHROPIC_API_KEY (doctrina). OpenRouter usa SU propia
+  // key; el relay de Hetzner no necesita ninguna. Solo abortamos si NO hay
+  // ningún motor disponible (ni OpenRouter, ni relay).
+  const apiKey =
+    process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY || "";
+  if (!apiKey && !process.env.HETZNER_SECRET) {
+    return jsonError(
+      "No model engine configured (OPENROUTER_API_KEY o HETZNER_SECRET)",
+      500,
+    );
   }
 
   // Texto del último turno del usuario. Se calcula ANTES de construir el
@@ -735,16 +742,45 @@ async function runViaHetznerRelay(args: {
     });
     if (!upstream.ok) return false;
 
-    const vData = await upstream.json() as { reply?: string; error?: string };
-    if (!vData.reply) return false;
+    const vData = (await upstream.json()) as { reply?: string; error?: string };
+    const reply = vData.reply || "";
+    if (!reply || reply.length < 3) return false;
 
-    // Simular streaming enviando la respuesta completa en chunks pequeños
-    const reply = vData.reply;
+    // Extraer bloques <memory> ANTES de pintar: no se muestran ni viajan al UI.
+    const { cleaned: assistantVisible, memories: newMemories } =
+      extractMemoryBlocks(reply);
+
+    // Simular streaming: chunks pequeños con la clave `value` (lo que lee el FE).
     const chunkSize = 8;
-    for (let i = 0; i < reply.length; i += chunkSize) {
-      send({ type: "text", text: reply.slice(i, i + chunkSize) });
+    for (let i = 0; i < assistantVisible.length; i += chunkSize) {
+      send({ type: "text", value: assistantVisible.slice(i, i + chunkSize) });
     }
-    send({ type: "done" });
+
+    for (const m of newMemories) {
+      await saveUserMemory(memoryUserId, m.key, m.value).catch(() => undefined);
+    }
+
+    try {
+      await sql`
+        INSERT INTO conversations (
+          user_id, session_id, role, content, model, tokens_in, tokens_out, cost_usd
+        )
+        VALUES (
+          ${userId}, ${sessionId}, 'assistant', ${assistantVisible},
+          ${MODEL_LABEL}, 0, 0, NULL
+        )
+      `;
+    } catch (e) {
+      console.error("conversations insert (relay Hetzner) failed:", e);
+    }
+
+    rememberTurn({
+      role: "assistant",
+      content: assistantVisible,
+      sessionId,
+    }).catch(() => undefined);
+
+    send({ type: "done", tokensIn: 0, tokensOut: 0, model: MODEL_LABEL });
     return true;
   } catch (e) {
     console.error("[V] chat-full error:", e);
