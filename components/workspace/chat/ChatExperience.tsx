@@ -1354,6 +1354,29 @@ function Composer({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
+  // Dictado por voz del VOrb desde otra ruta: el orbe deja el texto en
+  // sessionStorage y navega aquí; lo consumimos al montar y enfocamos.
+  // (En el chat el orbe inyecta directo en el textarea[data-chat-input].)
+  useEffect(() => {
+    let raw: string | null = null;
+    try {
+      raw = sessionStorage.getItem("vorb_dictation");
+    } catch {
+      /* noop */
+    }
+    if (raw) {
+      try {
+        sessionStorage.removeItem("vorb_dictation");
+      } catch {
+        /* noop */
+      }
+      setInput(input ? `${input} ${raw}` : raw);
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    }
+    // solo al montar
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // "Cambia esto" de una VersionCard: enfoca el composer con el prefijo
   // ya puesto y el cursor al final.
   useEffect(() => {
@@ -1589,6 +1612,7 @@ function Composer({
 
           <textarea
             ref={textareaRef}
+            data-chat-input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             rows={1}
