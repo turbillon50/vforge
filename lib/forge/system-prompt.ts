@@ -600,7 +600,31 @@ function formatMemorySection(
   ];
   if (recaps.length === 0 && memories.length === 0) {
     blocks.push("(aún no hay recaps ni memorias guardadas)");
-    return blocks.join("\n");
+  
+  // VULCANO BUILD STANDARD
+  blocks.push("");
+  blocks.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  blocks.push("VULCANO PWA STANDARD — REGLAS DE CONSTRUCCION");
+  blocks.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  blocks.push("Cuando construyas apps, estas reglas son ABSOLUTAS:");
+  blocks.push("");
+  blocks.push("1. NO LANDINGS — El home ES la app. Contenido real desde el primer pixel.");
+  blocks.push("2. PALETA TOTAL — fondo #000000, UN color de acento, texto #FFFFFF. CERO colores extra.");
+  blocks.push("3. BOTTOM NAV OBLIGATORIO — 5 items max, activo en acento, 56px altura, portrait siempre.");
+  blocks.push("4. CLERK SOLO DONDE SE NECESITA — rutas publicas sin login: / /tabla /catalogo /menu");
+  blocks.push("5. CERO lucide-react, CERO shadcn/ui — SVG inline propios unicamente.");
+  blocks.push("6. FRAMER MOTION en todo — opacity/y stagger 0.06s whileTap 0.97");
+  blocks.push("7. DESIGN TOKENS en globals.css — --sp-1:8px --sp-2:16px --r-sm:8px --anim-fast:150ms");
+  blocks.push("8. PWA COMPLETO — manifest.json + icon-192.png + icon-512.png con logo real (>1KB)");
+  blocks.push("9. ADMIN = SIDEBAR desktop 240px + bottom nav mobile");
+  blocks.push("10. IMAGENES HIGGSFIELD en CDN antes del primer build");
+  blocks.push("");
+  blocks.push("ANTES DE DECIR DONE: correr pwa_checker via hetzner_exec:");
+  blocks.push("python3 /home/brain-files/pwa_checker.py <url> /root/<repo>");
+  blocks.push("Si RECHAZADO: corregir y volver a correr. Solo DONE cuando APROBADO 10/10.");
+  blocks.push("");
+
+  return blocks.join("\n");
   }
   if (memories.length > 0) {
     blocks.push("Memorias explícitas (lo que Luis pidió que recordaras o tú decidiste guardar con memory_save):");
@@ -619,6 +643,30 @@ function formatMemorySection(
         .join("\n\n"),
     );
   }
+
+  // VULCANO BUILD STANDARD
+  blocks.push("");
+  blocks.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  blocks.push("VULCANO PWA STANDARD — REGLAS DE CONSTRUCCION");
+  blocks.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  blocks.push("Cuando construyas apps, estas reglas son ABSOLUTAS:");
+  blocks.push("");
+  blocks.push("1. NO LANDINGS — El home ES la app. Contenido real desde el primer pixel.");
+  blocks.push("2. PALETA TOTAL — fondo #000000, UN color de acento, texto #FFFFFF. CERO colores extra.");
+  blocks.push("3. BOTTOM NAV OBLIGATORIO — 5 items max, activo en acento, 56px altura, portrait siempre.");
+  blocks.push("4. CLERK SOLO DONDE SE NECESITA — rutas publicas sin login: / /tabla /catalogo /menu");
+  blocks.push("5. CERO lucide-react, CERO shadcn/ui — SVG inline propios unicamente.");
+  blocks.push("6. FRAMER MOTION en todo — opacity/y stagger 0.06s whileTap 0.97");
+  blocks.push("7. DESIGN TOKENS en globals.css — --sp-1:8px --sp-2:16px --r-sm:8px --anim-fast:150ms");
+  blocks.push("8. PWA COMPLETO — manifest.json + icon-192.png + icon-512.png con logo real (>1KB)");
+  blocks.push("9. ADMIN = SIDEBAR desktop 240px + bottom nav mobile");
+  blocks.push("10. IMAGENES HIGGSFIELD en CDN antes del primer build");
+  blocks.push("");
+  blocks.push("ANTES DE DECIR DONE: correr pwa_checker via hetzner_exec:");
+  blocks.push("python3 /home/brain-files/pwa_checker.py <url> /root/<repo>");
+  blocks.push("Si RECHAZADO: corregir y volver a correr. Solo DONE cuando APROBADO 10/10.");
+  blocks.push("");
+
   return blocks.join("\n");
 }
 
@@ -695,6 +743,30 @@ function formatDirectives(directives: AgentDirective[]): string {
     });
   }
   
+
+  // VULCANO BUILD STANDARD
+  blocks.push("");
+  blocks.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  blocks.push("VULCANO PWA STANDARD — REGLAS DE CONSTRUCCION");
+  blocks.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  blocks.push("Cuando construyas apps, estas reglas son ABSOLUTAS:");
+  blocks.push("");
+  blocks.push("1. NO LANDINGS — El home ES la app. Contenido real desde el primer pixel.");
+  blocks.push("2. PALETA TOTAL — fondo #000000, UN color de acento, texto #FFFFFF. CERO colores extra.");
+  blocks.push("3. BOTTOM NAV OBLIGATORIO — 5 items max, activo en acento, 56px altura, portrait siempre.");
+  blocks.push("4. CLERK SOLO DONDE SE NECESITA — rutas publicas sin login: / /tabla /catalogo /menu");
+  blocks.push("5. CERO lucide-react, CERO shadcn/ui — SVG inline propios unicamente.");
+  blocks.push("6. FRAMER MOTION en todo — opacity/y stagger 0.06s whileTap 0.97");
+  blocks.push("7. DESIGN TOKENS en globals.css — --sp-1:8px --sp-2:16px --r-sm:8px --anim-fast:150ms");
+  blocks.push("8. PWA COMPLETO — manifest.json + icon-192.png + icon-512.png con logo real (>1KB)");
+  blocks.push("9. ADMIN = SIDEBAR desktop 240px + bottom nav mobile");
+  blocks.push("10. IMAGENES HIGGSFIELD en CDN antes del primer build");
+  blocks.push("");
+  blocks.push("ANTES DE DECIR DONE: correr pwa_checker via hetzner_exec:");
+  blocks.push("python3 /home/brain-files/pwa_checker.py <url> /root/<repo>");
+  blocks.push("Si RECHAZADO: corregir y volver a correr. Solo DONE cuando APROBADO 10/10.");
+  blocks.push("");
+
   return blocks.join("\n");
 }
 
@@ -828,6 +900,30 @@ function formatSkillCatalog(
     const mark = skill.id === activeId ? "▶" : "•";
     blocks.push(`${mark} ${skill.name} — ${skill.description || "(sin descripción)"}`);
   });
+
+
+  // VULCANO BUILD STANDARD
+  blocks.push("");
+  blocks.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  blocks.push("VULCANO PWA STANDARD — REGLAS DE CONSTRUCCION");
+  blocks.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  blocks.push("Cuando construyas apps, estas reglas son ABSOLUTAS:");
+  blocks.push("");
+  blocks.push("1. NO LANDINGS — El home ES la app. Contenido real desde el primer pixel.");
+  blocks.push("2. PALETA TOTAL — fondo #000000, UN color de acento, texto #FFFFFF. CERO colores extra.");
+  blocks.push("3. BOTTOM NAV OBLIGATORIO — 5 items max, activo en acento, 56px altura, portrait siempre.");
+  blocks.push("4. CLERK SOLO DONDE SE NECESITA — rutas publicas sin login: / /tabla /catalogo /menu");
+  blocks.push("5. CERO lucide-react, CERO shadcn/ui — SVG inline propios unicamente.");
+  blocks.push("6. FRAMER MOTION en todo — opacity/y stagger 0.06s whileTap 0.97");
+  blocks.push("7. DESIGN TOKENS en globals.css — --sp-1:8px --sp-2:16px --r-sm:8px --anim-fast:150ms");
+  blocks.push("8. PWA COMPLETO — manifest.json + icon-192.png + icon-512.png con logo real (>1KB)");
+  blocks.push("9. ADMIN = SIDEBAR desktop 240px + bottom nav mobile");
+  blocks.push("10. IMAGENES HIGGSFIELD en CDN antes del primer build");
+  blocks.push("");
+  blocks.push("ANTES DE DECIR DONE: correr pwa_checker via hetzner_exec:");
+  blocks.push("python3 /home/brain-files/pwa_checker.py <url> /root/<repo>");
+  blocks.push("Si RECHAZADO: corregir y volver a correr. Solo DONE cuando APROBADO 10/10.");
+  blocks.push("");
 
   return blocks.join("\n");
 }

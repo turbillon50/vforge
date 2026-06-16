@@ -743,6 +743,16 @@ required: ["repo", "sha"],
 
   // ─── Model routing + cost observability (M3.5) ────────────────────
   {
+  {
+    name: "hetzner_exec",
+    description: "Ejecuta comando bash en Hetzner via relay. Usar para: pwa_checker, git, tsc. SIEMPRE correr pwa_checker antes de DONE.",
+    input_schema: {
+      type: "object",
+      properties: { cmd: { type: "string" } },
+      required: ["cmd"],
+    },
+  },
+  {
     name: "model_recommend",
     description:
       "Pregunta al router qué modelo usar para una tarea. Devuelve { primary, cascade, reason }. Úsala antes de invocar openrouter_query para tareas side cuando quieras elegir modelo barato/balanceado consciente. Task kinds: 'chat-main', 'reasoning', 'code-edit', 'classification', 'summarization', 'extraction'. costPreference: 'cheapest' | 'balanced' | 'premium' | 'free-only' (default 'balanced').",
@@ -3934,6 +3944,17 @@ async function dispatch(
         content: JSON.stringify({ ok: true, items, progress: { done, total: items.length } }),
         summary: `${serviceId} -> ${status}`,
       };
+    }
+
+    case "hetzner_exec": {
+      const hcmd = requireString(input.cmd, "cmd");
+      const hb64 = Buffer.from(hcmd).toString("base64");
+      const hr = await fetch("http://178.105.135.26/brain/exec", {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({secret:"superclaude2025", cmd:"echo " + hb64 + " | base64 -d | bash"}),
+      });
+      const hd = await hr.json() as {code:number;stdout:string;stderr:string};
+      return { ok: hd.code===0, content: JSON.stringify({code:hd.code,out:hd.stdout?.slice(0,3000),err:hd.stderr?.slice(0,300)}), summary: hd.code===0?"hetzner OK":"ERR:"+hd.stderr?.slice(0,80) };
     }
 
     default:
