@@ -57,8 +57,8 @@ export function HomeExperience({ name }: { name: string }) {
             width: 800,
             height: 800,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(88,28,235,0.16) 0%, transparent 70%)",
-            filter: "blur(40px)",
+            background: "radial-gradient(circle, rgba(88,28,235,0.12) 0%, transparent 70%)",
+            filter: "blur(48px)",
           }}
         />
         <div
@@ -69,14 +69,14 @@ export function HomeExperience({ name }: { name: string }) {
             width: 600,
             height: 600,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(34,211,238,0.10) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(34,211,238,0.06) 0%, transparent 70%)",
             filter: "blur(40px)",
           }}
         />
       </div>
 
       {/* HERO — centrado, jerarquía fuerte */}
-      <div className="relative z-10 mx-auto flex max-w-[640px] flex-col items-center text-center">
+      <div className="relative z-10 mx-auto flex max-w-[640px] flex-col items-start text-left md:items-center md:text-center">
         {/* Saludo */}
         <motion.p
           initial={{ opacity: 0, y: 8 }}
@@ -94,8 +94,8 @@ export function HomeExperience({ name }: { name: string }) {
           transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           className="font-display"
           style={{
-            marginTop: 10,
-            fontSize: "clamp(3rem, 8vw, 5.5rem)",
+            marginTop: 8,
+            fontSize: "clamp(2.6rem, 7vw, 4.5rem)",
             fontWeight: 700,
             letterSpacing: "-0.04em",
             lineHeight: 0.95,
@@ -121,7 +121,8 @@ export function HomeExperience({ name }: { name: string }) {
           initial={{ opacity: 0, scale: 0.7 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.0, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          style={{ position: "relative", marginTop: 56 }}
+          className="self-center"
+          style={{ position: "relative", marginTop: 48 }}
         >
           {/* Glow principal violeta — pulsa */}
           <motion.div
@@ -165,7 +166,8 @@ export function HomeExperience({ name }: { name: string }) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
-          style={{ marginTop: 40 }}
+          className="self-center"
+          style={{ marginTop: 36 }}
         >
           <Link href="/app/chat" data-vorb-avoid>
             <motion.span
@@ -175,7 +177,8 @@ export function HomeExperience({ name }: { name: string }) {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
-                padding: "14px 32px",
+                width: "auto",
+                padding: "14px 40px",
                 borderRadius: 999,
                 background: "linear-gradient(135deg,#7c3aed,#22d3ee)",
                 color: "#fff",

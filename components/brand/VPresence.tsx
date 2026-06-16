@@ -75,16 +75,16 @@ export function VPresence({
           animation: cfg.spin ? `vpresSpin ${cfg.spin}s linear infinite` : undefined,
         }}
       />
-      {/* separación */}
+      {/* separación — apenas una hairline entre anillo y núcleo */}
       <span
         className="absolute rounded-full"
-        style={{ inset: Math.max(1.5, size * 0.045), background: "var(--color-void)" }}
+        style={{ inset: Math.max(1, size * 0.018), background: "var(--color-void)" }}
       />
-      {/* núcleo */}
+      {/* núcleo — domina el orbe: bola de luz, no aro */}
       <span
         className="absolute rounded-full"
         style={{
-          inset: Math.max(3, size * 0.09),
+          inset: Math.max(2, size * 0.05),
           background:
             "radial-gradient(circle at 32% 28%, #c4b5fd, #8b5cf6 45%, #4f46e5 80%, #22d3ee 130%)",
           animation: animate ? `vpresCore ${cfg.pulse}s ease-in-out infinite` : undefined,
@@ -94,7 +94,7 @@ export function VPresence({
       <span
         className="absolute rounded-full"
         style={{
-          inset: Math.max(3, size * 0.09),
+          inset: Math.max(2, size * 0.05),
           background:
             "radial-gradient(ellipse 70% 40% at 50% 18%, rgba(255,255,255,0.5), transparent 60%)",
         }}
