@@ -254,6 +254,10 @@ export function ChatExperience() {
   const [composerFocusTick, setComposerFocusTick] = useState(0);
   const [pending, setPending] = useState(false);
   const [isHydrating, setIsHydrating] = useState(true);
+  // `ready` controla el fade-in del scroller: arranca false al hidratar/cambiar
+  // de sesión y se pone true SOLO tras el primer scroll al fondo, así nunca se
+  // ve el contenido "arriba" antes de saltar al último mensaje (sensación iMessage).
+  const [ready, setReady] = useState(false);
   const [scope, setScope] = useState<string>("general");
   const [projects, setProjects] = useState<Project[]>([]);
   const [scopeMenuOpen, setScopeMenuOpen] = useState(false);
@@ -364,8 +368,12 @@ export function ChatExperience() {
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
+    const toBottom = () => el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+    // `ready=true` SIEMPRE (idempotente): revela el scroller tras el primer
+    // ajuste de scroll. Fallback duro a 600ms para no dejar el chat invisible.
+    const reveal = () => setReady(true);
     // Tras hidratar una conversación: restaurar la posición donde la dejó el
-    // usuario (una sola vez), en vez de pegarnos al fondo.
+    // usuario (una sola vez), o pegarnos al último mensaje.
     if (restorePendingRef.current) {
       restorePendingRef.current = false;
       const key = scrollKeyRef.current;
@@ -381,18 +389,36 @@ export function ChatExperience() {
       }
       if (saved != null) {
         // Había una posición guardada (no estaba al fondo): restaurarla.
+        // Mismo patrón escalonado para que sobreviva al layout tardío.
         stickToBottomRef.current = false;
-        const restore = () => el.scrollTo({ top: saved, behavior: "auto" });
-        requestAnimationFrame(() => { restore(); requestAnimationFrame(restore); });
+        const restore = () => el.scrollTo({ top: saved!, behavior: "auto" });
+        restore();
+        requestAnimationFrame(() => { restore(); requestAnimationFrame(() => { restore(); reveal(); }); });
+        [60, 160, 320, 550].forEach((ms) => setTimeout(restore, ms));
+        setTimeout(reveal, 600);
         return;
       }
-      // Sin posición guardada: estaba al fondo, seguimos pegados.
+      // Sin posición guardada: estaba al fondo. Forzamos el fondo en varios
+      // frames + timeouts porque el contenido (markdown, fuentes) cambia de
+      // altura tras montar y un doble rAF no basta para asentar el layout.
       stickToBottomRef.current = true;
+      toBottom();
+      requestAnimationFrame(() => { toBottom(); requestAnimationFrame(() => { toBottom(); reveal(); }); });
+      [60, 160, 320, 550].forEach((ms) => setTimeout(toBottom, ms));
+      setTimeout(reveal, 600);
+      return;
     }
     if (!stickToBottomRef.current) return;
-    const toBottom = () => el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
     requestAnimationFrame(() => { toBottom(); requestAnimationFrame(toBottom); });
   }, [messages, smooth.displayed]);
+
+  // Red de seguridad: si por cualquier ruta (fetch falla, sin mensajes nuevos)
+  // `ready` se quedó en false, lo forzamos a true para no dejar el chat oculto.
+  useEffect(() => {
+    if (ready) return;
+    const id = setTimeout(() => setReady(true), 700);
+    return () => clearTimeout(id);
+  }, [ready]);
 
   // Load projects + initial scope
   useEffect(() => {
@@ -481,6 +507,7 @@ export function ChatExperience() {
         // (último mensaje) o restaurará la posición guardada.
         scrollKeyRef.current = `vf_scroll_${sid}`;
         restorePendingRef.current = true;
+        setReady(false);
         setMessages(
           hydrated.length > 0
             ? hydrated
@@ -831,6 +858,11 @@ export function ChatExperience() {
       setSessionsOpen(false);
       setIsHydrating(true);
       sessionIdRef.current = sid;
+      // Mismo patrón que init(): clave de scroll + restauración pendiente +
+      // fade-in, para que al cambiar de hilo también caiga al último mensaje.
+      scrollKeyRef.current = `vf_scroll_${sid}`;
+      restorePendingRef.current = true;
+      setReady(false);
       try {
         const res = await fetch(
           `/api/forge/conversations?sessionId=${encodeURIComponent(sid)}&limit=100`,
@@ -1146,6 +1178,7 @@ export function ChatExperience() {
       <div
         ref={scrollerRef}
         className="chat-scroll flex min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+        style={{ opacity: ready ? 1 : 0, transition: "opacity 0.2s ease-out" }}
       >
         <div
           className={`mx-auto flex min-h-full w-full max-w-3xl flex-col overflow-x-hidden px-3 py-4 md:px-8 md:py-6 ${
