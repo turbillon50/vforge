@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { IconActivity, IconExtLink, IconBoxes, IconBranch, IconKey, IconMap, IconChats, IconUsers, IconWorkflow } from "@/components/brand/VFIcons";
+import { IconActivity, IconBoxes, IconBranch, IconKey, IconMap, IconUsers, IconWorkflow } from "@/components/brand/VFIcons";
 import { VPresence } from "@/components/brand/VPresence";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 
@@ -45,60 +45,156 @@ export function HomeExperience({ name }: { name: string }) {
   }, []);
 
   return (
-    <main className="home-aurora grain mx-auto w-full max-w-5xl px-5 pb-28 pt-10 md:px-8 md:pt-16">
-      {/* Saludo — tipografía gigante, limpia, sin cajas */}
-      <motion.header
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <p className="text-base text-on-surface-variant md:text-lg">
+    <main className="grain relative mx-auto w-full max-w-5xl overflow-hidden px-5 pb-28 pt-10 md:px-8 md:pt-16" style={{ background: "var(--void, #03020a)" }}>
+      {/* Fondos de profundidad — gradientes difusos */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div
+          style={{
+            position: "absolute",
+            top: "-12%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 800,
+            height: 800,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(88,28,235,0.16) 0%, transparent 70%)",
+            filter: "blur(40px)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: "8%",
+            right: "-12%",
+            width: 600,
+            height: 600,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(34,211,238,0.10) 0%, transparent 70%)",
+            filter: "blur(40px)",
+          }}
+        />
+      </div>
+
+      {/* HERO — centrado, jerarquía fuerte */}
+      <div className="relative z-10 mx-auto flex max-w-[640px] flex-col items-center text-center">
+        {/* Saludo */}
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-sm text-on-surface-variant md:text-base"
+        >
           {greeting()}, {name}.
-        </p>
-        <h1 className="mt-1 font-display text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.03em] text-on-surface md:text-7xl">
+        </motion.p>
+
+        {/* H1 dramático */}
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          className="font-display"
+          style={{
+            marginTop: 10,
+            fontSize: "clamp(3rem, 8vw, 5.5rem)",
+            fontWeight: 700,
+            letterSpacing: "-0.04em",
+            lineHeight: 0.95,
+            color: "#f0f4ff",
+          }}
+        >
           Tu fábrica está
-          <br />
-          <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
+          <span
+            style={{
+              display: "block",
+              background: "linear-gradient(135deg,#a78bfa,#22d3ee)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
             despierta.
           </span>
-        </h1>
-      </motion.header>
+        </motion.h1>
 
-      {/* V — el centro de la casa */}
-      <motion.section
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.15, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="mt-10 md:mt-14"
-      >
-        <Link href="/app/chat"
-          data-vorb-avoid
-          className="surface-deep group relative block overflow-hidden rounded-3xl border border-app bg-gradient-to-b from-violet-500/[0.07] via-[var(--color-surface)] to-[var(--color-surface)] px-6 py-10 backdrop-blur-xl transition duration-300 hover:border-violet-400/30 hover:shadow-glow-violet active:scale-[0.99] md:px-12 md:py-14"
+        {/* Esfera V — protagonista absoluta */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.0, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          style={{ position: "relative", marginTop: 56 }}
         >
+          {/* Glow principal violeta — pulsa */}
+          <motion.div
+            aria-hidden
+            animate={{ scale: [1, 1.08, 1] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            style={{
+              position: "absolute",
+              inset: -110,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(139,92,246,0.35) 0%, transparent 70%)",
+              filter: "blur(40px)",
+              zIndex: 0,
+            }}
+          />
+          {/* Glow secundario cyan, offset abajo-derecha */}
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-violet-500/25 blur-[110px] transition group-hover:bg-violet-500/35"
+            style={{
+              position: "absolute",
+              inset: -40,
+              transform: "translate(60px, 60px)",
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(34,211,238,0.15) 0%, transparent 70%)",
+              filter: "blur(40px)",
+              zIndex: 0,
+            }}
           />
-          <div className="relative flex flex-col items-center text-center">
-            <VPresence size={104} />
-            <h2 className="mt-6 font-display text-2xl font-semibold tracking-tight text-on-surface md:text-3xl">
-              Habla con V
-            </h2>
-            <p className="mt-2 max-w-md text-balance text-sm leading-relaxed text-on-surface-variant md:text-base">
-              Tu copiloto conoce tus repos, tus deploys y tu memoria.
-              Pídele lo que necesites — ella se encarga.
-            </p>
-            <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-cyan-500 px-6 py-2.5 text-sm font-medium text-white shadow-glow-violet transition group-hover:scale-[1.03]">
-              Abrir conversación <IconExtLink size={15} />
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <span className="block md:hidden">
+              <VPresence size={180} />
+            </span>
+            <span className="hidden md:block">
+              <VPresence size={220} />
             </span>
           </div>
-        </Link>
-      </motion.section>
+        </motion.div>
+
+        {/* Botón — flotando bajo la esfera */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          style={{ marginTop: 40 }}
+        >
+          <Link href="/app/chat" data-vorb-avoid>
+            <motion.span
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "14px 32px",
+                borderRadius: 999,
+                background: "linear-gradient(135deg,#7c3aed,#22d3ee)",
+                color: "#fff",
+                fontWeight: 600,
+                fontSize: 16,
+                cursor: "pointer",
+                boxShadow: "0 0 40px rgba(139,92,246,0.4)",
+              }}
+            >
+              Hablar con V
+            </motion.span>
+          </Link>
+        </motion.div>
+      </div>
 
       {/* Accesos — fila deslizable estilo Apple TV */}
-      <section className="mt-12 md:mt-16">
+      <section className="relative z-10 mt-16 md:mt-20">
         <h3 className="font-display text-xl font-semibold tracking-[-0.02em] text-on-surface md:text-2xl">
-          Explora
+          La fábrica
         </h3>
         <div className="no-scrollbar -mx-5 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 md:-mx-8 md:px-8">
           {SHORTCUTS.map((s, i) => (
@@ -127,7 +223,7 @@ export function HomeExperience({ name }: { name: string }) {
 
       {/* Proyectos: skeleton mientras carga — nunca pantalla en blanco */}
       {loadingProjects && (
-        <section className="mt-10 md:mt-14">
+        <section className="relative z-10 mt-10 md:mt-14">
           <h3 className="font-display text-xl font-semibold tracking-[-0.02em] text-on-surface md:text-2xl">
             Tus proyectos
           </h3>
@@ -141,7 +237,7 @@ export function HomeExperience({ name }: { name: string }) {
 
       {/* Proyectos — fila deslizable */}
       {!loadingProjects && projects.length > 0 && (
-        <section className="mt-10 md:mt-14">
+        <section className="relative z-10 mt-10 md:mt-14">
           <div className="flex items-baseline justify-between">
             <h3 className="font-display text-xl font-semibold tracking-[-0.02em] text-on-surface md:text-2xl">
               Tus proyectos
