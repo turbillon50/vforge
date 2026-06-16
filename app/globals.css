@@ -1285,16 +1285,18 @@ body:not([data-theme="light"]) .hud-scanlines::after {
    el fondo de la burbuja también reaccione al tema.
    ═══════════════════════════════════════════ */
 .chat-bubble-forge {
-  background: var(--color-surface-elev);            /* #1c1930 en dark */
-  border: 1px solid rgb(var(--color-border-strong));
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+  background: transparent;                          /* estilo Grok — texto directo sobre negro, sin card */
+  border: none;
+  box-shadow: none;
   color: var(--color-on-surface);
+  padding-left: 0;
+  padding-right: 0;
 }
 [data-theme="light"] .chat-bubble-forge {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  color: #0f0e1a;
+  background: transparent;                          /* chat siempre negro estilo Grok */
+  border: none;
+  box-shadow: none;
+  color: var(--color-on-surface);
 }
 
 /* Burbuja del usuario (gradiente violet→cyan, texto blanco):

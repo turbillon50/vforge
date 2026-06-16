@@ -863,7 +863,7 @@ export function ChatExperience() {
   }));
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 flex-col" style={{ background: "#000000" }}>
       <div
         className="sticky top-0 z-40 flex-shrink-0 border-b border-app bg-void/70 backdrop-blur-xl"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
@@ -1509,7 +1509,17 @@ function Composer({
           if (!pending) onSend();
         }}
         data-vorb-avoid
-        className="group/composer relative overflow-hidden rounded-2xl border border-app bg-surface/70 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_12px_40px_rgba(0,0,0,0.25)] backdrop-blur-2xl transition-all duration-300 focus-within:border-violet-400/40 focus-within:shadow-[0_1px_0_rgba(255,255,255,0.08)_inset,0_0_0_1px_rgba(139,92,246,0.25),0_12px_44px_rgba(139,92,246,0.18)]"
+        className="group/composer relative overflow-hidden rounded-2xl transition-all duration-300"
+        style={{
+          background: "#0a0a0a",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
+        onFocusCapture={(e) => {
+          e.currentTarget.style.borderColor = "rgba(124,58,237,0.45)";
+        }}
+        onBlurCapture={(e) => {
+          e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+        }}
       >
         <div className="flex items-end gap-1.5 px-2 py-2 sm:gap-2">
           <div className="flex items-center gap-0.5 pb-0.5 text-on-surface-variant sm:gap-1">
@@ -1604,12 +1614,12 @@ function Composer({
               type="submit"
               disabled={!input.trim() && !attachment}
               aria-label={sendLabel}
-              className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-white transition-all duration-200 active:scale-90 disabled:cursor-not-allowed disabled:opacity-35 disabled:saturate-50 ${
+              className={`flex h-10 w-10 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-90 disabled:cursor-not-allowed disabled:opacity-35 disabled:saturate-50 ${
                 input.trim() || attachment
-                  ? "scale-100 shadow-[0_4px_18px_rgba(139,92,246,0.55)] hover:shadow-[0_4px_24px_rgba(139,92,246,0.75)]"
+                  ? "scale-100 shadow-[0_4px_18px_rgba(124,58,237,0.45)] hover:shadow-[0_4px_24px_rgba(124,58,237,0.6)]"
                   : "scale-95"
               }`}
-              style={{ touchAction: "manipulation" }}
+              style={{ touchAction: "manipulation", background: "linear-gradient(135deg, #7c3aed, #8b5cf6)" }}
             >
               <IconArrowUp size={17} strokeWidth={2.5} />
             </button>
@@ -1709,7 +1719,10 @@ function MessageBubble({
       animate={{ opacity: 1, y: 0 }}
       className="flex w-full min-w-0 justify-end"
     >
-      <div className="chat-bubble-user max-w-[82%] min-w-0 rounded-2xl rounded-br-md bg-gradient-to-br from-violet-500 to-cyan-500 px-4 py-2.5 font-sans text-[15px] font-normal leading-[1.55] text-white shadow-glow-violet sm:text-[16px]">
+      <div
+        className="chat-bubble-user max-w-[82%] min-w-0 rounded-2xl rounded-br-md px-4 py-2.5 font-sans text-[15px] font-normal leading-[1.55] text-white sm:text-[16px]"
+        style={{ background: "#1c1c1f", border: "1px solid rgba(255,255,255,0.06)" }}
+      >
         {msg.image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img

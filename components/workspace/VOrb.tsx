@@ -134,6 +134,9 @@ export function VOrb() {
   if (pathname === "/app" || HIDE_ON.some((p) => pathname?.startsWith(p))) return null;
   if (pos.x < 0) return null;
   const onLeft = pos.x + 28 < (typeof window !== "undefined" ? window.innerWidth / 2 : 200);
+  // Solo en el chat la esfera se encoge al scrollear/leer; en otras rutas se mantiene.
+  const inChat = pathname?.startsWith("/app/chat") ?? false;
+  const shrink = inChat && scrolling && !open;
 
   const go = (href: string) => { setOpen(false); router.push(href); };
 
@@ -220,8 +223,10 @@ export function VOrb() {
           aria-label="V"
           style={{
             touchAction: "none",
-            transform: scrolling && !open ? "scale(0.62)" : open ? "scale(1.08)" : "scale(1)",
-            opacity: scrolling && !open ? 0.7 : 1,
+            // En el chat: al scrollear/leer o mientras V responde, la esfera se aparta discreta (40%).
+            // En otras rutas: comportamiento normal, no se encoge.
+            transform: shrink ? "scale(0.4)" : open ? "scale(1.08)" : "scale(1)",
+            opacity: shrink ? 0.4 : 1,
             transition: "transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease",
           }}
           className={"vorb-crystal relative h-14 w-14 cursor-grab rounded-full active:scale-95 " + (open ? "vorb-open" : "")}
