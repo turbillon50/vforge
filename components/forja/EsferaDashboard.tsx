@@ -140,7 +140,7 @@ export function EsferaDashboard() {
   const savings = data?.savings;
 
   return (
-    <div className="relative z-10 mx-auto w-full max-w-3xl px-5 py-8 md:py-12">
+    <div className="relative z-10 mx-auto w-full max-w-5xl px-5 py-8 md:py-12">
       {/* Encabezado */}
       <div className="mb-7 flex items-start justify-between gap-4">
         <div className="min-w-0">
@@ -172,42 +172,56 @@ export function EsferaDashboard() {
         </button>
       </div>
 
-      {/* Esfera sin forjar → CTA al wizard */}
+      {/* Esfera sin forjar → CTA al wizard (estado vacío usa todo el ancho) */}
       {!anyConnected ? (
-        <EmptyState onForge={() => router.push("/forja")} />
+        <div className="grid gap-6 lg:grid-cols-5 lg:items-start">
+          <div className="lg:col-span-3">
+            <EmptyState onForge={() => router.push("/forja")} />
+          </div>
+          <section className="lg:col-span-2">
+            <h2
+              className="mb-3 font-mono text-[10px] uppercase tracking-widest"
+              style={{ color: "#5a6480" }}
+            >
+              Brain — Fábrica en Vivo
+            </h2>
+            <BrainLivePanel />
+          </section>
+        </div>
       ) : (
         <>
           {/* Métrica estrella: Ahorro vs infra tradicional */}
           <SavingsCard savings={savings} liveCount={liveCount} />
 
-          {/* Estado por conexión */}
-          <section className="mt-6">
-            <SectionTitle>Conexiones</SectionTitle>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {connections.map((c, i) => (
-                <ConnectionCard key={c.service} conn={c} index={i} />
-              ))}
-            </div>
-          </section>
+          {/* Estado por conexión + actividad — 2 columnas en desktop */}
+          <div className="mt-6 grid gap-6 lg:grid-cols-2 lg:items-start">
+            <section>
+              <SectionTitle>Conexiones</SectionTitle>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-2">
+                {connections.map((c, i) => (
+                  <ConnectionCard key={c.service} conn={c} index={i} />
+                ))}
+              </div>
+            </section>
 
-          {/* Actividad reciente */}
-          <section className="mt-6">
-            <SectionTitle>Actividad</SectionTitle>
-            <EventsList events={data?.events ?? []} />
+            <section>
+              <SectionTitle>Actividad</SectionTitle>
+              <EventsList events={data?.events ?? []} />
+            </section>
+          </div>
+
+          {/* Brain — Fábrica en Vivo */}
+          <section className="mt-8">
+            <h2
+              className="mb-3 font-mono text-[10px] uppercase tracking-widest"
+              style={{ color: "#5a6480" }}
+            >
+              Brain — Fábrica en Vivo
+            </h2>
+            <BrainLivePanel />
           </section>
         </>
       )}
-
-      {/* Brain — Fábrica en Vivo */}
-      <section className="mt-8">
-        <h2
-          className="mb-3 font-mono text-[10px] uppercase tracking-widest"
-          style={{ color: "#5a6480" }}
-        >
-          Brain — Fábrica en Vivo
-        </h2>
-        <BrainLivePanel />
-      </section>
     </div>
   );
 }
