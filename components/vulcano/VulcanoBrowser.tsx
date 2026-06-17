@@ -37,6 +37,7 @@ export function VulcanoBrowser() {
   const [showProfiles, setShowProfiles] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   // ── Barra de control: Luis le dicta a la IA a dónde navegar ──
   const [cmdUrl, setCmdUrl] = useState("");
   const [sending, setSending] = useState(false);
@@ -315,6 +316,17 @@ export function VulcanoBrowser() {
         </motion.div>
 
         {/* Refrescar VNC */}
+
+        <button onClick={() => setFullscreen(v => !v)}
+          title={fullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+          style={{ display:"flex", alignItems:"center", justifyContent:"center",
+            width:32, height:32, borderRadius:9, cursor:"pointer", flexShrink:0,
+            background: fullscreen ? "rgba(34,211,238,0.15)" : "var(--color-surface-low)",
+            color: fullscreen ? "#22d3ee" : "var(--color-on-surface-variant)",
+            border: fullscreen ? "1px solid rgba(34,211,238,0.4)" : "1px solid rgba(127,127,170,0.18)",
+            fontSize:16 }}>
+          {fullscreen ? "⊠" : "⛶"}
+        </button>
         <button onClick={() => { setIframeLoaded(false); setIframeKey(k => k+1); }}
           title="Reconectar"
           style={{ display:"flex", alignItems:"center", justifyContent:"center",
@@ -498,7 +510,7 @@ export function VulcanoBrowser() {
       )}
 
       {/* ── CUERPO: VNC + panel ── */}
-      <div style={{ flex:1, display:"grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1fr) minmax(280px,340px)", minHeight:0, overflowY:"auto" }}>
+      <div style={{ flex:1, display:"grid", gridTemplateColumns: fullscreen ? "1fr" : isMobile ? "1fr" : "minmax(0,1fr) minmax(280px,340px)", minHeight:0, overflowY:"auto" }}>
 
         {/* iframe Chrome */}
         <div style={{ position:"relative", background:"#0a0a0f",
@@ -562,7 +574,7 @@ export function VulcanoBrowser() {
         </div>
 
         {/* Panel derecho */}
-        <div style={{ display:"flex", flexDirection:"column", minHeight: isMobile ? "auto" : 0,
+        <div style={{ display: fullscreen ? "none" : "flex", flexDirection:"column", minHeight: isMobile ? "auto" : 0,
           maxHeight: isMobile ? "40vh" : "none", overflowY:"auto",
           borderTop: isMobile ? "1px solid rgba(127,127,170,0.12)" : "none",
           background:"var(--color-surface)" }}>
