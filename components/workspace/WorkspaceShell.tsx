@@ -201,7 +201,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           "flex-1 min-h-0 min-w-0 max-w-full overflow-x-hidden",
           (pathname.startsWith("/app/chat")||pathname.startsWith("/forge")||pathname.startsWith("/v"))?"overflow-y-hidden":"overflow-y-auto flex flex-col"
         )}>
-          {(pathname.startsWith("/app/chat"))?children:<PageTransition>{children}</PageTransition>}
+          {(pathname.startsWith("/app/chat")||pathname.startsWith("/app/vulcano"))?children:<PageTransition>{children}</PageTransition>}
         </div>
         <MobileNav pathname={pathname}/>
         <VOrb/>

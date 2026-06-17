@@ -265,7 +265,7 @@ export function VulcanoBrowser() {
       {/* ── TOPBAR: estado de conexión ── */}
       <div style={{ display:"flex", alignItems:"center", gap: isMobile ? 8 : 12,
         padding: isMobile ? "10px 12px" : "10px 16px", borderBottom:"1px solid rgba(127,127,170,0.12)",
-        background:"var(--color-surface)", flexShrink:0 }}>
+        background:"var(--color-surface)", flexShrink:0, position:"sticky", top:0, zIndex:25 }}>
 
         <Link href="/app" style={{ display:"flex", alignItems:"center", justifyContent:"center",
           width:32, height:32, borderRadius:9, flexShrink:0,
