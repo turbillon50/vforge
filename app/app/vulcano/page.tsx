@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { VulcanoBrowser } from "@/components/vulcano/VulcanoBrowser";
+import { VulcanoStatus } from "@/components/vulcano/VulcanoStatus";
 export const metadata: Metadata = {
   title: "Navegador Vulcano — IA & Human",
-  description: "Tu navegador remoto operado por IA, con relevo humano para logins, registros y pagos. Tú das el toque humano. Vulcano hace el resto.",
+  description: "Tu navegador remoto persistente. Inicias sesión una vez y los agentes reutilizan tus sesiones por CDP. Tú das el toque humano; Vulcano hace el resto.",
 };
-export default function Page() { return <VulcanoBrowser/>; }
+export default function Page() { return <VulcanoStatus/>; }
