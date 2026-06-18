@@ -1,12 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useLiteMotion } from "@/components/cockpit/use-lite-motion";
 
 /**
  * VulcanoCore — núcleo/orbe Vulcano animado y reutilizable.
  * Capas: halo que respira, anillo cónico que gira, esfera de cristal,
  * reflejo especular, núcleo que pulsa y dos partículas en órbita.
  * `driving` acelera el pulso (IA operando) vs ritmo calmo (tu turno).
+ *
+ * MODO LITE (móvil / reduce-motion): apaga el giro del anillo, las partículas
+ * en órbita, el respiro del halo y el pulso del núcleo. Queda la esfera de
+ * cristal estática con su glow — se ve igual de premium pero sin repintar cada
+ * frame, que es lo que trababa el scroll/touch en celular.
  */
 export function VulcanoCore({
   size = 120,
@@ -17,29 +23,30 @@ export function VulcanoCore({
   accent?: string;
   driving?: boolean;
 }) {
+  const lite = useLiteMotion();
   const pulse = driving ? 2.4 : 3.6;
   const r = size / 2;
 
   return (
     <div style={{ position: "relative", width: size, height: size }} aria-hidden>
-      {/* Halo exterior que respira */}
+      {/* Halo exterior que respira (estático en lite) */}
       <motion.span
-        animate={{ scale: [1, 1.18, 1], opacity: [0.35, 0.7, 0.35] }}
-        transition={{ duration: pulse * 1.3, repeat: Infinity, ease: "easeInOut" }}
+        animate={lite ? { scale: 1, opacity: 0.5 } : { scale: [1, 1.18, 1], opacity: [0.35, 0.7, 0.35] }}
+        transition={lite ? { duration: 0 } : { duration: pulse * 1.3, repeat: Infinity, ease: "easeInOut" }}
         style={{
           position: "absolute",
           inset: -size * 0.22,
           borderRadius: "50%",
           background: `radial-gradient(circle, ${accent}66 0%, ${accent}22 45%, transparent 70%)`,
-          filter: `blur(${size * 0.06}px)`,
+          filter: `blur(${size * (lite ? 0.03 : 0.06)}px)`,
           pointerEvents: "none",
         }}
       />
 
-      {/* Anillo cónico giratorio */}
+      {/* Anillo cónico (giratorio en desktop, estático en lite) */}
       <motion.span
-        animate={{ rotate: 360 }}
-        transition={{ duration: driving ? 6 : 11, repeat: Infinity, ease: "linear" }}
+        animate={lite ? { rotate: 0 } : { rotate: 360 }}
+        transition={lite ? { duration: 0 } : { duration: driving ? 6 : 11, repeat: Infinity, ease: "linear" }}
         style={{
           position: "absolute",
           inset: -2,
@@ -47,6 +54,7 @@ export function VulcanoCore({
           background: `conic-gradient(from 0deg, ${accent}, #a78bfa, ${accent}00, ${accent}, #7c3aed, ${accent})`,
           WebkitMask: "radial-gradient(circle, transparent 86%, #000 92%)",
           mask: "radial-gradient(circle, transparent 86%, #000 92%)",
+          opacity: lite ? 0.7 : 1,
         }}
       />
 
@@ -62,10 +70,10 @@ export function VulcanoCore({
           overflow: "hidden",
         }}
       >
-        {/* Núcleo interno que pulsa */}
+        {/* Núcleo interno que pulsa (estático en lite) */}
         <motion.span
-          animate={{ scale: [0.82, 1.06, 0.82], opacity: [0.65, 1, 0.65] }}
-          transition={{ duration: pulse, repeat: Infinity, ease: "easeInOut" }}
+          animate={lite ? { scale: 0.95, opacity: 0.9 } : { scale: [0.82, 1.06, 0.82], opacity: [0.65, 1, 0.65] }}
+          transition={lite ? { duration: 0 } : { duration: pulse, repeat: Infinity, ease: "easeInOut" }}
           style={{
             position: "absolute",
             inset: "26%",
@@ -90,39 +98,40 @@ export function VulcanoCore({
         />
       </span>
 
-      {/* Partículas en órbita */}
-      {[0, 1].map((i) => (
-        <motion.span
-          key={i}
-          animate={{ rotate: 360 }}
-          transition={{
-            duration: i === 0 ? 7 : 10,
-            repeat: Infinity,
-            ease: "linear",
-            delay: i * 0.4,
-          }}
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: "50%",
-            pointerEvents: "none",
-          }}
-        >
-          <span
+      {/* Partículas en órbita — solo desktop (en lite se omiten) */}
+      {!lite &&
+        [0, 1].map((i) => (
+          <motion.span
+            key={i}
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: i === 0 ? 7 : 10,
+              repeat: Infinity,
+              ease: "linear",
+              delay: i * 0.4,
+            }}
             style={{
               position: "absolute",
-              top: i === 0 ? -2 : "auto",
-              bottom: i === 0 ? "auto" : -2,
-              left: r - 2,
-              width: 4,
-              height: 4,
+              inset: 0,
               borderRadius: "50%",
-              background: i === 0 ? "#fff" : accent,
-              boxShadow: `0 0 8px ${accent}, 0 0 14px ${accent}aa`,
+              pointerEvents: "none",
             }}
-          />
-        </motion.span>
-      ))}
+          >
+            <span
+              style={{
+                position: "absolute",
+                top: i === 0 ? -2 : "auto",
+                bottom: i === 0 ? "auto" : -2,
+                left: r - 2,
+                width: 4,
+                height: 4,
+                borderRadius: "50%",
+                background: i === 0 ? "#fff" : accent,
+                boxShadow: `0 0 8px ${accent}, 0 0 14px ${accent}aa`,
+              }}
+            />
+          </motion.span>
+        ))}
     </div>
   );
 }

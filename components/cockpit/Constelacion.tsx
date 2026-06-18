@@ -12,6 +12,7 @@ import type {
   FeedItem,
   GrokVerdict,
 } from "@/components/cockpit/esferas-types";
+import { useLiteMotion } from "@/components/cockpit/use-lite-motion";
 
 /**
  * VISTA CONSTELACIÓN (zoom out): un MINI-núcleo por job activo para supervisar
@@ -90,6 +91,7 @@ function AgentRing({
   dotPx: number;
   dim: boolean;
 }) {
+  const lite = useLiteMotion();
   return (
     <>
       {ROSTER.map((id, i) => {
@@ -112,7 +114,7 @@ function AgentRing({
                 : "var(--surface-2)",
             }}
             animate={
-              on && !dim
+              on && !dim && !lite
                 ? { boxShadow: [`0 0 0px ${hue}00`, `0 0 12px ${hue}aa`, `0 0 0px ${hue}00`] }
                 : {}
             }
@@ -141,6 +143,7 @@ function MiniLive({
   big: boolean;
   onZoom: () => void;
 }) {
+  const lite = useLiteMotion();
   const hue = (job.agent && HUE[job.agent]) || ACCENT;
   const active = useMemo(() => new Set<EsferaId | null>([job.agent]), [job.agent]);
   const orb = big ? 96 : 60;
@@ -214,8 +217,8 @@ function MiniLive({
             <motion.div
               className="h-full w-1/3 rounded-full"
               style={{ background: hue, boxShadow: `0 0 8px ${hue}` }}
-              animate={{ x: ["-120%", "320%"] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+              animate={lite ? { x: "120%" } : { x: ["-120%", "320%"] }}
+              transition={lite ? { duration: 0 } : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
             />
           )}
         </div>

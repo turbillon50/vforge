@@ -12,6 +12,7 @@ import type {
   EsferasPayload,
   EsferaState,
 } from "@/components/cockpit/esferas-types";
+import { useLiteMotion } from "@/components/cockpit/use-lite-motion";
 
 /**
  * Sentido del haz de energía:
@@ -160,6 +161,7 @@ function EnergyBeam({
   hue: string;
   dir: FlowDir;
 }) {
+  const lite = useLiteMotion();
   const gid = `beamgrad-${id}-${dir}`;
   const d = `M ${tail.x} ${tail.y} Q ${control.x} ${control.y} ${head.x} ${head.y}`;
   // Partículas: muestreo de la curva para que viajen tail→head SOBRE el hilo.
@@ -198,13 +200,13 @@ function EnergyBeam({
         strokeOpacity={0.9}
         strokeLinecap="round"
         strokeDasharray="2 6"
-        initial={{ strokeDashoffset: 16 }}
+        initial={false}
         animate={{ strokeDashoffset: 0 }}
-        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        transition={lite ? { duration: 0 } : { duration: 1, repeat: Infinity, ease: "linear" }}
       />
 
-      {/* Partículas viajando tail→head a lo largo de la curva */}
-      {[0, 1].map((i) => (
+      {/* Partículas viajando tail→head a lo largo de la curva (solo desktop) */}
+      {!lite && [0, 1].map((i) => (
         <motion.circle
           key={i}
           r={0.95}
@@ -248,6 +250,7 @@ function AgentNode({
   compact: boolean;
   onSelect: () => void;
 }) {
+  const lite = useLiteMotion();
   const Logo = AGENT_LOGOS[esfera.id];
   const pending = !working && esfera.status === "pending";
   const hue = HUE[esfera.id] ?? ACCENT;
@@ -266,12 +269,12 @@ function AgentNode({
       <div className="flex flex-col items-center gap-1.5">
         <motion.div
           animate={
-            working
+            working && !lite
               ? { boxShadow: [`0 0 0px ${hue}00`, `0 0 24px ${hue}cc`, `0 0 0px ${hue}00`] }
               : {}
           }
           transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-          className="relative grid h-12 w-12 place-items-center rounded-2xl border backdrop-blur-md md:h-14 md:w-14"
+          className={`relative grid h-12 w-12 place-items-center rounded-2xl border md:h-14 md:w-14 ${lite ? "backdrop-blur-sm" : "backdrop-blur-md"}`}
           style={{
             borderColor: working ? `${hue}66` : pending ? `${hue}33` : "var(--border-2)",
             background: working
@@ -291,7 +294,7 @@ function AgentNode({
               boxShadow: working ? `0 0 8px ${hue}` : "none",
             }}
           />
-          {pending && (
+          {pending && !lite && (
             <motion.span
               className="absolute inset-0 rounded-2xl border"
               style={{ borderColor: `${hue}55` }}
@@ -397,6 +400,7 @@ export function EsferasNucleo({
   error?: boolean;
 }) {
   // Modo controlado vs autónomo (retrocompat con el cockpit que lo usa sin props).
+  const lite = useLiteMotion();
   const controlled = data !== undefined;
   const [internal, setInternal] = useState<EsferasPayload | null>(null);
   const [internalError, setInternalError] = useState(false);
@@ -522,8 +526,8 @@ export function EsferasNucleo({
     <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-4 sm:p-5">
       <motion.div
         className="pointer-events-none absolute left-1/2 top-1/2 h-[130%] w-[130%] -translate-x-1/2 -translate-y-1/2"
-        animate={{ opacity: [glowOpacity * 0.7, glowOpacity, glowOpacity * 0.7] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        animate={lite ? { opacity: glowOpacity } : { opacity: [glowOpacity * 0.7, glowOpacity, glowOpacity * 0.7] }}
+        transition={lite ? { duration: 0 } : { duration: 4, repeat: Infinity, ease: "easeInOut" }}
         style={{
           background: `radial-gradient(circle at 50% 45%, ${ACCENT}1f 0%, #a78bfa12 35%, transparent 60%)`,
         }}

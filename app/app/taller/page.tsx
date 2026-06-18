@@ -9,6 +9,7 @@ import { UtilizacionPanel } from "@/components/cockpit/UtilizacionPanel";
 import { IconActivity, IconCpu, IconShield, IconBoxes, IconMaximize } from "@/components/brand/VFIcons";
 import { TokenRiskBanner } from "@/components/workspace/TokenHealth";
 import { AGENT_LOGOS, LogoGrok } from "@/components/brand/AgentLogos";
+import { useLiteMotion } from "@/components/cockpit/use-lite-motion";
 import type {
   ActiveJob,
   EsferasPayload,
@@ -91,6 +92,7 @@ function LiveMetric({ value, label, accent }: { value: number; label: string; ac
 }
 
 export default function TallerPage() {
+  const lite = useLiteMotion();
   const [data, setData] = useState<EsferasPayload | null>(null);
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
@@ -114,13 +116,27 @@ export default function TallerPage() {
           }
         })
         .catch(() => alive && setError(true));
-    load();
-    const t = setInterval(load, POLL_MS);
-    const tick = setInterval(() => alive && setNow(Date.now()), 1000);
+    const everyMs =
+      typeof window !== "undefined" && window.matchMedia && window.matchMedia("(max-width: 640px)").matches
+        ? 9000
+        : POLL_MS;
+    const hidden = () => typeof document !== "undefined" && document.hidden;
+    const safeLoad = () => {
+      if (hidden()) return;
+      load();
+    };
+    safeLoad();
+    const t = setInterval(safeLoad, everyMs);
+    const tick = setInterval(() => alive && !hidden() && setNow(Date.now()), 1000);
+    const onVis = () => {
+      if (!hidden()) safeLoad();
+    };
+    if (typeof document !== "undefined") document.addEventListener("visibilitychange", onVis);
     return () => {
       alive = false;
       clearInterval(t);
       clearInterval(tick);
+      if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
 
@@ -402,7 +418,7 @@ export default function TallerPage() {
                       className="flex items-center gap-3 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3"
                     >
                       <motion.div
-                        animate={{
+                        animate={lite ? {} : {
                           boxShadow: [`0 0 0px ${hue}00`, `0 0 16px ${hue}aa`, `0 0 0px ${hue}00`],
                         }}
                         transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
