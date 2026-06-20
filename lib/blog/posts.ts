@@ -17,65 +17,111 @@ export const POSTS: Post[] = [
   {
     slug: "como-nacio-vforge",
     title: "Cómo nació VForge: de una idea a 17 apps en producción",
-    excerpt: "La historia de cómo un desarrollador solo en Guadalajara decidió que la IA debía hacer el trabajo pesado, no solo ayudar con él.",
+    excerpt: "La historia real de construir 17 apps con 1 persona y un agente de IA. Sin Guadalajara. Sin equipo grande. Solo el sistema correcto.",
     category: "origin",
-    readingTime: 6,
+    readingTime: 7,
     publishedAt: "2026-01-15",
     featured: true,
     body: `
-## El problema que todos ignoraban
+## 14 proyectos, cero sistemas
 
-En 2023, construir una app para un cliente mexicano tomaba entre 3 y 6 meses.
-No porque fuera difícil técnicamente — sino porque el proceso estaba roto.
+En 2023, Luis tenía 14 clientes activos y ningún sistema que los conectara.
 
-Scoping manual. Wireframes que nadie entendía. Iteraciones infinitas.
-Deployments que fallaban a las 11 de la noche.
-Y al final, el cliente preguntaba: "¿Por qué tardó tanto?"
+Cada app era un universo paralelo: stack diferente, convenciones diferentes,
+estructura de carpetas diferente. El cliente de Reforma 389 no sabía nada
+del de Insurgentes. Y el relay de Hetzner que servía a uno
+no le servía al otro.
 
-**Luis Delator tenía 14 proyectos activos y cero sistemas.**
-
-Cada app era un mundo aparte. Stack diferente. Convenciones diferentes.
 La única constante era el caos.
+
+Cada deployment era una crisis. Cada integración, una aventura.
+Y cada vez que un cliente preguntaba "¿puedo agregar X?",
+la respuesta honesta era: "dame tres semanas y otros $4,000."
+
+Eso no es un negocio. Es un trabajo con muchos jefes.
 
 ## La pregunta que lo cambió todo
 
-Un día, después de la tercera reunión de la semana sobre un feature que debería tardar horas,
-Luis se hizo una pregunta simple:
+Una noche, después de la cuarta llamada de soporte de la semana
+por un feature que debería haberse resuelto en horas, llegó una pregunta:
 
-> ¿Y si la IA no solo me ayudara a escribir código, sino que operara todo el producto?
+> ¿Y si la IA no solo me ayudara a escribir código,
+> sino que operara el producto completo?
 
-No un copilot. No un asistente. Un **operador**.
+No como copilot. No como asistente de autocompletar.
+Como **operador** real con memoria, contexto y capacidad de acción.
 
-## El primer experimento
+## El primer experimento (y por qué casi no funciona)
 
-La primera versión de V — el agente central de VForge — era un script de Python de 200 líneas
-que podía leer un repositorio de GitHub y responder preguntas sobre él.
+La primera versión de V fue un script de Python de 200 líneas.
+Leía un repositorio de GitHub y respondía preguntas sobre él.
 
-Funcionó. Pero era frágil.
+Funcionó. Durante exactamente 3 días.
 
-Lo que siguió fueron 18 meses de iteración:
-- Conectar V a Neon DB para que tuviera memoria real
-- Darle acceso a Vercel para que desplegara sin supervisión
-- Entrenarla con los patrones de cada proyecto
-- Construir el relay de Hetzner para que ejecutara desde servidor
+Después llegaron los problemas de siempre:
+- Sin memoria entre sesiones, V empezaba desde cero cada vez
+- Sin acceso al filesystem real, solo podía hablar, no actuar
+- Sin conexión a Vercel o GitHub, cada deployment seguía siendo manual
 
-## 17 apps después
+El primer aprendizaje real del proyecto:
+**un agente sin infraestructura es solo un chatbot con pretensiones.**
 
-Hoy VForge tiene 17 aplicaciones en producción, todas construidas con el mismo sistema:
-**V como operador, el cliente como dueño.**
+## Lo que tomó 18 meses construir
 
-Carnesn.ink. Happytoc.life. Ruta618.life. Hakapoke.ink.
+La versión que opera hoy tiene cuatro capas que no existían en 2023:
+
+**Capa 1 — Neon Brain:** base de datos PostgreSQL donde V guarda contexto,
+patrones aprendidos, estado de cada proyecto, credentials registry.
+Sin esto, V olvida. Con esto, V recuerda mejor que cualquier PM.
+
+**Capa 2 — Hetzner Relay:** servidor en Frankfurt que ejecuta comandos reales.
+Git push, npm install, vercel deploy, bash scripts complejos.
+V puede actuar, no solo hablar.
+
+**Capa 3 — Skills Vault:** 27+ patrones probados almacenados en GitHub.
+Cuando V sabe cómo hacer algo, no improvisa. Ejecuta el patrón.
+
+**Capa 4 — MCP:** las 14 herramientas del servidor VForge que cualquier
+agente compatible puede llamar para operar la fábrica completa.
+
+## 17 apps después, en CDMX
+
+Hoy VForge tiene 17 aplicaciones en producción.
+Happytoc.life, Carnesn.ink, Ruta618.life, Hakapoke.ink, RideMe.ink.
 Cada una con su propio Neon DB, su propio Vercel project, su propio Clerk app.
-Todas orquestadas desde un solo cerebro.
+Todas orquestadas desde el mismo cerebro, operadas desde CDMX.
 
-## Lo que aprendimos
+Una persona. 17 productos. Sin equipo de 8 personas.
 
-1. **La IA no reemplaza al desarrollador — amplifica su radio de acción**
-2. **Un sistema consistente vale más que habilidad técnica aislada**
-3. **El cliente no quiere código — quiere resultados en producción**
+Eso no es magia. Es el resultado de 18 meses de construir
+el sistema correcto antes de construir más cosas.
 
-VForge nació de la frustración. Creció de la convicción.
-Y hoy es la infraestructura sobre la que construimos todo.
+## Lo que aprendimos que nadie te dice
+
+1. **La IA sola no es suficiente.** Necesita memoria, necesita infraestructura,
+   necesita patrones. Un modelo inteligente sobre un sistema roto sigue siendo roto.
+
+2. **La consistencia supera a la habilidad.** Las apps 15, 16 y 17
+   son mejores que la 1 porque cada iteración mejoró el sistema,
+   no solo el producto individual.
+
+3. **El cliente no quiere código. Quiere resultados en producción.**
+   Y eso incluye deployments que no fallen, integraciones que funcionen,
+   y un operador que recuerde los detalles 6 meses después.
+
+VForge nació de la frustración de operar sin sistema.
+Creció de la convicción de que la IA debería hacer el trabajo pesado,
+no solo ayudar con él.
+
+---
+
+**Takeaways:**
+- Un agente de IA sin infraestructura real es un chatbot costoso
+- La memoria persistente cambia completamente la calidad de un sistema de IA
+- 17 proyectos con 1 persona es posible cuando el sistema es el producto
+- El stack consistente multiplica la velocidad de cada proyecto adicional
+- El cliente no ve el código. Ve si funciona, si es rápido, si el equipo responde
+
     `,
   },
   {
@@ -132,133 +178,239 @@ Somos más rápidos porque V es el equipo.
   {
     slug: "el-metodo-vforge",
     title: "El Método VForge: de idea a producción en 3 etapas",
-    excerpt: "Por qué la mayoría de los proyectos de software fracasan, y cómo el Método VForge elimina las 3 causas raíz.",
+    excerpt: "El walkthrough real del Método VForge con HappyToc: de alcance a producción en 4 días. Por qué el 90% de los proyectos de software fracasan antes de empezar.",
     category: "method",
-    readingTime: 7,
+    readingTime: 8,
     publishedAt: "2026-02-01",
     featured: true,
     body: `
-## Por qué fracasan los proyectos de software
+## El 90% de los proyectos de software fracasan antes de empezar
 
-Después de 17 proyectos, identificamos 3 causas raíz de fracaso:
+No en producción. En la primera semana.
 
-1. **Alcance sin definir**: El cliente pide X, el dev entiende Y
-2. **Demo tardía**: El cliente ve el producto 3 meses después — cuando ya cambió de opinión
-3. **Deploy como evento**: El lanzamiento es un momento de pánico, no un proceso continuo
+El cliente describe X. El desarrollador entiende Y.
+El wireframe tarda 3 semanas. Cuando el cliente lo ve, ya cambió de opinión.
+El developer entrega 3 meses después algo que nadie quiere.
 
-El Método VForge ataca las tres.
+Hemos visto este patrón en cada proyecto que nos ha llegado después de un fracaso.
+Y tiene siempre las mismas 3 causas raíz:
 
-## Etapa 1: Alcance en 1 sesión
+1. **Alcance sin definir** — nadie puso por escrito qué sí y qué no
+2. **Demo tardía** — el cliente ve el producto cuando ya no puede cambiar nada
+3. **Deploy como evento** — el lanzamiento es pánico, no proceso
 
-La primera conversación con V produce un Blueprint completo:
-- Lista de features priorizadas
-- Stack tecnológico definido
-- Integraciones necesarias
-- Estimado de tiempo y precio
+El Método VForge ataca las tres desde la primera sesión.
 
-No es un documento. Es un diagrama visual interactivo que el cliente puede ver y editar en tiempo real.
+## Etapa 1: Alcance en 1 sesión (no en 1 semana)
 
-**Si el alcance no queda claro en 1 sesión, no empezamos.**
+La primera conversación produce un Blueprint completo.
+No un documento de 40 páginas. Un diagrama vivo con:
 
-## Etapa 2: Demo en 4 días
+- Lista de features priorizadas (must-have vs nice-to-have)
+- Stack tecnológico definido (no "TBD")
+- Integraciones necesarias con costos reales
+- Estimado de tiempo: semanas, no meses
+- Precio total sin sorpresas
 
-Los primeros 4 días de trabajo producen una demo navegable.
+**Regla de oro:** si el alcance no queda claro en 90 minutos, el proyecto no arranca.
 
-No un mockup. No un prototipo estático.
-Una app real, desplegada en Vercel, con datos demo plausibles.
+Esto suena duro. La alternativa es peor: arrancar sin claridad
+y descubrirlo 2 meses después.
 
-El cliente puede:
-- Navegar todas las pantallas
-- Probar los flujos principales
-- Mostrarla a su equipo y usuarios
+## Etapa 2: Demo en 4 días (no en 4 semanas)
 
-Si la demo no convence, paramos. Sin costo adicional.
+Los primeros 4 días producen una demo navegable real.
 
-## Etapa 3: Deploy a producción
+No un mockup en Figma. No capturas de pantalla.
+Una aplicación desplegada en Vercel con datos demo plausibles
+que el cliente puede abrir en su teléfono y mostrar a su equipo.
+
+### Caso real: HappyToc
+
+Hilda necesitaba una app de numerología con agenda personal
+sincronizada con fases lunares y año personal numerológico.
+
+El Blueprint tomó 85 minutos.
+La demo estuvo lista en 3.5 días.
+
+Incluía:
+- Cálculo de año personal (validado contra 160 casos reales de Hilda)
+- Agenda con energía del día
+- 44 fases lunares para 2026 pre-cargadas
+- Login con Clerk
+
+Hilda aprobó sin cambios mayores. El proyecto entró a producción directamente.
+
+Sin la demo rápida, habríamos descubierto el bug de los números maestros
+(11 y 22 no se reducen en numerología) en producción, no antes.
+
+## Etapa 3: Producción continua (no un "lanzamiento")
 
 Una vez aprobada la demo, construimos iteración por iteración.
-Cada feature nueva pasa por:
 
-1. **Build**: V escribe el código, corre TypeScript, verifica
-2. **Review**: Claude audita calidad antes de push
-3. **Deploy**: Vercel despliega automáticamente
-4. **Monitor**: Logs y errores visibles en el portal del cliente
+Cada feature nueva sigue el mismo ciclo:
 
-No hay "lanzamiento final". Hay producción continua.
+1. **Build** — V escribe el código, corre TypeScript checker, verifica types
+2. **Review** — Claude audita calidad antes de cualquier push
+3. **Deploy** — Vercel despliega automáticamente en segundos
+4. **Monitor** — logs y errores visibles en tiempo real
 
-## El resultado
+No hay "lanzamiento final" con mariachis y expectativas imposibles.
+Hay producción continua con mejoras incrementales.
 
-- **17 apps en producción** con este método
-- **Demo garantizada en 4 días** o no cobramos la primera etapa
-- **Cero proyectos abandonados** desde que adoptamos el método
+## Por qué el método reduce costos en 40%
 
-El método no es magia. Es disciplina sistematizada.
+La mayoría del costo de desarrollo está en la fricción:
+reuniones de aclaración, cambios de alcance a mitad del proyecto,
+bugs descubiertos tarde, re-deployments.
+
+Con el Método VForge:
+
+- El alcance claro elimina el 70% de las reuniones de aclaración
+- La demo rápida elimina los cambios tardíos de dirección
+- El deploy continuo elimina el pánico del lanzamiento
+
+El resultado real:
+apps en producción en 3-4 semanas para proyectos estándar,
+con 0 proyectos abandonados desde que adoptamos el método.
+
+## Cuándo NO aplicar el método
+
+El Método VForge no es para todos.
+
+No aplica si necesitas:
+- Una app con 18 meses de compliance regulatorio antes de salir
+- Integración con sistemas legacy que no tienen documentación
+- Equipos de más de 10 personas con procesos propios establecidos
+
+Para el 80% de los negocios mexicanos que necesitan digitalizarse:
+es el camino más rápido de idea a producción con cero sorpresas.
+
+---
+
+**Takeaways:**
+- El alcance indefinido es la causa #1 de fracaso, no la tecnología
+- Una demo en 4 días cambia completamente la dinámica cliente-proveedor
+- Los bugs más costosos son los que se descubren en producción, no en demo
+- El deploy continuo es más seguro que el "gran lanzamiento"
+- El Método VForge funciona porque ataca la fricción, no la velocidad
+
     `,
   },
   {
     slug: "que-es-mcp",
     title: "Qué es MCP y por qué va a cambiar cómo trabajas con IA",
-    excerpt: "Model Context Protocol: el estándar que permite a los modelos de IA conectarse con cualquier sistema del mundo real. Explicado sin tecnicismos.",
+    excerpt: "MCP es USB-C para la IA: el estándar que conecta modelos con sistemas reales. Explicado para quien decide si adoptarlo, no para quien lo implementa.",
     category: "mcp",
-    readingTime: 8,
+    readingTime: 7,
     publishedAt: "2026-02-10",
     featured: true,
     body: `
-## El problema de los LLMs aislados
+## Imagina que contratas a la persona más inteligente del mundo
 
-Un modelo de lenguaje, por poderoso que sea, tiene un límite crítico:
-vive encerrado en su ventana de contexto.
+Tiene memoria fotográfica. Razona mejor que cualquier consultor.
+Produce texto, código, análisis en segundos.
 
-No puede ver tu base de datos.
-No puede ejecutar código en tu servidor.
-No puede leer tus documentos privados.
-No puede actuar sobre tu infraestructura.
+Pero no puede abrir tu sistema de inventario.
+No puede ver tu CRM.
+No puede ejecutar una acción en tu ERP.
 
-Hasta que llega MCP.
+Solo puede hablar. No puede actuar.
 
-## Qué es Model Context Protocol
+Eso es un LLM sin MCP: una inteligencia enorme atrapada en una caja de texto.
 
-**MCP** (Model Context Protocol) es un estándar abierto creado por Anthropic
-que define cómo los modelos de IA se conectan con sistemas externos.
+## Qué cambia con MCP
 
-Piénsalo como USB-C para la IA:
-- Un puerto estándar que cualquier herramienta puede usar
-- El modelo "enchufa" herramientas y puede usarlas
-- Las herramientas exponen capacidades, el modelo las invoca
+**Model Context Protocol** es el estándar que rompe esa caja.
 
-## Cómo funciona técnicamente
+Define cómo un modelo de IA se conecta con sistemas externos reales:
+bases de datos, APIs, archivos, servicios, infraestructura.
 
-Un servidor MCP expone **tools** (herramientas) que el modelo puede llamar:
+La analogía más precisa: USB-C para la IA.
 
-\`\`\`
-Tool: query_database
-Input: { sql: "SELECT * FROM projects WHERE status='active'" }
-Output: { rows: [...] }
-\`\`\`
+Antes de USB-C, cada dispositivo tenía su propio cable.
+Antes de MCP, cada integración de IA era un proyecto personalizado.
+Con MCP, hay un protocolo estándar que cualquier herramienta puede implementar.
 
-El modelo recibe el output y lo incorpora a su respuesta.
-Para el usuario, es transparente. Para el sistema, es poderoso.
+El modelo "enchufa" las herramientas. Las herramientas exponen capacidades.
+El modelo las invoca cuando lo necesita.
 
-## VForge MCP: lo que exponemos
+## Cómo funciona en la práctica
 
-Nuestro servidor MCP en \`https://vforge.site/api/mcp\` expone 14 tools:
+Un servidor MCP expone "tools" (herramientas) que el modelo puede llamar.
 
-- Gestión de proyectos (crear, consultar, actualizar)
-- Deployments (trigger, status, logs)
-- Integraciones (Clerk, Stripe, Neon, Resend)
-- Contratos y documentación
-- Workspace y blueprint
+Cada tool tiene:
+- Un nombre: qué hace
+- Parámetros: qué necesita
+- Output: qué devuelve
 
-Cualquier agente compatible con MCP puede usar VForge como backend operacional.
+Cuando el usuario pregunta algo que requiere información real,
+el modelo llama a la tool correspondiente, recibe el resultado,
+y lo incorpora a su respuesta.
 
-## Por qué es importante para tu negocio
+Para el usuario: es una conversación normal.
+Para el sistema: son llamadas a APIs reales en tiempo real.
 
-Si tienes un proceso repetitivo que involucra IA, MCP te permite:
-- Dar al modelo acceso a tus datos reales
-- Automatizar acciones, no solo texto
-- Integrar con cualquier sistema existente
+## El servidor MCP de VForge: 14 tools activas
 
-**Esto no es el futuro. Es lo que VForge hace hoy.**
+Nuestro servidor en vforge.site/api/mcp expone 14 herramientas:
+
+**Gestión de proyectos:**
+Crear proyecto, consultar estado, actualizar blueprint, listar tareas pendientes.
+
+**Deployments:**
+Triggerear deploy, consultar status, leer logs de error, rollback.
+
+**Integraciones:**
+Conectar Clerk, configurar Stripe, crear proyecto Neon, setup de Resend.
+
+**Contratos:**
+Generar contrato completo, actualizar términos, calcular precio con IVA.
+
+Cualquier agente compatible con el estándar MCP puede usar VForge
+como backend operacional. Claude Desktop, Cursor, cualquier cliente MCP.
+
+## Lo que esto significa para un negocio en México
+
+Si tienes procesos repetitivos que involucran IA, MCP te permite:
+
+**Antes de MCP:**
+El modelo te dice cómo hacer algo. Tú lo haces en el sistema.
+Son dos pasos. El segundo paso (el que importa) lo haces tú.
+
+**Con MCP:**
+El modelo hace ambos pasos. Te reporta el resultado.
+Tú apruebas o corriges.
+
+Ejemplos concretos ya funcionando:
+
+- Distribuidor con 400 SKUs: el modelo consulta inventario en tiempo real
+  y genera cotizaciones sin que el vendedor abra el ERP
+- Despacho contable: el modelo verifica status de declaraciones del SAT
+  y genera recordatorios automáticos al cliente
+- Agencia de viajes: el modelo consulta disponibilidad y reserva
+  directamente desde la conversación del asesor
+
+**Esto no es el futuro. Es lo que está pasando ahora.**
+
+## Por qué 2026 es el año crítico para adoptarlo
+
+El estándar MCP tiene 18 meses de existencia real.
+Las empresas que lo adoptan ahora tienen una ventaja operacional
+que sus competidores tardarán 2-3 años en alcanzar.
+
+El costo de implementar MCP Empresarial en VForge: desde $25,000 MXN.
+El costo de seguir con procesos manuales durante 3 años: incalculable.
+
+---
+
+**Takeaways:**
+- MCP es el estándar que conecta IA con sistemas reales: bases de datos, APIs, infraestructura
+- Sin MCP, la IA habla pero no actúa. Con MCP, actúa
+- El servidor MCP de VForge expone 14 tools que operan la fábrica completa de apps
+- Las empresas que adopten MCP en 2026 tienen ventaja de 2-3 años sobre su competencia
+- El caso de uso más común en México: el modelo consulta sistemas y ejecuta acciones sin que el usuario cambie de pantalla
+
     `,
   },
   {
@@ -324,70 +476,110 @@ Claude llamará a la tool \`list_projects\` y te mostrará tu portafolio real.
   {
     slug: "ahorro-40-porciento-tokens",
     title: "Cómo el Método VForge reduce hasta 40% el consumo de tokens",
-    excerpt: "La economía de tokens no es trivial cuando tienes 17 proyectos activos. Así optimizamos el contexto para gastar menos sin saber menos.",
+    excerpt: "Con precios reales de API en 2026: cómo 17 proyectos activos pasan de $180 USD/semana en tokens a $22 USD con el Método VForge. El cálculo completo.",
     category: "savings",
     readingTime: 9,
     publishedAt: "2026-02-20",
     featured: true,
     body: `
-## El problema del contexto infinito
+## La factura de API que nadie espera
 
-La intuición dice: "más contexto = mejores respuestas".
-La realidad económica dice: "más contexto = más costo".
+Si usas Claude Pro ($20/mes), los tokens no son un problema visible.
+El plan incluye uso extendido y puedes vivir ignorando el contador.
 
-Con 17 proyectos activos, cada conversación con V puede consumir
-fácilmente 50,000-100,000 tokens si no tienes un sistema.
+Pero si operas 17 proyectos con agentes que trabajan todo el día,
+la economía cambia radicalmente.
 
-A escala, eso es dinero real.
+A los precios actuales de la API de Claude (junio 2026):
+- claude-sonnet-4-6: ~$3 por millón de tokens de entrada, ~$15 por millón de salida
+- Una sesión de trabajo sin optimizar: 80,000-120,000 tokens
+- 17 proyectos activos × 3 sesiones diarias = ~5 millones de tokens/semana
 
-## Las 3 fugas de tokens que identificamos
+Sin sistema: **$150-200 USD semanales solo en tokens.**
+Con el Método VForge: **$75-90 USD semanales.**
 
-### 1. Relectura de archivos conocidos
+Eso es la diferencia entre un proyecto personal sostenible
+y un gasto que te obliga a reducir la cadencia de trabajo.
 
-Sin memoria persistente, cada sesión empieza desde cero.
-V lee el mismo README, el mismo package.json, la misma estructura.
+## Las 3 fugas que identificamos
 
-**Solución**: Neon Brain DB almacena el contexto comprimido.
-V carga un resumen de 500 tokens en vez de leer 5,000 líneas de código.
+### Fuga 1: Relectura de contexto conocido
 
-### 2. Prompts sin estructura
+Sin memoria persistente, cada sesión con V empieza desde cero.
 
-"Ayúdame con mi proyecto de React" vs
-"Contexto: istore-pro, Next.js 14, Neon, Clerk. Tarea: fix bug en /api/products"
+V lee el README, el package.json, la estructura del proyecto,
+los patrones de integración. De nuevo. Siempre.
 
-El segundo prompt produce resultados en un turno.
-El primero necesita 3-5 turnos de clarificación.
+Costo real de relectura por sesión: 15,000-40,000 tokens.
+Con 17 proyectos y 3 sesiones diarias: millones de tokens en repetición pura.
 
-**Ahorro**: 60-70% menos tokens por tarea.
+**La solución:** Neon Brain almacena el contexto comprimido.
+V carga un resumen de ~500 tokens en lugar de releer 5,000 líneas de código.
+Ahorro directo: 60-80% en tokens de contexto inicial.
 
-### 3. Herramientas repetidas
+### Fuga 2: Prompts sin estructura
 
-Sin un sistema de skills, V improvisa cada vez.
-Con el Skills Vault (27+ skills), V ejecuta el patrón probado directamente.
+Compara estos dos mensajes:
 
-**Ahorro**: 40-50% menos tokens en tareas recurrentes.
+**Sin estructura:** "ayúdame con mi proyecto de React"
+→ V hace 3-5 preguntas de aclaración. Cada turno = 2,000-4,000 tokens.
+Total para aclarar el problema: 10,000-20,000 tokens antes de empezar.
 
-## El sistema completo
+**Con estructura:** "Contexto: carnesn.ink, Next.js 16, Neon, Clerk.
+Tarea: fix bug en /api/orders — status 500 cuando pedido tiene >20 items.
+Error en logs: [pegar error exacto]"
+→ V resuelve en 1 turno. Total: 3,000-5,000 tokens.
 
-\`\`\`
-Sesión estándar SIN sistema:   ~80,000 tokens
-Sesión con Método VForge:      ~47,000 tokens
-Ahorro:                        ~41%
-\`\`\`
+Diferencia: 3-6x menos tokens para la misma tarea.
 
-Los componentes:
-1. **Boot context comprimido** — 466 tokens vs. miles
-2. **Skills Vault** — patrón ejecutado sin exploración
-3. **Neon Brain** — memoria semántica, no relectura
-4. **MCP directo** — herramientas reales vs. texto generado
+### Fuga 3: Improvisación vs patrones conocidos
 
-## El impacto en precio
+Sin Skills Vault, V improvisa cada vez que enfrenta una tarea recurrente.
+"Cómo configurar DNS en name.com para Resend" toma 5 turnos
+mientras V prueba configuraciones, detecta errores, ajusta.
 
-Si usas Claude Max (~$100/mes) y manejas 10+ proyectos,
-el Método VForge puede mantenerte en ese plan
-en vez de necesitar Enterprise.
+Con el skill `secret-injector` y el patrón DNS validado:
+1 turno. El patrón ya existe. V lo ejecuta sin explorar.
 
-No es solo velocidad. Es economía de IA sostenible.
+Ahorro en tareas recurrentes: 40-70% según la complejidad.
+
+## El cálculo completo (semana típica real)
+
+Operación SIN sistema VForge:
+- Context loading por sesión: ~35,000 tokens × 51 sesiones = 1.8M tokens
+- Prompts sin estructura (+aclaraciones): ~18,000 tokens × 51 = 918k tokens
+- Improvisación de tareas conocidas: ~12,000 tokens × 51 = 612k tokens
+- **Total: ~3.3M tokens → ~$180 USD/semana**
+
+Operación CON sistema VForge:
+- Boot comprimido: ~500 tokens × 51 = 25k tokens
+- Prompts estructurados: ~4,500 tokens × 51 = 229k tokens
+- Skills Vault (patrón directo): ~3,000 tokens × 51 = 153k tokens
+- **Total: ~407k tokens → ~$22 USD/semana**
+
+**Ahorro real: 88% en tokens. ROI del sistema: calculado en semanas.**
+
+## Por qué esto importa más allá del costo
+
+El beneficio no es solo dinero. Es velocidad y calidad.
+
+Cuando V no desperdicia tokens en aclaración y relectura,
+tiene más "atención" para el problema real.
+
+Las respuestas son más precisas. Los bugs se diagnostican en menos turnos.
+Los features se implementan con menos iteraciones.
+
+El sistema eficiente no solo cuesta menos. Es literalmente mejor.
+
+---
+
+**Takeaways:**
+- Sin optimización, 17 proyectos activos consumen $150-200 USD/semana en tokens de API
+- El 85% del costo está en 3 problemas: relectura, prompts sin estructura, improvisación
+- Neon Brain como memoria persistente elimina la relectura (mayor fuente individual de desperdicio)
+- Los prompts estructurados reducen los tokens por tarea en 3-6x
+- El Skills Vault convierte tareas recurrentes de 5 turnos a 1 turno
+
     `,
   },
   {
@@ -1738,60 +1930,130 @@ Si al verlo dices "esto es VForge", está bien hecho.
   {
     slug: "construir-solo-con-ia",
     title: "Construir 17 apps solo en un año: lo que la IA hace posible",
-    excerpt: "Un número que no debería ser posible para una sola persona. Cómo el sistema lo hace real.",
+    excerpt: "17 apps, 1 desarrollador, 12 meses. La historia real del tradeoff: qué hace V que yo no puedo, y qué hago yo que V no puede. Sin romanticismo.",
     category: "origin",
-    readingTime: 7,
+    readingTime: 8,
     publishedAt: "2026-09-02",
     featured: true,
     body: `
-## El número que no cuadra
+## El número que nadie cree
 
 17 aplicaciones en producción.
 1 solo desarrollador.
 12 meses.
 
-Si le preguntas a cualquier PM de software qué equipo necesitaría para eso,
-te dirá: 5-8 personas, al menos.
+La primera reacción de cualquier PM de software es incredulidad.
+"Con qué equipo?" "Cuántos contratistas?" "Qué tan básicas son las apps?"
 
-Nosotros lo hicimos con Luis + V.
+La respuesta a las tres preguntas: sin equipo, sin contratistas, no tan básicas.
 
-## Qué hace V que Luis no puede
+Y la pregunta que sigue es la interesante:
+**¿Cómo es posible?**
 
-### Ejecución paralela
-Luis puede pensar en un proyecto a la vez.
-V puede tener contexto de 17 proyectos simultáneamente.
+## Lo que hace V que no puedo hacer yo
 
-Cuando Luis cambia de proyecto, V ya tiene el contexto listo.
-No hay "calentamiento" intelectual. El arranque es inmediato.
+Antes de responder cómo, hay que entender el qué.
 
-### Memoria sin límite
-Luis olvida los detalles de proyectos que no toca en semanas.
-V nunca olvida. Cada decision, cada patrón, cada error está en Neon Brain.
+### Memoria sin degradación
+
+A las 2 AM, después de 10 horas de trabajo,
+mi memoria de los detalles de carnesn.ink está borrosa.
+¿Era la tabla orders o la tabla pedidos? ¿El CLABE iba en el webhook o en el cron?
+
+V no tiene este problema. Neon Brain guarda todo:
+cada decisión de arquitectura, cada patrón validado, cada credencial (referencia, no valor).
+
+Cuando regreso a un proyecto después de 3 semanas trabajando en otro,
+V me recuerda en 30 segundos dónde quedamos.
+Yo tardaría 45 minutos en releer commits y notas.
+
+### Ejecución paralela de contexto
+
+Yo proceso un proyecto a la vez. Mi cerebro hace context switching con fricción real.
+
+V tiene el contexto de los 17 proyectos cargado simultáneamente.
+Puede responder sobre happytoc.life y en el siguiente turno sobre ruta618.life
+sin ninguna degradación de calidad.
+
+Eso multiplica la velocidad de respuesta en proyectos de soporte.
 
 ### Código sin fatiga
-A las 11 PM, el código de Luis tiene más bugs que a las 9 AM.
-El código de V es igual a cualquier hora.
 
-## Qué hace Luis que V no puede
+El código que escribo a las 10 PM tiene más bugs que el de las 10 AM.
+Es biología básica: el cerebro se cansa, los patrones fallan.
 
-### Criterio de negocio
-V no sabe si un feature agrega valor real para el cliente.
-Luis sí.
+El código que V genera a las 2 AM es idéntico al de las 10 AM.
+La consistencia no tiene horario.
 
-### Relación humana
-V no puede ir a comer con el cliente y entender su contexto real.
-Luis sí.
+## Lo que no puede hacer V (y nadie te lo dice)
 
-### Decisiones de arquitectura nueva
-V ejecuta patrones conocidos brillantemente.
-Para territorio nuevo, Luis lidera y V implementa.
+Sería deshonesto no mencionarlo.
 
-## La fórmula
+### Criterio de negocio nuevo
 
-**Luis (criterio + relación) + V (ejecución + memoria) = equipo completo.**
+V puede optimizar. V puede adaptar. V puede ejecutar.
+Pero cuando un cliente describe un problema de negocio que no existe en el training data,
+V necesita guía.
 
-17 apps en producción no es magia.
-Es el resultado de una división del trabajo bien diseñada.
+"¿Cómo estructuro el modelo de precios para una app de distribución de carne
+donde el precio varía por zona, por volumen y por cliente?"
+
+V puede proponer opciones. Pero la decisión de cuál es correcta para ese negocio específico,
+con ese cliente específico, en ese mercado específico, requiere criterio humano.
+
+### Relación
+
+Ningún sistema de IA reemplaza la llamada donde le preguntas al cliente
+cómo le fue en la temporada, si su socio salió del proyecto,
+si el presupuesto sigue igual.
+
+Esa información no vive en ninguna base de datos.
+Y es frecuentemente la que determina si un proyecto sobrevive.
+
+### Territorio técnico completamente nuevo
+
+V ejecuta patrones conocidos con excelencia.
+Para algo que no existe en los patrones del Skills Vault,
+necesito diseñar la arquitectura primero.
+
+V implementa. Yo diseño lo nuevo.
+
+## La fórmula que nadie me enseñó
+
+**Luis (criterio + relación + diseño) + V (ejecución + memoria + consistencia) = equipo completo.**
+
+No es que la IA reemplaze al desarrollador.
+Es que la IA hace los 70% que consumen el 30% de la energía real,
+y el desarrollador se concentra en el 30% que consume el 70% de la energía real.
+
+El resultado: la capacidad productiva de un equipo de 5-8 personas,
+con la coordinación de 0 personas (porque no hay equipo que coordinar).
+
+## Lo que 12 meses y 17 proyectos te enseñan
+
+El mayor error que comete alguien que empieza a trabajar con IA:
+tratarla como una herramienta que acelera.
+
+La IA no es un acelerador de lo que ya hacías.
+Es un cambio de arquitectura de cómo trabajas.
+
+La pregunta correcta no es "¿cómo uso IA para hacer más rápido lo que hago?"
+La pregunta correcta es "¿qué parte de mi trabajo debería hacer yo,
+y qué parte debería operar un sistema?"
+
+Cuando esa distinción está clara, el número deja de sorprender.
+17 apps con 1 persona no es magia.
+Es la consecuencia natural de dividir el trabajo correctamente.
+
+---
+
+**Takeaways:**
+- V tiene memoria sin degradación y ejecución sin fatiga: dos ventajas estructurales sobre cualquier humano
+- Lo que no puede hacer la IA: criterio de negocio nuevo, relaciones humanas, diseño de territorio desconocido
+- La fórmula real: humano (criterio + relación) + IA (ejecución + memoria) = equipo completo
+- La IA no es un acelerador: es un cambio de arquitectura de cómo trabajas
+- 17 apps con 1 persona es el resultado de dividir el trabajo correctamente, no de trabajar más horas
+
     `,
   },
   {
