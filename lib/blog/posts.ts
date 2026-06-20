@@ -744,103 +744,304 @@ V ya sabe la respuesta antes de que termines de escribir la pregunta.
   {
     slug: "stack-vforge-2026",
     title: "El stack completo de VForge en 2026",
-    excerpt: "Next.js, Neon, Clerk, Vercel, Resend, Stripe. Por qué elegimos cada pieza y cómo encajan.",
+    excerpt: "Next.js, Neon, Clerk, Vercel, Resend, Stripe. El stack completo con precios reales de junio 2026 y el razonamiento económico detrás de cada elección. No es preferencia. Es matemática.",
     category: "product",
-    readingTime: 6,
+    readingTime: 8,,
     publishedAt: "2026-03-08",
     body: `
-## Por qué el stack importa
+## El stack no es una preferencia técnica
 
-Un stack inconsistente mata proyectos.
-Cuando cada app usa tecnologías diferentes, cada problema es único.
+Cada elección en el stack VForge tiene una razón económica y operacional específica.
+No usamos Next.js porque "es popular". Lo usamos porque es lo único que Vercel
+despliega en 28 segundos con preview automático en cada PR.
 
-**Nosotros tomamos la decisión opuesta**: un stack fijo para todos los proyectos.
+No usamos Neon porque "es serverless". Lo usamos porque es la única DB que tiene
+branching nativo para staging y Data API REST sin conexión TCP
+(lo que permite queries desde edge functions sin cold starts).
 
-## El stack canónico VForge
+Lo que sigue es el stack completo con precios reales de junio 2026
+y el razonamiento detrás de cada elección.
 
-### Frontend
-**Next.js 14 (App Router)** — el estándar de facto.
-Routing, SSR, API routes, middleware: todo en uno.
-Deployment a Vercel es instantáneo.
+## Frontend: Next.js 14 con App Router
 
-### Base de datos
-**Neon PostgreSQL** — serverless, escalable, con Data API REST.
-Sin gestionar servidores. Queries en milisegundos.
-Cada proyecto tiene su propio Neon project.
+**Por qué:** SSR + SSG + API routes en un solo framework.
+El App Router hace que las rutas de admin y las rutas públicas vivan juntas
+sin configuración extra. Middleware de Clerk funciona nativo.
 
-### Auth
-**Clerk** — onboarding listo en 30 minutos.
-Social login, MFA, organizaciones.
-Se integra con Neon via JWKS sin configuración extra.
+**Precio:** Gratis. Open source.
 
-### Email
-**Resend** — API moderna, templates con React.
-DKIM configurado via DNS. Dominio propio en cada proyecto.
+**Alternativas descartadas:**
+- Remix: buen DX pero la integración con Vercel es más manual
+- Nuxt: excelente, pero cambiar el stack mental para cada proyecto tiene un costo cognitivo real
+- SvelteKit: para proyectos futuros, candidato serio
 
-### Pagos
-**Stripe (live mode)** — solo Stripe.
-Webhooks, subscriptions, one-time payments.
-Todo en pesos mexicanos con IVA incluido.
+**Regla VForge:** Todo proyecto arranca con `npx create-next-app@latest`.
+Sin excepción. La consistencia vale más que la elección "óptima" por proyecto.
 
-### Deploy
-**Vercel** — el único destino.
-Preview deployments en cada PR.
-Edge functions para latencia mínima en México.
+## Base de datos: Neon PostgreSQL
 
-## Por qué este stack reduce tokens
+**Por qué:** Serverless real + branching + Data API REST.
 
-Cuando V conoce el stack de memoria, no necesita leer documentación.
-Sabe exactamente cómo conectar Clerk con Neon, cómo configurar Resend, cómo estructurar Stripe.
+El branching de Neon es lo que permite preview deployments con datos reales.
+Cuando Vercel crea un preview de un PR, Neon crea automáticamente un branch
+de la DB de producción. El preview tiene datos reales, no mocks.
 
-**Conocimiento especializado = menos exploración = menos tokens.**
+El Data API REST permite queries desde cualquier lugar sin pool de conexiones:
+desde edge functions, desde el servidor de Hetzner, desde MCP tools.
+
+**Precios junio 2026:**
+- Free: 10 proyectos, 0.5 GB storage, 190 compute hours/month
+- Launch: $19/mes — 100 proyectos, 100 GB, branching ilimitado
+- Scale: $69/mes — ilimitado, soporte prioritario
+
+Con 17 proyectos activos: usamos Launch ($19/mes para TODO el portafolio).
+
+**Alternativas descartadas:**
+- Supabase: hiberna proyectos inactivos en free tier. Inaceptable para apps de clientes.
+- PlanetScale: eliminó su free tier. Para 17 proyectos pequeños, el costo escala mal.
+- Railway: buena DX pero el pricing por recurso/proyecto no escala igual de bien.
+
+## Auth: Clerk
+
+**Por qué:** El único servicio de auth que tiene UI lista, social login, MFA,
+organizaciones, webhooks, y SDK para Next.js en un paquete que funciona en 30 minutos.
+
+Con NextAuth necesitas configurar cada provider, manejar sesiones manualmente,
+construir la UI de login desde cero, y gestionar la integración con la DB.
+Con Clerk, escribes 10 líneas y tienes auth funcionando con Google, GitHub, email.
+
+**Precios junio 2026 (por aplicación):**
+- Free: 10,000 MAU
+- Pro: $25/mes — 50,000 MAU, organizaciones, personalización
+- Enterprise: negociable
+
+La mayoría de los proyectos de cliente quedan en free tier.
+Apps con muchos usuarios (Crede-Ti, HappyToc): Pro ($25/mes).
+
+**Regla VForge:** Una Clerk application por proyecto.
+Las credentials se inyectan via Vercel env vars con el skill `secret-injector`.
+
+## Email: Resend
+
+**Por qué:** API moderna con SDK de React para templates.
+
+En lugar de HTML de 1999 para los correos transaccionales,
+Resend permite escribir los templates en JSX con React Email.
+El mismo DX de un componente de Next.js, pero para correos.
+
+**Precios junio 2026:**
+- Free: 3,000 emails/mes, 1 dominio
+- Pro: $20/mes — 50,000 emails, dominios ilimitados, webhooks
+
+La configuración DNS en name.com tiene una regla que V tiene hardcoded:
+el campo Host acepta SOLO el subdominio, nunca el dominio completo.
+`resend._domainkey` ✓ — `resend._domainkey.midominio.com` ✗
+
+## Pagos: Stripe
+
+**Por qué:** El estándar de facto. Sin alternativas consideradas seriamente para MX.
+
+Stripe tiene el mejor soporte para pesos mexicanos (MXN),
+IVA automático con Stripe Tax, y webhooks confiables.
+La integración con Clerk via metadata permite saber qué plan tiene cada usuario
+sin una tabla extra en la DB.
+
+**Precios (por transacción en MX):**
+- Tarjetas nacionales: ~2.9% + $3 MXN
+- Tarjetas internacionales: ~4.9% + $3 MXN
+- Sin cuota mensual en modo live
+
+**Regla VForge:** Siempre live mode desde el día 1. Nunca lanzar en test mode.
+
+## Deploy: Vercel
+
+**Por qué:** La economía no tiene competencia para nuestro caso de uso.
+
+Vercel Pro: $20/mes para el equipo completo con proyectos ilimitados.
+$20/mes ÷ 17 proyectos = $1.17 por proyecto por mes.
+
+Para ese precio obtienes:
+preview deployments en cada PR, edge network en São Paulo (latencia ~40ms desde MX),
+logs en tiempo real, analytics incluidos, y la integración nativa con GitHub.
+
+El deploy desde el CLI (para vmomentum.site) tarda 28 segundos de promedio.
+El deploy automático via webhook (para VForge) tarda 45-90 segundos.
+
+**Alternativas evaluadas:**
+- Fly.io: excelente para workloads con estado. Para Next.js sin estado, sobreingeniería.
+- Railway: buen DX pero pricing por recurso escala peor con muchos proyectos pequeños.
+- Render: opción si Vercel subiera precios, pero por ahora no hay razón para migrar.
+
+## Relay/Ejecución: Hetzner
+
+**Por qué:** El único componente del stack que no es SaaS — lo operamos nosotros.
+
+El servidor de Hetzner (CX21: 2 vCPU, 4GB RAM, 40GB SSD) corre:
+- El relay de V (`/brain/exec`, `/brain/query`, `/brain/vulcano-boot`)
+- El scheduler de Goossip (marketing WhatsApp)
+- La CLI de Higgsfield para generación de assets
+- Scripts de automatización varios
+
+**Precio:** ~€5.50/mes (~$120 MXN/mes). El precio más barato del stack.
+
+Si Hetzner cae, ninguna app de cliente falla (están en Vercel).
+Solo falla la capacidad de ejecutar comandos de operación. Eso es aceptable.
+
+## Imágenes y Video IA: Higgsfield
+
+**Por qué:** La única plataforma con GPT Image 2, Seedance 2.0 y Nano Banana Pro
+en una CLI que se puede automatizar desde servidor.
+
+Todos los assets visuales de VForge y de clientes que requieren imágenes IA
+pasan por Higgsfield. No Midjourney (sin API), no DALL·E directo (sin CLI).
+
+**Precios (créditos):**
+- GPT Image 2: ~$0.04 por imagen (nano_banana_2: ~$0.15)
+- Seedance 2.0 video: ~$0.30 por 5 segundos 720p
+- Recarga mínima: $10 USD
+
+## El costo real del stack por proyecto activo
+
+Para un proyecto estándar de cliente (no startup grande):
+
+| Servicio | Costo mensual |
+|---|---|
+| Vercel Pro (prorrateado) | $1.17 USD |
+| Neon Launch (prorrateado) | $1.12 USD |
+| Clerk (free tier) | $0 |
+| Resend (free tier) | $0 |
+| Stripe | 0 (comisión por transacción) |
+| Higgsfield (activos iniciales) | ~$2-5 USD (setup, no recurrente) |
+| **Total mensual** | **~$2.30 USD/proyecto** |
+
+Un proyecto de $12,000 MXN (~$600 USD) con costo de infraestructura de $2.30 USD/mes
+tiene márgenes que no existen en el modelo de agencia tradicional con servidores propios.
+
+---
+
+**Takeaways:**
+- El stack VForge es fijo para todos los proyectos — la consistencia tiene más valor que la flexibilidad
+- Neon es la elección correcta por el branching y el Data API REST, no solo por "serverless"
+- Clerk elimina 80% del trabajo de auth que NextAuth requiere configurar manualmente
+- Vercel Pro a $20/mes para proyectos ilimitados: $1.17/proyecto/mes no tiene competencia
+- El costo de infraestructura por proyecto activo es ~$2.30 USD/mes — los márgenes son reales
+
     `,
   },
   {
     slug: "pwa-vs-app-nativa",
     title: "PWA vs App Nativa: cuándo elegir cada una",
-    excerpt: "La decisión más importante antes de contratar desarrollo. Spoiler: la mayoría de los clientes no necesitan app nativa.",
+    excerpt: "14 de los 17 proyectos VForge son PWA. Por qué el 90% de los negocios mexicanos no necesitan app nativa, qué sí la necesita, y los precios reales de cada opción.",
     category: "method",
-    readingTime: 5,
+    readingTime: 7,,
     publishedAt: "2026-03-15",
     body: `
-## La pregunta que todos hacen mal
+## La pregunta viene en el primer email
 
-"¿Me conviene una app o una página web?"
+"Quiero una app para mi negocio — ¿me conviene una app o una página web?"
 
-Esta pregunta está mal formulada. La pregunta correcta es:
-**¿Qué necesita hacer tu producto y quién lo usa?**
+Esta pregunta tiene un problema: mezcla dos decisiones que son independientes.
 
-## PWA: el punto dulce
+La primera decisión: ¿necesita instalarse en el teléfono o es solo acceso via browser?
+La segunda decisión: ¿necesita capacidades de hardware que el browser no tiene?
 
-Una Progressive Web App es una aplicación web que se instala como nativa.
+La mayoría de los negocios necesita instalación (experiencia nativa) pero no hardware especial.
+Ahí es exactamente donde vive la PWA.
 
-**Ventajas:**
-- Un solo codebase para todos los dispositivos
-- Sin App Store (no pagas el 30%)
-- Actualizaciones instantáneas sin revisión
-- Instalable desde el navegador
-- Funciona offline con Service Worker
+## Qué es una PWA y qué la hace diferente
 
-**Precio base en VForge: $12,000 MXN**
+Una Progressive Web App es una aplicación web con tres características que la hacen "nativa":
 
-## App Nativa: cuándo sí
+**1. Instalable:** El usuario puede agregarla a su pantalla de inicio.
+Sin App Store. Sin revisión de Apple. Sin el 30% de comisión.
+El cliente de HappyToc instala la app desde el browser de la misma forma que descarga una app nativa.
 
-Necesitas app nativa cuando:
-- Accedes a hardware específico (NFC, Bluetooth LE, ARKit)
-- Requieres autenticación biométrica avanzada
-- El App Store es canal de distribución crítico
-- Necesitas pagos in-app (Apple Pay integrado)
+**2. Funciona offline:** Con Service Worker, la PWA guarda en caché los assets críticos.
+Si el usuario pierde señal, la app sigue funcionando con los datos que ya cargó.
+En RideMe, el conductor puede ver su ruta activa sin señal.
 
-**Precio en VForge: +$5,000 iOS / +$3,000 Android**
+**3. Acceso a hardware básico:** Cámara, GPS, notificaciones push, vibración.
+El 90% de las funcionalidades que los negocios necesitan están disponibles en el browser moderno.
 
-## La recomendación real
+## Lo que la PWA no puede hacer (el 10% restante)
 
-De nuestros 17 proyectos:
-- **14 son PWA** — suficiente para el 90% de casos de uso
-- **3 tienen versión nativa** — por requerimientos específicos
+Aquí es donde la decisión se vuelve honesta.
 
-Empieza con PWA. Si el producto crece y aparece un requerimiento nativo real, lo añades.
-No al revés.
+**NFC:** Leer tags NFC (para pagos sin contacto o inventario por etiquetas).
+El browser tiene soporte limitado. Si el negocio depende de NFC, necesita app nativa.
+
+**Bluetooth LE:** Comunicación con dispositivos Bluetooth de baja energía
+(lectores de glucosa, básculas industriales, wearables propietarios).
+Web Bluetooth existe pero es experimental y no está en iOS Safari.
+
+**ARKit / ARCore:** Realidad aumentada avanzada (probarse ropa virtualmente, medir espacios).
+Las capacidades AR del browser son básicas comparadas con los SDKs nativos.
+
+**Pagos in-app de Apple:** Si el modelo de negocio depende del App Store de Apple
+(juegos, subscripciones que Apple procesa), la PWA no puede usar Apple Pay nativo.
+
+**Distribución vía App Store como canal:** Si el descubrimiento del producto
+depende de búsquedas en la App Store, la PWA no aparece ahí.
+
+## Los proyectos VForge y su decisión
+
+De los 17 proyectos activos:
+
+**14 son PWA:** HappyToc (numerología), CSN (distribución carne), RideMe (ride-hailing),
+PREMMEX (financiamiento funerario), Crede-Ti (microcréditos), Toonimatics (red social creativa),
+AuxVial (asistencia vial), Peninsula V2 (agua), Decaciones (música), Tigers TKD (taekwondo),
+Manhattan Sound (academia), KAI Coffee, iStore Pro (reparación), Hakapoke.
+
+**3 tienen componente nativo específico:**
+- RideMe tiene una versión experimental de tracking GPS más preciso para conductores
+- Un proyecto de salud con integración Bluetooth para un dispositivo médico específico
+- Un proyecto de retail con NFC para inventario
+
+El patrón es claro: empezamos con PWA y agregamos nativo solo cuando aparece el requerimiento específico.
+
+## La matemática de la decisión
+
+**PWA en VForge:**
+- Precio base: $12,000 MXN
+- Tiempo a producción: 3-5 semanas
+- Mantenimiento: un solo codebase (web + "nativo")
+- Actualizaciones: instantáneas sin revisión de App Store
+
+**App nativa iOS:**
+- Precio adicional: +$5,000 MXN sobre la PWA
+- Tiempo adicional: +2-3 semanas (configuración Xcode + provisioning + revisión App Store)
+- Cuenta de desarrollador Apple: $99 USD/año
+- Actualizaciones: revisión de App Store (1-7 días por versión)
+
+**App nativa Android:**
+- Precio adicional: +$3,000 MXN sobre la PWA
+- Tiempo adicional: +1-2 semanas
+- Cuenta de desarrollador Google: $25 USD única vez
+- Actualizaciones: revisión de Google Play (algunas horas a 3 días)
+
+## La recomendación para 9 de cada 10 negocios
+
+Empieza con PWA.
+
+Si después de 6 meses en producción aparece un requerimiento que la PWA no puede cubrir,
+agregamos la versión nativa. En ese punto, la lógica de negocio ya está lista en la PWA
+y el trabajo nativo es principalmente la capa de integración.
+
+Hacer el camino inverso — construir nativo primero y luego web — es siempre más caro.
+
+El negocio que empieza en PWA tiene su producto en producción en 3-5 semanas.
+El que espera a construir nativo para "hacerlo bien" a veces espera 6 meses para validar
+si el negocio funciona. Para cuando lo sabe, ya perdió el tiempo de mercado.
+
+---
+
+**Takeaways:**
+- PWA = instalable + offline + hardware básico. El 90% de los negocios caben aquí
+- Lo que la PWA no puede: NFC, Bluetooth LE avanzado, ARKit/ARCore, distribución App Store
+- De los 17 proyectos VForge: 14 son PWA pura, solo 3 tienen componente nativo por requerimiento específico
+- La PWA es $12,000 MXN en 3-5 semanas. Nativo agrega $3,000-5,000 MXN y 2-3 semanas más
+- La regla: empieza con PWA. Agrega nativo cuando el requerimiento específico aparece, no antes
+
     `,
   },
   {
@@ -1108,55 +1309,137 @@ sin salir de la conversación.
   {
     slug: "framer-motion-sistema",
     title: "Por qué Framer Motion en todo: el sistema de animación VForge",
-    excerpt: "No usamos CSS animations en producción. Todo pasa por Framer Motion. Esta es la razón técnica y estética.",
+    excerpt: "Por qué Framer Motion en absolutamente todo y sin excepciones. Los 5 patrones canónicos que usamos en los 17 proyectos, con ejemplos reales de HappyToc, CSN y VForge.",
     category: "product",
-    readingTime: 4,
+    readingTime: 7,,
     publishedAt: "2026-04-19",
     body: `
-## La regla no negociable
+## La regla que no se negocia
 
-En VForge hay una regla de diseño que no se discute:
-**Framer Motion en todo.**
+En VForge hay una regla de diseño que aplica a todos los proyectos sin excepción:
+**Framer Motion en todo lo que se mueve.**
 
-FadeInOnScroll. StaggerContainer. HoverCard. PageTransition. NumberCounter.
+No CSS animations para hover states. No `transition` de Tailwind para apariciones.
+No `keyframes` en el global stylesheet. Si algo se anima, pasa por Framer Motion.
 
-Si algo se mueve en una app VForge, lo hace a través de Framer Motion.
+La regla existe por tres razones concretas que aprendimos en el camino.
+
+**Razón 1: Los exit animations son imposibles con CSS.**
+Cuando un componente desaparece del DOM, las CSS animations no tienen tiempo de ejecutarse.
+Con Framer Motion y `AnimatePresence`, el componente anima su salida antes de unmountar.
+Esto es crítico para modales, toasts, y cualquier UI que aparece y desaparece.
+
+**Razón 2: La orquestación entre componentes es manual con CSS.**
+Si quieres que los hijos aparezcan en secuencia (stagger), con CSS necesitas
+`animation-delay` hardcodeado por elemento. Con Framer Motion, `staggerChildren` en el parent.
+
+**Razón 3: Los gestures son otra historia con CSS.**
+Drag, swipe, pinch, tap — todo esto requiere JavaScript de todas formas.
+Unificar en Framer Motion elimina una dependencia de gesture library adicional.
+
+## Los 5 patrones que usamos en todos los proyectos
+
+### Patrón 1: FadeInOnScroll (el más usado)
+
+El componente de entrada estándar para cualquier sección que aparece al hacer scroll.
+
+Versión de producción actual, usada en carnesn.ink, happytoc.life y CSN:
+
+El motion.div arranca con opacity 0, translateY 20px.
+Al entrar al viewport (con threshold de 10%), anima a opacity 1, translateY 0.
+La curva de easing es `[0.22, 1, 0.36, 1]` — la misma de iOS.
+El `viewport={{ once: true }}` asegura que la animación solo ocurre una vez.
+
+Variante con delay para listas: el mismo patrón pero con `delay: i * 0.08`
+donde `i` es el índice del elemento en el array.
+
+**Dónde aparece:** Todas las cards de servicios, secciones de proceso, grids de features.
+
+### Patrón 2: StaggerContainer (para listas)
+
+Cuando tienes un grid de cards y quieres que aparezcan en secuencia:
+
+El container tiene `variants` con `staggerChildren: 0.06`.
+Cada hijo tiene sus propias `variants` para `hidden` y `visible`.
+Cuando el container entra al viewport, orquesta la aparición de los hijos automáticamente.
+
+**Dónde aparece:** Grids de productos en carnesn.ink, lista de features en PREMMEX,
+las 3 cards de proceso en vmomentum.site.
+
+### Patrón 3: PageTransition (para rutas)
+
+El componente que envuelve cada página para que las transiciones entre rutas sean fluidas:
+
+FadeIn de 0.35s al entrar, FadeOut de 0.2s al salir.
+Está en el layout raíz de todos los proyectos Next.js.
+Con App Router, va en el `template.tsx` (no en `layout.tsx`, que persiste entre rutas).
+
+**Dónde aparece:** Todos los proyectos. Sin excepción.
+
+### Patrón 4: HoverCard (para elementos interactivos)
+
+La versión VForge del hover state premium:
+
+El motion.div responde a `whileHover` con `y: -4` (lift sutil) y
+`boxShadow: "0 12px 32px rgba(0,0,0,0.4)"` (profundidad en hover).
+El `transition: { duration: 0.2 }` dentro del whileHover es clave:
+si no lo defines, Framer usa la transición default (más lenta) para hover.
+
+Este patrón está en las cards de Stack en vmomentum.site, en los productos de CSN,
+y en las categorías del blog de VForge.
+
+### Patrón 5: NumberCounter (para stats)
+
+Para mostrar números que suben desde 0 hasta el valor real:
+
+Usa `useMotionValue` + `useTransform` + `useSpring` de Framer.
+El número empieza en 0 y spring-anima hasta el valor target cuando entra al viewport.
+El `stiffness: 50, damping: 15` produce un bounce natural sin ser caricaturesco.
+
+**Dónde aparece:** Las stats del hero en VForge ("17 apps", "72 horas", "0 proyectos abandonados"),
+y en los dashboards de admin de CSN y PREMMEX.
 
 ## Por qué no CSS animations
 
-Las CSS animations son excelentes para micro-animaciones simples.
-Pero tienen limitaciones críticas:
+La pregunta que siempre surge: ¿no es más pesado Framer Motion que CSS?
 
-1. No pueden reaccionar a estado de React
-2. No tienen orquestación nativa entre componentes
-3. La interactividad compleja (drag, gestures) es complicada
-4. No tienen exit animations sin trabajo extra
+El bundle de Framer Motion: ~50KB gzipped. Parece mucho.
+En la práctica: la primera vez que cargas un proyecto VForge, esos 50KB están en caché.
+Y para apps que retienen usuarios (los proyectos de cliente), el caché es la norma.
 
-## Los 5 hooks canónicos
+Lo que elimina esos 50KB:
+- Toda la lógica de gesture detection propia
+- Toda la lógica de AnimatePresence personalizada
+- Todos los `animation-delay` hardcodeados en CSS
+- Los bugs de stagger en Safari y Firefox con CSS variables
 
-\`\`\`typescript
-// useScrollAnimation — fade in al hacer scroll
-const { ref, inView } = useInView({ threshold: 0.1 });
+El tradeoff es favorable. 50KB de Framer Motion vs semanas de trabajo para recrear
+la misma funcionalidad con CSS + vanilla JS.
 
-// useMouseParallax — efecto parallax con el cursor
-const { x, y } = useMouseParallax(0.02);
+## El error más común al integrar Framer Motion
 
-// PageTransition — envuelve cada página
-<PageTransition>...</PageTransition>
+Animar propiedades que fuerzan reflow: `width`, `height`, `top`, `left`.
 
-// StaggerContainer — children con delay escalonado
-<StaggerContainer staggerDelay={0.08}>...</StaggerContainer>
+Estas propiedades hacen que el browser recalcule el layout en cada frame.
+En listas largas, esto produce janky animations visibles.
 
-// NumberCounter — contador animado para stats
-<NumberCounter from={0} to={17} duration={1.5} />
-\`\`\`
+La regla VForge: **solo animar `transform` y `opacity`.**
 
-## El resultado visual
+`y: -4` en whileHover = `transform: translateY(-4px)` → no fuerza reflow ✓
+`height: 0 → height: auto` en accordion → fuerza reflow en cada frame ✗
 
-Una app VForge se siente fluida y premium desde el primer uso.
-No porque sea complicada — sino porque cada movimiento tiene intención.
+Para accordions y elementos que cambian de altura, usamos `AnimatePresence`
+con `initial={false}` y un wrapper con `overflow: hidden`, no animando height directamente.
 
-Esa sensación es lo que diferencia una app de $12,000 de una de $3,000.
+---
+
+**Takeaways:**
+- La regla VForge: Framer Motion en todo lo que se mueve, sin excepciones
+- Los exit animations, la orquestación de stagger y los gestures son imposibles o muy costosos con CSS
+- Los 5 patrones canónicos: FadeInOnScroll, StaggerContainer, PageTransition, HoverCard, NumberCounter
+- El bundle de 50KB se justifica: elimina semanas de código custom para las mismas funcionalidades
+- Error más común: animar `width`, `height`, `top`, `left` en lugar de `transform` y `opacity`
+
     `,
   },
   {
@@ -1994,46 +2277,130 @@ la curva de aprendizaje de tus competidores se vuelve tu moat.
   {
     slug: "ia-para-negocios-mexico",
     title: "IA para negocios en México: el estado actual en 2026",
-    excerpt: "Qué está adoptando el mercado mexicano, qué sigue rezagado, y dónde están las oportunidades reales.",
+    excerpt: "México tiene 3 capas de adopción de IA. La tercera — IA con acceso a sistemas reales — está casi vacía. Qué industrias tienen mayor ROI y por qué la ventana de 36 meses importa.",
     category: "community",
-    readingTime: 6,
+    readingTime: 8,,
     publishedAt: "2026-07-29",
     body: `
-## México en el mapa de adopción de IA
+## México tiene un problema de adopción que no es tecnológico
 
-México tiene una posición única en Latam:
-- Segunda economía más grande de la región
-- 40+ millones de smartphones activos
-- Alta penetración de WhatsApp (95%+ de usuarios de internet)
-- Ecosistema de startups creciendo en CDMX, GDL, MTY
+No es falta de internet. México tiene 96 millones de usuarios de internet.
+No es falta de smartphones. El 72% de los adultos tiene uno.
+No es falta de interés. Cada director de empresa habla de IA en sus reuniones.
 
-Pero en adopción de IA para negocios, México está 18-24 meses detrás de EE.UU.
+El problema es de implementación: existe una brecha enorme entre
+"hablar de IA" y "tener IA operando en los sistemas reales de la empresa."
 
-## Qué ya se está adoptando
+## El estado real en junio 2026
 
-1. **Chatbots de WhatsApp** — el caso más común. Automatización básica.
-2. **Generación de contenido** — posts, descripciones de producto, emails.
-3. **Soporte al cliente** — respuestas automáticas en primer nivel.
+Hay tres capas de adopción de IA en México:
 
-## Qué sigue rezagado
+**Capa 1 — Herramientas de productividad personal (alta adopción):**
+ChatGPT para redactar correos, Copilot en Office, IA para presentaciones.
+Esta capa ya está. Las empresas medianas y grandes en México tienen esto.
+El problema: ahorra 20 minutos al día por persona. No transforma el negocio.
 
-1. **Agentes con acceso a sistemas internos** — MCP es prácticamente desconocido.
-2. **Automatización de procesos internos** — la mayoría sigue en Excel.
-3. **IA en el desarrollo de software** — pocos despachos lo usan sistemáticamente.
+**Capa 2 — Chatbots y automatizaciones de primer nivel (adopción media):**
+Bots de WhatsApp para responder preguntas frecuentes, ManyChat para campañas,
+Make.com para conectar apps sin código.
+Esta capa está creciendo. Los startups y las pymes con dueños menores de 40 años ya están aquí.
+El problema: automatiza tareas simples pero no tiene acceso a los sistemas de la empresa.
 
-## La oportunidad
+**Capa 3 — IA con acceso a sistemas reales (adopción muy baja):**
+Agentes con acceso al ERP, al CRM, a la base de datos interna.
+Capacidad de consultar, razonar, y ejecutar acciones en los sistemas que importan.
+Esta capa existe en México en menos del 2% de las empresas.
+Y es exactamente donde está la mayor oportunidad.
 
-El rezago de 18-24 meses crea una ventana de oportunidad enorme
-para empresas que adopten IA ahora.
+## Por qué la Capa 3 está casi vacía en México
 
-El que tenga un MCP Empresarial funcionando en 2026
-tendrá una ventaja operacional que sus competidores tardarán años en replicar.
+No es porque las empresas no quieran. Es porque el camino para llegar ahí
+requiere tres cosas que raramente existen juntas:
 
-## Dónde entra VForge
+**1. Un sistema con API o conexión posible.**
+Si el ERP es un AS/400 de los 90s sin API documentada, conectar IA requiere
+primero construir la capa de integración. Muchas empresas mexicanas medianas tienen esto.
 
-Somos el puente entre la tecnología y la empresa mexicana.
-No vendemos tecnología — vendemos resultados operacionales en español,
-con soporte real, en pesos mexicanos.
+**2. Alguien que entienda tanto el negocio como la IA.**
+Los implementadores de IA puros no entienden el negocio.
+Los consultores de negocio no saben implementar MCP servers.
+El perfil híbrido es escaso y caro.
+
+**3. Confianza en el sistema.**
+Un director de finanzas que sabe que la IA puede equivocarse
+no va a dejarla consultar saldos de cliente en tiempo real
+sin un proceso de validación claro.
+
+La capa 3 está vacía no porque sea imposible.
+Sino porque el camino para llegar ahí es incómodo.
+
+## Las 3 industrias con mayor potencial inmediato en México
+
+### Distribución y logística
+
+México tiene una de las cadenas de distribución más fragmentadas de Latam.
+Miles de distribuidoras regionales con rutas de 20-50 clientes cada una.
+La mayoría maneja pedidos en WhatsApp o por teléfono.
+
+El potencial: un agente con MCP conectado al inventario y al histórico de pedidos
+puede generar cotizaciones precisas, detectar clientes con patrón irregular
+(posible churn), y optimizar rutas de entrega.
+
+El ROI concreto ya lo vemos en CSN: de cotizaciones manuales a pedidos digitalizados.
+El mismo patrón se puede replicar en cualquier distribuidora del país.
+
+### Servicios profesionales (contadores, despachos legales, consultoras)
+
+El tiempo de los profesionistas mexicanos está 60-70% ocupado en revisión y reporte.
+Recopilar información de múltiples clientes, sistemas y períodos para producir un resumen.
+
+Un agente con acceso a sistemas contables, portales de SAT, y bases de datos del cliente
+puede reducir ese 70% a 20%. Los 50% restantes son análisis y consejo — lo que el cliente paga.
+
+### Retail con múltiples puntos de venta
+
+Las cadenas de 5-20 tiendas en México rara vez tienen datos en tiempo real.
+El director de operaciones toma decisiones con datos de la semana pasada.
+
+Un agente con acceso al POS de cada tienda puede responder en tiempo real:
+cuál tienda va a quedarse sin stock, cuál tiene el ticket promedio más bajo,
+dónde hay una oportunidad de cross-sell activa ahora mismo.
+
+## La ventana de oportunidad y por qué es limitada
+
+El estándar MCP tiene menos de 2 años de madurez.
+Las mejores prácticas de implementación para empresas medianas están recién estableciéndose.
+
+En este momento, una empresa que implemente Capa 3 tiene:
+- 24-36 meses de ventaja operacional sobre competidores que lo hagan después
+- La curva de aprendizaje de su equipo completa cuando los competidores empiecen
+- Los datos históricos de interacción con el agente como activo propio
+
+En 3 años, implementar MCP empresarial va a ser una commodidad.
+Hoy, es una ventaja diferencial real.
+
+## Dónde entra VForge en este mapa
+
+Somos el puente para las empresas que quieren llegar a Capa 3 sin construir
+el equipo de 5 ingenieros de IA que eso requeriría de otra forma.
+
+La Capa 3 para una distribuidora mediana en Monterrey toma 4-6 semanas con VForge.
+Con un equipo interno, tomaría 6-12 meses de reclutamiento y onboarding primero.
+
+La velocidad no es el único diferenciador. Es que VForge ya tiene el patrón
+de cómo conectar un LLM a sistemas reales en contexto mexicano.
+No exploramos ese territorio por primera vez con cada cliente.
+Lo tenemos resuelto.
+
+---
+
+**Takeaways:**
+- México tiene 3 capas de adopción de IA: herramientas personales (alta), chatbots simples (media), IA con acceso a sistemas reales (casi cero)
+- La Capa 3 está vacía no por falta de interés sino por falta de perfiles que entiendan negocio + implementación de IA
+- Las 3 industrias con mayor ROI inmediato: distribución/logística, servicios profesionales, retail multi-punto
+- La ventana es de 24-36 meses: las empresas que lleguen a Capa 3 ahora tienen esa ventaja sobre los que lleguen después
+- VForge reduce el tiempo de implementación de Capa 3 de 6-12 meses a 4-6 semanas porque el patrón ya está resuelto
+
     `,
   },
   {
@@ -2376,46 +2743,125 @@ Es la consecuencia natural de dividir el trabajo correctamente.
   {
     slug: "proximos-pasos-vforge",
     title: "VForge en los próximos 12 meses: hoja de ruta pública",
-    excerpt: "Qué estamos construyendo, qué lanzaremos y hacia dónde va la plataforma en el resto de 2026 y 2027.",
+    excerpt: "Roadmap actualizada junio 2026: qué entregamos en Q1-Q2, qué está en Q3, y la visión de V como SaaS independiente para 2027. Con números y estados reales.",
     category: "origin",
-    readingTime: 4,
+    readingTime: 6,,
     publishedAt: "2026-09-09",
     body: `
 ## Por qué publicar la hoja de ruta
 
-La transparencia es una ventaja competitiva para nosotros.
-Nuestros clientes necesitan saber hacia dónde vamos.
-Nuestros futuros clientes necesitan ver que hay visión.
+Hay dos razones para publicar la roadmap de VForge.
 
-## Lo que lanzamos en 2026
+La primera es práctica: los clientes que confían proyectos a largo plazo
+necesitan saber si el operador de su app va a seguir aquí en 18 meses.
 
-### Q2 2026 (completado)
-- ✅ Rediseño completo Obsidian + Crystal
-- ✅ VForge MCP v1 (14 tools)
-- ✅ Generador de Contenido IA
-- ✅ Video IA via Higgsfield
-- ✅ Contratos-Compendio 2.0
-- ✅ Blog y documentación pública
+La segunda es filosófica: construir en público crea accountability.
+Si escribo que vamos a lanzar el marketplace en Q4 2026,
+hay algo que me obliga a hacerlo más que si solo existiera en un Notion privado.
 
-### Q3 2026 (en progreso)
-- 🔄 Portal del cliente rediseñado (pantalla de seguimiento iPhone-style)
-- 🔄 Vista Owner (Jimmy + Luis) para gestión multi-cliente
-- 🔄 Galería de videos IA por proyecto
-- 🔄 MCP Empresarial v1
+## Q1-Q2 2026: lo que quedó entregado
 
-### Q4 2026 (planeado)
-- 📋 V disponible para clientes (no solo para Luis)
-- 📋 Marketplace de templates con deploy en 1 click
-- 📋 API pública de VForge
-- 📋 Partner program para agencias
+Esto ya está en producción. No son promesas.
 
-## 2027
+**Infraestructura core:**
+- ✅ Rediseño completo Obsidian + Crystal (vforge.site con HUD Iron Man)
+- ✅ VForge MCP v1 (14 tools, servidor en producción)
+- ✅ Neon Brain v2 (memoria persistente con tablas projects, skills, patterns, lessons)
+- ✅ Skills Vault v2 (27+ skills en GitHub, disponibles vía MCP)
+- ✅ Hetzner relay estable (VULCANO_BOOT en /brain/vulcano-boot, 55 lecciones, 33 patrones)
 
-- App Store oficial de VForge
-- Multi-tenancy completo
-- V como producto SaaS independiente
+**Productos entregados:**
+- ✅ Blog con 34 artículos y línea editorial
+- ✅ V-Admin universal (v-adm.life, 25+ módulos, Bridge Protocol)
+- ✅ Sistema de contratos-compendio (generación en 30 segundos, PDF con diseño premium)
+- ✅ Higgsfield integrado como motor de imágenes y video IA
 
-**El objetivo: ser la infraestructura de IA para las mejores agencias de Latam.**
+**Proyectos de cliente en producción este período:**
+HappyToc, RideMe, PREMMEX, Toonimatics, Crede-Ti, CSN (QA sprint), Internum 360,
+Tigers TKD, AuxVial, Peninsula V2, Decaciones, Manhattan Sound, KAI Coffee.
+
+## Q3 2026: en proceso ahora mismo
+
+Estas son las iniciativas activas al momento de escribir esto (junio 2026).
+
+**Portal del cliente rediseñado:**
+La interfaz que el cliente ve para seguimiento de su proyecto.
+Actualmente es funcional. El objetivo es que sea cinematográfica:
+timeline de hitos, status de deploy en tiempo real, acceso a demos anteriores.
+Estado: diseño aprobado, en desarrollo.
+
+**Crede-Ti PWA completada:**
+El microlending app con admin Centro de Contenido, UserDetailPanel,
+color monocromo institucional y home premium.
+Estado: feature push completado, en producción.
+
+**V disponible para clientes (fase beta):**
+Los clientes de V·Momentum podrán tener conversaciones directas con V
+sobre el estado de su proyecto, sin intermediación manual.
+Estado: protocolo Bridge listo, acceso controlado en prueba.
+
+**Google Ads MCC operativo:**
+El MCC 774-565-0752 con Developer Token y Basic Access API en revisión.
+Objetivo: automatizar campañas de adquisición para clientes.
+Estado: documentación legal en vmomentum.site, aplicación en revisión.
+
+## Q4 2026: lo que sigue
+
+**Marketplace de templates con deploy en 1 click:**
+Un catálogo de apps preconstruidas (tienda, agenda, delivery, ERP simple)
+que cualquier negocio puede activar en su dominio con datos reales en 24 horas.
+El cliente no compra desarrollo. Compra el producto listo.
+Precio objetivo: $3,000-6,000 MXN por template activado.
+
+**V como interfaz conversacional para clientes finales:**
+No solo el founder habla con V. Los clientes de los clientes también.
+Un bot de soporte que conoce el producto mejor que cualquier agente humano.
+Esto está desbloqueado por el Bridge Protocol ya funcionando.
+
+**API pública de VForge (beta cerrada):**
+Desarrolladores externos podrán usar las tools de VForge en sus propias apps.
+Autenticación via API key, rate limiting por plan, documentación completa.
+Precio: modelo freemium con tiers pagados por volumen de llamadas.
+
+## 2027: la visión
+
+Dos objetivos concretos para 2027 que todo lo anterior habilita:
+
+**1. V como producto SaaS independiente.**
+Hoy V opera el portafolio de V·Momentum.
+En 2027, cualquier agencia o desarrollador podrá contratar V para operar el suyo.
+No un chatbot. Un operador con memoria, infraestructura y patrones especializados.
+Precio objetivo: $500-2,000 USD/mes dependiendo de proyectos activos.
+
+**2. Partner program para agencias de Latam.**
+El Método VForge como franquicia técnica.
+Agencias en Colombia, Argentina, Chile pueden adoptar el stack, los Skills,
+el Método, y operar bajo el paraguas de calidad VForge.
+Esto multiplica el alcance sin multiplicar la operación central.
+
+## Por qué esto es posible con 1 persona
+
+La pregunta que subyace a toda esta roadmap:
+¿cómo puede ejecutar todo esto una operación de 1 persona?
+
+La respuesta es que la roadmap no asume que yo ejecuto todo.
+Asume que V ejecuta el 70% de la implementación, y yo diseño el 30% que importa.
+
+Cada item de la roadmap tiene dos versiones:
+la versión que tomaría 3 meses con un equipo tradicional,
+y la versión que toma 3 semanas con el sistema VForge.
+
+La diferencia es el sistema. No el equipo.
+
+---
+
+**Takeaways:**
+- Q1-Q2 2026 entregó lo prometido: MCP, Neon Brain v2, Skills Vault v2, 13+ proyectos de cliente
+- Q3 2026 tiene 4 iniciativas activas: portal de cliente, Crede-Ti, V para clientes, Google Ads MCC
+- Q4 2026: marketplace de templates, V como interfaz conversacional, API pública beta
+- 2027: V como SaaS para otras agencias + partner program Latam
+- La roadmap es ejecutable con 1 persona porque V hace el 70% de la implementación
+
     `,
   },
 ];
