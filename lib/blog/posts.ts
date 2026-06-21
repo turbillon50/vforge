@@ -582,7 +582,7 @@ Sin Skills Vault, V improvisa cada vez que enfrenta una tarea recurrente.
 "Cómo configurar DNS en name.com para Resend" toma 5 turnos
 mientras V prueba configuraciones, detecta errores, ajusta.
 
-Con el skill `secret-injector` y el patrón DNS validado:
+Con el skill \`secret-injector\` y el patrón DNS validado:
 1 turno. El patrón ya existe. V lo ejecuta sin explorar.
 
 Ahorro en tareas recurrentes: 40-70% según la complejidad.
@@ -665,12 +665,12 @@ y ya tiene el patrón de corrección porque vio el mismo bug en Peninsula V2.
 
 Base de datos PostgreSQL con 6 tablas que persisten entre sesiones:
 
-- `projects` — 17 proyectos activos con su stack, sus credenciales (referencia), su estado
-- `skills` — 27+ patrones ejecutables con triggers y pasos
-- `patterns` — 55+ lecciones aprendidas de errores reales
-- `lessons` — casos específicos documentados post-resolución
-- `agent_registry` — estado de cada agente del ecosistema
-- `credentials_registry` — referencia de secrets (nunca los valores)
+- \`projects\` — 17 proyectos activos con su stack, sus credenciales (referencia), su estado
+- \`skills\` — 27+ patrones ejecutables con triggers y pasos
+- \`patterns\` — 55+ lecciones aprendidas de errores reales
+- \`lessons\` — casos específicos documentados post-resolución
+- \`agent_registry\` — estado de cada agente del ecosistema
+- \`credentials_registry\` — referencia de secrets (nunca los valores)
 
 Sin Neon Brain, V empieza cada sesión desde cero.
 Con Neon Brain, V arranca con el contexto completo del proyecto en ~500 tokens.
@@ -680,9 +680,9 @@ Con Neon Brain, V arranca con el contexto completo del proyecto en ~500 tokens.
 Servidor en Frankfurt que recibe comandos vía API y los ejecuta en el filesystem real.
 
 Endpoints activos:
-- `POST /brain/exec` — bash commands en el servidor
-- `POST /brain/query` — queries SQL a Neon Brain
-- `GET /brain/vulcano-boot` — contexto completo del ecosistema en 1 llamada
+- \`POST /brain/exec\` — bash commands en el servidor
+- \`POST /brain/query\` — queries SQL a Neon Brain
+- \`GET /brain/vulcano-boot\` — contexto completo del ecosistema en 1 llamada
 
 Sin el relay, V puede hablar pero no actuar.
 Con el relay, V hace git push, instala dependencias, lee logs, modifica archivos.
@@ -698,7 +698,7 @@ Cada skill define:
 - Herramientas que usa (comandos o APIs específicas)
 
 Cuando V necesita configurar DNS en name.com, no explora.
-Ejecuta el skill `secret-injector` con las reglas validadas:
+Ejecuta el skill \`secret-injector\` con las reglas validadas:
 host = solo subdominio, nunca el dominio completo.
 
 Sin Skills Vault: 5 turnos para configurar algo conocido.
@@ -706,7 +706,7 @@ Con Skills Vault: 1 turno, sin errores.
 
 ### Módulo 4: MCP Server (interfaz)
 
-14 herramientas expuestas en `https://vforge.site/api/mcp` que cualquier
+14 herramientas expuestas en \`https://vforge.site/api/mcp\` que cualquier
 agente compatible puede invocar.
 
 Desde Claude Desktop, una sola pregunta puede:
@@ -775,7 +775,7 @@ sin configuración extra. Middleware de Clerk funciona nativo.
 - Nuxt: excelente, pero cambiar el stack mental para cada proyecto tiene un costo cognitivo real
 - SvelteKit: para proyectos futuros, candidato serio
 
-**Regla VForge:** Todo proyecto arranca con `npx create-next-app@latest`.
+**Regla VForge:** Todo proyecto arranca con \`npx create-next-app@latest\`.
 Sin excepción. La consistencia vale más que la elección "óptima" por proyecto.
 
 ## Base de datos: Neon PostgreSQL
@@ -819,7 +819,7 @@ La mayoría de los proyectos de cliente quedan en free tier.
 Apps con muchos usuarios (Crede-Ti, HappyToc): Pro ($25/mes).
 
 **Regla VForge:** Una Clerk application por proyecto.
-Las credentials se inyectan via Vercel env vars con el skill `secret-injector`.
+Las credentials se inyectan via Vercel env vars con el skill \`secret-injector\`.
 
 ## Email: Resend
 
@@ -835,7 +835,7 @@ El mismo DX de un componente de Next.js, pero para correos.
 
 La configuración DNS en name.com tiene una regla que V tiene hardcoded:
 el campo Host acepta SOLO el subdominio, nunca el dominio completo.
-`resend._domainkey` ✓ — `resend._domainkey.midominio.com` ✗
+\`resend._domainkey\` ✓ — \`resend._domainkey.midominio.com\` ✗
 
 ## Pagos: Stripe
 
@@ -877,7 +877,7 @@ El deploy automático via webhook (para VForge) tarda 45-90 segundos.
 **Por qué:** El único componente del stack que no es SaaS — lo operamos nosotros.
 
 El servidor de Hetzner (CX21: 2 vCPU, 4GB RAM, 40GB SSD) corre:
-- El relay de V (`/brain/exec`, `/brain/query`, `/brain/vulcano-boot`)
+- El relay de V (\`/brain/exec\`, \`/brain/query\`, \`/brain/vulcano-boot\`)
 - El scheduler de Goossip (marketing WhatsApp)
 - La CLI de Higgsfield para generación de assets
 - Scripts de automatización varios
@@ -1319,19 +1319,19 @@ sin salir de la conversación.
 En VForge hay una regla de diseño que aplica a todos los proyectos sin excepción:
 **Framer Motion en todo lo que se mueve.**
 
-No CSS animations para hover states. No `transition` de Tailwind para apariciones.
-No `keyframes` en el global stylesheet. Si algo se anima, pasa por Framer Motion.
+No CSS animations para hover states. No \`transition\` de Tailwind para apariciones.
+No \`keyframes\` en el global stylesheet. Si algo se anima, pasa por Framer Motion.
 
 La regla existe por tres razones concretas que aprendimos en el camino.
 
 **Razón 1: Los exit animations son imposibles con CSS.**
 Cuando un componente desaparece del DOM, las CSS animations no tienen tiempo de ejecutarse.
-Con Framer Motion y `AnimatePresence`, el componente anima su salida antes de unmountar.
+Con Framer Motion y \`AnimatePresence\`, el componente anima su salida antes de unmountar.
 Esto es crítico para modales, toasts, y cualquier UI que aparece y desaparece.
 
 **Razón 2: La orquestación entre componentes es manual con CSS.**
 Si quieres que los hijos aparezcan en secuencia (stagger), con CSS necesitas
-`animation-delay` hardcodeado por elemento. Con Framer Motion, `staggerChildren` en el parent.
+\`animation-delay\` hardcodeado por elemento. Con Framer Motion, \`staggerChildren\` en el parent.
 
 **Razón 3: Los gestures son otra historia con CSS.**
 Drag, swipe, pinch, tap — todo esto requiere JavaScript de todas formas.
@@ -1347,11 +1347,11 @@ Versión de producción actual, usada en carnesn.ink, happytoc.life y CSN:
 
 El motion.div arranca con opacity 0, translateY 20px.
 Al entrar al viewport (con threshold de 10%), anima a opacity 1, translateY 0.
-La curva de easing es `[0.22, 1, 0.36, 1]` — la misma de iOS.
-El `viewport={{ once: true }}` asegura que la animación solo ocurre una vez.
+La curva de easing es \`[0.22, 1, 0.36, 1]\` — la misma de iOS.
+El \`viewport={{ once: true }}\` asegura que la animación solo ocurre una vez.
 
-Variante con delay para listas: el mismo patrón pero con `delay: i * 0.08`
-donde `i` es el índice del elemento en el array.
+Variante con delay para listas: el mismo patrón pero con \`delay: i * 0.08\`
+donde \`i\` es el índice del elemento en el array.
 
 **Dónde aparece:** Todas las cards de servicios, secciones de proceso, grids de features.
 
@@ -1359,8 +1359,8 @@ donde `i` es el índice del elemento en el array.
 
 Cuando tienes un grid de cards y quieres que aparezcan en secuencia:
 
-El container tiene `variants` con `staggerChildren: 0.06`.
-Cada hijo tiene sus propias `variants` para `hidden` y `visible`.
+El container tiene \`variants\` con \`staggerChildren: 0.06\`.
+Cada hijo tiene sus propias \`variants\` para \`hidden\` y \`visible\`.
 Cuando el container entra al viewport, orquesta la aparición de los hijos automáticamente.
 
 **Dónde aparece:** Grids de productos en carnesn.ink, lista de features en PREMMEX,
@@ -1372,7 +1372,7 @@ El componente que envuelve cada página para que las transiciones entre rutas se
 
 FadeIn de 0.35s al entrar, FadeOut de 0.2s al salir.
 Está en el layout raíz de todos los proyectos Next.js.
-Con App Router, va en el `template.tsx` (no en `layout.tsx`, que persiste entre rutas).
+Con App Router, va en el \`template.tsx\` (no en \`layout.tsx\`, que persiste entre rutas).
 
 **Dónde aparece:** Todos los proyectos. Sin excepción.
 
@@ -1380,9 +1380,9 @@ Con App Router, va en el `template.tsx` (no en `layout.tsx`, que persiste entre 
 
 La versión VForge del hover state premium:
 
-El motion.div responde a `whileHover` con `y: -4` (lift sutil) y
-`boxShadow: "0 12px 32px rgba(0,0,0,0.4)"` (profundidad en hover).
-El `transition: { duration: 0.2 }` dentro del whileHover es clave:
+El motion.div responde a \`whileHover\` con \`y: -4\` (lift sutil) y
+\`boxShadow: "0 12px 32px rgba(0,0,0,0.4)"\` (profundidad en hover).
+El \`transition: { duration: 0.2 }\` dentro del whileHover es clave:
 si no lo defines, Framer usa la transición default (más lenta) para hover.
 
 Este patrón está en las cards de Stack en vmomentum.site, en los productos de CSN,
@@ -1392,9 +1392,9 @@ y en las categorías del blog de VForge.
 
 Para mostrar números que suben desde 0 hasta el valor real:
 
-Usa `useMotionValue` + `useTransform` + `useSpring` de Framer.
+Usa \`useMotionValue\` + \`useTransform\` + \`useSpring\` de Framer.
 El número empieza en 0 y spring-anima hasta el valor target cuando entra al viewport.
-El `stiffness: 50, damping: 15` produce un bounce natural sin ser caricaturesco.
+El \`stiffness: 50, damping: 15\` produce un bounce natural sin ser caricaturesco.
 
 **Dónde aparece:** Las stats del hero en VForge ("17 apps", "72 horas", "0 proyectos abandonados"),
 y en los dashboards de admin de CSN y PREMMEX.
@@ -1410,7 +1410,7 @@ Y para apps que retienen usuarios (los proyectos de cliente), el caché es la no
 Lo que elimina esos 50KB:
 - Toda la lógica de gesture detection propia
 - Toda la lógica de AnimatePresence personalizada
-- Todos los `animation-delay` hardcodeados en CSS
+- Todos los \`animation-delay\` hardcodeados en CSS
 - Los bugs de stagger en Safari y Firefox con CSS variables
 
 El tradeoff es favorable. 50KB de Framer Motion vs semanas de trabajo para recrear
@@ -1418,18 +1418,18 @@ la misma funcionalidad con CSS + vanilla JS.
 
 ## El error más común al integrar Framer Motion
 
-Animar propiedades que fuerzan reflow: `width`, `height`, `top`, `left`.
+Animar propiedades que fuerzan reflow: \`width\`, \`height\`, \`top\`, \`left\`.
 
 Estas propiedades hacen que el browser recalcule el layout en cada frame.
 En listas largas, esto produce janky animations visibles.
 
-La regla VForge: **solo animar `transform` y `opacity`.**
+La regla VForge: **solo animar \`transform\` y \`opacity\`.**
 
-`y: -4` en whileHover = `transform: translateY(-4px)` → no fuerza reflow ✓
-`height: 0 → height: auto` en accordion → fuerza reflow en cada frame ✗
+\`y: -4\` en whileHover = \`transform: translateY(-4px)\` → no fuerza reflow ✓
+\`height: 0 → height: auto\` en accordion → fuerza reflow en cada frame ✗
 
-Para accordions y elementos que cambian de altura, usamos `AnimatePresence`
-con `initial={false}` y un wrapper con `overflow: hidden`, no animando height directamente.
+Para accordions y elementos que cambian de altura, usamos \`AnimatePresence\`
+con \`initial={false}\` y un wrapper con \`overflow: hidden\`, no animando height directamente.
 
 ---
 
@@ -1438,7 +1438,7 @@ con `initial={false}` y un wrapper con `overflow: hidden`, no animando height di
 - Los exit animations, la orquestación de stagger y los gestures son imposibles o muy costosos con CSS
 - Los 5 patrones canónicos: FadeInOnScroll, StaggerContainer, PageTransition, HoverCard, NumberCounter
 - El bundle de 50KB se justifica: elimina semanas de código custom para las mismas funcionalidades
-- Error más común: animar `width`, `height`, `top`, `left` en lugar de `transform` y `opacity`
+- Error más común: animar \`width\`, \`height\`, \`top\`, \`left\` en lugar de \`transform\` y \`opacity\`
 
     `,
   },
@@ -2069,7 +2069,7 @@ No porque V sea más inteligente que yo. Sino porque V no tiene las 10 horas ant
 Esto suena trivial. No lo es.
 
 La mayoría de los bugs en producción no vienen de problemas técnicos complejos.
-Vienen de decisiones tomadas bajo fatiga: el `if` que debería ser `if else`,
+Vienen de decisiones tomadas bajo fatiga: el \`if\` que debería ser \`if else\`,
 el array que debería validarse antes de mapear, el timeout que se olvidó configurar.
 
 V no se cansa. Esa sola propiedad cambia la economía del desarrollo solo.
@@ -2176,10 +2176,10 @@ El vendedor abre Claude Desktop. Escribe:
 "Cotización para Acero Noreste: 500 barras 1/2 pulgada, 200 ángulos 2x2, entrega Parque Industrial Valle."
 
 Claude llama a las tools del servidor MCP:
-1. `get_inventory(sku_list)` — disponibilidad en tiempo real del AS/400
-2. `get_client_pricing(client_id, items)` — precio con descuento aplicado
-3. `estimate_delivery(zone, weight)` — tiempo de entrega calculado
-4. `generate_quotation(items, client, delivery)` — PDF de cotización
+1. \`get_inventory(sku_list)\` — disponibilidad en tiempo real del AS/400
+2. \`get_client_pricing(client_id, items)\` — precio con descuento aplicado
+3. \`estimate_delivery(zone, weight)\` — tiempo de entrega calculado
+4. \`generate_quotation(items, client, delivery)\` — PDF de cotización
 
 Output: PDF de cotización listo en 90 segundos.
 
@@ -2203,10 +2203,10 @@ El asesor le pregunta a Claude:
 "Resumen de estatus de todos los clientes al cierre de mes. Urgencias primero."
 
 El servidor MCP tiene acceso a:
-- `get_sat_status(rfc)` — estatus de declaraciones via scraping autenticado
-- `get_contpaqi_balance(client_id)` — CxP/CxC de Contpaqi
-- `get_fiscal_calendar(client_id)` — próximas obligaciones del cliente
-- `get_bank_status(client_id)` — saldo y movimientos recientes
+- \`get_sat_status(rfc)\` — estatus de declaraciones via scraping autenticado
+- \`get_contpaqi_balance(client_id)\` — CxP/CxC de Contpaqi
+- \`get_fiscal_calendar(client_id)\` — próximas obligaciones del cliente
+- \`get_bank_status(client_id)\` — saldo y movimientos recientes
 
 Output: Reporte priorizado por urgencia. Los clientes con problemas aparecen primero.
 
@@ -2229,10 +2229,10 @@ El director desde su teléfono pregunta:
 "¿Cómo vamos esta semana? ¿Alguna tienda con alerta?"
 
 El servidor MCP accede a:
-- `get_weekly_sales(store_ids)` — ventas por tienda del período
-- `get_margin_by_store(store_ids)` — margen por categoría
-- `get_inventory_alerts(store_ids)` — productos bajo mínimo
-- `get_ticket_average(store_ids)` — ticket promedio y comparativo vs semana anterior
+- \`get_weekly_sales(store_ids)\` — ventas por tienda del período
+- \`get_margin_by_store(store_ids)\` — margen por categoría
+- \`get_inventory_alerts(store_ids)\` — productos bajo mínimo
+- \`get_ticket_average(store_ids)\` — ticket promedio y comparativo vs semana anterior
 
 Output: Resumen ejecutivo en 30 segundos. Solo abre los reportes que Claude flaggea.
 
