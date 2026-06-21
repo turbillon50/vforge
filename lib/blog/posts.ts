@@ -129,7 +129,7 @@ no solo ayudar con él.
     title: "Qué es V·Momentum y por qué no somos una agencia normal",
     excerpt: "V·Momentum no es una agencia. La diferencia entre vender horas de código y vender el producto funcionando. Por qué el modelo importa más que el precio.",
     category: "origin",
-    readingTime: 6,,
+    readingTime: 6,
     publishedAt: "2026-01-22",
     body: `
 ## Hay miles de agencias de desarrollo en México
@@ -631,7 +631,7 @@ El sistema eficiente no solo cuesta menos. Es literalmente mejor.
     title: "V: el agente que conoce tu proyecto mejor que tú",
     excerpt: "Una sesión real de debugging con V: de error 500 en producción a fix deployado en 8 minutos. Los 4 módulos que hacen esto posible y por qué ChatGPT no puede hacer lo mismo.",
     category: "product",
-    readingTime: 8,,
+    readingTime: 8,
     publishedAt: "2026-03-01",
     body: `
 ## Una sesión de trabajo real con V
@@ -746,7 +746,7 @@ V ya sabe la respuesta antes de que termines de escribir la pregunta.
     title: "El stack completo de VForge en 2026",
     excerpt: "Next.js, Neon, Clerk, Vercel, Resend, Stripe. El stack completo con precios reales de junio 2026 y el razonamiento económico detrás de cada elección. No es preferencia. Es matemática.",
     category: "product",
-    readingTime: 8,,
+    readingTime: 8,
     publishedAt: "2026-03-08",
     body: `
 ## El stack no es una preferencia técnica
@@ -933,7 +933,7 @@ tiene márgenes que no existen en el modelo de agencia tradicional con servidore
     title: "PWA vs App Nativa: cuándo elegir cada una",
     excerpt: "14 de los 17 proyectos VForge son PWA. Por qué el 90% de los negocios mexicanos no necesitan app nativa, qué sí la necesita, y los precios reales de cada opción.",
     category: "method",
-    readingTime: 7,,
+    readingTime: 7,
     publishedAt: "2026-03-15",
     body: `
 ## La pregunta viene en el primer email
@@ -1150,7 +1150,7 @@ Todos nuestros contratos incluyen:
     title: "Caso de éxito: CSN Carnes Selectas — el panel de admin perfecto",
     excerpt: "CSN Carnes Selectas tenía pedidos en WhatsApp, crédito en Excel y repartidores sin sistema. Cómo se construyó el panel de admin que hoy es el template estándar de VForge.",
     category: "community",
-    readingTime: 7,,
+    readingTime: 7,
     publishedAt: "2026-04-05",
     body: `
 ## El panel de admin que no íbamos a construir dos veces
@@ -1311,7 +1311,7 @@ sin salir de la conversación.
     title: "Por qué Framer Motion en todo: el sistema de animación VForge",
     excerpt: "Por qué Framer Motion en absolutamente todo y sin excepciones. Los 5 patrones canónicos que usamos en los 17 proyectos, con ejemplos reales de HappyToc, CSN y VForge.",
     category: "product",
-    readingTime: 7,,
+    readingTime: 7,
     publishedAt: "2026-04-19",
     body: `
 ## La regla que no se negocia
@@ -2028,7 +2028,7 @@ document.documentElement.setAttribute(
     title: "La IA no te reemplaza. Te hace irrelevante si no la usas.",
     excerpt: "El momento exacto en que dejé de hacerme la pregunta equivocada sobre la IA. De 3 proyectos con bugs a las 2 AM a 17 proyectos sin llamadas nocturnas de urgencia.",
     category: "origin",
-    readingTime: 7,,
+    readingTime: 7,
     publishedAt: "2026-07-15",
     body: `
 ## La pregunta que ya no me hacen
@@ -2130,7 +2130,7 @@ La IA no me quitó el trabajo. Me devolvió el trabajo que vale la pena hacer.
     title: "VForge MCP Empresarial: casos de uso reales para equipos de +10 personas",
     excerpt: "Tres empresas mexicanas reales: distribuidora de Monterrey, despacho contable en CDMX, cadena de tiendas en Guadalajara. Qué cambia cuando el LLM puede tocar tus sistemas.",
     category: "mcp",
-    readingTime: 9,,
+    readingTime: 9,
     publishedAt: "2026-07-22",
     body: `
 ## El problema con "adoptar IA" en una empresa
@@ -2279,7 +2279,7 @@ la curva de aprendizaje de tus competidores se vuelve tu moat.
     title: "IA para negocios en México: el estado actual en 2026",
     excerpt: "México tiene 3 capas de adopción de IA. La tercera — IA con acceso a sistemas reales — está casi vacía. Qué industrias tienen mayor ROI y por qué la ventana de 36 meses importa.",
     category: "community",
-    readingTime: 8,,
+    readingTime: 8,
     publishedAt: "2026-07-29",
     body: `
 ## México tiene un problema de adopción que no es tecnológico
@@ -2745,7 +2745,7 @@ Es la consecuencia natural de dividir el trabajo correctamente.
     title: "VForge en los próximos 12 meses: hoja de ruta pública",
     excerpt: "Roadmap actualizada junio 2026: qué entregamos en Q1-Q2, qué está en Q3, y la visión de V como SaaS independiente para 2027. Con números y estados reales.",
     category: "origin",
-    readingTime: 6,,
+    readingTime: 6,
     publishedAt: "2026-09-09",
     body: `
 ## Por qué publicar la hoja de ruta
