@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
 import { voiceBrain, type ChatTurn } from "@/lib/forge/v-voice-brain";
-import { persistVTurn } from "@/lib/v-chat/store";
+import { V_TEXT_SYSTEM_PROMPT } from "@/lib/forge/v-text-persona";
+import { persistVTurn, getVMessages } from "@/lib/v-chat/store";
 import { matchPlugins } from "@/lib/v/plugins/registry";
 import { runMatchedPlugins } from "@/lib/v/plugins/runner";
 import { ensureDatabaseHealed } from "@/lib/db/client";
 
 export const runtime = "nodejs";
 
-const HETZNER_V_URL = process.env.HETZNER_V_URL || "http://178.105.135.26/v/chat";
-const HETZNER_SECRET = process.env.HETZNER_SECRET || "";
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
+const V_TEXT_MODEL = process.env.V_TEXT_MODEL || "claude-sonnet-4-6";
 
-// qwen2.5:1.5b colapsa con contexto largo — máximo 6 turnos (12 mensajes)
-const MAX_HISTORY_TURNS = 6;
+// Historial máximo en modo texto (más que en voz — V puede manejar más contexto)
+const MAX_HISTORY_TURNS = 20;
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,15 +28,14 @@ export async function POST(req: NextRequest) {
       ? history.slice(-MAX_HISTORY_TURNS * 2)
       : [];
 
-    // ¿Persistimos este turno? Sólo con un hilo real (no los placeholders
-    // volátiles "default"/"voice"). Best-effort: nunca rompe el chat.
+    // Sesión persistible: cualquier id real que no sea placeholder
     const persistable =
       typeof session_id === "string" &&
       session_id.length > 0 &&
       session_id !== "default" &&
       session_id !== "voice";
 
-    // ─── MODO VOZ: cerebro hablado Gemini ───────────────────────────────────
+    // ─── MODO VOZ: cerebro hablado Gemini ─────────────────────────────────────
     if (mode === "voice") {
       const reply = await voiceBrain(message, safeHistory);
       if (persistable && typeof reply === "string" && reply.trim()) {
@@ -45,13 +46,15 @@ export async function POST(req: NextRequest) {
           model: "v-voice",
         }).catch(() => {});
       }
-      return NextResponse.json({ ok: true, reply, mode: "voice", session_id: session_id || "voice" });
+      return NextResponse.json({
+        ok: true,
+        reply,
+        mode: "voice",
+        session_id: session_id || "voice",
+      });
     }
 
-    // ─── PLUGINS: ¿el mensaje activa alguna capacidad extendida? ─────────────
-    // Antes de molestar al cerebro, vemos si un plugin (registry v_plugins) hace
-    // match con el mensaje. Si lo hay, V ejecuta el/los plugin(s) e incorpora su
-    // respuesta. Best-effort total: cualquier falla cae al flujo normal.
+    // ─── PLUGINS: capacidades extendidas antes del cerebro ─────────────────────
     try {
       await ensureDatabaseHealed();
       const matches = await matchPlugins(message);
@@ -89,54 +92,73 @@ export async function POST(req: NextRequest) {
         }
       }
     } catch (e) {
-      // Plugin layer caído → seguimos al cerebro normal, no rompemos el chat.
       console.error("[V plugins] dispatch failed:", e);
     }
 
-    // ─── MODO TEXTO (existente): proxy al cerebro de Hetzner ─────────────────
-    const upstream = await fetch(HETZNER_V_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        secret: HETZNER_SECRET,
-        message,
-        history: safeHistory,
-        session_id: session_id || "default",
-      }),
-      signal: AbortSignal.timeout(45000),
-    });
-
-    if (!upstream.ok) {
-      const err = await upstream.text();
-      return NextResponse.json({ error: err }, { status: upstream.status });
+    // ─── MODO TEXTO: V con su voz real (Anthropic directo) ────────────────────
+    if (!ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: "ANTHROPIC_API_KEY no configurada — V no puede pensar" },
+        { status: 503 }
+      );
     }
 
-    const data = await upstream.json();
-
-    // Sanitizar respuesta corrupta del modelo antes de enviar al cliente
-    if (data.reply && typeof data.reply === "string") {
-      const r = data.reply;
-      if (/(.)\1{40,}/.test(r) || /([A-Z]{2,6})\1{20,}/.test(r) || /(?:LLL|nuL|doL){6,}/.test(r)) {
-        const match = r.match(/(.)\1{40,}|([A-Z]{2,6})\1{20,}|(?:LLL|nuL|doL){6,}/);
-        const idx = match ? r.indexOf(match[0]) : 0;
-        data.reply =
-          (idx > 20 ? r.substring(0, idx).trim() : "") +
-          "\n\n⚠ _Respuesta truncada — modelo con contexto excesivo._";
+    // Rehidratar historial desde DB si hay session_id válido y el cliente
+    // no mandó history (sesión retomada entre dispositivos/recargas)
+    let contextHistory: ChatTurn[] = safeHistory;
+    if (persistable && safeHistory.length === 0) {
+      try {
+        const dbMsgs = await getVMessages(session_id);
+        contextHistory = dbMsgs.slice(-MAX_HISTORY_TURNS * 2).map((m) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        }));
+      } catch {
+        // best-effort — si falla la DB, seguimos sin historial
       }
     }
 
-    if (persistable && typeof data.reply === "string" && data.reply.trim()) {
+    const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+
+    const messages: Array<{ role: "user" | "assistant"; content: string }> = [
+      ...contextHistory
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+      { role: "user", content: message },
+    ];
+
+    const response = await anthropic.messages.create({
+      model: V_TEXT_MODEL,
+      max_tokens: 2048,
+      system: V_TEXT_SYSTEM_PROMPT,
+      messages,
+    });
+
+    const reply =
+      response.content
+        .filter((b): b is Anthropic.TextBlock => b.type === "text")
+        .map((b) => b.text)
+        .join("") || "Perdón hermano, me perdí. ¿Me lo repites?";
+
+    if (persistable) {
       await persistVTurn({
         sessionId: session_id,
         userText: message,
-        assistantText: data.reply,
-        model: "v-hetzner",
+        assistantText: reply,
+        model: V_TEXT_MODEL,
       }).catch(() => {});
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json({
+      ok: true,
+      reply,
+      mode: "text",
+      model: V_TEXT_MODEL,
+      session_id: session_id || "default",
+    });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
+    console.error("[V chat] error:", msg);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
