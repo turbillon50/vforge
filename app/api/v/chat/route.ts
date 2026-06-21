@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
-import { voiceBrain, type ChatTurn } from "@/lib/forge/v-voice-brain";
-import { V_TEXT_SYSTEM_PROMPT } from "@/lib/forge/v-text-persona";
+import { voiceBrain, textBrain, type ChatTurn } from "@/lib/forge/v-brain";
 import { persistVTurn, getVMessages } from "@/lib/v-chat/store";
 import { matchPlugins } from "@/lib/v/plugins/registry";
 import { runMatchedPlugins } from "@/lib/v/plugins/runner";
@@ -9,11 +7,9 @@ import { ensureDatabaseHealed } from "@/lib/db/client";
 
 export const runtime = "nodejs";
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
-const V_TEXT_MODEL = process.env.V_TEXT_MODEL || "claude-sonnet-4-6";
-
-// Historial máximo en modo texto (más que en voz — V puede manejar más contexto)
-const MAX_HISTORY_TURNS = 20;
+// Historial máximo: voz corto (4 turnos), texto largo (20 turnos)
+const MAX_HISTORY_VOICE = 4;
+const MAX_HISTORY_TEXT = 20;
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,25 +21,25 @@ export async function POST(req: NextRequest) {
     }
 
     const safeHistory: ChatTurn[] = Array.isArray(history)
-      ? history.slice(-MAX_HISTORY_TURNS * 2)
+      ? history.slice(-MAX_HISTORY_TEXT * 2)
       : [];
 
-    // Sesión persistible: cualquier id real que no sea placeholder
     const persistable =
       typeof session_id === "string" &&
       session_id.length > 0 &&
       session_id !== "default" &&
       session_id !== "voice";
 
-    // ─── MODO VOZ: cerebro hablado Gemini ─────────────────────────────────────
+    // ─── MODO VOZ ─────────────────────────────────────────────────────────────
     if (mode === "voice") {
-      const reply = await voiceBrain(message, safeHistory);
-      if (persistable && typeof reply === "string" && reply.trim()) {
+      const voiceHistory = safeHistory.slice(-MAX_HISTORY_VOICE * 2);
+      const reply = await voiceBrain(message, voiceHistory);
+      if (persistable && reply.trim()) {
         await persistVTurn({
           sessionId: session_id,
           userText: message,
           assistantText: reply,
-          model: "v-voice",
+          model: "v-hetzner-voice",
         }).catch(() => {});
       }
       return NextResponse.json({
@@ -54,7 +50,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // ─── PLUGINS: capacidades extendidas antes del cerebro ─────────────────────
+    // ─── PLUGINS ──────────────────────────────────────────────────────────────
     try {
       await ensureDatabaseHealed();
       const matches = await matchPlugins(message);
@@ -95,57 +91,29 @@ export async function POST(req: NextRequest) {
       console.error("[V plugins] dispatch failed:", e);
     }
 
-    // ─── MODO TEXTO: V con su voz real (Anthropic directo) ────────────────────
-    if (!ANTHROPIC_API_KEY) {
-      return NextResponse.json(
-        { error: "ANTHROPIC_API_KEY no configurada — V no puede pensar" },
-        { status: 503 }
-      );
-    }
-
-    // Rehidratar historial desde DB si hay session_id válido y el cliente
-    // no mandó history (sesión retomada entre dispositivos/recargas)
+    // ─── MODO TEXTO — cerebro V via Hetzner (cuenta de usuario de Luis) ───────
+    // Rehidratar historial desde DB si no vino del cliente
     let contextHistory: ChatTurn[] = safeHistory;
     if (persistable && safeHistory.length === 0) {
       try {
         const dbMsgs = await getVMessages(session_id);
-        contextHistory = dbMsgs.slice(-MAX_HISTORY_TURNS * 2).map((m) => ({
+        contextHistory = dbMsgs.slice(-MAX_HISTORY_TEXT * 2).map((m) => ({
           role: m.role as "user" | "assistant",
           content: m.content,
         }));
       } catch {
-        // best-effort — si falla la DB, seguimos sin historial
+        // best-effort
       }
     }
 
-    const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+    const reply = await textBrain(message, contextHistory);
 
-    const messages: Array<{ role: "user" | "assistant"; content: string }> = [
-      ...contextHistory
-        .filter((m) => m.role === "user" || m.role === "assistant")
-        .map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
-      { role: "user", content: message },
-    ];
-
-    const response = await anthropic.messages.create({
-      model: V_TEXT_MODEL,
-      max_tokens: 2048,
-      system: V_TEXT_SYSTEM_PROMPT,
-      messages,
-    });
-
-    const reply =
-      response.content
-        .filter((b): b is Anthropic.TextBlock => b.type === "text")
-        .map((b) => b.text)
-        .join("") || "Perdón hermano, me perdí. ¿Me lo repites?";
-
-    if (persistable) {
+    if (persistable && reply.trim()) {
       await persistVTurn({
         sessionId: session_id,
         userText: message,
         assistantText: reply,
-        model: V_TEXT_MODEL,
+        model: "v-hetzner-text",
       }).catch(() => {});
     }
 
@@ -153,7 +121,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       reply,
       mode: "text",
-      model: V_TEXT_MODEL,
+      model: "claude-via-hetzner",
       session_id: session_id || "default",
     });
   } catch (err: unknown) {
