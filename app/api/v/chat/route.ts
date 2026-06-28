@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 
 // Historial máximo: voz corto (4 turnos), texto largo (20 turnos)
 const MAX_HISTORY_VOICE = 4;
-const MAX_HISTORY_TEXT = 20;
+const MAX_HISTORY_TEXT = 4;
 
 export async function POST(req: NextRequest) {
   try {
