@@ -3,8 +3,8 @@
    LIGHT vf-fg rgba(10,10,20,0.92)   sobre #f4f4f8 = 18:1 PASS */
 :root,[data-theme="dark"] {
   --vf-fg:       rgba(255,255,255,0.95);
-  --vf-fg-1:     rgba(255,255,255,0.72);
-  --vf-fg-2:     rgba(255,255,255,0.48);
+  --vf-fg-1:     rgba(255,255,255,0.82);
+  --vf-fg-2:     rgba(255,255,255,0.66);
   --vf-border:   rgba(255,255,255,0.08);
   --vf-border-1: rgba(255,255,255,0.12);
   --vf-border-2: rgba(255,255,255,0.20);
