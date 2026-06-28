@@ -1,342 +1,344 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
-import { IconArrowR, IconBot, IconCheck, IconCpu, IconDatabase, IconSparkles, IconZap, IconX } from "@/components/brand/VFIcons";
+import { useRef, useState } from "react";
+import { motion, useInView } from "framer-motion";
+import {
+  IconRocket,
+  IconShield,
+  IconActivity,
+  IconGlobe,
+  IconLayers,
+  IconUsers,
+} from "@/components/brand/VFIcons";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-type Product = {
+interface Product {
   id: string;
+  category: string;
   name: string;
   tagline: string;
-  priceLabel: string;
+  desc: string;
   accent: string;
-  bgImg?: string;
-  sphere?: string;       // imagen de esfera en vez de foto
-  icon?: "cpu" | "bot" | "zap" | "db";
-  badge?: string;
-  isNew?: boolean;
-  fullDesc: string;
-  timeline?: { phase: string; detail: string; pay?: string }[];
-  includes?: string[];
-  capabilities?: string[];
-  note?: string;
-  ctaLabel?: string;
-};
+  tags: string[];
+  Icon: React.ComponentType<{ size?: number }>;
+  stat: string;
+  statLabel: string;
+}
 
 const PRODUCTS: Product[] = [
   {
-    id: "app",
-    name: "Aplicación Personalizada",
-    tagline: "De cero a producción",
-    priceLabel: "$12,000 MXN",
-    accent: "#8b5cf6",
-    bgImg: "/products/app.jpg",
-    badge: "Producto estrella",
-    fullDesc: "Construimos tu aplicación completa: PWA premium, base de datos, login, dashboard y todo lo necesario para operar en el mundo real. Empiezas con una demo gratuita y avanzas por etapas con pagos claros.",
-    timeline: [
-      { phase: "Día 1–4", detail: "Demo gratuita — ves tu app antes de pagar" },
-      { phase: "Inicio de contrato", detail: "Arranca el desarrollo", pay: "$4,000" },
-      { phase: "Etapa 1", detail: "Desarrollo del núcleo y flujos" },
-      { phase: "Etapa 2", detail: "Integraciones y refinamiento", pay: "$4,000" },
-      { phase: "Entrega final", detail: "Producción + capacitación", pay: "$4,000" },
-    ],
-    includes: ["PWA instalable", "Dominio propio", "Diseño premium", "Roles de usuario", "Base de datos", "Login seguro", "Dashboard", "Notificaciones push", "Correos automáticos", "Integraciones", "Manual de uso", "Capacitación"],
-  },
-  {
-    id: "mcp",
-    name: "MCP Empresarial",
-    tagline: "El cerebro que conecta tus IA",
-    priceLabel: "Desde $25,000 MXN",
+    id: "delivery",
+    category: "Delivery & Logística",
+    name: "Pedidos en línea",
+    tagline: "Agua, comida, servicios. Tuyo en 30 minutos.",
+    desc: "App de pedidos con seguimiento GPS, historial, pagos integrados y WhatsApp automático al confirmar.",
     accent: "#22d3ee",
-    icon: "cpu",
-    isNew: true,
-    fullDesc: "Diseñamos MCP empresariales para tus procesos, con memoria de empresa y ahorro de tokens por contexto. Un solo cerebro que conecta todas tus IA — Claude, GPT, Gemini — para que trabajen con el conocimiento de tu negocio sin repetir contexto.",
-    capabilities: ["Memoria de empresa persistente", "Ahorro de tokens por contexto", "Conecta todas tus IA", "Procesos automatizados", "Acceso a tus datos en tiempo real", "Protocolo seguro (OAuth)"],
-    note: "El mismo motor que opera VForge por dentro, ahora para tu empresa.",
-    ctaLabel: "Solicita el MCP de VForge",
+    tags: ["PWA", "GPS", "WhatsApp", "Stripe"],
+    Icon: IconRocket,
+    stat: "< 30s",
+    statLabel: "confirmar pedido",
   },
   {
-    id: "ios",
-    name: "Publicación iOS",
-    tagline: "Tu app en el App Store",
-    priceLabel: "$5,000 MXN",
-    accent: "#0ea5e9",
-    bgImg: "/products/mcp.jpg",
-    fullDesc: "Llevamos tu aplicación al App Store de Apple. Configuración de cuenta de desarrollador, build firmado, assets, revisión de Apple y publicación. Tu app lista para iIconBell y iPad.",
-    timeline: [
-      { phase: "Preparación", detail: "Configuración de App Store Connect" },
-      { phase: "Build", detail: "Compilación y firma del paquete" },
-      { phase: "Revisión", detail: "Envío y seguimiento con Apple" },
-      { phase: "Publicación", detail: "Tu app en vivo en el App Store" },
-    ],
+    id: "clinica",
+    category: "Salud & Clínicas",
+    name: "Sistema clínico",
+    tagline: "Expedientes, citas y pagos en un solo lugar.",
+    desc: "Gestión de pacientes, agenda inteligente, historial médico cifrado y cobros con facturación automática.",
+    accent: "#4ade80",
+    tags: ["Neon", "Clerk", "Resend", "Stripe"],
+    Icon: IconShield,
+    stat: "100%",
+    statLabel: "datos cifrados",
   },
   {
-    id: "android",
-    name: "Publicación Android",
-    tagline: "Tu app en Google Play",
-    priceLabel: "$3,000 MXN",
-    accent: "#22c55e",
-    bgImg: "/products/android.jpg",
-    fullDesc: "Publicamos tu aplicación en Google Play. Configuración de Play Console, build firmado, ficha de tienda optimizada, revisión y publicación para millones de dispositivos Android.",
-    timeline: [
-      { phase: "Preparación", detail: "Configuración de Play Console" },
-      { phase: "Build", detail: "APK/AAB firmado" },
-      { phase: "Ficha", detail: "Store listing optimizado" },
-      { phase: "Publicación", detail: "Tu app en vivo en Google Play" },
-    ],
+    id: "mlm",
+    category: "MLM & Redes de distribución",
+    name: "Plataforma MLM",
+    tagline: "Comisiones automáticas. Red que crece sola.",
+    desc: "Árbol de afiliados multinivel, cálculo de comisiones en tiempo real, tienda y panel de distribuidor.",
+    accent: "#a78bfa",
+    tags: ["Multi-nivel", "Dashboard", "PWA", "Pagos"],
+    Icon: IconUsers,
+    stat: "N niveles",
+    statLabel: "comisiones auto",
   },
   {
-    id: "videos",
-    name: "Videos IA Cinematográficos",
-    tagline: "Pixar, cine y corporativo",
-    priceLabel: "Desde $200 MXN",
-    accent: "#f59e0b",
-    bgImg: "/products/videos.jpg",
-    fullDesc: "Producimos videos cinematográficos generados con IA de última generación. Estilo Pixar, cinematográfico realista o corporativo profesional. Perfectos para campañas, presentaciones y lanzamientos.",
-    capabilities: ["Estilo Pixar / animación 3D", "Cinematográfico fotorrealista", "Corporativo profesional", "Spots para redes sociales", "Intros y lanzamientos", "Entrega en alta resolución"],
+    id: "fintech",
+    category: "Fintech & Créditos",
+    name: "App de créditos",
+    tagline: "Solicita, aprueba y cobra en minutos.",
+    desc: "Solicitud digital, scoring automático, firmas electrónicas y cobranza con recordatorios por WhatsApp.",
+    accent: "#fbbf24",
+    tags: ["DocuSign", "WhatsApp", "Neon", "PDF"],
+    Icon: IconActivity,
+    stat: "< 5 min",
+    statLabel: "crédito aprobado",
   },
   {
-    id: "automations",
-    name: "Automatizaciones Empresariales",
-    tagline: "Tu empresa operando sola",
-    priceLabel: "Desde $20,000 MXN",
-    accent: "#a855f7",
-    icon: "zap",
-    fullDesc: "Automatizamos los procesos de tu empresa de punta a punta. WhatsApp, correo, CRM, telefonía y flujos documentales conectados con IA. Tu operación funciona sola mientras tú creces.",
-    capabilities: ["WhatsApp automatizado", "Correo inteligente", "CRM integrado", "Telefonía con IA", "Flujos de trabajo", "Automatización documental", "Integraciones empresariales"],
-  },
-  {
-    id: "bots",
-    name: "IconBot Inteligentes",
-    tagline: "Atención y ventas 24/7",
-    priceLabel: "Desde $1,500 MXN",
-    accent: "#06b6d4",
-    icon: "bot",
-    fullDesc: "IconBot inteligentes que atienden, venden y dan seguimiento sin descanso. En WhatsApp, Telegram o tu sitio web. Responden, califican leads y cierran ventas mientras tu equipo duerme.",
-    capabilities: ["Atención al cliente", "Ventas automatizadas", "Seguimiento de leads", "WhatsApp", "Telegram", "Widget web"],
-  },
-  {
-    id: "llm",
-    name: "LLMs Empresariales",
-    tagline: "Una IA que opera tu empresa",
-    priceLabel: "$5,000 – $60,000 MXN",
+    id: "servicios",
+    category: "Servicios a Domicilio",
+    name: "App de servicios",
+    tagline: "Agenda, asigna y cobra sin papel.",
+    desc: "Calendario de órdenes, asignación de técnicos, bitácora fotográfica de obra y cobro en sitio con QR.",
     accent: "#fb923c",
-    sphere: "/sphere-orange.png",
-    badge: "Máxima potencia",
-    fullDesc: "Construimos un modelo de lenguaje empresarial a la medida, con memoria persistente y capacidad de coordinar tu negocio completo. Conectado a tus datos, tus herramientas y tus procesos.",
-    capabilities: ["Memoria persistente", "Memoria semántica", "Memoria vectorial", "Memoria maestra", "OpenRouter / Gemini / Claude / GPT", "Bases documentales", "Automatizaciones integradas"],
-    note: "BI es un ejemplo de LLM empresarial capaz de operar y coordinar una empresa completa.",
+    tags: ["Maps", "Calendario", "Fotos", "QR"],
+    Icon: IconGlobe,
+    stat: "0 papel",
+    statLabel: "operación digital",
+  },
+  {
+    id: "saas",
+    category: "SaaS & Empresarial",
+    name: "CRM & Dashboard",
+    tagline: "Tu empresa vista desde un solo panel.",
+    desc: "Pipeline de ventas, reportes en vivo, roles y permisos por equipo, integraciones con tu stack existente.",
+    accent: "#60a5fa",
+    tags: ["Multi-rol", "APIs", "Reportes", "SSO"],
+    Icon: IconLayers,
+    stat: "∞",
+    statLabel: "integraciones",
   },
 ];
 
-const ICONS = { cpu: IconCpu, bot: IconBot, zap: IconZap, db: IconDatabase };
-
 export function ProductCarousel() {
+  const ref = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.1 });
   const [active, setActive] = useState<string | null>(null);
-  const activeProduct = PRODUCTS.find((p) => p.id === active);
 
   return (
-    <section id="productos" className="relative py-20">
-      <div className="mx-auto max-w-5xl px-5">
-        <p className="text-center text-[11px] font-semibold tracking-[0.25em] text-violet-400/70 uppercase">Nuestros productos</p>
-        <h2 className="mt-2 text-center text-[clamp(1.8rem,5vw,3rem)] font-bold leading-tight tracking-tight text-white">
-          Una fábrica completa de<br />
-          <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">tecnología e IA.</span>
-        </h2>
-        <p className="mx-auto mt-3 max-w-md text-center text-sm font-light text-[var(--fg-tertiary)]">
-          Desliza. Toca cualquier producto para ver todo el proceso.
-        </p>
-      </div>
+    <section
+      ref={ref}
+      id="productos"
+      className="relative overflow-hidden border-b border-app py-16 md:py-20"
+      style={{ background: "rgb(var(--color-void))" }}
+    >
+      {/* Glow ambiental único por sección */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 h-[400px] w-[700px] rounded-full opacity-25"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.22) 0%, rgba(34,211,238,0.08) 60%, transparent 80%)",
+          filter: "blur(72px)",
+        }}
+      />
 
-      <div className="mt-10 flex gap-5 overflow-x-auto px-5 pb-10 no-scrollbar snap-x snap-mandatory">
-        {PRODUCTS.map((p, i) => {
-          const Icon = p.icon ? ICONS[p.icon] : null;
-          return (
-            <motion.button
-              key={p.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              animate={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.01 }}
-              transition={{ delay: i * 0.05, ease: EASE }}
-              onClick={() => setActive(p.id)}
-              className="group relative h-[440px] w-[310px] shrink-0 snap-center overflow-hidden rounded-[2rem] border text-left transition-all duration-500 hover:scale-[1.03]"
-              style={{
-                borderColor: `${p.accent}40`,
-                background: `linear-gradient(165deg, ${p.accent}1f 0%, #0a0612 55%)`,
-                boxShadow: `0 24px 70px ${p.accent}30, inset 0 1px 0 ${p.accent}30`,
-              }}
-            >
-              {/* Imagen o esfera o icono */}
-              {p.bgImg && (
-                <>
-                  <img src={p.bgImg} alt={p.name} className="absolute inset-0 h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0" style={{ background: `linear-gradient(to top, #0a0612 8%, ${p.accent}10 55%, transparent 100%)` }} />
-                </>
-              )}
-              {p.sphere && (
-                <div className="absolute inset-x-0 top-6 flex h-48 items-center justify-center">
-                  <motion.img
-                    src={p.sphere} alt={p.name}
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                    className="h-44 w-44 object-contain"
-                    style={{ mixBlendMode: "screen", filter: `drop-shadow(0 0 40px ${p.accent}90) saturate(1.2)` }}
-                  />
-                </div>
-              )}
-              {Icon && (
-                <div className="absolute inset-x-0 top-10 flex items-center justify-center">
-                  <div className="relative flex h-32 w-32 items-center justify-center rounded-[2rem]"
-                    style={{ background: `radial-gradient(circle, ${p.accent}30, transparent 70%)` }}>
-                    <div className="absolute inset-0 rounded-[2rem] blur-2xl" style={{ background: `${p.accent}40` }} />
-                    <Icon size={56} strokeWidth={1.5} className="relative" style={{ color: p.accent }} />
-                  </div>
-                </div>
-              )}
+      <div className="mx-auto max-w-container px-5 md:px-margin-desktop">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.55, ease: EASE as unknown as number[] }}
+          className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
+        >
+          <div className="max-w-xl">
+            <p className="label-caps mb-3 text-cyber-cyan">Lo que construye VForge</p>
+            <h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-on-surface md:text-4xl">
+              Productos reales.{" "}
+              <span className="bg-gradient-to-r from-violet-300 to-cyan-300 bg-clip-text text-transparent">
+                Negocios que funcionan.
+              </span>
+            </h2>
+          </div>
+          <p className="max-w-sm text-sm leading-relaxed text-on-surface-variant">
+            Desde apps de delivery hasta plataformas MLM. VForge construye lo que tu
+            negocio necesita, con código real y deploy a producción.
+          </p>
+        </motion.div>
 
-              {/* Glow inferior */}
-              <div className="absolute -bottom-16 left-1/2 h-40 w-48 -translate-x-1/2 rounded-full opacity-50 blur-3xl transition-opacity group-hover:opacity-90" style={{ background: p.accent }} />
+        {/* Carousel */}
+        <div className="relative">
+          {/* Fade edges */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-0 top-0 z-10 h-full w-10 bg-gradient-to-r from-[rgb(var(--color-void))] to-transparent"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute right-0 top-0 z-10 h-full w-10 bg-gradient-to-l from-[rgb(var(--color-void))] to-transparent"
+          />
 
-              {/* Badges */}
-              <div className="absolute left-3 right-3 top-3 flex items-start justify-between">
-                {p.isNew ? (
-                  <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-black" style={{ background: p.accent, boxShadow: `0 0 16px ${p.accent}` }}>
-                    NEW
-                  </span>
-                ) : <span />}
-                {p.badge && (
-                  <span className="rounded-full border border-[var(--border-2)] bg-black/50 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-xl">
-                    {p.badge}
-                  </span>
-                )}
-              </div>
+          <div
+            ref={trackRef}
+            className="flex gap-4 overflow-x-auto pb-3 pt-1"
+            style={{
+              scrollSnapType: "x mandatory",
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
+          >
+            {PRODUCTS.map((p, i) => (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, y: 24 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, delay: 0.08 + i * 0.07, ease: EASE as unknown as number[] }}
+                onClick={() => setActive(active === p.id ? null : p.id)}
+                className="group relative flex-shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-app bg-ink transition-all duration-300"
+                style={{
+                  width: "clamp(260px, 30vw, 310px)",
+                  scrollSnapAlign: "start",
+                  borderColor: active === p.id ? `${p.accent}55` : undefined,
+                  boxShadow: active === p.id ? `0 0 40px ${p.accent}18` : undefined,
+                }}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {/* Top accent line */}
+                <div
+                  aria-hidden
+                  className="absolute inset-x-0 top-0 h-px opacity-60 transition-opacity group-hover:opacity-100"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${p.accent}, transparent)`,
+                  }}
+                />
 
-              {/* Contenido */}
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: p.accent }}>{p.tagline}</p>
-                <h3 className="mt-1.5 text-2xl font-bold leading-tight text-white">{p.name}</h3>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-lg font-bold text-white">{p.priceLabel}</span>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full border transition-all group-hover:scale-110"
-                    style={{ borderColor: `${p.accent}60`, background: `${p.accent}20` }}>
-                    <IconArrowR size={15} className="text-white" />
-                  </span>
-                </div>
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
+                {/* Ambient glow */}
+                <div
+                  aria-hidden
+                  className="absolute -top-8 right-4 h-28 w-28 rounded-full opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                  style={{
+                    background: `radial-gradient(circle, ${p.accent}25, transparent 70%)`,
+                    filter: "blur(20px)",
+                  }}
+                />
 
-      {/* POPUP FULLSCREEN */}
-      <AnimatePresence>
-        {active && activeProduct && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setActive(null)} className="fixed inset-0 z-[80] bg-black/85 backdrop-blur-md" />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }}
-              transition={{ ease: EASE, duration: 0.4 }}
-              className="fixed inset-0 z-[81] flex items-end justify-center md:items-center"
-            >
-              <div className="relative max-h-[92vh] w-full max-w-lg overflow-auto rounded-t-[2rem] border bg-[#06040f] md:rounded-[2rem]"
-                style={{ borderColor: `${activeProduct.accent}40`, boxShadow: `0 0 120px ${activeProduct.accent}40` }}>
-                {/* Hero del popup */}
-                <div className="relative h-52 overflow-hidden">
-                  {activeProduct.bgImg && <img src={activeProduct.bgImg} alt="" className="absolute inset-0 h-full w-full object-cover" />}
-                  {(activeProduct.sphere || activeProduct.icon) && (
-                    <div className="absolute inset-0 flex items-center justify-center" style={{ background: `radial-gradient(circle at 50% 40%, ${activeProduct.accent}25, transparent 70%)` }}>
-                      {activeProduct.sphere
-                        ? <img src={activeProduct.sphere} alt="" className="h-40 w-40 object-contain" style={{ mixBlendMode: "screen", filter: `drop-shadow(0 0 40px ${activeProduct.accent}) saturate(1.2)` }} />
-                        : (() => { const I = ICONS[activeProduct.icon!]; return <I size={72} strokeWidth={1.5} style={{ color: activeProduct.accent }} />; })()}
+                <div className="relative p-6">
+                  {/* Icon + stat */}
+                  <div className="flex items-start justify-between">
+                    <div
+                      className="flex h-11 w-11 items-center justify-center rounded-xl border transition-all group-hover:scale-110"
+                      style={{
+                        borderColor: `${p.accent}40`,
+                        background: `${p.accent}15`,
+                        color: p.accent,
+                      }}
+                    >
+                      <p.Icon size={20} />
                     </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#06040f] via-[#06040f]/40 to-transparent" />
-                  <button onClick={() => setActive(null)} className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-2)] bg-black/50 text-white backdrop-blur-xl transition hover:bg-black/70">
-                    <IconX size={16} />
-                  </button>
-                  <div className="absolute bottom-4 left-5 right-5">
-                    {activeProduct.isNew && <span className="mb-2 inline-block rounded-full px-2.5 py-1 text-[10px] font-bold uppercase text-black" style={{ background: activeProduct.accent }}>NEW</span>}
-                    <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: activeProduct.accent }}>{activeProduct.tagline}</p>
-                    <h2 className="mt-1 text-2xl font-bold text-white">{activeProduct.name}</h2>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <div className="mb-5 flex items-center justify-between rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] px-5 py-4">
-                    <span className="text-sm text-[var(--fg-tertiary)]">Inversión</span>
-                    <span className="text-2xl font-bold" style={{ color: activeProduct.accent }}>{activeProduct.priceLabel}</span>
-                  </div>
-
-                  <p className="text-sm font-light leading-relaxed text-[var(--fg-secondary)]">{activeProduct.fullDesc}</p>
-
-                  {activeProduct.timeline && (
-                    <div className="mt-6">
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-[var(--fg-tertiary)]">Proceso y pagos</p>
-                      <div className="space-y-3">
-                        {activeProduct.timeline.map((t, i) => (
-                          <div key={i} className="flex items-start gap-3">
-                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold" style={{ borderColor: `${activeProduct.accent}60`, color: activeProduct.accent }}>{i + 1}</div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between">
-                                <p className="text-sm font-semibold text-white">{t.phase}</p>
-                                {t.pay && <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-bold text-white">{t.pay}</span>}
-                              </div>
-                              <p className="text-xs text-[var(--fg-tertiary)]">{t.detail}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {activeProduct.includes && (
-                    <div className="mt-6">
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-[var(--fg-tertiary)]">Incluye</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {activeProduct.includes.map((f) => (
-                          <div key={f} className="flex items-center gap-2 text-xs text-[var(--fg-secondary)]">
-                            <IconCheck size={12} style={{ color: activeProduct.accent }} className="shrink-0" />{f}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {activeProduct.capabilities && (
-                    <div className="mt-6">
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-[var(--fg-tertiary)]">Capacidades</p>
-                      <div className="flex flex-wrap gap-2">
-                        {activeProduct.capabilities.map((c) => (
-                          <span key={c} className="rounded-full border px-3 py-1.5 text-xs text-[var(--fg-secondary)]" style={{ borderColor: `${activeProduct.accent}30`, background: `${activeProduct.accent}10` }}>{c}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {activeProduct.note && (
-                    <div className="mt-5 rounded-2xl border px-4 py-3" style={{ borderColor: `${activeProduct.accent}40`, background: `${activeProduct.accent}12` }}>
-                      <p className="flex items-start gap-2 text-xs font-light leading-relaxed text-[var(--fg-primary)]">
-                        <IconSparkles size={13} style={{ color: activeProduct.accent }} className="mt-0.5 shrink-0" />{activeProduct.note}
+                    <div className="text-right">
+                      <p
+                        className="font-mono text-lg font-bold leading-none"
+                        style={{ color: p.accent }}
+                      >
+                        {p.stat}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-on-surface-variant">
+                        {p.statLabel}
                       </p>
                     </div>
-                  )}
+                  </div>
 
-                  <Link href="/sign-up" prefetch={false} onClick={() => setActive(null)}
-                    className="mt-6 flex items-center justify-center gap-2 rounded-2xl py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
-                    style={{ background: `linear-gradient(135deg, ${activeProduct.accent}, ${activeProduct.accent}cc)`, boxShadow: `0 0 40px ${activeProduct.accent}50` }}>
-                    {activeProduct.ctaLabel || "Solicitar este producto"} <IconArrowR size={14} />
-                  </Link>
+                  {/* Category badge */}
+                  <p
+                    className="mt-4 text-[10px] font-semibold uppercase tracking-widest"
+                    style={{ color: p.accent }}
+                  >
+                    {p.category}
+                  </p>
+
+                  {/* Name */}
+                  <h3 className="mt-1 text-base font-semibold text-on-surface">
+                    {p.name}
+                  </h3>
+                  <p className="mt-0.5 text-[13px] font-medium text-on-surface-variant">
+                    {p.tagline}
+                  </p>
+
+                  {/* Desc */}
+                  <p className="mt-3 text-[12px] leading-relaxed text-on-surface-variant opacity-75">
+                    {p.desc}
+                  </p>
+
+                  {/* Tags */}
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {p.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full border px-2.5 py-0.5 font-mono text-[10px] text-on-surface-variant"
+                        style={{
+                          borderColor: `${p.accent}30`,
+                          background: `${p.accent}0d`,
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+
+                {/* Expandable CTA */}
+                <div
+                  className="overflow-hidden border-t border-app px-6 transition-all duration-300"
+                  style={{
+                    maxHeight: active === p.id ? "56px" : "0px",
+                    opacity: active === p.id ? 1 : 0,
+                  }}
+                >
+                  <div className="flex items-center justify-between py-3">
+                    <span className="text-[11px] text-on-surface-variant">
+                      ¿Te interesa este tipo de app?
+                    </span>
+                    <a
+                      href="/sign-up"
+                      className="rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-colors"
+                      style={{ background: `${p.accent}22`, color: p.accent }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Empezar →
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Scroll dots */}
+        <div className="mt-5 flex items-center justify-center gap-1.5">
+          {PRODUCTS.map((p, i) => (
+            <button
+              key={p.id}
+              onClick={() => {
+                const track = trackRef.current;
+                if (!track) return;
+                const cardW = track.scrollWidth / PRODUCTS.length;
+                track.scrollTo({ left: cardW * i, behavior: "smooth" });
+              }}
+              className="h-1 rounded-full transition-all duration-300"
+              style={{
+                width: active === p.id ? "24px" : "6px",
+                background:
+                  active === p.id ? p.accent : "rgba(255,255,255,0.18)",
+              }}
+              aria-label={`Ver ${p.name}`}
+            />
+          ))}
+        </div>
+
+        {/* Stats strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.6, ease: EASE as unknown as number[] }}
+          className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-app bg-app md:grid-cols-4"
+        >
+          {[
+            { n: "70+", l: "apps desplegadas" },
+            { n: "< 7d", l: "tiempo promedio" },
+            { n: "100%", l: "código es tuyo" },
+            { n: "24/7", l: "V monitoreando" },
+          ].map((s) => (
+            <div key={s.l} className="bg-void px-6 py-5 text-center">
+              <p className="font-mono text-2xl font-bold text-on-surface">{s.n}</p>
+              <p className="mt-1 text-[11px] text-on-surface-variant">{s.l}</p>
+            </div>
+          ))}
+        </motion.div>
+      </div>
     </section>
   );
 }
