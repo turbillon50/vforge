@@ -159,7 +159,7 @@ export function FlowCanvas({
                     : `0 8px 24px rgba(0,0,0,0.45), inset 0 1px 6px rgba(255,255,255,0.15)`,
               }}
             >
-              <span className="text-white/95 drop-shadow">
+              <span className="text-[var(--fg-primary)] drop-shadow">
                 <Icon size={26} />
               </span>
               {n.type === "trigger" && (

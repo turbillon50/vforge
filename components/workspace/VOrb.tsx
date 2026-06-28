@@ -404,7 +404,7 @@ export function VOrb() {
                 );
               })}
               {/* Divider + share */}
-              <div className="mt-1.5 border-t border-white/[0.07] pt-1.5">
+              <div className="mt-1.5 border-t border-[var(--border-1)] pt-1.5">
                 <motion.button
                   onClick={() => {
                     if (navigator.share) {

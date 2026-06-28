@@ -1,0 +1,24 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch({ executablePath: '/root/.cache/ms-playwright/chromium-1148/chrome-linux/chrome' });
+const ctx = await b.newContext({ viewport: { width: 1366, height: 900 } });
+const page = await ctx.newPage();
+const BASE = "https://www.crede-ti.info";
+const errors = [];
+page.on('pageerror', e => errors.push("PAGEERROR: "+e.message));
+page.on('console', m => { if (m.type()==='error') errors.push("CONSOLE: "+m.text()); });
+const failedReqs = [];
+page.on('requestfailed', r => failedReqs.push(r.url()+" - "+r.failure()?.errorText));
+page.on('response', r => { if (r.status()>=400) failedReqs.push(r.status()+" "+r.url().replace(BASE,'')); });
+
+const tok = (await (await page.request.post(`${BASE}/api/auth/master-login`, { data: { masterPassword: "LuisAdmin2025#" } })).json()).token;
+await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+await page.evaluate((t) => { localStorage.setItem('credeti_token', t); localStorage.setItem('credeti_role', 'admin'); }, tok);
+await page.goto(`${BASE}/mi-credito`, { waitUntil: 'networkidle', timeout: 20000 });
+await page.waitForTimeout(2000);
+console.log("ERRORES JS:");
+errors.slice(0,5).forEach(e => console.log("  " + e.slice(0,140)));
+console.log("REQUESTS FALLIDOS (>=400):");
+[...new Set(failedReqs)].slice(0,8).forEach(r => console.log("  " + r.slice(0,120)));
+const txt = await page.evaluate(() => document.body.innerText.slice(0,200).replace(/\n+/g,' | '));
+console.log("CONTENIDO:", txt);
+await b.close();

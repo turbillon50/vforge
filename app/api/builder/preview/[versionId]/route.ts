@@ -85,7 +85,7 @@ function shellHtml(title: string, files: BuildFile[]): string {
   }
   h1 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; }
   p.note {
-    margin-top: 8px; font-size: 13.5px; color: rgba(236,233,246,0.62);
+    margin-top: 8px; font-size: 13.5px; color: var(--fg-secondary, rgba(236,233,246,0.78));
   }
   .badge {
     display: inline-flex; align-items: center; gap: 8px; margin-bottom: 14px;

@@ -1,0 +1,16 @@
+import { chromium } from 'playwright';
+const KEY = "cti-admin-0c532e1012f44a5e5846245d0d0897f9bc64fb9542e53e81";
+const b = await chromium.launch({ executablePath: '/root/.cache/ms-playwright/chromium-1148/chrome-linux/chrome' });
+const ctx = await b.newContext({ viewport: { width: 1280, height: 900 } });
+const page = await ctx.newPage();
+const BASE = "https://www.crede-ti.info";
+await page.goto(`${BASE}/entrar/${KEY}`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(4500);
+console.log("URL final:", page.url().replace(BASE,''));
+const txt = await page.evaluate(() => document.body.innerText.slice(0,200).replace(/\n+/g,' | '));
+console.log("Pantalla:", txt);
+const enPanel = txt.includes('administraci') || txt.includes('Solicitudes') || txt.includes('Cartera') || page.url().includes('/admin');
+console.log("Cae en PANEL ADMIN sin login:", enPanel ? "SI - LISTO" : "NO");
+const role = await page.evaluate(() => localStorage.getItem('credeti_role'));
+console.log("Rol en sesion:", role);
+await b.close();

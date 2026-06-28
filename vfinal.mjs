@@ -1,0 +1,22 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch({ executablePath: '/root/.cache/ms-playwright/chromium-1148/chrome-linux/chrome' });
+const ctx = await b.newContext({ viewport: { width: 1366, height: 1100 } });
+const page = await ctx.newPage();
+const BASE = "https://www.crede-ti.info";
+const tok = (await (await page.request.post(`${BASE}/api/auth/master-login`, { data: { masterPassword: "LuisAdmin2025#" } })).json()).token;
+await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+await page.evaluate((t) => { localStorage.setItem('credeti_token', t); localStorage.setItem('credeti_role', 'admin'); }, tok);
+await page.goto(`${BASE}/admin/solicitudes`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(2500);
+await page.evaluate(() => {
+  const cards = [...document.querySelectorAll('[class*="pressable"]')];
+  const target = cards.find(el => el.textContent.includes('Luis Humberto') || el.textContent.includes('#13'));
+  if (target) target.click();
+});
+await page.waitForTimeout(3500);
+const imgs = await page.evaluate(() => [...document.querySelectorAll('a[target="_blank"] img')].map(i => ({ src: i.src.slice(-40), loaded: i.complete && i.naturalWidth > 0 })));
+console.log("Documentos mostrados:", imgs.length);
+imgs.forEach((im,i) => console.log("  doc"+(i+1)+": cargado="+im.loaded+" ..."+im.src));
+const labels = await page.evaluate(() => [...document.querySelectorAll('a[target="_blank"]')].map(a => a.textContent.trim()).filter(Boolean));
+console.log("Etiquetas:", JSON.stringify(labels));
+await b.close();

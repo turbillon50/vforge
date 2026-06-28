@@ -1,0 +1,18 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch({ executablePath: '/root/.cache/ms-playwright/chromium-1148/chrome-linux/chrome' });
+const ctx = await b.newContext({ viewport: { width: 1366, height: 900 } });
+const page = await ctx.newPage();
+const BASE = "https://www.crede-ti.info";
+const resp = await page.request.post(`${BASE}/api/auth/master-login`, { data: { masterPassword: "LuisAdmin2025#" } });
+const tok = (await resp.json()).token;
+await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+await page.evaluate((t) => { localStorage.setItem('credeti_token', t); localStorage.setItem('credeti_role', 'admin'); }, tok);
+await page.goto(`${BASE}/admin/expediente/9`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(3500);
+await page.screenshot({ path: '/tmp/exp9.png', fullPage: true });
+console.log("URL:", page.url());
+const btns = await page.evaluate(() => Array.from(document.querySelectorAll('button')).map(b=>b.textContent.trim()).filter(Boolean));
+console.log("BOTONES:", JSON.stringify(btns));
+const creditTxt = await page.evaluate(() => { const el=[...document.querySelectorAll('div')].find(d=>d.textContent.includes('Cr')&&d.textContent.includes('dito')); return document.body.innerText.slice(0,600); });
+console.log("TEXTO:", creditTxt);
+await b.close();
