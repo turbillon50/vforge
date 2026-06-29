@@ -205,7 +205,7 @@ export default function TallerPage() {
                   ? "text-amber-600 dark:text-amber-300"
                   : live
                     ? "text-emerald-600 dark:text-emerald-300"
-                    : "text-cyan-600 dark:text-violet-300"
+                    : "text-violet-400 dark:text-violet-300"
               }`}
             >
               {error ? "Sin señal" : live ? "En vivo" : "En reposo"}

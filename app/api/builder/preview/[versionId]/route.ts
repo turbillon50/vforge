@@ -100,7 +100,7 @@ function shellHtml(title: string, files: BuildFile[]): string {
     border: 1px solid rgba(255,255,255,0.07); font-size: 13px;
   }
   .dot { width: 7px; height: 7px; border-radius: 999px; flex: none;
-    background: linear-gradient(135deg, #8b5cf6, #22d3ee); }
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
   code { color: rgba(236,233,246,0.86); font-size: 12.5px; }
 </style></head>
 <body>

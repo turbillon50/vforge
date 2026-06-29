@@ -108,7 +108,7 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
             layout
             className="group relative overflow-hidden rounded-xl border border-app bg-tint-1 p-5 transition hover:border-violet-500/30 hover:bg-tint-2"
           >
-            <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-violet-cyan opacity-0 blur-3xl transition group-hover:opacity-15" />
+            <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-violet-500/30 opacity-0 blur-3xl transition group-hover:opacity-15" />
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/10 text-violet-300 ring-1 ring-violet-500/20">

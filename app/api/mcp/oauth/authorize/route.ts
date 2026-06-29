@@ -100,7 +100,7 @@ function consentHtml(p: AuthorizeParams, clientName: string, email: string): str
   </p>
   <div style="display:flex;gap:10px">
     <button name="decision" value="deny" style="flex:1;height:46px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:transparent;color:#ddd;font-size:15px;cursor:pointer">Cancelar</button>
-    <button name="decision" value="allow" style="flex:2;height:46px;border-radius:12px;border:0;background:linear-gradient(90deg,#7c3aed,#06b6d4);color:#fff;font-size:15px;font-weight:600;cursor:pointer">Permitir</button>
+    <button name="decision" value="allow" style="flex:2;height:46px;border-radius:12px;border:0;background:linear-gradient(90deg,#7c3aed,#6d28d9);color:#fff;font-size:15px;font-weight:600;cursor:pointer">Permitir</button>
   </div>
 </form>
 </body></html>`;

@@ -2079,7 +2079,7 @@ function SpeakButton({
         type="button"
         onClick={() => void play()}
         aria-label={state === "playing" ? "Detener voz de V" : "Reproducir voz de V"}
-        className="flex items-center gap-2.5 rounded-full border border-violet-400/30 bg-violet-500/[0.08] px-3.5 py-2 text-cyan-200 transition hover:border-violet-400/50 hover:bg-violet-500/[0.14]"
+        className="flex items-center gap-2.5 rounded-full border border-violet-400/30 bg-violet-500/[0.08] px-3.5 py-2 text-violet-200 transition hover:border-violet-400/50 hover:bg-violet-500/[0.14]"
       >
         {state === "loading" ? (
           <IconActivity size={16} className="animate-pulse text-violet-300" />

@@ -97,14 +97,14 @@ export default function MCPDocsPage() {
         {/* ── HERO ── */}
         <div className="mx-auto max-w-4xl px-5 text-center">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-400/25 bg-violet-500/8 px-4 py-1.5">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400 shadow-[0_0_8px_rgba(124,58,237,0.5)]" />
             <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-violet-300">
               Model Context Protocol · VForge
             </span>
           </div>
           <h1 className="text-[clamp(2.2rem,7vw,4rem)] font-bold leading-[0.95] tracking-[-0.04em] text-white">
             Conecta Claude Desktop<br />
-            <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-violet-400 to-violet-400 bg-clip-text text-transparent">
               con tu fábrica de apps.
             </span>
           </h1>
@@ -222,7 +222,7 @@ export default function MCPDocsPage() {
             ].map((msg, i) => (
               <div key={i} className={`flex ${msg.from === "user" ? "justify-end" : "justify-start gap-2.5"}`}>
                 {msg.from === "v" && (
-                  <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-cyan-500 text-[10px]">
+                  <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-violet-500 text-[10px]">
                     ⚡
                   </div>
                 )}

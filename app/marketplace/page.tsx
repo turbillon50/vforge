@@ -66,7 +66,7 @@ export default function MarketplacePage() {
             <p className="mb-3 text-[11px] font-semibold tracking-[0.25em] text-violet-400/60 uppercase">V-Shop</p>
             <h1 className="text-[clamp(2rem,6vw,3.5rem)] font-bold leading-tight tracking-tight text-white">
               Todo lo que necesita<br />
-              <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">tu próxima app.</span>
+              <span className="bg-gradient-to-r from-violet-400 to-violet-400 bg-clip-text text-transparent">tu próxima app.</span>
             </h1>
             <p className="mx-auto mt-3 max-w-md text-sm font-light text-[var(--fg-muted)]">
               Apps listas, integraciones, LLMs y plantillas. V los conecta a tu proyecto en segundos.

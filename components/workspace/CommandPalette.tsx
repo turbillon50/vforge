@@ -48,11 +48,11 @@ const COMMANDS: Command[] = [
   { id:"nav-blueprint", label:"Ir a Blueprint",    icon:"workflow", group:"Navegar", kbd:"G B", action:c=>c.router.push("/app/blueprint") },
   { id:"nav-repovision",label:"Ir a RepoVisión",   icon:"branch",   group:"Navegar", kbd:"G R", action:c=>c.router.push("/app/repovision") },
   { id:"nav-projects",  label:"Ir a Proyectos",    icon:"layers",   group:"Navegar", kbd:"G P", action:c=>c.router.push("/app/projects") },
-  { id:"nav-esfera",    label:"Ir a Esfera",       icon:"database", group:"Navegar", kbd:"G E", action:c=>c.router.push("/esfera") },
+  { id:"nav-secrets",   label:"Ir a Bóveda",       icon:"database", group:"Navegar", kbd:"G E", action:c=>c.router.push("/app/secrets") },
   { id:"nav-admin",     label:"Ir a Usuarios",     icon:"users",    group:"Navegar", kbd:"G A", action:c=>c.router.push("/app/admin") },
   // Brain
   { id:"brain-search",  label:"Buscar en Brain…",  icon:"search",   group:"Brain", action:c=>c.setMode("brain") },
-  { id:"brain-status",  label:"Estado del Brain",  icon:"activity", group:"Brain", action:c=>c.router.push("/esfera") },
+  { id:"brain-status",  label:"Estado del Brain",  icon:"activity", group:"Brain", action:c=>c.router.push("/app/activity") },
   // Apariencia
   { id:"theme-dark",    label:"Modo Oscuro",       icon:"moon",     group:"Apariencia", action:()=>applyTheme("dark") },
   { id:"theme-light",   label:"Modo Claro",        icon:"sun",      group:"Apariencia", action:()=>applyTheme("light") },

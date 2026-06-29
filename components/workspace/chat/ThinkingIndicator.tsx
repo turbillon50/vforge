@@ -72,7 +72,7 @@ export function ThinkingIndicator() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute inset-0 bg-gradient-to-r from-violet-300 via-on-surface to-cyan-300 bg-clip-text font-sans text-[14px] font-semibold tracking-tight text-transparent"
+            className="absolute inset-0 bg-gradient-to-r from-violet-300 via-on-surface to-violet-300 bg-clip-text font-sans text-[14px] font-semibold tracking-tight text-transparent"
           >
             {PHASES[phase]}
           </motion.span>

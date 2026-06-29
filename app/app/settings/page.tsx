@@ -184,29 +184,46 @@ function Toggle({ label, defaultChecked = false }: { label: string; defaultCheck
 }
 
 function ProfilePanel() {
+  const { user, isLoaded } = useUser();
+  const clerk = useClerk();
+
+  if (!isLoaded) return (
+    <div className="space-y-3">
+      {[0,1,2].map(i => <div key={i} className="h-12 animate-pulse rounded-xl" style={{background:"rgba(255,255,255,0.03)"}} />)}
+    </div>
+  );
+
+  const name    = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "—";
+  const email   = user?.emailAddresses?.[0]?.emailAddress ?? "—";
+  const username = user?.username ?? "—";
+  const avatar  = user?.imageUrl;
+
   return (
     <>
-      <Card title="Tu identidad como operador">
-        <div className="mb-4 flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-violet-500 to-violet-400" />
+      <Card title="Perfil">
+        <div className="mb-5 flex items-center gap-4">
+          {avatar ? (
+            <img src={avatar} alt={name} className="h-14 w-14 rounded-full object-cover"
+              style={{ border:"2px solid rgba(124,58,237,0.3)" }} />
+          ) : (
+            <div className="flex h-14 w-14 items-center justify-center rounded-full text-[22px] font-bold"
+              style={{ background:"rgba(124,58,237,0.15)", border:"2px solid rgba(124,58,237,0.3)", color:"#a78bfa" }}>
+              {name[0] ?? "V"}
+            </div>
+          )}
           <div>
-            <p className="font-display text-lg font-semibold text-on-surface">
-              Luis de la Torre Herrera
-            </p>
-            <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
-              operator_luis · turbillon50
-            </p>
+            <p className="font-semibold" style={{color:"#fff"}}>{name}</p>
+            <p className="text-[12px]" style={{color:"rgba(255,255,255,0.4)"}}>{email}</p>
           </div>
         </div>
-        <Field label="Nombre" value="Luis de la Torre Herrera" />
-        <Field label="Email" placeholder="luis@allglobal.ec" />
-        <Field label="Usuario GitHub" value="turbillon50" />
-        <button className="btn-primary mt-2 !px-4 !py-2">Guardar cambios</button>
-      </Card>
-
-      <Card title="Empresa">
-        <Field label="Razón social" value="All Global Holding LLC / MIRMAR EMPRESAS S.A. de C.V." />
-        <Field label="País fiscal" value="México · Estados Unidos" />
+        <Field label="Nombre completo" value={name} />
+        <Field label="Email" value={email} />
+        <Field label="Username" value={username} />
+        <button onClick={() => clerk.openUserProfile()}
+          className="btn-primary mt-3 !px-4 !py-2 text-[13px]"
+          style={{ minHeight:44, touchAction:"manipulation" }}>
+          Editar perfil completo
+        </button>
       </Card>
     </>
   );

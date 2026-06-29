@@ -59,7 +59,7 @@ export default function DeveloperPage() {
             </div>
             <h1 className="text-[clamp(2rem,7vw,3.5rem)] font-bold leading-tight tracking-tight text-white">
               Portal<br />
-              <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">Desarrolladores</span>
+              <span className="bg-gradient-to-r from-violet-400 to-violet-400 bg-clip-text text-transparent">Desarrolladores</span>
             </h1>
             <p className="mx-auto mt-4 max-w-md text-base font-light text-[var(--fg-tertiary)]">
               Estamos construyendo el espacio definitivo para desarrolladores que quieren integrar, extender y monetizar con V.

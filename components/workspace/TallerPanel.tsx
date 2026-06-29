@@ -65,7 +65,7 @@ export function TallerPanel({
 
   return (
     <div className="relative mx-auto w-full max-w-5xl">
-      <div className="absolute -inset-8 -z-10 bg-violet-cyan opacity-20 blur-[80px]" />
+      <div className="absolute -inset-8 -z-10 bg-violet-500/20 opacity-20 blur-[80px]" />
       <div className="glass-strong overflow-hidden rounded-xl shadow-elev sm:rounded-2xl">
         {/* ---- Window chrome con fondo Higgsfield + overlay obsidian ---- */}
         <div className="relative overflow-hidden border-b border-app">

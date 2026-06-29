@@ -389,7 +389,7 @@ export function VOrb() {
                           : "0 0 10px rgba(124,58,237,0.22), inset 0 1px 0 rgba(255,255,255,0.08)",
                       }}
                     >
-                      <it.Icon size={15} className={active ? "text-cyan-200" : "text-violet-200/85"} />
+                      <it.Icon size={15} className={active ? "text-violet-200" : "text-violet-200/85"} />
                     </span>
                     <span className="flex-1 text-left">{it.label}</span>
                     {it.primary && (

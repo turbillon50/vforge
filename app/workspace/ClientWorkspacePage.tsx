@@ -56,7 +56,7 @@ export function ClientWorkspacePage() {
           <p className="mt-1 text-sm font-light text-[var(--fg-tertiary)]">PWA completa · Next.js + Clerk + Neon + Stripe</p>
           <div className="mt-4 flex flex-wrap gap-3">
             <a href="/app/deployments" className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:bg-white/[0.12]">
-              <IconGlobe size={12} className="text-cyan-400"/> Ver en vivo
+              <IconGlobe size={12} className="text-violet-400"/> Ver en vivo
             </a>
             <a href="/app/repovision" className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:bg-white/[0.12]">
               <IconBranch size={12} className="text-violet-300"/> Repositorio
@@ -85,7 +85,7 @@ export function ClientWorkspacePage() {
           </div>
           <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
             <motion.div initial={{width:0}} animate={{width:"48%"}} transition={{delay:0.5,duration:1,ease:EASE}}
-              className="h-full rounded-full bg-gradient-to-r from-violet-600 to-cyan-400"/>
+              className="h-full rounded-full bg-gradient-to-r from-violet-600 to-violet-400"/>
           </div>
           <p className="mt-1 text-right text-[11px] text-[var(--fg-muted)]">48% completado</p>
         </motion.div>
