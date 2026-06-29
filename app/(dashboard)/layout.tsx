@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { WorkspaceShell } from "@/components/workspace/WorkspaceShell";
 
 export default function DashboardLayout({
