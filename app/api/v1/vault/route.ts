@@ -1,1 +1,1 @@
-export { GET, POST } from "@/app/api/vault/route";
+export { GET } from "@/app/api/vault/route";
