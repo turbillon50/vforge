@@ -248,7 +248,7 @@ export function Hero() {
           </svg>
         </Link>
         <Link
-          href="/pricing"
+          href="/#metodo"
           className="flex items-center gap-2 rounded-xl border px-6 py-3 text-[14px] font-medium transition-all"
           style={{
             borderColor: "rgba(255,255,255,0.1)",
@@ -267,7 +267,7 @@ export function Hero() {
             (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
           }}
         >
-          Ver precios
+          Ver el método
         </Link>
       </motion.div>
 
