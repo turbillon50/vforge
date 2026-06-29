@@ -1351,3 +1351,34 @@ body:not([data-theme="light"]) .hud-scanlines::after {
   --tw-gradient-via-position: ;
   --tw-gradient-stops: var(--tw-gradient-from), #f8f8ff var(--tw-gradient-via-position), var(--tw-gradient-to);
 }
+
+/* ── Clerk overrides globales ───────────────────────────────────────────
+   Clerk renderiza botones sociales con data-provider.
+   X/Twitter usa logo negro nativo → necesita fondo blanco forzado.
+──────────────────────────────────────────────────────────────────────── */
+[data-provider="x_twitter"],
+button[data-provider="x_twitter"],
+.cl-socialButtonsBlockButton[data-provider="x_twitter"] {
+  background-color: #ffffff !important;
+  border-color: rgba(255,255,255,0.15) !important;
+  color: #000 !important;
+}
+[data-provider="x_twitter"]:hover {
+  background-color: #f0f0f0 !important;
+}
+[data-provider="x_twitter"] svg,
+[data-provider="x_twitter"] img {
+  filter: none !important;
+}
+[data-provider="x_twitter"] span {
+  color: #000 !important;
+}
+
+/* Social buttons base — todos excepto X */
+.cl-socialButtonsBlockButton:not([data-provider="x_twitter"]) {
+  background-color: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+.cl-socialButtonsBlockButton:not([data-provider="x_twitter"]):hover {
+  background-color: rgba(255,255,255,0.08) !important;
+}
