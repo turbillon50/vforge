@@ -25,7 +25,7 @@ function MetallicIcon({ children, label, sublabel }: { children: React.ReactNode
   return (
     <div className="flex flex-col items-center gap-3">
       <div
-        className="flex h-[88px] w-[88px] items-center justify-center rounded-[22px]"
+        className="flex h-[104px] w-[104px] items-center justify-center rounded-[26px]"
         style={{
           background: "linear-gradient(145deg, #2a2a2a 0%, #111 60%, #1a1a1a 100%)",
           boxShadow:
@@ -45,7 +45,7 @@ function MetallicIcon({ children, label, sublabel }: { children: React.ReactNode
 /* V metálica cromada */
 function VIcon() {
   return (
-    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+    <svg width="62" height="62" viewBox="0 0 48 48" fill="none">
       <defs>
         <linearGradient id="vm" x1="8" y1="8" x2="40" y2="48" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#ffffff" />
@@ -70,8 +70,8 @@ function VIcon() {
 /* GitHub metálico — PNG Higgsfield */
 function GitHubIcon() {
   return (
-    <div className="relative h-[52px] w-[52px]">
-      <Image src="/logos/github-metal.png" alt="GitHub" fill sizes="52px" className="object-contain" />
+    <div className="relative h-[64px] w-[64px]">
+      <Image src="/logos/github-metal.png" alt="GitHub" fill sizes="64px" className="object-contain" />
     </div>
   );
 }
@@ -79,8 +79,8 @@ function GitHubIcon() {
 /* Vercel metálico — PNG Higgsfield */
 function VercelIcon() {
   return (
-    <div className="relative h-[52px] w-[52px]">
-      <Image src="/logos/vercel-metal.png" alt="Vercel" fill sizes="52px" className="object-contain" />
+    <div className="relative h-[62px] w-[62px]">
+      <Image src="/logos/vercel-metal.png" alt="Vercel" fill sizes="62px" className="object-contain" />
     </div>
   );
 }
@@ -145,7 +145,7 @@ function InfraCarousel() {
 export function Hero() {
   return (
     <section
-      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-5 py-28 text-center"
+      className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-5 pt-16 pb-6 text-center"
       style={{ background: "#000" }}
     >
       {/* Partículas sutiles */}
@@ -174,7 +174,7 @@ export function Hero() {
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-8 inline-flex items-center gap-2 rounded-full border px-4 py-1.5"
+          className="mb-5 inline-flex items-center gap-2 rounded-full border px-4 py-1.5"
           style={{ border: "1px solid rgba(124,58,237,0.3)", background: "rgba(124,58,237,0.06)" }}
         >
           <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#7c3aed" }} />
@@ -201,7 +201,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto mt-7 max-w-xl text-[16px] leading-relaxed"
+          className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed"
           style={{ color: "rgba(255,255,255,0.38)" }}
         >
           VForge es tu servidor MCP propio: secrets cifrados, más de 200 skills,
@@ -214,7 +214,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-10 flex flex-wrap items-center justify-center gap-3"
+          className="mt-7 flex flex-wrap items-center justify-center gap-3"
         >
           <Link
             href="/sign-up"
@@ -256,7 +256,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-20 flex items-center justify-center gap-0"
+          className="mt-10 flex items-center justify-center gap-0"
         >
           <MetallicIcon label="VForge" sublabel="Secrets & Vault">
             <VIcon />
@@ -276,7 +276,7 @@ export function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.35 }}
-          className="mt-6 font-mono text-[10px] uppercase tracking-[0.18em]"
+          className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em]"
           style={{ color: "rgba(255,255,255,0.18)" }}
         >
           Start to end · Secrets · Code · Deploy
@@ -289,7 +289,7 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="w-full"
         >
-          <p className="mt-16 font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: "rgba(255,255,255,0.2)" }}>
+          <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: "rgba(255,255,255,0.2)" }}>
             Construido sobre
           </p>
           <InfraCarousel />
