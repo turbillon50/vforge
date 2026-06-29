@@ -19,7 +19,7 @@ export default async function HomePage() {
   } catch {}
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--color-void)" }}>
+    <div className="min-h-screen" style={{ background: "#000" }}>
       <MarketingHeader />
       <main>
         <Hero />
