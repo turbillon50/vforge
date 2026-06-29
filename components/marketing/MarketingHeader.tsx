@@ -12,7 +12,7 @@ export function MarketingHeader() {
   const nav=[
     {href:"/#metodo",label:"Método"},
     {href:"/marketplace",label:"V-Shop"},
-    {href:"/blog",label:"Blog"},
+    
     {href:"/mcp",label:"MCP"},
     {href:"/vulcano",label:"Navegador",badge:"IA"},
     {href:"/status",label:"Taller",badge:"Live"},

@@ -195,9 +195,9 @@ export default function BlueprintCanvas({ scope }: Props) {
               {nodes.filter((n) => n.kind === "integration").length} integraciones
             </span>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-3 py-1 backdrop-blur">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="font-mono text-[10px] text-cyan-400">live</span>
+          <div className="flex items-center gap-1.5 rounded-full border border-violet-400/20 bg-violet-400/5 px-3 py-1 backdrop-blur">
+            <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+            <span className="font-mono text-[10px] text-violet-400">live</span>
           </div>
         </div>
       </motion.div>
@@ -225,10 +225,10 @@ export default function BlueprintCanvas({ scope }: Props) {
           <linearGradient id="bp-edge-violet" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
             <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0" />
             <stop offset="40%" stopColor="#8b5cf6" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.4" />
           </linearGradient>
           <linearGradient id="bp-edge-cyan" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
-            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.4" />
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4" />
             <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.2" />
           </linearGradient>
           {/* Centro radial */}
@@ -244,8 +244,8 @@ export default function BlueprintCanvas({ scope }: Props) {
           </linearGradient>
           {/* Crystal integration */}
           <linearGradient id="bp-integration-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.04" />
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.04" />
           </linearGradient>
           {/* Sheen highlight */}
           <linearGradient id="bp-sheen" x1="0" y1="0" x2="0" y2="1">
@@ -300,7 +300,7 @@ export default function BlueprintCanvas({ scope }: Props) {
                 <path
                   d={d}
                   fill="none"
-                  stroke={isIntegration ? "#22d3ee" : "#8b5cf6"}
+                  stroke={isIntegration ? "#8b5cf6" : "#8b5cf6"}
                   strokeOpacity="0.1"
                   strokeWidth="1.5"
                 />
@@ -308,7 +308,7 @@ export default function BlueprintCanvas({ scope }: Props) {
                 <path
                   d={d}
                   fill="none"
-                  stroke={isIntegration ? "#22d3ee" : "#8b5cf6"}
+                  stroke={isIntegration ? "#8b5cf6" : "#8b5cf6"}
                   strokeOpacity="0.55"
                   strokeWidth="1.5"
                   strokeLinecap="round"
@@ -322,7 +322,7 @@ export default function BlueprintCanvas({ scope }: Props) {
                   cx={pt.x}
                   cy={pt.y}
                   r="3.5"
-                  fill={isIntegration ? "#22d3ee" : "#a78bfa"}
+                  fill={isIntegration ? "#8b5cf6" : "#a78bfa"}
                   opacity="0.9"
                   filter={isIntegration ? "url(#glow-cyan)" : "url(#glow-violet)"}
                 />
@@ -345,7 +345,7 @@ export default function BlueprintCanvas({ scope }: Props) {
                   <ellipse cx={n.x} cy={n.y - 18} rx="36" ry="22" fill="white" fillOpacity="0.12" />
                   {/* Border */}
                   <circle cx={n.x} cy={n.y} r="66" fill="none" stroke="#a78bfa" strokeOpacity="0.7" strokeWidth="1.5" />
-                  <circle cx={n.x} cy={n.y} r="66" fill="none" stroke="#22d3ee" strokeOpacity="0.25" strokeWidth="0.75" />
+                  <circle cx={n.x} cy={n.y} r="66" fill="none" stroke="#8b5cf6" strokeOpacity="0.25" strokeWidth="0.75" />
                   {/* Label */}
                   <text
                     x={n.x}
@@ -395,7 +395,7 @@ export default function BlueprintCanvas({ scope }: Props) {
                     height={(rh + 4) * 2}
                     rx="20"
                     fill="none"
-                    stroke={isFeature ? "#8b5cf6" : "#22d3ee"}
+                    stroke={isFeature ? "#8b5cf6" : "#8b5cf6"}
                     strokeOpacity="0.5"
                     strokeWidth="1"
                   />
@@ -427,7 +427,7 @@ export default function BlueprintCanvas({ scope }: Props) {
                   height={rh * 2}
                   rx="16"
                   fill="none"
-                  stroke={isFeature ? "#8b5cf6" : "#22d3ee"}
+                  stroke={isFeature ? "#8b5cf6" : "#8b5cf6"}
                   strokeOpacity={isHovered ? 0.85 : 0.4}
                   strokeWidth="1.25"
                 />

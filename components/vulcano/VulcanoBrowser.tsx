@@ -9,7 +9,7 @@ import {
 } from "@/components/brand/VFIcons";
 import { ObsidianLoader } from "@/components/ui/ObsidianLoader";
 
-const TEAL  = "var(--color-cyan-400)";   // #22d3ee — conectado / Vulcano
+const TEAL  = "var(--color-cyan-400)";   // #8b5cf6 — conectado / Vulcano
 const VIOLET = "var(--color-violet-400)"; // #a78bfa — acento marca
 const AMBER = "#f5a623";                  // tu turno / intervención
 const GREEN = "#22c55e";                  // badge "Conectado"
@@ -322,7 +322,7 @@ export function VulcanoBrowser() {
           style={{ display:"flex", alignItems:"center", justifyContent:"center",
             width:32, height:32, borderRadius:9, cursor:"pointer", flexShrink:0,
             background: fullscreen ? "rgba(34,211,238,0.15)" : "var(--color-surface-low)",
-            color: fullscreen ? "#22d3ee" : "var(--color-on-surface-variant)",
+            color: fullscreen ? "#8b5cf6" : "var(--color-on-surface-variant)",
             border: fullscreen ? "1px solid rgba(34,211,238,0.4)" : "1px solid rgba(127,127,170,0.18)",
             fontSize:16 }}>
           {fullscreen ? "⊠" : "⛶"}

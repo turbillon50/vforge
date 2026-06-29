@@ -22,19 +22,17 @@ export function MarketingFooter() {
         <div>
           <h4 className="label-caps mb-4 text-on-surface">{t.marketing.footer_platform}</h4>
           <ul className="space-y-3 text-sm text-on-surface-variant">
-            <li><Link href="/#integraciones" className="hover:text-cyber-cyan">{t.common.nav_workspace}</Link></li>
-            <li><Link href="/marketplace" className="hover:text-cyber-cyan">{t.common.nav_marketplace}</Link></li>
-            <li><Link href="/glossary" className="hover:text-cyber-cyan">{t.common.nav_glossary}</Link></li>
-            <li><Link href="/pricing" className="hover:text-cyber-cyan">{t.common.nav_pricing}</Link></li>
+            <li><Link href="/#integraciones" className="hover:text-white/70">{t.common.nav_workspace}</Link></li>
+            <li><Link href="/marketplace" className="hover:text-white/70">{t.common.nav_marketplace}</Link></li>
+            <li><Link href="https://vmomentum.site" className="hover:text-white/70">{t.common.nav_pricing}</Link></li>
           </ul>
         </div>
         <div>
           <h4 className="label-caps mb-4 text-on-surface">{t.marketing.footer_company}</h4>
           <ul className="space-y-3 text-sm text-on-surface-variant">
-            <li><Link className="hover:text-cyber-cyan" href="/developers">{t.marketing.footer_about}</Link></li>
-            <li><Link className="hover:text-cyber-cyan" href="/blog">{t.marketing.footer_manifesto}</Link></li>
-            <li><Link className="hover:text-cyber-cyan" href="/status">{t.marketing.footer_security}</Link></li>
-            <li><Link className="hover:text-cyber-cyan" href="/support">{t.marketing.footer_contact}</Link></li>
+            <li><Link className="hover:text-white/70" href="/developers">{t.marketing.footer_about}</Link></li>
+            <li><Link className="hover:text-white/70" href="/status">{t.marketing.footer_security}</Link></li>
+            <li><Link className="hover:text-white/70" href="/support">{t.marketing.footer_contact}</Link></li>
           </ul>
         </div>
       </div>

@@ -13,7 +13,7 @@ export function Problem() {
       <div className="mx-auto max-w-container px-5 py-20 md:px-margin-desktop md:py-28">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-12 md:gap-16">
           <div className="md:col-span-5">
-            <span className="label-caps text-cyber-cyan">{t.marketing.problem_eyebrow}</span>
+            <span className="label-caps text-violet-400">{t.marketing.problem_eyebrow}</span>
             <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight md:text-5xl">
               {t.marketing.problem_title}
             </h2>
@@ -25,9 +25,9 @@ export function Problem() {
               {items.map((p) => (
                 <div
                   key={p.label}
-                  className="group flex items-center gap-3 rounded-lg border border-app bg-tint-1 px-4 py-4 transition hover:border-cyber-cyan/30 hover:bg-tint-2"
+                  className="group flex items-center gap-3 rounded-lg border border-app bg-tint-1 px-4 py-4 transition hover:border-violet-400/30 hover:bg-tint-2"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-tint-2 text-on-surface-variant group-hover:text-cyber-cyan">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-tint-2 text-on-surface-variant group-hover:text-violet-400">
                     <p.icon size={16} />
                   </div>
                   <p className="text-sm text-on-surface">{p.label}</p>

@@ -16,7 +16,7 @@ interface Entry {
 const REPO_URL = "https://github.com/turbillon50/vforge";
 
 const CAT_STYLE: Record<Category, { dot: string; badge: string; label: string }> = {
-  feat:     { dot: "#22d3ee", badge: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",     label: "NUEVO" },
+  feat:     { dot: "#8b5cf6", badge: "bg-violet-500/10 text-violet-400 border-cyan-500/20",     label: "NUEVO" },
   fix:      { dot: "#22c55e", badge: "bg-green-500/10 text-green-400 border-green-500/20",   label: "FIX" },
   perf:     { dot: "#fbbf24", badge: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20", label: "PERF" },
   refactor: { dot: "#a78bfa", badge: "bg-violet-500/10 text-violet-300 border-violet-500/20", label: "REFACTOR" },

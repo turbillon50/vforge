@@ -13,7 +13,7 @@ export function HowItWorks() {
       <div className="mx-auto max-w-container px-5 py-20 md:px-margin-desktop md:py-28">
         <div className="grid grid-cols-1 items-end gap-10 md:grid-cols-2">
           <div>
-            <span className="label-caps text-cyber-cyan">{t.marketing.how_eyebrow}</span>
+            <span className="label-caps text-violet-400">{t.marketing.how_eyebrow}</span>
             <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight md:text-5xl text-balance">
               {t.marketing.how_title}
             </h2>
@@ -27,7 +27,7 @@ export function HowItWorks() {
               <div className="absolute right-4 top-4 font-mono text-[11px] tracking-[0.18em] text-muted">
                 0{i + 1}
               </div>
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-400/10 text-cyber-cyan ring-1 ring-cyan-400/20">
+              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-violet-400/10 text-violet-400 ring-1 ring-violet-400/20">
                 <s.icon size={18} />
               </div>
               <h3 className="font-display text-lg font-semibold">{s.title}</h3>

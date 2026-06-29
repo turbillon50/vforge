@@ -55,7 +55,7 @@ export function Contratos() {
       <div className="mx-auto max-w-5xl px-5">
         <div className="relative overflow-hidden rounded-[2.5rem] border border-[var(--border-1)] bg-gradient-to-br from-[#0c0a1a] to-[#06040f] p-8 md:p-12">
           <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-violet-600/20 blur-[100px]" />
-          <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-cyan-500/15 blur-[100px]" />
+          <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-violet-500/15 blur-[100px]" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/30 to-transparent" />
 
           <div className="relative">
@@ -64,7 +64,7 @@ export function Contratos() {
             </span>
             <h2 className="mt-4 text-[clamp(1.6rem,4.5vw,2.6rem)] font-bold leading-tight tracking-tight text-white">
               Contratos claros,<br />
-              <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-violet-400 to-violet-400 bg-clip-text text-transparent">
                 firma sin papel.
               </span>
             </h2>
@@ -94,7 +94,7 @@ export function Contratos() {
             </div>
 
             <div className="mt-7 flex items-center gap-2 text-xs text-[var(--fg-muted)]">
-              <span className="text-cyan-400/70"><IconShieldSm /></span>
+              <span className="text-violet-400/70"><IconShieldSm /></span>
               Firma electrónica con validez legal · Respaldado por DocuSign
             </div>
           </div>

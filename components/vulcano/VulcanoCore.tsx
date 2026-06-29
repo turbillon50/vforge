@@ -16,7 +16,7 @@ import { useLiteMotion } from "@/components/cockpit/use-lite-motion";
  */
 export function VulcanoCore({
   size = 120,
-  accent = "#22d3ee",
+  accent = "#8b5cf6",
   driving = true,
 }: {
   size?: number;

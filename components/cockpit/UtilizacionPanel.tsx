@@ -9,7 +9,7 @@ import type { EsferaId } from "@/components/cockpit/esferas-types";
 
 const HUE: Record<string, string> = {
   claude: "#a78bfa",
-  codex: "#22d3ee",
+  codex: "#8b5cf6",
   grok: "#f472b6",
   shell: "#34d399",
   browser: "#38bdf8",
@@ -62,7 +62,7 @@ export function UtilizacionPanel() {
   return (
     <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
       <div className="flex items-center justify-between gap-2">
-        <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
+        <p className="label-caps flex items-center gap-1.5 text-violet-400">
           <IconActivity size={13} /> Utilización · últimas 24h
         </p>
         <div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ export function UtilizacionPanel() {
 
       <div className="mt-4 space-y-2.5">
         {agents.map((a) => {
-          const hue = HUE[a.id] || "#22d3ee";
+          const hue = HUE[a.id] || "#8b5cf6";
           const Logo = AGENT_LOGOS[a.id as EsferaId] ?? LogoGrok;
           // El ancho relativo escala al máximo del periodo para que las barras
           // pequeñas sean visibles; el número muestra el % absoluto real.

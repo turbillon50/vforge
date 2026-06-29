@@ -171,7 +171,7 @@ export default function VersionCard({
                 onClick={() => setActive(v)}
                 className={`flex h-11 min-w-[44px] flex-none items-center justify-center rounded-full px-3.5 text-[12.5px] transition md:h-8 ${
                   isActive
-                    ? "bg-gradient-to-r from-violet-500/35 to-cyan-500/25 text-white ring-1 ring-violet-400/40"
+                    ? "bg-gradient-to-r from-violet-500/35 to-violet-500/25 text-white ring-1 ring-violet-400/40"
                     : "bg-[var(--surface-1)] text-on-surface-variant hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]"
                 }`}
               >
@@ -272,7 +272,7 @@ function CardAction({
       onClick={onClick}
       className={`flex h-11 items-center gap-1.5 rounded-xl px-3 text-[13px] transition md:h-9 ${
         active
-          ? "text-cyan-300"
+          ? "text-violet-300"
           : "text-on-surface-variant hover:bg-white/[0.07] hover:text-white"
       }`}
     >

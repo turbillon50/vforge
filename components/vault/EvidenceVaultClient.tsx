@@ -84,7 +84,7 @@ const KIND_META: Record<
   screenshot: {
     label: "Screenshot",
     Icon: IconCamera,
-    tone: "text-cyan-400 border-cyan-400",
+    tone: "text-violet-400 border-violet-400",
   },
   text: {
     label: "Texto",
@@ -558,7 +558,7 @@ export function EvidenceVaultClient({
             onDrop={handleDrop}
             className={cn(
               "rounded-2xl border border-dashed bg-surface p-4 shadow-elev transition md:p-5",
-              dragOver ? "border-cyan-400 bg-tint-2" : "border-app-strong",
+              dragOver ? "border-violet-400 bg-tint-2" : "border-app-strong",
             )}
           >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -855,7 +855,7 @@ function CaptureButton({
         "min-h-[104px] rounded-xl border bg-surface-low p-4 text-left transition",
         "focus:outline-none focus:ring-2 focus:ring-violet-400",
         active
-          ? "border-cyan-400 bg-tint-2 text-on-surface"
+          ? "border-violet-400 bg-tint-2 text-on-surface"
           : "border-app text-on-surface hover:border-violet-400 hover:bg-tint-2",
         disabled && "cursor-not-allowed opacity-50",
       )}
@@ -916,7 +916,7 @@ function EvidenceRow({ item, index }: { item: EvidenceItem; index: number }) {
             href={item.raw_url}
             target="_blank"
             rel="noreferrer"
-            className="mt-2 inline-flex font-mono text-[11px] uppercase tracking-[0.14em] text-cyan-400 hover:text-violet-400"
+            className="mt-2 inline-flex font-mono text-[11px] uppercase tracking-[0.14em] text-violet-400 hover:text-violet-400"
           >
             Abrir archivo
           </a>
@@ -976,7 +976,7 @@ function SyncBadge({
         state === "error"
           ? "border-error-crimson text-error-crimson"
           : state === "syncing"
-            ? "border-cyan-400 text-cyan-400"
+            ? "border-violet-400 text-violet-400"
             : "border-success-emerald text-success-emerald",
       )}
     >

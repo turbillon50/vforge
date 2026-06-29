@@ -71,7 +71,7 @@ export function VPresence({
         className="absolute inset-0 rounded-full"
         style={{
           background:
-            "conic-gradient(from 0deg, #8b5cf6, #22d3ee 35%, #6d6af8 60%, #22d3ee 80%, #8b5cf6)",
+            "conic-gradient(from 0deg, #8b5cf6, #8b5cf6 35%, #6d6af8 60%, #8b5cf6 80%, #8b5cf6)",
           animation: cfg.spin ? `vpresSpin ${cfg.spin}s linear infinite` : undefined,
         }}
       />
@@ -86,7 +86,7 @@ export function VPresence({
         style={{
           inset: Math.max(2, size * 0.05),
           background:
-            "radial-gradient(circle at 32% 28%, #c4b5fd, #8b5cf6 45%, #4f46e5 80%, #22d3ee 130%)",
+            "radial-gradient(circle at 32% 28%, #c4b5fd, #8b5cf6 45%, #4f46e5 80%, #8b5cf6 130%)",
           animation: animate ? `vpresCore ${cfg.pulse}s ease-in-out infinite` : undefined,
         }}
       />

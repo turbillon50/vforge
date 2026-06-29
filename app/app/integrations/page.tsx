@@ -86,7 +86,7 @@ export default function IntegrationsPage() {
         <div className="flex items-center gap-3">
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
             <motion.div initial={{width:0}} animate={{width:`${(connected/SERVICES.length)*100}%`}}
-              transition={{duration:0.8,ease:EASE}} className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"/>
+              transition={{duration:0.8,ease:EASE}} className="h-full rounded-full bg-gradient-to-r from-violet-500 to-violet-400"/>
           </div>
           <span className="font-mono text-[11px] text-[var(--fg-muted)]">{connected}/{SERVICES.length} conectados</span>
         </div>

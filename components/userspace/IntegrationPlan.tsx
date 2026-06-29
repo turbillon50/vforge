@@ -88,7 +88,7 @@ export default function IntegrationPlan() {
         <div className="mt-3 flex items-center gap-3">
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-tint-1">
             <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-violet-400 to-cyan-400"
+              className="h-full rounded-full bg-gradient-to-r from-violet-400 to-violet-400"
               initial={{ width: 0 }}
               animate={{ width: `${pct}%` }}
               transition={{ duration: 0.5, ease: EASE }}

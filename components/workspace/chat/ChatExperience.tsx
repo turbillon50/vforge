@@ -1003,7 +1003,7 @@ export function ChatExperience() {
                       {opt.id === "general" ? (
                         <IconChat size={13} className="mt-0.5 shrink-0 text-violet-300" />
                       ) : (
-                        <IconBranch size={13} className="mt-0.5 shrink-0 text-cyber-cyan" />
+                        <IconBranch size={13} className="mt-0.5 shrink-0 text-violet-400" />
                       )}
                       <div className="min-w-0">
                         <p className="truncate font-medium">{opt.label}</p>
@@ -1065,7 +1065,7 @@ export function ChatExperience() {
                           onClick={() => setRepoMenuOpen(false)}
                           className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
                         >
-                          <IconBranch size={14} className="text-cyber-cyan" /> Ver en GitHub
+                          <IconBranch size={14} className="text-violet-400" /> Ver en GitHub
                         </a>
                       )}
                     </>
@@ -1139,7 +1139,7 @@ export function ChatExperience() {
                     onClick={() => setDeployMenuOpen(false)}
                     className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
                   >
-                    <IconGlobe size={14} className="text-cyber-cyan" /> Ver deployments
+                    <IconGlobe size={14} className="text-violet-400" /> Ver deployments
                   </Link>
                   {builderNote && (
                     <p className="px-3 pb-2.5 text-[12px] text-muted">{builderNote}</p>
@@ -1188,7 +1188,7 @@ export function ChatExperience() {
                     }}
                     className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
                   >
-                    <IconHistory size={14} className="text-cyber-cyan" /> Hilos
+                    <IconHistory size={14} className="text-violet-400" /> Hilos
                   </button>
                   <Link href="/app/home"
                     onClick={() => setHeaderMenuOpen(false)}
@@ -1219,7 +1219,7 @@ export function ChatExperience() {
             <div className="mb-4 flex items-center gap-3 rounded-2xl border border-app bg-[var(--color-surface-low)] px-4 py-3">
               <VOrb size={34} />
               <div>
-                <p className="bg-gradient-to-r from-violet-500 via-violet-400 to-cyan-400 bg-clip-text font-display text-lg font-semibold tracking-tight text-transparent">
+                <p className="bg-gradient-to-r from-violet-500 via-violet-400 to-violet-400 bg-clip-text font-display text-lg font-semibold tracking-tight text-transparent">
                   Hola, soy {t.common.label_b}.
                 </p>
                 <p className="mt-0.5 text-[12px] text-muted">
@@ -1293,7 +1293,7 @@ export function ChatExperience() {
                 disabled={pending}
                 className="flex w-full items-center gap-2 rounded-xl border border-violet-400/50 bg-violet-500/25 px-3 py-2.5 text-sm font-medium text-white transition hover:bg-violet-500/35 disabled:opacity-50"
               >
-                <IconPlus size={15} className="text-cyan-300" />
+                <IconPlus size={15} className="text-violet-300" />
                 Nuevo chat
               </button>
             </div>
@@ -1663,7 +1663,7 @@ function Composer({
                 recording
                   ? "bg-error-crimson/15 text-error-crimson animate-pulse"
                   : transcribing
-                    ? "text-cyber-cyan animate-pulse"
+                    ? "text-violet-400 animate-pulse"
                     : "hover:bg-tint-2"
               }`}
               aria-label={recording ? "Detener grabación" : "Grabar voz"}
@@ -1797,7 +1797,7 @@ function MessageBubble({
                   {a.status === "done" ? (
                     <IconCheck size={14} className="text-success-emerald" />
                   ) : a.status === "running" ? (
-                    <IconActivity size={14} className="animate-pulse text-cyber-cyan" />
+                    <IconActivity size={14} className="animate-pulse text-violet-400" />
                   ) : (
                     <IconActivity size={14} className="text-muted" />
                   )}
@@ -1861,7 +1861,7 @@ function StreamingBubble({ text, image, audioOnly }: { text: string; image?: str
           <VOrb size={24} />
         </div>
         <div className="chat-bubble-forge flex min-w-0 items-center gap-2 rounded-2xl rounded-bl-md px-5 py-4">
-          <IconSpeaker size={16} className="text-cyan-300" />
+          <IconSpeaker size={16} className="text-violet-300" />
           <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">
             {text.length === 0 ? "V está pensando…" : "Preparando voz…"}
           </span>
@@ -2079,12 +2079,12 @@ function SpeakButton({
         type="button"
         onClick={() => void play()}
         aria-label={state === "playing" ? "Detener voz de V" : "Reproducir voz de V"}
-        className="flex items-center gap-2.5 rounded-full border border-cyan-400/30 bg-cyan-500/[0.08] px-3.5 py-2 text-cyan-200 transition hover:border-cyan-400/50 hover:bg-cyan-500/[0.14]"
+        className="flex items-center gap-2.5 rounded-full border border-violet-400/30 bg-violet-500/[0.08] px-3.5 py-2 text-cyan-200 transition hover:border-violet-400/50 hover:bg-violet-500/[0.14]"
       >
         {state === "loading" ? (
-          <IconActivity size={16} className="animate-pulse text-cyan-300" />
+          <IconActivity size={16} className="animate-pulse text-violet-300" />
         ) : (
-          <IconSpeaker size={16} className={state === "playing" ? "animate-pulse text-cyan-300" : "text-cyan-300"} />
+          <IconSpeaker size={16} className={state === "playing" ? "animate-pulse text-violet-300" : "text-violet-300"} />
         )}
         <span className="font-mono text-[10px] uppercase tracking-[0.18em]">
           {state === "playing" ? "Hablando…" : state === "loading" ? "Cargando…" : "Mensaje de voz"}
@@ -2110,12 +2110,12 @@ function SpeakButton({
       onClick={() => void play()}
       aria-label={state === "playing" ? "Detener voz" : "Escuchar respuesta de V"}
       title="Escuchar con la voz de V"
-      className="flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1 px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-cyan-400/40 hover:text-cyan-300"
+      className="flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1 px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-400/40 hover:text-violet-300"
     >
       {state === "loading" ? (
         <IconActivity size={11} className="animate-pulse" />
       ) : (
-        <IconSpeaker size={11} className={state === "playing" ? "animate-pulse text-cyan-300" : ""} />
+        <IconSpeaker size={11} className={state === "playing" ? "animate-pulse text-violet-300" : ""} />
       )}
       <span>{label}</span>
     </button>

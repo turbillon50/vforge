@@ -87,7 +87,7 @@ export function RegisterSW() {
           aria-hidden
           className="h-2.5 w-2.5 shrink-0 rounded-full"
           style={{
-            background: "radial-gradient(circle,#22d3ee,#7c3aed)",
+            background: "radial-gradient(circle,#8b5cf6,#7c3aed)",
             boxShadow: "0 0 10px rgba(34,211,238,0.6)",
             animation: "swPulse 1.6s ease-in-out infinite",
           }}
@@ -98,7 +98,7 @@ export function RegisterSW() {
         </div>
         <button
           onClick={applyUpdate}
-          className="shrink-0 rounded-xl border border-violet-400/40 bg-gradient-to-r from-violet-600/40 to-cyan-500/25 px-3.5 py-2 text-[12px] font-semibold text-white transition active:scale-95 hover:from-violet-600/55 hover:to-cyan-500/35"
+          className="shrink-0 rounded-xl border border-violet-400/40 bg-gradient-to-r from-violet-600/40 to-violet-500/25 px-3.5 py-2 text-[12px] font-semibold text-white transition active:scale-95 hover:from-violet-600/55 hover:to-violet-500/35"
         >
           Actualizar
         </button>

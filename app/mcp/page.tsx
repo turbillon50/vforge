@@ -262,7 +262,7 @@ export default function MCPDocsPage() {
                 Crear cuenta gratis
               </Link>
               <Link
-                href="/blog/que-es-mcp"
+                href="/mcp#docs"
                 className="flex items-center justify-center gap-2 rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] py-4 text-sm text-[var(--fg-tertiary)] transition-all hover:text-[var(--fg-primary)]"
               >
                 Leer qué es MCP primero

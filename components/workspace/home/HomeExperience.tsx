@@ -45,7 +45,7 @@ export function HomeExperience({ name }: { name: string }) {
   }, []);
 
   return (
-    <main className="grain relative mx-auto w-full max-w-5xl overflow-hidden px-5 pb-28 pt-10 md:px-8 md:pt-16" style={{ minHeight: "100vh", background: "#03020a" }}>
+    <main className="grain relative mx-auto w-full max-w-5xl overflow-hidden px-5 pb-28 pt-10 md:px-8 md:pt-16" style={{ minHeight: "100vh", background: "var(--color-void)" }}>
       {/* Fondos de profundidad — gradientes difusos */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div
@@ -69,7 +69,7 @@ export function HomeExperience({ name }: { name: string }) {
             width: 600,
             height: 600,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(34,211,238,0.06) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(124,58,237,0.05) 0%, transparent 70%)",
             filter: "blur(40px)",
           }}
         />
@@ -106,7 +106,7 @@ export function HomeExperience({ name }: { name: string }) {
           <span
             style={{
               display: "block",
-              background: "linear-gradient(135deg,#a78bfa,#22d3ee)",
+              background: "linear-gradient(135deg,#a78bfa,#8b5cf6)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -180,7 +180,7 @@ export function HomeExperience({ name }: { name: string }) {
                 width: "auto",
                 padding: "14px 40px",
                 borderRadius: 999,
-                background: "linear-gradient(135deg,#7c3aed,#22d3ee)",
+                background: "linear-gradient(135deg,#7c3aed,#8b5cf6)",
                 color: "#fff",
                 fontWeight: 600,
                 fontSize: 16,

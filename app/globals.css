@@ -336,7 +336,7 @@ img, svg, video, canvas {
   }
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-white transition-all;
-    background: linear-gradient(135deg, #7c3aed 0%, #22d3ee 100%);
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
     box-shadow: 0 8px 30px rgba(124, 58, 237, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
     font-family: var(--font-geist-mono), "JetBrains Mono", monospace;
   }
@@ -713,7 +713,7 @@ body.keyboard-open .vf-mobile-nav {
   .crystal-progress-fill {
     height: 100%;
     border-radius: 9999px;
-    background: linear-gradient(90deg, #7c3aed, #22d3ee);
+    background: linear-gradient(90deg, #7c3aed, #6d28d9);
     box-shadow: 0 0 12px rgba(124,58,237,0.5);
   }
 }
@@ -1121,7 +1121,7 @@ body:not([data-theme="light"]) .hud-scanlines::after {
   border-image: linear-gradient(
     135deg,
     #7c3aed 0%,
-    #22d3ee 35%,
+    #8b5cf6 35%,
     #fbbf24 65%,
     #7c3aed 100%
   ) 1;

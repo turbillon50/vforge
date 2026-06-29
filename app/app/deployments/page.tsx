@@ -86,7 +86,7 @@ export default function DeploymentsPage() {
                     </span>
                   </div>
                   <div className="relative mt-3.5 flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2">
-                    <IconGlobe size={11} className="shrink-0 text-cyan-400/60"/>
+                    <IconGlobe size={11} className="shrink-0 text-violet-400/60"/>
                     <span className="flex-1 truncate font-mono text-[11px] text-[var(--fg-tertiary)]">{host}</span>
                     <IconExtLink size={12} className="shrink-0 text-[var(--fg-muted)] transition group-hover:text-violet-300"/>
                   </div>

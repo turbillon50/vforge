@@ -270,7 +270,7 @@ function Breadcrumbs({ pathname }: { pathname:string }) {
         const isLast=i===trail.length-1;
         return (
           <span key={p+i} className="flex items-center gap-1">
-            <span className={isLast?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-semibold text-transparent":"text-[var(--fg-muted)]"}>{p}</span>
+            <span className={isLast?"bg-gradient-to-r from-violet-300 to-violet-400 bg-clip-text font-semibold text-transparent":"text-[var(--fg-muted)]"}>{p}</span>
             {!isLast&&<IconChevR size={9} className="text-[var(--fg-subtle)]"/>}
           </span>
         );
@@ -293,7 +293,7 @@ function MobileNav({ pathname }: { pathname:string }) {
         if(item.orb) return (
           <Link key={item.href} href={item.href} className={cn("flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition active:scale-95",active?"text-[var(--color-violet-300)]":"text-[var(--fg-tertiary)]")}>
             <VPresence size={25} breathing={active}/>
-            <span className={cn("font-mono text-[9px] uppercase tracking-widest",active?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-bold text-transparent":"")}>{item.label}</span>
+            <span className={cn("font-mono text-[9px] uppercase tracking-widest",active?"bg-gradient-to-r from-violet-300 to-violet-400 bg-clip-text font-bold text-transparent":"")}>{item.label}</span>
           </Link>
         );
         if("Icon" in item && item.Icon) {
@@ -306,7 +306,7 @@ function MobileNav({ pathname }: { pathname:string }) {
               <motion.span className="inline-flex" animate={active?{scale:[1,1.08,1]}:{scale:1}} transition={active?{duration:2.4,repeat:Infinity,ease:"easeInOut"}:{duration:0.18}}>
                 <Icon size={24} className={cn("transition",active?"text-[var(--color-violet-300)]":"text-[var(--fg-tertiary)] group-hover:text-[var(--fg-secondary)]")}/>
               </motion.span>
-              <span className={cn("font-mono text-[9px] uppercase tracking-widest",active?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-bold text-transparent":"")}>{item.label}</span>
+              <span className={cn("font-mono text-[9px] uppercase tracking-widest",active?"bg-gradient-to-r from-violet-300 to-violet-400 bg-clip-text font-bold text-transparent":"")}>{item.label}</span>
             </Link>
           );
         }
@@ -318,7 +318,7 @@ function MobileNav({ pathname }: { pathname:string }) {
             <motion.span className="inline-flex" animate={active?{scale:[1,1.08,1]}:{scale:1}} transition={active?{duration:2.4,repeat:Infinity,ease:"easeInOut"}:{duration:0.18}}>
               <Icon3D name={(item as {icon3d?:any}).icon3d} size={25} glow={active} className={cn("transition",active?"":"opacity-55 group-hover:opacity-90")}/>
             </motion.span>
-            <span className={cn("font-mono text-[9px] uppercase tracking-widest",active?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-bold text-transparent":"")}>{item.label}</span>
+            <span className={cn("font-mono text-[9px] uppercase tracking-widest",active?"bg-gradient-to-r from-violet-300 to-violet-400 bg-clip-text font-bold text-transparent":"")}>{item.label}</span>
           </Link>
         );
       })}
@@ -331,7 +331,7 @@ function MobileNav({ pathname }: { pathname:string }) {
         <motion.span className="inline-flex" animate={moreOpen?{scale:[1,1.08,1]}:{scale:1}} transition={{duration:0.18}}>
           <IconBoxes size={24} className={cn("transition",inMore?"text-[var(--color-violet-300)]":"text-[var(--fg-tertiary)] group-hover:text-[var(--fg-secondary)]")}/>
         </motion.span>
-        <span className={cn("font-mono text-[9px] uppercase tracking-widest",inMore?"bg-gradient-to-r from-violet-300 to-cyan-400 bg-clip-text font-bold text-transparent":"")}>Más</span>
+        <span className={cn("font-mono text-[9px] uppercase tracking-widest",inMore?"bg-gradient-to-r from-violet-300 to-violet-400 bg-clip-text font-bold text-transparent":"")}>Más</span>
       </button>
     </nav>
     <MoreDrawer open={moreOpen} onClose={()=>setMoreOpen(false)} pathname={pathname}/>

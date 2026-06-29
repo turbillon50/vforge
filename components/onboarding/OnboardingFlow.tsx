@@ -160,7 +160,7 @@ export function OnboardingFlow() {
           initial={false}
           animate={{ width: `${progress}%` }}
           transition={{ type: "spring", stiffness: 120, damping: 20 }}
-          className="h-full bg-gradient-to-r from-violet-500 via-violet-400 to-cyan-400 shadow-[0_0_20px_rgba(139,92,246,0.5)]"
+          className="h-full bg-gradient-to-r from-violet-500 via-violet-400 to-violet-400 shadow-[0_0_20px_rgba(139,92,246,0.5)]"
         />
       </div>
 
@@ -251,7 +251,7 @@ function Welcome({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="text-center">
       <div className="mx-auto mb-5 inline-flex h-14 w-14 items-center justify-center rounded-full bg-violet-500/10 ring-1 ring-violet-500/30 animate-breathe">
-        <IconSparkles className="text-cyber-cyan" size={22} />
+        <IconSparkles className="text-violet-400" size={22} />
       </div>
       <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl text-balance">
         {t.onboarding.welcome_title}
@@ -498,8 +498,8 @@ function Connect({
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-3 rounded-md border border-cyan-400/20 bg-cyan-400/[0.04] p-3 text-sm text-on-surface-variant">
-                      <span className="label-caps mr-2 text-cyber-cyan">{t.onboarding.glossary_label}</span>
+                    <div className="mt-3 rounded-md border border-violet-400/20 bg-violet-400/[0.04] p-3 text-sm text-on-surface-variant">
+                      <span className="label-caps mr-2 text-violet-400">{t.onboarding.glossary_label}</span>
                       {meta.glossary}
                     </div>
                   </motion.div>
@@ -612,7 +612,7 @@ function FirstProject({
                     href={repo.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 truncate font-mono text-sm text-cyber-cyan hover:underline"
+                    className="flex items-center gap-1 truncate font-mono text-sm text-violet-400 hover:underline"
                   >
                     {repo.name} <IconExtLink size={12} />
                   </a>

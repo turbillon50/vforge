@@ -50,7 +50,7 @@ const PRODUCTS: Product[] = [
     name: "MCP Empresarial",
     tagline: "El cerebro que conecta tus IA",
     priceLabel: "Desde $25,000 MXN",
-    accent: "#22d3ee",
+    accent: "#8b5cf6",
     icon: "cpu",
     isNew: true,
     fullDesc: "Diseñamos MCP empresariales para tus procesos, con memoria de empresa y ahorro de tokens por contexto. Un solo cerebro que conecta todas tus IA — Claude, GPT, Gemini — para que trabajen con el conocimiento de tu negocio sin repetir contexto.",
@@ -144,7 +144,7 @@ export function ProductCarousel() {
         <p className="text-center text-[11px] font-semibold tracking-[0.25em] text-violet-400/70 uppercase">Nuestros productos</p>
         <h2 className="mt-2 text-center text-[clamp(1.8rem,5vw,3rem)] font-bold leading-tight tracking-tight text-white">
           Una fábrica completa de<br />
-          <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">tecnología e IA.</span>
+          <span className="bg-gradient-to-r from-violet-400 to-violet-400 bg-clip-text text-transparent">tecnología e IA.</span>
         </h2>
         <p className="mx-auto mt-3 max-w-md text-center text-sm font-light text-[var(--fg-tertiary)]">
           Desliza. Toca cualquier producto para ver todo el proceso.

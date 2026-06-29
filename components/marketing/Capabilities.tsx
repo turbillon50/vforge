@@ -16,7 +16,7 @@ export function Capabilities() {
     <section id="product" className="border-b border-app">
       <div className="mx-auto max-w-container px-5 py-20 md:px-margin-desktop md:py-28">
         <div className="flex flex-col items-center text-center">
-          <span className="label-caps text-cyber-cyan">{t.marketing.capabilities_eyebrow}</span>
+          <span className="label-caps text-violet-400">{t.marketing.capabilities_eyebrow}</span>
           <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight md:text-5xl text-balance">
             {t.marketing.capabilities_title}
           </h2>

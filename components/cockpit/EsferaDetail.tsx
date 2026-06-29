@@ -12,7 +12,7 @@ import type {
 
 const HUE: Record<string, string> = {
   claude: "#a78bfa",
-  codex: "#22d3ee",
+  codex: "#8b5cf6",
   grok: "#f472b6",
   shell: "#34d399",
   browser: "#38bdf8",
@@ -30,7 +30,7 @@ const STATUS_HUE: Record<string, string> = {
   in_progress: "#34d399",
   pending: "#fbbf24",
   queued: "#fbbf24",
-  done: "#22d3ee",
+  done: "#8b5cf6",
   failed: "#f87171",
   error: "#f87171",
 };
@@ -103,7 +103,7 @@ export function EsferaDetail({
 
   // Normaliza job/agente a un modelo común para el render.
   const agentId = target.kind === "job" ? target.job.agent : target.esfera.id;
-  const hue = (agentId && HUE[agentId]) || "#22d3ee";
+  const hue = (agentId && HUE[agentId]) || "#8b5cf6";
   const Logo = agentId ? AGENT_LOGOS[agentId] : LogoGrok;
 
   const agentName =
@@ -244,7 +244,7 @@ export function EsferaDetail({
                   />
                 )}
                 {source && <Row label="Origen" value={<span className="text-muted">{source}</span>} />}
-                {gajo && <Row label="Gajo" value={<span className="font-mono text-[12px] text-cyber-cyan">{gajo}</span>} />}
+                {gajo && <Row label="Gajo" value={<span className="font-mono text-[12px] text-violet-400">{gajo}</span>} />}
                 <Row
                   label="Corriendo"
                   value={

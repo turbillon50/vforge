@@ -153,7 +153,7 @@ export default async function AdminBillingPage() {
       )}
 
       <p className="mt-8">
-        <Link href="/app/admin" className="text-sm text-cyber-cyan hover:underline">
+        <Link href="/app/admin" className="text-sm text-violet-400 hover:underline">
           ← Volver a usuarios
         </Link>
       </p>

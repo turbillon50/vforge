@@ -42,7 +42,7 @@ export interface Member {
 
 /** Scopes de acceso (cara visible). key = lo que espera /api/invitations. */
 export const SCOPES = [
-  { key: "cliente", label: "Cliente", sub: "Solo lectura", Icon: IconEye, color: "#22d3ee" },
+  { key: "cliente", label: "Cliente", sub: "Solo lectura", Icon: IconEye, color: "#8b5cf6" },
   { key: "colaborador", label: "Colaborador", sub: "Edición", Icon: IconPen, color: "#a78bfa" },
   { key: "admin", label: "Admin", sub: "Control total", Icon: IconShield, color: "#34d399" },
   { key: "invitado", label: "Invitado", sub: "Vista demo", Icon: IconRocket, color: "#f59e0b" },
@@ -62,7 +62,7 @@ export function scopeLabel(scope?: string | null): string {
 }
 
 export function scopeColor(scope?: string | null): string {
-  return SCOPES.find((s) => s.key === scope)?.color ?? "#22d3ee";
+  return SCOPES.find((s) => s.key === scope)?.color ?? "#8b5cf6";
 }
 
 function initialOf(member: Member): string {
@@ -434,7 +434,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
                               ? "border border-emerald-500/30 bg-emerald-500/8 text-emerald-400"
                               : m.status === "revoked"
                                 ? "border border-[var(--border-1)] bg-[var(--surface-1)] text-muted"
-                                : "border border-cyan-400/30 bg-cyan-400/8 text-cyan-400"
+                                : "border border-violet-400/30 bg-violet-400/8 text-violet-400"
                           }`}
                         >
                           {m.status === "active" ? "Activo" : m.status === "revoked" ? "Revocado" : "Invitado"}

@@ -115,7 +115,7 @@ function McpCard() {
           type="button"
           onClick={gen}
           disabled={loading}
-          className="mt-4 flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-5 text-[14px] font-medium text-white shadow-glow-violet transition active:scale-[0.98] disabled:opacity-50"
+          className="mt-4 flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-violet-500 to-violet-500 px-5 text-[14px] font-medium text-white shadow-glow-violet transition active:scale-[0.98] disabled:opacity-50"
         >
           {loading ? "Generando…" : "Generar token MCP"}
         </button>
@@ -188,7 +188,7 @@ function ProfilePanel() {
     <>
       <Card title="Tu identidad como operador">
         <div className="mb-4 flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400" />
+          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-violet-500 to-violet-400" />
           <div>
             <p className="font-display text-lg font-semibold text-on-surface">
               Luis de la Torre Herrera
@@ -265,7 +265,7 @@ function PlanPanel() {
         )}
         <div className="mt-4 flex flex-wrap gap-2">
           {plan === "free" ? (
-            <Link href="/pricing"
+            <Link href="https://vmomentum.site"
               className="btn-primary !px-4 !py-2"
               style={{ minHeight: 44, touchAction: "manipulation" }}
             >
@@ -280,7 +280,7 @@ function PlanPanel() {
               <IconCreditCard size={14} /> Gestionar suscripción
             </a>
           )}
-          <Link href="/pricing"
+          <Link href="https://vmomentum.site"
             className="btn-ghost !px-4 !py-2"
             style={{ minHeight: 44, touchAction: "manipulation" }}
           >
@@ -365,7 +365,7 @@ function InvoicesPanel() {
                 className={
                   inv.status === "paid"
                     ? "chip text-success-emerald"
-                    : "chip text-cyber-cyan"
+                    : "chip text-violet-400"
                 }
               >
                 {inv.status}
@@ -586,7 +586,7 @@ function ApiPanel() {
       <Card title="API & integraciones">
         <p className="mb-3 text-[12px] text-on-surface-variant">
           Las claves de tus integraciones viven encriptadas en{" "}
-          <a href="/app/secrets" className="text-cyber-cyan hover:underline">
+          <a href="/app/secrets" className="text-violet-400 hover:underline">
             /app/secrets
           </a>{" "}
           (AES-256-GCM). V las usa para operar sin que tengas que copiarlas.
@@ -595,7 +595,7 @@ function ApiPanel() {
           href="https://github.com/turbillon50/vforge/blob/main/docs/backend-contract.md"
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-2 text-sm text-cyber-cyan hover:underline"
+          className="inline-flex items-center gap-2 text-sm text-violet-400 hover:underline"
         >
           <IconExtLink size={13} /> Contrato del backend (docs)
         </a>

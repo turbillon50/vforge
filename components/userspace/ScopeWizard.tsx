@@ -175,7 +175,7 @@ export default function ScopeWizard({ initialScope }: Props) {
             key={i}
             className={`h-1.5 rounded-full transition-all duration-300 ${
               i === step
-                ? "w-7 bg-gradient-to-r from-violet-500 to-cyan-400"
+                ? "w-7 bg-gradient-to-r from-violet-500 to-violet-400"
                 : i < step
                   ? "w-1.5 bg-violet-400/70"
                   : "w-1.5 bg-tint-3"
@@ -289,7 +289,7 @@ export default function ScopeWizard({ initialScope }: Props) {
               type="button"
               onClick={() => go(1)}
               disabled={!canNext}
-              className="flex min-h-[44px] items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-cyan-500 px-6 py-2.5 text-sm font-medium text-white shadow-elev transition hover:brightness-110 disabled:opacity-40"
+              className="flex min-h-[44px] items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-violet-500 px-6 py-2.5 text-sm font-medium text-white shadow-elev transition hover:brightness-110 disabled:opacity-40"
             >
               Continuar
               <IconArrowR className="h-4 w-4" aria-hidden />
@@ -299,7 +299,7 @@ export default function ScopeWizard({ initialScope }: Props) {
               type="button"
               onClick={() => void finish()}
               disabled={!canNext || saving}
-              className="flex min-h-[44px] items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-cyan-500 px-7 py-2.5 text-sm font-medium text-white shadow-elev transition hover:brightness-110 disabled:opacity-40"
+              className="flex min-h-[44px] items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-violet-500 px-7 py-2.5 text-sm font-medium text-white shadow-elev transition hover:brightness-110 disabled:opacity-40"
             >
               {saving ? (
                 <IconLoader className="h-4 w-4 animate-spin" aria-hidden />
@@ -372,7 +372,7 @@ function OptionGrid({
                 {opt}
               </span>
               {active && (
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-white">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-violet-400 text-white">
                   <IconCheck className="h-3.5 w-3.5" aria-hidden />
                 </span>
               )}

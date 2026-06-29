@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { VulcanoCore } from "./VulcanoCore";
 import { IconGlobe } from "@/components/brand/VFIcons";
 
-const ACCENT = "#22d3ee";
+const ACCENT = "#8b5cf6";
 
 /**
  * Splash de entrada del Navegador Vulcano. Núcleo que pulsa + texto que aparece

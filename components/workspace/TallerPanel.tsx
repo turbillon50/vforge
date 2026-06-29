@@ -94,13 +94,13 @@ export function TallerPanel({
             </div>
             <div
               className={`flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] sm:text-[11px] sm:tracking-[0.18em] ${
-                live ? "text-cyber-cyan" : "text-amber-300/80"
+                live ? "text-violet-400" : "text-amber-300/80"
               }`}
             >
               <span
                 className={`h-1.5 w-1.5 rounded-full ${
                   live
-                    ? "bg-cyber-cyan shadow-[0_0_8px_rgba(34,211,238,0.7)]"
+                    ? "bg-violet-400 shadow-[0_0_8px_rgba(34,211,238,0.7)]"
                     : "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]"
                 }`}
               />
@@ -160,7 +160,7 @@ export function TallerPanel({
                       {hasServices ? (
                         <IconCheck size={14} className="text-success-emerald" />
                       ) : (
-                        <IconActivity size={14} className="animate-pulse text-cyber-cyan" />
+                        <IconActivity size={14} className="animate-pulse text-violet-400" />
                       )}
                       <span className={hasServices ? "" : "text-on-surface-variant"}>
                         {hasServices
@@ -318,7 +318,7 @@ function Stat({
 }) {
   const dotClass =
     tone === "cyan"
-      ? "bg-cyber-cyan shadow-[0_0_10px_rgba(34,211,238,0.6)]"
+      ? "bg-violet-400 shadow-[0_0_10px_rgba(34,211,238,0.6)]"
       : tone === "violet"
       ? "bg-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.6)]"
       : "bg-success-emerald shadow-[0_0_10px_rgba(16,185,129,0.5)]";
@@ -349,7 +349,7 @@ function ActivityItem({
     tone === "violet"
       ? "text-violet-300"
       : tone === "cyan"
-      ? "text-cyber-cyan"
+      ? "text-violet-400"
       : "text-success-emerald";
   return (
     <div className="flex items-center gap-2 py-1.5 text-[12px] text-on-surface-variant">

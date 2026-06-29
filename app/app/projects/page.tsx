@@ -157,7 +157,7 @@ export default function ProjectsPage() {
                 ? f === "live"
                   ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400"
                   : f === "preview"
-                  ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-400"
+                  ? "border-violet-400/50 bg-violet-400/10 text-violet-400"
                   : "border-violet-500/50 bg-violet-500/10 text-violet-300"
                 : "border-[var(--border-1)] text-muted hover:border-[var(--border-2)] hover:text-on-surface"
             }`}
@@ -247,8 +247,8 @@ export default function ProjectsPage() {
                       </span>
                     )}
                     {status === "preview" && (
-                      <span className="flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/8 px-2.5 py-1 font-mono text-[10px] text-cyan-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                      <span className="flex items-center gap-1.5 rounded-full border border-violet-400/30 bg-violet-400/8 px-2.5 py-1 font-mono text-[10px] text-violet-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
                         Preview
                       </span>
                     )}
@@ -285,7 +285,7 @@ export default function ProjectsPage() {
                           status === "live"
                             ? "linear-gradient(90deg, #10b981, #34d399)"
                             : status === "preview"
-                            ? "linear-gradient(90deg, #22d3ee, #67e8f9)"
+                            ? "linear-gradient(90deg, #8b5cf6, #67e8f9)"
                             : "linear-gradient(90deg, #8b5cf6, #a78bfa)",
                       }}
                     />
@@ -499,7 +499,7 @@ export default function ProjectsPage() {
                                 ? "border border-emerald-500/30 bg-emerald-500/8 text-emerald-400"
                                 : m.status === "revoked"
                                   ? "border border-[var(--border-1)] bg-[var(--surface-1)] text-muted"
-                                  : "border border-cyan-400/30 bg-cyan-400/8 text-cyan-400"
+                                  : "border border-violet-400/30 bg-violet-400/8 text-violet-400"
                             }`}
                           >
                             {m.status === "active" ? "Activo" : m.status === "revoked" ? "Revocado" : "Invitado"}

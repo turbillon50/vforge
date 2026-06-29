@@ -10,8 +10,8 @@ export function CTA() {
       <div className="mx-auto max-w-container px-5 py-16 md:px-margin-desktop md:py-20">
         <div className="relative overflow-hidden rounded-3xl border border-app-strong bg-ink p-10 text-center md:p-16">
           <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-violet-500/30 blur-[120px]" />
-          <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-cyber-cyan/20 blur-[120px]" />
-          <span className="label-caps text-cyber-cyan">{t.marketing.cta_eyebrow}</span>
+          <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-violet-400/20 blur-[120px]" />
+          <span className="label-caps text-violet-400">{t.marketing.cta_eyebrow}</span>
           <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight md:text-5xl text-balance">
             {t.marketing.cta_title}
           </h2>
@@ -20,7 +20,7 @@ export function CTA() {
             <Link href="/sign-up" prefetch={false} className="btn-primary">
               {t.marketing.cta_primary}
             </Link>
-            <Link href="/pricing" className="btn-ghost">
+            <Link href="/mcp" className="btn-ghost">
               {t.marketing.cta_secondary}
             </Link>
           </div>

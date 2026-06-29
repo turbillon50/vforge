@@ -23,11 +23,11 @@ function iconFor(action:string):{Icon:IconComp;color:string} {
   if(action.startsWith("forge.chat"))  return {Icon:IconSparkles,color:"#a78bfa"};
   if(action.startsWith("project."))    return {Icon:IconBranch,color:"#a78bfa"};
   if(action.includes("deploy")||action.startsWith("vercel.")) return {Icon:IconRocket,color:"#34d399"};
-  if(action.includes("secret")||action.startsWith("vault."))  return {Icon:IconKey,color:"#22d3ee"};
+  if(action.includes("secret")||action.startsWith("vault."))  return {Icon:IconKey,color:"#8b5cf6"};
   if(action.includes("dns"))           return {Icon:IconGlobe,color:"#34d399"};
   if(action.includes("error")||action.includes("fail")) return {Icon:IconWarn,color:"#ef4444"};
   if(action.includes("ok")||action.includes("complete")) return {Icon:IconCheck,color:"#34d399"};
-  if(action.includes("auth")||action.includes("seal")) return {Icon:IconShield,color:"#22d3ee"};
+  if(action.includes("auth")||action.includes("seal")) return {Icon:IconShield,color:"#8b5cf6"};
   return {Icon:IconActivity,color:"#a78bfa"};
 }
 

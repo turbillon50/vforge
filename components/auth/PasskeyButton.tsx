@@ -47,7 +47,7 @@ export function PasskeyButton({ redirectUrl = "/app" }: { redirectUrl?: string }
         {loading ? (
           <IconLoader size={16} className="animate-spin" />
         ) : (
-          <IconFingerprint size={16} className="text-cyan-300 transition group-hover:scale-110" />
+          <IconFingerprint size={16} className="text-violet-300 transition group-hover:scale-110" />
         )}
         {loading ? "Verificando…" : "Continuar con passkey"}
       </button>

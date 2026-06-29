@@ -92,7 +92,7 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
               <article key={u.name} className="rounded-xl border border-app bg-tint-1 p-5">
                 <div className="flex items-center justify-between">
                   <h3 className="font-display text-base font-semibold text-on-surface">{u.name}</h3>
-                  <span className="chip text-cyber-cyan">Próximamente</span>
+                  <span className="chip text-violet-400">Próximamente</span>
                 </div>
                 <p className="mt-3 text-sm text-on-surface-variant">{u.blurb}</p>
               </article>
@@ -120,7 +120,7 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
                 </div>
               </div>
               {m.recommended && (
-                <span className="chip text-cyber-cyan"><IconSparkles size={10} /> {t.common.label_b_picks}</span>
+                <span className="chip text-violet-400"><IconSparkles size={10} /> {t.common.label_b_picks}</span>
               )}
             </div>
             <p className="mt-3 text-sm text-on-surface-variant">{m.blurb}</p>
@@ -138,8 +138,8 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
         ))}
       </div>
       {context === "workspace" && (
-        <div className="mx-5 mb-10 rounded-xl border border-cyan-400/20 bg-cyan-400/[0.04] p-5 md:mx-8">
-          <p className="label-caps mb-2 text-cyber-cyan">{t.marketplace.ask_b_title}</p>
+        <div className="mx-5 mb-10 rounded-xl border border-violet-400/20 bg-violet-400/[0.04] p-5 md:mx-8">
+          <p className="label-caps mb-2 text-violet-400">{t.marketplace.ask_b_title}</p>
           <p className="text-on-surface">{t.marketplace.ask_b_body}</p>
         </div>
       )}

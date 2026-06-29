@@ -15,7 +15,7 @@ export function Metodo() {
     <section id="metodo" className="border-b border-app bg-void py-16 md:py-20">
       <div className="mx-auto max-w-container px-5 md:px-margin-desktop">
         <motion.div initial={false} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1 }} transition={{ duration: 0.5 }} className="mb-14 max-w-2xl">
-          <p className="label-caps mb-4 text-cyber-cyan">Cómo funciona</p>
+          <p className="label-caps mb-4 text-violet-400">Cómo funciona</p>
           <h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-on-surface md:text-5xl">
             Un agente. Tu mundo conectado. <span className="bg-gradient-to-r from-violet-300 to-cyan-300 bg-clip-text text-transparent">Tres pasos.</span>
           </h2>

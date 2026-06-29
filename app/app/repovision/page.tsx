@@ -99,6 +99,7 @@ export default function RepoVisionPage() {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [needsConnect, setNeedsConnect] = useState(false);
   const [filter, setIconSettings] = useState<IconSettings>("todos");
   const [query, setQuery] = useState("");
   const [oldestFirst, setOldestFirst] = useState(false);
@@ -112,7 +113,10 @@ export default function RepoVisionPage() {
         if (!r.ok) throw new Error(`No se pudieron cargar los repos (HTTP ${r.status})`);
         return r.json();
       })
-      .then((d: { repos: Repo[] }) => setRepos(d.repos ?? []))
+      .then((d: { repos: Repo[]; needsConnect?: string }) => {
+        if (d.needsConnect) { setNeedsConnect(true); return; }
+        setRepos(d.repos ?? []);
+      })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
   }, []);
@@ -155,6 +159,24 @@ export default function RepoVisionPage() {
     });
     return list;
   }, [enriched, filter, query, oldestFirst]);
+
+  if (needsConnect) return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center px-5">
+      <div className="rounded-2xl border p-8 max-w-sm w-full"
+        style={{ border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.02)" }}>
+        <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{color:"rgba(124,58,237,0.7)"}}>RepoVision</p>
+        <h2 className="text-[1.2rem] font-bold mb-2" style={{color:"#fff"}}>Conecta GitHub</h2>
+        <p className="text-[14px] mb-6" style={{color:"rgba(255,255,255,0.4)"}}>
+          Para ver tus repos necesitas conectar tu cuenta de GitHub.
+        </p>
+        <a href="/api/auth/github/start"
+          className="block w-full rounded-xl px-5 py-3 text-[14px] font-semibold text-center"
+          style={{background:"#fff", color:"#000"}}>
+          Conectar GitHub →
+        </a>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -412,7 +434,7 @@ function RepoCard({ repo, health }: { repo: Repo; health: Health }) {
       )}
 
       <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-3 text-xs text-muted">
-        {repo.language && <span className="text-cyber-cyan">{repo.language}</span>}
+        {repo.language && <span className="text-violet-400">{repo.language}</span>}
         <span className="tabular">{repo.default_branch}</span>
         <span className="tabular">{pushedLabel(repo.pushed_at)}</span>
         <span className="flex items-center gap-1 tabular">

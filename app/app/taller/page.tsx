@@ -19,7 +19,7 @@ import type {
 
 const HUE: Record<string, string> = {
   claude: "#a78bfa",
-  codex: "#22d3ee",
+  codex: "#8b5cf6",
   grok: "#f472b6",
   shell: "#34d399",
   browser: "#38bdf8",
@@ -58,7 +58,7 @@ const STATUS_HUE: Record<string, string> = {
   in_progress: "#34d399",
   pending: "#fbbf24",
   queued: "#fbbf24",
-  done: "#22d3ee",
+  done: "#8b5cf6",
   failed: "#f87171",
   error: "#f87171",
 };
@@ -205,7 +205,7 @@ export default function TallerPage() {
                   ? "text-amber-600 dark:text-amber-300"
                   : live
                     ? "text-emerald-600 dark:text-emerald-300"
-                    : "text-cyan-600 dark:text-cyan-300"
+                    : "text-cyan-600 dark:text-violet-300"
               }`}
             >
               {error ? "Sin señal" : live ? "En vivo" : "En reposo"}
@@ -237,7 +237,7 @@ export default function TallerPage() {
             }}
           />
           <div className="relative flex h-full flex-col justify-end p-5 md:p-6">
-            <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
+            <p className="label-caps flex items-center gap-1.5 text-violet-400">
               <IconActivity size={13} /> Cabina del operador
             </p>
             <h2 className="mt-1 font-display text-lg font-bold text-[var(--fg-primary)] md:text-xl">
@@ -256,8 +256,8 @@ export default function TallerPage() {
               onClick={() => setSelected(null)}
               className="chip min-h-[44px] px-3.5 text-[11px] transition active:scale-95"
               style={{
-                borderColor: selected === null ? "#22d3ee66" : undefined,
-                color: selected === null ? "#22d3ee" : undefined,
+                borderColor: selected === null ? "#8b5cf666" : undefined,
+                color: selected === null ? "#8b5cf6" : undefined,
                 background: selected === null ? "#22d3ce14" : undefined,
               }}
             >
@@ -286,7 +286,7 @@ export default function TallerPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <LiveMetric value={jobs.length} label="Esferas activas" accent="#34d399" />
           <LiveMetric value={proyectosActivos} label="Proyectos activos" accent="#a78bfa" />
-          <LiveMetric value={data?.queue?.running ?? 0} label="Jobs corriendo" accent="#22d3ee" />
+          <LiveMetric value={data?.queue?.running ?? 0} label="Jobs corriendo" accent="#8b5cf6" />
           <LiveMetric value={pendingCount} label="En cola" accent="#fbbf24" />
         </div>
 
@@ -308,8 +308,8 @@ export default function TallerPage() {
                   }}
                   className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition active:scale-95"
                   style={{
-                    background: on ? "#22d3ee18" : "transparent",
-                    color: on ? "#22d3ee" : "var(--fg-tertiary)",
+                    background: on ? "#8b5cf618" : "transparent",
+                    color: on ? "#8b5cf6" : "var(--fg-tertiary)",
                   }}
                   aria-pressed={on}
                 >
@@ -324,7 +324,7 @@ export default function TallerPage() {
                 setFocusJob(null);
                 setView("constelacion");
               }}
-              className="chip inline-flex min-h-[40px] items-center gap-1.5 px-3 text-[11px] text-cyber-cyan transition active:scale-95"
+              className="chip inline-flex min-h-[40px] items-center gap-1.5 px-3 text-[11px] text-violet-400 transition active:scale-95"
             >
               <IconBoxes size={13} /> Volver a constelación
             </button>
@@ -381,7 +381,7 @@ export default function TallerPage() {
 
         {/* Tablero: quién trabaja en qué */}
         <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
-          <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
+          <p className="label-caps flex items-center gap-1.5 text-violet-400">
             <IconActivity size={13} /> Quién trabaja en qué
           </p>
 
@@ -405,7 +405,7 @@ export default function TallerPage() {
                 </motion.p>
               ) : (
                 jobs.map((j, i) => {
-                  const hue = (j.agent && HUE[j.agent]) || "#22d3ee";
+                  const hue = (j.agent && HUE[j.agent]) || "#8b5cf6";
                   const Logo = j.agent ? AGENT_LOGOS[j.agent] : LogoGrok;
                   return (
                     <motion.div
@@ -467,7 +467,7 @@ export default function TallerPage() {
         {/* Último veredicto del auditor Grok */}
         {data?.lastVerdict && (
           <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
-            <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
+            <p className="label-caps flex items-center gap-1.5 text-violet-400">
               <LogoGrok size={13} style={{ color: "#f472b6" }} /> Auditor Grok
             </p>
             <div className="mt-3 flex items-center gap-3">
@@ -487,7 +487,7 @@ export default function TallerPage() {
                     Job #{data.lastVerdict.id}
                   </span>
                   {data.lastVerdict.project && (
-                    <span className="truncate text-[11px] text-cyber-cyan">
+                    <span className="truncate text-[11px] text-violet-400">
                       {data.lastVerdict.project}
                     </span>
                   )}
@@ -506,7 +506,7 @@ export default function TallerPage() {
         {/* Feed de actividad reciente con timestamps relativos */}
         {feed.length > 0 && (
           <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
-            <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
+            <p className="label-caps flex items-center gap-1.5 text-violet-400">
               <IconActivity size={13} /> Actividad reciente
             </p>
             <div className="mt-3 space-y-1.5">
@@ -523,7 +523,7 @@ export default function TallerPage() {
                     />
                     <span className="flex-none font-medium text-on-surface">{f.agentName}</span>
                     {f.project && (
-                      <span className="hidden max-w-[90px] flex-none truncate text-[10px] text-cyber-cyan sm:inline">
+                      <span className="hidden max-w-[90px] flex-none truncate text-[10px] text-violet-400 sm:inline">
                         {f.project}
                       </span>
                     )}

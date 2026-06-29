@@ -16,7 +16,7 @@ interface SocialPost {
 const STATUS_TONE: Record<string, { color: string; label: string }> = {
   published: { color: "#34d399", label: "Publicado" },
   publishing: { color: "#fbbf24", label: "Publicando" },
-  scheduled: { color: "#22d3ee", label: "Programado" },
+  scheduled: { color: "#8b5cf6", label: "Programado" },
   failed: { color: "#ef4444", label: "Falló" },
   pending: { color: "#a78bfa", label: "Pendiente" },
 };

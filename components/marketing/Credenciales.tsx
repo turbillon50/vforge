@@ -16,7 +16,7 @@ export function Credenciales() {
       data-theme="dark" className="border-b border-[var(--border-1)] bg-[#050509] py-12 md:py-14"
     >
       <div className="mx-auto max-w-container px-5 md:px-margin-desktop">
-        <p className="label-caps mb-3 text-center text-cyber-cyan">Confianza verificada</p>
+        <p className="label-caps mb-3 text-center text-violet-400">Confianza verificada</p>
         <h2 className="text-center font-display text-2xl font-bold tracking-tight text-on-surface md:text-3xl">
           Pagos certificados por{" "}
           <span className="bg-gradient-to-r from-violet-300 to-cyan-300 bg-clip-text text-transparent">
@@ -38,7 +38,7 @@ export function Credenciales() {
             <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <span
               aria-hidden
-              className="pointer-events-none absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/20 opacity-50 blur-2xl transition-opacity duration-300 group-hover:opacity-80 sm:left-[18%]"
+              className="pointer-events-none absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-400/20 opacity-50 blur-2xl transition-opacity duration-300 group-hover:opacity-80 sm:left-[18%]"
             />
             <Image
               src="/badges/mp-checkout-pro.png"

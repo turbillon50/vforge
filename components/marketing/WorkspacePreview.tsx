@@ -69,13 +69,13 @@ export function WorkspacePreview() {
                     </div>
                   </div>
                   <div className="mt-3 rounded-md border border-app-strong bg-tint-2 p-2 font-mono text-[12px] text-on-surface-variant">
-                    <span className="text-cyber-cyan">›</span> {t.chat.placeholder}
+                    <span className="text-violet-400">›</span> {t.chat.placeholder}
                   </div>
                 </div>
                 <div className="col-span-3 rounded-lg bg-tint-2 p-3">
                   <p className="label-caps mb-2 text-muted">{t.chat.ops.title}</p>
                   {[
-                    { k: t.chat.ops.build, v: "42s", c: "text-cyber-cyan" },
+                    { k: t.chat.ops.build, v: "42s", c: "text-violet-400" },
                     { k: t.common.status_healthy, v: t.common.status_ready, c: "text-success-emerald" },
                     { k: t.chat.ops.errors, v: "0", c: "text-on-surface" },
                     { k: "Latency", v: "84ms", c: "text-violet-300" },

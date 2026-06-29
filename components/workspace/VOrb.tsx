@@ -393,7 +393,7 @@ export function VOrb() {
                     </span>
                     <span className="flex-1 text-left">{it.label}</span>
                     {it.primary && (
-                      <span className="rounded-md bg-cyan-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-cyan-300">
+                      <span className="rounded-md bg-violet-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-violet-300">
                         Live
                       </span>
                     )}
@@ -423,7 +423,7 @@ export function VOrb() {
                 >
                   <span
                     aria-hidden
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-cyan-300"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-violet-300"
                     style={{
                       background: "radial-gradient(circle at 50% 40%, rgba(34,211,238,0.28), rgba(20,12,40,0.5))",
                       border: "1px solid rgba(255,255,255,0.10)",
@@ -520,7 +520,7 @@ export function VOrb() {
 @keyframes vorbRec{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.55),0 12px 40px rgba(239,68,68,.4),0 0 60px rgba(124,58,237,.35)}50%{box-shadow:0 0 0 10px rgba(239,68,68,0),0 12px 40px rgba(239,68,68,.55),0 0 80px rgba(124,58,237,.6)}}
 @keyframes vorbWave{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.1);opacity:0}}
 
-.vorb-menu-dot{width:6px;height:6px;border-radius:9999px;background:radial-gradient(circle,#22d3ee,#7c3aed);box-shadow:0 0 8px #22d3ee80}
+.vorb-menu-dot{width:6px;height:6px;border-radius:9999px;background:radial-gradient(circle,#8b5cf6,#7c3aed);box-shadow:0 0 8px #8b5cf680}
 
 .vorb-crystal{
   box-shadow:

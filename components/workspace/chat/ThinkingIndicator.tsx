@@ -50,7 +50,7 @@ export function ThinkingIndicator() {
         />
         <div className="absolute inset-[3px] rounded-full bg-void" />
         <motion.div
-          className="absolute inset-[5px] rounded-full bg-gradient-to-br from-violet-400 to-cyan-400"
+          className="absolute inset-[5px] rounded-full bg-gradient-to-br from-violet-400 to-violet-400"
           animate={{ scale: [0.8, 1.1, 0.8], opacity: [0.85, 1, 0.85] }}
           transition={{ duration: 1.3, ease: "easeInOut", repeat: Infinity }}
         />
@@ -86,7 +86,7 @@ export function ThinkingIndicator() {
       >
         <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
         <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
-        <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+        <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
       </motion.div>
     </motion.div>
   );

@@ -50,7 +50,7 @@ export default async function AdminPage() {
         <p className="mt-3">
           <Link
             href="/app/admin/billing"
-            className="inline-flex items-center text-sm text-cyber-cyan hover:underline"
+            className="inline-flex items-center text-sm text-violet-400 hover:underline"
             style={{ minHeight: 44, touchAction: "manipulation" }}
           >
             Quién pagó qué →

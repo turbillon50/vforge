@@ -23,11 +23,11 @@ import { useLiteMotion } from "@/components/cockpit/use-lite-motion";
  * y su sello de veredicto Grok. Tap en un mini → zoom-in al diagrama de detalle.
  */
 
-const ACCENT = "#22d3ee";
+const ACCENT = "#8b5cf6";
 
 const HUE: Record<string, string> = {
   claude: "#a78bfa",
-  codex: "#22d3ee",
+  codex: "#8b5cf6",
   grok: "#f472b6",
   shell: "#34d399",
   browser: "#38bdf8",
@@ -310,7 +310,7 @@ export function Constelacion({
   return (
     <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-4 sm:p-5">
       <div className="relative mb-1 flex items-center justify-between">
-        <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
+        <p className="label-caps flex items-center gap-1.5 text-violet-400">
           <IconActivity size={13} /> Constelación · supervisión total
         </p>
         {live ? (
@@ -318,7 +318,7 @@ export function Constelacion({
             {jobs.length} {jobs.length === 1 ? "job vivo" : "jobs vivos"}
           </span>
         ) : lastAgo ? (
-          <span className="chip text-[10px] text-cyan-600 dark:text-cyan-300">
+          <span className="chip text-[10px] text-cyan-600 dark:text-violet-300">
             Último job {lastAgo === "ahora" ? "ahora" : lastAgo.startsWith("hace") ? lastAgo : `hace ${lastAgo}`}
           </span>
         ) : (

@@ -77,7 +77,7 @@ export function MyProjects() {
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="relative overflow-hidden rounded-2xl border border-violet-500/25 bg-gradient-to-br from-violet-600/12 to-cyan-500/[0.04] p-4 pr-9"
+              className="relative overflow-hidden rounded-2xl border border-violet-500/25 bg-gradient-to-br from-violet-600/12 to-violet-500/[0.04] p-4 pr-9"
             >
               <button
                 onClick={dismissWelcome}

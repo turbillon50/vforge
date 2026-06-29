@@ -21,7 +21,7 @@ export function OperatorPreview() {
           <div className="hidden truncate font-mono text-[10px] uppercase tracking-[0.14em] text-muted sm:block sm:text-[11px] sm:tracking-[0.18em]">
             vforge://workspace/orion
           </div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-cyber-cyan sm:text-[11px] sm:tracking-[0.18em]">
+          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-violet-400 sm:text-[11px] sm:tracking-[0.18em]">
             ● {t.common.status_live}
           </div>
         </div>
@@ -67,7 +67,7 @@ export function OperatorPreview() {
                     ) : idx === 1 ? (
                       <IconCheck size={14} className="text-success-emerald" />
                     ) : idx === 2 ? (
-                      <IconActivity size={14} className="animate-pulse text-cyber-cyan" />
+                      <IconActivity size={14} className="animate-pulse text-violet-400" />
                     ) : (
                       <IconActivity size={14} className="text-muted" />
                     )}
@@ -79,7 +79,7 @@ export function OperatorPreview() {
 
             <div className="mt-5 rounded-lg border border-app-strong bg-tint-2 p-3">
               <div className="font-mono text-[12px] text-on-surface-variant">
-                <span className="text-cyber-cyan">›</span> {t.chat.placeholder}
+                <span className="text-violet-400">›</span> {t.chat.placeholder}
               </div>
             </div>
           </div>
@@ -149,7 +149,7 @@ function Stat({
 }) {
   const dotClass =
     tone === "cyan"
-      ? "bg-cyber-cyan shadow-[0_0_10px_rgba(34,211,238,0.6)]"
+      ? "bg-violet-400 shadow-[0_0_10px_rgba(34,211,238,0.6)]"
       : tone === "violet"
       ? "bg-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.6)]"
       : "bg-success-emerald shadow-[0_0_10px_rgba(16,185,129,0.5)]";
@@ -180,7 +180,7 @@ function ActivityItem({
     tone === "violet"
       ? "text-violet-300"
       : tone === "cyan"
-      ? "text-cyber-cyan"
+      ? "text-violet-400"
       : "text-success-emerald";
   return (
     <div className="flex items-center gap-2 py-1.5 text-[12px] text-on-surface-variant">

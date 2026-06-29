@@ -88,7 +88,7 @@ const components: Components = {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-cyan-400 underline decoration-cyan-400/40 underline-offset-2 transition hover:decoration-cyan-400"
+      className="text-violet-400 underline decoration-cyan-400/40 underline-offset-2 transition hover:decoration-cyan-400"
     >
       {children}
     </a>
@@ -168,7 +168,7 @@ function MarkdownInner({ text, streaming }: MarkdownProps) {
       {streaming && (
         <span
           aria-hidden
-          className="vf-stream-caret ml-px inline-block h-[1.05em] w-[2px] -translate-y-[2px] translate-x-[1px] rounded-sm bg-gradient-to-b from-violet-400 to-cyan-400 align-middle"
+          className="vf-stream-caret ml-px inline-block h-[1.05em] w-[2px] -translate-y-[2px] translate-x-[1px] rounded-sm bg-gradient-to-b from-violet-400 to-violet-400 align-middle"
         />
       )}
     </div>

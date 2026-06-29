@@ -199,7 +199,7 @@ function ReconnectButton({
         type="button"
         onClick={onClick}
         disabled={reconnecting}
-        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-5 text-[14px] font-medium text-white shadow-glow-violet transition active:scale-[0.98] disabled:opacity-50"
+        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-violet-500 px-5 text-[14px] font-medium text-white shadow-glow-violet transition active:scale-[0.98] disabled:opacity-50"
         style={{ minHeight: 44, touchAction: "manipulation" }}
       >
         <motion.span

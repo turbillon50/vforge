@@ -177,7 +177,7 @@ export default function SecretsPage() {
               <p className="mt-2 text-sm max-w-md mx-auto leading-relaxed">
                 Tus secretos viven encriptados (AES-256-GCM) en Neon. Para
                 verlos en este navegador necesitas el operator token —
-                el mismo que <span className="font-mono text-cyber-cyan">V</span> usa
+                el mismo que <span className="font-mono text-violet-400">V</span> usa
                 para Ring 1+ writes.
               </p>
               <button
@@ -289,7 +289,7 @@ function Stat({
 }) {
   const m = {
     violet: "text-violet-300",
-    cyan: "text-cyber-cyan",
+    cyan: "text-violet-400",
     emerald: "text-success-emerald",
     crimson: "text-error-crimson",
   };

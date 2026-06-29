@@ -29,12 +29,12 @@ function flowDirection(job: ActiveJob): FlowDir {
   return "dispatch";
 }
 
-const ACCENT = "#22d3ee";
+const ACCENT = "#8b5cf6";
 
 /** Color de acento por esfera para diferenciar nodos cuando trabajan. */
 const HUE: Record<string, string> = {
   claude: "#a78bfa", // violet
-  codex: "#22d3ee", // cyan
+  codex: "#8b5cf6", // cyan
   grok: "#f472b6", // pink
   shell: "#34d399", // emerald
   browser: "#38bdf8", // sky
@@ -534,7 +534,7 @@ export function EsferasNucleo({
       />
 
       <div className="relative mb-1 flex items-center justify-between">
-        <p className="label-caps flex items-center gap-1.5 text-cyber-cyan">
+        <p className="label-caps flex items-center gap-1.5 text-violet-400">
           <IconActivity size={13} /> Núcleo de operaciones
         </p>
         <span className="chip text-[10px] text-emerald-600 dark:text-emerald-300">

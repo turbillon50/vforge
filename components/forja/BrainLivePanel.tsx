@@ -15,7 +15,7 @@ const C = {
   surface: "#100d1e",
   surf2: "#16112a",
   violet: "#7c3aed",
-  cyan: "#22d3ee",
+  cyan: "#8b5cf6",
   gold: "#fbbf24",
   green: "#10b981",
   red: "#ef4444",
