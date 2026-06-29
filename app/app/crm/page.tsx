@@ -51,6 +51,7 @@ export default function CrmPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [openContact, setOpenContact] = useState<Contact | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
 
   const load = useCallback(async () => {

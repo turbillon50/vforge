@@ -1,7 +1,5 @@
-import { MyProjects } from "@/components/portal/MyProjects";
-
+import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
-
 export default function WorkspacePage() {
-  return <MyProjects />;
+  redirect("/app/home");
 }

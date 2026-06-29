@@ -81,7 +81,7 @@ export function OnboardingFlow() {
       name: name.trim(),
       svc: String(services),
     });
-    router.push(`/workspace?${q.toString()}`);
+    router.push(`/app/home`);
   };
 
   const order: Step[] = ["welcome", "profile", "connect", "first-project", "summary"];
