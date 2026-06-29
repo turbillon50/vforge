@@ -24,36 +24,37 @@ export function ClerkShell({ children }: { children: React.ReactNode }) {
           colorInputBackground: "#1a1a1f",
           colorInputText: "#e5e5e5",
           colorText: "#e5e5e5",
-          colorTextSecondary: "#888",
+          colorTextSecondary: "#777",
           borderRadius: "0.5rem",
           fontFamily: "var(--font-hanken), Hanken Grotesk, system-ui, sans-serif",
         },
         elements: {
-          card: "bg-[#0d0d0f] border border-white/[0.08] shadow-none",
-          formButtonPrimary:
-            "bg-violet-600 hover:bg-violet-500 transition-colors shadow-none",
-          // Social buttons — fondo claro para que todos los íconos sean visibles
+          card: "shadow-none",
+
+          // ── Social buttons base: borde sutil, fondo muy oscuro ──
           socialButtonsBlockButton:
-            "bg-white/[0.06] border border-white/[0.1] hover:bg-white/[0.1] transition-colors",
-          socialButtonsBlockButtonText: "text-[#e5e5e5] font-medium",
-          socialButtonsBlockButtonArrow: "text-[#e5e5e5]",
-          // X/Twitter específico: fondo blanco para que el logo negro sea visible
+            "border transition-colors",
+          socialButtonsBlockButtonText: "font-medium",
+
+          // ── X/Twitter: fondo blanco para que el logo negro sea legible ──
+          // Clerk renderiza el SVG de X en negro nativo, necesita fondo claro
           socialButtonsBlockButton__x_twitter:
-            "bg-white hover:bg-gray-100 border-transparent transition-colors",
-          socialButtonsBlockButtonText__x_twitter: "text-[#000] font-medium",
-          // Inputs
+            "!bg-white !border-white/20 hover:!bg-gray-100 transition-colors",
+          socialButtonsBlockButtonText__x_twitter:
+            "!text-black font-medium",
+
+          // ── Inputs ──
           formFieldInput:
-            "bg-[#1a1a1f] border-white/[0.1] text-[#e5e5e5] focus:border-violet-500 transition-colors",
-          formFieldLabel: "text-[#888] text-xs",
-          // Divider
+            "border-white/[0.1] focus:border-violet-500 transition-colors",
+          formFieldLabel: "text-xs",
+
+          // ── Divider ──
           dividerLine: "bg-white/[0.08]",
-          dividerText: "text-[#444] text-xs",
-          // Footer links
+          dividerText: "text-xs",
+
+          // ── Footer ──
           footerActionLink: "text-violet-400 hover:text-violet-300",
-          identityPreviewText: "text-[#e5e5e5]",
-          // Header
-          headerTitle: "text-[#e5e5e5] font-semibold",
-          headerSubtitle: "text-[#666]",
+          headerTitle: "font-semibold",
         },
       }}
     >
