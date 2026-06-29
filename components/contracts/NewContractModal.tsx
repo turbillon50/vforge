@@ -1,4 +1,13 @@
 "use client";
+
+const TEMPLATES = {
+  custom: { label:"Personalizado", product:"Aplicación Personalizada", amount:12000, desc:"" },
+  nda:    { label:"NDA",           product:"Acuerdo de Confidencialidad (NDA)", amount:0,     desc:"Acuerdo de no divulgación estándar para proyectos tech." },
+  msa:    { label:"MSA",           product:"Contrato Marco de Servicios (MSA)", amount:36000, desc:"Marco de servicios recurrentes con SLA definido." },
+  sow:    { label:"SOW",           product:"Alcance de Trabajo (SOW)",          amount:18000, desc:"Entregables, plazos y criterios de aceptación definidos." },
+} as const;
+type TemplateKey = keyof typeof TEMPLATES;
+
 import { useEffect, useState } from "react";
 import { Modal, Field, inputCls } from "./Modal";
 import { IconFile, IconLoader, IconCheck, IconSend } from "@/components/brand/VFIcons";
@@ -20,6 +29,7 @@ export function NewContractModal({
 }) {
   const [projects, setProjects] = useState<ProjectOpt[]>([]);
   const [projectId, setProjectId] = useState("");
+  const [template, setTemplate] = useState<"custom"|"nda"|"msa"|"sow">("custom");
   const [product, setProduct] = useState("Aplicación Personalizada");
   const [amount, setAmount] = useState(12000);
   const [signerName, setSignerName] = useState("");
@@ -30,8 +40,13 @@ export function NewContractModal({
 
   useEffect(() => {
     if (!open) return;
-    setError("");
-    setDone("");
+    setError(""); setDone("");
+    // Aplicar plantilla seleccionada
+    const tmpl = TEMPLATES[template as TemplateKey];
+    if (tmpl) {
+      setProduct(tmpl.product);
+      if (tmpl.amount > 0) setAmount(tmpl.amount);
+    }
     fetch("/api/projects")
       .then((r) => r.json())
       .then((d) => {
@@ -101,7 +116,33 @@ export function NewContractModal({
       subtitle="Desde un proyecto de tu cartera"
     >
       <div className="space-y-3.5">
-        <Field label="Proyecto">
+        {/* Selector de plantilla */}
+      <div className="mb-5">
+        <label className="mb-2 block text-[11px]" style={{color:"rgba(255,255,255,0.4)"}}>Plantilla</label>
+        <div className="grid grid-cols-4 gap-2">
+          {(Object.keys(TEMPLATES) as TemplateKey[]).map(key => {
+            const tmpl = TEMPLATES[key];
+            return (
+              <button key={key} type="button"
+                onClick={() => { setTemplate(key); setProduct(tmpl.product); if(tmpl.amount>0) setAmount(tmpl.amount); }}
+                className="rounded-lg py-2 px-1 text-center text-[11px] font-medium transition-all"
+                style={{
+                  background: template===key ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.03)",
+                  border: template===key ? "1px solid rgba(124,58,237,0.4)" : "1px solid rgba(255,255,255,0.08)",
+                  color: template===key ? "#c4b5fd" : "rgba(255,255,255,0.4)",
+                }}>
+                {tmpl.label}
+              </button>
+            );
+          })}
+        </div>
+        {TEMPLATES[template as TemplateKey]?.desc && (
+          <p className="mt-2 text-[11px]" style={{color:"rgba(255,255,255,0.3)"}}>
+            {TEMPLATES[template as TemplateKey].desc}
+          </p>
+        )}
+      </div>
+            <Field label="Proyecto">
           <select
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}

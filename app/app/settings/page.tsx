@@ -569,8 +569,114 @@ function SecurityPanel() {
 
 
 function ApiPanel() {
+  const [keys, setKeys] = useState<{id:string;name:string;created_at:string;last_used_at:string|null}[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [newKey, setNewKey] = useState<string|null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const token = typeof window !== "undefined" ? window.localStorage.getItem("vforge_operator_token") ?? "" : "";
+
+  useEffect(() => {
+    if (!token) { setLoading(false); return; }
+    fetch("/api/vault/operator-secrets", { headers:{ Authorization:`Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : { secrets:[] })
+      .then(d => setKeys((d.secrets ?? []).filter((s:any) => s.provider === "api_key")))
+      .catch(()=>{})
+      .finally(()=>setLoading(false));
+  }, [token]);
+
+  async function generate() {
+    if (!token || generating) return;
+    setGenerating(true); setNewKey(null);
+    try {
+      const key = `vf_${crypto.randomUUID().replace(/-/g,"").slice(0,32)}`;
+      const r = await fetch("/api/vault/operator-secrets", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", Authorization:`Bearer ${token}` },
+        body: JSON.stringify({ name:"VF_API_KEY", value:key, provider:"api_key",
+          description:`Generado ${new Date().toLocaleDateString("es-MX")}` }),
+      });
+      if (r.ok) { setNewKey(key); }
+    } finally { setGenerating(false); }
+  }
+
+  function copy(text: string) {
+    navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(()=>setCopied(false), 2000); });
+  }
+
   return (
     <>
+      <Card title="API Keys de VForge">
+        <p className="mb-4 text-[12px] text-on-surface-variant">
+          Usa estas claves para conectar tu IA o herramientas externas al MCP de VForge.
+          Se guardan cifradas con AES-256-GCM.
+        </p>
+        {newKey && (
+          <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+            <p className="mb-2 text-[11px] font-mono text-emerald-400">
+              ✓ Nueva API key generada — cópiala ahora, no se mostrará de nuevo
+            </p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 truncate rounded bg-black/30 px-3 py-2 font-mono text-[12px] text-emerald-300">
+                {newKey}
+              </code>
+              <button onClick={() => copy(newKey)}
+                className="flex-shrink-0 rounded-lg px-3 py-2 text-[12px] font-medium transition-all"
+                style={{ background:"rgba(34,197,94,0.15)", color:"#86efac", border:"1px solid rgba(34,197,94,0.2)" }}>
+                {copied ? "✓" : "Copiar"}
+              </button>
+            </div>
+          </div>
+        )}
+        {loading ? (
+          <div className="h-10 animate-pulse rounded-lg" style={{background:"rgba(255,255,255,0.03)"}} />
+        ) : !token ? (
+          <p className="text-[12px] text-muted">Necesitas configurar tu token de operador en Secrets primero.</p>
+        ) : (
+          <div className="space-y-2 mb-4">
+            {keys.length === 0 && !newKey && (
+              <p className="text-[12px] text-muted">Sin API keys generadas aún.</p>
+            )}
+            {keys.map(k => (
+              <div key={k.id} className="flex items-center justify-between rounded-lg border border-app bg-void px-3 py-2.5">
+                <div>
+                  <p className="font-mono text-[12px] text-on-surface">vf_••••••••••••••••</p>
+                  <p className="text-[10px] text-muted">
+                    Creado {new Date(k.created_at).toLocaleDateString("es-MX")}
+                    {k.last_used_at && ` · Usado ${new Date(k.last_used_at).toLocaleDateString("es-MX")}`}
+                  </p>
+                </div>
+                <span className="chip text-success-emerald">activa</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <button onClick={generate} disabled={generating || !token}
+          className="btn-primary !px-4 !py-2 text-[13px] disabled:opacity-50"
+          style={{ minHeight:44 }}>
+          {generating ? "Generando…" : "+ Generar nueva API key"}
+        </button>
+      </Card>
+
+      <Card title="Endpoint MCP">
+        <p className="mb-3 text-[12px] text-on-surface-variant">
+          Conecta Claude, GPT o cualquier IA a tu infraestructura real.
+        </p>
+        <div className="flex items-center gap-2 rounded-lg border border-app bg-void px-3 py-2.5">
+          <code className="flex-1 truncate font-mono text-[12px] text-on-surface">
+            https://vforge.site/api/mcp
+          </code>
+          <button onClick={() => copy("https://vforge.site/api/mcp")}
+            className="flex-shrink-0 rounded px-2 py-1 text-[11px] text-violet-400 transition hover:text-violet-300">
+            {copied ? "✓" : "Copiar"}
+          </button>
+        </div>
+        <a href="/mcp" className="mt-3 inline-flex items-center gap-1.5 text-[12px] text-violet-400 hover:text-violet-300 transition">
+          <IconExtLink size={12} /> Ver documentación MCP →
+        </a>
+      </Card>
+
       <Card title="Dominios conectados">
         <ul className="space-y-2">
           <li className="flex items-center justify-between rounded-md border border-app bg-void px-3 py-2">
@@ -578,27 +684,6 @@ function ApiPanel() {
             <span className="chip text-success-emerald">activo</span>
           </li>
         </ul>
-        <button className="btn-ghost mt-3 !px-3 !py-1.5 text-[12px]">
-          <IconGlobe size={13} /> Conectar dominio
-        </button>
-      </Card>
-
-      <Card title="API & integraciones">
-        <p className="mb-3 text-[12px] text-on-surface-variant">
-          Las claves de tus integraciones viven encriptadas en{" "}
-          <a href="/app/secrets" className="text-violet-400 hover:underline">
-            /app/secrets
-          </a>{" "}
-          (AES-256-GCM). V las usa para operar sin que tengas que copiarlas.
-        </p>
-        <a
-          href="https://github.com/turbillon50/vforge/blob/main/docs/backend-contract.md"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-2 text-sm text-violet-400 hover:underline"
-        >
-          <IconExtLink size={13} /> Contrato del backend (docs)
-        </a>
       </Card>
     </>
   );

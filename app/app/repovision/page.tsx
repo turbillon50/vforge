@@ -104,6 +104,11 @@ export default function RepoVisionPage() {
   const [query, setQuery] = useState("");
   const [oldestFirst, setOldestFirst] = useState(false);
   const [cleanupOpen, setCleanupOpen] = useState(false);
+  const [branchModal, setBranchModal] = useState<{repo:string;owner:string}|null>(null);
+  const [newBranch, setNewBranch] = useState("");
+  const [fromBranch, setFromBranch] = useState("main");
+  const [creatingBranch, setCreatingBranch] = useState(false);
+  const [branchMsg, setBranchMsg] = useState<{ok:boolean;text:string}|null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -159,6 +164,28 @@ export default function RepoVisionPage() {
     });
     return list;
   }, [enriched, filter, query, oldestFirst]);
+
+  async function createBranch() {
+    if (!branchModal || !newBranch.trim() || creatingBranch) return;
+    setCreatingBranch(true); setBranchMsg(null);
+    try {
+      const r = await fetch(`/api/github/repos/${branchModal.owner}/${branchModal.repo}/branches`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ branch: newBranch.trim(), from: fromBranch }),
+      });
+      if (r.ok) {
+        setBranchMsg({ ok:true, text:`Rama "${newBranch}" creada desde "${fromBranch}" ✓` });
+        setNewBranch("");
+        setTimeout(() => setBranchModal(null), 1800);
+      } else {
+        const d = await r.json();
+        setBranchMsg({ ok:false, text: d.error ?? `HTTP ${r.status}` });
+      }
+    } catch(e) {
+      setBranchMsg({ ok:false, text: e instanceof Error ? e.message : String(e) });
+    } finally { setCreatingBranch(false); }
+  }
 
   if (needsConnect) return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center px-5">
@@ -369,6 +396,55 @@ export default function RepoVisionPage() {
     </>
   );
 }
+
+      {/* Modal crear rama */}
+      {branchModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+          onClick={() => setBranchModal(null)}>
+          <div className="w-full max-w-sm rounded-2xl p-6"
+            style={{ background:"#0f0f14", border:"1px solid rgba(255,255,255,0.1)" }}
+            onClick={e => e.stopPropagation()}>
+            <h3 className="mb-4 text-[15px] font-bold" style={{color:"#fff"}}>
+              Nueva rama — {branchModal.repo}
+            </h3>
+            {branchMsg && (
+              <p className="mb-3 rounded-lg px-3 py-2 text-[12px]"
+                style={{ background: branchMsg.ok ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
+                  color: branchMsg.ok ? "#86efac" : "#f87171", border:`1px solid ${branchMsg.ok ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)"}` }}>
+                {branchMsg.text}
+              </p>
+            )}
+            <label className="mb-1 block text-[11px]" style={{color:"rgba(255,255,255,0.4)"}}>Nombre de la rama</label>
+            <input value={newBranch} onChange={e=>setNewBranch(e.target.value)}
+              placeholder="feature/mi-nueva-feature"
+              className="mb-3 w-full rounded-lg px-3 py-2 font-mono text-[13px] outline-none"
+              style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", color:"#e5e5e5" }}
+              onFocus={e=>(e.currentTarget.style.borderColor="rgba(124,58,237,0.5)")}
+              onBlur={e=>(e.currentTarget.style.borderColor="rgba(255,255,255,0.08)")}
+              onKeyDown={e=>e.key==="Enter"&&createBranch()} />
+            <label className="mb-1 block text-[11px]" style={{color:"rgba(255,255,255,0.4)"}}>Desde</label>
+            <input value={fromBranch} onChange={e=>setFromBranch(e.target.value)}
+              placeholder="main"
+              className="mb-4 w-full rounded-lg px-3 py-2 font-mono text-[13px] outline-none"
+              style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", color:"#e5e5e5" }}
+              onFocus={e=>(e.currentTarget.style.borderColor="rgba(124,58,237,0.5)")}
+              onBlur={e=>(e.currentTarget.style.borderColor="rgba(255,255,255,0.08)")} />
+            <div className="flex gap-2">
+              <button onClick={createBranch} disabled={creatingBranch||!newBranch.trim()}
+                className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold"
+                style={{ background: creatingBranch||!newBranch.trim() ? "rgba(255,255,255,0.08)" : "#fff",
+                  color: creatingBranch||!newBranch.trim() ? "rgba(255,255,255,0.3)" : "#000" }}>
+                {creatingBranch ? "Creando…" : "Crear rama"}
+              </button>
+              <button onClick={()=>setBranchModal(null)}
+                className="rounded-xl px-4 py-2.5 text-[13px]"
+                style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.5)" }}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
 function StatCard({
   label,
