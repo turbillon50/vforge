@@ -27,10 +27,21 @@ export function WorkspaceStudio() {
   const [active, setActive] = useState<App | null>(null);
   const [tab, setTab] = useState<"preview" | "codigo" | "consola" | "detalles">("preview");
   const [conn, setConn] = useState<string[]>([]);
+  const [files, setFiles] = useState<{ name: string; path: string; type: string }[]>([]);
+  const [code, setCode] = useState<{ path: string; content: string } | null>(null);
   useEffect(() => {
     fetch("/api/forja/apps").then(r => r.ok ? r.json() : { apps: [] }).then(d => { setApps(d.apps || []); if (d.apps?.[0]) setActive(d.apps[0]); }).catch(() => {});
     fetch("/api/onboarding/status").then(r => r.ok ? r.json() : { connected: [] }).then(d => setConn(d.connected || [])).catch(() => {});
   }, []);
+  useEffect(() => {
+    setFiles([]); setCode(null);
+    if (active?.id) fetch("/api/forja/app-files?app=" + active.id).then(r => r.ok ? r.json() : { files: [] }).then(d => setFiles(d.files || [])).catch(() => {});
+  }, [active]);
+  const openFile = (path: string) => {
+    if (!active?.id) return;
+    setTab("codigo");
+    fetch("/api/forja/app-files?app=" + active.id + "&path=" + encodeURIComponent(path)).then(r => r.ok ? r.json() : null).then(d => { if (d && d.content !== undefined) setCode({ path, content: d.content }); }).catch(() => {});
+  };
 
   const [msgs, setMsgs] = useState<Msg[]>([{ role: "assistant", content: "Que onda, hermano? Soy V. Dime que construimos o conectame y le entramos." }]);
   const [input, setInput] = useState("");
@@ -92,13 +103,15 @@ export function WorkspaceStudio() {
               active?.deploy_url ? <iframe title="preview" src={active.deploy_url} className="h-full w-full border-0 bg-white" />
               : <div className="flex h-full items-center justify-center p-6 text-center text-[14px] text-white/45"><div>Aun no hay app que previsualizar.<br /><Link href="/workspace#crear" className="mt-3 inline-block rounded-full px-4 py-2 text-[13px] font-semibold text-black" style={{ background: "linear-gradient(180deg,#fff,#ededf2)" }}>Crear una app</Link></div></div>
 ) : tab === "codigo" ? (
-              <div className="h-full overflow-auto p-4">
-                <div className="rounded-xl border border-white/[0.08] bg-[#0d0d12] p-4 font-mono text-[12.5px] leading-relaxed text-white/80">
-                  <p className="mb-2 text-white/40">// {active ? active.name : "tu app"} - index.html</p>
-                  <p>{active?.repo_url ? "El codigo completo vive en tu repositorio." : "Crea una app para ver su codigo aqui."}</p>
-                  {active?.repo_url && <a href={active.repo_url} target="_blank" rel="noreferrer" className="mt-3 inline-block rounded-full px-4 py-1.5 text-[12px]" style={{ background: "rgba(124,58,237,0.16)", border: "1px solid rgba(124,58,237,0.35)", color: "#c4b5fd" }}>Abrir repo en GitHub</a>}
-                </div>
-                <p className="mt-3 text-[11.5px] text-white/35">Proximamente: editor en vivo y commits desde aqui.</p>
+              <div className="h-full overflow-auto bg-[#0b0b10] p-4">
+                {code ? (
+                  <>
+                    <p className="mb-2 font-mono text-[11.5px] text-white/40">{code.path}</p>
+                    <pre className="whitespace-pre-wrap break-words rounded-xl border border-white/[0.08] bg-[#0d0d12] p-4 font-mono text-[12px] leading-relaxed text-white/85">{code.content}</pre>
+                  </>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-center text-[13px] text-white/40">{active ? "Elige un archivo del panel derecho para ver su codigo." : "Crea o selecciona una app."}</div>
+                )}
               </div>
             ) : tab === "consola" ? (
               <div className="h-full overflow-auto bg-[#070709] p-4 font-mono text-[12.5px] leading-relaxed">
@@ -121,7 +134,15 @@ export function WorkspaceStudio() {
         </main>
         <Handle side="right" />
         <aside style={{ width: rightW }} className="flex shrink-0 flex-col border-l border-white/[0.08]">
-          <div className="border-b border-white/[0.08] px-4 py-3 text-[12px] font-semibold text-white/80">Tus apps</div>
+          <div className="border-b border-white/[0.08] px-4 py-3 text-[12px] font-semibold text-white/80">Archivos</div>
+          <div className="max-h-44 space-y-0.5 overflow-y-auto p-2">
+            {!active && <p className="px-2 py-1 text-[12px] text-white/40">Sin app activa.</p>}
+            {active && files.length === 0 && <p className="px-2 py-1 text-[12px] text-white/40">Sin archivos / conecta GitHub.</p>}
+            {files.map((f) => (
+              <button key={f.path} onClick={() => f.type === "file" && openFile(f.path)} className="block w-full truncate rounded-lg px-3 py-1.5 text-left font-mono text-[12px] text-white/65 transition-colors hover:bg-white/[0.06] hover:text-white">{f.type === "dir" ? "📁 " : ""}{f.name}</button>
+            ))}
+          </div>
+          <div className="border-b border-t border-white/[0.08] px-4 py-3 text-[12px] font-semibold text-white/80">Tus apps</div>
           <div className="space-y-1 overflow-y-auto p-2">
             {apps.length === 0 && <p className="px-2 py-2 text-[12.5px] text-white/40">Aun no creas apps.</p>}
             {apps.map(a => (
