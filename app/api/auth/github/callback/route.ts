@@ -28,7 +28,7 @@ export async function GET(req: Request) {
   if (!code) return back("error_no_code");
   if (!state || !expected || state !== expected) return back("error_state");
 
-  const clientId = process.env.GITHUB_CLIENT_ID || "Iv23livvZ0wFgmWc7lhi";
+  const clientId = process.env.GITHUB_APP_CLIENT_ID || "";
   const clientSecret = process.env.GITHUB_APP_CLIENT_SECRET;
   if (!clientSecret) return back("error_no_secret");
 

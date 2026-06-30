@@ -14,7 +14,8 @@ export async function GET() {
   const { userId } = await auth();
   if (!userId) return Response.redirect(new URL("/sign-in", siteUrl()), 302);
 
-  const clientId = process.env.GITHUB_CLIENT_ID || "Iv23livvZ0wFgmWc7lhi";
+  const clientId = process.env.GITHUB_APP_CLIENT_ID || "";
+  if (!clientId) return Response.redirect(new URL("/onboarding?github=error_no_client", siteUrl()), 302);
   const state = randomBytes(16).toString("hex");
   const jar = await cookies();
   jar.set("gh_oauth_state", state, {
