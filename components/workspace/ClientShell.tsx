@@ -10,7 +10,7 @@ const NAV = [
   { href: "/workspace", label: "Inicio", Icon: IconHome },
   { href: "/workspace/apps", label: "Mis apps", Icon: IconRocket },
   { href: "/workspace#cobros", label: "Cobros", Icon: IconCreditCard },
-  { href: "/onboarding", label: "Conexiones", Icon: IconKey },
+  { href: "/workspace/conexiones", label: "Conexiones", Icon: IconKey },
   { href: "/workspace/perfil", label: "Perfil", Icon: IconUsers },
 ];
 
