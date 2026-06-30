@@ -197,7 +197,7 @@ export default hasClerk
           | undefined
       )?.onboardingComplete;
       const onboarded = await resolveOnboardingComplete(userId, claimOnboard);
-      if (!onboarded && !onOnboarding) {
+      if (!onboarded && !onOnboarding && !req.nextUrl.pathname.startsWith("/workspace")) {
         return NextResponse.redirect(new URL("/onboarding", req.url));
       }
       if (onboarded && onOnboarding) {

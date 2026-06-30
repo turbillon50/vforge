@@ -98,7 +98,7 @@ export function OnboardingFlow() {
       name: name.trim(),
       svc: String(services),
     });
-    router.push(`/app/home`);
+    router.push("/workspace");
   };
 
   const order: Step[] = ["welcome", "profile", "connect", "first-project", "summary"];
@@ -162,13 +162,14 @@ export function OnboardingFlow() {
   return (
     <div className="relative z-10 mx-auto flex min-h-dvh max-w-3xl flex-col px-5 py-10 md:px-0">
       <div className="mb-8 flex items-center justify-between">
-        <Link href="/"><VWordmark /></Link>
+        <Link href="/workspace"><VWordmark /></Link>
         <div className="flex items-center gap-2">
           <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
             {interpolate(t.onboarding.step_progress, { current: stepIndex + 1, total: order.length })}
           </span>
           <LocaleToggle compact />
           <ThemeToggle compact />
+          <button onClick={finishOnboarding} className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted transition hover:text-[var(--fg-primary)]">Entrar &rarr;</button>
         </div>
       </div>
 
