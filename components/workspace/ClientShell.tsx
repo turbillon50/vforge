@@ -33,7 +33,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
             const on = pathname === href || (href !== "/workspace" && pathname.startsWith(href.split("#")[0] + "/"));
             return (
               <Link key={href} href={href} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] transition-colors"
-                style={{ color: on ? "#fff" : "rgba(255,255,255,0.6)", background: on ? "rgba(255,255,255,0.05)" : "transparent" }}>
+                style={{ color: on ? "#fff" : "rgba(255,255,255,0.66)", background: on ? "rgba(255,255,255,0.05)" : "transparent" }}>
                 <Icon size={15} /><span>{label}</span>
               </Link>
             );

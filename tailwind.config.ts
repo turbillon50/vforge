@@ -71,7 +71,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-hanken)", "Hanken Grotesk", "system-ui", "sans-serif"],
+        sans: ["var(--font-geist-sans)", "Geist", "var(--font-hanken)", "system-ui", "sans-serif"],
         display: ["var(--font-geist-sans)", "Geist", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "JetBrains Mono", "monospace"],
       },

@@ -40,7 +40,7 @@ function Widget({ title, href, children }: { title: string; href: string; childr
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="rounded-2xl p-5"
-      style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 24px 60px -28px rgba(0,0,0,0.85)" }}
+      style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}
     >
       <div className="mb-4 flex items-center justify-between">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.3)" }}>{title}</p>
@@ -88,7 +88,7 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
   return (
     <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
       className="mb-8 rounded-2xl p-5 md:p-6"
-      style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 24px 60px -28px rgba(0,0,0,0.85)" }}>
+      style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Empieza aquí</p>
@@ -179,7 +179,7 @@ function CreateApp() {
   };
 
   return (
-    <div id="crear" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(124,58,237,0.10),rgba(255,255,255,0.015))", border: "1px solid rgba(124,58,237,0.28)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 24px 60px -28px rgba(0,0,0,0.85)" }}>
+    <div id="crear" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(124,58,237,0.10),rgba(255,255,255,0.015))", border: "1px solid rgba(124,58,237,0.28)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Crea tu app y publícala</p>
@@ -254,7 +254,7 @@ function CobroApp() {
   };
 
   return (
-    <div id="cobros" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(34,197,94,0.08),rgba(255,255,255,0.015))", border: "1px solid rgba(34,197,94,0.22)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 24px 60px -28px rgba(0,0,0,0.85)" }}>
+    <div id="cobros" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(34,197,94,0.08),rgba(255,255,255,0.015))", border: "1px solid rgba(34,197,94,0.22)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Cobra en segundos</p>
@@ -355,7 +355,7 @@ function DomainBuyer() {
   };
 
   return (
-    <div id="dominio" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(14,165,233,0.08),rgba(255,255,255,0.015))", border: "1px solid rgba(14,165,233,0.22)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 24px 60px -28px rgba(0,0,0,0.85)" }}>
+    <div id="dominio" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(14,165,233,0.08),rgba(255,255,255,0.015))", border: "1px solid rgba(14,165,233,0.22)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Tu dominio propio</p>
@@ -451,7 +451,7 @@ export function HomeExperience({ name }: { name: string }) {
           { label: "Actividad", value: loading ? "—" : events.length + " eventos", icon: IconActivity },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-xl p-4"
-            style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 24px 60px -28px rgba(0,0,0,0.85)" }}>
+            style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
             <Icon size={14} style={{ color: "rgba(124,58,237,0.8)", marginBottom: 8 }} />
             <p className="text-[1.4rem] font-bold tabular-nums" style={{ color: "#fff" }}>{value}</p>
             <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>{label}</p>
@@ -523,7 +523,7 @@ export function HomeExperience({ name }: { name: string }) {
           {ACTIONS.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href}
               className="flex flex-col items-center gap-2 rounded-xl py-4 px-2 transition-all text-center"
-              style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 24px 60px -28px rgba(0,0,0,0.85)" }}
+              style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}
               onMouseEnter={e => {
                 const el = e.currentTarget as HTMLElement;
                 el.style.background = "rgba(124,58,237,0.08)";
