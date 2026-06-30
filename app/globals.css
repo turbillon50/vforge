@@ -1395,3 +1395,16 @@ button[data-provider="x_twitter"],
 .cl-socialButtonsIconButton[data-provider="x_twitter"] img {
   filter: brightness(0) invert(1) !important;
 }
+
+/* X/Twitter — selector REAL de Clerk (variante icono, sin data-provider, key __x) */
+.cl-socialButtonsIconButton__x {
+  background-color: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+}
+.cl-socialButtonsIconButton__x:hover {
+  background-color: rgba(255,255,255,0.09) !important;
+}
+.cl-socialButtonsProviderIcon__x,
+.cl-providerIcon__x {
+  filter: brightness(0) invert(1) !important;
+}
