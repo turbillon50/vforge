@@ -8,10 +8,15 @@ import { motion, AnimatePresence } from "framer-motion";
  * fade-out 0.3s. Aparece en cada arranque en frío de la PWA.
  */
 export default function SplashScreen() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(false), 2000); // 2.0s fija
+    if (typeof window === "undefined") return;
+    // Solo en el primer arranque de la sesion; NUNCA al cambiar de pagina.
+    if (sessionStorage.getItem("vf-splash")) return;
+    sessionStorage.setItem("vf-splash", "1");
+    setVisible(true);
+    const t = setTimeout(() => setVisible(false), 1300);
     return () => clearTimeout(t);
   }, []);
 
