@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { getUserSecret } from "@/lib/connect/user-vault";
+import { saveUserApp } from "@/lib/connect/user-apps";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -99,6 +100,7 @@ export async function POST(req: Request) {
     const dep = await depRes.json();
     if (!depRes.ok) return Response.json({ ok: false, error: "deploy", detail: dep, repo: out.repo }, { status: 400 });
     out.deploy = { url: dep.url ? `https://${dep.url}` : null, id: dep.id, state: dep.readyState || dep.status };
+    try { await saveUserApp(userId, { name, repo_url: (out.repo as { url?: string })?.url ?? null, deploy_url: (out.deploy as { url?: string | null })?.url ?? null, template }); } catch { /* best-effort */ }
 
     return Response.json({ ok: true, ...out });
   } catch (e) {
