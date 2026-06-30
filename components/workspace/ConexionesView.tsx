@@ -17,8 +17,22 @@ export function ConexionesView() {
   const [msg, setMsg] = useState<string | null>(null);
   const [llmDone, setLlmDone] = useState(false);
 
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
   const load = () => fetch("/api/onboarding/status").then(r => r.ok ? r.json() : { connected: [] }).then(d => setConn(d.connected || [])).catch(() => {});
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search);
+      for (const svc of ["github", "vercel", "stripe", "mindcontext"]) {
+        const v = q.get(svc);
+        if (v) {
+          setNotice(v === "connected" ? { ok: true, text: svc + " conectado correctamente." } : { ok: false, text: svc + ": no se pudo (" + v + "). Reintenta o avísame." });
+          setTimeout(load, 800);
+          break;
+        }
+      }
+    }
+  }, []);
 
   const saveLlm = async () => {
     if (!key.trim() || busy) return;
@@ -37,6 +51,9 @@ export function ConexionesView() {
       <p className="font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.46)", letterSpacing: "0.22em" }}>Tu infraestructura</p>
       <h1 className="font-display mb-2 mt-3" style={{ fontSize: "clamp(2rem,5vw,3rem)", letterSpacing: "-0.045em", color: "#f4f4f6", fontWeight: 600 }}>Conexiones</h1>
       <p className="mb-8 text-[13px]" style={{ color: "rgba(255,255,255,0.6)" }}>Conecta tus cuentas. Todo queda en tu bóveda, cifrado; solo tú lo usas.</p>
+      {notice && (
+        <div className="mb-6 rounded-xl px-4 py-3 text-[13px]" style={{ background: notice.ok ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", border: `1px solid ${notice.ok ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`, color: notice.ok ? "#86efac" : "#fca5a5" }}>{notice.text}</div>
+      )}
 
       <div className="space-y-3">
         {OAUTH.map((s) => {
