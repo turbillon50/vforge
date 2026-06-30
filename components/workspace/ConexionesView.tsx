@@ -16,6 +16,10 @@ export function ConexionesView() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [llmDone, setLlmDone] = useState(false);
+  const [vTok, setVTok] = useState("");
+  const [vTeam, setVTeam] = useState("");
+  const [vBusy, setVBusy] = useState(false);
+  const [vMsg, setVMsg] = useState<string | null>(null);
 
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
   const load = () => fetch("/api/onboarding/status").then(r => r.ok ? r.json() : { connected: [] }).then(d => setConn(d.connected || [])).catch(() => {});
@@ -46,6 +50,18 @@ export function ConexionesView() {
     finally { setBusy(false); }
   };
 
+  const saveVercel = async () => {
+    if (vTok.trim().length < 20 || vBusy) return;
+    setVBusy(true); setVMsg(null);
+    try {
+      const r = await fetch("/api/forja/connect-vercel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: vTok.trim(), teamId: vTeam.trim() }) });
+      const d = await r.json();
+      if (d.ok) { setVMsg("Vercel conectado como " + d.username + "."); setVTok(""); setVTeam(""); setTimeout(load, 400); }
+      else setVMsg(d.error || "No se pudo validar el token.");
+    } catch (e) { setVMsg(e instanceof Error ? e.message : "error"); }
+    finally { setVBusy(false); }
+  };
+
   return (
     <main className="mx-auto w-full max-w-3xl px-5 pb-24 pt-12 md:px-8">
       <p className="font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.46)", letterSpacing: "0.22em" }}>Tu infraestructura</p>
@@ -59,7 +75,7 @@ export function ConexionesView() {
         {OAUTH.map((s) => {
           const on = conn.includes(s.id);
           return (
-            <div key={s.id} className="glossy lift flex items-center gap-4 rounded-2xl p-5">
+            <div key={s.id} className="glossy lift flex flex-wrap items-center gap-4 rounded-2xl p-5">
               <img src={`/logos/${s.id}.svg`} alt={s.label} className="h-9 w-9 shrink-0" />
               <div>
                 <p className="text-[15px] font-semibold text-white">{s.label}</p>
@@ -68,7 +84,19 @@ export function ConexionesView() {
               <div className="ml-auto">
                 {on
                   ? <span className="rounded-full px-3 py-1.5 text-[12px] font-medium" style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", color: "#86efac" }}>Conectado</span>
-                  : <a href={`/api/auth/${s.id}/start`} className="rounded-full px-5 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Conectar &rarr;</a>}
+                  : s.id === "vercel"
+                    ? <span className="rounded-full px-3 py-1.5 text-[12px]" style={{ color: "rgba(255,255,255,0.5)" }}>Pega tu token abajo &darr;</span>
+                    : <a href={`/api/auth/${s.id}/start`} className="rounded-full px-5 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Conectar &rarr;</a>}
+                {s.id === "vercel" && !on && (
+                  <div className="mt-3 w-full">
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <input value={vTok} onChange={e => setVTok(e.target.value)} type="password" placeholder="Vercel token (vercel.com/account/tokens)" className="flex-1 rounded-full px-4 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+                      <input value={vTeam} onChange={e => setVTeam(e.target.value)} placeholder="Team ID (opcional)" className="rounded-full px-4 py-2.5 text-[13px] outline-none sm:w-44" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+                      <button onClick={saveVercel} disabled={vBusy || vTok.trim().length < 20} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810" }}>{vBusy ? "Validando..." : "Conectar"}</button>
+                    </div>
+                    {vMsg && <p className="mt-2 text-[12px]" style={{ color: vMsg.includes("conectado") ? "#86efac" : "#fca5a5" }}>{vMsg}</p>}
+                  </div>
+                )}
               </div>
             </div>
           );
