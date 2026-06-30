@@ -198,6 +198,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       <div className="relative z-10 flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar hiddenOnMobile={pathname.startsWith("/app/chat")||pathname.startsWith("/forge")||pathname.startsWith("/v")} pathname={pathname}/>
         <div data-app-scroll className={cn(
+          "dot-grid",
           "flex-1 min-h-0 min-w-0 max-w-full overflow-x-hidden",
           (pathname.startsWith("/app/chat")||pathname.startsWith("/forge")||pathname.startsWith("/v"))?"overflow-y-hidden":"overflow-y-auto flex flex-col pb-10 md:pb-16"
         )}>

@@ -53,7 +53,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
             <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "h-7 w-7" } }} />
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="dot-grid flex-1 overflow-y-auto">{children}</main>
       </div>
       <ClientV />
     </div>
