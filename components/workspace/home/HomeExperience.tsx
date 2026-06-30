@@ -111,7 +111,7 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
             <p className="mt-0.5 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.4)" }}>{st.desc}</p>
             {!st.done
               ? <Link href={st.href} className="mt-3 inline-block rounded-lg px-3 py-1.5 text-[12px] font-medium" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>{st.cta} →</Link>
-              : <p className="mt-3 flex items-center gap-1 text-[11px] font-medium" style={{ color: "#a78bfa" }}><IconCheck size={12} /> Listo</p>}
+              : <p className="mt-3 flex items-center gap-1 text-[11px] font-medium" style={{ color: "#9aa0aa" }}><IconCheck size={12} /> Listo</p>}
             <button onClick={() => window.dispatchEvent(new CustomEvent("vforge:open-v", { detail: { prompt: st.vq } }))} className="mt-2 text-[11px] transition-colors" style={{ color: "rgba(167,139,250,0.85)" }}>Pregúntale a V &rarr;</button>
           </div>
         ))}
@@ -123,10 +123,10 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
 /* ── Vitrina "Qué puedes hacer" (con hueco de imagen para Higgsfield) ── */
 function Showcase() {
   const cards = [
-    { icon: IconSparkles, title: "Construye hablando con V", desc: "Describe tu idea y V la vuelve una app real.", href: "/app/forge", g: "linear-gradient(135deg,#1a1530,#0d0b1a)" },
+    { icon: IconSparkles, title: "Construye hablando con V", desc: "Describe tu idea y V la vuelve una app real.", href: "/workspace#crear", g: "linear-gradient(135deg,#1a1530,#0d0b1a)" },
     { icon: IconBranch, title: "Configurador visual", desc: "Arma tu app por módulos con preview en vivo.", href: "/configurador.html", g: "linear-gradient(135deg,#161421,#0c0b16)" },
-    { icon: IconKey, title: "200+ integraciones", desc: "GitHub, Vercel, Stripe, Neon y más en un clic.", href: "/app/integrations", g: "linear-gradient(135deg,#1a1525,#0d0b16)" },
-    { icon: IconRocket, title: "Deploy en segundos", desc: "Publica a producción sin salir de aquí.", href: "/app/deployments", g: "linear-gradient(135deg,#171327,#0c0b18)" },
+    { icon: IconKey, title: "200+ integraciones", desc: "GitHub, Vercel, Stripe, Neon y más en un clic.", href: "/workspace/conexiones", g: "linear-gradient(135deg,#1a1525,#0d0b16)" },
+    { icon: IconRocket, title: "Deploy en segundos", desc: "Publica a producción sin salir de aquí.", href: "/workspace#crear", g: "linear-gradient(135deg,#171327,#0c0b18)" },
   ];
   return (
     <section className="mb-8">
@@ -138,7 +138,7 @@ function Showcase() {
             <Link key={i} href={c.href} className="block overflow-hidden rounded-2xl" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
               {/* IMG-SLOT: mañana cambiar este div por <img src={...} /> de Higgsfield */}
               <div className="flex h-24 items-center justify-center" style={{ background: c.g }}>
-                <Icon size={26} style={{ color: "rgba(167,139,250,0.9)" }} />
+                <Icon size={24} style={{ color: "rgba(255,255,255,0.85)" }} />
               </div>
               <div className="p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
                 <p className="text-[13px] font-semibold" style={{ color: "#fff" }}>{c.title}</p>
