@@ -29,6 +29,7 @@ export function WorkspaceStudio() {
   const [conn, setConn] = useState<string[]>([]);
   const [files, setFiles] = useState<{ name: string; path: string; type: string }[]>([]);
   const [code, setCode] = useState<{ path: string; content: string } | null>(null);
+  const [saving, setSaving] = useState(false);
   useEffect(() => {
     fetch("/api/forja/apps").then(r => r.ok ? r.json() : { apps: [] }).then(d => { setApps(d.apps || []); if (d.apps?.[0]) setActive(d.apps[0]); }).catch(() => {});
     fetch("/api/onboarding/status").then(r => r.ok ? r.json() : { connected: [] }).then(d => setConn(d.connected || [])).catch(() => {});
@@ -41,6 +42,12 @@ export function WorkspaceStudio() {
     if (!active?.id) return;
     setTab("codigo");
     fetch("/api/forja/app-files?app=" + active.id + "&path=" + encodeURIComponent(path)).then(r => r.ok ? r.json() : null).then(d => { if (d && d.content !== undefined) setCode({ path, content: d.content }); }).catch(() => {});
+  };
+  const saveFile = async () => {
+    if (!code || !active?.id || saving) return;
+    setSaving(true);
+    try { await fetch("/api/forja/app-files", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ app: active.id, path: code.path, content: code.content }) }); } catch {}
+    setSaving(false);
   };
 
   const [msgs, setMsgs] = useState<Msg[]>([{ role: "assistant", content: "Que onda, hermano? Soy V. Dime que construimos o conectame y le entramos." }]);
@@ -105,10 +112,13 @@ export function WorkspaceStudio() {
 ) : tab === "codigo" ? (
               <div className="h-full overflow-auto bg-[#0b0b10] p-4">
                 {code ? (
-                  <>
-                    <p className="mb-2 font-mono text-[11.5px] text-white/40">{code.path}</p>
-                    <pre className="whitespace-pre-wrap break-words rounded-xl border border-white/[0.08] bg-[#0d0d12] p-4 font-mono text-[12px] leading-relaxed text-white/85">{code.content}</pre>
-                  </>
+                  <div className="flex h-full flex-col">
+                    <div className="mb-2 flex items-center justify-between">
+                      <p className="font-mono text-[11.5px] text-white/40">{code.path}</p>
+                      <button onClick={saveFile} disabled={saving} className="rounded-full px-3.5 py-1.5 text-[12px] font-semibold disabled:opacity-50" style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}>{saving ? "Guardando..." : "Guardar y commitear"}</button>
+                    </div>
+                    <textarea value={code.content} onChange={(e) => setCode({ path: code.path, content: e.target.value })} spellCheck={false} className="min-h-0 flex-1 w-full resize-none rounded-xl border border-white/[0.08] bg-[#0d0d12] p-4 font-mono text-[12px] leading-relaxed text-white/85 outline-none" />
+                  </div>
                 ) : (
                   <div className="flex h-full items-center justify-center text-center text-[13px] text-white/40">{active ? "Elige un archivo del panel derecho para ver su codigo." : "Crea o selecciona una app."}</div>
                 )}

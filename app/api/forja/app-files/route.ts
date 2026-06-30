@@ -38,3 +38,31 @@ export async function GET(req: Request) {
     return Response.json({ error: "exception", detail: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }
+
+export async function POST(req: Request) {
+  const { userId } = await auth();
+  if (!userId) return Response.json({ error: "unauth" }, { status: 401 });
+  const b = await req.json().catch(() => ({} as Record<string, unknown>));
+  const path = String(b.path || "");
+  const content = String(b.content ?? "");
+  if (!path) return Response.json({ error: "no_path" }, { status: 400 });
+  const token = await getUserSecret(userId, "GITHUB_USER_TOKEN");
+  if (!token) return Response.json({ error: "connect_github" }, { status: 400 });
+  const apps = await listUserApps(userId);
+  const app = apps.find((a) => a.id === String(b.app || ""));
+  const mm = app && app.repo_url ? app.repo_url.match(/github[.]com[/]([^/]+)[/]([^/]+)/) : null;
+  if (!mm) return Response.json({ error: "no_repo" }, { status: 404 });
+  const owner = mm[1], repo = mm[2].replace(/[.]git$/, "");
+  const ep = "/contents/" + path.split("/").map(encodeURIComponent).join("/");
+  const ghh = (init) => fetch("https://api.github.com/repos/" + owner + "/" + repo + ep, Object.assign({}, init, { headers: Object.assign({ Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "User-Agent": "vforge" }, (init && init.headers) || {}) }));
+  try {
+    let sha;
+    const cur = await ghh(undefined);
+    if (cur.ok) { const d = await cur.json(); sha = d.sha; }
+    const put = await ghh({ method: "PUT", body: JSON.stringify({ message: "VForge: edit " + path, content: Buffer.from(content, "utf8").toString("base64"), sha }) });
+    if (!put.ok) return Response.json({ error: "save", detail: await put.text() }, { status: 400 });
+    return Response.json({ ok: true });
+  } catch (e) {
+    return Response.json({ error: "exception" }, { status: 500 });
+  }
+}
