@@ -5,6 +5,7 @@ const OAUTH = [
   { id: "github", label: "GitHub", desc: "Para crear y guardar tus repos." },
   { id: "vercel", label: "Vercel", desc: "Para publicar (deploy) tus apps." },
   { id: "stripe", label: "Stripe", desc: "Para cobrar con links de pago." },
+  { id: "mindcontext", label: "MindContext", desc: "Conecta tu contexto y memoria empresarial." },
 ];
 const LLMS: [string, string][] = [["gemini", "Gemini"], ["openai", "OpenAI"], ["anthropic", "Anthropic"]];
 
