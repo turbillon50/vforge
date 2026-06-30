@@ -156,7 +156,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 pb-2 no-scrollbar">
-          <p className="mb-2 px-2 font-mono text-[9px] uppercase tracking-[0.15em] text-[var(--fg-subtle)]">Workspace</p>
+          <p className="mb-2 px-2 font-mono text-[9px] uppercase tracking-[0.15em] text-[var(--fg-subtle)]">Workspace</p><a href="/configurador.html" className="group relative mb-2 flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-[13px] font-semibold text-black transition hover:bg-white/90"><span className="flex-1">+ Nueva app</span></a>
           {NAV.map(({ href, label, Icon, kbd }) => {
             const active = pathname.startsWith(href);
             return (
