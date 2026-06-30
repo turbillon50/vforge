@@ -158,6 +158,9 @@ function CreateApp() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [tpl, setTpl] = useState("landing");
+  const [desc, setDesc] = useState("");
+  const [mods, setMods] = useState<string[]>([]);
+  const [priv, setPriv] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [res, setRes] = useState<{ repo?: { url: string }; deploy?: { url: string | null } } | null>(null);
@@ -168,7 +171,7 @@ function CreateApp() {
     try {
       const r = await fetch("/api/forja/ship", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), template: tpl }),
+        body: JSON.stringify({ name: name.trim(), template: tpl, description: desc, modules: mods, isPrivate: priv }),
       });
       const d = await r.json();
       if (!d.ok) {
@@ -201,6 +204,19 @@ function CreateApp() {
               </button>
             ))}
           </div>
+          <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="¿Qué hace tu app? (objetivo, 1-2 líneas)" rows={2} className="mb-3 w-full rounded-lg px-3.5 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", resize: "vertical" }} />
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.46)" }}>Capacidades</p>
+          <div className="mb-3 flex flex-wrap gap-2">
+            {["Autenticación", "Pagos", "Base de datos", "IA / V", "Dominio", "Panel admin", "Notificaciones", "Multi-idioma"].map((m) => {
+              const on = mods.includes(m);
+              return (
+                <button key={m} type="button" onClick={() => setMods((pp) => (on ? pp.filter((x) => x !== m) : [...pp, m]))} className="rounded-full px-3 py-1.5 text-[12px] transition" style={{ background: on ? "rgba(124,58,237,0.16)" : "rgba(255,255,255,0.04)", border: `1px solid ${on ? "rgba(124,58,237,0.4)" : "rgba(255,255,255,0.12)"}`, color: on ? "#c4b5fd" : "rgba(255,255,255,0.7)" }}>{m}</button>
+              );
+            })}
+          </div>
+          <label className="mb-3 flex cursor-pointer items-center gap-2 text-[12.5px]" style={{ color: "rgba(255,255,255,0.6)" }}>
+            <input type="checkbox" checked={priv} onChange={(e) => setPriv(e.target.checked)} /> Repositorio privado
+          </label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && run()} placeholder="Nombre de tu app" autoFocus
               className="flex-1 rounded-lg px-3.5 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />

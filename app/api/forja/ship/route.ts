@@ -25,8 +25,9 @@ const TEMPLATES: Record<string, { sub: string; accent: string }> = {
   portafolio: { sub: "Tu portafolio esta en linea. Muestra tu trabajo.", accent: "#0ea5e9" },
   blanco:     { sub: "Lienzo en blanco listo. Construye lo que imagines.", accent: "#a78bfa" },
 };
-function starter(name: string, template: string): string {
+function starter(name: string, template: string, description?: string): string {
   const t = TEMPLATES[template] || TEMPLATES.blanco;
+  const sub = (description && description.trim()) ? description.trim() : t.sub;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/><title>${name}</title>
 <style>:root{color-scheme:dark}*{margin:0;box-sizing:border-box}
@@ -36,7 +37,7 @@ h1{font-size:2rem;letter-spacing:-.03em;margin-bottom:12px}p{color:rgba(255,255,
 .b{display:inline-block;margin-bottom:20px;padding:6px 14px;border-radius:999px;border:1px solid ${t.accent};color:${t.accent};font-size:12px;font-weight:600}
 .d{display:inline-block;width:8px;height:8px;border-radius:50%;background:${t.accent};box-shadow:0 0 10px ${t.accent};margin-right:6px}</style></head>
 <body><div class="card"><span class="b"><span class="d"></span>En produccion</span>
-<h1>${name}</h1><p>${t.sub}</p></div></body></html>`;
+<h1>${name}</h1><p>${sub}</p></div></body></html>`;
 }
 
 function gh(path: string, token: string, init: RequestInit = {}) {
@@ -59,6 +60,9 @@ export async function POST(req: Request) {
   const name = (String(body.name || "Mi app").trim() || "Mi app").slice(0, 60);
   const slug = slugify(name) + "-" + Math.random().toString(36).slice(2, 6);
   const template = String(body.template || "blanco").toLowerCase();
+  const description = String(body.description || "").trim().slice(0, 600);
+  const isPrivate = !!body.isPrivate;
+  const modules = Array.isArray(body.modules) ? (body.modules as string[]).slice(0, 12).map(String) : [];
 
   const ghToken = await getUserSecret(userId, "GITHUB_USER_TOKEN");
   if (!ghToken) return Response.json({ ok: false, error: "connect_github" }, { status: 400 });
@@ -74,17 +78,23 @@ export async function POST(req: Request) {
 
     const repoRes = await gh("/user/repos", ghToken, {
       method: "POST",
-      body: JSON.stringify({ name: slug, description: name + " — creada con VForge", private: false, auto_init: true }),
+      body: JSON.stringify({ name: slug, description: (description || name) + " — creada con VForge", private: isPrivate, auto_init: true }),
     });
     if (!repoRes.ok) return Response.json({ ok: false, error: "repo_create", detail: await repoRes.text() }, { status: 400 });
     const repo = await repoRes.json();
     out.repo = { url: repo.html_url, full: repo.full_name };
 
-    const content = Buffer.from(starter(name, template), "utf8").toString("base64");
+    const content = Buffer.from(starter(name, template, description), "utf8").toString("base64");
     await gh(`/repos/${owner}/${slug}/contents/index.html`, ghToken, {
       method: "PUT",
       body: JSON.stringify({ message: "VForge: app inicial", content }),
     });
+    const readme = `# ${name}\n\n${description || "App creada con VForge."}\n\n**Plantilla:** ${template}\n\n**Módulos solicitados:**\n${modules.length ? modules.map((m) => "- " + m).join("\n") : "- (ninguno)"}\n\n---\nGenerada con VForge.`;
+    await gh(`/repos/${owner}/${slug}/contents/README.md`, ghToken, {
+      method: "PUT",
+      body: JSON.stringify({ message: "VForge: README/spec", content: Buffer.from(readme, "utf8").toString("base64") }),
+    }).catch(() => {});
+
 
     const q = vcTeam ? `?teamId=${encodeURIComponent(vcTeam)}&forceNew=1` : `?forceNew=1`;
     const depRes = await fetch("https://api.vercel.com/v13/deployments" + q, {
@@ -94,7 +104,7 @@ export async function POST(req: Request) {
         name: slug,
         target: "production",
         projectSettings: { framework: null },
-        files: [{ file: "index.html", data: starter(name, template) }],
+        files: [{ file: "index.html", data: starter(name, template, description) }],
       }),
     });
     const dep = await depRes.json();
