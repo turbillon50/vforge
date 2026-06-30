@@ -1,0 +1,99 @@
+import { auth } from "@clerk/nextjs/server";
+import { getUserSecret } from "@/lib/connect/user-vault";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+/**
+ * POST /api/forja/ship  { name }
+ * EL MOTOR: con los tokens conectados del usuario (GitHub + Vercel),
+ *  1) crea un repo en SU GitHub,
+ *  2) empuja una app inicial,
+ *  3) la deploya en SU Vercel (archivos directos, robusto).
+ * Devuelve { ok, repo:{url}, deploy:{url} }.
+ */
+function slugify(s: string): string {
+  return (s || "mi-app")
+    .toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 50) || "mi-app";
+}
+
+function starter(name: string): string {
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/><title>${name}</title>
+<style>:root{color-scheme:dark}*{margin:0;box-sizing:border-box}
+body{min-height:100vh;display:grid;place-items:center;background:#0a0a0f;color:#f5f5f7;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif}
+.card{text-align:center;padding:48px 32px;border:1px solid rgba(255,255,255,.09);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 20px 60px -20px rgba(0,0,0,.7);max-width:520px}
+h1{font-size:2rem;letter-spacing:-.03em;margin-bottom:12px}p{color:rgba(255,255,255,.5);line-height:1.5}
+.b{display:inline-block;margin-bottom:20px;padding:6px 14px;border-radius:999px;border:1px solid rgba(124,58,237,.35);color:#a78bfa;font-size:12px;font-weight:600}
+.d{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px #22c55e;margin-right:6px}</style></head>
+<body><div class="card"><span class="b"><span class="d"></span>En produccion</span>
+<h1>${name}</h1><p>Tu app esta viva. La creaste y deployaste con VForge en segundos. Desde aqui la haces crecer.</p></div></body></html>`;
+}
+
+function gh(path: string, token: string, init: RequestInit = {}) {
+  return fetch("https://api.github.com" + path, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+      "User-Agent": "vforge",
+      ...(init.headers || {}),
+    },
+  });
+}
+
+export async function POST(req: Request) {
+  const { userId } = await auth();
+  if (!userId) return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
+
+  const body = await req.json().catch(() => ({} as Record<string, unknown>));
+  const name = (String(body.name || "Mi app").trim() || "Mi app").slice(0, 60);
+  const slug = slugify(name) + "-" + Math.random().toString(36).slice(2, 6);
+
+  const ghToken = await getUserSecret(userId, "GITHUB_USER_TOKEN");
+  if (!ghToken) return Response.json({ ok: false, error: "connect_github" }, { status: 400 });
+  const vcToken = await getUserSecret(userId, "VERCEL_USER_TOKEN");
+  if (!vcToken) return Response.json({ ok: false, error: "connect_vercel" }, { status: 400 });
+  const vcTeam = await getUserSecret(userId, "VERCEL_TEAM_ID");
+
+  const out: Record<string, unknown> = { name, slug };
+  try {
+    const meRes = await gh("/user", ghToken);
+    if (!meRes.ok) return Response.json({ ok: false, error: "github_auth", detail: await meRes.text() }, { status: 400 });
+    const owner = (await meRes.json()).login as string;
+
+    const repoRes = await gh("/user/repos", ghToken, {
+      method: "POST",
+      body: JSON.stringify({ name: slug, description: name + " — creada con VForge", private: false, auto_init: true }),
+    });
+    if (!repoRes.ok) return Response.json({ ok: false, error: "repo_create", detail: await repoRes.text() }, { status: 400 });
+    const repo = await repoRes.json();
+    out.repo = { url: repo.html_url, full: repo.full_name };
+
+    const content = Buffer.from(starter(name), "utf8").toString("base64");
+    await gh(`/repos/${owner}/${slug}/contents/index.html`, ghToken, {
+      method: "PUT",
+      body: JSON.stringify({ message: "VForge: app inicial", content }),
+    });
+
+    const q = vcTeam ? `?teamId=${encodeURIComponent(vcTeam)}&forceNew=1` : `?forceNew=1`;
+    const depRes = await fetch("https://api.vercel.com/v13/deployments" + q, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${vcToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: slug,
+        target: "production",
+        projectSettings: { framework: null },
+        files: [{ file: "index.html", data: starter(name) }],
+      }),
+    });
+    const dep = await depRes.json();
+    if (!depRes.ok) return Response.json({ ok: false, error: "deploy", detail: dep, repo: out.repo }, { status: 400 });
+    out.deploy = { url: dep.url ? `https://${dep.url}` : null, id: dep.id, state: dep.readyState || dep.status };
+
+    return Response.json({ ok: true, ...out });
+  } catch (e) {
+    return Response.json({ ok: false, error: "exception", detail: e instanceof Error ? e.message : String(e), partial: out }, { status: 500 });
+  }
+}
