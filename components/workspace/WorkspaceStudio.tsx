@@ -31,6 +31,8 @@ export function WorkspaceStudio() {
   const [code, setCode] = useState<{ path: string; content: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [split, setSplit] = useState(false);
+  const [deploying, setDeploying] = useState(false);
+  const [depMsg, setDepMsg] = useState<string | null>(null);
   useEffect(() => {
     fetch("/api/forja/apps").then(r => r.ok ? r.json() : { apps: [] }).then(d => { setApps(d.apps || []); if (d.apps?.[0]) setActive(d.apps[0]); }).catch(() => {});
     fetch("/api/onboarding/status").then(r => r.ok ? r.json() : { connected: [] }).then(d => setConn(d.connected || [])).catch(() => {});
@@ -49,6 +51,16 @@ export function WorkspaceStudio() {
     setSaving(true);
     try { await fetch("/api/forja/app-files", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ app: active.id, path: code.path, content: code.content }) }); } catch {}
     setSaving(false);
+  };
+  const deploy = async () => {
+    if (!active?.id || deploying) return;
+    setDeploying(true); setDepMsg(null);
+    try {
+      const r = await fetch("/api/forja/app-deploy", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ app: active.id }) });
+      const d = await r.json();
+      setDepMsg(d.ok ? "Publicado" + (d.url ? ": " + d.url : "") : "Error: " + (d.error || "deploy"));
+    } catch { setDepMsg("Error de red"); }
+    setDeploying(false);
   };
 
   const [msgs, setMsgs] = useState<Msg[]>([{ role: "assistant", content: "Que onda, hermano? Soy V. Dime que construimos o conectame y le entramos." }]);
@@ -76,7 +88,9 @@ export function WorkspaceStudio() {
           {apps.length === 0 && <option value="">Sin apps aun</option>}
           {apps.map(a => <option key={a.id} value={a.id} className="text-black">{a.name}</option>)}
         </select>
-        <div className="ml-auto"><UserButton afterSignOutUrl="/" /></div>
+        <button onClick={deploy} disabled={!active || deploying} className="ml-auto rounded-full px-4 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50" style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}>{deploying ? "Publicando..." : "Deploy"}</button>
+        {depMsg && <span className="max-w-[260px] truncate text-[11.5px]" style={{ color: depMsg.startsWith("Error") ? "#fca5a5" : "#86efac" }}>{depMsg}</span>}
+        <div><UserButton afterSignOutUrl="/" /></div>
       </header>
       <div className="flex min-h-0 flex-1">
         <aside style={{ width: leftW }} className="flex shrink-0 flex-col border-r border-white/[0.08]">
