@@ -138,9 +138,10 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   return (
-    <div className="fixed inset-0 flex overflow-hidden bg-[var(--color-void)]">
+    <div className="fixed inset-0 flex overflow-hidden" style={{ background: "#0a0810" }}>
+      <div className="vibe-mesh" />
       {/* Sidebar — chrome theme-aware (tokens --chrome-bg / --fg-* / --border-* / --surface-*) */}
-      <aside data-chrome className="hidden h-dvh w-[248px] shrink-0 flex-col border-r border-[var(--border-1)] bg-[rgb(var(--chrome-bg)/0.92)] backdrop-blur-2xl md:flex">
+      <aside data-chrome className="relative z-10 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-[var(--border-1)] bg-[rgb(var(--chrome-bg)/0.92)] backdrop-blur-2xl md:flex">
         <div className="px-5 py-5">
           <div className="flex items-center justify-between">
             <Link href="/app"><VWordmark /></Link>
@@ -194,7 +195,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
       {/* Main */}
-      <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="relative z-10 flex h-dvh min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar hiddenOnMobile={pathname.startsWith("/app/chat")||pathname.startsWith("/forge")||pathname.startsWith("/v")} pathname={pathname}/>
         <div data-app-scroll className={cn(
           "flex-1 min-h-0 min-w-0 max-w-full overflow-x-hidden",
