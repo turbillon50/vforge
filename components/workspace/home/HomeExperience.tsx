@@ -79,9 +79,9 @@ function eventIcon(action: string) {
 function FirstSteps({ connected, projects, loading }: { connected: string[]; projects: Project[]; loading: boolean }) {
   if (loading) return null;
   const steps = [
-    { done: connected.includes("github") && connected.includes("vercel"), title: "Conecta tus herramientas", desc: "GitHub y Vercel en un clic.", cta: "Conectar", href: "/workspace/conexiones" },
-    { done: projects.length > 0, title: "Crea tu primera app", desc: "Ármala por módulos con preview en vivo.", cta: "Crear", href: "/configurador.html" },
-    { done: projects.some(p => !!p.vercel_url), title: "Publícala en producción", desc: "Deploy en segundos, sin salir de aquí.", cta: "Publicar", href: "/app/deployments" },
+    { done: connected.includes("github") && connected.includes("vercel"), title: "Conecta tus herramientas", desc: "GitHub y Vercel en un clic.", cta: "Conectar", href: "/workspace/conexiones", vq: "¿Cómo conecto mis herramientas, GitHub y Vercel?" },
+    { done: projects.length > 0, title: "Crea tu primera app", desc: "Ármala por módulos con preview en vivo.", cta: "Crear", href: "/configurador.html", vq: "¿Cómo creo mi primera app?" },
+    { done: projects.some(p => !!p.vercel_url), title: "Publícala en producción", desc: "Deploy en segundos, sin salir de aquí.", cta: "Publicar", href: "/workspace#crear", vq: "¿Cómo publico mi app en producción?" },
   ];
   const doneCount = steps.filter(s => s.done).length;
   if (doneCount === 3) return null;
@@ -112,6 +112,7 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
             {!st.done
               ? <Link href={st.href} className="mt-3 inline-block rounded-lg px-3 py-1.5 text-[12px] font-medium" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>{st.cta} →</Link>
               : <p className="mt-3 flex items-center gap-1 text-[11px] font-medium" style={{ color: "#a78bfa" }}><IconCheck size={12} /> Listo</p>}
+            <button onClick={() => window.dispatchEvent(new CustomEvent("vforge:open-v", { detail: { prompt: st.vq } }))} className="mt-2 text-[11px] transition-colors" style={{ color: "rgba(167,139,250,0.85)" }}>Pregúntale a V &rarr;</button>
           </div>
         ))}
       </div>

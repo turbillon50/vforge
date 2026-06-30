@@ -10,6 +10,11 @@ export function ClientV() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+    const h = (e: Event) => { setOpen(true); const pr = (e as CustomEvent).detail?.prompt as string | undefined; if (pr) setInput(pr); };
+    window.addEventListener("vforge:open-v", h);
+    return () => window.removeEventListener("vforge:open-v", h);
+  }, []);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, open]);
 
   const send = async (override?: string) => {
