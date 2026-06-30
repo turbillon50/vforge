@@ -24,10 +24,18 @@ input{width:100%;background:#0a0a10;border:1px solid #26263a;border-radius:8px;p
 .layout{display:flex;gap:20px;max-width:1520px;margin:0 auto;align-items:flex-start}
 .layout .wrap{flex:1;max-width:none;margin:0;padding-right:4px}
 .preview{position:sticky;top:14px;width:360px;flex-shrink:0;padding:14px 0}
-.frame{background:#0f0f16;border:1px solid #1d1d28;border-radius:14px;padding:9px;margin-bottom:14px}
-.frame .ttl{font-size:10px;color:#7a7a8c;letter-spacing:1px;margin:2px 4px 7px}
-.scr{border-radius:10px;overflow-y:auto}
-.phone .scr{height:430px}.desk .scr{height:240px}
+.preview .ttl{font-size:10px;color:#7a7a8c;letter-spacing:1px;margin:8px 2px 7px}
+.scr{overflow-y:auto}
+.phone{width:200px;margin:0 auto 18px;background:#0f0f16;border:7px solid #16161e;border-radius:30px;overflow:hidden;position:relative;box-shadow:0 10px 34px rgba(0,0,0,.55)}
+.phone .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:64px;height:15px;background:#16161e;border-radius:0 0 12px 12px;z-index:3}
+.phone .scr{height:400px;border-radius:22px}
+.browser{background:#0f0f16;border:1px solid #1d1d28;border-radius:11px;overflow:hidden;box-shadow:0 10px 34px rgba(0,0,0,.45)}
+.bbar{display:flex;align-items:center;gap:6px;padding:8px 11px;background:#14141d;border-bottom:1px solid #1d1d28}
+.bbar i{width:9px;height:9px;border-radius:50%;background:#34343f;display:inline-block}
+.bbar .addr{flex:1;margin-left:8px;background:#0a0a10;border-radius:6px;height:18px;font-size:9px;color:#6a6a80;display:flex;align-items:center;padding:0 9px}
+.browser .scr{height:240px}
+.scr.empty{display:flex;align-items:center;justify-content:center}
+.emptymsg{color:#42425a;font-size:12px;text-align:center;line-height:1.7}
 @media(max-width:1140px){.preview{display:none}}
 .intake{background:#0f0f16;border:1px solid #1d1d28;border-radius:16px;padding:18px;margin-top:16px}
 .intake h2{font-size:17px}.intake .sub{color:#7a7a8c;font-size:12.5px;margin:4px 0 12px}
@@ -76,6 +84,8 @@ const INTEGRATED=["Obsidiana (oscuro)","Landing que vende","Dashboard","Perfil d
 document.querySelectorAll(".opt").forEach(b=>{if(INTEGRATED.includes(b.dataset.v))b.classList.add("rdy");});
 function has(g,v){return (state[g]||[]).includes(v);}
 function buildScreen(mobile){
+ var empty=((typeof count==="function"?count():0)===0)&&!(state.objetivo||state.que_soluciona);
+ if(empty){var lt=has('tema','Marfil (claro)');return '<div class="scr empty" style="background:'+(lt?'#f6f6f8':'#08080c')+'"><div class="emptymsg">Selecciona features<br>y aqui aparece tu app</div></div>';}
  var light=has('tema','Marfil (claro)');
  var bg=light?'#f6f6f8':'#08080c', fg=light?'#16161c':'#e8e8f0', card=light?'#fff':'#14141d', muted=light?'#6a6a78':'#9a9aa8', acc='#6366f1', bd=light?'#e5e5ea':'#1d1d28';
  var h='<div class="scr" style="background:'+bg+';color:'+fg+'">';
@@ -92,7 +102,7 @@ function buildScreen(mobile){
  if(mobile&&has('navegacion','Tab bar inferior'))h+='<div style="position:sticky;bottom:0;display:flex;justify-content:space-around;padding:9px 0;background:'+(light?'#fff':'#0c0c14')+';border-top:1px solid '+bd+'">'+[0,1,2,3].map(function(i){return '<div style="width:18px;height:18px;border-radius:5px;background:'+(i==0?acc:muted)+';opacity:'+(i==0?1:.4)+'"></div>';}).join('')+'</div>';
  h+='</div>';return h;
 }
-function renderPreview(){var p=document.getElementById('preview');if(!p)return;p.innerHTML='<div class="frame phone"><div class="ttl">MOVIL 390px</div>'+buildScreen(true)+'</div><div class="frame desk"><div class="ttl">ESCRITORIO 1440px</div>'+buildScreen(false)+'</div>';}
+function renderPreview(){var p=document.getElementById('preview');if(!p)return;p.innerHTML='<div class="ttl">MOVIL 390px</div><div class="phone"><div class="notch"></div>'+buildScreen(true)+'</div><div class="ttl">ESCRITORIO 1440px</div><div class="browser"><div class="bbar"><i></i><i></i><i></i><div class="addr">vforge.site/tu-app</div></div>'+buildScreen(false)+'</div>';}
 function count(){let n=0;for(const k in state){const v=state[k];if(Array.isArray(v))n+=v.length;else if(v===true)n++;}return n;}
 function upd(){renderPreview();document.getElementById('spec').innerHTML='<span class=cnt>'+count()+'</span> features | '+(state.tipo||'define tipo');}
 function ensamblar(){alert('Spec lista para el ensamblador:\n\n'+JSON.stringify(state,null,1));}
