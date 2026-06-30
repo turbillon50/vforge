@@ -56,11 +56,11 @@ export async function ensureTenantContext(
     // Backfill: si el tenant se creó sin email/nombre (currentUser() falló en el
     // primer request), rellénalos en cuanto los tengamos. Sin pisar valores ya
     // presentes. tenants no fuerza RLS → va con csql directo.
-    if ((!tenant.email && email) || (!tenant.display_name && name)) {
+    if ((!tenant.email && email) || (!tenant.display_name && displayName)) {
       const rows = (await csql`
         UPDATE tenants
         SET email = COALESCE(email, ${email}),
-            display_name = COALESCE(display_name, ${name}),
+            display_name = COALESCE(display_name, ${displayName}),
             updated_at = now()
         WHERE id = ${tenant.id}
         RETURNING id, clerk_user_id, email, display_name, plan

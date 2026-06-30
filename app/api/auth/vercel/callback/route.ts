@@ -25,7 +25,7 @@ export async function GET(req: Request) {
   jar.delete("vc_oauth_state");
 
   const back = (status: string) =>
-    Response.redirect(`${site}/app/integrations?vercel=${status}`, 302);
+    Response.redirect(`${site}/onboarding?connected=vercel&vercel=${status}`, 302);
 
   if (!code) return back("error_no_code");
   // Vercel a veces no reenvía state en installs desde marketplace; si viene, validamos.

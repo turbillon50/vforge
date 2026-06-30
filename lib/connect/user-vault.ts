@@ -66,3 +66,19 @@ export async function getUserSecret(
     return null;
   }
 }
+
+
+/**
+ * Lista los servicios (scope) que el usuario YA conectó (github, vercel, ...).
+ * Sin secretos — solo presencia. Base para hidratar el onboarding.
+ */
+export async function listUserConnections(userId: string): Promise<string[]> {
+  const dburl = process.env.DATABASE_URL;
+  if (!dburl) return [];
+  const sql = neon(dburl);
+  const rows = (await sql`
+    SELECT DISTINCT scope FROM user_secrets
+    WHERE user_id = ${userId} AND scope IS NOT NULL
+  `) as Array<{ scope: string }>;
+  return rows.map((r) => r.scope).filter(Boolean);
+}

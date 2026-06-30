@@ -23,7 +23,7 @@ export async function GET(req: Request) {
   jar.delete("gh_oauth_state");
 
   const back = (status: string) =>
-    Response.redirect(`${site}/app/integrations?github=${status}`, 302);
+    Response.redirect(`${site}/onboarding?connected=github&github=${status}`, 302);
 
   if (!code) return back("error_no_code");
   if (!state || !expected || state !== expected) return back("error_state");

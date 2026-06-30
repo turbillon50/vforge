@@ -1,10 +1,10 @@
 "use client";
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { IconArrowL, IconArrowR, IconBell, IconCheck, IconCircle, IconCreditCard, IconDatabase, IconExtLink, IconEye, IconGithub, IconGlobe, IconInfo, IconLoader, IconMap, IconRocket, IconSparkles, IconX } from "@/components/brand/VFIcons";
 import { VWordmark } from "@/components/brand/VMark";
 import { useT, interpolate } from "@/i18n/AppProviders";
@@ -58,6 +58,23 @@ export function OnboardingFlow() {
   const [intent, setIntent] = useState("");
   const [finishing, setFinishing] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("connected")) setStep("connect");
+    let alive = true;
+    fetch("/api/onboarding/status")
+      .then((r) => (r.ok ? r.json() : { connected: [] }))
+      .then((d) => {
+        if (!alive) return;
+        const list: string[] = Array.isArray(d.connected) ? d.connected : [];
+        if (list.length)
+          setConnected((p) => ({ ...p, ...Object.fromEntries(list.map((x) => [x, true])) }));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [searchParams]);
 
   // Cierre del onboarding: marca el flag en Clerk (el middleware lo usa para
   // dejar de mandar al usuario a /onboarding) y entra al workspace con un saludo
