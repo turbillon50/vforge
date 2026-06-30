@@ -51,13 +51,13 @@
   --color-surface-elev: #1c1930;  /* modales, dropdowns */
 
   /* Bordes HUD style */
-  --color-border: 139 92 246 / 0.14;
-  --color-border-strong: 139 92 246 / 0.20;
+  --color-border: 255 255 255 / 0.10;
+  --color-border-strong: 255 255 255 / 0.16;
 
   /* Texto */
-  --color-on-surface: #e8e4ff;
-  --color-on-surface-variant: #b8b0e0;
-  --color-muted: #8b82b3;
+  --color-on-surface: #f4f4f6;
+  --color-on-surface-variant: #b6b6c0;
+  --color-muted: #8a8a93;
   --color-off-white: #f0ecff;
 
   /* Accents Iron Man */
@@ -91,7 +91,7 @@
   /* Tints */
   --tint-1: 139 92 246 / 0.03;
   --tint-2: 139 92 246 / 0.06;
-  --tint-3: 139 92 246 / 0.10;
+  --tint-3: 255 255 255 / 0.08;
 
   /* ── VULCANO PWA STANDARD v2 — design tokens (spacing/radius/anim) ── */
   --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 32px;
@@ -114,11 +114,11 @@
   --color-surface-low: #110f1f;
   --color-surface-high: #16142a;
   --color-surface-elev: #1c1930;
-  --color-border: 139 92 246 / 0.10;
-  --color-border-strong: 139 92 246 / 0.20;
-  --color-on-surface: #e8e4ff;
-  --color-on-surface-variant: #a89fd4;
-  --color-muted: #6b628f;
+  --color-border: 255 255 255 / 0.08;
+  --color-border-strong: 255 255 255 / 0.16;
+  --color-on-surface: #f4f4f6;
+  --color-on-surface-variant: #aeaeb8;
+  --color-muted: #7a7a85;
   --color-off-white: #f0ecff;
   --color-violet-300: #c4b5fd;
   --color-violet-400: #a78bfa;
@@ -144,7 +144,7 @@
     0 24px 60px rgba(0,0,0,0.5);
   --tint-1: 139 92 246 / 0.03;
   --tint-2: 139 92 246 / 0.06;
-  --tint-3: 139 92 246 / 0.10;
+  --tint-3: 255 255 255 / 0.08;
 }
 
 [data-theme="light"] {
@@ -1221,7 +1221,7 @@ body:not([data-theme="light"]) .hud-scanlines::after {
 .bubble-assistant h1,
 .bubble-assistant h2,
 .bubble-assistant h3 {
-  color: #e8e4ff !important;
+  color: #f4f4f6 !important;
 }
 
 /* Código inline en burbujas */
@@ -1241,21 +1241,21 @@ body:not([data-theme="light"]) .hud-scanlines::after {
 
 /* Prose dentro del markdown — forzar contraste */
 .prose-vforge {
-  --tw-prose-body: #e8e4ff;
+  --tw-prose-body: #f4f4f6;
   --tw-prose-headings: #f0ecff;
   --tw-prose-bold: #f0ecff;
   --tw-prose-links: #a78bfa;
   --tw-prose-code: #c4b5fd;
-  --tw-prose-quotes: #a89fd4;
-  color: #e8e4ff;
+  --tw-prose-quotes: #aeaeb8;
+  color: #f4f4f6;
 }
 
 /* Nav sidebar items — texto visible */
 .nav-item-label {
-  color: #a89fd4;
+  color: #aeaeb8;
 }
 .nav-item-label.active {
-  color: #e8e4ff;
+  color: #f4f4f6;
 }
 
 /* ═══════════════════════════════════════════
