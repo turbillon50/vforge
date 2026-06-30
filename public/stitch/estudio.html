@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VForge - Estudio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap');
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-container": "#ede0ff",
+                      "primary-fixed-dim": "#d2bbff",
+                      "on-tertiary-container": "#ffe0cd",
+                      "surface": "#131318",
+                      "inverse-surface": "#e4e1e9",
+                      "tertiary": "#ffb784",
+                      "inverse-primary": "#732ee4",
+                      "on-primary": "#3f008e",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "on-tertiary-fixed": "#301400",
+                      "on-secondary-fixed-variant": "#005236",
+                      "outline-variant": "#4a4455",
+                      "tertiary-fixed": "#ffdcc6",
+                      "on-error-container": "#ffdad6",
+                      "secondary-container": "#00a572",
+                      "surface-container": "#1f1f25",
+                      "secondary": "#4edea3",
+                      "on-background": "#e4e1e9",
+                      "error": "#ffb4ab",
+                      "surface-tint": "#d2bbff",
+                      "primary-fixed": "#eaddff",
+                      "on-error": "#690005",
+                      "surface-container-highest": "#35343a",
+                      "surface-container-high": "#2a292f",
+                      "surface-dim": "#131318",
+                      "on-secondary-fixed": "#002113",
+                      "outline": "#958da1",
+                      "on-tertiary": "#4f2500",
+                      "tertiary-container": "#a15100",
+                      "tertiary-fixed-dim": "#ffb784",
+                      "surface-container-lowest": "#0e0e13",
+                      "on-surface": "#e4e1e9",
+                      "primary-container": "#7c3aed",
+                      "on-primary-fixed-variant": "#5a00c6",
+                      "inverse-on-surface": "#303036",
+                      "surface-bright": "#39383e",
+                      "on-secondary-container": "#00311f",
+                      "primary": "#d2bbff",
+                      "background": "#131318",
+                      "surface-container-low": "#1b1b20",
+                      "on-surface-variant": "#ccc3d8",
+                      "on-primary-fixed": "#25005a",
+                      "secondary-fixed-dim": "#4edea3",
+                      "on-secondary": "#003824",
+                      "error-container": "#93000a",
+                      "secondary-fixed": "#6ffbbe",
+                      "surface-variant": "#35343a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "gutter": "24px",
+                      "base": "4px",
+                      "lg": "24px",
+                      "md": "16px",
+                      "margin-mobile": "16px",
+                      "2xl": "64px",
+                      "xs": "4px",
+                      "margin-desktop": "48px",
+                      "xl": "40px"
+              },
+              "fontFamily": {
+                      "display-lg-mobile": [
+                              "Geist"
+                      ],
+                      "mono-code": [
+                              "Geist Mono"
+                      ],
+                      "body-lg": [
+                              "Geist"
+                      ],
+                      "label-md": [
+                              "Geist"
+                      ],
+                      "body-sm": [
+                              "Geist"
+                      ],
+                      "display-lg": [
+                              "Geist"
+                      ],
+                      "headline-md": [
+                              "Geist"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "mono-code": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "1",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.04em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        /* Custom scrollbar for IDE panels */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .resizer {
+            width: 4px;
+            cursor: col-resize;
+            background-color: transparent;
+            transition: background-color 0.2s;
+            z-index: 10;
+        }
+        .resizer:hover, .resizer:active {
+            background-color: rgba(124, 58, 237, 0.5); /* Primary violet glow */
+        }
+        /* Code syntax highlighting simulation */
+        .token.keyword { color: #d2bbff; }
+        .token.string { color: #4edea3; }
+        .token.function { color: #ffb784; }
+        .token.comment { color: #958da1; font-style: italic; }
+        .token.punctuation { color: #e4e1e9; }
+        
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: rgba(18, 18, 26, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen w-screen overflow-hidden flex flex-col font-body-sm">
+<!-- Top Navigation (From JSON logic) -->
+<nav class="bg-surface/80 dark:bg-surface/80 backdrop-blur-md flex justify-between items-center px-lg py-sm w-full docked full-width top-0 sticky z-50 border-b border-white/10 shadow-sm h-14 shrink-0">
+<div class="flex items-center gap-gutter">
+<span class="font-display-lg text-display-lg font-bold text-on-surface dark:text-on-surface" style="font-size: 24px;">VForge</span>
+<div class="hidden md:flex gap-md h-full items-center pt-2">
+<a class="font-body-lg text-body-lg text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-1 rounded-lg" href="#">Inicio</a>
+<a class="font-body-lg text-body-lg text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-1 rounded-lg" href="#">Mis apps</a>
+<a class="font-body-lg text-body-lg text-primary dark:text-primary border-b-2 border-primary pb-1 px-sm" href="#">Estudio</a>
+<a class="font-body-lg text-body-lg text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-1 rounded-lg" href="#">Cobros</a>
+<a class="font-body-lg text-body-lg text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-1 rounded-lg" href="#">Conexiones</a>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-sm text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded-full transition-colors duration-200 scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-sm text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded-full transition-colors duration-200 scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden ml-sm border border-white/10">
+<img alt="Luis Profile Avatar" class="w-full h-full object-cover" data-alt="A cinematic, high-contrast digital avatar portrait for a developer profile. The image features a sleek, minimalist geometric abstract representation of a face using deep purples and neon accents against a true black background. The lighting is moody and dramatic, conveying a sense of elite technical proficiency and modern design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrJGD5BzHU7ja1qUWQrHYQvKA5jX-3G110iQrHfD85HE3-_6DZyHm27-qYoudk9NsvMvjE2SJTrYALRyBH7Ajtmy9Vw5-lobQPf_9xFam57U4oq4aGMXb1B6WsVkXp-BVeDBJqIpuPvS2NjY_YM7aKe1wETcSflHWLhY_TpzsRTKV3ypkQOdVblYrAmlE8LlcrJCntHxKMCKZoL9DH3JUtuC5fX8cQAFuE7IgdPcF3rLru20clcbJM_V-cTeqHRHhB86ry8YmVy0Di"/>
+</div>
+</div>
+</nav>
+<!-- Main Workspace Area -->
+<div class="flex-1 flex overflow-hidden relative">
+<!-- Panel 1: Copilot Chat (Left) -->
+<div class="w-[300px] flex flex-col bg-surface-container-low border-r border-white/5 h-full shrink-0" id="panel-left">
+<!-- Header -->
+<div class="h-12 border-b border-white/5 flex items-center px-md shrink-0">
+<span class="material-symbols-outlined text-primary mr-sm" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+<span class="font-label-md text-label-md font-semibold text-on-surface">V Copilot</span>
+</div>
+<!-- Chat History -->
+<div class="flex-1 overflow-y-auto p-md flex flex-col gap-md">
+<!-- V Message -->
+<div class="flex gap-sm">
+<div class="w-6 h-6 rounded-full bg-primary-container/20 flex items-center justify-center shrink-0 border border-primary/20">
+<span class="material-symbols-outlined text-primary text-[14px]">psychology</span>
+</div>
+<div class="glass-panel p-sm rounded-lg rounded-tl-none text-on-surface-variant font-body-sm leading-relaxed max-w-[90%]">
+                        He analizado la estructura de tu proyecto. ¿En qué componente del <span class="font-mono-code text-mono-code text-primary-fixed-dim">TopNavBar</span> necesitas ayuda hoy?
+                    </div>
+</div>
+<!-- User Message -->
+<div class="flex gap-sm flex-row-reverse">
+<div class="w-6 h-6 rounded-full bg-surface-variant shrink-0 border border-white/10 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A sleek, low-poly 3D rendered avatar icon for a user profile. Rendered in dark mode with subtle rim lighting. The design is abstract, using geometric shapes in a cool, deep gray palette with a single stark white highlight to give a premium, cinematic feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcT3XA-mXdYNkTC5qJcZ6QvF_PuAJ9OBqVPHH8yA5AqQNpYvk9A7HiaLlH9KkQ_ZlgCni-jeRFmlft-rhkBN_EfqEsksaZkcFCEP3Z8F9dGbjvayA4Hh8IkLN3UgTOf-n3616VL4PLidPN31dzOFwixaOeJuA73a_aRMamy6gUdrOL4IXTBkaT15Yuj0xdvn5W2aXWgLyuKH5iuJYMvCC-EJBNDNki4UQCjEGyRYQl0v4dOteMHcrDtZRkgNd6rkW2HVeuWypXNdL-"/>
+</div>
+<div class="bg-surface-bright p-sm rounded-lg rounded-tr-none text-on-surface font-body-sm leading-relaxed max-w-[90%] border border-white/5">
+                        Necesito agregar un botón de 'Deploy' en el editor principal, con color primario.
+                    </div>
+</div>
+<!-- V Message -->
+<div class="flex gap-sm">
+<div class="w-6 h-6 rounded-full bg-primary-container/20 flex items-center justify-center shrink-0 border border-primary/20">
+<span class="material-symbols-outlined text-primary text-[14px]">psychology</span>
+</div>
+<div class="glass-panel p-sm rounded-lg rounded-tl-none text-on-surface-variant font-body-sm leading-relaxed max-w-[90%]">
+                        Entendido. He generado el código para el botón usando las variables del sistema de diseño <span class="font-mono-code text-mono-code text-primary-fixed-dim">bg-primary-container</span> y <span class="font-mono-code text-mono-code text-primary-fixed-dim">text-on-primary-container</span>. Lo puedes ver en el editor central.
+                    </div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-md shrink-0 border-t border-white/5 bg-surface-container-low">
+<div class="relative flex items-center">
+<input class="w-full bg-[#050507] border border-white/10 rounded-lg py-sm pl-sm pr-xl text-on-surface font-body-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" placeholder="Pregúntale a V..." type="text"/>
+<button class="absolute right-xs p-xs text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Resizer -->
+<div class="resizer h-full relative" id="resizer-1">
+<div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-white/5"></div>
+</div>
+<!-- Panel 2: Center Editor/Preview -->
+<div class="flex-1 flex flex-col min-w-[300px] h-full bg-[#0a0a0f] relative" id="panel-center">
+<!-- Editor Tabs & Actions -->
+<div class="h-12 bg-surface-container border-b border-white/5 flex items-center justify-between px-md shrink-0">
+<div class="flex gap-sm h-full items-end">
+<button class="px-md py-sm text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors font-label-md text-label-md flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+                        Preview
+                    </button>
+<button class="px-md py-sm text-primary border-b-2 border-primary bg-surface/50 rounded-t-lg transition-colors font-label-md text-label-md flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">code</span>
+                        Código
+                    </button>
+<button class="px-md py-sm text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors font-label-md text-label-md flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">terminal</span>
+                        Consola
+                    </button>
+<button class="px-md py-sm text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-colors font-label-md text-label-md flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">info</span>
+                        Detalles
+                    </button>
+</div>
+<div class="flex items-center gap-sm">
+<button class="flex items-center justify-center p-xs border border-white/10 rounded text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-colors" title="Dividir">
+<span class="material-symbols-outlined text-[18px]">vertical_split</span>
+</button>
+<button class="bg-primary-container text-white px-md py-xs rounded-DEFAULT font-label-md text-label-md font-semibold hover:bg-inverse-primary transition-colors flex items-center gap-xs shadow-[0_0_15px_rgba(124,58,237,0.2)]">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+                        Deploy
+                    </button>
+</div>
+</div>
+<!-- Editor Content -->
+<div class="flex-1 overflow-auto bg-[#0a0a0f] p-md font-mono-code text-mono-code flex relative">
+<!-- Line Numbers -->
+<div class="w-12 shrink-0 text-outline-variant text-right pr-md select-none border-r border-white/5 mr-md opacity-50">
+<div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div><div>15</div><div>16</div><div>17</div><div>18</div><div>19</div><div>20</div>
+</div>
+<!-- Code Area -->
+<div class="flex-1 text-on-surface whitespace-pre overflow-x-auto">
+<span class="token keyword">import</span> <span class="token punctuation">{</span> useState <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'react'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token punctuation">{</span> Button <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'@/components/ui/button'</span><span class="token punctuation">;</span>
+<span class="token keyword">export default function</span> <span class="token function">DeployAction</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token keyword">const</span> <span class="token punctuation">[</span>isDeploying<span class="token punctuation">,</span> setIsDeploying<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token function">useState</span><span class="token punctuation">(</span><span class="token keyword">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> <span class="token function">handleDeploy</span> <span class="token operator">=</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+<span class="token function">setIsDeploying</span><span class="token punctuation">(</span><span class="token keyword">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment">// Trigger Vercel deployment</span>
+<span class="token keyword">await</span> <span class="token function">fetch</span><span class="token punctuation">(</span><span class="token string">'/api/deploy'</span><span class="token punctuation">,</span> <span class="token punctuation">{</span> method<span class="token punctuation">:</span> <span class="token string">'POST'</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token function">setIsDeploying</span><span class="token punctuation">(</span><span class="token keyword">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token keyword">return</span> <span class="token punctuation">(</span>
+<span class="token operator">&lt;</span>Button 
+      className<span class="token operator">=</span><span class="token string">"bg-primary-container text-white"</span>
+      onClick<span class="token operator">=</span><span class="token punctuation">{</span>handleDeploy<span class="token punctuation">}</span>
+      disabled<span class="token operator">=</span><span class="token punctuation">{</span>isDeploying<span class="token punctuation">}</span>
+<span class="token operator">&gt;</span>
+<span class="token punctuation">{</span>isDeploying <span class="token operator">?</span> <span class="token string">'Deploying...'</span> <span class="token operator">:</span> <span class="token string">'Deploy'</span><span class="token punctuation">}</span>
+<span class="token operator">&lt;</span><span class="token operator">/</span>Button<span class="token operator">&gt;</span>
+<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</div>
+</div>
+</div>
+<!-- Resizer -->
+<div class="resizer h-full relative hidden md:block" id="resizer-2">
+<div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-white/5"></div>
+</div>
+<!-- Panel 3: Right Sidebar -->
+<div class="w-[280px] bg-surface-container border-l border-white/5 h-full flex flex-col shrink-0 hidden md:flex" id="panel-right">
+<!-- File Tree Section -->
+<div class="flex-1 overflow-y-auto border-b border-white/5">
+<div class="p-sm flex items-center justify-between group cursor-pointer hover:bg-white/5">
+<span class="font-label-md text-label-md font-semibold text-on-surface uppercase tracking-wider text-[10px]">Explorador</span>
+<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant hover:text-on-surface">note_add</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant hover:text-on-surface">create_new_folder</span>
+</div>
+</div>
+<div class="px-sm pb-md">
+<!-- Folder -->
+<div class="flex items-center gap-xs py-1 cursor-pointer hover:bg-white/5 rounded px-sm">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">folder_open</span>
+<span class="font-body-sm text-on-surface">src</span>
+</div>
+<!-- Nested Files -->
+<div class="pl-md border-l border-white/10 ml-3">
+<div class="flex items-center gap-xs py-1 cursor-pointer hover:bg-white/5 rounded px-sm">
+<span class="material-symbols-outlined text-[16px] text-primary-fixed-dim">javascript</span>
+<span class="font-body-sm text-on-surface-variant">index.js</span>
+</div>
+<div class="flex items-center gap-xs py-1 cursor-pointer bg-primary-container/20 rounded px-sm border border-primary/10">
+<span class="material-symbols-outlined text-[16px] text-secondary">code</span>
+<span class="font-body-sm text-primary-fixed-dim">DeployAction.jsx</span>
+</div>
+<div class="flex items-center gap-xs py-1 cursor-pointer hover:bg-white/5 rounded px-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">css</span>
+<span class="font-body-sm text-on-surface-variant">styles.css</span>
+</div>
+</div>
+<div class="flex items-center gap-xs py-1 cursor-pointer hover:bg-white/5 rounded px-sm mt-1">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">folder</span>
+<span class="font-body-sm text-on-surface">public</span>
+</div>
+<div class="flex items-center gap-xs py-1 cursor-pointer hover:bg-white/5 rounded px-sm mt-1">
+<span class="material-symbols-outlined text-[16px] text-outline-variant">description</span>
+<span class="font-body-sm text-on-surface-variant">package.json</span>
+</div>
+</div>
+</div>
+<!-- Tus Apps Section -->
+<div class="h-1/3 overflow-y-auto border-b border-white/5">
+<div class="p-sm">
+<span class="font-label-md text-label-md font-semibold text-on-surface uppercase tracking-wider text-[10px]">Tus apps</span>
+</div>
+<div class="px-md pb-md flex flex-col gap-sm">
+<div class="glass-panel p-sm rounded-lg flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-body-sm text-on-surface">VForge Main</span>
+</div>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">open_in_new</span>
+</div>
+<div class="glass-panel p-sm rounded-lg flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors border-dashed border-white/20">
+<div class="flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-outline-variant"></div>
+<span class="font-body-sm text-on-surface-variant">Auth Service</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Baúl (Connections) Section -->
+<div class="h-1/3 overflow-y-auto bg-surface-container-low">
+<div class="p-sm flex items-center justify-between">
+<span class="font-label-md text-label-md font-semibold text-on-surface uppercase tracking-wider text-[10px]">Baúl (Infra)</span>
+<button class="text-primary hover:text-primary-fixed-dim font-label-md text-label-md text-[10px]">Gestionar</button>
+</div>
+<div class="px-md pb-md flex flex-col gap-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">code</span>
+<span class="font-body-sm text-on-surface-variant text-[13px]">GitHub</span>
+</div>
+<div class="flex items-center gap-xs">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+<span class="text-[10px] text-on-surface-variant">Activo</span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">cloud_upload</span>
+<span class="font-body-sm text-on-surface-variant text-[13px]">Vercel</span>
+</div>
+<div class="flex items-center gap-xs">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+<span class="text-[10px] text-on-surface-variant">Activo</span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">payments</span>
+<span class="font-body-sm text-on-surface-variant text-[13px]">Stripe</span>
+</div>
+<div class="flex items-center gap-xs">
+<div class="w-1.5 h-1.5 rounded-full bg-error"></div>
+<span class="text-[10px] text-error">Error</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Simple resize logic -->
+<script>
+        const resizer1 = document.getElementById('resizer-1');
+        const leftPanel = document.getElementById('panel-left');
+        let isResizing1 = false;
+
+        resizer1.addEventListener('mousedown', (e) => {
+            isResizing1 = true;
+            document.body.style.cursor = 'col-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing1) return;
+            const newWidth = e.clientX;
+            if (newWidth > 200 && newWidth < 500) {
+                leftPanel.style.width = `${newWidth}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing1 = false;
+            document.body.style.cursor = 'default';
+        });
+
+        // Basic implementation for resizer 2 (right panel)
+        const resizer2 = document.getElementById('resizer-2');
+        const rightPanel = document.getElementById('panel-right');
+        let isResizing2 = false;
+
+        resizer2.addEventListener('mousedown', (e) => {
+            isResizing2 = true;
+            document.body.style.cursor = 'col-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing2) return;
+            const newWidth = window.innerWidth - e.clientX;
+            if (newWidth > 200 && newWidth < 500) {
+                rightPanel.style.width = `${newWidth}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing2 = false;
+            document.body.style.cursor = 'default';
+        });
+    </script>
+</body></html>

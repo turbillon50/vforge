@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mis apps - VForge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400&amp;family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary": "#ffb784",
+                      "surface-bright": "#39383e",
+                      "on-secondary-container": "#00311f",
+                      "on-surface": "#e4e1e9",
+                      "inverse-surface": "#e4e1e9",
+                      "surface-tint": "#d2bbff",
+                      "on-error-container": "#ffdad6",
+                      "error": "#ffb4ab",
+                      "outline-variant": "#4a4455",
+                      "on-tertiary-container": "#ffe0cd",
+                      "secondary-fixed-dim": "#4edea3",
+                      "on-tertiary-fixed": "#301400",
+                      "on-primary-fixed": "#25005a",
+                      "on-primary-container": "#ede0ff",
+                      "surface-container": "#1f1f25",
+                      "surface-container-lowest": "#0e0e13",
+                      "secondary": "#4edea3",
+                      "tertiary-fixed-dim": "#ffb784",
+                      "surface": "#131318",
+                      "secondary-fixed": "#6ffbbe",
+                      "outline": "#958da1",
+                      "surface-container-high": "#2a292f",
+                      "on-primary": "#3f008e",
+                      "inverse-on-surface": "#303036",
+                      "surface-dim": "#131318",
+                      "secondary-container": "#00a572",
+                      "on-secondary-fixed-variant": "#005236",
+                      "on-background": "#e4e1e9",
+                      "on-secondary-fixed": "#002113",
+                      "primary-fixed": "#eaddff",
+                      "on-tertiary": "#4f2500",
+                      "error-container": "#93000a",
+                      "on-primary-fixed-variant": "#5a00c6",
+                      "primary-fixed-dim": "#d2bbff",
+                      "on-error": "#690005",
+                      "surface-variant": "#35343a",
+                      "background": "#131318",
+                      "surface-container-highest": "#35343a",
+                      "surface-container-low": "#1b1b20",
+                      "on-surface-variant": "#ccc3d8",
+                      "tertiary-container": "#a15100",
+                      "primary-container": "#7c3aed",
+                      "primary": "#d2bbff",
+                      "on-secondary": "#003824",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "inverse-primary": "#732ee4",
+                      "tertiary-fixed": "#ffdcc6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "base": "4px",
+                      "xs": "4px",
+                      "sm": "8px",
+                      "xl": "40px",
+                      "md": "16px",
+                      "lg": "24px",
+                      "margin-desktop": "48px",
+                      "margin-mobile": "16px",
+                      "gutter": "24px",
+                      "2xl": "64px"
+              },
+              "fontFamily": {
+                      "mono-code": [
+                              "Geist Mono"
+                      ],
+                      "label-md": [
+                              "Geist"
+                      ],
+                      "headline-md": [
+                              "Geist"
+                      ],
+                      "display-lg": [
+                              "Geist"
+                      ],
+                      "body-lg": [
+                              "Geist"
+                      ],
+                      "display-lg-mobile": [
+                              "Geist"
+                      ],
+                      "body-sm": [
+                              "Geist"
+                      ]
+              },
+              "fontSize": {
+                      "mono-code": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "1",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.04em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0a0a0f;
+            color: #e4e1e9;
+        }
+        .glass-card {
+            background: rgba(18, 18, 26, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .parallel-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+        }
+        .accent-glow {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
+        }
+        .accent-glow:hover {
+             box-shadow: 0 0 25px rgba(124, 58, 237, 0.4);
+        }
+        
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(18, 18, 26, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-lg text-body-lg antialiased overflow-x-hidden">
+<!-- TopNavBar (Hidden on Mobile, Visible on Desktop) -->
+<nav class="hidden md:flex bg-surface/80 dark:bg-surface/80 backdrop-blur-md text-primary dark:text-primary font-body-lg text-body-lg docked full-width top-0 sticky z-50 border-b border-white/10 shadow-sm flex justify-between items-center px-margin-desktop py-md w-full">
+<div class="flex items-center gap-lg">
+<div class="font-display-lg text-display-lg font-bold text-on-surface dark:text-on-surface tracking-tight">VForge</div>
+<div class="flex items-center gap-md ml-lg">
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded" href="#">Inicio</a>
+<a class="text-primary dark:text-primary border-b-2 border-primary pb-1 px-sm py-xs hover:bg-white/5 transition-colors duration-200" href="#">Mis apps</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded" href="#">Estudio</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded" href="#">Cobros</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded" href="#">Conexiones</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<!-- Search Bar (on_left configuration simulated by placement before icons if needed, but keeping it clean here as per cinematic focus) -->
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-sm" style="font-variation-settings: 'FILL' 0;">search</span>
+<input class="bg-[#050507] border border-white/10 rounded-DEFAULT pl-lg pr-sm py-xs text-body-sm font-body-sm text-on-surface focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] outline-none transition-all w-64 placeholder-on-surface-variant/50" placeholder="Buscar..." type="text"/>
+</div>
+<button class="scale-95 active:scale-90 transition-transform hover:bg-white/5 p-sm rounded-full text-on-surface-variant hover:text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<button class="scale-95 active:scale-90 transition-transform hover:bg-white/5 p-sm rounded-full text-on-surface-variant hover:text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+<img class="w-8 h-8 rounded-full border border-white/10 object-cover ml-sm" data-alt="A stylized, high-contrast digital avatar portrait of a technical user. The avatar features a minimalist, futuristic aesthetic with deep obsidian shadows and subtle violet neon highlights, suitable for a dark-mode developer platform. The image is clean, sharp, and highly professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmCYW3waEAwggS87ZiM12LasBv92ucyY3kqSk6RtfgSmEEVd1ojfVzTW32OqvRW1yqBkhCk3e4Rf7JpO0tnPZ1vfo5lwdrLdBmnwXFEWEcoFz4RuGlvs2Ly9XjjBs4hA4JreDEo17LXBbAuXRYhHWw5MynWNXhRh6zQtlW4pCuzZwN3Z5ZYFtu7sSnTswPB_Djx8Lz9YJ9xfaRHKlv4l6hQP1_JYtr-KNq0vuZjtAqnAZvS9pOgE7oik6isTgagva5Fg6jxgnh_Lsc"/>
+</div>
+</nav>
+<!-- Main Layout Container -->
+<div class="flex flex-1 relative w-full max-w-[100vw]">
+<!-- Main Content Area (Expands to fill available space minus sidebar on desktop) -->
+<!-- Adding right padding on desktop to account for fixed SideNavBar (w-64 = 256px) -->
+<main class="flex-1 flex flex-col px-margin-mobile md:px-margin-desktop py-lg md:py-2xl md:pr-[calc(256px+48px)] transition-all duration-300">
+<!-- Page Header -->
+<header class="flex flex-col sm:flex-row sm:items-center justify-between mb-xl gap-md">
+<div>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface tracking-tight">Mis apps</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-xs">Gestiona y despliega tus proyectos de VForge.</p>
+</div>
+<button class="bg-primary-container text-white px-md py-sm rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider flex items-center gap-xs hover:bg-[#6d28d9] transition-colors duration-200 accent-glow self-start sm:self-auto">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">add</span>
+                    Crear app
+                </button>
+</header>
+<!-- Apps Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter" id="apps-grid">
+<!-- App Card 1: Live -->
+<article class="glass-card rounded-lg overflow-hidden flex flex-col group hover:border-white/20 transition-all duration-300 parallel-shadow">
+<div class="h-32 w-full relative overflow-hidden bg-surface-container border-b border-white/5">
+<img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" data-alt="A striking, abstract digital rendering representing a data analytics dashboard. The image features a dark obsidian background overlaid with glowing, semi-transparent violet and emerald green data visualizations, such as line charts and scatter plots. The lighting is cinematic, highlighting the intricate details of the data points in a high-contrast, modern aesthetic suitable for a technical platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHb7KweOaBd77__a_w27IsXCv8iRtS8KcsYQJNwEq5i-xz8WKYADRammBo9BmY89XBTzDxcGzVU6HtiNNh-1yFR-oJ4qSzAAAyIfrRCvjybvITpiVbqNbhfnfZT7QZ6Er5IuVnqaxJUDyCU5zCPgTbLFFkShC8XPrWR-hclH9OFS9pXo-U6v2qXoelp392BCzf1OW2e_jrXC-lykJq0xCdCV0RH4FLlHnZ3z5tsNfuIbR-FW685KG4GVZGDBdV-bhdc47_JuPzJtFM"/>
+<div class="absolute top-sm right-sm bg-surface/90 backdrop-blur-sm border border-white/10 px-2 py-1 rounded-[2px] flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-mono-code text-[10px] text-secondary uppercase tracking-wider">Live</span>
+</div>
+</div>
+<div class="p-md flex flex-col flex-1">
+<div class="flex justify-between items-start mb-sm">
+<h2 class="font-headline-md text-[18px] text-on-surface truncate pr-sm">Nexus Analytics</h2>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1 rounded hover:bg-white/5">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">more_vert</span>
+</button>
+</div>
+<p class="font-mono-code text-mono-code text-on-surface-variant text-xs truncate mb-lg">nexus-analytics.vforge.app</p>
+<div class="mt-auto pt-sm border-t border-white/5 flex gap-sm">
+<button class="flex-1 border border-white/10 text-on-surface hover:bg-white/5 font-label-md text-label-md py-sm rounded-DEFAULT transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">open_in_new</span>
+                                Abrir
+                            </button>
+<button class="flex-1 bg-white/5 hover:bg-white/10 text-on-surface font-label-md text-label-md py-sm rounded-DEFAULT transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">rocket_launch</span>
+                                Deploy
+                            </button>
+</div>
+</div>
+</article>
+<!-- App Card 2: Building -->
+<article class="glass-card rounded-lg overflow-hidden flex flex-col group hover:border-white/20 transition-all duration-300 parallel-shadow">
+<div class="h-32 w-full relative overflow-hidden bg-surface-container border-b border-white/5">
+<img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" data-alt="A minimalist, high-contrast digital illustration depicting an e-commerce platform architecture. The scene shows abstract floating blocks and interconnected nodes on a deep black canvas. Subtle ambient lighting highlights the edges of the blocks in soft tertiary orange and primary violet tones, creating a sense of construction and modern technical engineering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmJybsvYKxf57223qhYGnL4U4152LdWVj5GpdAtK1hnMZkwvKDdxfKvLn9gJkb_5YCMFM_K4vK6QrlhSSD0BHxBJ6sqx28xqnx1Fxom8Tt5vbnfdugTCnbvmjNFpzPvBAIPI4tXIdF81IiOPcCEPp2E0fMZEjXuUBdBCp7DMdYKZcXHZMkPW5sZINk7Y_0cnm8nxqESUd3KgAAHRypwWkkVA1O3sG_JI74T6AQWreXSM471l79fZkKCYbsbwXq70Ondy57q-4gEqXg"/>
+<div class="absolute top-sm right-sm bg-surface/90 backdrop-blur-sm border border-white/10 px-2 py-1 rounded-[2px] flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-mono-code text-[10px] text-tertiary uppercase tracking-wider">Building</span>
+</div>
+</div>
+<div class="p-md flex flex-col flex-1">
+<div class="flex justify-between items-start mb-sm">
+<h2 class="font-headline-md text-[18px] text-on-surface truncate pr-sm">Storefront API</h2>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1 rounded hover:bg-white/5">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">more_vert</span>
+</button>
+</div>
+<p class="font-mono-code text-mono-code text-on-surface-variant text-xs truncate mb-lg">storefront-api.vforge.app</p>
+<div class="mt-auto pt-sm border-t border-white/5 flex gap-sm">
+<button class="flex-1 border border-white/10 text-on-surface-variant hover:text-on-surface hover:bg-white/5 font-label-md text-label-md py-sm rounded-DEFAULT transition-colors flex items-center justify-center gap-xs opacity-50 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">open_in_new</span>
+                                Abrir
+                            </button>
+<button class="flex-1 bg-white/5 hover:bg-white/10 text-on-surface font-label-md text-label-md py-sm rounded-DEFAULT transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">stop_circle</span>
+                                Cancelar
+                            </button>
+</div>
+</div>
+</article>
+<!-- App Card 3: Live -->
+<article class="glass-card rounded-lg overflow-hidden flex flex-col group hover:border-white/20 transition-all duration-300 parallel-shadow">
+<div class="h-32 w-full relative overflow-hidden bg-surface-container border-b border-white/5">
+<img class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" data-alt="A sleek, modern visualization of a machine learning model interface. The image displays a dark grid background with a glowing, semi-transparent neural network diagram overlay. The nodes pulse with subtle violet and white light, conveying advanced technology, precision, and high-performance computing in a cinematic style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhm2TL-5Dw3hvWZkVOqW5QhbN8sy29j7BJPyTqYRJyBxMkWWrFUzRpEr2VP0W9Vr697IodaxoIGV0WBljUPdPvss8HQqjyDnAJpfMaqZLFKcvq0AA4fBJNQD0E2yP00D8dLRStqkAdyWpNFca3r06fkALUD0s9YDZpnWxfYAJ69hUWf68Zi7uBSw-PJa35sOA15mIw53m_K8A2wMy6HeibOeERMwb77vLHedILbJru3XeGIC2vlHMW0rJAsAv6FSCA0gUueoBiBOhk"/>
+<div class="absolute top-sm right-sm bg-surface/90 backdrop-blur-sm border border-white/10 px-2 py-1 rounded-[2px] flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-mono-code text-[10px] text-secondary uppercase tracking-wider">Live</span>
+</div>
+</div>
+<div class="p-md flex flex-col flex-1">
+<div class="flex justify-between items-start mb-sm">
+<h2 class="font-headline-md text-[18px] text-on-surface truncate pr-sm">AI Text Generator</h2>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1 rounded hover:bg-white/5">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">more_vert</span>
+</button>
+</div>
+<p class="font-mono-code text-mono-code text-on-surface-variant text-xs truncate mb-lg">ai-generator-prod.vforge.app</p>
+<div class="mt-auto pt-sm border-t border-white/5 flex gap-sm">
+<button class="flex-1 border border-white/10 text-on-surface hover:bg-white/5 font-label-md text-label-md py-sm rounded-DEFAULT transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">open_in_new</span>
+                                Abrir
+                            </button>
+<button class="flex-1 bg-white/5 hover:bg-white/10 text-on-surface font-label-md text-label-md py-sm rounded-DEFAULT transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">rocket_launch</span>
+                                Deploy
+                            </button>
+</div>
+</div>
+</article>
+</div>
+<!-- Empty State (Hidden by default, can be toggled via JS if needed for demo) -->
+<div class="hidden flex-col items-center justify-center flex-1 min-h-[400px] glass-card rounded-lg border-dashed border-2 border-white/10 mt-md" id="empty-state">
+<div class="w-16 h-16 rounded-full bg-primary-container/10 flex items-center justify-center mb-md">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 0;">apps</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Aún no tienes aplicaciones</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant text-center max-w-md mb-lg">Despliega tu primer proyecto en segundos. VForge se encarga de la infraestructura para que tú te enfoques en el código.</p>
+<button class="bg-primary-container text-white px-lg py-sm rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider flex items-center gap-xs hover:bg-[#6d28d9] transition-colors duration-200 accent-glow">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">rocket_launch</span>
+                    Empezar ahora
+                </button>
+</div>
+</main>
+<!-- SideNavBar (Fixed on Right, Hidden on Mobile) -->
+<aside class="hidden md:flex bg-surface-container dark:bg-surface-container text-primary dark:text-primary font-label-md text-label-md font-headline-md text-headline-md font-semibold text-on-surface docked right-0 h-screen w-64 border-l border-white/5 flat no shadows transition-all duration-300 ease-in-out fixed right-0 top-0 pt-24 pb-lg px-md h-full flex flex-col z-40">
+<div class="mb-xl px-sm flex items-center gap-sm">
+<img class="w-10 h-10 rounded-DEFAULT border border-white/10 object-cover bg-surface" data-alt="A small, stylized icon depicting system infrastructure. The image shows a glowing, abstract server rack or microchip design against a dark void, rendered in sharp, modern lines with subtle hints of secondary green and primary violet to signify an active, healthy system status." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIzWL8MKnVzln7XaN1R-vpsfulx40cKnsPKVyQlb9usuicU3XnaMrv6yNiNuQGLd9FB8YM8bWm1cFA7ubBWpIlMKLY0RGiv8QDPlDvKfobo5aUQbqfvQeCLSJ0snrLLM3bCSJSfWB31DL1Njb7hucEOSrbGmlyH3pGZ-RBuDwfQ_9YjIVJGTOhmeHgx3TZfny2NDr__X8krsVXyZTBMMzA4IZSKgAD7HI7WVDu3FdPCMHis6Lyfpy6EYECavYrBEB7zhNYKCKJ36a7"/>
+<div>
+<h3 class="font-headline-md text-[16px] text-on-surface leading-tight">Conexiones</h3>
+<p class="font-mono-code text-[10px] text-secondary mt-1 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+                        Infrastructure Status
+                    </p>
+</div>
+</div>
+<nav class="flex flex-col gap-xs flex-1">
+<a class="flex items-center gap-md px-sm py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 0;">code</span>
+<span class="font-label-md text-label-md">GitHub</span>
+</a>
+<a class="flex items-center gap-md px-sm py-sm rounded-lg bg-primary-container text-on-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">cloud_upload</span>
+<span class="font-label-md text-label-md">Vercel</span>
+</a>
+<a class="flex items-center gap-md px-sm py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 0;">payments</span>
+<span class="font-label-md text-label-md">Stripe</span>
+</a>
+<a class="flex items-center gap-md px-sm py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 0;">psychology</span>
+<span class="font-label-md text-label-md">MindContext</span>
+</a>
+</nav>
+<div class="mt-auto pt-md border-t border-white/5">
+<button class="w-full border border-white/10 text-on-surface hover:bg-white/5 font-label-md text-label-md py-sm rounded-DEFAULT transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">add_link</span>
+                    Nueva Conexión
+                </button>
+</div>
+</aside>
+</div>
+<!-- Mobile Navigation (Bottom Nav - Simplified for context) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container border-t border-white/5 flex justify-around items-center py-sm pb-safe z-50">
+<a class="flex flex-col items-center p-xs text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">home</span>
+<span class="text-[10px] mt-1 font-label-md">Inicio</span>
+</a>
+<a class="flex flex-col items-center p-xs text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">apps</span>
+<span class="text-[10px] mt-1 font-label-md">Mis apps</span>
+</a>
+<a class="flex flex-col items-center p-xs text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">cable</span>
+<span class="text-[10px] mt-1 font-label-md">Conexiones</span>
+</a>
+</nav>
+</body></html>

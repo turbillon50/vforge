@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cobros - VForge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#4f2500",
+                        "primary-fixed": "#eaddff",
+                        "on-secondary": "#003824",
+                        "surface": "#131318",
+                        "outline-variant": "#4a4455",
+                        "surface-container": "#1f1f25",
+                        "on-secondary-container": "#00311f",
+                        "error-container": "#93000a",
+                        "surface-tint": "#d2bbff",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "secondary-container": "#00a572",
+                        "tertiary-container": "#a15100",
+                        "secondary-fixed": "#6ffbbe",
+                        "inverse-surface": "#e4e1e9",
+                        "surface-bright": "#39383e",
+                        "on-error": "#690005",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-tertiary-container": "#ffe0cd",
+                        "surface-container-highest": "#35343a",
+                        "tertiary": "#ffb784",
+                        "primary": "#d2bbff",
+                        "on-primary-fixed": "#25005a",
+                        "background": "#131318",
+                        "on-tertiary-fixed": "#301400",
+                        "on-surface-variant": "#ccc3d8",
+                        "on-surface": "#e4e1e9",
+                        "on-background": "#e4e1e9",
+                        "surface-variant": "#35343a",
+                        "on-primary-container": "#ede0ff",
+                        "secondary": "#4edea3",
+                        "on-secondary-fixed": "#002113",
+                        "outline": "#958da1",
+                        "surface-container-high": "#2a292f",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#005236",
+                        "primary-fixed-dim": "#d2bbff",
+                        "inverse-on-surface": "#303036",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "primary-container": "#7c3aed",
+                        "tertiary-fixed": "#ffdcc6",
+                        "error": "#ffb4ab",
+                        "surface-dim": "#131318",
+                        "on-primary": "#3f008e",
+                        "surface-container-lowest": "#0e0e13",
+                        "surface-container-low": "#1b1b20",
+                        "inverse-primary": "#732ee4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "xl": "40px",
+                        "md": "16px",
+                        "base": "4px",
+                        "xs": "4px",
+                        "2xl": "64px",
+                        "margin-mobile": "16px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "mono-code": ["Geist Mono"],
+                        "body-lg": ["Geist"],
+                        "label-md": ["Geist"],
+                        "display-lg-mobile": ["Geist"],
+                        "body-sm": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "headline-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "mono-code": ["14px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #0a0a0f; color: #e4e1e9; }
+        .glass-card {
+            background-color: rgba(18, 18, 26, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .btn-primary { background-color: #7c3aed; transition: all 0.2s ease; }
+        .btn-primary:hover { box-shadow: 0 0 15px rgba(124, 58, 237, 0.4); transform: translateY(-1px); }
+        .btn-secondary { background: transparent; border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s ease; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.05); }
+        .input-dark { background-color: #050507; border: 1px solid rgba(255, 255, 255, 0.1); color: #e4e1e9; transition: border-color 0.2s ease; }
+        .input-dark:focus { border-color: #7c3aed; outline: none; box-shadow: 0 0 0 1px #7c3aed; }
+        
+        /* Layout Grid */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            padding: 16px;
+        }
+        @media (min-width: 768px) {
+            .layout-grid {
+                grid-template-columns: repeat(12, 1fr);
+                gap: 24px;
+                padding: 48px;
+            }
+        }
+    </style>
+</head>
+<body class="font-body-lg text-body-lg antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="bg-surface/80 dark:bg-surface/80 backdrop-blur-md font-body-lg text-body-lg docked full-width top-0 sticky z-50 border-b border-white/10 shadow-sm flex justify-between items-center px-margin-desktop py-md w-full">
+<div class="flex items-center gap-xl">
+<div class="font-display-lg text-display-lg font-bold text-on-surface dark:text-on-surface tracking-tighter">VForge</div>
+<div class="hidden md:flex gap-lg">
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded" href="#">Inicio</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded" href="#">Mis apps</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded" href="#">Estudio</a>
+<a class="text-primary dark:text-primary border-b-2 border-primary pb-1 px-sm py-xs scale-95 active:scale-90 transition-transform" href="#">Cobros</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded" href="#">Conexiones</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-on-surface hover:bg-white/5 p-sm rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface hover:bg-white/5 p-sm rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<img alt="Luis Profile Avatar" class="w-10 h-10 rounded-full border border-white/10 ml-sm object-cover" data-alt="A small circular profile avatar of a developer in a cinematic dark studio setting, neon purple accents, hyper-realistic, 8k resolution, modern tech aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKeT9WNTRibPCFmrtanmjeYUdaixIf_z_p1K12x3L6TJSugtW9r_ENvhByiF7c4BysUkjhVzJe14JANtqiBFPgFa-orFKU9cNfUj6oWfD6e6yyRzPe0lOaNkOBP-MeQcvjM2YCtyiaXNu8lacD8mdorRby9RtZ_xXLbbcSuSt4sbJwylf_OO_2YLOHpH0FQqxL8EzFUJW-sKSd1FscIQI7dmQHlepxQTpR5WlI206qlz0QYln08e5chyyA8_lU98YAOe2CDma61eeQ"/>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 layout-grid relative w-full max-w-screen-2xl mx-auto">
+<!-- Header -->
+<header class="col-span-4 md:col-span-12 flex flex-col sm:flex-row justify-between items-start sm:items-center mb-xl gap-md">
+<div>
+<h1 class="font-headline-md text-headline-md text-on-surface">Cobros</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Gestiona tus links de pago y transacciones.</p>
+</div>
+<button class="btn-primary text-white font-label-md text-label-md px-lg py-sm rounded-lg flex items-center gap-sm">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Nuevo link de pago
+            </button>
+</header>
+<!-- New Payment Link Form (Compact) -->
+<section class="col-span-4 md:col-span-12 glass-card rounded-xl p-lg mb-xl">
+<div class="flex items-center gap-sm mb-md">
+<span class="material-symbols-outlined text-primary text-[20px]">link</span>
+<h2 class="font-label-md text-label-md text-on-surface uppercase tracking-widest text-white/70">Crear Pago Rápido</h2>
+</div>
+<form class="flex flex-col md:flex-row gap-md items-end">
+<div class="flex-1 w-full">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs">Producto / Descripción</label>
+<input class="input-dark w-full rounded-lg px-md py-sm font-body-sm text-body-sm" placeholder="Ej. Suscripción Pro" type="text"/>
+</div>
+<div class="w-full md:w-32">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs">Precio</label>
+<input class="input-dark w-full rounded-lg px-md py-sm font-body-sm text-body-sm font-mono-code text-mono-code" placeholder="0.00" type="number"/>
+</div>
+<div class="w-full md:w-28">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs">Moneda</label>
+<select class="input-dark w-full rounded-lg px-md py-sm font-body-sm text-body-sm appearance-none">
+<option>USD</option>
+<option>EUR</option>
+<option>MXN</option>
+</select>
+</div>
+<button class="btn-secondary w-full md:w-auto font-label-md text-label-md text-on-surface px-lg py-sm rounded-lg h-[42px] flex items-center justify-center gap-sm" type="button">
+                    Generar
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</form>
+<p class="font-label-md text-label-md text-on-surface-variant/50 mt-sm text-right">Comisión 1.5% en plan Free</p>
+</section>
+<!-- Payment Links List -->
+<section class="col-span-4 md:col-span-12">
+<h3 class="font-label-md text-label-md text-on-surface uppercase tracking-widest text-white/50 mb-md">Links Activos</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+<!-- Card 1 -->
+<div class="glass-card rounded-xl p-md flex flex-col group hover:border-white/20 transition-all duration-300">
+<div class="flex justify-between items-start mb-md">
+<div class="bg-secondary/10 text-secondary font-label-md text-label-md px-sm py-xs rounded flex items-center gap-xs w-max">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                            Pagado
+                        </div>
+<span class="font-mono-code text-mono-code text-on-surface-variant text-[12px]">Hace 2h</span>
+</div>
+<div class="mb-lg">
+<h4 class="font-body-lg text-body-lg text-on-surface font-medium truncate">API Access - Startup Tier</h4>
+<div class="font-display-lg-mobile text-display-lg-mobile text-white mt-xs tracking-tight">$99.00 <span class="text-on-surface-variant text-[16px] font-normal">USD</span></div>
+</div>
+<div class="mt-auto flex gap-sm">
+<button class="btn-secondary flex-1 font-label-md text-label-md py-sm rounded-lg flex items-center justify-center gap-xs text-on-surface-variant hover:text-white">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+                            Copiar link
+                        </button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="glass-card rounded-xl p-md flex flex-col group hover:border-white/20 transition-all duration-300">
+<div class="flex justify-between items-start mb-md">
+<div class="bg-tertiary/10 text-tertiary font-label-md text-label-md px-sm py-xs rounded flex items-center gap-xs w-max">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                            Pendiente
+                        </div>
+<span class="font-mono-code text-mono-code text-on-surface-variant text-[12px]">Hace 5h</span>
+</div>
+<div class="mb-lg">
+<h4 class="font-body-lg text-body-lg text-on-surface font-medium truncate">Consultoría Técnica (1hr)</h4>
+<div class="font-display-lg-mobile text-display-lg-mobile text-white mt-xs tracking-tight">$250.00 <span class="text-on-surface-variant text-[16px] font-normal">USD</span></div>
+</div>
+<div class="mt-auto flex gap-sm">
+<button class="btn-secondary flex-1 font-label-md text-label-md py-sm rounded-lg flex items-center justify-center gap-xs text-on-surface-variant hover:text-white">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+                            Copiar link
+                        </button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="glass-card rounded-xl p-md flex flex-col group hover:border-white/20 transition-all duration-300">
+<div class="flex justify-between items-start mb-md">
+<div class="bg-secondary/10 text-secondary font-label-md text-label-md px-sm py-xs rounded flex items-center gap-xs w-max">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                            Pagado
+                        </div>
+<span class="font-mono-code text-mono-code text-on-surface-variant text-[12px]">Ayer</span>
+</div>
+<div class="mb-lg">
+<h4 class="font-body-lg text-body-lg text-on-surface font-medium truncate">VForge Pro License - Anual</h4>
+<div class="font-display-lg-mobile text-display-lg-mobile text-white mt-xs tracking-tight">$1,200.00 <span class="text-on-surface-variant text-[16px] font-normal">USD</span></div>
+</div>
+<div class="mt-auto flex gap-sm">
+<button class="btn-secondary flex-1 font-label-md text-label-md py-sm rounded-lg flex items-center justify-center gap-xs text-on-surface-variant hover:text-white">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+                            Copiar link
+                        </button>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>
