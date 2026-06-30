@@ -40,7 +40,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="px-5 py-4">
-          <span className="flex items-center gap-1.5 font-mono text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+          <span className="flex items-center gap-1.5 font-mono text-[10px]" style={{ color: "rgba(255,255,255,0.46)" }}>
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#34d399", boxShadow: "0 0 6px #34d399" }} />online
           </span>
         </div>

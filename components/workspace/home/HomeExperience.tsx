@@ -43,7 +43,7 @@ function Widget({ title, href, children }: { title: string; href: string; childr
       style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}
     >
       <div className="mb-4 flex items-center justify-between">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.3)" }}>{title}</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.46)" }}>{title}</p>
         <Link href={href} className="text-[11px] transition-colors" style={{ color: "rgba(124,58,237,0.8)" }}
           onMouseEnter={e => (e.currentTarget.style.color = "rgba(167,139,250,1)")}
           onMouseLeave={e => (e.currentTarget.style.color = "rgba(124,58,237,0.8)")}>
@@ -71,7 +71,7 @@ function eventIcon(action: string) {
   if (action.includes("forge") || action.includes("chat"))    return { Icon: IconSparkles,color: "#a78bfa" };
   if (action.includes("error") || action.includes("fail"))    return { Icon: IconWarn,   color: "#ef4444" };
   if (action.includes("ok")   || action.includes("complete")) return { Icon: IconCheck,  color: "#22c55e" };
-  return { Icon: IconActivity, color: "rgba(255,255,255,0.3)" };
+  return { Icon: IconActivity, color: "rgba(255,255,255,0.46)" };
 }
 
 
@@ -92,9 +92,9 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Empieza aquí</p>
-          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.4)" }}>Tres pasos para tener tu primera app viva.</p>
+          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.58)" }}>Tres pasos para tener tu primera app viva.</p>
         </div>
-        <span className="font-mono text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>{doneCount}/3</span>
+        <span className="font-mono text-[11px]" style={{ color: "rgba(255,255,255,0.58)" }}>{doneCount}/3</span>
       </div>
       <div className="mb-5 h-1 w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
         <div className="h-full rounded-full" style={{ width: `${(doneCount / 3) * 100}%`, background: "linear-gradient(90deg,#7c3aed,#a78bfa)", transition: "width .6s ease" }} />
@@ -108,7 +108,7 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
               {st.done ? <IconCheck size={13} /> : <span className="text-[11px] font-semibold">{i + 1}</span>}
             </div>
             <p className="text-[13px] font-medium" style={{ color: "#fff" }}>{st.title}</p>
-            <p className="mt-0.5 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.4)" }}>{st.desc}</p>
+            <p className="mt-0.5 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.58)" }}>{st.desc}</p>
             {!st.done
               ? <Link href={st.href} className="mt-3 inline-block rounded-lg px-3 py-1.5 text-[12px] font-medium" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>{st.cta} →</Link>
               : <p className="mt-3 flex items-center gap-1 text-[11px] font-medium" style={{ color: "#9aa0aa" }}><IconCheck size={12} /> Listo</p>}
@@ -130,7 +130,7 @@ function Showcase() {
   ];
   return (
     <section className="mb-8">
-      <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.3)" }}>Qué puedes hacer</p>
+      <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.46)" }}>Qué puedes hacer</p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c, i) => {
           const Icon = c.icon;
@@ -142,7 +142,7 @@ function Showcase() {
               </div>
               <div className="p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
                 <p className="text-[13px] font-semibold" style={{ color: "#fff" }}>{c.title}</p>
-                <p className="mt-1 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.42)" }}>{c.desc}</p>
+                <p className="mt-1 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.58)" }}>{c.desc}</p>
               </div>
             </Link>
           );
@@ -183,7 +183,7 @@ function CreateApp() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Crea tu app y publícala</p>
-          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>Un nombre y listo: repo en GitHub + deploy en Vercel, en segundos.</p>
+          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Un nombre y listo: repo en GitHub + deploy en Vercel, en segundos.</p>
         </div>
         {!open && (
           <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>Crear app →</button>
@@ -191,13 +191,13 @@ function CreateApp() {
       </div>
       {open && (
         <div className="mt-4">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.4)" }}>Elige una plantilla</p>
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.58)" }}>Elige una plantilla</p>
           <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {[["landing","Landing","Cuenta qué haces","#7c3aed"],["tienda","Tienda","Vende con Stripe","#16a34a"],["portafolio","Portafolio","Muestra tu trabajo","#0ea5e9"],["blanco","En blanco","Lienzo libre","#a78bfa"]].map(([id,t,d,c]) => (
               <button key={id} type="button" onClick={() => setTpl(id)} className="rounded-xl p-3 text-left transition" style={{ background: tpl===id ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)", border: tpl===id ? `1px solid ${c}` : "1px solid rgba(255,255,255,0.09)", boxShadow: tpl===id ? `0 0 0 1px ${c}, inset 0 1px 0 rgba(255,255,255,0.06)` : "none" }}>
                 <span className="block h-7 w-7 rounded-lg" style={{ background: `radial-gradient(120% 120% at 30% 25%, ${c}, transparent 70%)`, border: `1px solid ${c}` }} />
                 <span className="mt-2 block text-[12.5px] font-semibold" style={{ color: "#fff" }}>{t}</span>
-                <span className="block text-[10.5px]" style={{ color: "rgba(255,255,255,0.42)" }}>{d}</span>
+                <span className="block text-[10.5px]" style={{ color: "rgba(255,255,255,0.58)" }}>{d}</span>
               </button>
             ))}
           </div>
@@ -258,7 +258,7 @@ function CobroApp() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Cobra en segundos</p>
-          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>Crea un producto y un link de pago con tu Stripe. El dinero llega a tu cuenta.</p>
+          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Crea un producto y un link de pago con tu Stripe. El dinero llega a tu cuenta.</p>
         </div>
         {!open && <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>Crear cobro →</button>}
       </div>
@@ -309,8 +309,8 @@ function ConnectLLM() {
   const opts = [["anthropic", "Anthropic"], ["openai", "OpenAI"], ["gemini", "Gemini"]];
   return (
     <div className="mb-8 rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)" }}>
-      <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Conecta tu IA <span className="text-[12px] font-normal" style={{ color: "rgba(255,255,255,0.4)" }}>(opcional)</span></p>
-      <p className="mb-3 text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>Trae tu propia key y V corre con tu modelo. Sin key, usa el V de la casa gratis.</p>
+      <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Conecta tu IA <span className="text-[12px] font-normal" style={{ color: "rgba(255,255,255,0.58)" }}>(opcional)</span></p>
+      <p className="mb-3 text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Trae tu propia key y V corre con tu modelo. Sin key, usa el V de la casa gratis.</p>
       <div className="flex flex-col gap-2 sm:flex-row">
         <select value={provider} onChange={e => setProvider(e.target.value)} className="rounded-lg px-3 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}>
           {opts.map(([v, l]) => <option key={v} value={v} style={{ color: "#000" }}>{l}</option>)}
@@ -359,7 +359,7 @@ function DomainBuyer() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Tu dominio propio</p>
-          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>Busca y compra un dominio para tu app, desde tu Vercel.</p>
+          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Busca y compra un dominio para tu app, desde tu Vercel.</p>
         </div>
         {!open && <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Buscar dominio →</button>}
       </div>
@@ -420,7 +420,7 @@ export function HomeExperience({ name }: { name: string }) {
       {/* ── Header ── */}
       <div className="mb-14 mt-2">
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.32)", letterSpacing: "0.22em" }}>
+          className="font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.46)", letterSpacing: "0.22em" }}>
           {greeting()}, {name}
         </motion.p>
         <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -454,7 +454,7 @@ export function HomeExperience({ name }: { name: string }) {
             style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
             <Icon size={14} style={{ color: "rgba(124,58,237,0.8)", marginBottom: 8 }} />
             <p className="text-[1.4rem] font-bold tabular-nums" style={{ color: "#fff" }}>{value}</p>
-            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>{label}</p>
+            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.46)" }}>{label}</p>
           </div>
         ))}
       </motion.div>
@@ -466,7 +466,7 @@ export function HomeExperience({ name }: { name: string }) {
         <Widget title="Proyectos recientes" href="/app/projects">
           {loading ? <div className="space-y-2">{[0,1,2].map(i => <Skel key={i} h="h-[48px]" />)}</div>
           : projects.length === 0
-            ? <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+            ? <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.46)" }}>
                 Sin proyectos.{" "}
                 <Link href="/app/projects" style={{ color: "#a78bfa" }}>Crea uno →</Link>
               </p>
@@ -494,7 +494,7 @@ export function HomeExperience({ name }: { name: string }) {
         <Widget title="Actividad reciente" href="/app/activity">
           {loading ? <div className="space-y-2">{[0,1,2].map(i => <Skel key={i} h="h-[44px]" />)}</div>
           : events.length === 0
-            ? <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.3)" }}>Sin actividad registrada aún.</p>
+            ? <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.46)" }}>Sin actividad registrada aún.</p>
             : <div className="space-y-1">
                 {events.slice(0, 6).map(ev => {
                   const { Icon, color } = eventIcon(ev.action);

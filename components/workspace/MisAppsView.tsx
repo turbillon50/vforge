@@ -8,10 +8,10 @@ export function MisAppsView() {
   useEffect(() => { fetch("/api/forja/apps").then(r => r.ok ? r.json() : { apps: [] }).then(d => setApps(d.apps || [])).catch(() => setApps([])); }, []);
   return (
     <main className="mx-auto w-full max-w-4xl px-5 pb-24 pt-12 md:px-8">
-      <p className="font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.32)", letterSpacing: "0.22em" }}>Tu trabajo</p>
+      <p className="font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.46)", letterSpacing: "0.22em" }}>Tu trabajo</p>
       <h1 className="font-display mb-6 mt-3" style={{ fontSize: "clamp(2rem,5vw,3rem)", letterSpacing: "-0.045em", color: "#f4f4f6", fontWeight: 600 }}>Mis apps</h1>
       {apps === null ? (
-        <div className="glossy rounded-2xl p-8 text-center text-[13px]" style={{ color: "rgba(255,255,255,0.4)" }}>Cargando…</div>
+        <div className="glossy rounded-2xl p-8 text-center text-[13px]" style={{ color: "rgba(255,255,255,0.58)" }}>Cargando…</div>
       ) : apps.length === 0 ? (
         <div className="glossy rounded-2xl p-10 text-center">
           <p className="text-[14px]" style={{ color: "rgba(255,255,255,0.5)" }}>Aún no creas ninguna app.</p>

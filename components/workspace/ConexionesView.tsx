@@ -33,9 +33,9 @@ export function ConexionesView() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-5 pb-24 pt-12 md:px-8">
-      <p className="font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.32)", letterSpacing: "0.22em" }}>Tu infraestructura</p>
+      <p className="font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.46)", letterSpacing: "0.22em" }}>Tu infraestructura</p>
       <h1 className="font-display mb-2 mt-3" style={{ fontSize: "clamp(2rem,5vw,3rem)", letterSpacing: "-0.045em", color: "#f4f4f6", fontWeight: 600 }}>Conexiones</h1>
-      <p className="mb-8 text-[13px]" style={{ color: "rgba(255,255,255,0.45)" }}>Conecta tus cuentas. Todo queda en tu bóveda, cifrado; solo tú lo usas.</p>
+      <p className="mb-8 text-[13px]" style={{ color: "rgba(255,255,255,0.6)" }}>Conecta tus cuentas. Todo queda en tu bóveda, cifrado; solo tú lo usas.</p>
 
       <div className="space-y-3">
         {OAUTH.map((s) => {
@@ -45,7 +45,7 @@ export function ConexionesView() {
               <img src={`/logos/${s.id}.svg`} alt={s.label} className="h-9 w-9 shrink-0" />
               <div>
                 <p className="text-[15px] font-semibold text-white">{s.label}</p>
-                <p className="text-[12.5px]" style={{ color: "rgba(255,255,255,0.45)" }}>{s.desc}</p>
+                <p className="text-[12.5px]" style={{ color: "rgba(255,255,255,0.6)" }}>{s.desc}</p>
               </div>
               <div className="ml-auto">
                 {on
@@ -57,9 +57,9 @@ export function ConexionesView() {
         })}
       </div>
 
-      <p className="mb-3 mt-10 font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.32)", letterSpacing: "0.18em" }}>Tu IA (opcional)</p>
+      <p className="mb-3 mt-10 font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.46)", letterSpacing: "0.18em" }}>Tu IA (opcional)</p>
       <div className="glossy rounded-2xl p-5">
-        <p className="mb-3 text-[12.5px]" style={{ color: "rgba(255,255,255,0.45)" }}>Trae tu propia key y V corre con tu modelo. Sin key, usa el V de la casa gratis.</p>
+        <p className="mb-3 text-[12.5px]" style={{ color: "rgba(255,255,255,0.6)" }}>Trae tu propia key y V corre con tu modelo. Sin key, usa el V de la casa gratis.</p>
         <div className="flex flex-col gap-2 sm:flex-row">
           <select value={provider} onChange={e => setProvider(e.target.value)} className="rounded-lg px-3 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}>
             {LLMS.map(([v, l]) => <option key={v} value={v} style={{ color: "#000" }}>{l}</option>)}
