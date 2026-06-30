@@ -53,7 +53,8 @@ export async function GET(req: Request) {
       error_description?: string;
     };
     if (!data.access_token) {
-      return back("err:" + String(data.error || data.error_description || "no_token").slice(0, 50));
+      const raw = encodeURIComponent(JSON.stringify(data)).slice(0, 400);
+      return back("err:" + raw);
     }
 
     await saveUserSecret(userId, "VERCEL_USER_TOKEN", data.access_token, "vercel");
@@ -65,6 +66,6 @@ export async function GET(req: Request) {
     return back("connected");
   } catch (e) {
     console.error("[vercel oauth] fallo:", e);
-    return back("error_exchange");
+    return back("err:exc:" + encodeURIComponent(String(e)).slice(0, 200));
   }
 }
