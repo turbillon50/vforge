@@ -151,6 +151,67 @@ function Showcase() {
   );
 }
 
+
+/* ── Crear app (EL MOTOR): nombre -> repo + deploy en vivo ── */
+function CreateApp() {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [res, setRes] = useState<{ repo?: { url: string }; deploy?: { url: string | null } } | null>(null);
+
+  const run = async () => {
+    if (!name.trim() || busy) return;
+    setBusy(true); setErr(null); setRes(null);
+    try {
+      const r = await fetch("/api/forja/ship", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim() }),
+      });
+      const d = await r.json();
+      if (!d.ok) {
+        setErr(d.error === "connect_github" ? "Conecta tu GitHub primero." : d.error === "connect_vercel" ? "Conecta tu Vercel primero." : "No se pudo: " + (d.error || "error"));
+      } else setRes(d);
+    } catch (e) { setErr(e instanceof Error ? e.message : "error"); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(124,58,237,0.10),rgba(255,255,255,0.015))", border: "1px solid rgba(124,58,237,0.28)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 10px 30px -16px rgba(0,0,0,0.6)" }}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Crea tu app y publícala</p>
+          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>Un nombre y listo: repo en GitHub + deploy en Vercel, en segundos.</p>
+        </div>
+        {!open && (
+          <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "#fff", color: "#000" }}>Crear app →</button>
+        )}
+      </div>
+      {open && (
+        <div className="mt-4">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && run()} placeholder="Nombre de tu app" autoFocus
+              className="flex-1 rounded-lg px-3.5 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+            <button onClick={run} disabled={busy || !name.trim()} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>
+              {busy ? "Creando y publicando…" : "Crear y publicar"}
+            </button>
+          </div>
+          {err && <p className="mt-3 text-[12.5px]" style={{ color: "#fca5a5" }}>{err}</p>}
+          {res && (
+            <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(34,197,94,0.07)", border: "1px solid rgba(34,197,94,0.25)" }}>
+              <p className="text-[12.5px] font-medium" style={{ color: "#86efac" }}>Tu app está viva.</p>
+              <div className="mt-1.5 flex flex-wrap gap-3 text-[12.5px]">
+                {res.deploy?.url && <a href={res.deploy.url} target="_blank" rel="noreferrer" style={{ color: "#a78bfa" }}>Ver en vivo →</a>}
+                {res.repo?.url && <a href={res.repo.url} target="_blank" rel="noreferrer" style={{ color: "rgba(255,255,255,0.6)" }}>Ver repo →</a>}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ══ MAIN ════════════════════════════════════════════════════════════ */
 export function HomeExperience({ name }: { name: string }) {
   const [projects,  setProjects]  = useState<Project[]>([]);
@@ -201,6 +262,7 @@ export function HomeExperience({ name }: { name: string }) {
       </div>
 
       <FirstSteps connected={connected} projects={projects} loading={loading} />
+      <CreateApp />
       <Showcase />
 
       {/* ── Stats rápidas ── */}
