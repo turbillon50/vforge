@@ -282,7 +282,7 @@ function PlanPanel() {
         )}
         <div className="mt-4 flex flex-wrap gap-2">
           {plan === "free" ? (
-            <Link href="https://vmomentum.site"
+            <Link href="/pricing"
               className="btn-primary !px-4 !py-2"
               style={{ minHeight: 44, touchAction: "manipulation" }}
             >
@@ -297,7 +297,7 @@ function PlanPanel() {
               <IconCreditCard size={14} /> Gestionar suscripción
             </a>
           )}
-          <Link href="https://vmomentum.site"
+          <Link href="/pricing"
             className="btn-ghost !px-4 !py-2"
             style={{ minHeight: 44, touchAction: "manipulation" }}
           >

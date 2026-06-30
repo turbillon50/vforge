@@ -24,7 +24,7 @@ export function MarketingFooter() {
           <ul className="space-y-3 text-sm text-on-surface-variant">
             <li><Link href="/#integraciones" className="hover:text-white/70">{t.common.nav_workspace}</Link></li>
             <li><Link href="/marketplace" className="hover:text-white/70">{t.common.nav_marketplace}</Link></li>
-            <li><Link href="https://vmomentum.site" className="hover:text-white/70">{t.common.nav_pricing}</Link></li>
+            <li><Link href="/pricing" className="hover:text-white/70">{t.common.nav_pricing}</Link></li>
           </ul>
         </div>
         <div>

@@ -232,7 +232,7 @@ export function HomeExperience({ name }: { name: string }) {
               Sube a Forge Pro para MCP ilimitado, +200 skills y deploy sin límites.
             </p>
           </div>
-          <a href="https://vmomentum.site"
+          <a href="/pricing"
             className="flex-shrink-0 rounded-xl px-4 py-2 text-[13px] font-semibold transition-all"
             style={{ background: "#fff", color: "#000" }}
             onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.88)")}
