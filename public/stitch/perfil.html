@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Perfil - VForge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        @font-face {
+            font-family: 'Geist Mono';
+            src: url('https://cdn.jsdelivr.net/npm/geist@1.0.3/dist/fonts/geist-mono/GeistMono-Regular.woff2') format('woff2');
+            font-weight: 400;
+        }
+        @font-face {
+            font-family: 'Geist';
+            src: url('https://cdn.jsdelivr.net/npm/geist@1.0.3/dist/fonts/geist-sans/Geist-Regular.woff2') format('woff2');
+            font-weight: 400;
+        }
+        @font-face {
+            font-family: 'Geist';
+            src: url('https://cdn.jsdelivr.net/npm/geist@1.0.3/dist/fonts/geist-sans/Geist-Medium.woff2') format('woff2');
+            font-weight: 500;
+        }
+        @font-face {
+            font-family: 'Geist';
+            src: url('https://cdn.jsdelivr.net/npm/geist@1.0.3/dist/fonts/geist-sans/Geist-SemiBold.woff2') format('woff2');
+            font-weight: 600;
+        }
+        @font-face {
+            font-family: 'Geist';
+            src: url('https://cdn.jsdelivr.net/npm/geist@1.0.3/dist/fonts/geist-sans/Geist-Bold.woff2') format('woff2');
+            font-weight: 700;
+        }
+
+        body {
+            background-color: #0a0a0f;
+            color: #e4e1e9;
+        }
+
+        .glass-card {
+            background-color: rgba(18, 18, 26, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .parallel-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+        }
+
+        .accent-glow {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
+        }
+        
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #7c3aed;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #7c3aed;
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#e4e1e9",
+                        "inverse-surface": "#e4e1e9",
+                        "tertiary": "#ffb784",
+                        "surface-bright": "#39383e",
+                        "on-secondary-container": "#00311f",
+                        "surface-tint": "#d2bbff",
+                        "on-error-container": "#ffdad6",
+                        "error": "#ffb4ab",
+                        "outline-variant": "#4a4455",
+                        "on-primary-fixed": "#25005a",
+                        "on-primary-container": "#ede0ff",
+                        "on-tertiary-container": "#ffe0cd",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-tertiary-fixed": "#301400",
+                        "surface-container-lowest": "#0e0e13",
+                        "secondary": "#4edea3",
+                        "surface-container": "#1f1f25",
+                        "outline": "#958da1",
+                        "surface-container-high": "#2a292f",
+                        "on-primary": "#3f008e",
+                        "inverse-on-surface": "#303036",
+                        "surface-dim": "#131318",
+                        "secondary-container": "#00a572",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-background": "#e4e1e9",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "surface": "#131318",
+                        "secondary-fixed": "#6ffbbe",
+                        "primary-fixed-dim": "#d2bbff",
+                        "on-error": "#690005",
+                        "surface-variant": "#35343a",
+                        "background": "#131318",
+                        "on-secondary-fixed": "#002113",
+                        "primary-fixed": "#eaddff",
+                        "on-tertiary": "#4f2500",
+                        "error-container": "#93000a",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "primary": "#d2bbff",
+                        "on-secondary": "#003824",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "surface-container-highest": "#35343a",
+                        "surface-container-low": "#1b1b20",
+                        "on-surface-variant": "#ccc3d8",
+                        "tertiary-container": "#a15100",
+                        "primary-container": "#7c3aed",
+                        "tertiary-fixed": "#ffdcc6",
+                        "inverse-primary": "#732ee4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "2xl": "64px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "mono-code": ["Geist Mono"],
+                        "label-md": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "display-lg-mobile": ["Geist"],
+                        "body-sm": ["Geist"],
+                        "body-lg": ["Geist"]
+                    },
+                    "fontSize": {
+                        "mono-code": ["14px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#0a0a0f] text-on-surface antialiased min-h-screen flex flex-col font-body-lg text-body-lg">
+<!-- TopNavBar -->
+<header class="bg-surface/80 dark:bg-surface/80 backdrop-blur-md docked full-width top-0 sticky z-50 border-b border-white/10 shadow-sm flex justify-between items-center px-margin-desktop py-md w-full">
+<div class="flex items-center gap-gutter">
+<span class="font-display-lg text-display-lg font-bold text-on-surface dark:text-on-surface">VForge</span>
+<nav class="hidden md:flex gap-lg font-body-lg text-body-lg">
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded-lg" href="#">Inicio</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded-lg" href="#">Mis apps</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded-lg" href="#">Estudio</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded-lg" href="#">Cobros</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 px-sm py-xs rounded-lg" href="#">Conexiones</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative w-64 hidden lg:block">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full bg-[#050507] border border-white/10 rounded-lg pl-xl pr-sm py-xs text-body-sm font-body-sm text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all" placeholder="Buscar..." type="text"/>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 p-xs rounded-full scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-primary dark:text-primary border-b-2 border-primary pb-1 p-xs scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-white/10 ml-sm cursor-pointer">
+<img alt="Luis Profile Avatar" class="w-full h-full object-cover" data-alt="A highly detailed close-up portrait of a professional developer, dramatic studio lighting, dark cinematic background, ultra-premium tech aesthetic, deep shadows, crisp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMqxwkBbKmtKXhsQjE3titv1NNRGpnP452VnyjCwxPMm15Zaf_qZBmGPduv9fAU9U48We5CANGz3fsYMXoDH3Juvm6IhujVld-qW-nT6rgoX4f0_saBUq2hYlpokAZPCFNm81lay2s1sV6ax303rqbc7DpfGinpTADiHG4ufAuVJHN_Bf82NNecszQ3dyZhU41u2IoTTMID0LTPzf1ycr-ftKOwTsgU5C9KlmyPTRQFq6iCUynNzdO0BNYjT6AUYrU6g4EkX9fkj5-"/>
+</div>
+</div>
+</header>
+<main class="flex-grow px-margin-mobile md:px-margin-desktop py-2xl max-w-[1200px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Profile Sidebar / Quick Info -->
+<aside class="lg:col-span-4 flex flex-col gap-lg">
+<div class="glass-card rounded-xl p-lg flex flex-col items-center text-center">
+<div class="w-32 h-32 rounded-full overflow-hidden border-2 border-white/10 mb-md relative group">
+<img alt="Luis Profile Avatar" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A highly detailed close-up portrait of a professional developer, dramatic studio lighting, dark cinematic background, ultra-premium tech aesthetic, deep shadows, crisp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCknC1E8L0JDBxCzHCsOW0yRUwi1orOBMvcQlCW3NZaaWXR9u-yGyR6IvnyQUcNjAbm_djyzmmJe-fB36hPmA6iYmG9jakt0uEWeQbRRokd64nX22DCuDWp5pCdnF3nIAcPwOoamCDSQwb3Tr0LlgeMsVqZp8aKQCtRDGHcmNCQtuKGbICEDxz5QI_49cC1h0_LPTdkUDSHRETcq02K28COnxzX-w7dWm0pmWKYdfcjXqC55KP0nvhIyVrMqKeB9vnARutChRt38B5q"/>
+<div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer">
+<span class="material-symbols-outlined text-white">edit</span>
+</div>
+</div>
+<h1 class="font-headline-md text-headline-md text-on-surface">Luis</h1>
+<p class="font-mono-code text-mono-code text-on-surface-variant mt-xs">luis@vforge.dev</p>
+<div class="mt-md px-sm py-xs bg-[rgba(124,58,237,0.1)] rounded text-primary-container font-label-md text-label-md flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> Activo
+                </div>
+</div>
+<div class="glass-card rounded-xl p-lg flex flex-col gap-md">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-xs">Ajustes</h2>
+<div class="flex items-center justify-between p-sm hover:bg-white/5 rounded-lg transition-colors cursor-pointer group">
+<div class="flex items-center gap-sm text-on-surface">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">language</span>
+<span>Idioma</span>
+</div>
+<span class="font-mono-code text-mono-code text-on-surface-variant">Español</span>
+</div>
+<div class="flex items-center justify-between p-sm hover:bg-white/5 rounded-lg transition-colors group">
+<div class="flex items-center gap-sm text-on-surface">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">dark_mode</span>
+<span>Tema Oscuro</span>
+</div>
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-outline-variant checked:border-primary-container right-0 checked:bg-primary-container" id="theme-toggle" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-primary-container cursor-pointer" for="theme-toggle"></label>
+</div>
+</div>
+<div class="flex items-center justify-between p-sm hover:bg-white/5 rounded-lg transition-colors group">
+<div class="flex items-center gap-sm text-on-surface">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">notifications</span>
+<span>Notificaciones</span>
+</div>
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-outline-variant right-0" id="notif-toggle" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-primary-container cursor-pointer" for="notif-toggle"></label>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area / Plans -->
+<div class="lg:col-span-8 flex flex-col gap-lg">
+<div class="flex items-center justify-between mb-sm">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">Tu plan</h2>
+<button class="bg-primary-container hover:bg-inverse-primary text-white font-label-md text-label-md px-md py-sm rounded-lg transition-colors duration-200 accent-glow flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">upgrade</span> Mejorar plan
+                </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<!-- Free Plan -->
+<div class="glass-card rounded-xl p-lg flex flex-col hover:bg-surface-container transition-colors relative overflow-hidden">
+<h3 class="font-headline-md text-headline-md text-on-surface-variant">Free</h3>
+<div class="mt-md mb-lg">
+<span class="font-display-lg-mobile text-display-lg-mobile text-on-surface">$0</span>
+<span class="text-on-surface-variant font-mono-code text-mono-code">/mes</span>
+</div>
+<ul class="flex flex-col gap-sm flex-grow mb-xl">
+<li class="flex items-start gap-xs text-body-sm font-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">check</span> 1 Proyecto
+                        </li>
+<li class="flex items-start gap-xs text-body-sm font-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">check</span> Soporte comunitario
+                        </li>
+</ul>
+<button class="w-full bg-transparent border border-white/10 text-on-surface hover:bg-white/5 font-label-md text-label-md py-sm rounded-lg transition-colors">
+                        Seleccionar
+                    </button>
+</div>
+<!-- Studio Plan -->
+<div class="glass-card rounded-xl p-lg flex flex-col hover:bg-surface-container transition-colors relative overflow-hidden">
+<h3 class="font-headline-md text-headline-md text-on-surface-variant">Studio</h3>
+<div class="mt-md mb-lg">
+<span class="font-display-lg-mobile text-display-lg-mobile text-on-surface">$49</span>
+<span class="text-on-surface-variant font-mono-code text-mono-code">/mes</span>
+</div>
+<ul class="flex flex-col gap-sm flex-grow mb-xl">
+<li class="flex items-start gap-xs text-body-sm font-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-secondary">check</span> Proyectos ilimitados
+                        </li>
+<li class="flex items-start gap-xs text-body-sm font-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-secondary">check</span> Análisis avanzados
+                        </li>
+</ul>
+<button class="w-full bg-transparent border border-white/10 text-on-surface hover:bg-white/5 font-label-md text-label-md py-sm rounded-lg transition-colors">
+                        Seleccionar
+                    </button>
+</div>
+<!-- Forge Pro Plan (Active) -->
+<div class="glass-card rounded-xl p-lg flex flex-col relative overflow-hidden border-[#7c3aed] parallel-shadow" style="background-color: rgba(18, 18, 26, 0.9);">
+<div class="absolute top-0 right-0 bg-primary-container text-white text-[10px] font-bold px-sm py-xs rounded-bl-lg uppercase tracking-wider">
+                        Plan Actual
+                    </div>
+<div class="absolute inset-0 bg-gradient-to-br from-primary-container/10 to-transparent pointer-events-none"></div>
+<h3 class="font-headline-md text-headline-md text-primary-container flex items-center gap-xs">
+                        Forge Pro <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</h3>
+<div class="mt-md mb-lg">
+<span class="font-display-lg-mobile text-display-lg-mobile text-on-surface">$129</span>
+<span class="text-on-surface-variant font-mono-code text-mono-code">/mes</span>
+</div>
+<ul class="flex flex-col gap-sm flex-grow mb-xl">
+<li class="flex items-start gap-xs text-body-sm font-body-sm text-on-surface">
+<span class="material-symbols-outlined text-[18px] text-primary-container">check</span> Todo en Studio
+                        </li>
+<li class="flex items-start gap-xs text-body-sm font-body-sm text-on-surface">
+<span class="material-symbols-outlined text-[18px] text-primary-container">check</span> Infraestructura dedicada
+                        </li>
+<li class="flex items-start gap-xs text-body-sm font-body-sm text-on-surface">
+<span class="material-symbols-outlined text-[18px] text-primary-container">check</span> Soporte 24/7
+                        </li>
+</ul>
+<button class="w-full bg-white/5 border border-white/10 text-on-surface cursor-default font-label-md text-label-md py-sm rounded-lg transition-colors opacity-70">
+                        Gestionar
+                    </button>
+</div>
+</div>
+<div class="mt-lg glass-card rounded-xl p-lg">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-md">Uso de recursos</h3>
+<div class="flex flex-col gap-md">
+<div>
+<div class="flex justify-between text-body-sm font-body-sm mb-xs">
+<span class="text-on-surface-variant">Ancho de banda</span>
+<span class="text-on-surface font-mono-code">450GB / 1TB</span>
+</div>
+<div class="w-full bg-black/50 rounded-full h-2 border border-white/10 overflow-hidden">
+<div class="bg-primary-container h-2 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-body-sm font-body-sm mb-xs">
+<span class="text-on-surface-variant">Almacenamiento</span>
+<span class="text-on-surface font-mono-code">82GB / 100GB</span>
+</div>
+<div class="w-full bg-black/50 rounded-full h-2 border border-white/10 overflow-hidden">
+<div class="bg-tertiary-container h-2 rounded-full" style="width: 82%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interaction for toggles
+        document.querySelectorAll('input[type="checkbox"]').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                if(this.checked) {
+                    this.nextElementSibling.classList.replace('bg-outline-variant', 'bg-primary-container');
+                } else {
+                    this.nextElementSibling.classList.replace('bg-primary-container', 'bg-outline-variant');
+                }
+            });
+        });
+    </script>
+</body></html>

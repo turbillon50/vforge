@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VForge - Crea tu app conectando tu propia infraestructura</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-high": "#2a292f",
+                      "secondary-container": "#00a572",
+                      "error": "#ffb4ab",
+                      "primary-container": "#7c3aed",
+                      "inverse-surface": "#e4e1e9",
+                      "error-container": "#93000a",
+                      "secondary-fixed-dim": "#4edea3",
+                      "tertiary-container": "#a15100",
+                      "on-surface-variant": "#ccc3d8",
+                      "on-secondary": "#003824",
+                      "on-secondary-fixed-variant": "#005236",
+                      "surface-variant": "#35343a",
+                      "primary-fixed": "#eaddff",
+                      "primary": "#d2bbff",
+                      "surface-container-low": "#1b1b20",
+                      "secondary-fixed": "#6ffbbe",
+                      "on-primary-container": "#ede0ff",
+                      "on-error": "#690005",
+                      "on-surface": "#e4e1e9",
+                      "on-error-container": "#ffdad6",
+                      "primary-fixed-dim": "#d2bbff",
+                      "surface-container": "#1f1f25",
+                      "on-tertiary-fixed": "#301400",
+                      "inverse-on-surface": "#303036",
+                      "surface-container-lowest": "#0e0e13",
+                      "surface": "#131318",
+                      "on-primary": "#3f008e",
+                      "surface-container-highest": "#35343a",
+                      "surface-bright": "#39383e",
+                      "on-tertiary": "#4f2500",
+                      "on-secondary-fixed": "#002113",
+                      "background": "#131318",
+                      "surface-tint": "#d2bbff",
+                      "on-background": "#e4e1e9",
+                      "secondary": "#4edea3",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "surface-dim": "#131318",
+                      "tertiary-fixed": "#ffdcc6",
+                      "on-tertiary-container": "#ffe0cd",
+                      "tertiary-fixed-dim": "#ffb784",
+                      "inverse-primary": "#732ee4",
+                      "on-primary-fixed": "#25005a",
+                      "tertiary": "#ffb784",
+                      "outline-variant": "#4a4455",
+                      "outline": "#958da1",
+                      "on-primary-fixed-variant": "#5a00c6",
+                      "on-secondary-container": "#00311f"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "xl": "40px",
+                      "margin-mobile": "16px",
+                      "base": "4px",
+                      "margin-desktop": "48px",
+                      "gutter": "24px",
+                      "lg": "24px",
+                      "2xl": "64px",
+                      "md": "16px",
+                      "sm": "8px"
+              },
+              "fontFamily": {
+                      "mono-code": [
+                              "Geist Mono"
+                      ],
+                      "body-lg": [
+                              "Geist"
+                      ],
+                      "display-lg": [
+                              "Geist"
+                      ],
+                      "headline-md": [
+                              "Geist"
+                      ],
+                      "display-lg-mobile": [
+                              "Geist"
+                      ],
+                      "label-md": [
+                              "Geist"
+                      ],
+                      "body-sm": [
+                              "Geist"
+                      ]
+              },
+              "fontSize": {
+                      "mono-code": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.04em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "1",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0a0a0f;
+            color: #e4e1e9;
+            overflow-x: hidden;
+        }
+        .mesh-bg {
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(262,79%,40%,0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(262,79%,40%,0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(262,79%,40%,0.1) 0px, transparent 50%);
+            background-size: 100% 100%;
+            background-position: 0px 0px,0px 0px,0px 0px;
+        }
+        .grid-pattern {
+            background-image: linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+        }
+        .glass-card {
+            background: rgba(18, 18, 26, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card:hover {
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.1);
+        }
+        .glow-btn {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
+        }
+    </style>
+</head>
+<body class="font-body-lg text-body-lg mesh-bg min-h-screen flex flex-col relative">
+<div class="fixed inset-0 grid-pattern pointer-events-none z-[-1]"></div>
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl dark:bg-surface/80 border-b border-white/10 shadow-sm z-50 transition-all duration-300" id="navbar">
+<div class="flex justify-between items-center px-margin-desktop py-4 w-full z-50 max-w-[1440px] mx-auto">
+<div class="flex items-center gap-2xl">
+<a class="font-display-lg text-headline-md font-bold text-primary dark:text-primary tracking-tight" href="#">VForge</a>
+<div class="hidden md:flex gap-gutter">
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Características</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Integraciones</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Comunidad</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Precios</a>
+</div>
+</div>
+<div>
+<button class="bg-primary-container text-white px-lg py-sm rounded-lg font-label-md hover:bg-primary-container/90 transition-colors duration-200 glow-btn scale-95 transition-transform duration-150">Entrar</button>
+</div>
+</div>
+</nav>
+<main class="flex-grow pt-[100px]">
+<!-- Hero Section -->
+<section class="relative min-h-[819px] flex items-center justify-center px-margin-desktop py-2xl overflow-hidden">
+<div class="max-w-[1000px] mx-auto text-center z-10 relative">
+<div class="inline-flex items-center gap-sm px-sm py-xs rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-xl">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-md text-on-surface-variant">VForge 2.0 está aquí</span>
+</div>
+<h1 class="font-display-lg text-display-lg md:text-[72px] leading-[1.1] font-bold text-on-surface mb-gutter tracking-tight">
+                    Crea tu app conectando tu <br class="hidden md:block"/>
+<span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container">propia infraestructura</span>
+</h1>
+<p class="font-body-lg text-body-lg md:text-headline-md text-on-surface-variant max-w-[700px] mx-auto mb-2xl">
+                    El constructor de aplicaciones definitivo para ingenieros. Despliega al instante, integra cobros y escala sin límites manteniendo el control total de tu código.
+                </p>
+<div class="flex flex-col sm:flex-row gap-md justify-center items-center">
+<button class="bg-primary-container text-white px-xl py-md rounded-lg font-label-md hover:bg-primary-container/90 transition-colors duration-200 glow-btn w-full sm:w-auto">
+                        Empezar gratis
+                    </button>
+<button class="border border-white/10 bg-transparent text-on-surface px-xl py-md rounded-lg font-label-md hover:bg-white/5 transition-colors duration-200 w-full sm:w-auto flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-[20px]">play_circle</span>
+                        Ver demo
+                    </button>
+</div>
+</div>
+<div class="absolute inset-0 z-0 opacity-30 pointer-events-none flex items-center justify-center mt-[204px]">
+<img alt="Abstract representation of cloud infrastructure, glowing purple nodes connecting in a 3D isometric grid, dark cinematic lighting, highly detailed tech visualization, soft depth of field." class="w-[80%] max-w-[1200px] object-contain mix-blend-screen filter blur-[2px]" data-alt="A striking digital visualization of a glowing 3D isometric grid representing modern server infrastructure. The nodes emit intense, neon-violet light against a deep obsidian void. High-contrast, cinematic lighting highlights the complex web of connections. The scene feels highly technical, immersive, and captures an ultra-premium tech aesthetic suitable for a developer tool landing page." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmJwIzTLlJawsvk8b4_mAJ9UzoBOiLdjt1Li-7iF6FAz6iw7IuHbhMYsLp2eOcdMJca7tjbT68UsUwcnsSGxwHkLFvUodrc4caVxNkUoMChR_D1J_UZx_KZ6Py6PpUVkX7IJ9dw0KXfT2TBtHdTQTA27fHBXlUyE1A9okhL7bCzY3UBxgowM1F79LbbdfecIeJLX-K_OJVfJUadTUVLl86wGFdQY4WXzoyVRsyuCIhVI3DRmGSn_PePZ37nkccMRnY6DYuYhSdfZ04"/>
+</div>
+</section>
+<!-- Features Grid -->
+<section class="px-margin-desktop py-2xl max-w-[1440px] mx-auto relative z-10">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-lg">
+<!-- Feature 1 -->
+<div class="glass-card p-lg rounded-xl flex flex-col gap-md group transition-all duration-300">
+<div class="w-12 h-12 rounded-lg bg-surface flex items-center justify-center border border-white/10 group-hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary text-[24px]">code</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Repo real</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex-grow">
+                        Accede al código fuente completo. Nada de cajas negras. Tu infraestructura, tus reglas.
+                    </p>
+</div>
+<!-- Feature 2 -->
+<div class="glass-card p-lg rounded-xl flex flex-col gap-md group transition-all duration-300">
+<div class="w-12 h-12 rounded-lg bg-surface flex items-center justify-center border border-white/10 group-hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary text-[24px]">rocket_launch</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Deploy instantáneo</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex-grow">
+                        Integración continua out-of-the-box. Empuja a main y mira tus cambios en producción en segundos.
+                    </p>
+</div>
+<!-- Feature 3 -->
+<div class="glass-card p-lg rounded-xl flex flex-col gap-md group transition-all duration-300">
+<div class="w-12 h-12 rounded-lg bg-surface flex items-center justify-center border border-white/10 group-hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary text-[24px]">payments</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Cobros integrados</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex-grow">
+                        Monetiza desde el día uno con integraciones nativas para suscripciones y pagos únicos.
+                    </p>
+</div>
+<!-- Feature 4 -->
+<div class="glass-card p-lg rounded-xl flex flex-col gap-md group transition-all duration-300 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+<div class="w-12 h-12 rounded-lg bg-surface flex items-center justify-center border border-white/10 group-hover:border-primary/50 transition-colors relative z-10">
+<span class="material-symbols-outlined text-primary text-[24px]">smart_toy</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface relative z-10 flex items-center gap-xs">
+                        Copiloto V <span class="bg-primary/20 text-primary font-mono-code text-[10px] px-2 py-1 rounded">BETA</span>
+</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex-grow relative z-10">
+                        Asistente de IA integrado que escribe componentes, optimiza consultas y genera tests automáticamente.
+                    </p>
+</div>
+</div>
+</section>
+<!-- Integrations Banner -->
+<section class="py-2xl border-t border-b border-white/5 bg-surface-container-low/50 backdrop-blur-sm mt-xl">
+<div class="max-w-[1440px] mx-auto px-margin-desktop text-center">
+<p class="font-label-md text-label-md text-on-surface-variant mb-xl tracking-widest uppercase opacity-70">Se integra perfectamente con tu stack</p>
+<div class="flex flex-wrap justify-center items-center gap-2xl opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+<!-- Placeholder for integration logos, using material icons as stand-ins for semantic structure -->
+<div class="flex items-center gap-xs hover:text-white transition-colors"><span class="material-symbols-outlined text-[32px]">hub</span> <span class="font-headline-md">GitHub</span></div>
+<div class="flex items-center gap-xs hover:text-white transition-colors"><span class="material-symbols-outlined text-[32px]">change_history</span> <span class="font-headline-md">Vercel</span></div>
+<div class="flex items-center gap-xs hover:text-white transition-colors"><span class="material-symbols-outlined text-[32px]">credit_card</span> <span class="font-headline-md">Stripe</span></div>
+<div class="flex items-center gap-xs hover:text-white transition-colors"><span class="material-symbols-outlined text-[32px]">database</span> <span class="font-headline-md">Supabase</span></div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest dark:bg-surface-container-lowest border-t border-white/5 w-full mt-auto">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-desktop py-xl w-full max-w-[1440px] mx-auto">
+<div class="mb-md md:mb-0">
+<span class="font-headline-md text-headline-md font-bold text-on-surface opacity-80 hover:opacity-100 transition-opacity">VForge</span>
+</div>
+<div class="flex gap-lg font-body-sm text-body-sm">
+<a class="text-on-surface-variant hover:text-secondary transition-colors duration-200" href="#">Privacidad</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors duration-200" href="#">Términos</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors duration-200" href="#">Contacto</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors duration-200" href="#">Documentación</a>
+</div>
+<div class="mt-md md:mt-0 font-body-sm text-body-sm text-on-surface-variant opacity-60">
+                © 2024 VForge. Todos los derechos reservados.
+            </div>
+</div>
+</footer>
+<script>
+        // Simple scroll effect for navbar
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-lg', 'bg-surface/95');
+                nav.classList.remove('bg-surface/80');
+            } else {
+                nav.classList.remove('shadow-lg', 'bg-surface/95');
+                nav.classList.add('bg-surface/80');
+            }
+        });
+    </script>
+</body></html>
