@@ -40,7 +40,7 @@ function Widget({ title, href, children }: { title: string; href: string; childr
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="rounded-2xl p-5"
-      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
+      style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 10px 30px -16px rgba(0,0,0,0.6)" }}
     >
       <div className="mb-4 flex items-center justify-between">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.3)" }}>{title}</p>
@@ -88,7 +88,7 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
   return (
     <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
       className="mb-8 rounded-2xl p-5 md:p-6"
-      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)" }}>
+      style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 10px 30px -16px rgba(0,0,0,0.6)" }}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Empieza aquí</p>
@@ -214,7 +214,7 @@ export function HomeExperience({ name }: { name: string }) {
           { label: "Actividad", value: loading ? "—" : events.length + " eventos", icon: IconActivity },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-xl p-4"
-            style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 10px 30px -16px rgba(0,0,0,0.6)" }}>
             <Icon size={14} style={{ color: "rgba(124,58,237,0.8)", marginBottom: 8 }} />
             <p className="text-[1.4rem] font-bold tabular-nums" style={{ color: "#fff" }}>{value}</p>
             <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>{label}</p>
@@ -286,7 +286,7 @@ export function HomeExperience({ name }: { name: string }) {
           {ACTIONS.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href}
               className="flex flex-col items-center gap-2 rounded-xl py-4 px-2 transition-all text-center"
-              style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
+              style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 10px 30px -16px rgba(0,0,0,0.6)" }}
               onMouseEnter={e => {
                 const el = e.currentTarget as HTMLElement;
                 el.style.background = "rgba(124,58,237,0.08)";
