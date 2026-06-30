@@ -30,6 +30,7 @@ export function WorkspaceStudio() {
   const [files, setFiles] = useState<{ name: string; path: string; type: string }[]>([]);
   const [code, setCode] = useState<{ path: string; content: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [split, setSplit] = useState(false);
   useEffect(() => {
     fetch("/api/forja/apps").then(r => r.ok ? r.json() : { apps: [] }).then(d => { setApps(d.apps || []); if (d.apps?.[0]) setActive(d.apps[0]); }).catch(() => {});
     fetch("/api/onboarding/status").then(r => r.ok ? r.json() : { connected: [] }).then(d => setConn(d.connected || [])).catch(() => {});
@@ -103,9 +104,16 @@ export function WorkspaceStudio() {
             {([["preview", "Preview"], ["codigo", "Codigo"], ["consola", "Consola"], ["detalles", "Detalles"]] as const).map(([k, l]) => (
               <button key={k} onClick={() => setTab(k)} className="rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition-colors" style={tab === k ? { background: "rgba(255,255,255,0.1)", color: "#fff" } : { color: "rgba(255,255,255,0.55)" }}>{l}</button>
             ))}
-            {active?.deploy_url && <a href={active.deploy_url} target="_blank" rel="noreferrer" className="ml-auto rounded-full border border-white/[0.1] px-3 py-1.5 text-[12px] text-white/70 hover:text-white">Abrir</a>}
+            <button onClick={() => setSplit((v) => !v)} className="ml-auto rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors" style={split ? { background: "rgba(124,58,237,0.2)", color: "#c4b5fd" } : { color: "rgba(255,255,255,0.55)" }}>Dividir</button>
+            {active?.deploy_url && <a href={active.deploy_url} target="_blank" rel="noreferrer" className="rounded-full border border-white/[0.1] px-3 py-1.5 text-[12px] text-white/70 hover:text-white">Abrir</a>}
           </div>
-          <div className="min-h-0 flex-1 overflow-auto">
+          <div className="flex min-h-0 flex-1 overflow-hidden">
+            {split && (
+              <div className="w-1/2 border-r border-white/[0.08]">
+                {active?.deploy_url ? <iframe title="preview2" src={active.deploy_url} className="h-full w-full border-0 bg-white" /> : <div className="flex h-full items-center justify-center text-[13px] text-white/40">Sin preview</div>}
+              </div>
+            )}
+            <div className={split ? "min-h-0 w-1/2 overflow-auto" : "min-h-0 flex-1 overflow-auto"}>
             {tab === "preview" ? (
               active?.deploy_url ? <iframe title="preview" src={active.deploy_url} className="h-full w-full border-0 bg-white" />
               : <div className="flex h-full items-center justify-center p-6 text-center text-[14px] text-white/45"><div>Aun no hay app que previsualizar.<br /><Link href="/workspace#crear" className="mt-3 inline-block rounded-full px-4 py-2 text-[13px] font-semibold text-black" style={{ background: "linear-gradient(180deg,#fff,#ededf2)" }}>Crear una app</Link></div></div>
@@ -140,6 +148,7 @@ export function WorkspaceStudio() {
                 </div>
               </div>
             )}
+            </div>
           </div>
         </main>
         <Handle side="right" />
