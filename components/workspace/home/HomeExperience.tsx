@@ -215,6 +215,9 @@ function CreateApp() {
                 {res.deploy?.url && <a href={res.deploy.url} target="_blank" rel="noreferrer" style={{ color: "#a78bfa" }}>Ver en vivo →</a>}
                 {res.repo?.url && <a href={res.repo.url} target="_blank" rel="noreferrer" style={{ color: "rgba(255,255,255,0.6)" }}>Ver repo →</a>}
               </div>
+              {res.deploy?.url && (
+                <iframe title="preview" src={res.deploy.url} className="mt-3 h-72 w-full rounded-lg" style={{ border: "1px solid rgba(255,255,255,0.12)", background: "#fff" }} />
+              )}
             </div>
           )}
         </div>
