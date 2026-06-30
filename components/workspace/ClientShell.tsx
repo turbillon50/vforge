@@ -3,13 +3,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { VWordmark } from "@/components/brand/VMark";
-import { IconHome, IconKey, IconRocket, IconCreditCard } from "@/components/brand/VFIcons";
+import { IconHome, IconKey, IconRocket, IconCreditCard, IconUsers } from "@/components/brand/VFIcons";
 import { ClientV } from "@/components/workspace/ClientV";
 
 const NAV = [
   { href: "/workspace", label: "Inicio", Icon: IconHome },
+  { href: "/workspace/apps", label: "Mis apps", Icon: IconRocket },
+  { href: "/workspace#cobros", label: "Cobros", Icon: IconCreditCard },
   { href: "/onboarding", label: "Conexiones", Icon: IconKey },
-  { href: "/workspace#crear", label: "Crear app", Icon: IconRocket },
+  { href: "/workspace/perfil", label: "Perfil", Icon: IconUsers },
 ];
 
 /**
@@ -35,9 +37,6 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
-          <Link href="/workspace#cobros" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] transition-colors" style={{ color: "rgba(255,255,255,0.6)" }}>
-            <IconCreditCard size={15} /><span>Cobros</span>
-          </Link>
         </nav>
         <div className="px-5 py-4">
           <span className="flex items-center gap-1.5 font-mono text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>

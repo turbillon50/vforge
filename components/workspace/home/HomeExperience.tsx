@@ -110,7 +110,7 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
             <p className="text-[13px] font-medium" style={{ color: "#fff" }}>{st.title}</p>
             <p className="mt-0.5 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.4)" }}>{st.desc}</p>
             {!st.done
-              ? <Link href={st.href} className="mt-3 inline-block rounded-lg px-3 py-1.5 text-[12px] font-medium" style={{ background: "#fff", color: "#000" }}>{st.cta} →</Link>
+              ? <Link href={st.href} className="mt-3 inline-block rounded-lg px-3 py-1.5 text-[12px] font-medium" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>{st.cta} →</Link>
               : <p className="mt-3 flex items-center gap-1 text-[11px] font-medium" style={{ color: "#a78bfa" }}><IconCheck size={12} /> Listo</p>}
           </div>
         ))}
@@ -185,7 +185,7 @@ function CreateApp() {
           <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>Un nombre y listo: repo en GitHub + deploy en Vercel, en segundos.</p>
         </div>
         {!open && (
-          <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "#fff", color: "#000" }}>Crear app →</button>
+          <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>Crear app →</button>
         )}
       </div>
       {open && (
@@ -256,7 +256,7 @@ function CobroApp() {
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Cobra en segundos</p>
           <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>Crea un producto y un link de pago con tu Stripe. El dinero llega a tu cuenta.</p>
         </div>
-        {!open && <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "#fff", color: "#000" }}>Crear cobro →</button>}
+        {!open && <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>Crear cobro →</button>}
       </div>
       {open && (
         <div className="mt-4">
@@ -485,7 +485,7 @@ export function HomeExperience({ name }: { name: string }) {
           </div>
           <a href="/pricing"
             className="flex-shrink-0 rounded-xl px-4 py-2 text-[13px] font-semibold transition-all"
-            style={{ background: "#fff", color: "#000" }}
+            style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}
             onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.88)")}
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "#fff")}>
             Ver planes →
