@@ -26,7 +26,7 @@ export function PerfilView() {
             <p className="mt-1 text-[12px]" style={{ color: on ? "#86efac" : "rgba(255,255,255,0.4)" }}>{on ? "Conectado" : "Sin conectar"}</p>
           </div>); })}
       </div>
-      <a href="/onboarding" className="mt-6 inline-block rounded-lg px-4 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Gestionar conexiones &rarr;</a>
+      <a href="/workspace/conexiones" className="mt-6 inline-block rounded-lg px-4 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Gestionar conexiones &rarr;</a>
     </main>
   );
 }
