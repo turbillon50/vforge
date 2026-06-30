@@ -12,8 +12,8 @@ export function ClientV() {
   const endRef = useRef<HTMLDivElement>(null);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, open]);
 
-  const send = async () => {
-    const text = input.trim();
+  const send = async (override?: string) => {
+    const text = (override ?? input).trim();
     if (!text || busy) return;
     setInput("");
     const next = [...msgs, { role: "user" as const, content: text }];
@@ -45,7 +45,7 @@ export function ClientV() {
           <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
             <span className="flex items-center gap-2 text-[13px] font-semibold text-white">
               <span className="flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-bold text-white" style={{ background: "radial-gradient(120% 120% at 30% 25%, #a78bfa, #7c3aed)" }}>V</span>
-              V · tu asistente
+              V · tu copiloto
             </span>
             <button onClick={() => setOpen(false)} className="text-[18px] leading-none" style={{ color: "rgba(255,255,255,0.4)" }}>×</button>
           </div>
@@ -60,6 +60,13 @@ export function ClientV() {
                 </div>
               </div>
             ))}
+            {msgs.length <= 1 && !busy && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {["¿Cómo creo mi app?", "Conectar mi Stripe", "¿Qué puedo hacer aquí?"].map((q) => (
+                  <button key={q} onClick={() => send(q)} className="rounded-full px-3 py-1.5 text-[12px] transition-colors" style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.32)", color: "#c4b5fd" }}>{q}</button>
+                ))}
+              </div>
+            )}
             {busy && <div className="mr-auto text-[12px]" style={{ color: "rgba(255,255,255,0.4)" }}>V está pensando…</div>}
             <div ref={endRef} />
           </div>
