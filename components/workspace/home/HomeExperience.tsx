@@ -177,7 +177,7 @@ function CreateApp() {
   };
 
   return (
-    <div className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(124,58,237,0.10),rgba(255,255,255,0.015))", border: "1px solid rgba(124,58,237,0.28)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 10px 30px -16px rgba(0,0,0,0.6)" }}>
+    <div id="crear" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(124,58,237,0.10),rgba(255,255,255,0.015))", border: "1px solid rgba(124,58,237,0.28)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 10px 30px -16px rgba(0,0,0,0.6)" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Crea tu app y publícala</p>
