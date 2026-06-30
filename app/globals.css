@@ -829,11 +829,11 @@ body.keyboard-open .vf-mobile-nav {
 
 /* Variables semánticas de texto */
 :root {
-  --fg-primary: rgba(255,255,255,0.92);
-  --fg-secondary: rgba(255,255,255,0.62);
-  --fg-tertiary: rgba(255,255,255,0.46);
-  --fg-muted: rgba(255,255,255,0.30);
-  --fg-subtle: rgba(255,255,255,0.16);
+  --fg-primary: rgba(255,255,255,0.95);
+  --fg-secondary: rgba(255,255,255,0.74);
+  --fg-tertiary: rgba(255,255,255,0.60);
+  --fg-muted: rgba(255,255,255,0.46);
+  --fg-subtle: rgba(255,255,255,0.30);
   --surface-1: rgba(255,255,255,0.025);
   --surface-2: rgba(255,255,255,0.05);
   --surface-3: rgba(255,255,255,0.08);
