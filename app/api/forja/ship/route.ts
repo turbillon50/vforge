@@ -18,17 +18,24 @@ function slugify(s: string): string {
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 50) || "mi-app";
 }
 
-function starter(name: string): string {
+const TEMPLATES: Record<string, { sub: string; accent: string }> = {
+  landing:    { sub: "Tu landing esta viva. Cuentale al mundo que haces.", accent: "#7c3aed" },
+  tienda:     { sub: "Tu tienda esta lista. Conecta Stripe y empieza a vender.", accent: "#16a34a" },
+  portafolio: { sub: "Tu portafolio esta en linea. Muestra tu trabajo.", accent: "#0ea5e9" },
+  blanco:     { sub: "Lienzo en blanco listo. Construye lo que imagines.", accent: "#a78bfa" },
+};
+function starter(name: string, template: string): string {
+  const t = TEMPLATES[template] || TEMPLATES.blanco;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/><title>${name}</title>
 <style>:root{color-scheme:dark}*{margin:0;box-sizing:border-box}
 body{min-height:100vh;display:grid;place-items:center;background:#0a0a0f;color:#f5f5f7;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif}
 .card{text-align:center;padding:48px 32px;border:1px solid rgba(255,255,255,.09);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 20px 60px -20px rgba(0,0,0,.7);max-width:520px}
 h1{font-size:2rem;letter-spacing:-.03em;margin-bottom:12px}p{color:rgba(255,255,255,.5);line-height:1.5}
-.b{display:inline-block;margin-bottom:20px;padding:6px 14px;border-radius:999px;border:1px solid rgba(124,58,237,.35);color:#a78bfa;font-size:12px;font-weight:600}
-.d{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px #22c55e;margin-right:6px}</style></head>
+.b{display:inline-block;margin-bottom:20px;padding:6px 14px;border-radius:999px;border:1px solid ${t.accent};color:${t.accent};font-size:12px;font-weight:600}
+.d{display:inline-block;width:8px;height:8px;border-radius:50%;background:${t.accent};box-shadow:0 0 10px ${t.accent};margin-right:6px}</style></head>
 <body><div class="card"><span class="b"><span class="d"></span>En produccion</span>
-<h1>${name}</h1><p>Tu app esta viva. La creaste y deployaste con VForge en segundos. Desde aqui la haces crecer.</p></div></body></html>`;
+<h1>${name}</h1><p>${t.sub}</p></div></body></html>`;
 }
 
 function gh(path: string, token: string, init: RequestInit = {}) {
@@ -50,6 +57,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({} as Record<string, unknown>));
   const name = (String(body.name || "Mi app").trim() || "Mi app").slice(0, 60);
   const slug = slugify(name) + "-" + Math.random().toString(36).slice(2, 6);
+  const template = String(body.template || "blanco").toLowerCase();
 
   const ghToken = await getUserSecret(userId, "GITHUB_USER_TOKEN");
   if (!ghToken) return Response.json({ ok: false, error: "connect_github" }, { status: 400 });
@@ -71,7 +79,7 @@ export async function POST(req: Request) {
     const repo = await repoRes.json();
     out.repo = { url: repo.html_url, full: repo.full_name };
 
-    const content = Buffer.from(starter(name), "utf8").toString("base64");
+    const content = Buffer.from(starter(name, template), "utf8").toString("base64");
     await gh(`/repos/${owner}/${slug}/contents/index.html`, ghToken, {
       method: "PUT",
       body: JSON.stringify({ message: "VForge: app inicial", content }),
@@ -85,7 +93,7 @@ export async function POST(req: Request) {
         name: slug,
         target: "production",
         projectSettings: { framework: null },
-        files: [{ file: "index.html", data: starter(name) }],
+        files: [{ file: "index.html", data: starter(name, template) }],
       }),
     });
     const dep = await depRes.json();

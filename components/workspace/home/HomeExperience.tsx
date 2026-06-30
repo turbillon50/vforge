@@ -156,6 +156,7 @@ function Showcase() {
 function CreateApp() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [tpl, setTpl] = useState("landing");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [res, setRes] = useState<{ repo?: { url: string }; deploy?: { url: string | null } } | null>(null);
@@ -166,7 +167,7 @@ function CreateApp() {
     try {
       const r = await fetch("/api/forja/ship", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim() }),
+        body: JSON.stringify({ name: name.trim(), template: tpl }),
       });
       const d = await r.json();
       if (!d.ok) {
@@ -189,6 +190,16 @@ function CreateApp() {
       </div>
       {open && (
         <div className="mt-4">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.4)" }}>Elige una plantilla</p>
+          <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[["landing","Landing","Cuenta qué haces","#7c3aed"],["tienda","Tienda","Vende con Stripe","#16a34a"],["portafolio","Portafolio","Muestra tu trabajo","#0ea5e9"],["blanco","En blanco","Lienzo libre","#a78bfa"]].map(([id,t,d,c]) => (
+              <button key={id} type="button" onClick={() => setTpl(id)} className="rounded-xl p-3 text-left transition" style={{ background: tpl===id ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)", border: tpl===id ? `1px solid ${c}` : "1px solid rgba(255,255,255,0.09)", boxShadow: tpl===id ? `0 0 0 1px ${c}, inset 0 1px 0 rgba(255,255,255,0.06)` : "none" }}>
+                <span className="block h-7 w-7 rounded-lg" style={{ background: `radial-gradient(120% 120% at 30% 25%, ${c}, transparent 70%)`, border: `1px solid ${c}` }} />
+                <span className="mt-2 block text-[12.5px] font-semibold" style={{ color: "#fff" }}>{t}</span>
+                <span className="block text-[10.5px]" style={{ color: "rgba(255,255,255,0.42)" }}>{d}</span>
+              </button>
+            ))}
+          </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && run()} placeholder="Nombre de tu app" autoFocus
               className="flex-1 rounded-lg px-3.5 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
