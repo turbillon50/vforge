@@ -25,7 +25,7 @@ export function WorkspaceStudio() {
 
   const [apps, setApps] = useState<App[]>([]);
   const [active, setActive] = useState<App | null>(null);
-  const [tab, setTab] = useState<"preview" | "detalles">("preview");
+  const [tab, setTab] = useState<"preview" | "codigo" | "consola" | "detalles">("preview");
   const [conn, setConn] = useState<string[]>([]);
   useEffect(() => {
     fetch("/api/forja/apps").then(r => r.ok ? r.json() : { apps: [] }).then(d => { setApps(d.apps || []); if (d.apps?.[0]) setActive(d.apps[0]); }).catch(() => {});
@@ -82,7 +82,7 @@ export function WorkspaceStudio() {
         <Handle side="left" />
         <main className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-center gap-1 border-b border-white/[0.08] px-3 py-2">
-            {([["preview", "Preview"], ["detalles", "Detalles"]] as const).map(([k, l]) => (
+            {([["preview", "Preview"], ["codigo", "Codigo"], ["consola", "Consola"], ["detalles", "Detalles"]] as const).map(([k, l]) => (
               <button key={k} onClick={() => setTab(k)} className="rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition-colors" style={tab === k ? { background: "rgba(255,255,255,0.1)", color: "#fff" } : { color: "rgba(255,255,255,0.55)" }}>{l}</button>
             ))}
             {active?.deploy_url && <a href={active.deploy_url} target="_blank" rel="noreferrer" className="ml-auto rounded-full border border-white/[0.1] px-3 py-1.5 text-[12px] text-white/70 hover:text-white">Abrir</a>}
@@ -91,6 +91,22 @@ export function WorkspaceStudio() {
             {tab === "preview" ? (
               active?.deploy_url ? <iframe title="preview" src={active.deploy_url} className="h-full w-full border-0 bg-white" />
               : <div className="flex h-full items-center justify-center p-6 text-center text-[14px] text-white/45"><div>Aun no hay app que previsualizar.<br /><Link href="/workspace#crear" className="mt-3 inline-block rounded-full px-4 py-2 text-[13px] font-semibold text-black" style={{ background: "linear-gradient(180deg,#fff,#ededf2)" }}>Crear una app</Link></div></div>
+) : tab === "codigo" ? (
+              <div className="h-full overflow-auto p-4">
+                <div className="rounded-xl border border-white/[0.08] bg-[#0d0d12] p-4 font-mono text-[12.5px] leading-relaxed text-white/80">
+                  <p className="mb-2 text-white/40">// {active ? active.name : "tu app"} - index.html</p>
+                  <p>{active?.repo_url ? "El codigo completo vive en tu repositorio." : "Crea una app para ver su codigo aqui."}</p>
+                  {active?.repo_url && <a href={active.repo_url} target="_blank" rel="noreferrer" className="mt-3 inline-block rounded-full px-4 py-1.5 text-[12px]" style={{ background: "rgba(124,58,237,0.16)", border: "1px solid rgba(124,58,237,0.35)", color: "#c4b5fd" }}>Abrir repo en GitHub</a>}
+                </div>
+                <p className="mt-3 text-[11.5px] text-white/35">Proximamente: editor en vivo y commits desde aqui.</p>
+              </div>
+            ) : tab === "consola" ? (
+              <div className="h-full overflow-auto bg-[#070709] p-4 font-mono text-[12.5px] leading-relaxed">
+                <p className="text-emerald-400">$ vforge dev</p>
+                <p className="text-white/50">{active ? "Build OK - " + active.name : "Sin app activa."}</p>
+                <p className="text-white/40">{active?.deploy_url ? "Sirviendo en " + active.deploy_url : "Crea una app para ver logs."}</p>
+                <p className="mt-2 text-white/30">Proximamente: logs en vivo y shell real.</p>
+              </div>
             ) : (
               <div className="p-6 text-[13.5px]">
                 <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-white/40">Detalles</p>
