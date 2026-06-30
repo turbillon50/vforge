@@ -267,6 +267,47 @@ function CobroApp() {
   );
 }
 
+
+/* ── Conecta tu IA (BYO-key, opcional): Anthropic / OpenAI / Gemini ── */
+function ConnectLLM() {
+  const [provider, setProvider] = useState("anthropic");
+  const [key, setKey] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  const save = async () => {
+    if (!key.trim() || busy) return;
+    setBusy(true); setMsg(null);
+    try {
+      const r = await fetch("/api/forja/connect-llm", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider, key: key.trim() }),
+      });
+      const d = await r.json();
+      if (d.ok) { setDone(true); setMsg("Conectado. V correrá con tu " + provider + "."); setKey(""); }
+      else setMsg(d.error || "No se pudo validar la key.");
+    } catch (e) { setMsg(e instanceof Error ? e.message : "error"); }
+    finally { setBusy(false); }
+  };
+
+  const opts = [["anthropic", "Anthropic"], ["openai", "OpenAI"], ["gemini", "Gemini"]];
+  return (
+    <div className="mb-8 rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)" }}>
+      <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Conecta tu IA <span className="text-[12px] font-normal" style={{ color: "rgba(255,255,255,0.4)" }}>(opcional)</span></p>
+      <p className="mb-3 text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>Trae tu propia key y V corre con tu modelo. Sin key, usa el V de la casa gratis.</p>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <select value={provider} onChange={e => setProvider(e.target.value)} className="rounded-lg px-3 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}>
+          {opts.map(([v, l]) => <option key={v} value={v} style={{ color: "#000" }}>{l}</option>)}
+        </select>
+        <input value={key} onChange={e => setKey(e.target.value)} type="password" placeholder="Tu API key" className="flex-1 rounded-lg px-3.5 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+        <button onClick={save} disabled={busy || !key.trim()} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: done ? "#16a34a" : "#fff", color: done ? "#fff" : "#000" }}>{busy ? "Validando…" : done ? "Conectado ✓" : "Conectar"}</button>
+      </div>
+      {msg && <p className="mt-2 text-[12px]" style={{ color: done ? "#86efac" : "#fca5a5" }}>{msg}</p>}
+    </div>
+  );
+}
+
 /* ══ MAIN ════════════════════════════════════════════════════════════ */
 export function HomeExperience({ name }: { name: string }) {
   const [projects,  setProjects]  = useState<Project[]>([]);
@@ -319,6 +360,7 @@ export function HomeExperience({ name }: { name: string }) {
       <FirstSteps connected={connected} projects={projects} loading={loading} />
       <CreateApp />
       <CobroApp />
+      <ConnectLLM />
       <Showcase />
 
       {/* ── Stats rápidas ── */}
