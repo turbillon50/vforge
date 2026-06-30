@@ -414,7 +414,7 @@ function Connect({
                   </button>
                 ) : (
                   <button
-                    onClick={() => { if (id === "github" || id === "vercel") { window.location.href = "/api/auth/" + id + "/start"; } else { setOpenInput(isOpen ? null : id); } }}
+                    onClick={() => { if (id === "github" || id === "vercel" || id === "stripe") { window.location.href = "/api/auth/" + id + "/start"; } else { setOpenInput(isOpen ? null : id); } }}
                     className={isOpen ? "btn-ghost" : "btn-primary"}
                   >
                     {isOpen ? (

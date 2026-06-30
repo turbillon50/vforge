@@ -16,7 +16,7 @@ export async function GET() {
 
   const clientId = process.env.STRIPE_CONNECT_CLIENT_ID;
   if (!clientId)
-    return Response.redirect(`${site}/app/integrations?stripe=error_no_client`, 302);
+    return Response.redirect(`${site}/onboarding?stripe=error_no_client`, 302);
 
   const state = randomBytes(16).toString("hex");
   const jar = await cookies();

@@ -25,7 +25,7 @@ export async function GET(req: Request) {
   jar.delete("stripe_oauth_state");
 
   const back = (s: string) =>
-    Response.redirect(`${site}/app/integrations?stripe=${s}`, 302);
+    Response.redirect(`${site}/onboarding?connected=stripe&stripe=${s}`, 302);
 
   if (errParam) return back("error_denied");
   if (!code) return back("error_no_code");
