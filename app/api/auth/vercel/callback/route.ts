@@ -50,10 +50,10 @@ export async function GET(req: Request) {
       access_token?: string;
       team_id?: string | null;
       error?: string;
+      error_description?: string;
     };
     if (!data.access_token) {
-      console.error("[vercel oauth] sin access_token:", data.error);
-      return back("error_token");
+      return back("err:" + String(data.error || data.error_description || "no_token").slice(0, 50));
     }
 
     await saveUserSecret(userId, "VERCEL_USER_TOKEN", data.access_token, "vercel");
