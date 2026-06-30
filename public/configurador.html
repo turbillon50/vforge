@@ -52,6 +52,19 @@ input{width:100%;background:#0a0a10;border:1px solid #26263a;border-radius:8px;p
 .refchip{display:inline-flex;align-items:center;gap:6px;background:#0a0a10;border:1px solid #26263a;border-radius:18px;padding:6px 10px;font-size:12px;cursor:pointer}
 .refchip img{width:14px;height:14px}
 @media(max-width:680px){.intake-grid{grid-template-columns:1fr}}
+.pvbtn{width:100%;background:#1a1a26;color:#cfcfe0;border:1px solid #2a2a3a;border-radius:9px;padding:9px;font-size:12.5px;font-weight:600;cursor:pointer;margin-bottom:6px}
+.pvbtn:hover{border-color:#5a5af0}
+.bbar .addr{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.zoom{position:fixed;inset:0;background:rgba(4,4,8,.93);z-index:200;display:none;overflow:auto;padding:26px}
+.zoom.on{display:block}
+.zoomwrap{max-width:1280px;margin:0 auto}
+.zclose{background:#e8e8f0;color:#08080c;border:0;border-radius:9px;padding:10px 20px;font-weight:700;cursor:pointer;margin-bottom:18px}
+.zrow{display:flex;gap:26px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.zphone{width:300px;background:#0f0f16;border:9px solid #16161e;border-radius:42px;overflow:hidden;position:relative;box-shadow:0 12px 40px rgba(0,0,0,.6)}
+.zphone .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:90px;height:22px;background:#16161e;border-radius:0 0 16px 16px;z-index:3}
+.zphone .scr{height:600px;border-radius:30px}
+.zbrowser{background:#0f0f16;border:1px solid #1d1d28;border-radius:12px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.zbrowser .scr{height:560px}
 </style></head><body><div class="layout"><div class="wrap">
 <header><h1>VForge - Configurador de App</h1><p>Define el contexto y selecciona TODAS las features que quieras (se combinan). El ensamblador la construye.</p><p class="leg"><b>Punto verde</b> = integracion real probada (sale funcional en el MVP). Sin punto = visual (sale en el demo, se integra despues).</p></header><section class="intake">
  <h2>Carga tu objetivo <span class="req">contexto minimo</span></h2>
@@ -102,9 +115,11 @@ function buildScreen(mobile){
  if(mobile&&has('navegacion','Tab bar inferior'))h+='<div style="position:sticky;bottom:0;display:flex;justify-content:space-around;padding:9px 0;background:'+(light?'#fff':'#0c0c14')+';border-top:1px solid '+bd+'">'+[0,1,2,3].map(function(i){return '<div style="width:18px;height:18px;border-radius:5px;background:'+(i==0?acc:muted)+';opacity:'+(i==0?1:.4)+'"></div>';}).join('')+'</div>';
  h+='</div>';return h;
 }
-function renderPreview(){var p=document.getElementById('preview');if(!p)return;p.innerHTML='<div class="ttl">MOVIL 390px</div><div class="phone"><div class="notch"></div>'+buildScreen(true)+'</div><div class="ttl">ESCRITORIO 1440px</div><div class="browser"><div class="bbar"><i></i><i></i><i></i><div class="addr">vforge.site/tu-app</div></div>'+buildScreen(false)+'</div>';}
+function renderPreview(){var p=document.getElementById('preview');if(!p)return;p.innerHTML='<button class="pvbtn" onclick="openZoom()">Ampliar preview</button><div class="ttl">MOVIL 390px</div><div class="phone"><div class="notch"></div>'+buildScreen(true)+'</div><div class="ttl">ESCRITORIO 1440px</div><div class="browser"><div class="bbar"><i></i><i></i><i></i><div class="addr">vforge.site/tu-app</div></div>'+buildScreen(false)+'</div>';}
+function openZoom(){var z=document.getElementById('zoom');z.innerHTML='<div class="zoomwrap"><button class="zclose" onclick="closeZoom()">Cerrar preview</button><div class="zrow"><div><div class="ttl">MOVIL 390px</div><div class="zphone"><div class="notch"></div>'+buildScreen(true)+'</div></div><div style="flex:1;min-width:320px"><div class="ttl">ESCRITORIO 1440px</div><div class="zbrowser"><div class="bbar"><i></i><i></i><i></i><div class="addr">vforge.site/tu-app</div></div>'+buildScreen(false)+'</div></div></div></div>';z.classList.add('on');}
+function closeZoom(){document.getElementById('zoom').classList.remove('on');}
 function count(){let n=0;for(const k in state){const v=state[k];if(Array.isArray(v))n+=v.length;else if(v===true)n++;}return n;}
 function upd(){renderPreview();document.getElementById('spec').innerHTML='<span class=cnt>'+count()+'</span> features | '+(state.tipo||'define tipo');}
 function ensamblar(){alert('Spec lista para el ensamblador:\n\n'+JSON.stringify(state,null,1));}
 upd();
-</script></body></html>
+</script><div id="zoom" class="zoom"></div></body></html>
