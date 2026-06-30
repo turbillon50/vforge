@@ -19,8 +19,9 @@ const NAV = [
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   return (
-    <div className="fixed inset-0 flex overflow-hidden" style={{ background: "#0a0a0f" }}>
-      <aside className="hidden h-dvh w-[230px] shrink-0 flex-col md:flex" style={{ borderRight: "1px solid rgba(255,255,255,0.07)" }}>
+    <div className="fixed inset-0 flex overflow-hidden" style={{ background: "#0a0810" }}>
+      <div className="vibe-mesh" />
+      <aside className="relative z-10 hidden h-dvh w-[230px] shrink-0 flex-col md:flex" style={{ borderRight: "1px solid rgba(255,255,255,0.07)" }}>
         <div className="px-5 py-5">
           <Link href="/workspace"><VWordmark /></Link>
         </div>
@@ -44,7 +45,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
           </span>
         </div>
       </aside>
-      <div className="flex h-dvh min-w-0 flex-1 flex-col">
+      <div className="relative z-10 flex h-dvh min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center px-5 py-3"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(10,10,15,0.85)", backdropFilter: "blur(12px)" }}>
           <div className="md:hidden"><Link href="/workspace"><VWordmark /></Link></div>
