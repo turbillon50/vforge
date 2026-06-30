@@ -110,7 +110,7 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
             <p className="text-[13px] font-medium" style={{ color: "#fff" }}>{st.title}</p>
             <p className="mt-0.5 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.58)" }}>{st.desc}</p>
             {!st.done
-              ? <Link href={st.href} className="mt-3 inline-block rounded-lg px-3 py-1.5 text-[12px] font-medium" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>{st.cta} →</Link>
+              ? <Link href={st.href} className="mt-3 inline-block rounded-full px-4 py-1.5 text-[12px] font-medium" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>{st.cta} →</Link>
               : <p className="mt-3 flex items-center gap-1 text-[11px] font-medium" style={{ color: "#9aa0aa" }}><IconCheck size={12} /> Listo</p>}
             <button onClick={() => window.dispatchEvent(new CustomEvent("vforge:open-v", { detail: { prompt: st.vq } }))} className="mt-2 text-[11px] transition-colors" style={{ color: "rgba(167,139,250,0.85)" }}>Pregúntale a V &rarr;</button>
           </div>
@@ -189,7 +189,7 @@ function CreateApp() {
           <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Un nombre y listo: repo en GitHub + deploy en Vercel, en segundos.</p>
         </div>
         {!open && (
-          <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>Crear app →</button>
+          <button onClick={() => setOpen(true)} className="rounded-full px-5 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>Crear app →</button>
         )}
       </div>
       {open && (
@@ -204,7 +204,7 @@ function CreateApp() {
               </button>
             ))}
           </div>
-          <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="¿Qué hace tu app? (objetivo, 1-2 líneas)" rows={2} className="mb-3 w-full rounded-lg px-3.5 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", resize: "vertical" }} />
+          <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="¿Qué hace tu app? (objetivo, 1-2 líneas)" rows={2} className="mb-3 w-full rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", resize: "vertical" }} />
           <p className="mb-2 text-[11px] font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.46)" }}>Capacidades</p>
           <div className="mb-3 flex flex-wrap gap-2">
             {["Autenticación", "Pagos", "Base de datos", "IA / V", "Dominio", "Panel admin", "Notificaciones", "Multi-idioma"].map((m) => {
@@ -219,8 +219,8 @@ function CreateApp() {
           </label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && run()} placeholder="Nombre de tu app" autoFocus
-              className="flex-1 rounded-lg px-3.5 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-            <button onClick={run} disabled={busy || !name.trim()} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>
+              className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+            <button onClick={run} disabled={busy || !name.trim()} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>
               {busy ? "Creando y publicando…" : "Crear y publicar"}
             </button>
           </div>
@@ -276,14 +276,14 @@ function CobroApp() {
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Cobra en segundos</p>
           <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Crea un producto y un link de pago con tu Stripe. El dinero llega a tu cuenta.</p>
         </div>
-        {!open && <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>Crear cobro →</button>}
+        {!open && <button onClick={() => setOpen(true)} className="rounded-full px-5 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>Crear cobro →</button>}
       </div>
       {open && (
         <div className="mt-4">
           <div className="flex flex-col gap-2 sm:flex-row">
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="Qué cobras (ej. Asesoría)" className="flex-1 rounded-lg px-3.5 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-            <input value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} inputMode="decimal" placeholder="Monto MXN" className="w-full rounded-lg px-3.5 py-2.5 text-[14px] outline-none sm:w-40" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-            <button onClick={run} disabled={busy || !name.trim() || !amount} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>{busy ? "Creando…" : "Generar link"}</button>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Qué cobras (ej. Asesoría)" className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+            <input value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} inputMode="decimal" placeholder="Monto MXN" className="w-full rounded-full px-4 py-2.5 text-[14px] outline-none sm:w-40" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+            <button onClick={run} disabled={busy || !name.trim() || !amount} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>{busy ? "Creando…" : "Generar link"}</button>
           </div>
           {err && <p className="mt-3 text-[12.5px]" style={{ color: "#fca5a5" }}>{err}</p>}
           {url && (
@@ -331,8 +331,8 @@ function ConnectLLM() {
         <select value={provider} onChange={e => setProvider(e.target.value)} className="rounded-lg px-3 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}>
           {opts.map(([v, l]) => <option key={v} value={v} style={{ color: "#000" }}>{l}</option>)}
         </select>
-        <input value={key} onChange={e => setKey(e.target.value)} type="password" placeholder="Tu API key" className="flex-1 rounded-lg px-3.5 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-        <button onClick={save} disabled={busy || !key.trim()} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: done ? "#16a34a" : "#fff", color: done ? "#fff" : "#000" }}>{busy ? "Validando…" : done ? "Conectado ✓" : "Conectar"}</button>
+        <input value={key} onChange={e => setKey(e.target.value)} type="password" placeholder="Tu API key" className="flex-1 rounded-full px-4 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+        <button onClick={save} disabled={busy || !key.trim()} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: done ? "#16a34a" : "#fff", color: done ? "#fff" : "#000" }}>{busy ? "Validando…" : done ? "Conectado ✓" : "Conectar"}</button>
       </div>
       {msg && <p className="mt-2 text-[12px]" style={{ color: done ? "#86efac" : "#fca5a5" }}>{msg}</p>}
     </div>
@@ -377,13 +377,13 @@ function DomainBuyer() {
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Tu dominio propio</p>
           <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Busca y compra un dominio para tu app, desde tu Vercel.</p>
         </div>
-        {!open && <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Buscar dominio →</button>}
+        {!open && <button onClick={() => setOpen(true)} className="rounded-full px-5 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Buscar dominio →</button>}
       </div>
       {open && (
         <div className="mt-4">
           <div className="flex flex-col gap-2 sm:flex-row">
-            <input value={name} onChange={e => { setName(e.target.value); setInfo(null); setBought(false); }} onKeyDown={e => e.key === "Enter" && check()} placeholder="tudominio.com" className="flex-1 rounded-lg px-3.5 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-            <button onClick={check} disabled={busy || !name.trim()} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>{busy ? "Buscando…" : "Buscar"}</button>
+            <input value={name} onChange={e => { setName(e.target.value); setInfo(null); setBought(false); }} onKeyDown={e => e.key === "Enter" && check()} placeholder="tudominio.com" className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+            <button onClick={check} disabled={busy || !name.trim()} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>{busy ? "Buscando…" : "Buscar"}</button>
           </div>
           {err && <p className="mt-3 text-[12.5px]" style={{ color: "#fca5a5" }}>{err}</p>}
           {info && !bought && (
@@ -391,7 +391,7 @@ function DomainBuyer() {
               {info.available
                 ? <div className="flex items-center justify-between gap-3">
                     <span className="text-[13px]" style={{ color: "#86efac" }}>{name.trim().toLowerCase()} está disponible{info.price ? ` · $${info.price} USD/año` : ""}</span>
-                    {info.price && <button onClick={buy} disabled={busy} className="rounded-lg px-3.5 py-2 text-[12.5px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>{busy ? "Comprando…" : `Comprar por $${info.price}`}</button>}
+                    {info.price && <button onClick={buy} disabled={busy} className="rounded-full px-4 py-2 text-[12.5px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>{busy ? "Comprando…" : `Comprar por $${info.price}`}</button>}
                   </div>
                 : <span className="text-[13px]" style={{ color: "#fca5a5" }}>No disponible. Prueba otro.</span>}
             </div>
@@ -434,7 +434,7 @@ export function HomeExperience({ name }: { name: string }) {
     <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-10 md:px-8 md:pt-14">
 
       {/* ── Header ── */}
-      <div className="mb-14 mt-2">
+      <div className="mb-16 mt-4">
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.46)", letterSpacing: "0.22em" }}>
           {greeting()}, {name}
@@ -442,8 +442,8 @@ export function HomeExperience({ name }: { name: string }) {
         <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.05, ease: [0.22,1,0.36,1] }}
           className="font-display"
-          style={{ fontSize: "clamp(2.4rem, 5.6vw, 3.7rem)", lineHeight: 1.02,
-                   letterSpacing: "-0.045em", color: "#f4f4f6", marginTop: 16, fontWeight: 600 }}>
+          style={{ fontSize: "clamp(2.8rem, 6.5vw, 4.4rem)", lineHeight: 1.0,
+                   letterSpacing: "-0.05em", color: "#f4f4f6", marginTop: 16, fontWeight: 600 }}>
           Tu fábrica está{" "}
           <span style={{ color: "#fff", fontWeight: 500 }}>despierta.</span>
         </motion.h1>

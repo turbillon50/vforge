@@ -138,7 +138,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   return (
-    <div className="fixed inset-0 flex overflow-hidden" style={{ background: "#0a0810" }}>
+    <div className="fixed inset-0 flex overflow-hidden" style={{ background: "#0a0a0f" }}>
       <div className="vibe-mesh" />
       {/* Sidebar — chrome theme-aware (tokens --chrome-bg / --fg-* / --border-* / --surface-*) */}
       <aside data-chrome className="relative z-10 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-[var(--border-1)] bg-[rgb(var(--chrome-bg)/0.92)] backdrop-blur-2xl md:flex">

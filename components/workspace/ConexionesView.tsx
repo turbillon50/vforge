@@ -68,7 +68,7 @@ export function ConexionesView() {
               <div className="ml-auto">
                 {on
                   ? <span className="rounded-full px-3 py-1.5 text-[12px] font-medium" style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", color: "#86efac" }}>Conectado</span>
-                  : <a href={`/api/auth/${s.id}/start`} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Conectar &rarr;</a>}
+                  : <a href={`/api/auth/${s.id}/start`} className="rounded-full px-5 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Conectar &rarr;</a>}
               </div>
             </div>
           );
@@ -82,8 +82,8 @@ export function ConexionesView() {
           <select value={provider} onChange={e => setProvider(e.target.value)} className="rounded-lg px-3 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}>
             {LLMS.map(([v, l]) => <option key={v} value={v} style={{ color: "#000" }}>{l}</option>)}
           </select>
-          <input value={key} onChange={e => setKey(e.target.value)} type="password" placeholder="Tu API key" className="flex-1 rounded-lg px-3.5 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-          <button onClick={saveLlm} disabled={busy || !key.trim()} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: llmDone ? "#16a34a" : "linear-gradient(180deg,#ffffff,#ededf2)", color: llmDone ? "#fff" : "#0a0810" }}>{busy ? "Validando…" : llmDone ? "Conectado" : "Conectar"}</button>
+          <input value={key} onChange={e => setKey(e.target.value)} type="password" placeholder="Tu API key" className="flex-1 rounded-full px-4 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+          <button onClick={saveLlm} disabled={busy || !key.trim()} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: llmDone ? "#16a34a" : "linear-gradient(180deg,#ffffff,#ededf2)", color: llmDone ? "#fff" : "#0a0810" }}>{busy ? "Validando…" : llmDone ? "Conectado" : "Conectar"}</button>
         </div>
         {msg && <p className="mt-2 text-[12px]" style={{ color: llmDone ? "#86efac" : "#fca5a5" }}>{msg}</p>}
       </div>

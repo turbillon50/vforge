@@ -18,11 +18,11 @@ const NAV = [
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   return (
-    <div className="fixed inset-0 flex overflow-hidden bg-[#0a0810]">
+    <div className="fixed inset-0 flex overflow-hidden bg-[#0a0a0f]">
       {/* Mesh viva sutil premium */}
       <div className="absolute inset-0 bg-[radial-gradient(#7c3aed_0.8px,transparent_1px)] [background-size:24px_24px] opacity-30 pointer-events-none animate-[mesh_25s_linear_infinite]" />
 
-      <aside className="relative z-10 hidden h-dvh w-[260px] shrink-0 flex-col border-r border-white/[0.08] md:flex bg-[#0a0810]/95 backdrop-blur-2xl">
+      <aside className="relative z-10 hidden h-dvh w-[260px] shrink-0 flex-col border-r border-white/[0.08] md:flex bg-[#0a0a0f]/95 backdrop-blur-2xl">
         <div className="px-6 py-6 border-b border-white/[0.08]">
           <Link href="/workspace" className="flex items-center gap-2">
             <VWordmark />
@@ -52,7 +52,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 relative z-10">
-        <header className="sticky top-0 z-50 h-14 border-b border-white/[0.08] bg-[#0a0810]/95 backdrop-blur-2xl flex items-center px-6">
+        <header className="sticky top-0 z-50 h-14 border-b border-white/[0.08] bg-[#0a0a0f]/95 backdrop-blur-2xl flex items-center px-6">
           <div className="md:hidden"><Link href="/workspace"><VWordmark /></Link></div>
           <div className="flex-1" />
           <UserButton afterSignOutUrl="/" />

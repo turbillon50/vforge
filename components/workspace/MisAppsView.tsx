@@ -15,7 +15,7 @@ export function MisAppsView() {
       ) : apps.length === 0 ? (
         <div className="glossy rounded-2xl p-10 text-center">
           <p className="text-[14px]" style={{ color: "rgba(255,255,255,0.5)" }}>Aún no creas ninguna app.</p>
-          <a href="/workspace#crear" className="mt-4 inline-block rounded-lg px-4 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Crear mi primera app &rarr;</a>
+          <a href="/workspace#crear" className="mt-4 inline-block rounded-full px-5 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Crear mi primera app &rarr;</a>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
