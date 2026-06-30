@@ -23,6 +23,14 @@
 .hairline{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent)}
 .logo-row{mask:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
 a{text-decoration:none;color:inherit}
+.chip{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.09);box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 10px 24px -14px rgba(0,0,0,.9),0 30px 60px -30px rgba(124,58,237,.35);transition:.25s}
+.chip:hover{transform:translateY(-3px);border-color:rgba(124,58,237,.4);box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 14px 30px -14px rgba(0,0,0,.9),0 40px 70px -28px rgba(124,58,237,.55)}
+.chip img{height:22px;width:22px;object-fit:contain;filter:grayscale(1) brightness(0) invert(1);opacity:.92}
+.crys{position:relative;border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 80px -30px rgba(0,0,0,.95),0 60px 120px -50px rgba(124,58,237,.45),0 1px 0 rgba(255,255,255,.14) inset}
+.crys::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.10),transparent 30%,transparent 70%,rgba(7,7,9,.5));pointer-events:none}
+.crys::before{content:"";position:absolute;inset:0;background:radial-gradient(80% 50% at 50% 0%,rgba(168,85,247,.18),transparent 60%);pointer-events:none;z-index:1}
+.rail{display:flex;gap:22px;overflow-x:auto;scroll-snap-type:x mandatory;padding:8px 2px 22px;scrollbar-width:none}.rail::-webkit-scrollbar{display:none}
+.slide{flex:0 0 78%;max-width:820px;scroll-snap-align:center}@media(min-width:768px){.slide{flex:0 0 62%}}
 </style></head>
 <body>
 <canvas id="fx"></canvas>
@@ -32,7 +40,7 @@ a{text-decoration:none;color:inherit}
 <div class="wrap">
 <!-- NAV -->
 <nav class="glass fixed left-1/2 top-5 z-50 flex w-[min(1100px,92vw)] -translate-x-1/2 items-center gap-6 rounded-full px-5 py-3">
-  <div class="flex items-center gap-2 font-semibold tracking-tight"><span style="color:var(--v2);font-size:20px">⟁</span> VForge</div>
+  <div class="flex items-center gap-2 font-semibold tracking-tight"><img src="/icon.svg" alt="" style="height:22px;width:22px"/> VForge</div>
   <div class="ml-2 hidden gap-6 text-[13px] md:flex" style="color:rgba(255,255,255,.62)">
     <a href="#producto" class="hover:text-white">Producto</a><a href="#features" class="hover:text-white">Cómo funciona</a><a href="#infra" class="hover:text-white">Integraciones</a></div>
   <a href="/sign-in" class="ml-auto text-[13px]" style="color:rgba(255,255,255,.7)">Entrar</a>
@@ -73,6 +81,20 @@ a{text-decoration:none;color:inherit}
   </div>
 </section>
 
+<!-- CARRUSEL -->
+<section class="mx-auto mt-28 w-full">
+  <div class="mx-auto mb-8 w-[min(1100px,92vw)]">
+    <p class="kicker mono reveal text-[11px] uppercase" style="color:rgba(255,255,255,.42)">Hecho con materia oscura</p>
+    <h2 class="reveal mt-3 max-w-[22ch] font-bold" style="font-size:clamp(1.8rem,4.5vw,3rem);letter-spacing:-.035em">Obsidiana, cristal y luz.</h2>
+  </div>
+  <div id="rail" class="rail mx-auto w-[min(1240px,96vw)]">
+    <div class="slide"><div class="crys aspect-video"><img src="/stitch/hero.png" class="h-full w-full object-cover" alt=""/></div></div>
+    <div class="slide"><div class="crys aspect-video"><img src="/stitch/car-1.png" class="h-full w-full object-cover" alt="" onerror="this.parentNode.style.background='#0c0c12'"/></div></div>
+    <div class="slide"><div class="crys aspect-video"><img src="/stitch/car-2.png" class="h-full w-full object-cover" alt="" onerror="this.parentNode.style.background='#0c0c12'"/></div></div>
+    <div class="slide"><div class="crys aspect-video"><img src="/stitch/car-3.png" class="h-full w-full object-cover" alt="" onerror="this.parentNode.style.background='#0c0c12'"/></div></div>
+  </div>
+</section>
+
 <!-- BIG STATEMENT -->
 <section id="producto" class="relative mx-auto my-32 w-[min(1000px,92vw)] text-center">
   <h2 class="reveal hgrad mx-auto max-w-[18ch] font-extrabold" style="font-size:clamp(2rem,6vw,4rem);letter-spacing:-.04em;line-height:1">No rentas un patio de juegos. Construyes en tu propia tierra.</h2>
@@ -82,14 +104,12 @@ a{text-decoration:none;color:inherit}
 <!-- LOGOS -->
 <section id="infra" class="mx-auto w-[min(1100px,92vw)] pb-10">
   <p class="kicker mono reveal mb-6 text-center text-[11px] uppercase" style="color:rgba(255,255,255,.38)">Se conecta con tu stack</p>
-  <div class="logo-row glass flex flex-wrap items-center justify-center gap-x-12 gap-y-5 rounded-2xl px-8 py-7 text-[15px] font-medium" style="color:rgba(255,255,255,.7)">
-    <span>GitHub</span><span>Vercel</span><span>Stripe</span><span>MindContext</span><span>Anthropic</span><span>OpenAI</span><span>Gemini</span>
-  </div>
+  <div class="flex flex-wrap items-center justify-center gap-4"><div class="chip reveal"><img src="/logos/github.svg" alt="GitHub"/><span class="text-[14px] font-medium" style="color:rgba(255,255,255,.82)">GitHub</span></div><div class="chip reveal"><img src="/logos/vercel.svg" alt="Vercel"/><span class="text-[14px] font-medium" style="color:rgba(255,255,255,.82)">Vercel</span></div><div class="chip reveal"><img src="/logos/stripe.svg" alt="Stripe"/><span class="text-[14px] font-medium" style="color:rgba(255,255,255,.82)">Stripe</span></div><div class="chip reveal"><img src="/logos/mindcontext.svg" alt="MindContext"/><span class="text-[14px] font-medium" style="color:rgba(255,255,255,.82)">MindContext</span></div><div class="chip reveal"><img src="/logos/claude.svg" alt="Anthropic"/><span class="text-[14px] font-medium" style="color:rgba(255,255,255,.82)">Anthropic</span></div><div class="chip reveal"><img src="/logos/openai.svg" alt="OpenAI"/><span class="text-[14px] font-medium" style="color:rgba(255,255,255,.82)">OpenAI</span></div><div class="chip reveal"><img src="/logos/gemini.svg" alt="Gemini"/><span class="text-[14px] font-medium" style="color:rgba(255,255,255,.82)">Gemini</span></div></div>
 </section>
 
 <div class="hairline mx-auto my-10 w-[min(1100px,92vw)]"></div>
 <footer class="mx-auto flex w-[min(1100px,92vw)] flex-col items-center justify-between gap-4 pb-16 text-[13px] md:flex-row" style="color:rgba(255,255,255,.45)">
-  <div class="flex items-center gap-2 font-semibold" style="color:#fff"><span style="color:var(--v2)">⟁</span> VForge</div>
+  <div class="flex items-center gap-2 font-semibold" style="color:#fff"><img src="/icon.svg" alt="" style="height:20px;width:20px"/> VForge</div>
   <div>© 2026 · Tu infraestructura, tu app.</div>
 </footer>
 </div>
@@ -114,5 +134,6 @@ frame();
 // reveal on scroll
 const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:.15});
 document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%4*60)+'ms';io.observe(el);});
+const rail=document.getElementById('rail');let ci=0;setInterval(()=>{if(!rail)return;const sl=rail.querySelectorAll('.slide');ci=(ci+1)%sl.length;sl[ci].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});},4200);
 </script>
 </body></html>
