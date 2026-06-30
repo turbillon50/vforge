@@ -322,6 +322,70 @@ function ConnectLLM() {
   );
 }
 
+
+/* ── Comprar dominio (Vercel del usuario; compra con confirmación explícita) ── */
+function DomainBuyer() {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [info, setInfo] = useState<{ available: boolean; price: number | null } | null>(null);
+  const [bought, setBought] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const check = async () => {
+    const n = name.trim().toLowerCase();
+    if (!n || busy) return;
+    setBusy(true); setErr(null); setInfo(null); setBought(false);
+    try {
+      const r = await fetch("/api/forja/domain?name=" + encodeURIComponent(n));
+      const d = await r.json();
+      if (!d.ok) setErr(d.error === "connect_vercel" ? "Conecta tu Vercel primero." : "No se pudo consultar.");
+      else setInfo({ available: d.available, price: d.price });
+    } catch { setErr("Error de red."); } finally { setBusy(false); }
+  };
+  const buy = async () => {
+    if (!info?.price || busy) return;
+    setBusy(true); setErr(null);
+    try {
+      const r = await fetch("/api/forja/domain", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: name.trim().toLowerCase(), expectedPrice: info.price }) });
+      const d = await r.json();
+      if (d.ok) setBought(true); else setErr("No se pudo comprar (revisa tu método de pago en Vercel).");
+    } catch { setErr("Error de red."); } finally { setBusy(false); }
+  };
+
+  return (
+    <div id="dominio" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(14,165,233,0.08),rgba(255,255,255,0.015))", border: "1px solid rgba(14,165,233,0.22)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 24px 60px -28px rgba(0,0,0,0.85)" }}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Tu dominio propio</p>
+          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>Busca y compra un dominio para tu app, desde tu Vercel.</p>
+        </div>
+        {!open && <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Buscar dominio →</button>}
+      </div>
+      {open && (
+        <div className="mt-4">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input value={name} onChange={e => { setName(e.target.value); setInfo(null); setBought(false); }} onKeyDown={e => e.key === "Enter" && check()} placeholder="tudominio.com" className="flex-1 rounded-lg px-3.5 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+            <button onClick={check} disabled={busy || !name.trim()} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#0ea5e9", color: "#fff" }}>{busy ? "Buscando…" : "Buscar"}</button>
+          </div>
+          {err && <p className="mt-3 text-[12.5px]" style={{ color: "#fca5a5" }}>{err}</p>}
+          {info && !bought && (
+            <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)" }}>
+              {info.available
+                ? <div className="flex items-center justify-between gap-3">
+                    <span className="text-[13px]" style={{ color: "#86efac" }}>{name.trim().toLowerCase()} está disponible{info.price ? ` · $${info.price} USD/año` : ""}</span>
+                    {info.price && <button onClick={buy} disabled={busy} className="rounded-lg px-3.5 py-2 text-[12.5px] font-semibold disabled:opacity-50" style={{ background: "#0ea5e9", color: "#fff" }}>{busy ? "Comprando…" : `Comprar por $${info.price}`}</button>}
+                  </div>
+                : <span className="text-[13px]" style={{ color: "#fca5a5" }}>No disponible. Prueba otro.</span>}
+            </div>
+          )}
+          {bought && <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(34,197,94,0.07)", border: "1px solid rgba(34,197,94,0.25)" }}><p className="text-[12.5px] font-medium" style={{ color: "#86efac" }}>¡Dominio comprado! Conéctalo a tu app desde Vercel.</p></div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ══ MAIN ════════════════════════════════════════════════════════════ */
 export function HomeExperience({ name }: { name: string }) {
   const [projects,  setProjects]  = useState<Project[]>([]);
@@ -371,6 +435,7 @@ export function HomeExperience({ name }: { name: string }) {
       <FirstSteps connected={connected} projects={projects} loading={loading} />
       <CreateApp />
       <CobroApp />
+      <DomainBuyer />
       <ConnectLLM />
       <Showcase />
 
