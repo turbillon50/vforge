@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { VWordmark } from "@/components/brand/VMark";
 import { IconHome, IconKey, IconRocket, IconCreditCard } from "@/components/brand/VFIcons";
+import { ClientV } from "@/components/workspace/ClientV";
 
 const NAV = [
   { href: "/workspace", label: "Inicio", Icon: IconHome },
@@ -53,6 +54,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
+      <ClientV />
     </div>
   );
 }
