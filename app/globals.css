@@ -1382,3 +1382,16 @@ button[data-provider="x_twitter"],
 .cl-socialButtonsBlockButton:not([data-provider="x_twitter"]):hover {
   background-color: rgba(255,255,255,0.08) !important;
 }
+
+/* X/Twitter en variante ICONO (4+ providers): icono blanco sobre fondo oscuro */
+.cl-socialButtonsIconButton[data-provider="x_twitter"] {
+  background-color: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+.cl-socialButtonsIconButton[data-provider="x_twitter"]:hover {
+  background-color: rgba(255,255,255,0.08) !important;
+}
+.cl-socialButtonsIconButton[data-provider="x_twitter"] svg,
+.cl-socialButtonsIconButton[data-provider="x_twitter"] img {
+  filter: brightness(0) invert(1) !important;
+}
