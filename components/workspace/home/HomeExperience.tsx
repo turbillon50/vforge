@@ -212,6 +212,61 @@ function CreateApp() {
   );
 }
 
+
+/* ── Cobrar (MOTOR DE COBROS): nombre + monto -> link de pago Stripe ── */
+function CobroApp() {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [url, setUrl] = useState<string | null>(null);
+
+  const run = async () => {
+    if (!name.trim() || !amount || busy) return;
+    setBusy(true); setErr(null); setUrl(null);
+    try {
+      const r = await fetch("/api/forja/cobro", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), amount: Number(amount) }),
+      });
+      const d = await r.json();
+      if (!d.ok) {
+        setErr(d.error === "connect_stripe" ? "Conecta tu Stripe primero." : d.error === "monto_minimo" ? "Monto mínimo $10." : "No se pudo: " + (d.error || "error"));
+      } else setUrl(d.url);
+    } catch (e) { setErr(e instanceof Error ? e.message : "error"); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div id="cobros" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(34,197,94,0.08),rgba(255,255,255,0.015))", border: "1px solid rgba(34,197,94,0.22)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 10px 30px -16px rgba(0,0,0,0.6)" }}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Cobra en segundos</p>
+          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>Crea un producto y un link de pago con tu Stripe. El dinero llega a tu cuenta.</p>
+        </div>
+        {!open && <button onClick={() => setOpen(true)} className="rounded-lg px-4 py-2 text-[13px] font-semibold" style={{ background: "#fff", color: "#000" }}>Crear cobro →</button>}
+      </div>
+      {open && (
+        <div className="mt-4">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Qué cobras (ej. Asesoría)" className="flex-1 rounded-lg px-3.5 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+            <input value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} inputMode="decimal" placeholder="Monto MXN" className="w-full rounded-lg px-3.5 py-2.5 text-[14px] outline-none sm:w-40" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+            <button onClick={run} disabled={busy || !name.trim() || !amount} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#16a34a", color: "#fff" }}>{busy ? "Creando…" : "Generar link"}</button>
+          </div>
+          {err && <p className="mt-3 text-[12.5px]" style={{ color: "#fca5a5" }}>{err}</p>}
+          {url && (
+            <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(34,197,94,0.07)", border: "1px solid rgba(34,197,94,0.25)" }}>
+              <p className="text-[12.5px] font-medium" style={{ color: "#86efac" }}>Link de pago listo.</p>
+              <a href={url} target="_blank" rel="noreferrer" className="mt-1 block break-all text-[12.5px]" style={{ color: "#a78bfa" }}>{url}</a>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ══ MAIN ════════════════════════════════════════════════════════════ */
 export function HomeExperience({ name }: { name: string }) {
   const [projects,  setProjects]  = useState<Project[]>([]);
@@ -263,6 +318,7 @@ export function HomeExperience({ name }: { name: string }) {
 
       <FirstSteps connected={connected} projects={projects} loading={loading} />
       <CreateApp />
+      <CobroApp />
       <Showcase />
 
       {/* ── Stats rápidas ── */}

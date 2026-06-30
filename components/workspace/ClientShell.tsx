@@ -33,10 +33,9 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
-          <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+          <Link href="/workspace#cobros" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] transition-colors" style={{ color: "rgba(255,255,255,0.6)" }}>
             <IconCreditCard size={15} /><span>Cobros</span>
-            <span className="ml-auto text-[9px] uppercase tracking-wide" style={{ color: "rgba(167,139,250,0.7)" }}>pronto</span>
-          </div>
+          </Link>
         </nav>
         <div className="px-5 py-4">
           <span className="flex items-center gap-1.5 font-mono text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>
