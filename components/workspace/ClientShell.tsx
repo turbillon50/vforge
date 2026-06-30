@@ -3,12 +3,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { VWordmark } from "@/components/brand/VMark";
-import { IconHome, IconKey, IconRocket, IconCreditCard, IconUsers, IconLayers } from "@/components/brand/VFIcons";
+import { IconHome, IconKey, IconRocket, IconCreditCard, IconUsers, IconLayers, IconCpu } from "@/components/brand/VFIcons";
 import { ClientV } from "@/components/workspace/ClientV";
 
 const NAV = [
   { href: "/workspace", label: "Inicio", Icon: IconHome },
   { href: "/workspace/apps", label: "Mis apps", Icon: IconRocket },
+  { href: "/workspace/studio", label: "Estudio", Icon: IconCpu },
   { href: "/configurador.html", label: "Configurador", Icon: IconLayers },
   { href: "/workspace#cobros", label: "Cobros", Icon: IconCreditCard },
   { href: "/workspace/conexiones", label: "Conexiones", Icon: IconKey },
