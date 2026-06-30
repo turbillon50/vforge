@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VForge - Inicio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Geist+Mono:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed": "#002113",
+                        "inverse-primary": "#732ee4",
+                        "on-primary-container": "#ede0ff",
+                        "on-tertiary-fixed": "#301400",
+                        "surface-container-highest": "#35343a",
+                        "primary-container": "#7c3aed",
+                        "error-container": "#93000a",
+                        "error": "#ffb4ab",
+                        "tertiary-container": "#a15100",
+                        "on-secondary": "#003824",
+                        "on-surface": "#e4e1e9",
+                        "on-primary-fixed": "#25005a",
+                        "on-tertiary-container": "#ffe0cd",
+                        "surface-variant": "#35343a",
+                        "outline": "#958da1",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-container": "#1f1f25",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "inverse-on-surface": "#303036",
+                        "surface-dim": "#131318",
+                        "primary": "#d2bbff",
+                        "surface-container-high": "#2a292f",
+                        "tertiary-fixed": "#ffdcc6",
+                        "on-tertiary": "#4f2500",
+                        "on-background": "#e4e1e9",
+                        "inverse-surface": "#e4e1e9",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "tertiary": "#ffb784",
+                        "outline-variant": "#4a4455",
+                        "secondary-fixed": "#6ffbbe",
+                        "surface-container-low": "#1b1b20",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "surface-container-lowest": "#0e0e13",
+                        "secondary": "#4edea3",
+                        "on-error": "#690005",
+                        "on-surface-variant": "#ccc3d8",
+                        "on-secondary-container": "#00311f",
+                        "on-primary": "#3f008e",
+                        "primary-fixed": "#eaddff",
+                        "on-error-container": "#ffdad6",
+                        "secondary-container": "#00a572",
+                        "surface": "#131318",
+                        "background": "#131318",
+                        "surface-tint": "#d2bbff",
+                        "secondary-fixed-dim": "#4edea3",
+                        "primary-fixed-dim": "#d2bbff",
+                        "surface-bright": "#39383e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "2xl": "64px",
+                        "md": "16px",
+                        "base": "4px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "margin-desktop": "48px",
+                        "xl": "40px",
+                        "margin-mobile": "16px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Geist"],
+                        "label-md": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "mono-code": ["Geist Mono"],
+                        "display-lg-mobile": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "body-sm": ["Geist"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "mono-code": ["14px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #0a0a0f; }
+        .glass-card {
+            background: rgba(18, 18, 26, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .btn-primary {
+            background-color: #7c3aed;
+            color: #ffffff;
+            transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
+        }
+        .btn-primary:hover { background-color: #6d28d9; }
+        .btn-ghost {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            transition: all 0.2s;
+        }
+        .btn-ghost:hover { background: rgba(255, 255, 255, 0.05); }
+        .parallel-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="text-on-surface antialiased min-h-screen flex flex-col font-body-lg text-body-lg">
+<!-- TopNavBar -->
+<nav class="bg-surface/80 dark:bg-surface/80 backdrop-blur-md text-primary dark:text-primary docked full-width top-0 sticky z-50 border-b border-white/10 shadow-sm flex justify-between items-center px-margin-desktop py-md w-full">
+<div class="flex items-center gap-xl">
+<span class="font-display-lg text-display-lg font-bold text-on-surface dark:text-on-surface tracking-tighter">VForge</span>
+<div class="hidden md:flex gap-lg font-body-lg text-body-lg">
+<a class="text-primary dark:text-primary border-b-2 border-primary pb-1" href="#">Inicio</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 scale-95 active:scale-90 transition-transform" href="#">Mis apps</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 scale-95 active:scale-90 transition-transform" href="#">Estudio</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 scale-95 active:scale-90 transition-transform" href="#">Cobros</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors duration-200 scale-95 active:scale-90 transition-transform" href="#">Conexiones</a>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<button class="hover:bg-white/5 p-2 rounded-full transition-colors scale-95 active:scale-90 text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="hover:bg-white/5 p-2 rounded-full transition-colors scale-95 active:scale-90 text-on-surface-variant">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-white/10 ml-2">
+<img alt="Luis Profile Avatar" class="w-full h-full object-cover" data-alt="A cinematic, high-contrast avatar portrait of an elite software engineer in a dark tech environment, subtly lit by deep violet and cool blue neon glows, conveying focus and uncompromising professional quality, 8k resolution, photorealistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJ-Nir5t7JWzDPANPotR2V3GamCeZPHUdWNpotlZ8pf9j2tZwOPlGQ2jAtTKb2ZefGB4AEBgfkeI49Z_cnLNT9f6rtX28syet3x3esD_xqlKuhf-Evc-pZ0wZdpC91-STUrRyqkUMcqJ3-UHOE1oYFCANH-Ebiaj5jZp58HLNl74moKoYfzzhOO8fKsZXhs_cEFauBHRIRZpVAzMXlmBnrH3rPFK1CYWFFHZbevsSzRxG-VZauAB4mk3SgTNWrb-93HGtMHO19y9HY"/>
+</div>
+</div>
+</nav>
+<div class="flex flex-1 relative w-full">
+<!-- Main Canvas -->
+<main class="flex-1 w-full max-w-[1440px] mx-auto flex flex-col md:flex-row gap-gutter p-margin-mobile md:p-margin-desktop pr-0 md:pr-0 pb-2xl">
+<div class="flex-1 flex flex-col gap-2xl">
+<!-- Hero Section -->
+<section class="relative rounded-xl overflow-hidden glass-card p-xl border border-white/10 min-h-[320px] flex flex-col justify-center">
+<!-- STITCH_SHADER_START:ANIMATION_1 class="absolute inset-0 w-full h-full opacity-40" -->
+<div class="absolute inset-0 w-full h-full opacity-40" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_1" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_1');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+varying vec2 v_texCoord;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+void main() {
+    vec2 uv = v_texCoord;
+    vec2 pixel_coords = uv * u_resolution;
+    
+    // Scale for the grid
+    float grid_scale = 40.0;
+    vec2 grid_uv = fract(uv * grid_scale);
+    vec2 grid_id = floor(uv * grid_scale);
+    
+    // Dot pattern
+    float dot_radius = 0.05;
+    float dist = length(grid_uv - 0.5);
+    float dot = smoothstep(dot_radius, dot_radius - 0.01, dist);
+    
+    // Subtle mesh/wave effect
+    float wave = sin(uv.x * 5.0 + u_time * 0.5) * cos(uv.y * 3.0 + u_time * 0.4);
+    float noise = hash(grid_id);
+    
+    // Interaction with mouse
+    vec2 mouse_uv = u_mouse / u_resolution;
+    float m_dist = length(uv - mouse_uv);
+    float highlight = smoothstep(0.3, 0.0, m_dist) * 0.3;
+    
+    // Final color: subtle grey dots with highlights
+    vec3 dot_color = vec3(0.2, 0.2, 0.25) * (0.5 + 0.5 * wave);
+    dot_color += vec3(0.48, 0.22, 0.93) * highlight; // Violet hint near mouse
+    
+    vec3 final_color = mix(vec3(0.039, 0.039, 0.059), dot_color, dot);
+    
+    gl_FragColor = vec4(final_color, 1.0);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_1 -->
+<div class="relative z-10 max-w-2xl">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-white mb-sm">Hola, Luis</h1>
+<p class="font-headline-md text-headline-md text-on-surface-variant mb-xl">Bienvenido de nuevo a tu centro de mando.</p>
+<div class="flex gap-md">
+<button class="btn-primary font-label-md text-label-md px-lg py-sm rounded flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span> Crear app
+                            </button>
+<button class="btn-ghost font-label-md text-label-md px-lg py-sm rounded flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">cable</span> Conectar infra
+                            </button>
+</div>
+</div>
+</section>
+<!-- Stats Row -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<div class="glass-card rounded-lg p-lg parallel-shadow flex flex-col gap-md">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Apps creadas</span>
+<span class="material-symbols-outlined text-primary">apps</span>
+</div>
+<span class="font-display-lg-mobile text-display-lg-mobile text-white">12</span>
+</div>
+<div class="glass-card rounded-lg p-lg parallel-shadow flex flex-col gap-md">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Cobros</span>
+<span class="material-symbols-outlined text-secondary">payments</span>
+</div>
+<span class="font-display-lg-mobile text-display-lg-mobile text-white">$4.2k</span>
+</div>
+<div class="glass-card rounded-lg p-lg parallel-shadow flex flex-col gap-md">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Conexiones</span>
+<span class="material-symbols-outlined text-tertiary">hub</span>
+</div>
+<span class="font-display-lg-mobile text-display-lg-mobile text-white">4/4</span>
+</div>
+</section>
+<!-- Main Content: Mis apps -->
+<section class="flex flex-col gap-lg">
+<h2 class="font-headline-md text-headline-md text-white">Mis apps</h2>
+<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-lg">
+<!-- App Card 1 -->
+<div class="glass-card rounded-lg overflow-hidden parallel-shadow flex flex-col hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="h-32 bg-surface-container-high border-b border-white/5 relative">
+<img alt="App Preview" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" data-alt="A sleek, dark mode futuristic user interface mockup showing a complex data dashboard with glowing neon violet charts and subtle glassmorphic panels, rendered in hyper-detailed 3d style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJ6PmR2MUCm5_ND3nm6OfToINPOnWiK64PEiBfhiS4ipeU1bWG4zCM-XInHtgfMPbhLIGtWe6ex-6-UyeokDv_nsdRqlZunqWQ7ntFv9ZClwErhRNoLTIyr8doiWQS9KPUkGe2G_8GlHqSxafqKs64QCUw1ohROsJrBX9q7pJmCTbU0Ql90hMVuwDXNPeMGkp1KAKMANS4A7AkpWeu9aTQ7I3_dNDJ_R19LlkJ42gQMt_zJrRhwhshto55gRj0xmAnSY-UX0Vyb9_F"/>
+<div class="absolute top-sm right-sm bg-secondary/10 text-secondary border border-secondary/20 px-2 py-1 rounded font-mono-code text-mono-code text-[10px] flex items-center gap-1 backdrop-blur-md">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> Activo
+                                </div>
+</div>
+<div class="p-lg flex flex-col gap-md flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-body-lg text-body-lg font-bold text-white">Nexus Analytics</h3>
+</div>
+<div class="flex gap-2 mt-auto pt-sm">
+<button class="btn-ghost flex-1 py-1 px-2 rounded font-label-md text-label-md text-xs text-center border-white/10 hover:border-white/30">Abrir</button>
+<button class="bg-white/5 hover:bg-white/10 text-white flex-1 py-1 px-2 rounded font-label-md text-label-md text-xs text-center transition-colors">Deploy</button>
+</div>
+</div>
+</div>
+<!-- App Card 2 -->
+<div class="glass-card rounded-lg overflow-hidden parallel-shadow flex flex-col hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="h-32 bg-surface-container-high border-b border-white/5 relative">
+<img alt="App Preview" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" data-alt="A technical, wireframe-style blueprint of a modern web application architecture, etched in glowing white lines on a deep obsidian black background, emphasizing structural precision and cinematic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCSMpQSy6TWsOjlpMamWClN9tWLT34LEXIG5KN525gt8YzqG6PUxrgGGoQzfv1jLKLvujvG_KPw8c3A6x0JXuRSFiYQ4k1eCituLoU9eFR2Uqzel46Qsslyshnozmv_ZqzFfbtHTNRHbRle-0rOFFVQ3flqYiLTGSqUMZDOMlo5sDfHS1_oNfm4vHr62TMhKllVqkxdw5H8JBd7t7wJgzd-kDqr-dMVpMmlhmdZXrN21JbHZ_t7DlFh01-vOceGZxo7Rd5qmDciHn8"/>
+<div class="absolute top-sm right-sm bg-tertiary/10 text-tertiary border border-tertiary/20 px-2 py-1 rounded font-mono-code text-mono-code text-[10px] flex items-center gap-1 backdrop-blur-md">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span> Pendiente
+                                </div>
+</div>
+<div class="p-lg flex flex-col gap-md flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-body-lg text-body-lg font-bold text-white">Project Orion</h3>
+</div>
+<div class="flex gap-2 mt-auto pt-sm">
+<button class="btn-ghost flex-1 py-1 px-2 rounded font-label-md text-label-md text-xs text-center border-white/10 hover:border-white/30">Abrir</button>
+<button class="bg-primary/20 text-primary hover:bg-primary/30 flex-1 py-1 px-2 rounded font-label-md text-label-md text-xs text-center transition-colors">Deploy</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- SideNavBar -->
+<aside class="hidden xl:flex bg-surface-container dark:bg-surface-container text-primary dark:text-primary font-label-md text-label-md docked right-0 h-screen w-64 border-l border-white/5 flat no shadows transition-all duration-300 ease-in-out fixed right-0 top-0 pt-24 pb-lg px-md h-full flex-col z-40">
+<div class="mb-xl flex items-center gap-md px-2">
+<div class="w-8 h-8 rounded border border-white/10 overflow-hidden shrink-0">
+<img alt="System Infrastructure" class="w-full h-full object-cover" data-alt="A stylized, glowing server rack icon rendering in deep space, conveying high-performance system infrastructure with a cinematic sci-fi aesthetic, dark background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJv16754dLNBjhthUC_fxk_FwPpWQZ3Y8hOuFqDpB9hIMNsFBFcV2oCHeYO3oPkseCs8Q7pWecoaxDh2x9flJre0me8djwryiDVDuX9l3L5gA5Ym_WispuowleTQY55JejS9HU4ITcwfAb-1JX0Vi73ghMKntl8Cz2LUF2xvu_hvOSQcb7TQuFmHPwsHH3Qc75bxa0pEL6c0hl_VHtaf18lkNYv9UpmL5lRKwpLu9xQJP9-LVDUpwZMETBcIElVQkoHhCLH2dpcIzQ"/>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md font-semibold text-on-surface text-lg">Conexiones</h2>
+<p class="text-on-surface-variant text-[10px] uppercase tracking-wider">Infrastructure Status</p>
+</div>
+</div>
+<div class="flex flex-col gap-2 flex-1">
+<a class="bg-primary-container text-on-primary-container rounded-lg p-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined text-[20px]">code</span>
+                    GitHub
+                    <span class="ml-auto w-2 h-2 rounded-full bg-secondary"></span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 p-3 rounded-lg flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">cloud_upload</span>
+                    Vercel
+                    <span class="ml-auto w-2 h-2 rounded-full bg-secondary"></span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 p-3 rounded-lg flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">payments</span>
+                    Stripe
+                    <span class="ml-auto w-2 h-2 rounded-full bg-secondary"></span>
+</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 p-3 rounded-lg flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">psychology</span>
+                    MindContext
+                    <span class="ml-auto w-2 h-2 rounded-full bg-tertiary"></span>
+</a>
+</div>
+<div class="mt-auto pt-lg">
+<button class="w-full btn-ghost py-2 rounded flex items-center justify-center gap-2 text-on-surface hover:text-white">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Nueva Conexión
+                </button>
+</div>
+</aside>
+</div>
+</body></html>
