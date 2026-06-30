@@ -74,6 +74,83 @@ function eventIcon(action: string) {
   return { Icon: IconActivity, color: "rgba(255,255,255,0.3)" };
 }
 
+
+/* ── Primeros pasos (cálido, se auto-oculta al completar) ── */
+function FirstSteps({ connected, projects, loading }: { connected: string[]; projects: Project[]; loading: boolean }) {
+  if (loading) return null;
+  const steps = [
+    { done: connected.includes("github") && connected.includes("vercel"), title: "Conecta tus herramientas", desc: "GitHub y Vercel en un clic.", cta: "Conectar", href: "/onboarding" },
+    { done: projects.length > 0, title: "Crea tu primera app", desc: "Ármala por módulos con preview en vivo.", cta: "Crear", href: "/configurador.html" },
+    { done: projects.some(p => !!p.vercel_url), title: "Publícala en producción", desc: "Deploy en segundos, sin salir de aquí.", cta: "Publicar", href: "/app/deployments" },
+  ];
+  const doneCount = steps.filter(s => s.done).length;
+  if (doneCount === 3) return null;
+  return (
+    <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+      className="mb-8 rounded-2xl p-5 md:p-6"
+      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)" }}>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Empieza aquí</p>
+          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.4)" }}>Tres pasos para tener tu primera app viva.</p>
+        </div>
+        <span className="font-mono text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>{doneCount}/3</span>
+      </div>
+      <div className="mb-5 h-1 w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
+        <div className="h-full rounded-full" style={{ width: `${(doneCount / 3) * 100}%`, background: "linear-gradient(90deg,#7c3aed,#a78bfa)", transition: "width .6s ease" }} />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {steps.map((st, i) => (
+          <div key={i} className="rounded-xl p-4"
+            style={{ background: st.done ? "rgba(124,58,237,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${st.done ? "rgba(124,58,237,0.25)" : "rgba(255,255,255,0.08)"}` }}>
+            <div className="mb-2 flex h-6 w-6 items-center justify-center rounded-full"
+              style={{ background: st.done ? "rgba(124,58,237,0.9)" : "rgba(255,255,255,0.06)", color: "#fff" }}>
+              {st.done ? <IconCheck size={13} /> : <span className="text-[11px] font-semibold">{i + 1}</span>}
+            </div>
+            <p className="text-[13px] font-medium" style={{ color: "#fff" }}>{st.title}</p>
+            <p className="mt-0.5 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.4)" }}>{st.desc}</p>
+            {!st.done
+              ? <Link href={st.href} className="mt-3 inline-block rounded-lg px-3 py-1.5 text-[12px] font-medium" style={{ background: "#fff", color: "#000" }}>{st.cta} →</Link>
+              : <p className="mt-3 flex items-center gap-1 text-[11px] font-medium" style={{ color: "#a78bfa" }}><IconCheck size={12} /> Listo</p>}
+          </div>
+        ))}
+      </div>
+    </motion.section>
+  );
+}
+
+/* ── Vitrina "Qué puedes hacer" (con hueco de imagen para Higgsfield) ── */
+function Showcase() {
+  const cards = [
+    { icon: IconSparkles, title: "Construye hablando con V", desc: "Describe tu idea y V la vuelve una app real.", href: "/app/forge", g: "linear-gradient(135deg,#1a1530,#0d0b1a)" },
+    { icon: IconBranch, title: "Configurador visual", desc: "Arma tu app por módulos con preview en vivo.", href: "/configurador.html", g: "linear-gradient(135deg,#161421,#0c0b16)" },
+    { icon: IconKey, title: "200+ integraciones", desc: "GitHub, Vercel, Stripe, Neon y más en un clic.", href: "/app/integrations", g: "linear-gradient(135deg,#1a1525,#0d0b16)" },
+    { icon: IconRocket, title: "Deploy en segundos", desc: "Publica a producción sin salir de aquí.", href: "/app/deployments", g: "linear-gradient(135deg,#171327,#0c0b18)" },
+  ];
+  return (
+    <section className="mb-8">
+      <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.3)" }}>Qué puedes hacer</p>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((c, i) => {
+          const Icon = c.icon;
+          return (
+            <Link key={i} href={c.href} className="block overflow-hidden rounded-2xl" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+              {/* IMG-SLOT: mañana cambiar este div por <img src={...} /> de Higgsfield */}
+              <div className="flex h-24 items-center justify-center" style={{ background: c.g }}>
+                <Icon size={26} style={{ color: "rgba(167,139,250,0.9)" }} />
+              </div>
+              <div className="p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
+                <p className="text-[13px] font-semibold" style={{ color: "#fff" }}>{c.title}</p>
+                <p className="mt-1 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.42)" }}>{c.desc}</p>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 /* ══ MAIN ════════════════════════════════════════════════════════════ */
 export function HomeExperience({ name }: { name: string }) {
   const [projects,  setProjects]  = useState<Project[]>([]);
@@ -81,6 +158,7 @@ export function HomeExperience({ name }: { name: string }) {
   const [billing,   setBilling]   = useState<BillingMe | null>(null);
   const [secretCnt, setSecretCnt] = useState<number | null>(null);
   const [loading,   setLoading]   = useState(true);
+  const [connected, setConnected] = useState<string[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -88,11 +166,13 @@ export function HomeExperience({ name }: { name: string }) {
       fetch("/api/forge/activity?limit=8", { cache: "no-store" }).then(r => r.ok ? r.json() : { events: [] }),
       fetch("/api/billing/me",     { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch("/api/vault/operator-secrets", { cache: "no-store" }).then(r => r.ok ? r.json() : { secrets: [] }).catch(() => ({ secrets: [] })),
-    ]).then(([p, a, b, v]) => {
+      fetch("/api/onboarding/status", { cache: "no-store" }).then(r => r.ok ? r.json() : { connected: [] }).catch(() => ({ connected: [] })),
+    ]).then(([p, a, b, v, c]) => {
       setProjects((p.projects ?? []).slice(0, 5));
       setEvents(a.events ?? []);
       setBilling(b);
       setSecretCnt((v.secrets ?? []).length);
+      setConnected(c.connected ?? []);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -119,6 +199,9 @@ export function HomeExperience({ name }: { name: string }) {
           </span>
         </motion.h1>
       </div>
+
+      <FirstSteps connected={connected} projects={projects} loading={loading} />
+      <Showcase />
 
       {/* ── Stats rápidas ── */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
