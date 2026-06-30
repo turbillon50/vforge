@@ -179,7 +179,7 @@ function CreateApp() {
   };
 
   return (
-    <div id="crear" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(124,58,237,0.10),rgba(255,255,255,0.015))", border: "1px solid rgba(124,58,237,0.28)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
+    <div id="crear" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Crea tu app y publícala</p>
@@ -254,7 +254,7 @@ function CobroApp() {
   };
 
   return (
-    <div id="cobros" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(34,197,94,0.08),rgba(255,255,255,0.015))", border: "1px solid rgba(34,197,94,0.22)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
+    <div id="cobros" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Cobra en segundos</p>
@@ -267,7 +267,7 @@ function CobroApp() {
           <div className="flex flex-col gap-2 sm:flex-row">
             <input value={name} onChange={e => setName(e.target.value)} placeholder="Qué cobras (ej. Asesoría)" className="flex-1 rounded-lg px-3.5 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
             <input value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} inputMode="decimal" placeholder="Monto MXN" className="w-full rounded-lg px-3.5 py-2.5 text-[14px] outline-none sm:w-40" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-            <button onClick={run} disabled={busy || !name.trim() || !amount} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#16a34a", color: "#fff" }}>{busy ? "Creando…" : "Generar link"}</button>
+            <button onClick={run} disabled={busy || !name.trim() || !amount} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>{busy ? "Creando…" : "Generar link"}</button>
           </div>
           {err && <p className="mt-3 text-[12.5px]" style={{ color: "#fca5a5" }}>{err}</p>}
           {url && (
@@ -355,7 +355,7 @@ function DomainBuyer() {
   };
 
   return (
-    <div id="dominio" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "linear-gradient(180deg,rgba(14,165,233,0.08),rgba(255,255,255,0.015))", border: "1px solid rgba(14,165,233,0.22)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
+    <div id="dominio" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Tu dominio propio</p>
@@ -367,7 +367,7 @@ function DomainBuyer() {
         <div className="mt-4">
           <div className="flex flex-col gap-2 sm:flex-row">
             <input value={name} onChange={e => { setName(e.target.value); setInfo(null); setBought(false); }} onKeyDown={e => e.key === "Enter" && check()} placeholder="tudominio.com" className="flex-1 rounded-lg px-3.5 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-            <button onClick={check} disabled={busy || !name.trim()} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#0ea5e9", color: "#fff" }}>{busy ? "Buscando…" : "Buscar"}</button>
+            <button onClick={check} disabled={busy || !name.trim()} className="rounded-lg px-4 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>{busy ? "Buscando…" : "Buscar"}</button>
           </div>
           {err && <p className="mt-3 text-[12.5px]" style={{ color: "#fca5a5" }}>{err}</p>}
           {info && !bought && (
@@ -375,7 +375,7 @@ function DomainBuyer() {
               {info.available
                 ? <div className="flex items-center justify-between gap-3">
                     <span className="text-[13px]" style={{ color: "#86efac" }}>{name.trim().toLowerCase()} está disponible{info.price ? ` · $${info.price} USD/año` : ""}</span>
-                    {info.price && <button onClick={buy} disabled={busy} className="rounded-lg px-3.5 py-2 text-[12.5px] font-semibold disabled:opacity-50" style={{ background: "#0ea5e9", color: "#fff" }}>{busy ? "Comprando…" : `Comprar por $${info.price}`}</button>}
+                    {info.price && <button onClick={buy} disabled={busy} className="rounded-lg px-3.5 py-2 text-[12.5px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>{busy ? "Comprando…" : `Comprar por $${info.price}`}</button>}
                   </div>
                 : <span className="text-[13px]" style={{ color: "#fca5a5" }}>No disponible. Prueba otro.</span>}
             </div>
@@ -429,7 +429,7 @@ export function HomeExperience({ name }: { name: string }) {
           style={{ fontSize: "clamp(2.4rem, 5.6vw, 3.7rem)", lineHeight: 1.02,
                    letterSpacing: "-0.045em", color: "#f4f4f6", marginTop: 16, fontWeight: 600 }}>
           Tu fábrica está{" "}
-          <span style={{ color: "#b9a3f5", fontWeight: 500 }}>despierta.</span>
+          <span style={{ color: "#fff", fontWeight: 500 }}>despierta.</span>
         </motion.h1>
       </div>
 

@@ -41,7 +41,8 @@ export function ConexionesView() {
         {OAUTH.map((s) => {
           const on = conn.includes(s.id);
           return (
-            <div key={s.id} className="glossy flex items-center gap-4 rounded-2xl p-5">
+            <div key={s.id} className="glossy lift flex items-center gap-4 rounded-2xl p-5">
+              <img src={`/logos/${s.id}.svg`} alt={s.label} className="h-9 w-9 shrink-0" />
               <div>
                 <p className="text-[15px] font-semibold text-white">{s.label}</p>
                 <p className="text-[12.5px]" style={{ color: "rgba(255,255,255,0.45)" }}>{s.desc}</p>
