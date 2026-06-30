@@ -80,7 +80,7 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
   if (loading) return null;
   const steps = [
     { done: connected.includes("github") && connected.includes("vercel"), title: "Conecta tus herramientas", desc: "GitHub y Vercel en un clic.", cta: "Conectar", href: "/workspace/conexiones", vq: "¿Cómo conecto mis herramientas, GitHub y Vercel?" },
-    { done: projects.length > 0, title: "Crea tu primera app", desc: "Ármala por módulos con preview en vivo.", cta: "Crear", href: "/configurador.html", vq: "¿Cómo creo mi primera app?" },
+    { done: projects.length > 0, title: "Crea tu primera app", desc: "Ármala por módulos con preview en vivo.", cta: "Crear", href: "/workspace#crear", vq: "¿Cómo creo mi primera app?" },
     { done: projects.some(p => !!p.vercel_url), title: "Publícala en producción", desc: "Deploy en segundos, sin salir de aquí.", cta: "Publicar", href: "/workspace#crear", vq: "¿Cómo publico mi app en producción?" },
   ];
   const doneCount = steps.filter(s => s.done).length;
@@ -124,7 +124,7 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
 function Showcase() {
   const cards = [
     { icon: IconSparkles, title: "Construye hablando con V", desc: "Describe tu idea y V la vuelve una app real.", href: "/workspace#crear", g: "linear-gradient(135deg,#1a1530,#0d0b1a)" },
-    { icon: IconBranch, title: "Configurador visual", desc: "Arma tu app por módulos con preview en vivo.", href: "/configurador.html", g: "linear-gradient(135deg,#161421,#0c0b16)" },
+    { icon: IconBranch, title: "Configurador visual", desc: "Arma tu app por módulos con preview en vivo.", href: "/workspace#crear", g: "linear-gradient(135deg,#161421,#0c0b16)" },
     { icon: IconKey, title: "200+ integraciones", desc: "GitHub, Vercel, Stripe, Neon y más en un clic.", href: "/workspace/conexiones", g: "linear-gradient(135deg,#1a1525,#0d0b16)" },
     { icon: IconRocket, title: "Deploy en segundos", desc: "Publica a producción sin salir de aquí.", href: "/workspace#crear", g: "linear-gradient(135deg,#171327,#0c0b18)" },
   ];
@@ -189,7 +189,7 @@ function CreateApp() {
           <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Un nombre y listo: repo en GitHub + deploy en Vercel, en segundos.</p>
         </div>
         {!open && (
-          <button onClick={() => setOpen(true)} className="rounded-full px-5 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>Crear app →</button>
+          <button onClick={() => setOpen(true)} className="vf-btn rounded-full px-5 py-2.5 text-[13px] font-semibold text-white">Crear app →</button>
         )}
       </div>
       {open && (
@@ -276,7 +276,7 @@ function CobroApp() {
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Cobra en segundos</p>
           <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Crea un producto y un link de pago con tu Stripe. El dinero llega a tu cuenta.</p>
         </div>
-        {!open && <button onClick={() => setOpen(true)} className="rounded-full px-5 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>Crear cobro →</button>}
+        {!open && <button onClick={() => setOpen(true)} className="vf-btn rounded-full px-5 py-2.5 text-[13px] font-semibold text-white">Crear cobro →</button>}
       </div>
       {open && (
         <div className="mt-4">
@@ -441,9 +441,9 @@ export function HomeExperience({ name }: { name: string }) {
         </motion.p>
         <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.05, ease: [0.22,1,0.36,1] }}
-          className="font-display"
+          className="vf-hgrad font-display"
           style={{ fontSize: "clamp(2.8rem, 6.5vw, 4.4rem)", lineHeight: 1.0,
-                   letterSpacing: "-0.05em", color: "#f4f4f6", marginTop: 16, fontWeight: 600 }}>
+                   letterSpacing: "-0.05em", marginTop: 16, fontWeight: 600 }}>
           Tu fábrica está{" "}
           <span style={{ color: "#fff", fontWeight: 500 }}>despierta.</span>
         </motion.h1>
