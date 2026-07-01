@@ -3,22 +3,57 @@
 @tailwind utilities;
 
 /* ============================================
-   VFORGE - NEON DNA DESIGN SYSTEM v2
-   Accent: #37C38F | BG: #000 | Surface: #18191B
-   ============================================ */
+VFORGE - NEON DNA DESIGN SYSTEM v2
+Accent: #37C38F | BG: #000 | Surface: #18191B
+============================================ */
 
 :root {
-  --color-accent:      #37C38F;
-  --color-accent-dim:  #34D59A;
+  --color-accent: #37C38F;
+  --color-accent-dim: #34D59A;
   --color-accent-dark: #39A57D;
-  --color-accent-bg:   rgba(55,195,143,0.08);
+  --color-accent-bg: rgba(55,195,143,0.08);
   --color-accent-glow: rgba(55,195,143,0.20);
-  --color-surface:     #18191B;
-  --color-surface-2:   #1E2022;
-  --color-border:      #303236;
-  --color-muted:       #A0A0A0;
-  --color-dim:         #6B6B6B;
+  --color-surface: #18191B;
+  --color-surface-2: #1E2022;
+  --color-border: #303236;
+  --color-muted: #A0A0A0;
+  --color-dim: #6B6B6B;
   --font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
+
+  /* ---- Violet brand palette ---- */
+  --color-violet-100: #e9ddff;
+  --color-violet-200: #d0bcff;
+  --color-violet-300: #b497ff;
+  --color-violet-400: #a078ff;
+  --color-violet-500: #8b5cf6;
+  --color-violet-600: #7c3aed;
+
+  /* ---- Semantic on-surface tokens (dark theme default) ---- */
+  --color-on-surface: #ffffff;
+  --color-on-surface-variant: rgba(255,255,255,0.75);
+  --color-on-surface-muted: rgba(255,255,255,0.50);
+  --color-off-white: #f0f0f2;
+
+  /* ---- Emerald success ---- */
+  --color-success-emerald: #34d399;
+  --color-error-crimson: #f87171;
+
+  /* ---- Tint layers (for bg-tint-1/40 etc.) ---- */
+  --tint-1: 255 255 255 / 0.04;
+  --tint-2: 255 255 255 / 0.07;
+  --tint-3: 255 255 255 / 0.10;
+
+  /* ---- WorkspaceShell chrome tokens ---- */
+  --chrome-bg: 10 10 15;
+  --border-1: rgba(255,255,255,0.10);
+  --border-2: rgba(255,255,255,0.16);
+  --surface-1: rgba(255,255,255,0.04);
+  --surface-2: rgba(255,255,255,0.07);
+  --fg-primary: #ffffff;
+  --fg-secondary: rgba(255,255,255,0.80);
+  --fg-muted: rgba(255,255,255,0.55);
+  --fg-subtle: rgba(255,255,255,0.35);
+  --fg-tertiary: rgba(255,255,255,0.45);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -50,8 +85,8 @@ h1,h2,h3,h4,h5,h6 {
 h1 { font-size: clamp(2.5rem, 5vw, 4.25rem); }
 h2 { font-size: clamp(1.75rem, 3.5vw, 2.75rem); }
 h3 { font-size: clamp(1.25rem, 2vw, 1.5rem); }
-p  { color: #A0A0A0; line-height: 1.65; font-size: 1rem; }
-a  { color: inherit; text-decoration: none; }
+p { color: #A0A0A0; line-height: 1.65; font-size: 1rem; }
+a { color: inherit; text-decoration: none; }
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #000; }
@@ -60,32 +95,31 @@ a  { color: inherit; text-decoration: none; }
 ::selection { background: rgba(55,195,143,0.25); color: #fff; }
 
 @layer utilities {
-  .neon-border  { border: 1px solid #303236; }
+  .neon-border { border: 1px solid #303236; }
   .neon-surface { background: #18191B; }
-  .neon-accent  { color: #37C38F; }
-  .neon-glow    { box-shadow: 0 0 24px rgba(55,195,143,0.15); }
+  .neon-accent { color: #37C38F; }
+  .neon-glow { box-shadow: 0 0 24px rgba(55,195,143,0.15); }
 }
 
 @keyframes scroll-x {
   from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  to { transform: translateX(-50%); }
 }
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeIn {
   from { opacity: 0; }
-  to   { opacity: 1; }
+  to { opacity: 1; }
 }
 
-.animate-scroll-x   { animation: scroll-x 35s linear infinite; }
+.animate-scroll-x { animation: scroll-x 35s linear infinite; }
 .animate-fade-in-up { animation: fadeInUp 0.6s ease both; }
-.animate-fade-in    { animation: fadeIn 0.5s ease both; }
+.animate-fade-in { animation: fadeIn 0.5s ease both; }
 
 @media (display-mode: standalone) {
   body { padding-top: env(safe-area-inset-top); }
 }
-
