@@ -24,6 +24,13 @@ const GitHubIcon = () => (
   </svg>
 );
 
+const NAV = [
+  { label: "Labs", href: "/labs" },
+  { label: "Precios", href: "/pricing" },
+  { label: "Blog", href: "/blog" },
+  { label: "Manifiesto", href: "/manifiesto" },
+];
+
 export function MarketingHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -35,39 +42,37 @@ export function MarketingHeader() {
   }, []);
 
   return (
-    <header
-      style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        background: scrolled
-          ? "rgba(5,10,20,0.92)"
-          : "linear-gradient(180deg, rgba(5,10,20,0.98) 0%, rgba(5,10,20,0.85) 100%)",
-        backdropFilter: scrolled ? "blur(16px) saturate(1.4)" : "blur(8px)",
-        WebkitBackdropFilter: scrolled ? "blur(16px) saturate(1.4)" : "blur(8px)",
-        borderBottom: scrolled ? "1px solid rgba(59,130,246,0.12)" : "1px solid rgba(59,130,246,0.06)",
-        boxShadow: scrolled ? "0 1px 40px rgba(0,0,0,0.4), inset 0 -1px 0 rgba(59,130,246,0.08)" : "none",
-        transition: "all 0.3s ease",
-      }}
-    >
+    <header style={{
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+      background: scrolled
+        ? "rgba(5,10,20,0.94)"
+        : "linear-gradient(180deg, rgba(5,10,20,0.98) 0%, rgba(5,10,20,0.8) 100%)",
+      backdropFilter: scrolled ? "blur(20px) saturate(1.6)" : "blur(8px)",
+      WebkitBackdropFilter: scrolled ? "blur(20px) saturate(1.6)" : "blur(8px)",
+      borderBottom: scrolled
+        ? "1px solid rgba(59,130,246,0.14)"
+        : "1px solid rgba(59,130,246,0.06)",
+      boxShadow: scrolled
+        ? "0 1px 48px rgba(0,0,0,0.5), inset 0 -1px 0 rgba(59,130,246,0.08), 0 4px 24px rgba(59,130,246,0.04)"
+        : "none",
+      transition: "all 0.35s ease",
+    }}>
       <div style={{
         maxWidth: 1200, margin: "0 auto", padding: "0 24px",
-        height: 60, display: "flex", alignItems: "center", justifyContent: "space-between",
+        height: 62, display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
 
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+        {/* Logo */}
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0 }}>
           <VForgeLogo size={26} />
-          <span style={{
-            fontFamily: "Inter, sans-serif", fontSize: 16, fontWeight: 600,
-            letterSpacing: "-0.03em", color: "#FFFFFF",
-          }}>
+          <span style={{ fontFamily: "Inter, sans-serif", fontSize: 16, fontWeight: 700, letterSpacing: "-0.04em", color: "#FFFFFF" }}>
             VForge
           </span>
         </Link>
 
+        {/* Nav desktop */}
         <nav style={{ display: "flex", alignItems: "center", gap: 2 }} className="vf-hidden-mobile">
-          {[
-            { label: "Blog", href: "/blog" },
-            { label: "Manifiesto", href: "/manifiesto" },
-          ].map(item => (
+          {NAV.map(item => (
             <Link key={item.href} href={item.href} style={{
               color: "#64748b", fontSize: 14, fontWeight: 400,
               letterSpacing: "-0.02em", padding: "8px 14px",
@@ -82,12 +87,9 @@ export function MarketingHeader() {
           ))}
         </nav>
 
+        {/* CTAs */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <a
-            href="https://github.com/turbillon50/vforge"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Repositorio GitHub"
+          <a href="https://github.com/turbillon50/vforge" target="_blank" rel="noopener noreferrer" title="Repositorio GitHub"
             style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center",
               width: 34, height: 34,
@@ -119,40 +121,32 @@ export function MarketingHeader() {
           }}
           onMouseEnter={e => (e.currentTarget.style.color = "#e2e8f0")}
           onMouseLeave={e => (e.currentTarget.style.color = "#64748b")}
+          className="vf-hidden-mobile"
           >
             Log in
           </Link>
 
           <Link href="/app" style={{
             background: "linear-gradient(135deg, #3b82f6, #6d28d9)",
-            color: "#ffffff",
-            fontSize: 14, fontWeight: 500,
+            color: "#ffffff", fontSize: 14, fontWeight: 600,
             letterSpacing: "-0.02em",
-            padding: "9px 18px", borderRadius: 9999,
+            padding: "9px 20px", borderRadius: 9999,
             textDecoration: "none",
-            boxShadow: "0 0 16px rgba(59,130,246,0.25)",
+            boxShadow: "0 0 18px rgba(59,130,246,0.28)",
             transition: "box-shadow 0.2s",
           }}
-          onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 0 24px rgba(59,130,246,0.45)")}
-          onMouseLeave={e => (e.currentTarget.style.boxShadow = "0 0 16px rgba(59,130,246,0.25)")}
+          onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 0 28px rgba(59,130,246,0.5)")}
+          onMouseLeave={e => (e.currentTarget.style.boxShadow = "0 0 18px rgba(59,130,246,0.28)")}
           >
             Get started
           </Link>
 
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            style={{
-              display: "none", background: "none", border: "none",
-              color: "#e2e8f0", cursor: "pointer", padding: 4,
-            }}
-            className="vf-show-mobile"
-            aria-label="Menu"
+          <button onClick={() => setMenuOpen(!menuOpen)}
+            style={{ display: "none", background: "none", border: "none", color: "#e2e8f0", cursor: "pointer", padding: 4 }}
+            className="vf-show-mobile" aria-label="Menu"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-              {menuOpen
-                ? <><path d="M4 4l12 12M16 4L4 16"/></>
-                : <><path d="M3 6h14M3 10h14M3 14h14"/></>
-              }
+              {menuOpen ? <><path d="M4 4l12 12M16 4L4 16"/></> : <><path d="M3 6h14M3 10h14M3 14h14"/></>}
             </svg>
           </button>
         </div>
@@ -160,23 +154,12 @@ export function MarketingHeader() {
 
       {menuOpen && (
         <div style={{
-          background: "rgba(5,10,20,0.97)",
-          borderTop: "1px solid rgba(59,130,246,0.1)",
-          padding: "16px 24px 20px",
-          backdropFilter: "blur(16px)",
+          background: "rgba(5,10,20,0.98)", borderTop: "1px solid rgba(59,130,246,0.1)",
+          padding: "16px 24px 20px", backdropFilter: "blur(16px)",
         }}>
-          {[
-            { label: "Blog", href: "/blog" },
-            { label: "Manifiesto", href: "/manifiesto" },
-            { label: "Log in", href: "/app" },
-          ].map(item => (
-            <Link key={item.href} href={item.href}
-              onClick={() => setMenuOpen(false)}
-              style={{
-                display: "block", color: "#64748b", fontSize: 16,
-                padding: "12px 0", borderBottom: "1px solid rgba(59,130,246,0.08)",
-                textDecoration: "none",
-              }}
+          {[...NAV, { label: "Log in", href: "/app" }].map(item => (
+            <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
+              style={{ display: "block", color: "#64748b", fontSize: 16, padding: "12px 0", borderBottom: "1px solid rgba(59,130,246,0.08)", textDecoration: "none" }}
             >
               {item.label}
             </Link>
@@ -192,4 +175,4 @@ export function MarketingHeader() {
       `}</style>
     </header>
   );
-            }
+                            }
