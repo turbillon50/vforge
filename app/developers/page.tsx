@@ -3,29 +3,29 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 const ENDPOINTS = [
-  { method: "POST", path: "/v1/chat", desc: "Envia un mensaje al agente V y recibe respuesta en streaming.", auth: true },
-  { method: "GET",  path: "/v1/projects", desc: "Lista todos los proyectos del workspace con estado de deploy.", auth: true },
-  { method: "POST", path: "/v1/deploy", desc: "Dispara un deploy en Vercel desde cualquier rama.", auth: true },
-  { method: "GET",  path: "/v1/repos", desc: "Obtén la estructura y ramas de todos tus repositorios.", auth: true },
+  { method: "POST", path: "/v1/chat",           desc: "Envia un mensaje al agente V y recibe respuesta en streaming.", auth: true },
+  { method: "GET",  path: "/v1/projects",       desc: "Lista todos los proyectos del workspace con estado de deploy.", auth: true },
+  { method: "POST", path: "/v1/deploy",         desc: "Dispara un deploy en Vercel desde cualquier rama.", auth: true },
+  { method: "GET",  path: "/v1/repos",          desc: "Obtén la estructura y ramas de todos tus repositorios.", auth: true },
   { method: "POST", path: "/v1/mcp/tools/call", desc: "Ejecuta cualquier herramienta MCP registrada en tu Brain.", auth: true },
 ];
 
 const SDKS = [
   { lang: "TypeScript", install: "npm install @vforge/sdk", color: "#3b82f6" },
-  { lang: "Python", install: "pip install vforge", color: "#a855f7" },
-  { lang: "cURL", install: "nativo — sin instalacion", color: "#10b981" },
+  { lang: "Python",     install: "pip install vforge",       color: "#a855f7" },
+  { lang: "cURL",       install: "nativo, sin instalacion",  color: "#10b981" },
 ];
 
 const PILLARS = [
-  { icon: "⚡", title: "MCP-nativo", desc: "Cada herramienta es un tool MCP. Conecta tu propio agente al Brain de VForge con una URL y un token." },
-  { icon: "🔁", title: "Webhooks en tiempo real", desc: "Recibe eventos de deploy, builds y commits al instante. Cero polling, cero latencia." },
-  { icon: "🔐", title: "Auth con Bearer token", desc: "Un token por workspace. Scope granular por recurso. Rotacion sin downtime." },
-  { icon: "📦", title: "SDK tipado", desc: "TypeScript-first. Inferencia completa en cada respuesta. Sin any, sin sorpresas." },
+  { icon: "⚡", title: "MCP-nativo",            desc: "Cada herramienta es un tool MCP. Conecta tu agente al Brain con una URL y un token." },
+  { icon: "🔁", title: "Webhooks en tiempo real", desc: "Recibe eventos de deploy, builds y commits al instante. Cero polling." },
+  { icon: "🔐", title: "Auth Bearer token",       desc: "Un token por workspace. Scope granular por recurso. Rotacion sin downtime." },
+  { icon: "📦", title: "SDK tipado",              desc: "TypeScript-first. Inferencia completa en cada respuesta. Sin any." },
 ];
 
 export const metadata = {
   title: "Developers — VForge",
-  description: "API, SDK y protocolo MCP para integrar VForge en tus propios agentes y flujos.",
+  description: "API, SDK y protocolo MCP para integrar VForge en tus agentes y flujos.",
 };
 
 export default function DevelopersPage() {
@@ -40,16 +40,18 @@ export default function DevelopersPage() {
         </div>
         <h1 style={{ fontSize: "clamp(40px, 6vw, 72px)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.05, margin: "0 0 24px", color: "#ffffff" }}>
           Construye sobre<br />
-          <span style={{ background: "linear-gradient(90deg, #818cf8 0%, #a78bfa 50%, #60a5fa 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>el stack de VForge.</span>
+          <span style={{ background: "linear-gradient(90deg, #818cf8 0%, #a78bfa 50%, #60a5fa 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+            el stack de VForge.
+          </span>
         </h1>
         <p style={{ fontSize: 18, color: "#94a3b8", lineHeight: 1.7, maxWidth: 560, margin: "0 0 40px" }}>
-          REST API completa, protocolo MCP y SDKs con tipos. Integra tu agente, tu CI/CD o tu producto directamente con el Brain de VForge.
+          REST API completa, protocolo MCP y SDKs con tipos. Integra tu agente, tu CI/CD o tu producto con el Brain de VForge.
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <Link href="/sign-up" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 10, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>
-            Obtener API key →
+          <Link href="/sign-up" style={{ display: "inline-flex", alignItems: "center", padding: "12px 24px", borderRadius: 10, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>
+            Obtener API key
           </Link>
-          <a href="#endpoints" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", fontWeight: 500, fontSize: 15, textDecoration: "none" }}>
+          <a href="#endpoints" style={{ display: "inline-flex", alignItems: "center", padding: "12px 24px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", fontWeight: 500, fontSize: 15, textDecoration: "none" }}>
             Ver endpoints
           </a>
         </div>
@@ -66,23 +68,24 @@ export default function DevelopersPage() {
               <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e", opacity: 0.7 }} />
               <span style={{ marginLeft: 8, fontSize: 12, color: "#475569", fontFamily: "monospace" }}>terminal</span>
             </div>
-            <pre style={{ margin: 0, padding: "24px 28px", fontFamily: "monospace", fontSize: 14, lineHeight: 2, overflowX: "auto" as const, color: "#e2e8f0" }}>
-              <span style={{ color: "#475569" }}># 1. Instala el SDK</span>{"
-"}
-              <span style={{ color: "#818cf8" }}>npm</span>{" install @vforge/sdk
-
-"}
-              <span style={{ color: "#475569" }}># 2. Configura tu token</span>{"
-"}
-              <span style={{ color: "#818cf8" }}>export</span>{" VFORGE_TOKEN="}
-              <span style={{ color: "#34d399" }}>vf_live_xxxxxxxxxxxxx</span>{"
-
-"}
-              <span style={{ color: "#475569" }}># 3. Conecta al MCP Brain</span>{"
-"}
-              <span style={{ color: "#818cf8" }}>npx</span>{" @vforge/cli mcp connect "}
-              <span style={{ color: "#34d399" }}>--workspace my-org</span>
-            </pre>
+            <div style={{ padding: "24px 28px", fontFamily: "monospace", fontSize: 14, lineHeight: 2 }}>
+              <div style={{ color: "#475569", marginBottom: 4 }}># 1. Instala el SDK</div>
+              <div style={{ color: "#e2e8f0", marginBottom: 20 }}>
+                <span style={{ color: "#818cf8" }}>npm</span> install @vforge/sdk
+              </div>
+              <div style={{ color: "#475569", marginBottom: 4 }}># 2. Configura tu token</div>
+              <div style={{ color: "#e2e8f0", marginBottom: 20 }}>
+                <span style={{ color: "#818cf8" }}>export</span>
+                {" VFORGE_TOKEN="}
+                <span style={{ color: "#34d399" }}>vf_live_xxxxxxxxxxxxx</span>
+              </div>
+              <div style={{ color: "#475569", marginBottom: 4 }}># 3. Conecta al Brain</div>
+              <div style={{ color: "#e2e8f0" }}>
+                <span style={{ color: "#818cf8" }}>npx</span>
+                {" @vforge/cli mcp connect "}
+                <span style={{ color: "#34d399" }}>--workspace my-org</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -95,7 +98,7 @@ export default function DevelopersPage() {
             {PILLARS.map((p) => (
               <div key={p.title} style={{ background: "#080d18", padding: "32px 28px", borderRight: "1px solid rgba(255,255,255,0.04)" }}>
                 <div style={{ fontSize: 28, marginBottom: 16 }}>{p.icon}</div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#f1f5f9", margin: "0 0 10px", letterSpacing: "-0.02em" }}>{p.title}</h3>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#f1f5f9", margin: "0 0 10px" }}>{p.title}</h3>
                 <p style={{ fontSize: 13, color: "#64748b", lineHeight: 1.7, margin: 0 }}>{p.desc}</p>
               </div>
             ))}
@@ -107,23 +110,27 @@ export default function DevelopersPage() {
         <div style={{ maxWidth: 960, margin: "0 auto" }}>
           <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase" as const, color: "#475569", marginBottom: 12 }}>REST API</p>
           <h2 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em", color: "#f1f5f9", margin: "0 0 8px" }}>Endpoints principales</h2>
-          <p style={{ fontSize: 14, color: "#475569", margin: "0 0 40px" }}>Base URL: <code style={{ color: "#818cf8", background: "rgba(99,102,241,0.08)", padding: "2px 8px", borderRadius: 4, fontSize: 13 }}>https://api.vforge.site</code></p>
-          <div style={{ display: "flex", flexDirection: "column" as const, gap: 1 }}>
+          <p style={{ fontSize: 14, color: "#475569", margin: "0 0 40px" }}>
+            Base URL:{" "}
+            <code style={{ color: "#818cf8", background: "rgba(99,102,241,0.08)", padding: "2px 8px", borderRadius: 4, fontSize: 13 }}>https://api.vforge.site</code>
+          </p>
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
             {ENDPOINTS.map((ep) => (
-              <div key={ep.path} style={{ display: "flex", alignItems: "flex-start", gap: 20, padding: "20px 24px", background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10, flexWrap: "wrap" as const }}>
+              <div key={ep.path} style={{ display: "flex", alignItems: "center", gap: 20, padding: "18px 24px", background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10, flexWrap: "wrap" as const }}>
                 <span style={{
-                  flexShrink: 0, fontFamily: "monospace", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
-                  padding: "3px 10px", borderRadius: 6,
+                  flexShrink: 0, fontFamily: "monospace", fontSize: 11, fontWeight: 700,
+                  padding: "3px 10px", borderRadius: 6, minWidth: 52, textAlign: "center" as const,
                   background: ep.method === "GET" ? "rgba(16,185,129,0.1)" : "rgba(99,102,241,0.12)",
                   color: ep.method === "GET" ? "#34d399" : "#818cf8",
                   border: ep.method === "GET" ? "1px solid rgba(16,185,129,0.2)" : "1px solid rgba(99,102,241,0.2)",
-                  minWidth: 52, textAlign: "center" as const,
                 }}>
                   {ep.method}
                 </span>
                 <code style={{ fontFamily: "monospace", fontSize: 14, color: "#e2e8f0", flexShrink: 0, minWidth: 180 }}>{ep.path}</code>
                 <span style={{ fontSize: 13, color: "#64748b", flex: 1 }}>{ep.desc}</span>
-                {ep.auth && <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#a78bfa", background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.15)", padding: "2px 8px", borderRadius: 999 }}>Bearer</span>}
+                {ep.auth && (
+                  <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase" as const, color: "#a78bfa", background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.15)", padding: "2px 8px", borderRadius: 999 }}>Bearer</span>
+                )}
               </div>
             ))}
           </div>
@@ -138,7 +145,7 @@ export default function DevelopersPage() {
             {SDKS.map((sdk) => (
               <div key={sdk.lang} style={{ background: "#080d18", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "28px 24px" }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: sdk.color, marginBottom: 20, boxShadow: "0 0 12px " + sdk.color }} />
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: "#f1f5f9", margin: "0 0 12px", letterSpacing: "-0.02em" }}>{sdk.lang}</h3>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: "#f1f5f9", margin: "0 0 12px" }}>{sdk.lang}</h3>
                 <code style={{ fontFamily: "monospace", fontSize: 12, color: "#475569", background: "rgba(255,255,255,0.03)", padding: "8px 12px", borderRadius: 6, display: "block" }}>{sdk.install}</code>
               </div>
             ))}
@@ -154,8 +161,8 @@ export default function DevelopersPage() {
           <p style={{ fontSize: 16, color: "#64748b", margin: "0 0 36px", lineHeight: 1.7 }}>
             Empieza con el plan gratuito. Sin tarjeta de credito. API key en segundos.
           </p>
-          <Link href="/sign-up" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 32px", borderRadius: 12, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", fontWeight: 700, fontSize: 16, textDecoration: "none" }}>
-            Crear cuenta gratis →
+          <Link href="/sign-up" style={{ display: "inline-flex", alignItems: "center", padding: "14px 32px", borderRadius: 12, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", fontWeight: 700, fontSize: 16, textDecoration: "none" }}>
+            Crear cuenta gratis
           </Link>
         </div>
       </section>
