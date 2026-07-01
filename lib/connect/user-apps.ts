@@ -4,7 +4,8 @@ export interface UserApp {
   id: string; name: string; repo_url: string | null; deploy_url: string | null; template: string | null; created_at: string;
 }
 
-async function ensure(sql: ReturnType<typeof neon>) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function ensure(sql: any) {
   await sql`CREATE TABLE IF NOT EXISTS user_apps (
     id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
     user_id text NOT NULL,
