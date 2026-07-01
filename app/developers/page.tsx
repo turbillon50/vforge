@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { MarketingFooter } from "@/components/marketing/MarketingFooter";
+import MarketingHeader from "@/components/marketing/MarketingHeader";
+import MarketingFooter from "@/components/marketing/MarketingFooter";
 import { IconConstruction, IconClock, IconSparkles, IconArrowR, IconCheck } from "@/components/brand/VFIcons";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
