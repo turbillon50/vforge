@@ -8,7 +8,7 @@ const STACK = [
     items: [
       {
         name: "Claude",
-        tagline: "El agente V corre sobre Claude 3.5/4. Razonamiento, codigo y contexto largo.",
+        tagline: "El agente V corre sobre Claude Sonnet 4.6. Razonamiento, codigo y contexto largo.",
         url: "https://www.anthropic.com",
         color: "#cc785c",
         logoBg: "rgba(204,120,92,0.1)",
