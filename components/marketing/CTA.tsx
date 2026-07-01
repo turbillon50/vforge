@@ -2,20 +2,31 @@ import Link from "next/link";
 
 export function CTA() {
   return (
-    <section style={{ background: "#000", padding: "100px 24px 120px" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+    <section style={{ position: "relative", background: "linear-gradient(180deg, #050a14 0%, #03060e 100%)", padding: "100px 24px 120px", overflow: "hidden" }}>
 
-        {/* Divider */}
-        <div style={{ borderTop: "1px solid #303236", marginBottom: 80 }}/>
+      {/* Background glow */}
+      <div style={{
+        position: "absolute", bottom: "-20%", left: "50%",
+        transform: "translateX(-50%)",
+        width: 800, height: 400, borderRadius: "50%",
+        background: "radial-gradient(ellipse, rgba(59,130,246,0.08) 0%, rgba(109,40,217,0.04) 50%, transparent 70%)",
+        filter: "blur(60px)",
+        zIndex: 0,
+        pointerEvents: "none",
+      }}/>
+
+      <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative", zIndex: 1 }}>
+
+        <div style={{ borderTop: "1px solid rgba(59,130,246,0.08)", marginBottom: 80 }}/>
 
         <div style={{ maxWidth: 680 }}>
-          {/* Eyebrow */}
+
           <div style={{
             fontSize: 12, fontWeight: 500, letterSpacing: "0.1em",
-            textTransform: "uppercase", color: "#6B6B6B",
+            textTransform: "uppercase", color: "#334155",
             display: "flex", alignItems: "center", gap: 8, marginBottom: 24,
           }}>
-            <span style={{ display: "inline-block", width: 16, height: 1, background: "#6B6B6B" }}/>
+            <span style={{ display: "inline-block", width: 16, height: 1, background: "rgba(59,130,246,0.4)" }}/>
             Empieza hoy
           </div>
 
@@ -26,27 +37,30 @@ export function CTA() {
             marginBottom: 24,
           }}>
             El flujo que siempre<br/>
-            <span style={{ color: "#37C38F" }}>quisiste tener</span>
+            <span style={{
+              background: "linear-gradient(90deg, #60a5fa 0%, #a78bfa 100%)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+            }}>
+              quisiste tener
+            </span>
           </h2>
 
           <p style={{
-            fontSize: 16, color: "#A0A0A0",
+            fontSize: 16, color: "#475569",
             lineHeight: 1.65, marginBottom: 40, maxWidth: 480,
           }}>
             Conecta Git, Vercel y tus agentes de IA en minutos.
-            Sin configuraciones complejas. Sin fricción.
+            Sin configuraciones complejas. Sin friccion.
           </p>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <Link href="/app" style={{
               display: "inline-flex", alignItems: "center", gap: 8,
-              background: "#FFFFFF", color: "#000000",
-              fontSize: 14, fontWeight: 500,
-              letterSpacing: "-0.02em",
-              padding: "12px 22px", borderRadius: 9999,
-              textDecoration: "none",
-              border: "1px solid #FFFFFF",
-              transition: "background 0.15s",
+              background: "linear-gradient(135deg, #3b82f6, #6d28d9)", color: "#ffffff",
+              fontSize: 14, fontWeight: 500, letterSpacing: "-0.02em",
+              padding: "12px 22px", borderRadius: 9999, textDecoration: "none",
+              boxShadow: "0 0 24px rgba(59,130,246,0.35), 0 0 60px rgba(109,40,217,0.15)",
+              transition: "box-shadow 0.2s",
             }}>
               Empieza gratis
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -55,29 +69,25 @@ export function CTA() {
             </Link>
             <Link href="/developers" style={{
               display: "inline-flex", alignItems: "center", gap: 8,
-              background: "transparent", color: "#A0A0A0",
-              fontSize: 14, fontWeight: 400,
-              letterSpacing: "-0.02em",
-              padding: "11px 22px", borderRadius: 9999,
-              textDecoration: "none",
-              border: "1px solid #4A4A4A",
-              transition: "all 0.15s",
+              background: "rgba(255,255,255,0.04)", color: "#94a3b8",
+              fontSize: 14, fontWeight: 400, letterSpacing: "-0.02em",
+              padding: "11px 22px", borderRadius: 9999, textDecoration: "none",
+              border: "1px solid rgba(255,255,255,0.08)", transition: "all 0.15s",
             }}>
               Leer docs
             </Link>
           </div>
 
-          {/* Trust line */}
           <p style={{
-            marginTop: 32, fontSize: 12, color: "#4A4A4A",
+            marginTop: 32, fontSize: 12, color: "#1e293b",
             letterSpacing: "-0.01em",
           }}>
-            Gratis para empezar · Sin tarjeta de crédito · Beta abierta
+            Gratis para empezar — Sin tarjeta de credito — Beta abierta
           </p>
+
         </div>
 
       </div>
     </section>
   );
-}
-
+            }
