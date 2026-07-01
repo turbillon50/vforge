@@ -45,7 +45,7 @@ const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function initials(name: string): string {
   return name
-    .split(/[s-_]+/)
+    .split(/ +|-+|_+/)
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() ?? "")
     .join("");
