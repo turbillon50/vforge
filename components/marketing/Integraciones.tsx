@@ -121,7 +121,7 @@ const CARD_STYLE = {
   alignItems: "center" as const,
   gap: 12,
   background: "rgba(10,15,28,0.9)",
-  border: "1px solid rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
   borderRadius: 12,
   padding: "13px 20px",
   whiteSpace: "nowrap" as const,
@@ -140,7 +140,7 @@ export function Integraciones() {
         <h2 style={{ fontSize:"clamp(2rem, 4vw, 3rem)", fontWeight:800, letterSpacing:"-0.04em", color:"#f0f4ff", maxWidth:520 }}>
           Conecta con las herramientas que ya usas
         </h2>
-        <p style={{ fontSize:16, color:"rgba(200,215,255,0.45)", lineHeight:1.65, maxWidth:420, marginTop:12 }}>
+        <p style={{ fontSize:16, color:"rgba(200, 215, 255, 0.45)", lineHeight:1.65, maxWidth:420, marginTop:12 }}>
           Cada integracion nativa. Sin webhooks manuales. Sin configuracion extra.
         </p>
       </div>

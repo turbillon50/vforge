@@ -72,7 +72,7 @@ function ContactForm({ type }: { type: "partners" | "asociados" }) {
     return <div style={{ padding:"24px", textAlign:"center", color:"#60a5fa", fontSize:14 }}>Mensaje recibido. Te contactamos pronto.</div>;
   }
 
-  const inputStyle = { background:"rgba(15,23,42,0.8)", border:"1px solid rgba(59,130,246,0.12)", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#e2e8f0", outline:"none", width:"100%", boxSizing:"border-box" as const };
+  const inputStyle = { background:"rgba(15,23,42,0.8)", border:"1px solid rgba(59, 130, 246, 0.12)", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#e2e8f0", outline:"none", width:"100%", boxSizing:"border-box" as const };
 
   return (
     <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:12 }}>
@@ -88,17 +88,17 @@ function ContactForm({ type }: { type: "partners" | "asociados" }) {
 
 export function MarketingFooter() {
   return (
-    <footer style={{ background:"linear-gradient(180deg, #03060e 0%, #020408 100%)", borderTop:"1px solid rgba(59,130,246,0.08)" }}>
+    <footer style={{ background:"linear-gradient(180deg, #03060e 0%, #020408 100%)", borderTop:"1px solid rgba(59, 130, 246, 0.08)" }}>
 
-      <div style={{ borderBottom:"1px solid rgba(59,130,246,0.06)", padding:"64px 24px" }}>
+      <div style={{ borderBottom:"1px solid rgba(59, 130, 246, 0.06)", padding:"64px 24px" }}>
         <div style={{ maxWidth:1200, margin:"0 auto" }}>
           <div style={{ fontSize:12, fontWeight:500, letterSpacing:"0.1em", textTransform:"uppercase", color:"#8695aa", marginBottom:32, display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ display:"inline-block", width:16, height:1, background:"rgba(59,130,246,0.4)" }}/>
+            <span style={{ display:"inline-block", width:16, height:1, background:"rgba(59, 130, 246, 0.4)" }}/>
             Ecosistema
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(240px, 1fr))", gap:24 }}>
             {ECOSYSTEM.map(item => (
-              <a key={item.name} href={item.url} target="_blank" rel="noopener noreferrer" style={{ display:"block", background:"rgba(8,13,26,0.7)", border:"1px solid rgba(59,130,246,0.08)", borderRadius:12, padding:"24px", textDecoration:"none" }}>
+              <a key={item.name} href={item.url} target="_blank" rel="noopener noreferrer" style={{ display:"block", background:"rgba(8,13,26,0.7)", border:"1px solid rgba(59, 130, 246, 0.08)", borderRadius:12, padding:"24px", textDecoration:"none" }}>
                 <div style={{ fontSize:15, fontWeight:500, color:"#e2e8f0", marginBottom:8, letterSpacing:"-0.02em" }}>{item.name}</div>
                 <div style={{ fontSize:13, color:"#64748b", lineHeight:1.6 }}>{item.desc}</div>
                 <div style={{ marginTop:12, fontSize:12, color:"#60a5fa", letterSpacing:"0.02em" }}>{item.url.replace("https://", "")} &#8594;</div>
@@ -108,7 +108,7 @@ export function MarketingFooter() {
         </div>
       </div>
 
-      <div style={{ borderBottom:"1px solid rgba(59,130,246,0.06)", padding:"64px 24px" }}>
+      <div style={{ borderBottom:"1px solid rgba(59, 130, 246, 0.06)", padding:"64px 24px" }}>
         <div style={{ maxWidth:1200, margin:"0 auto" }}>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(320px, 1fr))", gap:48 }}>
             <div>
@@ -139,7 +139,7 @@ export function MarketingFooter() {
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 {SOCIAL_LINKS.map(link => (
                   <a key={link.name} href={link.href} target="_blank" rel="noopener noreferrer" title={link.name}
-                    style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:34, height:34, background:"rgba(15,23,42,0.8)", border:"1px solid rgba(59,130,246,0.1)", borderRadius:8, color:"#8695aa", textDecoration:"none" }}>
+                    style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:34, height:34, background:"rgba(15,23,42,0.8)", border:"1px solid rgba(59, 130, 246, 0.1)", borderRadius:8, color:"#8695aa", textDecoration:"none" }}>
                     {link.icon}
                   </a>
                 ))}
@@ -174,7 +174,7 @@ export function MarketingFooter() {
             </div>
           </div>
 
-          <div style={{ borderTop:"1px solid rgba(59,130,246,0.06)", paddingTop:24, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
+          <div style={{ borderTop:"1px solid rgba(59, 130, 246, 0.06)", paddingTop:24, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
             <p style={{ fontSize:12, color:"#64748b" }}>2026 VForge. Todos los derechos reservados.</p>
             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
               <div style={{ width:6, height:6, background:"#3b82f6", borderRadius:"50%" }}/>

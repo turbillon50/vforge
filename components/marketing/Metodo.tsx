@@ -102,7 +102,7 @@ export function Metodo() {
           <h2 style={{ fontSize:"clamp(2rem, 4vw, 3rem)", fontWeight:800, letterSpacing:"-0.04em", lineHeight:1.05, color:"#f0f4ff", marginBottom:12 }}>
             Un flujo. Cero friccion.
           </h2>
-          <p style={{ fontSize:17, color:"rgba(200,215,255,0.55)", lineHeight:1.65, maxWidth:480 }}>
+          <p style={{ fontSize:17, color:"rgba(200, 215, 255, 0.75)", lineHeight:1.65, maxWidth:480 }}>
             De idea a produccion en una conversacion. VForge orquesta cada herramienta por ti.
           </p>
         </div>
@@ -200,7 +200,7 @@ export function Metodo() {
                 <span style={{ width:5, height:5, borderRadius:"50%", background:step.color, display:"inline-block", boxShadow:`0 0 6px ${step.color}` }}/>
                 {step.tag}
               </span>
-              <p style={{ fontSize:16, color:"rgba(200,215,255,0.8)", lineHeight:1.7, margin:0, maxWidth:600 }}>
+              <p style={{ fontSize:16, color:"rgba(200, 215, 255, 0.8)", lineHeight:1.7, margin:0, maxWidth:600 }}>
                 {step.detail}
               </p>
             </div>
@@ -208,7 +208,7 @@ export function Metodo() {
               {STEPS.map((_, i) => (
                 <div key={i} onClick={() => setActive(i)} style={{
                   width: i === active ? 24 : 6, height:6, borderRadius:3,
-                  background: i === active ? step.color : "rgba(255,255,255,0.1)",
+                  background: i === active ? step.color : "rgba(255, 255, 255, 0.1)",
                   cursor:"pointer", transition:"all 0.3s ease",
                   boxShadow: i === active ? `0 0 8px ${step.color}` : "none",
                 }}/>
@@ -218,7 +218,7 @@ export function Metodo() {
         </div>
 
         {/* Feature cards */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:0, marginTop:3, borderRadius:16, overflow:"hidden", border:"1px solid rgba(59,130,246,0.1)" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:0, marginTop:3, borderRadius:16, overflow:"hidden", border:"1px solid rgba(59, 130, 246, 0.1)" }}>
           {[
             { title:"Conecta tu repo", desc:"Autoriza VForge con tu GitHub. Leemos tu codigo, generamos contexto y preparamos los agentes.", tag:"GitHub", c:"59,130,246" },
             { title:"Deploy automatico", desc:"Cada push genera un deployment en Vercel. Preview y produccion en segundos, sin CI manual.", tag:"Vercel", c:"167,139,250" },
@@ -227,7 +227,7 @@ export function Metodo() {
             <div key={i} style={{
               padding:"32px 28px",
               background:"rgba(8,13,26,0.8)",
-              borderRight: i < 2 ? "1px solid rgba(59,130,246,0.08)" : "none",
+              borderRight: i < 2 ? "1px solid rgba(59, 130, 246, 0.08)" : "none",
               position:"relative",
             }}>
               <div style={{
@@ -240,7 +240,7 @@ export function Metodo() {
               <h3 style={{ fontSize:15, fontWeight:600, letterSpacing:"-0.02em", color:"#e2e8f0", marginBottom:8 }}>
                 {card.title}
               </h3>
-              <p style={{ fontSize:13, color:"rgba(148,163,184,0.65)", lineHeight:1.65, margin:0 }}>
+              <p style={{ fontSize:13, color:"rgba(148, 163, 184, 0.82)", lineHeight:1.65, margin:0 }}>
                 {card.desc}
               </p>
             </div>

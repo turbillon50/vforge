@@ -149,10 +149,10 @@ function Stat({
 }) {
   const dotClass =
     tone === "cyan"
-      ? "bg-violet-400 shadow-[0_0_10px_rgba(34,211,238,0.6)]"
+      ? "bg-violet-400 shadow-[0_0_10px_rgba(34, 211, 238, 0.8)]"
       : tone === "violet"
-      ? "bg-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.6)]"
-      : "bg-success-emerald shadow-[0_0_10px_rgba(16,185,129,0.5)]";
+      ? "bg-violet-400 shadow-[0_0_10px_rgba(139, 92, 246, 0.8)]"
+      : "bg-success-emerald shadow-[0_0_10px_rgba(16, 185, 129, 0.72)]";
   return (
     <div className="mb-3 flex items-center justify-between rounded-md border border-app bg-tint-1/[0.05] px-3 py-2.5">
       <div>

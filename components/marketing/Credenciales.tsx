@@ -130,8 +130,8 @@ export function Credenciales() {
                 <span style={{
                   fontSize: 11, fontWeight: 500,
                   color: "#37C38F",
-                  background: "rgba(55,195,143,0.08)",
-                  border: "1px solid rgba(55,195,143,0.2)",
+                  background: "rgba(55, 195, 143, 0.08)",
+                  border: "1px solid rgba(55, 195, 143, 0.2)",
                   borderRadius: 9999, padding: "2px 8px",
                   letterSpacing: "0.02em",
                 }}>
