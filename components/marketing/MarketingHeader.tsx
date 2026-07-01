@@ -171,4 +171,3 @@ function MarketingHeaderComponent() {
 
 export { MarketingHeaderComponent as MarketingHeader };
 export default MarketingHeaderComponent;
-export { MarketingHeader };
