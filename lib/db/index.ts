@@ -20,3 +20,4 @@ export async function queryOne<T = unknown>(
   const rows = await query<T>(q, params);
   return rows[0] ?? null;
 }
+
