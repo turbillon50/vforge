@@ -101,7 +101,7 @@ export function MarketingFooter() {
               <a key={item.name} href={item.url} target="_blank" rel="noopener noreferrer" style={{ display:"block", background:"rgba(8,13,26,0.7)", border:"1px solid rgba(59,130,246,0.08)", borderRadius:12, padding:"24px", textDecoration:"none" }}>
                 <div style={{ fontSize:15, fontWeight:500, color:"#e2e8f0", marginBottom:8, letterSpacing:"-0.02em" }}>{item.name}</div>
                 <div style={{ fontSize:13, color:"#64748b", lineHeight:1.6 }}>{item.desc}</div>
-                <div style={{ marginTop:12, fontSize:12, color:"#60a5fa", letterSpacing:"0.02em" }}>{item.url.replace("https://", "")} -></div>
+                <div style={{ marginTop:12, fontSize:12, color:"#60a5fa", letterSpacing:"0.02em" }}>{item.url.replace("https://", "")} &#8594;</div>
               </a>
             ))}
           </div>
