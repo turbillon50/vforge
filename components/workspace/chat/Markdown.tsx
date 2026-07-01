@@ -58,22 +58,22 @@ function CodeBlock({ inline, className, children }: {
   }
 
   return (
-    <div className="vf-md-codewrap group relative my-3 overflow-hidden rounded-lg border border-violet-500/25 bg-tint-3">
-      <div className="flex items-center justify-between gap-2 border-b border-violet-500/15 bg-tint-1 px-3 py-1.5">
+    <div className="vf-md-codewrap group relative my-3 overflow-hidden rounded-lg border border-violet-500/25 bg-[#0d1117]">
+      <div className="flex items-center justify-between gap-2 border-b border-violet-500/15 bg-[#161b22] px-3 py-1.5">
         <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
           {lang || "code"}
         </span>
         <button
           type="button"
           onClick={onCopy}
-          className="flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:text-violet-300"
+          className="flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-[#e6edf3]-variant transition hover:text-violet-300"
           aria-label="Copy code"
         >
           {copied ? <IconCheck size={11} /> : <IconCopy size={11} />}
           <span className="hidden sm:inline">{copied ? "Copiado" : "Copy"}</span>
         </button>
       </div>
-      <pre className="m-0 overflow-x-auto whitespace-pre-wrap break-words px-3 py-2.5 font-mono text-[13px] leading-relaxed text-on-surface select-text">
+      <pre className="m-0 overflow-x-auto whitespace-pre-wrap break-words px-3 py-2.5 font-mono text-[13px] leading-relaxed text-[#e6edf3] select-text">
         <code className={className}>{text}</code>
       </pre>
     </div>

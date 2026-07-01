@@ -16,7 +16,7 @@ import { VPresence } from "@/components/brand/VPresence";
 import { TokenHealthIndicator, TokenToastHost } from "./TokenHealth";
 import { Icon3D } from "@/components/brand/Icon3D";
 import { cn } from "@/lib/utils";
-import { VOrb } from "@/components/workspace/VOrb";
+// import { VOrb } from "@/components/workspace/VOrb";
 import { useT } from "@/i18n/AppProviders";
 import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { LocaleToggle } from "@/components/controls/LocaleToggle";
@@ -207,7 +207,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         <MobileNav pathname={pathname}/>
 
       </div>
-      <VOrb />
+      {/* VOrb removido por peticion */}
       <TokenToastHost/>
       <CommandPalette/>
     </div>
