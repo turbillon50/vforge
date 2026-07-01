@@ -83,9 +83,9 @@ function pushedLabel(iso: string | null): string {
   return `push hace ${d}d`;
 }
 
-type IconSettings = "todos" | Health;
+type FilterType = "todos" | Health;
 
-const FILTERS: { id: IconSettings; label: string }[] = [
+const FILTERS: { id: FilterType; label: string }[] = [
   { id: "todos", label: "Todos" },
   { id: "vivo", label: "Vivos" },
   { id: "activo", label: "Activos" },
@@ -100,7 +100,7 @@ export default function RepoVisionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [needsConnect, setNeedsConnect] = useState(false);
-  const [filter, setIconSettings] = useState<IconSettings>("todos");
+  const [filter, setFilter] = useState<FilterType>("todos");
   const [query, setQuery] = useState("");
   const [oldestFirst, setOldestFirst] = useState(false);
   const [cleanupOpen, setCleanupOpen] = useState(false);
@@ -248,7 +248,7 @@ export default function RepoVisionPage() {
               return (
                 <button
                   key={f.id}
-                  onClick={() => setIconSettings(f.id)}
+                  onClick={() => setFilter(f.id)}
                   className={`min-h-[44px] rounded-full border px-4 text-sm font-medium transition ${
                     active
                       ? "border-violet-400/50 bg-tint-3 text-on-surface"
@@ -393,11 +393,9 @@ export default function RepoVisionPage() {
           </div>
         )}
       </div>
-    </>
-  );
-}
+  
 
-      {/* Modal crear rama */}
+{/* Modal crear rama */}
       {branchModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
           onClick={() => setBranchModal(null)}>
@@ -445,6 +443,9 @@ export default function RepoVisionPage() {
           </div>
         </div>
       )}
+  </>
+  );
+}
 
 function StatCard({
   label,
