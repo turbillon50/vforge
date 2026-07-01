@@ -65,7 +65,7 @@ export function Hero() {
         {/* Dark overlay for readability */}
         <div style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(90deg, rgba(5,10,20,0.92) 0%, rgba(5,10,20,0.75) 55%, rgba(5,10,20,0.4) 100%)",
+          background: "linear-gradient(90deg, rgba(5,10,20,0.97) 0%, rgba(5,10,20,0.92) 50%, rgba(5,10,20,0.7) 100%)",
           zIndex: 1,
         }}/>
 
