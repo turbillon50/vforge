@@ -1,31 +1,83 @@
-"use client";
-
 import Link from "next/link";
-import { useT } from "@/i18n/AppProviders";
 
 export function CTA() {
-  const t = useT();
   return (
-    <section data-theme="dark" className="relative">
-      <div className="mx-auto max-w-container px-5 py-16 md:px-margin-desktop md:py-20">
-        <div className="relative overflow-hidden rounded-3xl border border-app-strong bg-ink p-10 text-center md:p-16">
-          <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-violet-500/30 blur-[120px]" />
-          <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-violet-400/20 blur-[120px]" />
-          <span className="label-caps text-violet-400">{t.marketing.cta_eyebrow}</span>
-          <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight md:text-5xl text-balance">
-            {t.marketing.cta_title}
+    <section style={{ background: "#000", padding: "100px 24px 120px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+
+        {/* Divider */}
+        <div style={{ borderTop: "1px solid #303236", marginBottom: 80 }}/>
+
+        <div style={{ maxWidth: 680 }}>
+          {/* Eyebrow */}
+          <div style={{
+            fontSize: 12, fontWeight: 500, letterSpacing: "0.1em",
+            textTransform: "uppercase", color: "#6B6B6B",
+            display: "flex", alignItems: "center", gap: 8, marginBottom: 24,
+          }}>
+            <span style={{ display: "inline-block", width: 16, height: 1, background: "#6B6B6B" }}/>
+            Empieza hoy
+          </div>
+
+          <h2 style={{
+            fontSize: "clamp(2rem, 4vw, 3.25rem)",
+            fontWeight: 400, letterSpacing: "-0.03em",
+            lineHeight: 1.06, color: "#FFFFFF",
+            marginBottom: 24,
+          }}>
+            El flujo que siempre<br/>
+            <span style={{ color: "#37C38F" }}>quisiste tener</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-[var(--fg-primary)]">{t.marketing.cta_body}</p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/sign-up" prefetch={false} className="btn-primary">
-              {t.marketing.cta_primary}
+
+          <p style={{
+            fontSize: 16, color: "#A0A0A0",
+            lineHeight: 1.65, marginBottom: 40, maxWidth: 480,
+          }}>
+            Conecta Git, Vercel y tus agentes de IA en minutos.
+            Sin configuraciones complejas. Sin fricción.
+          </p>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <Link href="/app" style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              background: "#FFFFFF", color: "#000000",
+              fontSize: 14, fontWeight: 500,
+              letterSpacing: "-0.02em",
+              padding: "12px 22px", borderRadius: 9999,
+              textDecoration: "none",
+              border: "1px solid #FFFFFF",
+              transition: "background 0.15s",
+            }}>
+              Empieza gratis
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M2 7h10M8 3l4 4-4 4"/>
+              </svg>
             </Link>
-            <Link href="/mcp" className="btn-ghost">
-              {t.marketing.cta_secondary}
+            <Link href="/developers" style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              background: "transparent", color: "#A0A0A0",
+              fontSize: 14, fontWeight: 400,
+              letterSpacing: "-0.02em",
+              padding: "11px 22px", borderRadius: 9999,
+              textDecoration: "none",
+              border: "1px solid #4A4A4A",
+              transition: "all 0.15s",
+            }}>
+              Leer docs
             </Link>
           </div>
+
+          {/* Trust line */}
+          <p style={{
+            marginTop: 32, fontSize: 12, color: "#4A4A4A",
+            letterSpacing: "-0.01em",
+          }}>
+            Gratis para empezar · Sin tarjeta de crédito · Beta abierta
+          </p>
         </div>
+
       </div>
     </section>
   );
 }
+

@@ -1,51 +1,121 @@
-"use client";
-
 import Link from "next/link";
-import { VWordmark } from "@/components/brand/VMark";
-import { useT, interpolate } from "@/i18n/AppProviders";
+
+const LINKS = {
+  "Producto": [
+    { label: "Docs", href: "/developers" },
+    { label: "Blog", href: "/blog" },
+    { label: "Changelog", href: "/app/changelog" },
+    { label: "Status", href: "#" },
+  ],
+  "Plataforma": [
+    { label: "MCP Bridge", href: "/developers" },
+    { label: "Brain Memory", href: "/developers" },
+    { label: "Integraciones", href: "/app/integrations" },
+    { label: "API", href: "/developers" },
+  ],
+  "Empresa": [
+    { label: "Acerca de", href: "#" },
+    { label: "Privacidad", href: "#" },
+    { label: "Términos", href: "#" },
+    { label: "Contacto", href: "#" },
+  ],
+};
 
 export function MarketingFooter() {
-  const t = useT();
   return (
-    <footer
-      data-theme="dark"
-      className="border-t border-app bg-ink"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-    >
-      <div className="mx-auto grid max-w-container grid-cols-2 gap-8 px-4 py-10 sm:gap-12 sm:px-5 sm:py-16 md:grid-cols-4 md:px-margin-desktop">
-        <div className="col-span-2 space-y-5">
-          <VWordmark />
-          <p className="max-w-sm text-sm leading-relaxed text-on-surface-variant">
-            {t.marketing.footer_tagline}
+    <footer style={{
+      background: "#000",
+      borderTop: "1px solid #303236",
+      padding: "64px 24px 40px",
+    }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+
+        {/* Top row */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr 1fr 1fr",
+          gap: 48,
+          marginBottom: 64,
+        }}>
+          {/* Brand */}
+          <div>
+            <Link href="/" style={{
+              display: "flex", alignItems: "center", gap: 10,
+              textDecoration: "none", marginBottom: 16,
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L22 20H2L12 2Z" fill="#37C38F"/>
+              </svg>
+              <span style={{
+                fontSize: 15, fontWeight: 600,
+                letterSpacing: "-0.03em", color: "#FFFFFF",
+              }}>
+                VForge
+              </span>
+            </Link>
+            <p style={{
+              fontSize: 13, color: "#6B6B6B",
+              lineHeight: 1.65, maxWidth: 280,
+            }}>
+              La plataforma MCP que conecta Git, Vercel y tus agentes de IA en un solo flujo.
+            </p>
+          </div>
+
+          {/* Links */}
+          {Object.entries(LINKS).map(([title, items]) => (
+            <div key={title}>
+              <h4 style={{
+                fontSize: 12, fontWeight: 500,
+                letterSpacing: "0.06em", textTransform: "uppercase",
+                color: "#FFFFFF", marginBottom: 16,
+              }}>
+                {title}
+              </h4>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+                {items.map(item => (
+                  <li key={item.label}>
+                    <Link href={item.href} style={{
+                      fontSize: 13, color: "#6B6B6B",
+                      textDecoration: "none", transition: "color 0.15s",
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.color = "#FFFFFF")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "#6B6B6B")}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom row */}
+        <div style={{
+          borderTop: "1px solid #303236",
+          paddingTop: 24,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 16,
+        }}>
+          <p style={{ fontSize: 12, color: "#4A4A4A" }}>
+            © 2026 VForge. Todos los derechos reservados.
           </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{
+              display: "inline-block", width: 6, height: 6,
+              background: "#37C38F", borderRadius: "50", marginRight: 6,
+            }}/>
+            <span style={{ fontSize: 12, color: "#4A4A4A" }}>
+              Todos los sistemas operativos
+            </span>
+          </div>
         </div>
-        <div>
-          <h4 className="label-caps mb-4 text-on-surface">{t.marketing.footer_platform}</h4>
-          <ul className="space-y-3 text-sm text-on-surface-variant">
-            <li><Link href="/#integraciones" className="hover:text-white/70">{t.common.nav_workspace}</Link></li>
-            <li><Link href="/marketplace" className="hover:text-white/70">{t.common.nav_marketplace}</Link></li>
-            <li><Link href="/pricing" className="hover:text-white/70">{t.common.nav_pricing}</Link></li>
-          </ul>
-        </div>
-        <div>
-          <h4 className="label-caps mb-4 text-on-surface">{t.marketing.footer_company}</h4>
-          <ul className="space-y-3 text-sm text-on-surface-variant">
-            <li><Link className="hover:text-white/70" href="/developers">{t.marketing.footer_about}</Link></li>
-            <li><Link className="hover:text-white/70" href="/status">{t.marketing.footer_security}</Link></li>
-            <li><Link className="hover:text-white/70" href="/support">{t.marketing.footer_contact}</Link></li>
-          </ul>
-        </div>
-      </div>
-      <div className="border-t border-app">
-        <div className="mx-auto flex max-w-container flex-col items-center justify-between gap-3 px-4 py-5 text-center sm:px-5 sm:py-6 md:flex-row md:text-left md:px-margin-desktop">
-          <p className="break-words font-mono text-[10px] uppercase tracking-[0.16em] text-muted sm:text-[11px] sm:tracking-[0.18em]">
-            {interpolate(t.marketing.footer_legal, { year: new Date().getFullYear() })}
-          </p>
-          <p className="break-words font-mono text-[10px] uppercase tracking-[0.16em] text-muted sm:text-[11px] sm:tracking-[0.18em]">
-            {t.marketing.footer_system}
-          </p>
-        </div>
+
       </div>
     </footer>
   );
 }
+

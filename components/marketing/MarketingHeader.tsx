@@ -1,66 +1,147 @@
 "use client";
 import Link from "next/link";
-import { VWordmark } from "@/components/brand/VMark";
-import { useState } from "react";
-import { IconMenu, IconShare, IconX } from "@/components/brand/VFIcons";
-import { useT } from "@/i18n/AppProviders";
-import { LocaleToggle } from "@/components/controls/LocaleToggle";
+import { useState, useEffect } from "react";
 
 export function MarketingHeader() {
-  const [open,setOpen]=useState(false);
-  const t=useT();
-  const nav=[
-    {href:"/#metodo",label:"Método"},
-    {href:"/marketplace",label:"V-Shop"},
-    
-    {href:"/mcp",label:"MCP"},
-    {href:"/vulcano",label:"Navegador",badge:"IA"},
-    {href:"/status",label:"Taller",badge:"Live"},
-    {href:"/developers",label:"Desarrolladores",badge:"Pronto"},
-  ];
-  const handleShare=()=>{
-    if(typeof navigator!=="undefined"&&navigator.share)
-      navigator.share({title:"VForge",text:"La fábrica de apps con IA más potente.",url:"https://vforge.site"});
-    else if(typeof navigator!=="undefined")
-      navigator.clipboard?.writeText("https://vforge.site");
-  };
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
+
   return (
-    <header data-theme="dark" className="fixed inset-x-0 top-0 z-50 border-b border-[var(--border-1)] bg-[#03020a]/85 backdrop-blur-2xl">
-      <div className="mx-auto flex max-w-5xl items-center gap-4 px-5 py-3.5">
-        <Link href="/" className="shrink-0"><VWordmark/></Link>
-        <nav data-theme="dark" className="ml-4 hidden items-center gap-0.5 md:flex">
-          {nav.map(item=>(
-            <Link key={item.href} href={item.href}
-              className="relative flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-mono text-[12px] text-[var(--fg-secondary)] transition hover:bg-white/[0.06] hover:text-white">
+    <header
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+        background: scrolled ? "rgba(0,0,0,0.92)" : "#000000",
+        backdropFilter: scrolled ? "blur(12px)" : "none",
+        borderBottom: "1px solid #303236",
+        transition: "background 0.2s ease",
+        WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
+      }}
+    >
+      <div style={{
+        maxWidth: 1200, margin: "0 auto", padding: "0 24px",
+        height: 60, display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+
+        {/* Logo */}
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L22 20H2L12 2Z" fill="#37C38F"/>
+          </svg>
+          <span style={{
+            fontFamily: "Inter, sans-serif", fontSize: 16, fontWeight: 600,
+            letterSpacing: "-0.03em", color: "#FFFFFF",
+          }}>
+            VForge
+          </span>
+        </Link>
+
+        {/* Nav - Desktop */}
+        <nav style={{ display: "flex", alignItems: "center", gap: 2 }}
+             className="hidden-mobile">
+          {[
+            { label: "Docs", href: "/developers" },
+            { label: "Pricing", href: "/#pricing" },
+            { label: "Blog", href: "/blog" },
+          ].map(item => (
+            <Link key={item.href} href={item.href} style={{
+              color: "#A0A0A0", fontSize: 14, fontWeight: 400,
+              letterSpacing: "-0.02em", padding: "8px 14px",
+              borderRadius: 6, textDecoration: "none",
+              transition: "color 0.15s ease",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#FFFFFF")}
+            onMouseLeave={e => (e.currentTarget.style.color = "#A0A0A0")}
+            >
               {item.label}
-              {item.badge&&<span className="rounded-full bg-violet-500/15 px-1.5 py-0.5 text-[9px] font-bold text-violet-300 uppercase tracking-wider">{item.badge}</span>}
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-2">
-          <LocaleToggle/>
-          <button onClick={handleShare}
-            className="hidden items-center gap-1.5 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2 font-mono text-[11px] text-[var(--fg-secondary)] transition hover:text-[var(--fg-primary)] md:flex">
-            <IconShare size={12}/>Compartir
-          </button>
-          <Link href="/sign-in" prefetch={false} className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-2 font-mono text-[11px] text-[var(--fg-secondary)] transition hover:text-white">Entrar</Link>
-          <Link href="/sign-up" prefetch={false} className="rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 px-4 py-2 font-mono text-[11px] font-semibold text-white shadow-[0_4px_20px_rgba(124,58,237,0.35)] transition hover:brightness-110">Empezar</Link>
-          <button onClick={()=>setOpen(v=>!v)} className="flex items-center justify-center rounded-xl border border-[var(--border-1)] bg-white/[0.025] p-2 text-[var(--fg-tertiary)] transition hover:text-[var(--fg-secondary)] md:hidden">
-            {open?<IconX size={16}/>:<IconMenu size={16}/>}
+
+        {/* CTAs */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Link href="/app" style={{
+            color: "#A0A0A0", fontSize: 14, fontWeight: 400,
+            letterSpacing: "-0.02em", padding: "8px 14px",
+            textDecoration: "none", transition: "color 0.15s",
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = "#FFFFFF")}
+          onMouseLeave={e => (e.currentTarget.style.color = "#A0A0A0")}
+          >
+            Log in
+          </Link>
+          <Link href="/app" style={{
+            background: "#FFFFFF", color: "#000000",
+            fontSize: 14, fontWeight: 500,
+            letterSpacing: "-0.02em",
+            padding: "9px 18px", borderRadius: 9999,
+            textDecoration: "none", transition: "background 0.15s",
+            border: "1px solid #FFFFFF",
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = "#E8E8E8")}
+          onMouseLeave={e => (e.currentTarget.style.background = "#FFFFFF")}
+          >
+            Get started
+          </Link>
+
+          {/* Hamburger - Mobile */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{
+              display: "none", background: "none", border: "none",
+              color: "#FFFFFF", cursor: "pointer", padding: 4,
+            }}
+            className="show-mobile"
+            aria-label="Menu"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+              {menuOpen
+                ? <><path d="M4 4l12 12M16 4L4 16"/></>
+                : <><path d="M3 6h14M3 10h14M3 14h14"/></>
+              }
+            </svg>
           </button>
         </div>
       </div>
+
       {/* Mobile menu */}
-      {open&&(
-        <div className="border-t border-[var(--border-1)] bg-[#03020a]/95 px-5 py-4 md:hidden">
-          {nav.map(item=>(
-            <Link key={item.href} href={item.href} onClick={()=>setOpen(false)}
-              className="block rounded-xl px-3 py-2.5 font-mono text-[13px] text-[var(--fg-tertiary)] transition hover:bg-[var(--surface-1)] hover:text-[var(--fg-primary)]">
+      {menuOpen && (
+        <div style={{
+          background: "#18191B", borderTop: "1px solid #303236",
+          padding: "16px 24px 20px",
+        }}>
+          {[
+            { label: "Docs", href: "/developers" },
+            { label: "Pricing", href: "/#pricing" },
+            { label: "Blog", href: "/blog" },
+            { label: "Log in", href: "/app" },
+          ].map(item => (
+            <Link key={item.href} href={item.href}
+              onClick={() => setMenuOpen(false)}
+              style={{
+                display: "block", color: "#A0A0A0", fontSize: 16,
+                padding: "12px 0", borderBottom: "1px solid #303236",
+                textDecoration: "none",
+              }}
+            >
               {item.label}
             </Link>
           ))}
         </div>
       )}
+
+      <style>{`
+        @media (max-width: 768px) {
+          .hidden-mobile { display: none !important; }
+          .show-mobile { display: flex !important; }
+        }
+      `}</style>
     </header>
   );
 }
+
