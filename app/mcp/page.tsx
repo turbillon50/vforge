@@ -1,8 +1,8 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { MarketingFooter } from "@/components/marketing/MarketingFooter";
+import MarketingHeader from "@/components/marketing/MarketingHeader";
+import MarketingFooter from "@/components/marketing/MarketingFooter";
 
 export const metadata: Metadata = {
   title: "Instalar VForge MCP — Documentación",
