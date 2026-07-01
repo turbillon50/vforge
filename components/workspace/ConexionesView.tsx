@@ -109,7 +109,7 @@ function ConnectionCard({ title, description, connected, children }: ConnectionC
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function ConexionesView() {
+export function ConexionesView() {
   const [status,         setStatus        ] = useState<OnboardingStatus>({ llm: false, vercel: false, github: false });
   const [loading,        setLoading        ] = useState(true);
   const [vercelToken,    setVercelToken    ] = useState("");
@@ -403,3 +403,5 @@ export default function ConexionesView() {
     </div>
   );
 }
+
+export default ConexionesView;
