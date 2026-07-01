@@ -200,3 +200,4 @@ export function Integraciones() {
     </section>
   );
     }
+export default Integraciones;
