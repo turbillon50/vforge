@@ -132,7 +132,7 @@ export default function DevelopersPage() {
               <div key={sdk.lang} style={{ background:"#080d18", border:"1px solid rgba(255,255,255,0.06)", borderRadius:12, padding:"28px 24px" }}>
                 <div style={{ width:8, height:8, borderRadius:"50%", background:sdk.color, marginBottom:20 }} />
                 <h3 style={{ fontSize:15, fontWeight:700, color:"#f1f5f9", margin:"0 0 12px", letterSpacing:"-0.02em" }}>{sdk.lang}</h3>
-                <code style={{ fontFamily:"monospace", fontSize:12, color:"#475569", background:"rgba(255,255,255,0.03)", padding:"8px 12px", borderRadius:6, display:"block" }}>{sdk.install}</code>
+                <code style={{ fontFamily:"monospace", fontSize:13, color:"#cbd5e1", background:"rgba(255,255,255,0.07)", padding:"8px 12px", borderRadius:6, display:"block" }}>{sdk.install}</code>
               </div>
             ))}
           </div>
