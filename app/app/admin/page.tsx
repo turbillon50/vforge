@@ -88,7 +88,7 @@ export default async function AdminPage() {
                         Owner
                       </span>
                     ) : (
-                      <span className="rounded-full bg-tint-2 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-on-surface-variant">
+                      <span className="rounded-full bg-tint-2/[0.08] px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-on-surface-variant">
                         Usuario
                       </span>
                     )}

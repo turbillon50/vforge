@@ -235,7 +235,7 @@ export default function SecretsPage() {
                 return (
                   <li
                     key={s.id}
-                    className="grid grid-cols-12 items-center gap-3 border-b border-app px-4 py-3 last:border-0 hover:bg-tint-1"
+                    className="grid grid-cols-12 items-center gap-3 border-b border-app px-4 py-3 last:border-0 hover:bg-tint-1/[0.05]"
                   >
                     <div className="col-span-12 md:col-span-5 flex items-center gap-3 min-w-0">
                       <IconShield size={14} className="text-violet-300 shrink-0" />
@@ -265,7 +265,7 @@ export default function SecretsPage() {
                         className={
                           isCopied
                             ? "flex h-7 items-center gap-1 rounded-md border border-success-emerald/40 bg-success-emerald/10 px-2 font-mono text-[10px] uppercase tracking-widest text-success-emerald"
-                            : "flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1 px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300 disabled:opacity-50"
+                            : "flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1/[0.05] px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300 disabled:opacity-50"
                         }
                       >
                         {isLoading ? (
@@ -322,7 +322,7 @@ function Stat({
     crimson: "text-error-crimson",
   };
   return (
-    <div className="rounded-xl border border-app bg-tint-1 p-4">
+    <div className="rounded-xl border border-app bg-tint-1/[0.05] p-4">
       <p className="label-caps text-muted">{label}</p>
       <p className={`mt-2 font-display text-lg font-semibold ${m[tone]}`}>{value}</p>
     </div>

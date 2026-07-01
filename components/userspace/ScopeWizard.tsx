@@ -178,7 +178,7 @@ export default function ScopeWizard({ initialScope }: Props) {
                 ? "w-7 bg-gradient-to-r from-violet-500 to-violet-400"
                 : i < step
                   ? "w-1.5 bg-violet-400/70"
-                  : "w-1.5 bg-tint-3"
+                  : "w-1.5 bg-tint-3/[0.10]"
             }`}
           />
         ))}
@@ -247,7 +247,7 @@ export default function ScopeWizard({ initialScope }: Props) {
                     placeholder="Mi gran app"
                     className="w-full border-b-2 border-app bg-transparent pb-3 font-display text-3xl font-medium tracking-tight text-on-surface outline-none transition-colors placeholder:text-muted focus:border-violet-500 sm:text-4xl"
                   />
-                  <div className="mt-8 rounded-2xl border border-app bg-tint-1 p-6 shadow-elev">
+                  <div className="mt-8 rounded-2xl border border-app bg-tint-1/[0.05] p-6 shadow-elev">
                     <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-on-surface-variant">
                       Resumen del alcance
                     </p>
@@ -278,7 +278,7 @@ export default function ScopeWizard({ initialScope }: Props) {
             type="button"
             onClick={() => go(-1)}
             disabled={step === 0 || saving}
-            className="flex min-h-[44px] items-center gap-2 rounded-full border border-app bg-tint-1 px-5 py-2.5 text-sm text-on-surface-variant transition hover:bg-tint-2 disabled:opacity-0"
+            className="flex min-h-[44px] items-center gap-2 rounded-full border border-app bg-tint-1/[0.05] px-5 py-2.5 text-sm text-on-surface-variant transition hover:bg-tint-2/[0.08] disabled:opacity-0"
           >
             <IconArrowL className="h-4 w-4" aria-hidden />
             Atrás
@@ -356,7 +356,7 @@ function OptionGrid({
             className={`group relative min-h-[64px] rounded-2xl border px-6 py-5 text-left transition-all duration-200 ${
               active
                 ? "border-violet-500/60 bg-violet-500/10 shadow-[0_0_0_1px_rgba(139,92,246,0.35),0_12px_40px_rgba(139,92,246,0.15)]"
-                : "border-app bg-tint-1 hover:-translate-y-0.5 hover:bg-tint-2 hover:shadow-elev"
+                : "border-app bg-tint-1/[0.05] hover:-translate-y-0.5 hover:bg-tint-2/[0.08] hover:shadow-elev"
             }`}
           >
             <span

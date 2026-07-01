@@ -173,7 +173,7 @@ export function OnboardingFlow() {
         </div>
       </div>
 
-      <div className="mb-10 h-1 w-full overflow-hidden rounded-full bg-tint-2">
+      <div className="mb-10 h-1 w-full overflow-hidden rounded-full bg-tint-2/[0.08]">
         <motion.div
           initial={false}
           animate={{ width: `${progress}%` }}
@@ -378,13 +378,13 @@ function Connect({
           const isBusy = !!loading[id];
           const error = errors[id];
           return (
-            <div key={id} className="rounded-xl border border-app bg-tint-1 p-4 transition hover:border-app-strong">
+            <div key={id} className="rounded-xl border border-app bg-tint-1/[0.05] p-4 transition hover:border-app-strong">
               <div className="flex items-center gap-4">
                 <div
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
                     isOn
                       ? "bg-success-emerald/15 text-success-emerald ring-1 ring-success-emerald/30"
-                      : "bg-tint-2 text-on-surface-variant"
+                      : "bg-tint-2/[0.08] text-on-surface-variant"
                   }`}
                 >
                   <Icon size={18} />
@@ -404,7 +404,7 @@ function Connect({
                 </div>
                 <button
                   onClick={() => setOpenInfo(openInfo === id ? null : id)}
-                  className="rounded-md p-2 text-muted hover:bg-tint-2 hover:text-on-surface"
+                  className="rounded-md p-2 text-muted hover:bg-tint-2/[0.08] hover:text-on-surface"
                   aria-label={`Glossary: ${meta.name}`}
                 >
                   <IconInfo size={16} />
@@ -455,7 +455,7 @@ function Connect({
                           <button
                             type="button"
                             onClick={() => toggleShow(id)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted hover:bg-tint-2 hover:text-on-surface"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted hover:bg-tint-2/[0.08] hover:text-on-surface"
                             aria-label={showKey[id] ? "Ocultar" : "Mostrar"}
                           >
                             <IconEye size={16} />
@@ -618,7 +618,7 @@ function FirstProject({
 
         {/* Parte 3 — crear repo en GitHub al vuelo si hay GitHub conectado */}
         {githubConnected && (
-          <div className="rounded-xl border border-app-strong bg-tint-1 p-4">
+          <div className="rounded-xl border border-app-strong bg-tint-1/[0.05] p-4">
             {repo ? (
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success-emerald/15 text-success-emerald ring-1 ring-success-emerald/30">
@@ -645,7 +645,7 @@ function FirstProject({
                 >
                   <span
                     className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition ${
-                      optIn ? "bg-violet-500" : "bg-tint-3"
+                      optIn ? "bg-violet-500" : "bg-tint-3/[0.10]"
                     }`}
                   >
                     <span
@@ -734,7 +734,7 @@ function Summary({
       <h2 className="font-display text-3xl font-semibold tracking-tight">{title}</h2>
       <p className="mx-auto mt-3 max-w-md text-on-surface-variant">{body}</p>
 
-      <div className="mx-auto mt-7 max-w-md rounded-xl border border-app-strong bg-tint-1 p-5 text-left">
+      <div className="mx-auto mt-7 max-w-md rounded-xl border border-app-strong bg-tint-1/[0.05] p-5 text-left">
         <p className="label-caps mb-3 text-muted">{t.onboarding.summary_connected}</p>
         {integrationOrder.map(({ id, icon: Icon }) => {
           const meta = t.onboarding.integrations[id];

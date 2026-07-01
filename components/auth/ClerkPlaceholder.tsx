@@ -15,9 +15,9 @@ export function ClerkPlaceholder({ mode }: { mode: "sign-in" | "sign-up" }) {
         <button className="btn-ghost w-full justify-start">{t.auth.sso_github}</button>
         <button className="btn-ghost w-full justify-start">{t.auth.sso_google}</button>
         <div className="my-3 flex items-center gap-3 text-[11px] uppercase tracking-[0.2em] text-muted">
-          <span className="h-px flex-1 bg-tint-3" />
+          <span className="h-px flex-1 bg-tint-3/[0.10]" />
           {t.auth.separator_or}
-          <span className="h-px flex-1 bg-tint-3" />
+          <span className="h-px flex-1 bg-tint-3/[0.10]" />
         </div>
         <input className="input-base" placeholder={t.auth.email_placeholder} />
         <input className="input-base" placeholder={t.auth.password_placeholder} type="password" />

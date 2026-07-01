@@ -558,7 +558,7 @@ export function EvidenceVaultClient({
             onDrop={handleDrop}
             className={cn(
               "rounded-2xl border border-dashed bg-surface p-4 shadow-elev transition md:p-5",
-              dragOver ? "border-violet-400 bg-tint-2" : "border-app-strong",
+              dragOver ? "border-violet-400 bg-tint-2/[0.08]" : "border-app-strong",
             )}
           >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -787,11 +787,11 @@ export function EvidenceVaultClient({
                       type="button"
                       onClick={() => setStatusState(state)}
                       className={cn(
-                        "min-h-11 rounded-md border bg-tint-1 px-2 text-xs font-semibold transition",
+                        "min-h-11 rounded-md border bg-tint-1/[0.05] px-2 text-xs font-semibold transition",
                         "inline-flex items-center justify-center gap-1.5",
                         statusState === state
                           ? meta.tone
-                          : "border-app text-on-surface-variant hover:bg-tint-2",
+                          : "border-app text-on-surface-variant hover:bg-tint-2/[0.08]",
                       )}
                     >
                       <Icon size={13} />
@@ -855,12 +855,12 @@ function CaptureButton({
         "min-h-[104px] rounded-xl border bg-surface-low p-4 text-left transition",
         "focus:outline-none focus:ring-2 focus:ring-violet-400",
         active
-          ? "border-violet-400 bg-tint-2 text-on-surface"
-          : "border-app text-on-surface hover:border-violet-400 hover:bg-tint-2",
+          ? "border-violet-400 bg-tint-2/[0.08] text-on-surface"
+          : "border-app text-on-surface hover:border-violet-400 hover:bg-tint-2/[0.08]",
         disabled && "cursor-not-allowed opacity-50",
       )}
     >
-      <span className="flex h-10 w-10 items-center justify-center rounded-md border border-app bg-tint-1">
+      <span className="flex h-10 w-10 items-center justify-center rounded-md border border-app bg-tint-1/[0.05]">
         <Icon size={19} />
       </span>
       <span className="mt-3 block font-display text-base font-semibold">{label}</span>
@@ -881,7 +881,7 @@ function EvidenceRow({ item, index }: { item: EvidenceItem; index: number }) {
     >
       <div
         className={cn(
-          "mt-1 flex h-10 w-10 items-center justify-center rounded-md border bg-tint-1",
+          "mt-1 flex h-10 w-10 items-center justify-center rounded-md border bg-tint-1/[0.05]",
           meta.tone,
         )}
       >
@@ -908,7 +908,7 @@ function EvidenceRow({ item, index }: { item: EvidenceItem; index: number }) {
         <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-on-surface">
           {item.transcript}
         </p>
-        <p className="mt-3 rounded-xl border border-app bg-tint-1 px-3 py-2 text-sm leading-6 text-on-surface-variant">
+        <p className="mt-3 rounded-xl border border-app bg-tint-1/[0.05] px-3 py-2 text-sm leading-6 text-on-surface-variant">
           {item.interpretation}
         </p>
         {item.raw_url && (
@@ -972,7 +972,7 @@ function SyncBadge({
   return (
     <div
       className={cn(
-        "flex min-h-11 items-center gap-2 rounded-md border bg-tint-1 px-3",
+        "flex min-h-11 items-center gap-2 rounded-md border bg-tint-1/[0.05] px-3",
         state === "error"
           ? "border-error-crimson text-error-crimson"
           : state === "syncing"
@@ -1009,7 +1009,7 @@ function EmptyState({
 }) {
   return (
     <div className={cn("px-5 text-center", compact ? "py-6" : "py-12")}>
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-app bg-tint-1 text-violet-400">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-app bg-tint-1/[0.05] text-violet-400">
         <Icon size={20} />
       </div>
       <p className="mt-3 font-display text-sm font-semibold text-on-surface">

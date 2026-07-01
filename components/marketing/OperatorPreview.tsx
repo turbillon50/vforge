@@ -28,7 +28,7 @@ export function OperatorPreview() {
 
         <div className="grid grid-cols-12 gap-0">
           {/* Sidebar */}
-          <div className="col-span-3 hidden border-r border-app bg-tint-2 p-4 md:block">
+          <div className="col-span-3 hidden border-r border-app bg-tint-2/[0.08] p-4 md:block">
             <p className="label-caps mb-3 text-muted">{t.workspace.workspace_label}</p>
             {[
               { icon: IconSparkles, label: t.workspace.nav.chat, active: true },
@@ -77,7 +77,7 @@ export function OperatorPreview() {
               </ul>
             </Bubble>
 
-            <div className="mt-5 rounded-lg border border-app-strong bg-tint-2 p-3">
+            <div className="mt-5 rounded-lg border border-app-strong bg-tint-2/[0.08] p-3">
               <div className="font-mono text-[12px] text-on-surface-variant">
                 <span className="text-violet-400">›</span> {t.chat.placeholder}
               </div>
@@ -92,7 +92,7 @@ export function OperatorPreview() {
             <Stat label={t.workspace.nav.integrations} value="6" hint={t.common.status_healthy} tone="violet" />
             <Stat label={t.workspace.nav.secrets} value="14" hint="AES-256" />
 
-            <div className="mt-5 rounded-md border border-app-strong bg-tint-2 p-3">
+            <div className="mt-5 rounded-md border border-app-strong bg-tint-2/[0.08] p-3">
               <p className="label-caps mb-2 text-muted">{t.chat.ops.recent}</p>
               <ActivityItem icon={IconBranch} label={t.chat.ops.events[0]} tone="violet" />
               <ActivityItem icon={IconCpu} label={t.chat.ops.events[1]} tone="cyan" />
@@ -123,7 +123,7 @@ function Bubble({
       className={`mb-3 max-w-[90%] rounded-xl border px-4 py-3 text-[14px] leading-relaxed ${
         isB
           ? "ml-0 border-violet-500/20 bg-violet-500/[0.06] text-on-surface"
-          : "ml-auto border-app-strong bg-tint-1 text-on-surface-variant"
+          : "ml-auto border-app-strong bg-tint-1/[0.05] text-on-surface-variant"
       }`}
     >
       {isB && (
@@ -154,7 +154,7 @@ function Stat({
       ? "bg-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.6)]"
       : "bg-success-emerald shadow-[0_0_10px_rgba(16,185,129,0.5)]";
   return (
-    <div className="mb-3 flex items-center justify-between rounded-md border border-app bg-tint-1 px-3 py-2.5">
+    <div className="mb-3 flex items-center justify-between rounded-md border border-app bg-tint-1/[0.05] px-3 py-2.5">
       <div>
         <p className="label-caps text-muted">{label}</p>
         <p className="font-display text-lg font-semibold text-on-surface">{value}</p>

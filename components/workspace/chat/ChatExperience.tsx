@@ -950,7 +950,7 @@ export function ChatExperience() {
           {/* Volver (solo móvil) */}
           <Link href="/app/home"
             aria-label="Volver a inicio"
-            className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2/[0.08] hover:text-on-surface md:hidden"
             style={{ touchAction: "manipulation" }}
           >
             <IconChevL size={20} />
@@ -961,7 +961,7 @@ export function ChatExperience() {
             <button
               type="button"
               onClick={() => setScopeMenuOpen((v) => !v)}
-              className="flex min-h-[44px] min-w-0 items-center gap-2 rounded-full px-2 transition hover:bg-tint-1"
+              className="flex min-h-[44px] min-w-0 items-center gap-2 rounded-full px-2 transition hover:bg-tint-1/[0.05]"
               style={{ touchAction: "manipulation" }}
               aria-haspopup="menu"
               aria-expanded={scopeMenuOpen}
@@ -996,8 +996,8 @@ export function ChatExperience() {
                         setScope(opt.id);
                         setScopeMenuOpen(false);
                       }}
-                      className={`flex w-full items-start gap-2 border-b border-app/40 px-3 py-2.5 text-left text-sm last:border-0 hover:bg-tint-1 ${
-                        opt.id === scope ? "bg-tint-1 text-violet-300" : "text-on-surface"
+                      className={`flex w-full items-start gap-2 border-b border-app/40 px-3 py-2.5 text-left text-sm last:border-0 hover:bg-tint-1/[0.05] ${
+                        opt.id === scope ? "bg-tint-1/[0.05] text-violet-300" : "text-on-surface"
                       }`}
                     >
                       {opt.id === "general" ? (
@@ -1032,7 +1032,7 @@ export function ChatExperience() {
               aria-label="Repositorio"
               aria-haspopup="menu"
               aria-expanded={repoMenuOpen}
-              className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2/[0.08] hover:text-on-surface"
               style={{ touchAction: "manipulation" }}
             >
               <IconBranch size={17} />
@@ -1053,7 +1053,7 @@ export function ChatExperience() {
                       <button
                         type="button"
                         onClick={() => setRepoFormOpen(true)}
-                        className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
+                        className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1/[0.05]"
                       >
                         <IconPlus size={14} className="text-violet-300" /> Crear repositorio…
                       </button>
@@ -1063,7 +1063,7 @@ export function ChatExperience() {
                           target="_blank"
                           rel="noreferrer"
                           onClick={() => setRepoMenuOpen(false)}
-                          className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
+                          className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1/[0.05]"
                         >
                           <IconBranch size={14} className="text-violet-400" /> Ver en GitHub
                         </a>
@@ -1111,7 +1111,7 @@ export function ChatExperience() {
               aria-label="Despliegue"
               aria-haspopup="menu"
               aria-expanded={deployMenuOpen}
-              className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2/[0.08] hover:text-on-surface"
               style={{ touchAction: "manipulation" }}
             >
               <IconRocket size={17} />
@@ -1130,14 +1130,14 @@ export function ChatExperience() {
                     type="button"
                     disabled={builderBusy}
                     onClick={() => void sendBuilderRequest("deploy-request")}
-                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1 disabled:opacity-50"
+                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1/[0.05] disabled:opacity-50"
                   >
                     <IconRocket size={14} className="text-violet-300" />
                     {builderBusy ? "Encolando…" : "Deploy a Vercel…"}
                   </button>
                   <Link href="/app/deployments"
                     onClick={() => setDeployMenuOpen(false)}
-                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
+                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1/[0.05]"
                   >
                     <IconGlobe size={14} className="text-violet-400" /> Ver deployments
                   </Link>
@@ -1157,7 +1157,7 @@ export function ChatExperience() {
               aria-label="Más opciones"
               aria-haspopup="menu"
               aria-expanded={headerMenuOpen}
-              className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-tint-2/[0.08] hover:text-on-surface"
               style={{ touchAction: "manipulation" }}
             >
               <IconChevD size={18} />
@@ -1176,7 +1176,7 @@ export function ChatExperience() {
                       setHeaderMenuOpen(false);
                       void newChat();
                     }}
-                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1 disabled:opacity-50"
+                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1/[0.05] disabled:opacity-50"
                   >
                     <IconPlus size={14} className="text-violet-300" /> Nuevo hilo
                   </button>
@@ -1186,13 +1186,13 @@ export function ChatExperience() {
                       setHeaderMenuOpen(false);
                       openSessions();
                     }}
-                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
+                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1/[0.05]"
                   >
                     <IconHistory size={14} className="text-violet-400" /> Hilos
                   </button>
                   <Link href="/app/home"
                     onClick={() => setHeaderMenuOpen(false)}
-                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1"
+                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-tint-1/[0.05]"
                   >
                     <IconHome size={14} className="text-muted" /> Inicio
                   </Link>
@@ -1581,7 +1581,7 @@ function Composer({
             </div>
           )}
           {attachment && (
-            <div className="flex items-center gap-2 rounded-md border border-app bg-tint-1 px-3 py-2">
+            <div className="flex items-center gap-2 rounded-md border border-app bg-tint-1/[0.05] px-3 py-2">
               {attachment.preview ? (
                 <img
                   src={attachment.preview}
@@ -1596,7 +1596,7 @@ function Composer({
               </span>
               <button
                 onClick={clearAttachment}
-                className="rounded p-1 text-muted hover:bg-tint-2 hover:text-on-surface"
+                className="rounded p-1 text-muted hover:bg-tint-2/[0.08] hover:text-on-surface"
                 aria-label="Quitar adjunto"
               >
                 <IconX size={12} />
@@ -1637,7 +1637,7 @@ function Composer({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-tint-2"
+              className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-tint-2/[0.08]"
               aria-label="Adjuntar archivo"
               style={{ touchAction: "manipulation" }}
             >
@@ -1664,7 +1664,7 @@ function Composer({
                   ? "bg-error-crimson/15 text-error-crimson animate-pulse"
                   : transcribing
                     ? "text-violet-400 animate-pulse"
-                    : "hover:bg-tint-2"
+                    : "hover:bg-tint-2/[0.08]"
               }`}
               aria-label={recording ? "Detener grabación" : "Grabar voz"}
               style={{ touchAction: "manipulation" }}
@@ -2110,7 +2110,7 @@ function SpeakButton({
       onClick={() => void play()}
       aria-label={state === "playing" ? "Detener voz" : "Escuchar respuesta de V"}
       title="Escuchar con la voz de V"
-      className="flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1 px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-400/40 hover:text-violet-300"
+      className="flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1/[0.05] px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-400/40 hover:text-violet-300"
     >
       {state === "loading" ? (
         <IconActivity size={11} className="animate-pulse" />
@@ -2155,7 +2155,7 @@ function AssistantActions({
   }
 
   const btn =
-    "flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1 px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300";
+    "flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1/[0.05] px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300";
 
   return (
     <div className="mt-2 hidden items-center gap-1 opacity-70 transition-opacity duration-200 sm:flex sm:hover:opacity-100">
@@ -2187,7 +2187,7 @@ function AssistantActions({
         className={
           feedback === "up"
             ? "flex h-7 items-center justify-center rounded-md border border-violet-500/40 bg-violet-500/10 px-2 text-violet-300"
-            : "flex h-7 items-center justify-center rounded-md border border-app bg-tint-1 px-2 text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300"
+            : "flex h-7 items-center justify-center rounded-md border border-app bg-tint-1/[0.05] px-2 text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300"
         }
         aria-label={feedback === "up" ? "Quitar pulgar arriba" : "Pulgar arriba"}
         aria-pressed={feedback === "up"}
@@ -2200,7 +2200,7 @@ function AssistantActions({
         className={
           feedback === "down"
             ? "flex h-7 items-center justify-center rounded-md border border-error-crimson/40 bg-error-crimson/10 px-2 text-error-crimson"
-            : "flex h-7 items-center justify-center rounded-md border border-app bg-tint-1 px-2 text-on-surface-variant transition hover:border-error-crimson/30 hover:text-error-crimson"
+            : "flex h-7 items-center justify-center rounded-md border border-app bg-tint-1/[0.05] px-2 text-on-surface-variant transition hover:border-error-crimson/30 hover:text-error-crimson"
         }
         aria-label={feedback === "down" ? "Quitar pulgar abajo" : "Pulgar abajo"}
         aria-pressed={feedback === "down"}

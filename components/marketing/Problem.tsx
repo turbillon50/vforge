@@ -25,9 +25,9 @@ export function Problem() {
               {items.map((p) => (
                 <div
                   key={p.label}
-                  className="group flex items-center gap-3 rounded-lg border border-app bg-tint-1 px-4 py-4 transition hover:border-violet-400/30 hover:bg-tint-2"
+                  className="group flex items-center gap-3 rounded-lg border border-app bg-tint-1/[0.05] px-4 py-4 transition hover:border-violet-400/30 hover:bg-tint-2/[0.08]"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-tint-2 text-on-surface-variant group-hover:text-violet-400">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-tint-2/[0.08] text-on-surface-variant group-hover:text-violet-400">
                     <p.icon size={16} />
                   </div>
                   <p className="text-sm text-on-surface">{p.label}</p>

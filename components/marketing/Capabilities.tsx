@@ -29,7 +29,7 @@ export function Capabilities() {
           {items.map((it) => (
             <article
               key={it.title}
-              className="group relative overflow-hidden rounded-xl border border-app bg-tint-1 p-6 transition hover:border-violet-500/30 hover:bg-tint-2"
+              className="group relative overflow-hidden rounded-xl border border-app bg-tint-1/[0.05] p-6 transition hover:border-violet-500/30 hover:bg-tint-2/[0.08]"
             >
               <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-violet-cyan opacity-0 blur-3xl transition group-hover:opacity-20" />
               <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/10 text-violet-300 ring-1 ring-violet-500/20">

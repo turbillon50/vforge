@@ -42,7 +42,7 @@ export function SkeletonRow({ className }: { className?: string }) {
 /** Card de skeleton para grids (cartera, proyectos). */
 export function SkeletonCard({ className }: { className?: string }) {
   return (
-    <div className={cn("rounded-xl border border-app bg-tint-1 p-4", className)} aria-hidden>
+    <div className={cn("rounded-xl border border-app bg-tint-1/[0.05] p-4", className)} aria-hidden>
       <div className="flex items-start justify-between gap-2">
         <Skeleton className="h-3.5 w-1/2" />
         <Skeleton className="h-4 w-12 rounded-full" />

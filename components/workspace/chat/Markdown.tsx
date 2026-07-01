@@ -132,7 +132,7 @@ const components: Components = {
     </div>
   ),
   thead: ({ children }) => (
-    <thead className="bg-tint-1 font-mono text-[11px] uppercase tracking-widest text-muted">
+    <thead className="bg-tint-1/[0.05] font-mono text-[11px] uppercase tracking-widest text-muted">
       {children}
     </thead>
   ),

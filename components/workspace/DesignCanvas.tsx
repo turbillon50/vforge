@@ -112,7 +112,7 @@ export default function DesignCanvas() {
         </div>
         <button
           onClick={reset}
-          className="flex items-center gap-1.5 rounded-md border border-app px-2.5 py-1.5 text-[12px] text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface"
+          className="flex items-center gap-1.5 rounded-md border border-app px-2.5 py-1.5 text-[12px] text-on-surface-variant transition hover:bg-tint-2/[0.08] hover:text-on-surface"
         >
           <motion.span animate={{ rotate: spin ? 360 : 0 }} transition={{ duration: 0.6, ease: "easeInOut" }} style={{ display: "inline-flex" }}>
             <IconRefresh size={13} />
@@ -133,7 +133,7 @@ export default function DesignCanvas() {
                 "rounded-full border px-3 py-1.5 text-[12px] transition " +
                 (active
                   ? "border-violet-500/30 bg-violet-500/15 text-violet-300"
-                  : "border-app text-on-surface-variant hover:bg-tint-2 hover:text-on-surface")
+                  : "border-app text-on-surface-variant hover:bg-tint-2/[0.08] hover:text-on-surface")
               }
             >
               {p.name}
@@ -214,7 +214,7 @@ export default function DesignCanvas() {
                   "rounded-lg border px-2 py-2.5 text-center transition " +
                   (active
                     ? "border-violet-500/30 bg-violet-500/15"
-                    : "border-app hover:bg-tint-2")
+                    : "border-app hover:bg-tint-2/[0.08]")
                 }
               >
                 <div className={"text-[12px] font-medium " + (active ? "text-violet-300" : "text-on-surface")}>{d.label}</div>
@@ -239,7 +239,7 @@ export default function DesignCanvas() {
                   "flex flex-col items-center gap-2 rounded-lg border px-2 py-3 transition " +
                   (active
                     ? "border-violet-500/30 bg-violet-500/15"
-                    : "border-app hover:bg-tint-2")
+                    : "border-app hover:bg-tint-2/[0.08]")
                 }
               >
                 <div className={active ? "flex gap-2 text-violet-300" : "flex gap-2 text-on-surface-variant"}>
@@ -269,7 +269,7 @@ export default function DesignCanvas() {
                   "rounded-lg border px-2 py-2.5 text-[12px] font-medium transition " +
                   (active
                     ? "border-violet-500/30 bg-violet-500/15 text-violet-300"
-                    : "border-app text-on-surface hover:bg-tint-2")
+                    : "border-app text-on-surface hover:bg-tint-2/[0.08]")
                 }
               >
                 {mode === "live" ? "En Vivo" : "Demo"}

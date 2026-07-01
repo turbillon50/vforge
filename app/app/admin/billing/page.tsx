@@ -87,7 +87,7 @@ export default async function AdminBillingPage() {
       </header>
 
       <div className="mt-8 grid grid-cols-2 gap-3 md:max-w-md">
-        <div className="rounded-xl border border-app bg-tint-1 p-4">
+        <div className="rounded-xl border border-app bg-tint-1/[0.05] p-4">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
             Suscriptores activos
           </p>
@@ -95,7 +95,7 @@ export default async function AdminBillingPage() {
             {active.length}
           </p>
         </div>
-        <div className="rounded-xl border border-app bg-tint-1 p-4">
+        <div className="rounded-xl border border-app bg-tint-1/[0.05] p-4">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
             MRR estimado
           </p>
@@ -111,7 +111,7 @@ export default async function AdminBillingPage() {
           {error}
         </p>
       ) : rows.length === 0 ? (
-        <p className="mt-10 rounded-xl border border-app bg-tint-1 px-4 py-6 text-center text-sm text-on-surface-variant">
+        <p className="mt-10 rounded-xl border border-app bg-tint-1/[0.05] px-4 py-6 text-center text-sm text-on-surface-variant">
           Todavía nadie ha pagado. Cuando llegue el primer checkout, aparece aquí.
         </p>
       ) : (

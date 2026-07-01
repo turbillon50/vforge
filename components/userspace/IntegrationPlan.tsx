@@ -86,7 +86,7 @@ export default function IntegrationPlan() {
           Conéctalas una por una. Sin prisa, en el orden sugerido.
         </p>
         <div className="mt-3 flex items-center gap-3">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-tint-1">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-tint-1/[0.05]">
             <motion.div
               className="h-full rounded-full bg-gradient-to-r from-violet-400 to-violet-400"
               initial={{ width: 0 }}
@@ -203,7 +203,7 @@ function StepCard({
           href={item.signupUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-full border border-app bg-surface px-4 text-sm text-on-surface transition hover:bg-tint-2"
+          className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-full border border-app bg-surface px-4 text-sm text-on-surface transition hover:bg-tint-2/[0.08]"
         >
           Crear cuenta
           <IconExtLink className="h-3.5 w-3.5" aria-hidden />

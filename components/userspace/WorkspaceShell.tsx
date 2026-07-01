@@ -95,7 +95,7 @@ function TabButton({
       className={`flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full border text-sm font-medium transition ${
         active
           ? "border-violet-500/50 bg-violet-500/10 text-on-surface"
-          : "border-app bg-tint-1 text-on-surface-variant hover:bg-tint-2"
+          : "border-app bg-tint-1/[0.05] text-on-surface-variant hover:bg-tint-2/[0.08]"
       }`}
     >
       {icon}

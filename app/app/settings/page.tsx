@@ -57,7 +57,7 @@ export default function SettingsPage() {
                   "flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition shrink-0",
                   active === s.id
                     ? "bg-violet-500/15 text-violet-300 ring-1 ring-violet-500/30"
-                    : "text-on-surface-variant hover:bg-tint-2 hover:text-on-surface",
+                    : "text-on-surface-variant hover:bg-tint-2/[0.08] hover:text-on-surface",
                 )}
               >
                 <s.icon size={14} />
@@ -123,7 +123,7 @@ function McpCard() {
         <div className="mt-4 space-y-3">
           <div>
             <p className="text-[11px] uppercase tracking-wide text-muted">URL del servidor</p>
-            <code className="mt-1 block rounded-lg border border-app bg-tint-1 px-3 py-2 font-mono text-[12px] text-on-surface">{url}</code>
+            <code className="mt-1 block rounded-lg border border-app bg-tint-1/[0.05] px-3 py-2 font-mono text-[12px] text-on-surface">{url}</code>
           </div>
           <div>
             <p className="text-[11px] uppercase tracking-wide text-muted">Tu token (guárdalo ahora, no se vuelve a mostrar)</p>
@@ -132,7 +132,7 @@ function McpCard() {
           <button
             type="button"
             onClick={() => { navigator.clipboard.writeText(config); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-            className="flex h-11 items-center justify-center rounded-xl border border-app bg-tint-1 px-5 text-[14px] text-on-surface transition active:scale-[0.98] hover:border-app-strong"
+            className="flex h-11 items-center justify-center rounded-xl border border-app bg-tint-1/[0.05] px-5 text-[14px] text-on-surface transition active:scale-[0.98] hover:border-app-strong"
           >
             {copied ? "Copiado ✓" : "Copiar config para v0"}
           </button>
@@ -144,7 +144,7 @@ function McpCard() {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mb-4 rounded-xl border border-app bg-tint-1 p-5">
+    <div className="mb-4 rounded-xl border border-app bg-tint-1/[0.05] p-5">
       <h3 className="font-display text-sm font-semibold text-on-surface">{title}</h3>
       <div className="mt-4">{children}</div>
     </div>
@@ -387,7 +387,7 @@ function InvoicesPanel() {
               >
                 {inv.status}
               </span>
-              <button className="rounded-md border border-app p-2 text-on-surface-variant hover:bg-tint-2 hover:text-on-surface">
+              <button className="rounded-md border border-app p-2 text-on-surface-variant hover:bg-tint-2/[0.08] hover:text-on-surface">
                 <IconDownload size={13} />
               </button>
             </li>
@@ -574,7 +574,7 @@ function SecurityPanel() {
         </p>
         <Link
           href="/app/secrets"
-          className="inline-flex items-center gap-2 rounded-lg border border-app bg-tint-1 px-4 py-2 text-sm text-on-surface transition hover:bg-tint-2"
+          className="inline-flex items-center gap-2 rounded-lg border border-app bg-tint-1/[0.05] px-4 py-2 text-sm text-on-surface transition hover:bg-tint-2/[0.08]"
           style={{ minHeight: 44, touchAction: "manipulation" }}
         >
           <IconKey size={14} className="text-violet-300" /> Abrir bóveda
@@ -732,7 +732,7 @@ function MoreToolsCard() {
           <Link
             key={tool.href}
             href={tool.href}
-            className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-on-surface-variant transition hover:bg-tint-2 hover:text-on-surface"
+            className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-on-surface-variant transition hover:bg-tint-2/[0.08] hover:text-on-surface"
             style={{ minHeight: 44, touchAction: "manipulation" }}
           >
             <tool.icon size={15} className="text-violet-300" />
