@@ -7,7 +7,8 @@ export async function query<T = unknown>(
   q: string,
   params: unknown[] = []
 ): Promise<T[]> {
-  return (sql as (query: string, params?: unknown[]) => Promise<unknown[]>)(q, params) as Promise<T[]>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (sql as any)(q, params) as Promise<T[]>;
 }
 
 export async function queryOne<T = unknown>(
