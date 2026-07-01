@@ -3,9 +3,6 @@ import { redirect } from "next/navigation";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
 import Hero from "@/components/marketing/Hero";
-import Metodo from "@/components/marketing/Metodo";
-import Integraciones from "@/components/marketing/Integraciones";
-import CTA from "@/components/marketing/CTA";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +19,6 @@ export default async function HomePage() {
       <MarketingHeader />
       <main>
         <Hero />
-        <Metodo />
-        <Integraciones />
-        <CTA />
       </main>
       <MarketingFooter />
     </div>
