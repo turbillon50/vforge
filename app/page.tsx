@@ -1,7 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import MarketingHeader from "@/components/marketing/MarketingHeader";
-import MarketingFooter from "@/components/marketing/MarketingFooter";
 import Hero from "@/components/marketing/Hero";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +19,6 @@ export default async function HomePage() {
       <main>
         <Hero />
       </main>
-      <MarketingFooter />
     </div>
   );
 }
