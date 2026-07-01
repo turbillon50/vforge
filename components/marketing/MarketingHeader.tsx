@@ -6,14 +6,14 @@ function VForgeLogo({ size = 26 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="v-hdr-g2" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+        <linearGradient id="v-hdr-g3" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#ffffff"/>
           <stop offset="35%" stopColor="#c8c8d8"/>
           <stop offset="70%" stopColor="#888898"/>
           <stop offset="100%" stopColor="#e4e4f0"/>
         </linearGradient>
       </defs>
-      <path d="M6 6 L32 58 L58 6" fill="none" stroke="url(#v-hdr-g2)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M6 6 L32 58 L58 6" fill="none" stroke="url(#v-hdr-g3)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }
@@ -33,7 +33,7 @@ const NAV_LINKS = [
   { href: "/manifiesto", label: "Manifiesto" },
 ];
 
-function MarketingHeaderComponent() {
+export function MarketingHeader() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -42,9 +42,7 @@ function MarketingHeaderComponent() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const headerBg = scrolled
-    ? "rgba(5,10,20,0.97)"
-    : "rgba(5,10,20,0.55)";
+  const headerBg = scrolled ? "rgba(5,10,20,0.97)" : "rgba(5,10,20,0.55)";
 
   return (
     <header
@@ -169,5 +167,4 @@ function MarketingHeaderComponent() {
   );
 }
 
-export { MarketingHeaderComponent as MarketingHeader };
-export default MarketingHeaderComponent;
+export default MarketingHeader;
