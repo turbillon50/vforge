@@ -6,14 +6,14 @@ function VForgeLogo({ size = 26 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="v-hdr-g" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+        <linearGradient id="v-hdr-g2" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#ffffff"/>
           <stop offset="35%" stopColor="#c8c8d8"/>
           <stop offset="70%" stopColor="#888898"/>
           <stop offset="100%" stopColor="#e4e4f0"/>
         </linearGradient>
       </defs>
-      <path d="M6 6 L32 58 L58 6" fill="none" stroke="url(#v-hdr-g)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M6 6 L32 58 L58 6" fill="none" stroke="url(#v-hdr-g2)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 }
@@ -33,9 +33,8 @@ const NAV_LINKS = [
   { href: "/manifiesto", label: "Manifiesto" },
 ];
 
-export default function MarketingHeader() {
+function MarketingHeaderComponent() {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -73,7 +72,6 @@ export default function MarketingHeader() {
           justifyContent: "space-between",
         }}
       >
-        {/* Logo */}
         <Link
           href="/"
           style={{
@@ -97,7 +95,6 @@ export default function MarketingHeader() {
           </span>
         </Link>
 
-        {/* Desktop Nav */}
         <nav
           style={{
             display: "flex",
@@ -116,7 +113,6 @@ export default function MarketingHeader() {
                 textDecoration: "none",
                 padding: "6px 14px",
                 borderRadius: "8px",
-                transition: "color 0.15s, background 0.15s",
               }}
             >
               {link.label}
@@ -124,7 +120,6 @@ export default function MarketingHeader() {
           ))}
         </nav>
 
-        {/* Right actions */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <a
             href="https://github.com/turbillon50/vforge"
@@ -134,7 +129,6 @@ export default function MarketingHeader() {
               color: "rgba(200,215,255,0.6)",
               display: "flex",
               alignItems: "center",
-              transition: "color 0.15s",
             }}
             aria-label="GitHub"
           >
@@ -165,7 +159,6 @@ export default function MarketingHeader() {
               fontWeight: 700,
               fontSize: "14px",
               textDecoration: "none",
-              boxShadow: "0 0 20px rgba(96,165,250,0.2)",
             }}
           >
             Get started
@@ -175,3 +168,6 @@ export default function MarketingHeader() {
     </header>
   );
 }
+
+export { MarketingHeaderComponent as MarketingHeader };
+export default MarketingHeaderComponent;
