@@ -7,7 +7,7 @@ export async function query<T = unknown>(
   q: string,
   params: unknown[] = []
 ): Promise<T[]> {
-  return sql(q, params) as Promise<T[]>;
+  return (sql as (query: string, params?: unknown[]) => Promise<unknown[]>)(q, params) as Promise<T[]>;
 }
 
 export async function queryOne<T = unknown>(
