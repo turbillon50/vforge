@@ -92,7 +92,7 @@ export function MarketingFooter() {
 
       <div style={{ borderBottom:"1px solid rgba(59,130,246,0.06)", padding:"64px 24px" }}>
         <div style={{ maxWidth:1200, margin:"0 auto" }}>
-          <div style={{ fontSize:12, fontWeight:500, letterSpacing:"0.1em", textTransform:"uppercase", color:"#475569", marginBottom:32, display:"flex", alignItems:"center", gap:8 }}>
+          <div style={{ fontSize:12, fontWeight:500, letterSpacing:"0.1em", textTransform:"uppercase", color:"#8695aa", marginBottom:32, display:"flex", alignItems:"center", gap:8 }}>
             <span style={{ display:"inline-block", width:16, height:1, background:"rgba(59,130,246,0.4)" }}/>
             Ecosistema
           </div>
@@ -139,7 +139,7 @@ export function MarketingFooter() {
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 {SOCIAL_LINKS.map(link => (
                   <a key={link.name} href={link.href} target="_blank" rel="noopener noreferrer" title={link.name}
-                    style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:34, height:34, background:"rgba(15,23,42,0.8)", border:"1px solid rgba(59,130,246,0.1)", borderRadius:8, color:"#475569", textDecoration:"none" }}>
+                    style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:34, height:34, background:"rgba(15,23,42,0.8)", border:"1px solid rgba(59,130,246,0.1)", borderRadius:8, color:"#8695aa", textDecoration:"none" }}>
                     {link.icon}
                   </a>
                 ))}
@@ -147,7 +147,7 @@ export function MarketingFooter() {
             </div>
 
             <div>
-              <h4 style={{ fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:"#475569", marginBottom:16 }}>Producto</h4>
+              <h4 style={{ fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:"#8695aa", marginBottom:16 }}>Producto</h4>
               <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:10 }}>
                 {[{ label:"Blog", href:"/blog" }, { label:"Manifiesto", href:"/manifiesto" }, { label:"Labs", href:"/labs" }, { label:"Precios", href:"/pricing" }].map(item => (
                   <li key={item.label}><Link href={item.href} style={{ fontSize:13, color:"#64748b", textDecoration:"none" }}>{item.label}</Link></li>
@@ -156,7 +156,7 @@ export function MarketingFooter() {
             </div>
 
             <div>
-              <h4 style={{ fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:"#475569", marginBottom:16 }}>Plataforma</h4>
+              <h4 style={{ fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:"#8695aa", marginBottom:16 }}>Plataforma</h4>
               <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:10 }}>
                 {[{ label:"Integraciones", href:"/labs" }, { label:"API", href:"#" }, { label:"Blog", href:"/blog" }, { label:"Status", href:"#" }].map(item => (
                   <li key={item.label}><Link href={item.href} style={{ fontSize:13, color:"#64748b", textDecoration:"none" }}>{item.label}</Link></li>
@@ -165,7 +165,7 @@ export function MarketingFooter() {
             </div>
 
             <div>
-              <h4 style={{ fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:"#475569", marginBottom:16 }}>Legal</h4>
+              <h4 style={{ fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:"#8695aa", marginBottom:16 }}>Legal</h4>
               <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:10 }}>
                 {[{ label:"Privacidad", href:"/privacy" }, { label:"Terminos", href:"/terms" }, { label:"Manifiesto", href:"/manifiesto" }, { label:"Contacto", href:"#" }].map(item => (
                   <li key={item.label}><Link href={item.href} style={{ fontSize:13, color:"#64748b", textDecoration:"none" }}>{item.label}</Link></li>
@@ -175,10 +175,10 @@ export function MarketingFooter() {
           </div>
 
           <div style={{ borderTop:"1px solid rgba(59,130,246,0.06)", paddingTop:24, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
-            <p style={{ fontSize:12, color:"#334155" }}>2026 VForge. Todos los derechos reservados.</p>
+            <p style={{ fontSize:12, color:"#64748b" }}>2026 VForge. Todos los derechos reservados.</p>
             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
               <div style={{ width:6, height:6, background:"#3b82f6", borderRadius:"50%" }}/>
-              <span style={{ fontSize:12, color:"#334155" }}>Todos los sistemas operativos</span>
+              <span style={{ fontSize:12, color:"#64748b" }}>Todos los sistemas operativos</span>
             </div>
           </div>
         </div>
