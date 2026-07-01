@@ -5,7 +5,6 @@ import MarketingFooter from "@/components/marketing/MarketingFooter";
 import Hero from "@/components/marketing/Hero";
 import Metodo from "@/components/marketing/Metodo";
 import Integraciones from "@/components/marketing/Integraciones";
-import Labs from "@/components/marketing/Labs";
 import CTA from "@/components/marketing/CTA";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +24,6 @@ export default async function HomePage() {
         <Hero />
         <Metodo />
         <Integraciones />
-        <Labs />
         <CTA />
       </main>
       <MarketingFooter />
