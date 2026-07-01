@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 
 // Auth providers for login section
