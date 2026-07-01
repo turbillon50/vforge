@@ -1,321 +1,240 @@
 "use client";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 
-// Pipeline animation — VForge flow: code > GitHub > Vercel > deploy > artifact
 const GitHubSVG = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
   </svg>
 );
 
 const VercelSVG = () => (
-  <svg width="20" height="20" viewBox="0 0 76 65" fill="currentColor">
+  <svg width="24" height="24" viewBox="0 0 76 65" fill="currentColor">
     <path d="M37.5274 0L75.0548 65H0L37.5274 0Z"/>
   </svg>
 );
 
-const CodeSVG = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="16 18 22 12 16 6"/>
-    <polyline points="8 6 2 12 8 18"/>
+const BrainSVG = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/>
+    <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
   </svg>
 );
 
-const DeploySVG = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-    <path d="M2 17l10 5 10-5"/>
-    <path d="M2 12l10 5 10-5"/>
+const RocketSVG = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
   </svg>
 );
 
-const PIPELINE_STEPS = [
+const STEPS = [
   {
-    id: "code",
-    label: "Codigo",
-    sublabel: "Escribes con tu agente",
-    icon: <CodeSVG />,
+    id: "brain",
+    label: "VForge Brain",
+    sublabel: "Conversas con V",
+    icon: <BrainSVG />,
     color: "#60a5fa",
-    glow: "rgba(96,165,250,0.3)",
-    detail: "Conversas con VForge. El agente genera, edita y estructura tu codigo en tiempo real.",
-    tag: "VForge Brain",
+    glow: "59,130,246",
+    grad: "linear-gradient(135deg, #1e3a5f 0%, #0f1f35 100%)",
+    detail: "El agente V genera, edita y estructura tu codigo en tiempo real. Una conversacion — codigo listo.",
+    tag: "MCP Agent",
+    number: "01",
   },
   {
     id: "github",
     label: "GitHub",
     sublabel: "Push automatico",
     icon: <GitHubSVG />,
-    color: "#818cf8",
-    glow: "rgba(129,140,248,0.3)",
-    detail: "VForge hace commit y push al repositorio. Tus cambios quedan versionados al instante.",
+    color: "#a78bfa",
+    glow: "167,139,250",
+    grad: "linear-gradient(135deg, #2d1f4e 0%, #1a1030 100%)",
+    detail: "VForge hace commit y push al repositorio al instante. Tus cambios quedan versionados sin tocar la terminal.",
     tag: "Git Push",
+    number: "02",
   },
   {
     id: "vercel",
     label: "Vercel",
     sublabel: "Deploy en segundos",
     icon: <VercelSVG />,
-    color: "#a78bfa",
-    glow: "rgba(167,139,250,0.3)",
-    detail: "Cada push dispara un deployment automatico en Vercel. Preview y produccion listos.",
+    color: "#c4b5fd",
+    glow: "196,181,253",
+    grad: "linear-gradient(135deg, #3b2d6e 0%, #21184a 100%)",
+    detail: "Cada push dispara un deployment automatico. Preview y produccion listos en segundos.",
     tag: "CI/CD",
+    number: "03",
   },
   {
     id: "artifact",
     label: "Artifact",
     sublabel: "Producto en produccion",
-    icon: <DeploySVG />,
-    color: "#c4b5fd",
-    glow: "rgba(196,181,253,0.3)",
-    detail: "Tu producto vive. Dominio propio, HTTPS, escala sola. VForge recuerda todo el contexto.",
+    icon: <RocketSVG />,
+    color: "#e9d5ff",
+    glow: "233,213,255",
+    grad: "linear-gradient(135deg, #4c2a7a 0%, #2e1a50 100%)",
+    detail: "Tu producto vive. Dominio propio, HTTPS, escala automatica. VForge recuerda todo el contexto.",
     tag: "Live",
+    number: "04",
   },
 ];
 
-function PipelineNode({ step, index, active, onClick }: {
-  step: typeof PIPELINE_STEPS[0];
-  index: number;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        display: "flex", flexDirection: "column", alignItems: "center",
-        gap: 12, cursor: "pointer", flex: 1,
-        transition: "transform 0.2s",
-        transform: active ? "translateY(-4px)" : "translateY(0)",
-      }}
-    >
-      <div style={{
-        width: 64, height: 64,
-        background: active
-          ? `radial-gradient(circle, ${step.glow} 0%, rgba(15,23,42,0.9) 70%)`
-          : "rgba(15,23,42,0.8)",
-        border: `1px solid ${active ? step.color : "rgba(59,130,246,0.12)"}`,
-        borderRadius: 16,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: active ? step.color : "#475569",
-        transition: "all 0.3s ease",
-        boxShadow: active ? `0 0 24px ${step.glow}, 0 0 60px rgba(59,130,246,0.05)` : "none",
-        backdropFilter: "blur(8px)",
-      }}>
-        {step.icon}
-      </div>
-      <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 13, fontWeight: 500, color: active ? "#e2e8f0" : "#64748b", letterSpacing: "-0.01em", transition: "color 0.2s" }}>
-          {step.label}
-        </div>
-        <div style={{ fontSize: 11, color: active ? "#94a3b8" : "#334155", letterSpacing: "0.02em", marginTop: 2, transition: "color 0.2s" }}>
-          {step.sublabel}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PipelineConnector({ active }: { active: boolean }) {
-  return (
-    <div style={{
-      display: "flex", alignItems: "center", flex: "0 0 60px",
-      paddingBottom: 36,
-    }}>
-      <div style={{
-        height: 1, width: "100%",
-        background: active
-          ? "linear-gradient(90deg, rgba(96,165,250,0.6), rgba(167,139,250,0.6))"
-          : "rgba(59,130,246,0.1)",
-        position: "relative",
-        transition: "background 0.3s",
-      }}>
-        {active && (
-          <div style={{
-            position: "absolute", top: "50%", left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 6, height: 6, borderRadius: "50%",
-            background: "rgba(167,139,250,0.8)",
-            animation: "vf-pulse-dot 1.5s ease-in-out infinite",
-          }}/>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export function Metodo() {
-  const [activeStep, setActiveStep] = useState(0);
+  const [active, setActive] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveStep(prev => (prev + 1) % PIPELINE_STEPS.length);
-    }, 2800);
-    return () => clearInterval(interval);
+    const t = setInterval(() => setActive(p => (p + 1) % STEPS.length), 3000);
+    return () => clearInterval(t);
   }, []);
 
-  const step = PIPELINE_STEPS[activeStep];
+  const step = STEPS[active];
 
   return (
     <section style={{ background: "linear-gradient(180deg, #050a14 0%, #06080f 100%)", padding: "100px 24px" }}>
-
-      <style>{`
-        @keyframes vf-pulse-dot {
-          0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.8); }
-          50% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
-        }
-        @keyframes vf-fade-up {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
 
-        <div style={{ marginBottom: 64 }}>
-          <div style={{
-            display: "flex", alignItems: "center", gap: 8,
-            fontSize: 12, fontWeight: 500, letterSpacing: "0.1em",
-            textTransform: "uppercase", color: "#334155",
-            marginBottom: 20,
-          }}>
-            <span style={{ display: "inline-block", width: 16, height: 1, background: "rgba(59,130,246,0.4)" }}/>
+        <div style={{ marginBottom: 56 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:11, fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase", color:"#3b82f6", marginBottom:16 }}>
+            <span style={{ display:"inline-block", width:24, height:1, background:"linear-gradient(90deg,#3b82f6,transparent)" }}/>
             Como funciona
           </div>
-          <h2 style={{
-            fontSize: "clamp(1.75rem, 3vw, 2.5rem)",
-            fontWeight: 400, letterSpacing: "-0.03em",
-            lineHeight: 1.1, color: "#FFFFFF",
-            maxWidth: 600, marginBottom: 16,
-          }}>
-            El flujo que conecta todo
+          <h2 style={{ fontSize:"clamp(2rem, 4vw, 3rem)", fontWeight:800, letterSpacing:"-0.04em", lineHeight:1.05, color:"#f0f4ff", marginBottom:12 }}>
+            Un flujo. Cero friccion.
           </h2>
-          <p style={{ fontSize: 16, color: "#475569", lineHeight: 1.65, maxWidth: 500 }}>
-            Codigo, repositorio, deployment y artifact. Un ciclo completo orquestado por VForge en una sola conversacion.
+          <p style={{ fontSize:17, color:"rgba(200,215,255,0.55)", lineHeight:1.65, maxWidth:480 }}>
+            De idea a produccion en una conversacion. VForge orquesta cada herramienta por ti.
           </p>
         </div>
 
-        <div style={{ borderTop: "1px solid rgba(59,130,246,0.08)", marginBottom: 64 }}/>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:3, marginBottom:3, borderRadius:"20px 20px 0 0", overflow:"hidden" }}>
+          {STEPS.map((s, i) => (
+            <div
+              key={s.id}
+              onClick={() => setActive(i)}
+              style={{
+                padding:"28px 32px",
+                background: i === active
+                  ? s.grad
+                  : "rgba(8,13,26,0.95)",
+                border: "none",
+                cursor:"pointer",
+                transition:"background 0.4s ease",
+                position:"relative",
+                overflow:"hidden",
+              }}
+            >
+              {i === active && (
+                <div style={{
+                  position:"absolute", inset:0,
+                  background: `radial-gradient(ellipse at 20% 50%, rgba(${s.glow},0.15) 0%, transparent 60%)`,
+                  pointerEvents:"none",
+                }}/>
+              )}
+              <div style={{ display:"flex", alignItems:"center", gap:16, position:"relative", zIndex:1 }}>
+                <div style={{
+                  width:52, height:52, borderRadius:14,
+                  background: i === active
+                    ? `radial-gradient(circle, rgba(${s.glow},0.25) 0%, rgba(${s.glow},0.05) 100%)`
+                    : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${i === active ? `rgba(${s.glow},0.5)` : "rgba(255,255,255,0.06)"}`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  color: i === active ? s.color : "#334155",
+                  transition:"all 0.4s ease",
+                  boxShadow: i === active ? `0 0 20px rgba(${s.glow},0.3), 0 0 60px rgba(${s.glow},0.1)` : "none",
+                }}>
+                  {s.icon}
+                </div>
+                <div>
+                  <div style={{ fontSize:15, fontWeight:600, letterSpacing:"-0.02em", color: i === active ? "#f0f4ff" : "#334155", transition:"color 0.3s" }}>
+                    {s.label}
+                  </div>
+                  <div style={{ fontSize:12, color: i === active ? `rgba(${s.glow},0.9)` : "#1e293b", marginTop:2, transition:"color 0.3s" }}>
+                    {s.sublabel}
+                  </div>
+                </div>
+                <div style={{ marginLeft:"auto", fontSize:11, fontWeight:700, letterSpacing:"0.06em", color: i === active ? `rgba(${s.glow},0.7)` : "#1e293b", fontFamily:"monospace" }}>
+                  {s.number}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
 
-        {/* Pipeline visual */}
         <div style={{
-          background: "rgba(8,13,26,0.8)",
-          border: "1px solid rgba(59,130,246,0.1)",
-          borderRadius: 20,
-          padding: "48px 40px",
-          backdropFilter: "blur(12px)",
-          boxShadow: "0 8px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.02)",
-          marginBottom: 32,
+          background: "rgba(8,13,26,0.95)",
+          borderRadius:"0 0 20px 20px",
+          padding:"36px 40px",
+          borderTop: `1px solid rgba(${step.glow},0.15)`,
+          position:"relative",
+          overflow:"hidden",
+          minHeight:120,
         }}>
-          {/* Nodes row */}
-          <div style={{ display: "flex", alignItems: "center", marginBottom: 40 }}>
-            {PIPELINE_STEPS.map((s, i) => (
-              <div key={s.id} style={{ display: "flex", alignItems: "center", flex: i < PIPELINE_STEPS.length - 1 ? "1" : "0 0 auto" }}>
-                <PipelineNode step={s} index={i} active={i === activeStep} onClick={() => setActiveStep(i)} />
-                {i < PIPELINE_STEPS.length - 1 && (
-                  <PipelineConnector active={i === activeStep || i + 1 === activeStep} />
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Step detail card */}
-          <div key={activeStep} style={{
-            background: "rgba(15,23,42,0.7)",
-            border: `1px solid ${step.color}22`,
-            borderRadius: 12,
-            padding: "24px 28px",
-            display: "flex", alignItems: "flex-start", justifyContent: "space-between",
-            gap: 24,
-            animation: "vf-fade-up 0.3s ease",
-            boxShadow: `0 0 32px ${step.glow}15`,
-          }}>
-            <div>
-              <div style={{
-                fontSize: 11, fontWeight: 500, letterSpacing: "0.08em",
-                textTransform: "uppercase", color: step.color,
-                marginBottom: 8,
+          <div style={{
+            position:"absolute", top:0, left:0, right:0, height:1,
+            background: `linear-gradient(90deg, transparent, rgba(${step.glow},0.5), transparent)`,
+          }}/>
+          <div style={{
+            position:"absolute", top:"-40%", right:"-10%",
+            width:400, height:400, borderRadius:"50%",
+            background: `radial-gradient(circle, rgba(${step.glow},0.06) 0%, transparent 70%)`,
+            pointerEvents:"none",
+          }}/>
+          <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:32, position:"relative" }}>
+            <div style={{ flex:1 }}>
+              <span style={{
+                display:"inline-flex", alignItems:"center", gap:6,
+                padding:"4px 12px", borderRadius:999,
+                background: `rgba(${step.glow},0.1)`,
+                border: `1px solid rgba(${step.glow},0.25)`,
+                color: step.color, fontSize:11, fontWeight:600, letterSpacing:"0.08em",
+                textTransform:"uppercase", marginBottom:14,
               }}>
+                <span style={{ width:5, height:5, borderRadius:"50%", background:step.color, display:"inline-block" }}/>
                 {step.tag}
-              </div>
-              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.6, maxWidth: 520, margin: 0 }}>
+              </span>
+              <p style={{ fontSize:16, color:"rgba(200,215,255,0.75)", lineHeight:1.7, margin:0, maxWidth:600 }}>
                 {step.detail}
               </p>
             </div>
-            <div style={{
-              display: "flex", alignItems: "center", gap: 4, flexShrink: 0,
-            }}>
-              {PIPELINE_STEPS.map((_, i) => (
-                <div
-                  key={i}
-                  onClick={() => setActiveStep(i)}
-                  style={{
-                    width: i === activeStep ? 20 : 6,
-                    height: 6, borderRadius: 3,
-                    background: i === activeStep ? step.color : "rgba(59,130,246,0.15)",
-                    cursor: "pointer",
-                    transition: "all 0.3s ease",
-                  }}
-                />
+            <div style={{ display:"flex", gap:6, flexShrink:0, paddingTop:4 }}>
+              {STEPS.map((_, i) => (
+                <div key={i} onClick={() => setActive(i)} style={{
+                  width: i === active ? 24 : 6, height:6, borderRadius:3,
+                  background: i === active ? step.color : "rgba(255,255,255,0.08)",
+                  cursor:"pointer", transition:"all 0.3s ease",
+                }}/>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Three feature cards below */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: 1,
-          border: "1px solid rgba(59,130,246,0.08)",
-          borderRadius: 16,
-          overflow: "hidden",
-        }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:0, marginTop:3, borderRadius:16, overflow:"hidden", border:"1px solid rgba(59,130,246,0.08)" }}>
           {[
-            {
-              title: "Conecta tu repo en GitHub",
-              desc: "Autoriza VForge con tu cuenta de GitHub. Accedemos a tus repositorios para leer codigo, generar contexto y preparar los agentes.",
-              tag: "GitHub",
-            },
-            {
-              title: "Despliega con Vercel",
-              desc: "Vincula tu proyecto a Vercel. Cada push al repositorio genera un deployment automatico. VForge orquesta el ciclo completo.",
-              tag: "Vercel",
-            },
-            {
-              title: "VForge orquesta todo",
-              desc: "El Brain MCP centraliza la memoria. Los agentes leen contexto, ejecutan tareas, y el Bridge conecta cada herramienta en tiempo real.",
-              tag: "MCP Bridge",
-            },
+            { title:"Conecta tu repo", desc:"Autoriza VForge con tu GitHub. Leemos tu codigo, generamos contexto y preparamos los agentes.", tag:"GitHub" },
+            { title:"Deploy automatico", desc:"Cada push genera un deployment en Vercel. Preview y produccion en segundos, sin CI manual.", tag:"Vercel" },
+            { title:"V orquesta todo", desc:"El Brain MCP centraliza la memoria. Agentes que leen contexto y ejecutan tareas en tiempo real.", tag:"MCP Bridge" },
           ].map((card, i) => (
             <div key={i} style={{
-              padding: "36px 32px",
-              background: "rgba(8,13,26,0.6)",
+              padding:"32px 28px",
+              background:"rgba(8,13,26,0.7)",
               borderRight: i < 2 ? "1px solid rgba(59,130,246,0.08)" : "none",
             }}>
-              <h3 style={{ fontSize: 17, fontWeight: 500, letterSpacing: "-0.02em", color: "#e2e8f0", marginBottom: 12 }}>
+              <div style={{ fontSize:12, fontWeight:600, color:"#60a5fa", letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:12 }}>
+                {card.tag}
+              </div>
+              <h3 style={{ fontSize:15, fontWeight:600, letterSpacing:"-0.02em", color:"#e2e8f0", marginBottom:8 }}>
                 {card.title}
               </h3>
-              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.65, marginBottom: 20 }}>
+              <p style={{ fontSize:13, color:"rgba(148,163,184,0.7)", lineHeight:1.65, margin:0 }}>
                 {card.desc}
               </p>
-              <span style={{
-                display: "inline-flex", alignItems: "center",
-                background: "transparent", border: "1px solid rgba(59,130,246,0.15)",
-                borderRadius: 9999, padding: "4px 12px",
-                fontSize: 12, fontWeight: 500, color: "#60a5fa",
-                letterSpacing: "-0.01em",
-              }}>
-                {card.tag}
-              </span>
             </div>
           ))}
         </div>
 
-        <div style={{ borderTop: "1px solid rgba(59,130,246,0.06)", marginTop: 0 }}/>
-
       </div>
     </section>
   );
-    }
+}
 export default Metodo;
