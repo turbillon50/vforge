@@ -61,7 +61,7 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t.marketplace.search_placeholder}
-            className="input-base pl-9"
+            className="w-full rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2 text-[13px] text-[var(--fg-primary)] placeholder:text-[var(--fg-subtle)] outline-none transition focus:border-violet-500/50 pl-9"
           />
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -72,7 +72,7 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
               className={`rounded-full border px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest transition ${
                 cat === c
                   ? "border-violet-400/50 bg-violet-500/15 text-violet-300"
-                  : "border-app text-on-surface-variant hover:border-app-strong"
+                  : "border-[var(--border-1)] text-[var(--fg-secondary)] hover:border-[var(--border-2)]"
               }`}
             >
               {c}
@@ -83,18 +83,18 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
 
       {list.length === 0 && (
         <div className="px-5 pb-10 md:px-8">
-          <div className="rounded-xl border border-app bg-tint-1 p-8 text-center">
-            <p className="font-display text-lg font-semibold text-on-surface">El marketplace abre pronto</p>
-            <p className="mt-2 text-sm text-on-surface-variant">Estos módulos están en camino. Te avisamos cuando puedas instalarlos.</p>
+          <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-8 text-center">
+            <p className="font-display text-lg font-semibold text-[var(--fg-primary)]">El marketplace abre pronto</p>
+            <p className="mt-2 text-sm text-[var(--fg-secondary)]">Estos módulos están en camino. Te avisamos cuando puedas instalarlos.</p>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {UPCOMING.map((u) => (
-              <article key={u.name} className="rounded-xl border border-app bg-tint-1 p-5">
+              <article key={u.name} className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-5">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-display text-base font-semibold text-on-surface">{u.name}</h3>
-                  <span className="chip text-violet-400">Próximamente</span>
+                  <h3 className="font-display text-base font-semibold text-[var(--fg-primary)]">{u.name}</h3>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-violet-300">Próximamente</span>
                 </div>
-                <p className="mt-3 text-sm text-on-surface-variant">{u.blurb}</p>
+                <p className="mt-3 text-sm text-[var(--fg-secondary)]">{u.blurb}</p>
               </article>
             ))}
           </div>
@@ -106,7 +106,7 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
           <motion.article
             key={m.id}
             layout
-            className="group relative overflow-hidden rounded-xl border border-app bg-tint-1 p-5 transition hover:border-violet-500/30 hover:bg-tint-2"
+            className="group relative overflow-hidden rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-5 transition hover:border-violet-500/30 hover:bg-[var(--surface-2)]"
           >
             <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-violet-500/30 opacity-0 blur-3xl transition group-hover:opacity-15" />
             <div className="flex items-start justify-between">
@@ -120,15 +120,15 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
                 </div>
               </div>
               {m.recommended && (
-                <span className="chip text-violet-400"><IconSparkles size={10} /> {t.common.label_b_picks}</span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-violet-300"><IconSparkles size={10} /> {t.common.label_b_picks}</span>
               )}
             </div>
-            <p className="mt-3 text-sm text-on-surface-variant">{m.blurb}</p>
+            <p className="mt-3 text-sm text-[var(--fg-secondary)]">{m.blurb}</p>
             <div className="mt-5 flex items-center justify-between">
               {m.installed ? (
-                <span className="chip text-success-emerald">● {t.common.status_installed}</span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-emerald-400">● {t.common.status_installed}</span>
               ) : (
-                <span className="chip">● {t.common.status_available}</span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border-1)] px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-[var(--fg-secondary)]">● {t.common.status_available}</span>
               )}
               <button className={m.installed ? "btn-ghost !px-3 !py-1.5 text-[10px]" : "btn-primary !px-3 !py-1.5 text-[10px]"}>
                 {m.installed ? t.common.cta_configure : t.common.cta_install}
@@ -139,8 +139,8 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
       </div>
       {context === "workspace" && (
         <div className="mx-5 mb-10 rounded-xl border border-violet-400/20 bg-violet-400/[0.04] p-5 md:mx-8">
-          <p className="label-caps mb-2 text-violet-400">{t.marketplace.ask_b_title}</p>
-          <p className="text-on-surface">{t.marketplace.ask_b_body}</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] mb-2 text-violet-400">{t.marketplace.ask_b_title}</p>
+          <p className="text-[var(--fg-primary)]">{t.marketplace.ask_b_body}</p>
         </div>
       )}
     </div>
