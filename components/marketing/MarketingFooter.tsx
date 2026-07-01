@@ -100,7 +100,7 @@ export function MarketingFooter() {
             {ECOSYSTEM.map(item => (
               <a key={item.name} href={item.url} target="_blank" rel="noopener noreferrer" style={{ display:"block", background:"rgba(8,13,26,0.7)", border:"1px solid rgba(59, 130, 246, 0.08)", borderRadius:12, padding:"24px", textDecoration:"none" }}>
                 <div style={{ fontSize:15, fontWeight:500, color:"#e2e8f0", marginBottom:8, letterSpacing:"-0.02em" }}>{item.name}</div>
-                <div style={{ fontSize:13, color:"#64748b", lineHeight:1.6 }}>{item.desc}</div>
+                <div style={{ fontSize:13, color:"#94a3b8", lineHeight:1.6 }}>{item.desc}</div>
                 <div style={{ marginTop:12, fontSize:12, color:"#60a5fa", letterSpacing:"0.02em" }}>{item.url.replace("https://", "")} &#8594;</div>
               </a>
             ))}
@@ -113,12 +113,12 @@ export function MarketingFooter() {
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(320px, 1fr))", gap:48 }}>
             <div>
               <h3 style={{ fontSize:18, fontWeight:400, letterSpacing:"-0.02em", color:"#e2e8f0", marginBottom:8 }}>Partners</h3>
-              <p style={{ fontSize:13, color:"#64748b", lineHeight:1.6, marginBottom:20 }}>Integraciones tecnicas, alianzas de producto o distribuciones conjuntas. Construyamos juntos.</p>
+              <p style={{ fontSize:13, color:"#94a3b8", lineHeight:1.6, marginBottom:20 }}>Integraciones tecnicas, alianzas de producto o distribuciones conjuntas. Construyamos juntos.</p>
               <ContactForm type="partners" />
             </div>
             <div>
               <h3 style={{ fontSize:18, fontWeight:400, letterSpacing:"-0.02em", color:"#e2e8f0", marginBottom:8 }}>Asociados</h3>
-              <p style={{ fontSize:13, color:"#64748b", lineHeight:1.6, marginBottom:20 }}>Comunidad, embajadores, early adopters y colaboradores estrategicos del ecosistema VForge.</p>
+              <p style={{ fontSize:13, color:"#94a3b8", lineHeight:1.6, marginBottom:20 }}>Comunidad, embajadores, early adopters y colaboradores estrategicos del ecosistema VForge.</p>
               <ContactForm type="asociados" />
             </div>
           </div>
@@ -133,7 +133,7 @@ export function MarketingFooter() {
                 <VForgeLogo size={22} />
                 <span style={{ fontSize:15, fontWeight:600, letterSpacing:"-0.03em", color:"#FFFFFF" }}>VForge</span>
               </Link>
-              <p style={{ fontSize:13, color:"#64748b", lineHeight:1.65, maxWidth:280, marginBottom:24 }}>
+              <p style={{ fontSize:13, color:"#94a3b8", lineHeight:1.65, maxWidth:280, marginBottom:24 }}>
                 La plataforma MCP que conecta Git, Vercel y tus agentes de IA en un solo flujo.
               </p>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
@@ -150,7 +150,7 @@ export function MarketingFooter() {
               <h4 style={{ fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:"#8695aa", marginBottom:16 }}>Producto</h4>
               <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:10 }}>
                 {[{ label:"Blog", href:"/blog" }, { label:"Manifiesto", href:"/manifiesto" }, { label:"Labs", href:"/labs" }, { label:"Precios", href:"/pricing" }].map(item => (
-                  <li key={item.label}><Link href={item.href} style={{ fontSize:13, color:"#64748b", textDecoration:"none" }}>{item.label}</Link></li>
+                  <li key={item.label}><Link href={item.href} style={{ fontSize:13, color:"#94a3b8", textDecoration:"none" }}>{item.label}</Link></li>
                 ))}
               </ul>
             </div>
@@ -159,7 +159,7 @@ export function MarketingFooter() {
               <h4 style={{ fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:"#8695aa", marginBottom:16 }}>Plataforma</h4>
               <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:10 }}>
                 {[{ label:"Integraciones", href:"/labs" }, { label:"API", href:"#" }, { label:"Blog", href:"/blog" }, { label:"Status", href:"#" }].map(item => (
-                  <li key={item.label}><Link href={item.href} style={{ fontSize:13, color:"#64748b", textDecoration:"none" }}>{item.label}</Link></li>
+                  <li key={item.label}><Link href={item.href} style={{ fontSize:13, color:"#94a3b8", textDecoration:"none" }}>{item.label}</Link></li>
                 ))}
               </ul>
             </div>
@@ -168,17 +168,17 @@ export function MarketingFooter() {
               <h4 style={{ fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:"#8695aa", marginBottom:16 }}>Legal</h4>
               <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:10 }}>
                 {[{ label:"Privacidad", href:"/privacy" }, { label:"Terminos", href:"/terms" }, { label:"Manifiesto", href:"/manifiesto" }, { label:"Contacto", href:"#" }].map(item => (
-                  <li key={item.label}><Link href={item.href} style={{ fontSize:13, color:"#64748b", textDecoration:"none" }}>{item.label}</Link></li>
+                  <li key={item.label}><Link href={item.href} style={{ fontSize:13, color:"#94a3b8", textDecoration:"none" }}>{item.label}</Link></li>
                 ))}
               </ul>
             </div>
           </div>
 
           <div style={{ borderTop:"1px solid rgba(59, 130, 246, 0.06)", paddingTop:24, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
-            <p style={{ fontSize:12, color:"#64748b" }}>2026 VForge. Todos los derechos reservados.</p>
+            <p style={{ fontSize:12, color:"#94a3b8" }}>2026 VForge. Todos los derechos reservados.</p>
             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
               <div style={{ width:6, height:6, background:"#3b82f6", borderRadius:"50%" }}/>
-              <span style={{ fontSize:12, color:"#64748b" }}>Todos los sistemas operativos</span>
+              <span style={{ fontSize:12, color:"#94a3b8" }}>Todos los sistemas operativos</span>
             </div>
           </div>
         </div>

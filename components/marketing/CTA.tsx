@@ -22,7 +22,7 @@ export function CTA() {
           ))}
         </div>
         <div style={{ maxWidth:680 }}>
-          <div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase", color:"#64748b", display:"flex", alignItems:"center", gap:8, marginBottom:24 }}>
+          <div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase", color:"#94a3b8", display:"flex", alignItems:"center", gap:8, marginBottom:24 }}>
             <span style={{ display:"inline-block", width:16, height:1, background:"rgba(59, 130, 246, 0.4)" }}/>
             Empieza hoy
           </div>
