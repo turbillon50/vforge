@@ -1,10 +1,36 @@
 import { neon } from "@neondatabase/serverless";
 import { encryptOperatorSecret } from "@/lib/vault/operator-crypto";
+import { decryptOperatorSecret } from "@/lib/vault/operator-crypto";
+
+const getDb = () => {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL no configurada");
+  return neon(url);
+};
 
 /**
- * Guarda un secreto cifrado para un usuario (Clerk userId) en user_secrets.
- * Usado por los flujos OAuth (GitHub, Vercel) — token de usuario cifrado,
- * nunca en claro, ligado a su cuenta.
+ * Upsert de usuario por clerk_user_id. Seguro — crea o actualiza sin duplicados.
+ */
+export async function upsertUserByClerkId(
+  clerkId: string,
+  email?: string,
+  fullName?: string,
+  avatarUrl?: string,
+): Promise<void> {
+  const sql = getDb();
+  await sql`
+    INSERT INTO users (id, clerk_user_id, email, role, name, avatar_url)
+    VALUES (${clerkId}, ${clerkId}, ${email ?? clerkId + "@clerk.local"}, 'client', ${fullName ?? null}, ${avatarUrl ?? null})
+    ON CONFLICT (id) DO UPDATE SET
+      clerk_user_id = EXCLUDED.clerk_user_id,
+      email         = COALESCE(EXCLUDED.email, users.email),
+      name          = COALESCE(EXCLUDED.name, users.name),
+      avatar_url    = COALESCE(EXCLUDED.avatar_url, users.avatar_url)
+  `;
+}
+
+/**
+ * Guarda secreto cifrado del usuario.
  */
 export async function saveUserSecret(
   userId: string,
@@ -12,44 +38,32 @@ export async function saveUserSecret(
   value: string,
   scope: string | null = null,
 ): Promise<void> {
-  const dburl = process.env.DATABASE_URL;
-  if (!dburl) throw new Error("DATABASE_URL no configurada");
+  const sql = getDb();
   const enc = encryptOperatorSecret(value);
-  const sql = neon(dburl);
   const projectId = "connect";
-  // user_secrets.user_id tiene FK a users(id): aseguramos la fila del
-  // usuario Clerk antes de guardar (rol 'member', email placeholder si
-  // no lo conocemos — el perfil real lo completa Clerk).
-  await sql`
-    INSERT INTO users (id, email, role)
-    VALUES (${userId}, ${userId + "@clerk.local"}, 'client')
-    ON CONFLICT (id) DO NOTHING
-  `;
+
+  // Garantizar fila del usuario
+  await upsertUserByClerkId(userId);
+
   await sql`
     INSERT INTO user_secrets (user_id, project_id, name, scope, ciphertext, iv, auth_tag)
     VALUES (${userId}, ${projectId}, ${name}, ${scope}, ${enc.ciphertext}, ${enc.iv}, ${enc.authTag})
     ON CONFLICT (user_id, project_id, name) DO UPDATE SET
-      ciphertext = EXCLUDED.ciphertext,
-      iv = EXCLUDED.iv,
-      auth_tag = EXCLUDED.auth_tag,
+      ciphertext   = EXCLUDED.ciphertext,
+      iv           = EXCLUDED.iv,
+      auth_tag     = EXCLUDED.auth_tag,
       last_used_at = NULL
   `;
 }
 
-import { decryptOperatorSecret } from "@/lib/vault/operator-crypto";
-
 /**
- * Lee y descifra un secreto de conexión guardado por el usuario.
- * Devuelve null si no existe. Es la llave de aislamiento multi-tenant:
- * cada usuario solo ve lo que ÉL conectó.
+ * Lee y descifra un secreto.
  */
 export async function getUserSecret(
   userId: string,
   name: string,
 ): Promise<string | null> {
-  const dburl = process.env.DATABASE_URL;
-  if (!dburl) return null;
-  const sql = neon(dburl);
+  const sql = getDb();
   const rows = (await sql`
     SELECT ciphertext, iv, auth_tag FROM user_secrets
     WHERE user_id = ${userId} AND name = ${name}
@@ -58,27 +72,46 @@ export async function getUserSecret(
   if (rows.length === 0) return null;
   try {
     return decryptOperatorSecret({
-      ciphertext: Buffer.from(rows[0].ciphertext),
-      iv: Buffer.from(rows[0].iv),
-      authTag: Buffer.from(rows[0].auth_tag),
+      ciphertext: Buffer.from(rows[0].ciphertext, "hex"),
+      iv:         Buffer.from(rows[0].iv, "hex"),
+      authTag:    Buffer.from(rows[0].auth_tag, "hex"),
     });
   } catch {
     return null;
   }
 }
 
-
 /**
- * Lista los servicios (scope) que el usuario YA conectó (github, vercel, ...).
- * Sin secretos — solo presencia. Base para hidratar el onboarding.
+ * Lista los servicios conectados del usuario.
  */
 export async function listUserConnections(userId: string): Promise<string[]> {
-  const dburl = process.env.DATABASE_URL;
-  if (!dburl) return [];
-  const sql = neon(dburl);
+  const sql = getDb();
   const rows = (await sql`
     SELECT DISTINCT scope FROM user_secrets
     WHERE user_id = ${userId} AND scope IS NOT NULL
   `) as Array<{ scope: string }>;
   return rows.map((r) => r.scope).filter(Boolean);
+}
+
+/**
+ * Marca onboarding completado.
+ */
+export async function markOnboardingDone(clerkId: string): Promise<void> {
+  const sql = getDb();
+  // Columna onboarding_done puede no existir — silencioso si falla
+  try {
+    await sql`UPDATE users SET role = 'member' WHERE id = ${clerkId}`;
+  } catch { /* ok */ }
+}
+
+/**
+ * Perfil del usuario.
+ */
+export async function getUserProfile(clerkId: string) {
+  const sql = getDb();
+  const rows = (await sql`
+    SELECT id, clerk_user_id, email, name, role, avatar_url, created_at
+    FROM users WHERE id = ${clerkId} LIMIT 1
+  `) as Array<Record<string, unknown>>;
+  return rows[0] ?? null;
 }
