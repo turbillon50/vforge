@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { MarketingHeader } from "@/components/marketing/MarketingHeader";
-import { MarketingFooter } from "@/components/marketing/MarketingFooter";
+import MarketingHeader from "@/components/marketing/MarketingHeader";
+import MarketingFooter from "@/components/marketing/MarketingFooter";
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
