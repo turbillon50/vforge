@@ -54,7 +54,7 @@ export async function POST(req: Request) {
   if (!mm) return Response.json({ error: "no_repo" }, { status: 404 });
   const owner = mm[1], repo = mm[2].replace(/[.]git$/, "");
   const ep = "/contents/" + path.split("/").map(encodeURIComponent).join("/");
-  const ghh = (init) => fetch("https://api.github.com/repos/" + owner + "/" + repo + ep, Object.assign({}, init, { headers: Object.assign({ Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "User-Agent": "vforge" }, (init && init.headers) || {}) }));
+  const ghh = (init?: RequestInit) => fetch("https://api.github.com/repos/" + owner + "/" + repo + ep, Object.assign({}, init, { headers: Object.assign({ Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "User-Agent": "vforge" }, (init && init.headers) || {}) }));
   try {
     let sha;
     const cur = await ghh(undefined);
