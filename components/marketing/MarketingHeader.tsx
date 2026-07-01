@@ -18,6 +18,12 @@ function VForgeLogo({ size = 26 }: { size?: number }) {
   );
 }
 
+const GitHubIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+  </svg>
+);
+
 export function MarketingHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -32,11 +38,14 @@ export function MarketingHeader() {
     <header
       style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        background: scrolled ? "rgba(0,0,0,0.92)" : "#000000",
-        backdropFilter: scrolled ? "blur(12px)" : "none",
-        borderBottom: "1px solid #303236",
-        transition: "background 0.2s ease",
-        WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
+        background: scrolled
+          ? "rgba(5,10,20,0.92)"
+          : "linear-gradient(180deg, rgba(5,10,20,0.98) 0%, rgba(5,10,20,0.85) 100%)",
+        backdropFilter: scrolled ? "blur(16px) saturate(1.4)" : "blur(8px)",
+        WebkitBackdropFilter: scrolled ? "blur(16px) saturate(1.4)" : "blur(8px)",
+        borderBottom: scrolled ? "1px solid rgba(59,130,246,0.12)" : "1px solid rgba(59,130,246,0.06)",
+        boxShadow: scrolled ? "0 1px 40px rgba(0,0,0,0.4), inset 0 -1px 0 rgba(59,130,246,0.08)" : "none",
+        transition: "all 0.3s ease",
       }}
     >
       <div style={{
@@ -44,7 +53,6 @@ export function MarketingHeader() {
         height: 60, display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
 
-        {/* Logo */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <VForgeLogo size={26} />
           <span style={{
@@ -55,62 +63,89 @@ export function MarketingHeader() {
           </span>
         </Link>
 
-        {/* Nav - Desktop */}
-        <nav style={{ display: "flex", alignItems: "center", gap: 2 }}
-             className="hidden-mobile">
+        <nav style={{ display: "flex", alignItems: "center", gap: 2 }} className="vf-hidden-mobile">
           {[
-            { label: "Docs", href: "/developers" },
-            { label: "Pricing", href: "/#pricing" },
             { label: "Blog", href: "/blog" },
+            { label: "Manifiesto", href: "/manifiesto" },
           ].map(item => (
             <Link key={item.href} href={item.href} style={{
-              color: "#A0A0A0", fontSize: 14, fontWeight: 400,
+              color: "#64748b", fontSize: 14, fontWeight: 400,
               letterSpacing: "-0.02em", padding: "8px 14px",
               borderRadius: 6, textDecoration: "none",
               transition: "color 0.15s ease",
             }}
-            onMouseEnter={e => (e.currentTarget.style.color = "#FFFFFF")}
-            onMouseLeave={e => (e.currentTarget.style.color = "#A0A0A0")}
+            onMouseEnter={e => (e.currentTarget.style.color = "#e2e8f0")}
+            onMouseLeave={e => (e.currentTarget.style.color = "#64748b")}
             >
               {item.label}
             </Link>
           ))}
         </nav>
 
-        {/* CTAs */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <a
+            href="https://github.com/turbillon50/vforge"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Repositorio GitHub"
+            style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 34, height: 34,
+              background: "rgba(15,23,42,0.7)",
+              border: "1px solid rgba(59,130,246,0.15)",
+              borderRadius: 7, color: "#64748b",
+              textDecoration: "none", transition: "all 0.15s ease",
+            }}
+            onMouseEnter={e => {
+              const t = e.currentTarget as HTMLAnchorElement;
+              t.style.borderColor = "rgba(96,165,250,0.5)";
+              t.style.color = "#e2e8f0";
+              t.style.boxShadow = "0 0 10px rgba(59,130,246,0.15)";
+            }}
+            onMouseLeave={e => {
+              const t = e.currentTarget as HTMLAnchorElement;
+              t.style.borderColor = "rgba(59,130,246,0.15)";
+              t.style.color = "#64748b";
+              t.style.boxShadow = "none";
+            }}
+          >
+            <GitHubIcon />
+          </a>
+
           <Link href="/app" style={{
-            color: "#A0A0A0", fontSize: 14, fontWeight: 400,
+            color: "#64748b", fontSize: 14, fontWeight: 400,
             letterSpacing: "-0.02em", padding: "8px 14px",
             textDecoration: "none", transition: "color 0.15s",
           }}
-          onMouseEnter={e => (e.currentTarget.style.color = "#FFFFFF")}
-          onMouseLeave={e => (e.currentTarget.style.color = "#A0A0A0")}
+          onMouseEnter={e => (e.currentTarget.style.color = "#e2e8f0")}
+          onMouseLeave={e => (e.currentTarget.style.color = "#64748b")}
           >
             Log in
           </Link>
+
           <Link href="/app" style={{
-            background: "#FFFFFF", color: "#000000",
+            background: "linear-gradient(135deg, #3b82f6, #6d28d9)",
+            color: "#ffffff",
             fontSize: 14, fontWeight: 500,
             letterSpacing: "-0.02em",
             padding: "9px 18px", borderRadius: 9999,
-            textDecoration: "none", transition: "background 0.15s",
-            border: "1px solid #FFFFFF",
+            textDecoration: "none",
+            boxShadow: "0 0 16px rgba(59,130,246,0.25)",
+            transition: "box-shadow 0.2s",
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = "#E8E8E8")}
-          onMouseLeave={e => (e.currentTarget.style.background = "#FFFFFF")}
+          onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 0 24px rgba(59,130,246,0.45)")}
+          onMouseLeave={e => (e.currentTarget.style.boxShadow = "0 0 16px rgba(59,130,246,0.25)")}
           >
             Get started
           </Link>
 
-          {/* Hamburger - Mobile */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             style={{
               display: "none", background: "none", border: "none",
-              color: "#FFFFFF", cursor: "pointer", padding: 4,
+              color: "#e2e8f0", cursor: "pointer", padding: 4,
             }}
-            className="show-mobile"
+            className="vf-show-mobile"
             aria-label="Menu"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -123,23 +158,23 @@ export function MarketingHeader() {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {menuOpen && (
         <div style={{
-          background: "#18191B", borderTop: "1px solid #303236",
+          background: "rgba(5,10,20,0.97)",
+          borderTop: "1px solid rgba(59,130,246,0.1)",
           padding: "16px 24px 20px",
+          backdropFilter: "blur(16px)",
         }}>
           {[
-            { label: "Docs", href: "/developers" },
-            { label: "Pricing", href: "/#pricing" },
             { label: "Blog", href: "/blog" },
+            { label: "Manifiesto", href: "/manifiesto" },
             { label: "Log in", href: "/app" },
           ].map(item => (
             <Link key={item.href} href={item.href}
               onClick={() => setMenuOpen(false)}
               style={{
-                display: "block", color: "#A0A0A0", fontSize: 16,
-                padding: "12px 0", borderBottom: "1px solid #303236",
+                display: "block", color: "#64748b", fontSize: 16,
+                padding: "12px 0", borderBottom: "1px solid rgba(59,130,246,0.08)",
                 textDecoration: "none",
               }}
             >
@@ -151,10 +186,10 @@ export function MarketingHeader() {
 
       <style>{`
         @media (max-width: 768px) {
-          .hidden-mobile { display: none !important; }
-          .show-mobile { display: flex !important; }
+          .vf-hidden-mobile { display: none !important; }
+          .vf-show-mobile { display: flex !important; }
         }
       `}</style>
     </header>
   );
-}
+            }
