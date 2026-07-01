@@ -1,33 +1,139 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
+// Real SVG logos — no emojis, no duplicates
 const INTEGRATIONS = [
-  { name: "GitHub", icon: "⚙" },
-  { name: "Vercel", icon: "▲" },
-  { name: "Anthropic", icon: "◆" },
-  { name: "OpenAI", icon: "✦" },
-  { name: "Supabase", icon: "⚡" },
-  { name: "Neon DB", icon: "◉" },
-  { name: "Cloudflare", icon: "☁" },
-  { name: "Docker", icon: "◻" },
-  { name: "Stripe", icon: "✺" },
-  { name: "Linear", icon: "◈" },
-  { name: "Notion", icon: "□" },
-  { name: "Slack", icon: "◎" },
+  {
+    name: "GitHub",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+      </svg>
+    ),
+    color: "#e2e8f0",
+  },
+  {
+    name: "Vercel",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 76 65" fill="currentColor">
+        <path d="M37.5274 0L75.0548 65H0L37.5274 0Z"/>
+      </svg>
+    ),
+    color: "#e2e8f0",
+  },
+  {
+    name: "Anthropic",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.3 3h-3.4L8.7 21h3.4l1.1-3.2h4.6l1.1 3.2H22L17.3 3zm-3.4 11.5L15.6 9l1.7 5.5h-3.4zM6.7 3H3.3L0 12l3.3 9h3.4L10 12 6.7 3z"/>
+      </svg>
+    ),
+    color: "#a78bfa",
+  },
+  {
+    name: "OpenAI",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M22.28 9.28a5.998 5.998 0 00-.52-4.93 6.06 6.06 0 00-6.5-2.9A6.007 6.007 0 0010.45 0a6.065 6.065 0 00-5.78 4.2 6.003 6.003 0 00-4 2.9 6.058 6.058 0 00.74 7.1 5.998 5.998 0 00.52 4.93 6.06 6.06 0 006.5 2.9A6.007 6.007 0 0013.55 24a6.065 6.065 0 005.79-4.2 6.003 6.003 0 004-2.9 6.058 6.058 0 00-.74-7.1l-.32-.5zM13.55 22.5a4.494 4.494 0 01-2.88-1.04l.14-.08 4.79-2.77a.79.79 0 00.4-.69v-6.76l2.02 1.17a.07.07 0 01.04.05v5.6a4.515 4.515 0 01-4.51 4.52zM3.65 18.38a4.494 4.494 0 01-.54-3.02l.14.09 4.79 2.76a.79.79 0 00.79 0l5.85-3.38v2.33a.08.08 0 01-.03.06L9.76 19.9a4.51 4.51 0 01-6.11-1.52zm-1.17-10.6a4.49 4.49 0 012.35-1.97v5.67a.79.79 0 00.4.68l5.84 3.37-2.03 1.17a.07.07 0 01-.07 0L4.12 13.5a4.516 4.516 0 01-1.64-5.73zm16.63 3.86l-5.85-3.38 2.03-1.17a.07.07 0 01.07 0l4.85 2.8a4.51 4.51 0 01-.7 8.14V12.5a.79.79 0 00-.4-.68v-.18zm2.02-3.02l-.14-.09-4.79-2.76a.79.79 0 00-.79 0L9.56 9.15V6.82a.08.08 0 01.03-.06l4.89-2.82a4.51 4.51 0 016.65 4.68zM8.55 12.92L6.53 11.75a.07.07 0 01-.04-.05V6.1a4.51 4.51 0 017.39-3.46l-.14.08-4.79 2.77a.79.79 0 00-.4.69v6.74zm1.1-2.37l2.6-1.5 2.6 1.5v3l-2.6 1.5-2.6-1.5v-3z"/>
+      </svg>
+    ),
+    color: "#94a3b8",
+  },
+  {
+    name: "Supabase",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 109 113" fill="none">
+        <path d="M63.7 6.1c-2.7-4.1-8.9-2.2-8.9 2.6V56h36.4c6.5 0 10.1-7.7 6-12.4L63.7 6.1z" fill="#3ECF8E"/>
+        <path d="M45.3 106.9c2.7 4.1 8.9 2.2 8.9-2.6V57H17.8c-6.5 0-10.1 7.7-6 12.4l33.5 37.5z" fill="url(#sb_grad)"/>
+        <defs>
+          <linearGradient id="sb_grad" x1="22.5" y1="63" x2="60.9" y2="106.5" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#249361"/>
+            <stop offset="1" stopColor="#3ECF8E"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    ),
+    color: "#3ECF8E",
+  },
+  {
+    name: "Neon DB",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="2" width="20" height="20" rx="4" fill="#00e5bf" opacity="0.15"/>
+        <path d="M6 8h5l-1 4h4l-5 4 1-4H6V8z" fill="#00e5bf"/>
+      </svg>
+    ),
+    color: "#00e5bf",
+  },
+  {
+    name: "Cloudflare",
+    icon: (
+      <svg width="22" height="14" viewBox="0 0 110 70" fill="none">
+        <path d="M72 22c-.8-4.6-5-8-10-8-2.2 0-4.2.7-5.9 1.8C53.7 8.8 46.4 4 38 4 24.7 4 14 14.7 14 28c0 .7 0 1.4.1 2C7 31.4 2 37 2 44c0 7.2 5.8 13 13 13h55c7.7 0 14-6.3 14-14 0-6.8-4.8-12.4-11.4-13.7C73.3 27.8 73 24.9 72 22z" fill="#f6821f" opacity="0.8"/>
+        <path d="M82 22c-.8-4.6-5-8-10-8-2.2 0-4.2.7-5.9 1.8C63.7 8.8 56.4 4 48 4c-13.3 0-24 10.7-24 24 0 .7 0 1.4.1 2C17 31.4 12 37 12 44c0 7.2 5.8 13 13 13h65c7.7 0 14-6.3 14-14 0-6.8-4.8-12.4-11.4-13.7C83.3 27.8 83 24.9 82 22z" fill="#fbad41"/>
+      </svg>
+    ),
+    color: "#fbad41",
+  },
+  {
+    name: "Stripe",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
+      </svg>
+    ),
+    color: "#6772e5",
+  },
+  {
+    name: "Linear",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 100 100" fill="currentColor">
+        <path d="M1.22 61.4L38.6 98.78a50 50 0 0022.82-12.96L14.18 38.58A50 50 0 001.22 61.4zM0 50c0 7.9 1.84 15.37 5.12 22.04L27.96 27.96 5.12 27.96A49.9 49.9 0 000 50zM50 0a50 50 0 00-22.04 5.12L72.04 72.04l.0-44.08L27.96 27.96 72.04 27.96V72.04L94.88 72.04A50 50 0 0050 0z"/>
+      </svg>
+    ),
+    color: "#5e6ad2",
+  },
+  {
+    name: "Notion",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.968c-.42-.326-.981-.7-2.055-.607L3.01 2.295c-.466.046-.56.28-.374.466l1.823 1.447zm.793 3.08v13.904c0 .747.373 1.027 1.214.98l14.523-.84c.841-.046.935-.56.935-1.167V6.354c0-.606-.233-.933-.748-.887l-15.177.887c-.56.047-.747.327-.747.933zm14.337.745c.093.42 0 .84-.42.888l-.7.14v10.264c-.608.327-1.168.514-1.635.514-.748 0-.935-.234-1.495-.933l-4.577-7.186v6.952L12.21 19s0 .84-1.168.84l-3.222.186c-.093-.186 0-.653.327-.746l.84-.233V9.854L7.822 9.76c-.094-.42.14-1.026.793-1.073l3.456-.233 4.764 7.279v-6.44l-1.215-.14c-.093-.514.28-.887.747-.933l3.222-.187z"/>
+      </svg>
+    ),
+    color: "#94a3b8",
+  },
+  {
+    name: "Slack",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M5.042 15.165a2.528 2.528 0 01-2.52 2.523A2.528 2.528 0 010 15.165a2.527 2.527 0 012.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 012.521-2.52 2.527 2.527 0 012.521 2.52v6.313A2.528 2.528 0 018.834 24a2.528 2.528 0 01-2.521-2.522v-6.313zm2.521-10.123a2.528 2.528 0 01-2.521-2.52A2.528 2.528 0 018.834 0a2.528 2.528 0 012.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 012.521 2.521 2.528 2.528 0 01-2.521 2.521H2.522A2.528 2.528 0 010 8.834a2.528 2.528 0 012.522-2.521h6.312zm10.122 2.521a2.528 2.528 0 012.522-2.521A2.528 2.528 0 0124 8.834a2.528 2.528 0 01-2.522 2.521h-2.522V8.834zm-1.268 0a2.528 2.528 0 01-2.523 2.521 2.527 2.527 0 01-2.52-2.521V2.522A2.527 2.527 0 0115.165 0a2.528 2.528 0 012.523 2.522v6.312zm-2.523 10.122a2.528 2.528 0 012.523 2.522A2.528 2.528 0 0115.165 24a2.527 2.527 0 01-2.52-2.522v-2.522h2.52zm0-1.268a2.527 2.527 0 01-2.52-2.523 2.526 2.526 0 012.52-2.52h6.313A2.527 2.527 0 0124 15.165a2.528 2.528 0 01-2.522 2.523h-6.313z"/>
+      </svg>
+    ),
+    color: "#4A154B",
+  },
+  {
+    name: "Docker",
+    icon: (
+      <svg width="22" height="16" viewBox="0 0 640 512" fill="currentColor">
+        <path d="M349.9 236.3h-66.1v-59.4h66.1v59.4zm0-136h-66.1V41.6h66.1v58.7zm-263.8 82h66.1v59.4h-66.1v-59.4zm0-82h66.1v59.4H86.1V100.3zm-76 59.4H76.1v-59.4H10.1v59.4zm428.7 82.3c-1.4-17.5-2.5-26.9-2.5-28.7 0-2.8 3.3-3.4 5.5-3.4h11.4c18.5 0 36.6 3.4 53.3 10.2 5.5 2.1 7.6 5.5 7.6 10.9v.4c0 2.4-.7 4.5-2.1 6.3-1.7 2.1-3.8 2.8-6.6 2.8-7.9 0-15.8-.3-23.7-.3H438.8zm-75 0h-66.1v-59.4h66.1v59.4zm0-82h-66.1v-59.4h66.1v59.4zm-76 82h-66.1v-59.4H288v59.4zm0-82h-66.1v-59.4H288v59.4zm204.6 23.6c-7.6-4.1-19.5-7.9-33.5-7.9-10.6 0-20.1 2.1-28.3 5.5V323c0 45.5-29.4 68.4-73.2 68.4-35.8 0-55.7-14.4-69.7-36.5-8.6 11-22.7 17.9-40.5 17.9-29.4 0-49.6-20.5-49.6-49.3v-50.7H86.1v59.4c0 .7.7 1.7 1.4 1.7h14.8c1.4 0 2.5-1.4 2.5-2.8v-11.8h16.9v7.9c0 11.4-4.8 17.5-13.5 17.5H87c-9 0-16.9-6.9-16.9-19v-52.9H0v77.4c0 25.8 19.2 46 44 46h66.1c24.8 0 44-20.2 44-46v-5.5c8.6 11.7 21.7 18 38.5 18 13.1 0 23.7-4.5 31.6-12.8 7.6-8.3 11.4-19.3 11.4-32.7v-46.7l38.5 91.6c10.6 25.1 30.8 38.5 61.2 38.5 31.9 0 53.3-14.4 62.6-41.5.7-2.1 1.4-4.5 1.4-6.9v-43.1l38.5 91.6c10.6 25.1 30.8 38.5 61.2 38.5 35.5 0 58.5-19 58.5-53V382c0-26.5-16.9-48.6-44-53.9-5.2-1.1-10.6-1.7-15.8-1.7-26.5 0-44 18.2-44 44.8v18.9h-28.7v-18.9c0-40.2 28.7-67.8 72.5-67.8 11.7 0 23.4 2.1 34 6.2 35.8 13.8 59.9 47.3 59.9 86.9v4.8c0 57.7-40.5 93.9-97.6 93.9-46.6 0-82.1-20.8-97.6-60l-56.4-134.4h-14.4z"/>
+      </svg>
+    ),
+    color: "#2496ed",
+  },
 ];
 
 export function Integraciones() {
   const trackRef = useRef<HTMLDivElement>(null);
 
   return (
-    <section style={{ background: "#000", padding: "80px 0", overflow: "hidden" }}>
+    <section style={{ background: "linear-gradient(180deg, #06080f 0%, #050a14 100%)", padding: "80px 0", overflow: "hidden" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", marginBottom: 48 }}>
         <div style={{
           display: "flex", alignItems: "center", gap: 8,
           fontSize: 12, fontWeight: 500, letterSpacing: "0.1em",
-          textTransform: "uppercase", color: "#6B6B6B", marginBottom: 16,
+          textTransform: "uppercase", color: "#334155", marginBottom: 16,
         }}>
-          <span style={{ display: "inline-block", width: 16, height: 1, background: "#6B6B6B" }}/>
+          <span style={{ display: "inline-block", width: 16, height: 1, background: "rgba(59,130,246,0.4)" }}/>
           Integraciones
         </div>
         <h2 style={{
@@ -39,46 +145,50 @@ export function Integraciones() {
         </h2>
       </div>
 
-      {/* Divider */}
-      <div style={{ borderTop: "1px solid #303236", marginBottom: 48 }}/>
+      <div style={{ borderTop: "1px solid rgba(59,130,246,0.06)", marginBottom: 48 }}/>
 
-      {/* Infinite scroll strip */}
       <div style={{ position: "relative", overflow: "hidden" }}>
-        {/* Fade edges */}
         <div style={{
           position: "absolute", left: 0, top: 0, bottom: 0, width: 120,
-          background: "linear-gradient(to right, #000, transparent)",
+          background: "linear-gradient(to right, #06080f, transparent)",
           zIndex: 2, pointerEvents: "none",
         }}/>
         <div style={{
           position: "absolute", right: 0, top: 0, bottom: 0, width: 120,
-          background: "linear-gradient(to left, #000, transparent)",
+          background: "linear-gradient(to left, #06080f, transparent)",
           zIndex: 2, pointerEvents: "none",
         }}/>
+
+        <style>{`
+          @keyframes vf-scroll-x {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+          }
+        `}</style>
 
         <div
           ref={trackRef}
           style={{
-            display: "flex",
-            gap: 12,
-            width: "max-content",
-            animation: "scroll-x 35s linear infinite",
+            display: "flex", gap: 12, width: "max-content",
+            animation: "vf-scroll-x 40s linear infinite",
           }}
         >
           {[...INTEGRATIONS, ...INTEGRATIONS].map((item, i) => (
             <div key={i} style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 10,
-              background: "#18191B",
-              border: "1px solid #303236",
-              borderRadius: 8,
+              display: "inline-flex", alignItems: "center", gap: 10,
+              background: "rgba(8,13,26,0.8)",
+              border: "1px solid rgba(59,130,246,0.10)",
+              borderRadius: 10,
               padding: "12px 20px",
               whiteSpace: "nowrap",
               flexShrink: 0,
+              backdropFilter: "blur(8px)",
+              transition: "border-color 0.2s",
             }}>
-              <span style={{ fontSize: 16, lineHeight: 1, color: "#37C38F" }}>{item.icon}</span>
-              <span style={{ fontSize: 14, fontWeight: 400, color: "#A0A0A0", letterSpacing: "-0.01em" }}>
+              <span style={{ color: item.color, display: "flex", alignItems: "center", flexShrink: 0 }}>
+                {item.icon}
+              </span>
+              <span style={{ fontSize: 14, fontWeight: 400, color: "#64748b", letterSpacing: "-0.01em" }}>
                 {item.name}
               </span>
             </div>
@@ -86,9 +196,7 @@ export function Integraciones() {
         </div>
       </div>
 
-      {/* Divider */}
-      <div style={{ borderTop: "1px solid #303236", marginTop: 48 }}/>
+      <div style={{ borderTop: "1px solid rgba(59,130,246,0.06)", marginTop: 48 }}/>
     </section>
   );
-}
-
+    }
