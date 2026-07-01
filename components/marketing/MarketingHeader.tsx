@@ -176,3 +176,5 @@ export function MarketingHeader() {
     </header>
   );
                             }
+
+export default MarketingHeader;
