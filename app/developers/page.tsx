@@ -66,23 +66,14 @@ export default function DevelopersPage() {
               <span style={{ width:10, height:10, borderRadius:"50%", background:"#22c55e", opacity:0.7 }} />
               <span style={{ marginLeft:8, fontSize:12, color:"#475569", fontFamily:"monospace" }}>terminal</span>
             </div>
-            <pre style={{ margin:0, padding:"24px 28px", fontFamily:"monospace", fontSize:14, lineHeight:2, overflowX:"auto" as const, color:"#e2e8f0" }}>
-              <span style={{ color:"#475569" }}># 1. Instala el SDK</span>{"
-"}
-              <span style={{ color:"#818cf8" }}>npm</span>{" install @vforge/sdk
-
-"}
-              <span style={{ color:"#475569" }}># 2. Configura tu token</span>{"
-"}
-              <span style={{ color:"#818cf8" }}>export</span>{" VFORGE_TOKEN="}
-              <span style={{ color:"#34d399" }}>vf_live_xxxxxxxxxxxxx</span>{"
-
-"}
-              <span style={{ color:"#475569" }}># 3. Conecta al MCP Brain</span>{"
-"}
-              <span style={{ color:"#818cf8" }}>npx</span>{" @vforge/cli mcp connect "}
-              <span style={{ color:"#34d399" }}>--workspace my-org</span>
-            </pre>
+            <div style={{ padding:"24px 28px", fontFamily:"monospace", fontSize:14, lineHeight:2 }}>
+              <div style={{ color:"#475569", marginBottom:2 }}># 1. Instala el SDK</div>
+              <div style={{ color:"#e2e8f0", marginBottom:16 }}><span style={{ color:"#818cf8" }}>npm</span> install @vforge/sdk</div>
+              <div style={{ color:"#475569", marginBottom:2 }}># 2. Configura tu token</div>
+              <div style={{ color:"#e2e8f0", marginBottom:16 }}><span style={{ color:"#818cf8" }}>export</span> VFORGE_TOKEN=<span style={{ color:"#34d399" }}>vf_live_xxxxxxxxxxxxx</span></div>
+              <div style={{ color:"#475569", marginBottom:2 }}># 3. Conecta al Brain</div>
+              <div style={{ color:"#e2e8f0" }}><span style={{ color:"#818cf8" }}>npx</span> @vforge/cli mcp connect <span style={{ color:"#34d399" }}>--workspace my-org</span></div>
+            </div>
           </div>
         </div>
       </section>
