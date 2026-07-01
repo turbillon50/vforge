@@ -5,7 +5,6 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { Hero } from "@/components/marketing/Hero";
 import { Metodo } from "@/components/marketing/Metodo";
 import { Integraciones } from "@/components/marketing/Integraciones";
-import { Credenciales } from "@/components/marketing/Credenciales";
 import { CTA } from "@/components/marketing/CTA";
 
 export const dynamic = "force-dynamic";
@@ -19,13 +18,12 @@ export default async function HomePage() {
   } catch {}
 
   return (
-    <div className="min-h-screen" style={{ background: "#000" }}>
+    <div className="min-h-screen" style={{ background: "#050a14" }}>
       <MarketingHeader />
       <main>
         <Hero />
         <Metodo />
         <Integraciones />
-        <Credenciales />
         <CTA />
       </main>
       <MarketingFooter />
