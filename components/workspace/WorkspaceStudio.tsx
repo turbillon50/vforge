@@ -150,7 +150,7 @@ export function WorkspaceStudio() {
                 <p className="text-emerald-400">$ vforge dev</p>
                 <p className="text-white/50">{active ? "Build OK - " + active.name : "Sin app activa."}</p>
                 <p className="text-white/40">{active?.deploy_url ? "Sirviendo en " + active.deploy_url : "Crea una app para ver logs."}</p>
-                <p className="mt-2 text-white/30">Proximamente: logs en vivo y shell real.</p>
+                <p className="mt-2 text-white/55">Proximamente: logs en vivo y shell real.</p>
               </div>
             ) : (
               <div className="p-6 text-[13.5px]">
