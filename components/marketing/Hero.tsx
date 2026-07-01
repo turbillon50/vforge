@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 
-// Auth providers for login section
 const AUTH_PROVIDERS = [
   {
     name: "GitHub",
@@ -25,7 +24,7 @@ const AUTH_PROVIDERS = [
     name: "Google",
     href: "/app",
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <svg width="18" height="18" viewBox="0 0 24 24">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
@@ -45,85 +44,116 @@ const AUTH_PROVIDERS = [
 ];
 
 const FEATURE_PILLS = [
-  { icon: "⚡", label: "MCP Bridge" },
-  { icon: "🔗", label: "Git + Vercel + VForge" },
-  { icon: "🤖", label: "Multi-Agent" },
-  { icon: "🧠", label: "Brain Memory" },
+  { label: "MCP Bridge" },
+  { label: "Git + Vercel + VForge" },
+  { label: "Multi-Agent" },
+  { label: "Brain Memory" },
 ];
 
 export function Hero() {
   return (
-    <section style={{
-      background: "#000000",
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      padding: "120px 24px 80px",
-    }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%" }}>
+    <section style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "120px 24px 80px", overflow: "hidden" }}>
 
-        {/* Eyebrow */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 8,
-          marginBottom: 28,
-        }}>
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #050a14 0%, #080d1a 40%, #0a0f22 70%, #060b18 100%)", zIndex: 0 }}/>
+
+      <div style={{
+        position: "absolute", top: "-15%", right: "-5%",
+        width: 700, height: 700, borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(59,130,246,0.18) 0%, rgba(37,99,235,0.08) 45%, transparent 70%)",
+        filter: "blur(60px)",
+        animation: "vf-orb1 14s ease-in-out infinite alternate",
+        zIndex: 1,
+      }}/>
+
+      <div style={{
+        position: "absolute", bottom: "-10%", left: "-10%",
+        width: 600, height: 600, borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(124,58,237,0.14) 0%, rgba(109,40,217,0.06) 45%, transparent 70%)",
+        filter: "blur(80px)",
+        animation: "vf-orb2 18s ease-in-out infinite alternate",
+        zIndex: 1,
+      }}/>
+
+      <div style={{
+        position: "absolute", top: "40%", left: "30%",
+        width: 400, height: 400, borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(14,165,233,0.10) 0%, rgba(2,132,199,0.04) 50%, transparent 70%)",
+        filter: "blur(50px)",
+        animation: "vf-orb3 22s ease-in-out infinite alternate",
+        zIndex: 1,
+      }}/>
+
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: "linear-gradient(rgba(59,130,246,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.025) 1px, transparent 1px)",
+        backgroundSize: "64px 64px",
+        zIndex: 1,
+      }}/>
+
+      <style>{`
+        @keyframes vf-orb1 {
+          0% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-60px, 40px) scale(1.12); }
+          100% { transform: translate(40px, -30px) scale(0.92); }
+        }
+        @keyframes vf-orb2 {
+          0% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(80px, -50px) scale(1.08); }
+          100% { transform: translate(-40px, 60px) scale(0.95); }
+        }
+        @keyframes vf-orb3 {
+          0% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(-80px, 30px) scale(1.15); }
+          66% { transform: translate(60px, -40px) scale(0.88); }
+          100% { transform: translate(-20px, 60px) scale(1.05); }
+        }
+      `}</style>
+
+      <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%", position: "relative", zIndex: 2 }}>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 28 }}>
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 6,
-            background: "rgba(55,195,143,0.1)",
-            color: "#37C38F",
-            border: "1px solid rgba(55,195,143,0.25)",
-            borderRadius: 9999,
-            padding: "4px 12px",
-            fontSize: 12, fontWeight: 500, letterSpacing: "0.04em",
-            textTransform: "uppercase",
+            background: "rgba(59,130,246,0.1)", color: "#60a5fa",
+            border: "1px solid rgba(59,130,246,0.25)", borderRadius: 9999,
+            padding: "4px 12px", fontSize: 12, fontWeight: 500,
+            letterSpacing: "0.04em", textTransform: "uppercase",
           }}>
-            <span style={{
-              width: 6, height: 6, background: "#37C38F",
-              borderRadius: "50%", display: "inline-block",
-            }}/>
-            Plataforma MCP · Now in Beta
+            <span style={{ width: 6, height: 6, background: "#3b82f6", borderRadius: "50%", display: "inline-block" }}/>
+            Plataforma MCP — Beta abierta
           </span>
         </div>
 
-        {/* Hero headline */}
         <h1 style={{
-          fontSize: "clamp(2.8rem, 6vw, 4.5rem)",
-          fontWeight: 400,
-          letterSpacing: "-0.03em",
-          lineHeight: 1.05,
-          color: "#FFFFFF",
-          maxWidth: 900,
-          marginBottom: 24,
+          fontSize: "clamp(2.8rem, 6vw, 4.5rem)", fontWeight: 400,
+          letterSpacing: "-0.03em", lineHeight: 1.05, color: "#FFFFFF",
+          maxWidth: 900, marginBottom: 24,
         }}>
-          La conexión vital entre<br/>
-          <span style={{ color: "#37C38F" }}>Git, Vercel y tus agentes</span>
+          La conexion vital entre<br/>
+          <span style={{
+            background: "linear-gradient(90deg, #60a5fa 0%, #a78bfa 100%)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+          }}>
+            Git, Vercel y tus agentes
+          </span>
         </h1>
 
-        {/* Subheadline */}
         <p style={{
-          fontSize: "clamp(1rem, 1.5vw, 1.125rem)",
-          color: "#A0A0A0",
-          lineHeight: 1.65,
-          maxWidth: 560,
-          marginBottom: 40,
-          letterSpacing: "-0.01em",
+          fontSize: "clamp(1rem, 1.5vw, 1.125rem)", color: "#94a3b8",
+          lineHeight: 1.65, maxWidth: 560, marginBottom: 40, letterSpacing: "-0.01em",
         }}>
-          VForge conecta tus repositorios, deployments y modelos de IA en un solo flujo. 
+          VForge conecta tus repositorios, deployments y modelos de IA en un solo flujo.
           Construye, despliega y automatiza con el poder del protocolo MCP.
         </p>
 
-        {/* CTA Buttons */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 56 }}>
           <Link href="/app" style={{
             display: "inline-flex", alignItems: "center", gap: 8,
-            background: "#FFFFFF", color: "#000000",
-            fontSize: 14, fontWeight: 500,
-            letterSpacing: "-0.02em",
-            padding: "12px 22px", borderRadius: 9999,
-            textDecoration: "none",
-            border: "1px solid #FFFFFF",
-            transition: "background 0.15s",
+            background: "linear-gradient(135deg, #3b82f6, #6d28d9)", color: "#ffffff",
+            fontSize: 14, fontWeight: 500, letterSpacing: "-0.02em",
+            padding: "12px 22px", borderRadius: 9999, textDecoration: "none",
+            boxShadow: "0 0 24px rgba(59,130,246,0.35), 0 0 60px rgba(109,40,217,0.15)",
+            transition: "box-shadow 0.2s",
           }}>
             Empieza gratis
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -132,48 +162,33 @@ export function Hero() {
           </Link>
           <Link href="/developers" style={{
             display: "inline-flex", alignItems: "center", gap: 8,
-            background: "transparent", color: "#FFFFFF",
-            fontSize: 14, fontWeight: 400,
-            letterSpacing: "-0.02em",
-            padding: "11px 22px", borderRadius: 9999,
-            textDecoration: "none",
-            border: "1px solid #4A4A4A",
-            transition: "border-color 0.15s",
+            background: "rgba(255,255,255,0.04)", color: "#e2e8f0",
+            fontSize: 14, fontWeight: 400, letterSpacing: "-0.02em",
+            padding: "11px 22px", borderRadius: 9999, textDecoration: "none",
+            border: "1px solid rgba(255,255,255,0.10)", transition: "border-color 0.15s",
           }}>
-            Ver documentación
+            Ver documentacion
           </Link>
         </div>
 
-        {/* Feature pills */}
-        <div style={{
-          display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 64,
-        }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 64 }}>
           {FEATURE_PILLS.map(pill => (
             <span key={pill.label} style={{
               display: "inline-flex", alignItems: "center", gap: 6,
-              background: "#18191B",
-              border: "1px solid #303236",
-              borderRadius: 9999,
-              padding: "6px 14px",
-              fontSize: 13, color: "#A0A0A0",
-              letterSpacing: "-0.01em",
+              background: "rgba(15,23,42,0.7)", border: "1px solid rgba(59,130,246,0.15)",
+              borderRadius: 9999, padding: "6px 14px", fontSize: 13, color: "#94a3b8",
+              letterSpacing: "-0.01em", backdropFilter: "blur(8px)",
             }}>
-              <span>{pill.icon}</span>
               {pill.label}
             </span>
           ))}
         </div>
 
-        {/* Divider */}
-        <div style={{ borderTop: "1px solid #303236", marginBottom: 40 }}/>
+        <div style={{ borderTop: "1px solid rgba(59,130,246,0.12)", marginBottom: 40 }}/>
 
-        {/* Auth providers section */}
         <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
-          <span style={{
-            fontSize: 12, color: "#6B6B6B", letterSpacing: "0.05em",
-            textTransform: "uppercase", fontWeight: 500,
-          }}>
-            Conecta con
+          <span style={{ fontSize: 12, color: "#475569", letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 500 }}>
+            Accede con
           </span>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             {AUTH_PROVIDERS.map(provider => (
@@ -183,34 +198,32 @@ export function Hero() {
                 title={provider.name}
                 style={{
                   display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  width: 38, height: 38,
-                  background: "#18191B",
-                  border: "1px solid #303236",
-                  borderRadius: 8,
-                  color: "#A0A0A0",
-                  textDecoration: "none",
-                  transition: "all 0.15s ease",
+                  width: 38, height: 38, background: "rgba(15,23,42,0.8)",
+                  border: "1px solid rgba(59,130,246,0.15)", borderRadius: 8,
+                  color: "#64748b", textDecoration: "none",
+                  transition: "all 0.15s ease", backdropFilter: "blur(8px)",
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = "#37C38F";
-                  e.currentTarget.style.color = "#FFFFFF";
+                  e.currentTarget.style.borderColor = "rgba(99,102,241,0.6)";
+                  e.currentTarget.style.color = "#ffffff";
+                  e.currentTarget.style.boxShadow = "0 0 12px rgba(99,102,241,0.2)";
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = "#303236";
-                  e.currentTarget.style.color = "#A0A0A0";
+                  e.currentTarget.style.borderColor = "rgba(59,130,246,0.15)";
+                  e.currentTarget.style.color = "#64748b";
+                  e.currentTarget.style.boxShadow = "none";
                 }}
               >
                 {provider.icon}
               </Link>
             ))}
           </div>
-          <span style={{ fontSize: 12, color: "#6B6B6B" }}>
-            GitHub · Vercel · Google · X
+          <span style={{ fontSize: 12, color: "#334155" }}>
+            GitHub — Vercel — Google — X
           </span>
         </div>
 
       </div>
     </section>
   );
-}
-
+          }
