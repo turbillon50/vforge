@@ -34,14 +34,14 @@ Accent: #37C38F | BG: #000 | Surface: #18191B
   --color-on-surface-muted: rgba(255,255,255,0.50);
   --color-off-white: #f0f0f2;
 
-  /* ---- Emerald success ---- */
+  /* ---- Success / error ---- */
   --color-success-emerald: #34d399;
   --color-error-crimson: #f87171;
 
-  /* ---- Tint layers (for bg-tint-1/40 etc.) ---- */
-  --tint-1: 255 255 255 / 0.04;
-  --tint-2: 255 255 255 / 0.07;
-  --tint-3: 255 255 255 / 0.10;
+  /* ---- Tint layers — raw RGB channels for Tailwind rgb(var(--tint-1) / <alpha>) ---- */
+  --tint-1: 255 255 255;
+  --tint-2: 255 255 255;
+  --tint-3: 255 255 255;
 
   /* ---- WorkspaceShell chrome tokens ---- */
   --chrome-bg: 10 10 15;
@@ -54,6 +54,16 @@ Accent: #37C38F | BG: #000 | Surface: #18191B
   --fg-muted: rgba(255,255,255,0.55);
   --fg-subtle: rgba(255,255,255,0.35);
   --fg-tertiary: rgba(255,255,255,0.45);
+
+  /* ---- Misc semantic tokens used across components ---- */
+  --color-void: #000000;
+  --color-ink: #ffffff;
+  --color-background: #000000;
+  --color-surface-low: #0e0e14;
+  --color-surface-high: #1a1a24;
+  --color-surface-elev: #1e1e2a;
+  --color-cyan-400: #22d3ee;
+  --color-electric-blue: #3b82f6;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
