@@ -3,7 +3,7 @@ import type React from "react";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { IconBell, IconBot, IconCreditCard, IconDatabase, IconEye, IconGlobe, IconKey, IconMap, IconRocket, IconSearch, IconShield, IconSparkles, IconZap } from "@/components/brand/VFIcons";
+import { IconBell, IconBot, IconCreditCard, IconDatabase, IconEye, IconGlobe, IconKey, IconMap, IconRocket, IconSearch, IconShield, IconSparkles } from "@/components/brand/VFIcons";
 import { useT } from "@/i18n/AppProviders";
 
 type ModuleKey = "clerk" | "stripe" | "twilio" | "maps" | "neon" | "vision" | "mail" | "storage" | "vercel" | "domains" | "agent" | "audit";
@@ -68,11 +68,7 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
             <button
               key={c}
               onClick={() => setCat(c)}
-              className={
-                cat === c
-                  ? "rounded-full border px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest transition"
-                  : "rounded-full border px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest transition"
-              }
+              className="rounded-full border px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest transition"
               style={
                 cat === c
                   ? { borderColor: "rgba(139,92,246,0.5)", backgroundColor: "rgba(139,92,246,0.15)", color: "#c4b5fd" }
@@ -88,7 +84,7 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
       {list.length === 0 && (
         <div className="px-5 pb-10 md:px-8">
           <div className="rounded-xl border border-[var(--border-1,#ffffff18)] bg-[var(--surface-1,#ffffff08)] p-8 text-center">
-            <p className="font-display text-lg font-semibold text-white">{t.marketplace.coming_soon ?? "El marketplace abre pronto"}</p>
+            <p className="font-display text-lg font-semibold text-white">El marketplace abre pronto</p>
             <p className="mt-2 text-sm text-white/60">Estos módulos están en camino. Te avisamos cuando puedas instalarlos.</p>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -96,7 +92,10 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
               <article key={u.name} className="rounded-xl border border-[var(--border-1,#ffffff18)] bg-[var(--surface-1,#ffffff08)] p-5">
                 <div className="flex items-center justify-between">
                   <h3 className="font-display text-base font-semibold text-white">{u.name}</h3>
-                  <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest" style={{ border: "1px solid rgba(139,92,246,0.3)", backgroundColor: "rgba(139,92,246,0.1)", color: "#c4b5fd" }}>
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest"
+                    style={{ border: "1px solid rgba(139,92,246,0.3)", backgroundColor: "rgba(139,92,246,0.1)", color: "#c4b5fd" }}
+                  >
                     Próximamente
                   </span>
                 </div>
@@ -114,10 +113,16 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
             layout
             className="group relative overflow-hidden rounded-xl border border-[var(--border-1,#ffffff18)] bg-[var(--surface-1,#ffffff08)] p-5 transition hover:border-white/20 hover:bg-[var(--surface-2,#ffffff10)]"
           >
-            <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full opacity-0 blur-3xl transition group-hover:opacity-15" style={{ backgroundColor: "rgba(139,92,246,0.4)" }} />
+            <div
+              className="absolute -right-12 -top-12 h-32 w-32 rounded-full opacity-0 blur-3xl transition group-hover:opacity-15"
+              style={{ backgroundColor: "rgba(139,92,246,0.4)" }}
+            />
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg ring-1" style={{ backgroundColor: "rgba(139,92,246,0.1)", ringColor: "rgba(139,92,246,0.2)" }}>
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: "rgba(139,92,246,0.1)", boxShadow: "inset 0 0 0 1px rgba(139,92,246,0.2)" }}
+                >
                   <m.icon size={18} style={{ color: "#c4b5fd" }} />
                 </div>
                 <div>
@@ -126,7 +131,10 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
                 </div>
               </div>
               {m.recommended && (
-                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest" style={{ border: "1px solid rgba(139,92,246,0.3)", backgroundColor: "rgba(139,92,246,0.1)", color: "#c4b5fd" }}>
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest"
+                  style={{ border: "1px solid rgba(139,92,246,0.3)", backgroundColor: "rgba(139,92,246,0.1)", color: "#c4b5fd" }}
+                >
                   <IconSparkles size={10} /> {t.common.label_b_picks}
                 </span>
               )}
@@ -138,7 +146,10 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
                   ● {t.common.status_installed}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-white/40" style={{ border: "1px solid rgba(255,255,255,0.1)" }}>
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-white/40"
+                  style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+                >
                   ● {t.common.status_available}
                 </span>
               )}
@@ -150,8 +161,16 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
         ))}
       </div>
       {context === "workspace" && (
-        <div className="mx-5 mb-10 rounded-xl p-5 md:mx-8" style={{ border: "1px solid rgba(139,92,246,0.2)", backgroundColor: "rgba(139,92,246,0.04)" }}>
-          <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em]" style={{ color: "#a78bfa" }}>{t.marketplace.ask_b_title}</p>
+        <div
+          className="mx-5 mb-10 rounded-xl p-5 md:mx-8"
+          style={{ border: "1px solid rgba(139,92,246,0.2)", backgroundColor: "rgba(139,92,246,0.04)" }}
+        >
+          <p
+            className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em]"
+            style={{ color: "#a78bfa" }}
+          >
+            {t.marketplace.ask_b_title}
+          </p>
           <p className="text-white/80">{t.marketplace.ask_b_body}</p>
         </div>
       )}
