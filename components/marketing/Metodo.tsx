@@ -37,8 +37,8 @@ const STEPS = [
     icon: <BrainSVG />,
     color: "#60a5fa",
     glow: "59,130,246",
-    grad: "linear-gradient(135deg, #1e3a5f 0%, #0f1f35 100%)",
-    detail: "El agente V genera, edita y estructura tu codigo en tiempo real. Una conversacion — codigo listo.",
+    grad: "linear-gradient(135deg, #1a3a6e 0%, #0f2040 100%)",
+    detail: "El agente V genera, edita y estructura tu codigo en tiempo real. Una conversacion, codigo listo.",
     tag: "MCP Agent",
     number: "01",
   },
@@ -49,8 +49,8 @@ const STEPS = [
     icon: <GitHubSVG />,
     color: "#a78bfa",
     glow: "167,139,250",
-    grad: "linear-gradient(135deg, #2d1f4e 0%, #1a1030 100%)",
-    detail: "VForge hace commit y push al repositorio al instante. Tus cambios quedan versionados sin tocar la terminal.",
+    grad: "linear-gradient(135deg, #3d1f6e 0%, #221040 100%)",
+    detail: "VForge hace commit y push al repositorio al instante. Tus cambios versionados sin tocar la terminal.",
     tag: "Git Push",
     number: "02",
   },
@@ -61,7 +61,7 @@ const STEPS = [
     icon: <VercelSVG />,
     color: "#c4b5fd",
     glow: "196,181,253",
-    grad: "linear-gradient(135deg, #3b2d6e 0%, #21184a 100%)",
+    grad: "linear-gradient(135deg, #4a2d8e 0%, #2a1860 100%)",
     detail: "Cada push dispara un deployment automatico. Preview y produccion listos en segundos.",
     tag: "CI/CD",
     number: "03",
@@ -73,7 +73,7 @@ const STEPS = [
     icon: <RocketSVG />,
     color: "#e9d5ff",
     glow: "233,213,255",
-    grad: "linear-gradient(135deg, #4c2a7a 0%, #2e1a50 100%)",
+    grad: "linear-gradient(135deg, #5c3a9e 0%, #3a2070 100%)",
     detail: "Tu producto vive. Dominio propio, HTTPS, escala automatica. VForge recuerda todo el contexto.",
     tag: "Live",
     number: "04",
@@ -91,10 +91,10 @@ export function Metodo() {
   const step = STEPS[active];
 
   return (
-    <section style={{ background: "linear-gradient(180deg, #050a14 0%, #06080f 100%)", padding: "100px 24px" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+    <section style={{ background:"linear-gradient(180deg, #050a14 0%, #06080f 100%)", padding:"100px 24px" }}>
+      <div style={{ maxWidth:1200, margin:"0 auto" }}>
 
-        <div style={{ marginBottom: 56 }}>
+        <div style={{ marginBottom:56 }}>
           <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:11, fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase", color:"#3b82f6", marginBottom:16 }}>
             <span style={{ display:"inline-block", width:24, height:1, background:"linear-gradient(90deg,#3b82f6,transparent)" }}/>
             Como funciona
@@ -107,6 +107,7 @@ export function Metodo() {
           </p>
         </div>
 
+        {/* Pipeline — todos los cards siempre encendidos */}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:3, marginBottom:3, borderRadius:"20px 20px 0 0", overflow:"hidden" }}>
           {STEPS.map((s, i) => (
             <div
@@ -114,46 +115,49 @@ export function Metodo() {
               onClick={() => setActive(i)}
               style={{
                 padding:"28px 32px",
-                background: i === active
-                  ? s.grad
-                  : "rgba(8,13,26,0.95)",
-                border: "none",
+                background: s.grad,
                 cursor:"pointer",
-                transition:"background 0.4s ease",
                 position:"relative",
                 overflow:"hidden",
+                transition:"filter 0.3s",
+                filter: i === active ? "brightness(1.15)" : "brightness(0.75)",
               }}
             >
-              {i === active && (
-                <div style={{
-                  position:"absolute", inset:0,
-                  background: `radial-gradient(ellipse at 20% 50%, rgba(${s.glow},0.15) 0%, transparent 60%)`,
-                  pointerEvents:"none",
-                }}/>
-              )}
+              {/* Glow radial siempre visible */}
+              <div style={{
+                position:"absolute", inset:0,
+                background: `radial-gradient(ellipse at 20% 50%, rgba(${s.glow},0.2) 0%, transparent 65%)`,
+                pointerEvents:"none",
+                opacity: i === active ? 1 : 0.5,
+                transition:"opacity 0.3s",
+              }}/>
+              {/* Top border glow */}
+              <div style={{
+                position:"absolute", top:0, left:0, right:0, height:1,
+                background: `linear-gradient(90deg, transparent, rgba(${s.glow},0.6), transparent)`,
+                opacity: i === active ? 1 : 0.4,
+                transition:"opacity 0.3s",
+              }}/>
               <div style={{ display:"flex", alignItems:"center", gap:16, position:"relative", zIndex:1 }}>
                 <div style={{
-                  width:52, height:52, borderRadius:14,
-                  background: i === active
-                    ? `radial-gradient(circle, rgba(${s.glow},0.25) 0%, rgba(${s.glow},0.05) 100%)`
-                    : "rgba(255,255,255,0.03)",
-                  border: `1px solid ${i === active ? `rgba(${s.glow},0.5)` : "rgba(255,255,255,0.06)"}`,
+                  width:54, height:54, borderRadius:14,
+                  background: `radial-gradient(circle, rgba(${s.glow},0.3) 0%, rgba(${s.glow},0.08) 100%)`,
+                  border: `1px solid rgba(${s.glow},0.5)`,
                   display:"flex", alignItems:"center", justifyContent:"center",
-                  color: i === active ? s.color : "#334155",
-                  transition:"all 0.4s ease",
-                  boxShadow: i === active ? `0 0 20px rgba(${s.glow},0.3), 0 0 60px rgba(${s.glow},0.1)` : "none",
+                  color: s.color,
+                  boxShadow: `0 0 24px rgba(${s.glow},0.4), 0 0 60px rgba(${s.glow},0.15)`,
                 }}>
                   {s.icon}
                 </div>
                 <div>
-                  <div style={{ fontSize:15, fontWeight:600, letterSpacing:"-0.02em", color: i === active ? "#f0f4ff" : "#334155", transition:"color 0.3s" }}>
+                  <div style={{ fontSize:15, fontWeight:700, letterSpacing:"-0.02em", color:"#f0f4ff" }}>
                     {s.label}
                   </div>
-                  <div style={{ fontSize:12, color: i === active ? `rgba(${s.glow},0.9)` : "#1e293b", marginTop:2, transition:"color 0.3s" }}>
+                  <div style={{ fontSize:12, color: `rgba(${s.glow},0.9)`, marginTop:2 }}>
                     {s.sublabel}
                   </div>
                 </div>
-                <div style={{ marginLeft:"auto", fontSize:11, fontWeight:700, letterSpacing:"0.06em", color: i === active ? `rgba(${s.glow},0.7)` : "#1e293b", fontFamily:"monospace" }}>
+                <div style={{ marginLeft:"auto", fontSize:11, fontWeight:700, letterSpacing:"0.06em", color: `rgba(${s.glow},0.6)`, fontFamily:"monospace" }}>
                   {s.number}
                 </div>
               </div>
@@ -161,23 +165,25 @@ export function Metodo() {
           ))}
         </div>
 
+        {/* Detail card */}
         <div style={{
-          background: "rgba(8,13,26,0.95)",
+          background: `linear-gradient(135deg, ${step.grad.includes("1a3a") ? "rgba(15,23,42,0.98)" : "rgba(15,23,42,0.98)"}, rgba(8,13,26,0.98))`,
           borderRadius:"0 0 20px 20px",
-          padding:"36px 40px",
-          borderTop: `1px solid rgba(${step.glow},0.15)`,
+          padding:"32px 40px",
+          borderTop: `1px solid rgba(${step.glow},0.25)`,
           position:"relative",
           overflow:"hidden",
-          minHeight:120,
+          minHeight:100,
+          boxShadow: `inset 0 1px 0 rgba(${step.glow},0.15)`,
         }}>
           <div style={{
             position:"absolute", top:0, left:0, right:0, height:1,
-            background: `linear-gradient(90deg, transparent, rgba(${step.glow},0.5), transparent)`,
+            background: `linear-gradient(90deg, transparent, rgba(${step.glow},0.6), transparent)`,
           }}/>
           <div style={{
-            position:"absolute", top:"-40%", right:"-10%",
-            width:400, height:400, borderRadius:"50%",
-            background: `radial-gradient(circle, rgba(${step.glow},0.06) 0%, transparent 70%)`,
+            position:"absolute", top:"-60%", right:"-5%",
+            width:500, height:400, borderRadius:"50%",
+            background: `radial-gradient(circle, rgba(${step.glow},0.07) 0%, transparent 65%)`,
             pointerEvents:"none",
           }}/>
           <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:32, position:"relative" }}>
@@ -185,15 +191,16 @@ export function Metodo() {
               <span style={{
                 display:"inline-flex", alignItems:"center", gap:6,
                 padding:"4px 12px", borderRadius:999,
-                background: `rgba(${step.glow},0.1)`,
-                border: `1px solid rgba(${step.glow},0.25)`,
-                color: step.color, fontSize:11, fontWeight:600, letterSpacing:"0.08em",
+                background: `rgba(${step.glow},0.12)`,
+                border: `1px solid rgba(${step.glow},0.3)`,
+                color: step.color, fontSize:11, fontWeight:700, letterSpacing:"0.08em",
                 textTransform:"uppercase", marginBottom:14,
+                boxShadow: `0 0 12px rgba(${step.glow},0.2)`,
               }}>
-                <span style={{ width:5, height:5, borderRadius:"50%", background:step.color, display:"inline-block" }}/>
+                <span style={{ width:5, height:5, borderRadius:"50%", background:step.color, display:"inline-block", boxShadow:`0 0 6px ${step.color}` }}/>
                 {step.tag}
               </span>
-              <p style={{ fontSize:16, color:"rgba(200,215,255,0.75)", lineHeight:1.7, margin:0, maxWidth:600 }}>
+              <p style={{ fontSize:16, color:"rgba(200,215,255,0.8)", lineHeight:1.7, margin:0, maxWidth:600 }}>
                 {step.detail}
               </p>
             </div>
@@ -201,32 +208,39 @@ export function Metodo() {
               {STEPS.map((_, i) => (
                 <div key={i} onClick={() => setActive(i)} style={{
                   width: i === active ? 24 : 6, height:6, borderRadius:3,
-                  background: i === active ? step.color : "rgba(255,255,255,0.08)",
+                  background: i === active ? step.color : "rgba(255,255,255,0.1)",
                   cursor:"pointer", transition:"all 0.3s ease",
+                  boxShadow: i === active ? `0 0 8px ${step.color}` : "none",
                 }}/>
               ))}
             </div>
           </div>
         </div>
 
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:0, marginTop:3, borderRadius:16, overflow:"hidden", border:"1px solid rgba(59,130,246,0.08)" }}>
+        {/* Feature cards */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:0, marginTop:3, borderRadius:16, overflow:"hidden", border:"1px solid rgba(59,130,246,0.1)" }}>
           {[
-            { title:"Conecta tu repo", desc:"Autoriza VForge con tu GitHub. Leemos tu codigo, generamos contexto y preparamos los agentes.", tag:"GitHub" },
-            { title:"Deploy automatico", desc:"Cada push genera un deployment en Vercel. Preview y produccion en segundos, sin CI manual.", tag:"Vercel" },
-            { title:"V orquesta todo", desc:"El Brain MCP centraliza la memoria. Agentes que leen contexto y ejecutan tareas en tiempo real.", tag:"MCP Bridge" },
+            { title:"Conecta tu repo", desc:"Autoriza VForge con tu GitHub. Leemos tu codigo, generamos contexto y preparamos los agentes.", tag:"GitHub", c:"59,130,246" },
+            { title:"Deploy automatico", desc:"Cada push genera un deployment en Vercel. Preview y produccion en segundos, sin CI manual.", tag:"Vercel", c:"167,139,250" },
+            { title:"V orquesta todo", desc:"El Brain MCP centraliza la memoria. Agentes que leen contexto y ejecutan tareas en tiempo real.", tag:"MCP Bridge", c:"196,181,253" },
           ].map((card, i) => (
             <div key={i} style={{
               padding:"32px 28px",
-              background:"rgba(8,13,26,0.7)",
+              background:"rgba(8,13,26,0.8)",
               borderRight: i < 2 ? "1px solid rgba(59,130,246,0.08)" : "none",
+              position:"relative",
             }}>
-              <div style={{ fontSize:12, fontWeight:600, color:"#60a5fa", letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:12 }}>
+              <div style={{
+                position:"absolute", top:0, left:0, right:0, height:1,
+                background: `linear-gradient(90deg, transparent, rgba(${card.c},0.3), transparent)`,
+              }}/>
+              <div style={{ fontSize:11, fontWeight:700, color:`rgba(${card.c},0.9)`, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:10 }}>
                 {card.tag}
               </div>
               <h3 style={{ fontSize:15, fontWeight:600, letterSpacing:"-0.02em", color:"#e2e8f0", marginBottom:8 }}>
                 {card.title}
               </h3>
-              <p style={{ fontSize:13, color:"rgba(148,163,184,0.7)", lineHeight:1.65, margin:0 }}>
+              <p style={{ fontSize:13, color:"rgba(148,163,184,0.65)", lineHeight:1.65, margin:0 }}>
                 {card.desc}
               </p>
             </div>
