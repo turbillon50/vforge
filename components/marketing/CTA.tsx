@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 
 const STATS = [
@@ -14,8 +15,6 @@ export function CTA() {
       padding: "100px 24px 120px",
       overflow: "hidden",
     }}>
-
-      {/* Bottom glow */}
       <div style={{
         position: "absolute", bottom: "-20%", left: "50%",
         transform: "translateX(-50%)",
@@ -28,10 +27,8 @@ export function CTA() {
 
         <div style={{ borderTop: "1px solid rgba(59,130,246,0.08)", marginBottom: 80 }}/>
 
-        {/* Stats */}
         <div style={{
-          display: "flex", gap: 0,
-          marginBottom: 80,
+          display: "flex", gap: 0, marginBottom: 80,
           background: "rgba(8,13,26,0.7)",
           border: "1px solid rgba(59,130,246,0.08)",
           borderRadius: 16, overflow: "hidden",
@@ -42,10 +39,7 @@ export function CTA() {
               borderRight: i < STATS.length - 1 ? "1px solid rgba(59,130,246,0.08)" : "none",
               textAlign: "center",
             }}>
-              <div style={{
-                fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 700,
-                letterSpacing: "-0.04em", color: "#60a5fa", marginBottom: 6,
-              }}>
+              <div style={{ fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 700, letterSpacing: "-0.04em", color: "#60a5fa", marginBottom: 6 }}>
                 {stat.value}
               </div>
               <div style={{ fontSize: 13, color: "#334155", letterSpacing: "-0.01em" }}>
@@ -66,9 +60,8 @@ export function CTA() {
           </div>
 
           <h2 style={{
-            fontSize: "clamp(2.2rem, 4.5vw, 3.5rem)",
-            fontWeight: 700, letterSpacing: "-0.04em",
-            lineHeight: 1.04, color: "#FFFFFF", marginBottom: 24,
+            fontSize: "clamp(2.2rem, 4.5vw, 3.5rem)", fontWeight: 700,
+            letterSpacing: "-0.04em", lineHeight: 1.04, color: "#FFFFFF", marginBottom: 24,
           }}>
             Menos tokens.<br/>
             Menos tiempo.<br/>
@@ -80,11 +73,8 @@ export function CTA() {
             </span>
           </h2>
 
-          <p style={{
-            fontSize: 17, color: "#475569",
-            lineHeight: 1.7, marginBottom: 44, maxWidth: 480,
-          }}>
-            Tu codigo en produccion sin perder el hilo. VForge recuerda el contexto, orquesta los agentes y conecta cada herramienta — para que tu te concentres en construir.
+          <p style={{ fontSize: 17, color: "#475569", lineHeight: 1.7, marginBottom: 44, maxWidth: 480 }}>
+            Tu codigo en produccion sin perder el hilo. VForge recuerda el contexto, orquesta los agentes y conecta cada herramienta.
           </p>
 
           <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
@@ -94,11 +84,7 @@ export function CTA() {
               fontSize: 15, fontWeight: 600, letterSpacing: "-0.02em",
               padding: "14px 28px", borderRadius: 9999, textDecoration: "none",
               boxShadow: "0 0 32px rgba(59,130,246,0.4), 0 0 80px rgba(109,40,217,0.15)",
-              transition: "box-shadow 0.2s, transform 0.15s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 0 48px rgba(59,130,246,0.6), 0 0 100px rgba(109,40,217,0.25)"; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 32px rgba(59,130,246,0.4), 0 0 80px rgba(109,40,217,0.15)"; }}
-            >
+            }}>
               Empieza gratis
               <svg width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M2 7h10M8 3l4 4-4 4"/>
@@ -109,8 +95,7 @@ export function CTA() {
               background: "rgba(255,255,255,0.05)", color: "#94a3b8",
               fontSize: 15, fontWeight: 400, letterSpacing: "-0.02em",
               padding: "13px 24px", borderRadius: 9999, textDecoration: "none",
-              border: "1px solid rgba(255,255,255,0.08)", transition: "all 0.15s",
-              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)",
             }}>
               Ver precios
             </Link>
@@ -124,4 +109,4 @@ export function CTA() {
       </div>
     </section>
   );
-            }
+        }
