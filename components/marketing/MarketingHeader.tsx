@@ -45,120 +45,27 @@ export function MarketingHeader() {
   const headerBg = scrolled ? "rgba(5,10,20,0.97)" : "rgba(5,10,20,0.55)";
 
   return (
-    <header
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
-        background: headerBg,
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        borderBottom: scrolled ? "1px solid rgba(255,255,255,0.08)" : "1px solid transparent",
-        transition: "background 0.3s, border-color 0.3s",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "0 24px",
-          height: "62px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Link
-          href="/"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            textDecoration: "none",
-            flexShrink: 0,
-          }}
-        >
+    <header style={{ position:"fixed", top:0, left:0, right:0, zIndex:50, background:headerBg, backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", borderBottom:scrolled ? "1px solid rgba(255,255,255,0.08)" : "1px solid transparent", transition:"background 0.3s, border-color 0.3s" }}>
+      <div style={{ maxWidth:"1200px", margin:"0 auto", padding:"0 24px", height:"62px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <Link href="/" style={{ display:"flex", alignItems:"center", gap:"10px", textDecoration:"none", flexShrink:0 }}>
           <VForgeLogo size={26} />
-          <span
-            style={{
-              color: "#f0f4ff",
-              fontWeight: 700,
-              fontSize: "17px",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            VForge
-          </span>
+          <span style={{ color:"#f0f4ff", fontWeight:700, fontSize:"17px", letterSpacing:"-0.02em" }}>VForge</span>
         </Link>
-
-        <nav
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-          }}
-        >
+        <nav style={{ display:"flex", alignItems:"center", gap:"4px" }}>
           {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              style={{
-                color: "rgba(200,215,255,0.75)",
-                fontWeight: 500,
-                fontSize: "14px",
-                textDecoration: "none",
-                padding: "6px 14px",
-                borderRadius: "8px",
-              }}
-            >
+            <Link key={link.href} href={link.href} style={{ color:"rgba(200,215,255,0.75)", fontWeight:500, fontSize:"14px", textDecoration:"none", padding:"6px 14px", borderRadius:"8px" }}>
               {link.label}
             </Link>
           ))}
         </nav>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <a
-            href="https://github.com/turbillon50/vforge"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: "rgba(200,215,255,0.6)",
-              display: "flex",
-              alignItems: "center",
-            }}
-            aria-label="GitHub"
-          >
+        <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
+          <a href="https://github.com/turbillon50/vforge" target="_blank" rel="noopener noreferrer" style={{ color:"rgba(200,215,255,0.6)", display:"flex", alignItems:"center" }} aria-label="GitHub">
             <GitHubIcon />
           </a>
-          <Link
-            href="/sign-in"
-            style={{
-              color: "rgba(200,215,255,0.8)",
-              fontWeight: 500,
-              fontSize: "14px",
-              textDecoration: "none",
-              padding: "6px 14px",
-              borderRadius: "8px",
-            }}
-          >
+          <Link href="/sign-in" style={{ color:"rgba(200,215,255,0.8)", fontWeight:500, fontSize:"14px", textDecoration:"none", padding:"6px 14px", borderRadius:"8px" }}>
             Log in
           </Link>
-          <Link
-            href="/app"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              padding: "8px 18px",
-              borderRadius: "9px",
-              background: "linear-gradient(135deg, #3b82f6 0%, #6d28d9 100%)",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: "14px",
-              textDecoration: "none",
-            }}
-          >
+          <Link href="/sign-up" style={{ display:"inline-flex", alignItems:"center", padding:"8px 18px", borderRadius:"9px", background:"linear-gradient(135deg, #3b82f6 0%, #6d28d9 100%)", color:"#fff", fontWeight:700, fontSize:"14px", textDecoration:"none" }}>
             Get started
           </Link>
         </div>
