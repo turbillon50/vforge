@@ -318,3 +318,4 @@ export function Metodo() {
     </section>
   );
     }
+export default Metodo;
