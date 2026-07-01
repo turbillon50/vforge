@@ -1,8 +1,14 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { SignIn } from "@clerk/nextjs";
+import { useClerkAppearance } from "@/lib/clerk-appearance";
 import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
 import { ClerkPlaceholder } from "@/components/auth/ClerkPlaceholder";
+
+function SignInWithTheme() {
+  const appearance = useClerkAppearance();
+  return <SignIn appearance={appearance} />;
+}
 
 export default function SignInPage() {
   const clerkEnabled = hasClerkPublishableKey();
@@ -16,7 +22,6 @@ export default function SignInPage() {
           background: "radial-gradient(ellipse, rgba(124,58,237,0.09) 0%, transparent 70%)",
         }} />
       </div>
-
       <div className="relative z-10 w-full max-w-sm">
         <div className="mb-7 text-center">
           <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.2em]" style={{ color: "rgba(124,58,237,0.7)" }}>
@@ -29,12 +34,7 @@ export default function SignInPage() {
             Inicia sesión para acceder a tu stack
           </p>
         </div>
-
-        {clerkEnabled ? (
-          <SignIn />
-        ) : (
-          <ClerkPlaceholder />
-        )}
+        {clerkEnabled ? <SignInWithTheme /> : <ClerkPlaceholder mode="sign-in" />}
       </div>
     </div>
   );
