@@ -51,7 +51,7 @@ export default function SignUpPage() {
         {clerkEnabled ? (
           <SignUp />
         ) : (
-          <ClerkPlaceholder />
+          <ClerkPlaceholder mode="sign-up" />
         )}
       </div>
     </div>
