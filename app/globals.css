@@ -52,7 +52,7 @@ Accent: #37C38F | BG: #000 | Surface: #18191B
   --fg-primary: #ffffff;
   --fg-secondary: rgba(255,255,255,0.80);
   --fg-muted: rgba(255,255,255,0.55);
-  --fg-subtle: rgba(255,255,255,0.35);
+  --fg-subtle: rgba(255,255,255,0.5);
   --fg-tertiary: rgba(255,255,255,0.45);
 
   /* ---- Misc semantic tokens used across components ---- */
