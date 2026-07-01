@@ -1471,3 +1471,12 @@ button[data-provider="x_twitter"],
    radial-gradient(50% 40% at 10% 110%, rgba(109,40,217,.16), transparent 60%); }
 .vf-grain { position: absolute; inset: 0; pointer-events: none; z-index: 1; opacity: .045; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* Pedro — Variables VForge */
+:root {
+  --vf-success: #22d3ee;
+  --vf-error: #ef4444;
+  --vf-warning: #fbbf24;
+  --vf-shadow-card: 0 0 0 1px rgba(124,58,237,0.15), 0px 2px 8px rgba(0,0,0,0.4);
+  --vf-shadow-hover: 0 0 0 1px rgba(124,58,237,0.5), 0 0 20px rgba(124,58,237,0.2);
+}

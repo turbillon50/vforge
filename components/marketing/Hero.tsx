@@ -169,6 +169,26 @@ export function Hero() {
 
       <div className="relative z-10 mx-auto max-w-4xl w-full">
 
+
+        {/* Announcement bar — Pedro */}
+        <div className="mb-6 flex items-center justify-center">
+          <a
+            href="#"
+            className="group flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm transition-all"
+            style={{
+              background: "rgba(34,211,238,0.06)",
+              borderColor: "rgba(34,211,238,0.25)",
+              color: "rgba(34,211,238,0.9)",
+            }}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: "#22d3ee" }} />
+              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "#22d3ee" }} />
+            </span>
+            Nuevo: MCP Bridge stateless
+            <span style={{ color: "rgba(34,211,238,0.5)" }}>→</span>
+          </a>
+        </div>
         {/* Badge eyebrow */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
