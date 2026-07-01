@@ -2,6 +2,22 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
+function VForgeLogo({ size = 26 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="v-metal-hdr" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#ffffff"/>
+          <stop offset="35%" stopColor="#c8c8d8"/>
+          <stop offset="70%" stopColor="#888898"/>
+          <stop offset="100%" stopColor="#e4e4f0"/>
+        </linearGradient>
+      </defs>
+      <path d="M6 6 L32 58 L58 6" fill="none" stroke="url(#v-metal-hdr)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 export function MarketingHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -30,9 +46,7 @@ export function MarketingHeader() {
 
         {/* Logo */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L22 20H2L12 2Z" fill="#37C38F"/>
-          </svg>
+          <VForgeLogo size={26} />
           <span style={{
             fontFamily: "Inter, sans-serif", fontSize: 16, fontWeight: 600,
             letterSpacing: "-0.03em", color: "#FFFFFF",
@@ -144,4 +158,3 @@ export function MarketingHeader() {
     </header>
   );
 }
-

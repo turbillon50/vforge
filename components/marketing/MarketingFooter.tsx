@@ -1,6 +1,22 @@
 "use client";
 import Link from "next/link";
 
+function VForgeLogo({ size = 22 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="v-metal-ftr" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#ffffff"/>
+          <stop offset="35%" stopColor="#c8c8d8"/>
+          <stop offset="70%" stopColor="#888898"/>
+          <stop offset="100%" stopColor="#e4e4f0"/>
+        </linearGradient>
+      </defs>
+      <path d="M6 6 L32 58 L58 6" fill="none" stroke="url(#v-metal-ftr)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 const LINKS = {
   "Producto": [
     { label: "Docs", href: "/developers" },
@@ -30,23 +46,18 @@ export function MarketingFooter() {
       padding: "64px 24px 40px",
     }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-
-        {/* Top row */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "2fr 1fr 1fr 1fr",
           gap: 48,
           marginBottom: 64,
         }}>
-          {/* Brand */}
           <div>
             <Link href="/" style={{
               display: "flex", alignItems: "center", gap: 10,
               textDecoration: "none", marginBottom: 16,
             }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L22 20H2L12 2Z" fill="#37C38F"/>
-              </svg>
+              <VForgeLogo size={22} />
               <span style={{
                 fontSize: 15, fontWeight: 600,
                 letterSpacing: "-0.03em", color: "#FFFFFF",
@@ -62,7 +73,6 @@ export function MarketingFooter() {
             </p>
           </div>
 
-          {/* Links */}
           {Object.entries(LINKS).map(([title, items]) => (
             <div key={title}>
               <h4 style={{
@@ -91,7 +101,6 @@ export function MarketingFooter() {
           ))}
         </div>
 
-        {/* Bottom row */}
         <div style={{
           borderTop: "1px solid #303236",
           paddingTop: 24,
@@ -104,19 +113,17 @@ export function MarketingFooter() {
           <p style={{ fontSize: 12, color: "#4A4A4A" }}>
             © 2026 VForge. Todos los derechos reservados.
           </p>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{
               display: "inline-block", width: 6, height: 6,
-              background: "#37C38F", borderRadius: "50", marginRight: 6,
+              background: "#37C38F", borderRadius: "50%",
             }}/>
             <span style={{ fontSize: 12, color: "#4A4A4A" }}>
               Todos los sistemas operativos
             </span>
           </div>
         </div>
-
       </div>
     </footer>
   );
 }
-
