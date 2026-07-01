@@ -170,23 +170,27 @@ export function Hero() {
       <div className="relative z-10 mx-auto max-w-4xl w-full">
 
 
-        {/* Announcement bar — Pedro */}
-        <div className="mb-6 flex items-center justify-center">
+        {/* Announcement bar — Pedro/Neon inspired */}
+        <div className="mb-8 flex items-center justify-center">
           <a
             href="#"
-            className="group flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm transition-all"
+            className="group flex items-center gap-3 rounded-full border px-5 py-2 text-sm transition-all hover:border-cyan-400/50"
             style={{
-              background: "rgba(34,211,238,0.06)",
-              borderColor: "rgba(34,211,238,0.25)",
-              color: "rgba(34,211,238,0.9)",
+              background: "rgba(34,211,238,0.04)",
+              borderColor: "rgba(34,211,238,0.2)",
+              color: "rgba(255,255,255,0.7)",
             }}
           >
-            <span className="relative flex h-2 w-2">
+            <span className="relative flex h-2 w-2 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: "#22d3ee" }} />
               <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "#22d3ee" }} />
             </span>
-            Nuevo: MCP Bridge stateless
-            <span style={{ color: "rgba(34,211,238,0.5)" }}>→</span>
+            <span style={{ color: "rgba(34,211,238,0.9)", fontWeight: 500 }}>Nuevo</span>
+            <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
+            MCP Bridge stateless ya está disponible
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ opacity: 0.5 }}>
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
           </a>
         </div>
         {/* Badge eyebrow */}
