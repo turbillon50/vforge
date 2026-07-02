@@ -102,3 +102,22 @@ export const IconPlay = ({ size = 18, ...p }: IP) => (
     <path d="M7 5l11 7-11 7V5z" />
   </svg>
 );
+
+export const IconX = ({ size = 18, ...p }: IP) => (
+  <svg {...base(size, p)}>
+    <path d="M6 6l12 12M18 6L6 18" />
+  </svg>
+);
+
+export const IconPlus = ({ size = 18, ...p }: IP) => (
+  <svg {...base(size, p)}>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
+export const IconRotate = ({ size = 18, ...p }: IP) => (
+  <svg {...base(size, p)}>
+    <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+    <path d="M3 3v5h5" />
+  </svg>
+);

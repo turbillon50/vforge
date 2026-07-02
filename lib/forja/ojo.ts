@@ -29,3 +29,14 @@ export async function ojoGet(path: string): Promise<Response> {
   const url = `${OJO_BASE}/${path}${path.includes("?") ? "&" : "?"}token=${OJO_TOKEN}`;
   return fetch(url, { cache: "no-store", signal: AbortSignal.timeout(20000) });
 }
+
+/** POST a un path del Ojo. Token va en header X-Ojo-Token — NUNCA al cliente. */
+export async function ojoPost(path: string, body: unknown): Promise<Response> {
+  return fetch(`${OJO_BASE}/${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Ojo-Token": OJO_TOKEN },
+    body: JSON.stringify(body ?? {}),
+    cache: "no-store",
+    signal: AbortSignal.timeout(20000),
+  });
+}
