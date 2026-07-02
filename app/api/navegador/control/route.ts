@@ -5,61 +5,13 @@ export const dynamic = "force-dynamic";
 // Control del navegador visible (Chrome 138 vía VNC) en el contenedor
 // docker 'vulcano-browser' de Hetzner. Se maneja con CDP (puerto 9222
 // DENTRO del contenedor) a través del relay Hetzner /brain/exec.
+// Helpers compartidos con el bucle ver→arreglar→verificar en lib/forja/browser.ts.
 import { currentUser } from "@clerk/nextjs/server";
 import { isOwnerUser } from "@/lib/auth/owner";
 import { NextResponse } from "next/server";
-
-const RELAY = "http://178.105.135.26";
-const SECRET = process.env.BRAIN_SECRET ?? "";
-const CONTAINER = "vulcano-browser";
-const CDP = "http://localhost:9222";
+import { CONTAINER, CDP, relayExec, safeHttpUrl, cdpControl } from "@/lib/forja/browser";
 
 type Action = "navigate" | "tabs" | "close" | "eval" | "click" | "type" | "read";
-
-/** Ejecuta un cmd en Hetzner vía el relay y devuelve el stdout (texto). */
-async function relayExec(cmd: string): Promise<string> {
-  const res = await fetch(`${RELAY}/brain/exec`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ secret: SECRET, cmd }),
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    throw new Error(`relay HTTP ${res.status}`);
-  }
-  const data = await res.json().catch(() => ({}));
-  // El relay devuelve el stdout en alguno de estos campos según versión.
-  const out =
-    (data?.stdout ?? data?.output ?? data?.result ?? data?.data ?? "") as unknown;
-  return typeof out === "string" ? out : JSON.stringify(out);
-}
-
-/** Acepta solo URLs http/https — evita inyección de comandos por la url. */
-function safeHttpUrl(raw: unknown): string | null {
-  if (typeof raw !== "string") return null;
-  const url = raw.trim();
-  if (!/^https?:\/\//i.test(url)) return null;
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
-    return parsed.toString();
-  } catch {
-    return null;
-  }
-}
-
-
-/** Llama al controlador CDP (cdp_control.py) dentro del contenedor con un comando JSON. */
-async function cdpControl(payload: Record<string, unknown>): Promise<unknown> {
-  const json = JSON.stringify(payload).replace(/'/g, "'\\''");
-  const cmd = `docker exec ${CONTAINER} python3 /home/kasm-user/cdp_control.py '${json}'`;
-  const stdout = await relayExec(cmd);
-  try {
-    return JSON.parse(stdout.trim());
-  } catch {
-    return { ok: false, raw: stdout };
-  }
-}
 
 export async function POST(req: Request) {
   // Auth: solo owners.
