@@ -17,8 +17,9 @@ Este repo es el código de la app vForge (la fábrica) y, por dogfooding, tambi�
 1. [`README.md`](./README.md) — qué es y cómo correrlo
 2. [`docs/playbook.md`](./docs/playbook.md) — cómo se construye, fases, modelo de las 3 capas
 3. [`docs/architecture.md`](./docs/architecture.md) — cómo funciona el cerebro Forge cuando esté autónomo
-4. [`docs/v0-prompt.md`](./docs/v0-prompt.md) — prompts exactos para v0.dev
-5. [`docs/decisions/`](./docs/decisions/) — Architecture Decision Records (ADRs)
+4. [`docs/assembler.md`](./docs/assembler.md) — spec ejecutable del VForge Assembler (Capa 2: V orquestando el swarm de agentes)
+5. [`docs/v0-prompt.md`](./docs/v0-prompt.md) — prompts exactos para v0.dev
+6. [`docs/decisions/`](./docs/decisions/) — Architecture Decision Records (ADRs)
 
 ---
 
