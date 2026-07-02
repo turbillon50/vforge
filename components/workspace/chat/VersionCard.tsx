@@ -17,6 +17,12 @@ type VersionMeta = {
   liked?: boolean | null;
 };
 
+const SHIP_ERRORS: Record<string, string> = {
+  connect_github: "Conecta tu GitHub en Integraciones para publicar.",
+  connect_vercel: "Conecta tu Vercel en Integraciones para publicar.",
+  no_files: "Esta versión no tiene archivos para publicar.",
+};
+
 export default function VersionCard({
   buildId,
   versionId,
@@ -37,7 +43,9 @@ export default function VersionCard({
   const [active, setActive] = useState<VersionMeta>({ id: versionId, n, summary });
   const [liked, setLiked] = useState(false);
   const [confirmShip, setConfirmShip] = useState(false);
-  const [shipped, setShipped] = useState(false);
+  const [shipping, setShipping] = useState(false);
+  const [shipped, setShipped] = useState<{ repoUrl: string; deployUrl: string | null } | null>(null);
+  const [shipError, setShipError] = useState<string | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [visible, setVisible] = useState(false);
   const frameHostRef = useRef<HTMLDivElement>(null);
@@ -99,15 +107,24 @@ export default function VersionCard({
 
   const ship = useCallback(async () => {
     setConfirmShip(false);
+    setShipping(true);
+    setShipError(null);
     try {
       const res = await fetch("/api/builder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "approve", versionId: active.id }),
       });
-      if (res.ok) setShipped(true);
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setShipped({ repoUrl: data.repo?.url ?? null, deployUrl: data.deploy?.url ?? null });
+      } else {
+        setShipError(SHIP_ERRORS[data.error] ?? "No se pudo publicar. Intenta de nuevo.");
+      }
     } catch {
-      /* best-effort */
+      setShipError("No se pudo publicar. Intenta de nuevo.");
+    } finally {
+      setShipping(false);
     }
   }, [active.id]);
 
@@ -184,7 +201,29 @@ export default function VersionCard({
 
       {/* Acciones */}
       <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5">
-        {confirmShip ? (
+        {shipped ? (
+          <div className="flex w-full animate-[fadeIn_0.4s_ease-out] flex-wrap items-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/[0.08] px-3 py-2 text-[13px] shadow-[0_0_24px_-8px_rgba(52,211,153,0.5)]">
+            <span className="text-emerald-300">✦ Publicado</span>
+            {shipped.deployUrl && (
+              <a
+                href={shipped.deployUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-9 items-center gap-1.5 rounded-lg bg-emerald-500/20 px-3 font-medium text-emerald-200 transition hover:bg-emerald-500/30"
+              >
+                Ver sitio en vivo ↗
+              </a>
+            )}
+            <a
+              href={shipped.repoUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex h-9 items-center gap-1.5 rounded-lg px-3 text-on-surface-variant transition hover:bg-[var(--surface-2)] hover:text-[var(--fg-primary)]"
+            >
+              Ver repo ↗
+            </a>
+          </div>
+        ) : confirmShip ? (
           <div className="flex items-center gap-2 rounded-xl bg-[var(--surface-1)] px-3 py-1.5 text-[13px] text-on-surface">
             ¿Publico la versión {active.n}?
             <button
@@ -201,6 +240,14 @@ export default function VersionCard({
             >
               No
             </button>
+          </div>
+        ) : shipping ? (
+          <div className="flex items-center gap-2 rounded-xl bg-[var(--surface-1)] px-3 py-2 text-[13px] text-on-surface-variant">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-400" />
+            </span>
+            Empujando a tu GitHub y desplegando en tu Vercel…
           </div>
         ) : (
           <>
@@ -219,11 +266,13 @@ export default function VersionCard({
             />
             <CardAction
               icon={<IconRocket size={14} />}
-              label={shipped ? "Lista para publicar" : "Publicar"}
-              active={shipped}
-              onClick={() => !shipped && setConfirmShip(true)}
+              label="Publicar"
+              onClick={() => setConfirmShip(true)}
             />
           </>
+        )}
+        {shipError && (
+          <p className="w-full text-[12px] text-red-300">{shipError}</p>
         )}
       </div>
 

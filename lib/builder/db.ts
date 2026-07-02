@@ -184,3 +184,18 @@ export async function approveVersion(
   );
   return rows[0] ?? null;
 }
+
+/** Marca el build como publicado de verdad: repo + deploy ya existen. */
+export async function markBuildShipped(
+  buildId: string,
+  info: { repo_full_name: string; vercel_project_id: string },
+): Promise<Build | null> {
+  await ensureTables();
+  const rows = await queryAll<Build>(
+    `UPDATE vforge_builds
+        SET repo_full_name = $2, vercel_project_id = $3, status = 'shipped', updated_at = now()
+      WHERE id = $1 RETURNING *`,
+    [buildId, info.repo_full_name, info.vercel_project_id],
+  );
+  return rows[0] ?? null;
+}

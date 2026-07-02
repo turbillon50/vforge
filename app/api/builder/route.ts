@@ -5,8 +5,9 @@
  * GET  ?buildId=...           → { build, versions }
  * POST { action, ... }        → feedback | like | approve
  *
- * approve hoy solo marca approved_version y devuelve { next: 'ship-pending' };
- * el pipeline repo+vercel llega después.
+ * approve publica de verdad: push del snapshot de archivos al GitHub del
+ * usuario (repo nuevo o commit encima del existente) + deploy directo a
+ * su Vercel. Ver lib/builder/ship.ts.
  */
 import { auth } from "@clerk/nextjs/server";
 import {
@@ -18,6 +19,7 @@ import {
   setFeedback,
   approveVersion,
 } from "@/lib/builder/db";
+import { shipBuildVersion } from "@/lib/builder/ship";
 import { saveUserMemory } from "@/lib/forge/user-memory";
 
 export const runtime = "nodejs";
@@ -95,17 +97,26 @@ export async function POST(req: Request) {
       return Response.json({ ok: true, version: v });
     }
     case "approve": {
-      const version = body.versionId ? await getVersion(body.versionId) : null;
+      let version = body.versionId ? await getVersion(body.versionId) : null;
       const buildId = body.buildId ?? version?.build_id;
       const n = body.n ?? version?.n;
       if (!buildId || typeof n !== "number") {
         return jsonError("buildId + n (o versionId) required", 400);
       }
+      if (!version) {
+        version = (await listVersions(buildId)).find((v) => v.n === n) ?? null;
+      }
       const build = await approveVersion(buildId, n);
       if (!build) return jsonError("build not found", 404);
-      // El pipeline real (repo GitHub + deploy Vercel) llega después;
-      // por ahora dejamos el build aprobado y avisamos al cliente.
-      return Response.json({ ok: true, build, next: "ship-pending" });
+      if (!version?.files?.length) {
+        return Response.json({ ok: false, build, error: "no_files" }, { status: 400 });
+      }
+      // Publica de verdad: push a GitHub del usuario + deploy a su Vercel.
+      const ship = await shipBuildVersion(uid, build, version.files);
+      if (!ship.ok) {
+        return Response.json({ ok: false, build, error: ship.error, detail: ship.detail }, { status: 400 });
+      }
+      return Response.json({ ok: true, build, repo: ship.repo, deploy: ship.deploy });
     }
     case "scaffold-request":
     case "deploy-request": {
