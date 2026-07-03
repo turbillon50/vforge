@@ -1,8 +1,9 @@
 "use client";
 export const dynamic = "force-dynamic";
-import { SignIn } from "@clerk/nextjs";
+import { SignIn, ClerkLoading, ClerkLoaded } from "@clerk/nextjs";
 import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
 import { ClerkPlaceholder } from "@/components/auth/ClerkPlaceholder";
+import ForgeLoader from "@/components/forge/ForgeLoader";
 
 const forgeAppearance = {
   variables: {
@@ -18,19 +19,11 @@ const forgeAppearance = {
   },
   elements: {
     rootBox: { width: "100%" },
-    card: {
-      background: "#ffffff",
-      border: "1px solid #e2e2e2",
-      boxShadow: "none",
-      borderRadius: "4px",
-    },
+    card: { background: "#ffffff", border: "1px solid #e2e2e2", boxShadow: "none", borderRadius: "4px" },
     headerTitle: { color: "#1b1b1b", fontFamily: "'Inter', sans-serif", fontWeight: 600 },
     headerSubtitle: { color: "#6B7280" },
     socialButtonsBlockButton: {
-      border: "1px solid #e2e2e2",
-      background: "#ffffff",
-      color: "#1b1b1b",
-      boxShadow: "none",
+      border: "1px solid #e2e2e2", background: "#ffffff", color: "#1b1b1b", boxShadow: "none",
       "&:hover": { background: "#f9f9f9" },
     },
     socialButtonsBlockButtonText: { color: "#1b1b1b", fontWeight: 500 },
@@ -38,18 +31,11 @@ const forgeAppearance = {
     dividerText: { color: "#6B7280" },
     formFieldLabel: { color: "#1b1b1b", fontWeight: 500 },
     formFieldInput: {
-      border: "1px solid #e2e2e2",
-      background: "#ffffff",
-      color: "#1b1b1b",
-      boxShadow: "none",
+      border: "1px solid #e2e2e2", background: "#ffffff", color: "#1b1b1b", boxShadow: "none",
       "&:focus": { border: "1px solid #1b1b1b", boxShadow: "none" },
     },
     formButtonPrimary: {
-      background: "#000000",
-      color: "#ffffff",
-      boxShadow: "none",
-      textTransform: "none",
-      fontWeight: 600,
+      background: "#000000", color: "#ffffff", boxShadow: "none", textTransform: "none", fontWeight: 600,
       "&:hover": { background: "#1b1b1b" },
     },
     footerActionText: { color: "#6B7280" },
@@ -82,7 +68,18 @@ export default function SignInPage() {
             Sign in to your workspace
           </p>
         </div>
-        {clerkEnabled ? <SignIn appearance={forgeAppearance} /> : <ClerkPlaceholder mode="sign-in" />}
+        {clerkEnabled ? (
+          <>
+            <ClerkLoading>
+              <ForgeLoader label="Access" />
+            </ClerkLoading>
+            <ClerkLoaded>
+              <SignIn appearance={forgeAppearance} />
+            </ClerkLoaded>
+          </>
+        ) : (
+          <ClerkPlaceholder mode="sign-in" />
+        )}
       </div>
     </div>
   );
