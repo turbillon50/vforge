@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 import { SignUp, ClerkLoading, ClerkLoaded } from "@clerk/nextjs";
 import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
 import { ClerkPlaceholder } from "@/components/auth/ClerkPlaceholder";
-import ForgeLoader from "@/components/forge/ForgeLoader";
 
 const forgeAppearance = {
   variables: {
@@ -35,7 +34,7 @@ const forgeAppearance = {
       "&:focus": { border: "1px solid #1b1b1b", boxShadow: "none" },
     },
     formButtonPrimary: {
-      background: "#000000", color: "#ffffff", boxShadow: "none", textTransform: "none", fontWeight: 600,
+      background: "#000000", color: "#ffffff", boxShadow: "none", textTransform: "none" as const, fontWeight: 600,
       "&:hover": { background: "#1b1b1b" },
     },
     footerActionText: { color: "#6B7280" },
@@ -71,7 +70,14 @@ export default function SignUpPage() {
         {clerkEnabled ? (
           <>
             <ClerkLoading>
-              <ForgeLoader label="Onboard" />
+              <div className="flex min-h-[40vh] w-full flex-col items-center justify-center gap-4" style={{ background: "#ffffff" }}>
+                <svg viewBox="0 0 24 24" width="34" height="34" className="animate-pulse" aria-hidden>
+                  <path d="M2 3h20L12 21z" fill="#000000" />
+                </svg>
+                <p className="text-[10px] uppercase" style={{ color: "#6B7280", fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.3em" }}>
+                  Loading
+                </p>
+              </div>
             </ClerkLoading>
             <ClerkLoaded>
               <SignUp appearance={forgeAppearance} />
