@@ -4,55 +4,85 @@ import { SignUp } from "@clerk/nextjs";
 import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
 import { ClerkPlaceholder } from "@/components/auth/ClerkPlaceholder";
 
+const forgeAppearance = {
+  variables: {
+    colorPrimary: "#000000",
+    colorText: "#1b1b1b",
+    colorTextSecondary: "#6B7280",
+    colorBackground: "#ffffff",
+    colorInputBackground: "#ffffff",
+    colorInputText: "#1b1b1b",
+    colorDanger: "#b91c1c",
+    borderRadius: "3px",
+    fontFamily: "'Inter', -apple-system, sans-serif",
+  },
+  elements: {
+    rootBox: { width: "100%" },
+    card: {
+      background: "#ffffff",
+      border: "1px solid #e2e2e2",
+      boxShadow: "none",
+      borderRadius: "4px",
+    },
+    headerTitle: { color: "#1b1b1b", fontFamily: "'Inter', sans-serif", fontWeight: 600 },
+    headerSubtitle: { color: "#6B7280" },
+    socialButtonsBlockButton: {
+      border: "1px solid #e2e2e2",
+      background: "#ffffff",
+      color: "#1b1b1b",
+      boxShadow: "none",
+      "&:hover": { background: "#f9f9f9" },
+    },
+    socialButtonsBlockButtonText: { color: "#1b1b1b", fontWeight: 500 },
+    dividerLine: { background: "#eeeeee" },
+    dividerText: { color: "#6B7280" },
+    formFieldLabel: { color: "#1b1b1b", fontWeight: 500 },
+    formFieldInput: {
+      border: "1px solid #e2e2e2",
+      background: "#ffffff",
+      color: "#1b1b1b",
+      boxShadow: "none",
+      "&:focus": { border: "1px solid #1b1b1b", boxShadow: "none" },
+    },
+    formButtonPrimary: {
+      background: "#000000",
+      color: "#ffffff",
+      boxShadow: "none",
+      textTransform: "none",
+      fontWeight: 600,
+      "&:hover": { background: "#1b1b1b" },
+    },
+    footerActionText: { color: "#6B7280" },
+    footerActionLink: { color: "#000000", fontWeight: 600 },
+    identityPreview: { border: "1px solid #e2e2e2" },
+    logoBox: { display: "none" },
+  },
+} as const;
+
 export default function SignUpPage() {
   const clerkEnabled = hasClerkPublishableKey();
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-5 py-16" style={{ background: "#000" }}>
-      {/* Mesh morado sutil — igual al global */}
-      <div className="pointer-events-none fixed inset-0" aria-hidden>
-        <div style={{
-          position: "absolute", top: "30%", left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: "600px", height: "400px",
-          background: "radial-gradient(ellipse, rgba(124,58,237,0.09) 0%, transparent 70%)",
-        }} />
-      </div>
-
+    <div
+      className="relative flex min-h-screen items-center justify-center px-5 py-16"
+      style={{ background: "#ffffff", fontFamily: "'Inter', -apple-system, sans-serif" }}
+    >
+      <div className="pointer-events-none fixed inset-x-0 top-0" style={{ height: "2px", background: "#000000" }} aria-hidden />
       <div className="relative z-10 w-full max-w-sm">
-        {/* Header encima del card */}
-        <div className="mb-7 text-center">
-          <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.2em]" style={{ color: "rgba(124,58,237,0.7)" }}>
-            VForge
+        <div className="mb-8 text-center">
+          <p
+            className="mb-2 text-[10px] uppercase"
+            style={{ color: "#6B7280", fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.28em" }}
+          >
+            Forge — Onboard
           </p>
-          <h1 className="font-display text-[1.6rem] font-bold" style={{ color: "#fff" }}>
-            Empieza gratis
+          <h1 className="text-[1.55rem] font-semibold" style={{ color: "#1b1b1b", letterSpacing: "-0.02em" }}>
+            Create your account
           </h1>
-          <p className="mt-1.5 text-[14px]" style={{ color: "rgba(255,255,255,0.35)" }}>
-            Crea tu cuenta y despierta a V
+          <p className="mt-1.5 text-[14px]" style={{ color: "#6B7280" }}>
+            Start building with Forge
           </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            {["Sin tarjeta", "Deploy en segundos", "+200 skills listas"].map((b) => (
-              <span
-                key={b}
-                className="flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[10px]"
-                style={{
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(255,255,255,0.02)",
-                  color: "rgba(255,255,255,0.4)",
-                }}
-              >
-                <span style={{ color: "#7c3aed" }}>✓</span> {b}
-              </span>
-            ))}
-          </div>
         </div>
-
-        {/* Clerk usa el appearance de ClerkShell — sin override local */}
-        {clerkEnabled ? (
-          <SignUp />
-        ) : (
-          <ClerkPlaceholder mode="sign-up" />
-        )}
+        {clerkEnabled ? <SignUp appearance={forgeAppearance} /> : <ClerkPlaceholder mode="sign-up" />}
       </div>
     </div>
   );
