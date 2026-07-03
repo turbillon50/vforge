@@ -5,8 +5,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const EL_KEY = process.env.ELEVENLABS_API_KEY || "";
-const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || "ewn5JTa3lNPY8QVuZJi6";
-const TTS_MODEL = process.env.ELEVENLABS_TTS_MODEL || "eleven_flash_v2_5";
+const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || "krBsgMV3f0K6YAouOTs9";
+const TTS_MODEL = process.env.ELEVENLABS_TTS_MODEL || "eleven_multilingual_v2";
 
 /**
  * POST /api/v/voice/tts
@@ -47,9 +47,9 @@ export async function POST(req: NextRequest) {
         model_id: TTS_MODEL,
         // Voz cálida y con chispa, sin perder claridad (vibe hermana genio).
         voice_settings: {
-          stability: 0.4,
-          similarity_boost: 0.8,
-          style: 0.35,
+          stability: 0.5,
+          similarity_boost: 0.75,
+          style: 0.3,
           use_speaker_boost: true,
         },
       }),

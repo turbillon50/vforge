@@ -50,10 +50,8 @@ const NAV = [
   { href:"/app/vulcano",       label:"Navegador",    Icon:IconGlobe,    kbd:"N" },
   { href:"/app/taller",      label:"Taller",        Icon:IconCpu,      kbd:"O" },
   { href:"/app/blueprint",   label:"Blueprint",     Icon:IconWorkflow, kbd:"B" },
-  { href:"/app/crm",         label:"CRM",           Icon:IconUsers,    kbd:"M" },
   { href:"/app/projects",    label:"Proyectos",     Icon:IconLayers,   kbd:"P" },
   { href:"/app/vault",       label:"Baul",          Icon:IconDatabase, kbd:"V" },
-  { href:"/app/contracts",   label:"Contratos",     Icon:IconFile,     kbd:"T" },
   { href:"/app/activity",    label:"Actividad",     Icon:IconActivity, kbd:"A" },
   { href:"/app/changelog",   label:"Changelog",     Icon:IconGithub,   kbd:"L" },
   { href:"/app/community",   label:"Community",     Icon:IconShare,    kbd:"K" },
@@ -95,8 +93,6 @@ const MORE_GROUPS: { title:string; items:{ href:string; label:string; desc:strin
   {
     title: "Clientes y Ventas",
     items: [
-      { href:"/app/crm",         label:"CRM",          desc:"Leads y pipeline de ventas",         Icon:IconUsers },
-      { href:"/app/contracts",   label:"Contratos",    desc:"Documentos legales automatizados",   Icon:IconFile },
       { href:"/app/marketplace", label:"Marketplace",  desc:"Plantillas y módulos reutilizables", Icon:IconBag },
       { href:"/app/community",  label:"Community",    desc:"Redes sociales · Revisión de posts",  Icon:IconShare },
     ],

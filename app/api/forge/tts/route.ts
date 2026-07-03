@@ -6,8 +6,8 @@ export const dynamic = "force-dynamic";
 const OPERATOR_USER_ID = "operator_luis";
 const EL_KEY = process.env.ELEVENLABS_API_KEY || "";
 // Voz fija de V — consistente en todas las conversaciones.
-// Override por env V_VOICE_ID. Default "Sarah" (EXAVITQu4vr4xnSDxMaL).
-const VOICE_ID = process.env.V_VOICE_ID || "EXAVITQu4vr4xnSDxMaL";
+// Override por env V_VOICE_ID. Default "Sarah" (krBsgMV3f0K6YAouOTs9).
+const VOICE_ID = process.env.V_VOICE_ID || "krBsgMV3f0K6YAouOTs9";
 const TTS_MODEL = process.env.ELEVENLABS_TTS_MODEL || "eleven_multilingual_v2";
 // ElevenLabs cobra por carácter; cortamos para no quemar cuota con respuestas largas.
 const MAX_CHARS = 2500;
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           text,
           model_id: TTS_MODEL,
-          voice_settings: { stability: 0.5, similarity_boost: 0.8, style: 0.1, use_speaker_boost: true },
+          voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.3, use_speaker_boost: true },
         }),
       },
     );

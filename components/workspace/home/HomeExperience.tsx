@@ -61,8 +61,6 @@ const ACTIONS = [
   { href: "/app/secrets",     label: "Nuevo secret",     icon: IconKey },
   { href: "/app/repovision",  label: "Ver repos",        icon: IconBranch },
   { href: "/app/deployments", label: "Deployments",      icon: IconRocket },
-  { href: "/app/contracts",   label: "Contratos",        icon: IconShield },
-  { href: "/app/crm",         label: "CRM",              icon: IconActivity },
 ];
 
 function eventIcon(action: string) {

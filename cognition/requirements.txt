@@ -1,2 +1,0 @@
-psycopg2-binary>=2.9
-# urllib (stdlib) cubre OpenRouter y Baileys; sin más dependencias a propósito.
