@@ -1,0 +1,21 @@
+{
+  "//": "Config aislada para pruebas node:test. Transpila SOLO los módulos puros del portal en vivo + los tests con el compilador TS ya presente (devDep), sin plugins de Next. Emite CommonJS a .test-dist para correr con `node --test`. Sin dependencias nuevas.",
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": false,
+    "outDir": ".test-dist",
+    "rootDir": ".",
+    "types": ["node"]
+  },
+  "include": [
+    "tests/**/*.ts",
+    "lib/projects/roles.ts",
+    "lib/projects/invite-token.ts"
+  ]
+}

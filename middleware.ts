@@ -22,6 +22,11 @@ const isTwilioWebhook = createRouteMatcher(["/api/v/voice/twilio(.*)"]);
 // Rutas MCP: Clerk NO debe validar el Bearer (son tokens vfmcp_* propios,
 // no JWTs de Clerk). El handler MCP hace su propia autenticación.
 const isMcpRoute = createRouteMatcher(["/api/mcp", "/api/mcp/(.*)", "/api/mcp/public", "/api/mcp/public/(.*)"]);
+// Portal en vivo del cliente: accesible a CUALQUIER usuario autenticado
+// (owner/reviewer/observer), no solo al owner de la plataforma. El gating fino
+// por proyecto y rol vive en la página (/app/live) y en /api/live/*, que
+// resuelven la membresía con fail-closed. Aquí solo exigimos sesión.
+const isLivePortal = createRouteMatcher(["/app/live(.*)", "/api/live(.*)"]);
 
 /**
  * Valida el operator token del header Authorization en el edge. Comparación de
@@ -78,133 +83,4 @@ const isProtected = createRouteMatcher([
   "/api/vault(.*)",
   "/api/admin(.*)",
   "/api/workspace(.*)",
-  "/api/billing(.*)",
-  "/api/v/bridge(.*)",
-  "/api/v/voice(.*)",
-]);
-
-// Rutas exclusivas del owner (Luis): V, su cockpit y sus productos.
-const isOwnerOnly = createRouteMatcher([
-  "/app(.*)",
-  "/forge(.*)",
-  "/v",
-  "/forja(.*)",
-  "/api/cockpit(.*)",
-  "/api/graph(.*)",
-  "/api/github(.*)",
-  "/api/stats(.*)",
-  "/api/forge(.*)",
-  "/api/builder(.*)",
-  "/api/vault(.*)",
-  "/api/admin(.*)",
-  "/api/projects(.*)",
-  "/api/v/bridge(.*)",
-]);
-
-async function resolveOwner(userId: string): Promise<boolean> {
-  const cached = getCachedOwner(userId);
-  if (cached !== null) return cached;
-  try {
-    const cc = await clerkClient();
-    const user = await cc.users.getUser(userId);
-    const owner = isOwnerUser(user);
-    setCachedOwner(userId, owner);
-    return owner;
-  } catch {
-    return false;
-  }
-}
-
-export default hasClerk
-  ? clerkMiddleware(async (auth, req) => {
-      // Auth dual en /api/admin: un operator token válido salta Clerk (el Bearer
-      // no es un JWT de Clerk, así que Clerk lo rechazaría con 401). Sin token
-      // válido, la ruta cae al control de Clerk de abajo (la UI usa su sesión).
-      if (isAdminRoute(req) && hasValidOperatorToken(req)) return;
-      // Webhooks de Twilio (llamada de voz a V): Twilio no pasa por Clerk; se
-      // autentican con X-Twilio-Signature dentro del propio handler.
-      if (isTwilioWebhook(req)) return;
-      // MCP endpoints: los tokens vfmcp_* y tokens OAuth propios NO son JWTs
-      // de Clerk. Clerk los rechaza con token-invalid. El handler MCP (/api/mcp)
-      // hace su propia autenticación interna. Dejar pasar siempre.
-      if (isMcpRoute(req)) return;
-      if (!isProtected(req)) return;
-      const { userId, sessionClaims, redirectToSignIn } = await auth();
-      const isApi = req.nextUrl.pathname.startsWith("/api");
-
-      if (!userId) {
-        if (isApi) {
-          return new NextResponse(JSON.stringify({ error: "unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-        // redirectToSignIn() de Clerk hace el handshake/refresh de token
-        // (a diferencia de un redirect manual, que dejaba al usuario CON
-        // sesion activa en un bucle /app <-> /sign-in). signInUrl="/sign-in"
-        // en clerkMiddleware (abajo) lo apunta a la pagina PROPIA, nunca al
-        // Account Portal hosteado accounts.vforge.site.
-        return redirectToSignIn({ returnBackUrl: req.url });
-      }
-
-      const claimRole = (
-        sessionClaims?.publicMetadata as { role?: string } | undefined
-      )?.role;
-
-      // --- Rutas API ---
-      // Solo las owner-only necesitan gating extra; el resto ya pasó el auth
-      // de arriba. El onboarding NO bloquea APIs (rompería /api/onboarding/*
-      // y /api/user/complete-onboarding, que el flujo necesita).
-      if (isApi) {
-        if (isOwnerOnly(req)) {
-          const owner =
-            claimRole === "owner" ? true : await resolveOwner(userId);
-          if (!owner) {
-            return new NextResponse(JSON.stringify({ error: "forbidden" }), {
-              status: 403,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-        }
-        return;
-      }
-
-      // --- Rutas de página: los 3 tipos de usuario ---
-      const owner = claimRole === "owner" ? true : await resolveOwner(userId);
-      const onOnboarding = req.nextUrl.pathname.startsWith("/onboarding");
-
-      // Tipo 1 — Owner (Luis/Jaime): acceso total a todo, nunca onboarding.
-      if (owner) {
-        if (onOnboarding) {
-          return NextResponse.redirect(new URL("/app/chat", req.url));
-        }
-        return;
-      }
-
-      // Tipo 2 — Cliente intentando entrar a una ruta exclusiva del owner
-      // (/app, /forge, /v): se le redirige a su propio workspace.
-      if (isOwnerOnly(req)) {
-        return NextResponse.redirect(new URL("/workspace", req.url));
-      }
-
-      // Tipo 2 — Cliente en su propio espacio: gate de onboarding.
-      //   sin onboarding  → /onboarding
-      //   con onboarding y cae en /onboarding → /workspace
-      const claimOnboard = (
-        sessionClaims?.publicMetadata as
-          | { onboardingComplete?: boolean }
-          | undefined
-      )?.onboardingComplete;
-      const onboarded = await resolveOnboardingComplete(userId, claimOnboard);
-      if (!onboarded && !onOnboarding && !req.nextUrl.pathname.startsWith("/workspace")) {
-        return NextResponse.redirect(new URL("/onboarding", req.url));
-      }
-      if (onboarded && onOnboarding) {
-        return NextResponse.redirect(new URL("/workspace", req.url));
-      }
-    }, { signInUrl: "/sign-in", signUpUrl: "/sign-up" })
-  : () => NextResponse.next();
-
-export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)", "/(api|trpc)(.*)"],
-};
+  "/

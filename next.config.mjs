@@ -5,9 +5,6 @@ const nextConfig = {
   turbopack: {
     root: import.meta.dirname,
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
     unoptimized: true,
   },
