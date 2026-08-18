@@ -186,7 +186,7 @@ export default function ProductHome() {
       </header>
 
       <main className="relative z-10">
-        <section className="mx-auto grid min-h-[calc(100vh-64px)] max-w-[1480px] items-center gap-14 px-5 py-16 sm:px-8 lg:grid-cols-[minmax(380px_.78fr)_minmax(640px_1.35fr)] lg:gap-12 lg:py-20">
+        <section className="mx-auto grid min-h-[calc(100vh-64px)] max-w-[1480px] items-center gap-14 px-5 py-16 sm:px-8 lg:grid-cols-[minmax(380px,0.78fr)_minmax(640px,1.35fr)] lg:gap-12 lg:py-20">
           <div className="max-w-xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/15 bg-cyan-300/[0.055] px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.22em] text-cyan-100/80">
               <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 motion-safe:animate-pulse" />
