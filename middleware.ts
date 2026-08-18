@@ -22,6 +22,11 @@ const isTwilioWebhook = createRouteMatcher(["/api/v/voice/twilio(.*)"]);
 // Rutas MCP: Clerk NO debe validar el Bearer (son tokens vfmcp_* propios,
 // no JWTs de Clerk). El handler MCP hace su propia autenticación.
 const isMcpRoute = createRouteMatcher(["/api/mcp", "/api/mcp/(.*)", "/api/mcp/public", "/api/mcp/public/(.*)"]);
+// Portal en vivo del cliente: accesible a CUALQUIER usuario autenticado
+// (owner/reviewer/observer), no solo al owner de la plataforma. El gating fino
+// por proyecto y rol vive en la página (/app/live) y en /api/live/*, que
+// resuelven la membresía con fail-closed. Aquí solo exigimos sesión.
+const isLivePortal = createRouteMatcher(["/app/live(.*)", "/api/live(.*)"]);
 
 /**
  * Valida el operator token del header Authorization en el edge. Comparación de
@@ -81,6 +86,7 @@ const isProtected = createRouteMatcher([
   "/api/billing(.*)",
   "/api/v/bridge(.*)",
   "/api/v/voice(.*)",
+  "/api/live(.*)",
 ]);
 
 // Rutas exclusivas del owner (Luis): V, su cockpit y sus productos.
@@ -178,6 +184,13 @@ export default hasClerk
         if (onOnboarding) {
           return NextResponse.redirect(new URL("/app/chat", req.url));
         }
+        return;
+      }
+
+      // Portal en vivo: cualquier sesión válida pasa el edge. La página y las
+      // APIs (/api/live/*) verifican la membresía real por proyecto y rol con
+      // fail-closed, así que no aplicamos owner-only ni el gate de onboarding.
+      if (isLivePortal(req)) {
         return;
       }
 
