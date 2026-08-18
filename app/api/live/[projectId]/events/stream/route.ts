@@ -1,6 +1,6 @@
 /**
- * BFF del portal en vivo — actividad del proyecto.
- * Clerk se resuelve aquí; Hetzner vuelve a validar el rol contra Neon.
+ * Proxy SSE autenticado. El browser conserva la sesión Clerk del mismo origen;
+ * solo el BFF conoce el token interno usado para llegar a Hetzner.
  */
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -12,6 +12,7 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 300;
 
 const noStore = { "Cache-Control": "no-store" };
 
@@ -26,7 +27,7 @@ export async function GET(
 
   const { projectId } = await params;
   const rawSince = req.nextUrl.searchParams.get("since");
-  let path = projectApiPath(projectId, "events");
+  let path = projectApiPath(projectId, "events/stream");
   if (rawSince) {
     const since = new Date(rawSince);
     if (Number.isNaN(since.getTime())) {
@@ -39,8 +40,21 @@ export async function GET(
   }
 
   try {
-    const upstream = await fetchVForgeApi(path, identity, { signal: req.signal });
-    return mirrorJsonResponse(upstream);
+    const upstream = await fetchVForgeApi(path, identity, {
+      headers: { Accept: "text/event-stream" },
+      signal: req.signal,
+    });
+    if (!upstream.ok || !upstream.body) return mirrorJsonResponse(upstream);
+
+    return new Response(upstream.body, {
+      status: 200,
+      headers: {
+        "Cache-Control": "no-cache, no-store",
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "X-Accel-Buffering": "no",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
   } catch {
     return NextResponse.json(
       { error: "service_unavailable" },

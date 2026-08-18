@@ -1,12 +1,8 @@
 /**
  * Helper CENTRAL de acceso al portal en vivo — SERVER ONLY.
  *
- * Resuelve el acceso de un usuario (por su sesión de Clerk) a un proyecto,
- * FALLANDO CERRADO: cualquier ausencia de sesión, email, membresía, expiración
- * o error → sin acceso (null). Aplica la jerarquía owner > reviewer > observer.
- *
- * Es la ÚNICA puerta de entrada que deben usar las páginas y los handlers del
- * portal (/app/live y /api/live/*). No confía en nada del cliente.
+ * Resuelve el acceso de un usuario a un proyecto, FALLANDO CERRADO ante
+ * cualquier ausencia de identidad, membresía, expiración o error.
  */
 import "server-only";
 import { currentUser } from "@clerk/nextjs/server";
@@ -25,8 +21,14 @@ export interface LiveAccess {
   email: string;
   name: string;
   role: LiveRole;
-  /** true si es owner de la PLATAFORMA (Luis/Jaime): acceso a cualquier proyecto. */
+  /** true si es owner de la PLATAFORMA (Luis/Jaime). */
   isPlatformOwner: boolean;
+}
+
+export interface LiveIdentity {
+  userId: string;
+  email: string;
+  name?: string | null;
 }
 
 function displayName(user: {
@@ -39,39 +41,31 @@ function displayName(user: {
 }
 
 /**
- * Resuelve el acceso del usuario actual al proyecto `projectId`.
- * Devuelve el contexto de acceso o null (fail-closed).
+ * Variante server-to-server. La identidad solo debe llegar después de validar
+ * VFORGE_API_INTERNAL_TOKEN; esta función vuelve a resolver el rol en la DB.
  */
-export async function resolveLiveAccess(
+export async function resolveLiveAccessForIdentity(
   projectId: string,
+  identity: LiveIdentity,
 ): Promise<LiveAccess | null> {
-  if (!projectId || typeof projectId !== "string") return null;
+  const cleanProjectId = projectId?.trim();
+  const userId = identity.userId?.trim();
+  const email = identity.email?.trim().toLowerCase();
+  const name = identity.name?.trim().slice(0, 160) || email;
 
-  let user: Awaited<ReturnType<typeof currentUser>> = null;
-  try {
-    user = await currentUser();
-  } catch {
-    return null; // sin runtime de auth → cerrado
-  }
-  if (!user) return null;
+  if (!cleanProjectId || !userId || !email || email.length > 320) return null;
 
-  const email = user.emailAddresses?.[0]?.emailAddress?.trim().toLowerCase();
-  if (!email) return null;
-
-  // Owner de la plataforma: acceso total a cualquier proyecto en vivo, sin
-  // necesidad de membresía. Mismo bypass que el resto del portal del cliente.
   if (isOwnerEmail(email)) {
     return {
-      projectId,
-      clerkUserId: user.id,
+      projectId: cleanProjectId,
+      clerkUserId: userId,
       email,
-      name: displayName(user, email),
+      name,
       role: "owner",
       isPlatformOwner: true,
     };
   }
 
-  // Membresía real del proyecto. resolveMembership aplica status + expiración.
   let row: MembershipRow | null = null;
   try {
     row = await queryOne<MembershipRow>(
@@ -79,36 +73,53 @@ export async function resolveLiveAccess(
          FROM project_live_members
         WHERE project_id = $1 AND lower(email) = lower($2)
         LIMIT 1`,
-      [projectId, email],
+      [cleanProjectId, email],
     );
   } catch {
-    return null; // error de DB → cerrado
+    return null;
   }
 
   const role = resolveMembership(row, new Date());
   if (!role) return null;
 
   return {
-    projectId,
-    clerkUserId: user.id,
+    projectId: cleanProjectId,
+    clerkUserId: userId,
     email,
-    name: displayName(user, email),
+    name,
     role,
     isPlatformOwner: false,
   };
 }
 
-/**
- * Igual que resolveLiveAccess pero exige un rol MÍNIMO (jerárquico). Devuelve
- * null si no hay acceso o el rol no alcanza. Úsalo en handlers que requieren
- * reviewer u owner.
- */
+/** Resuelve el acceso del usuario Clerk actual. */
+export async function resolveLiveAccess(
+  projectId: string,
+): Promise<LiveAccess | null> {
+  let user: Awaited<ReturnType<typeof currentUser>> = null;
+  try {
+    user = await currentUser();
+  } catch {
+    return null;
+  }
+  if (!user) return null;
+
+  const email = user.emailAddresses?.[0]?.emailAddress;
+  if (!email) return null;
+
+  return resolveLiveAccessForIdentity(projectId, {
+    userId: user.id,
+    email,
+    name: displayName(user, email),
+  });
+}
+
+/** Igual que resolveLiveAccess pero exige un rol mínimo. */
 export async function requireLiveAccess(
   projectId: string,
   minRole: LiveRole = "observer",
 ): Promise<LiveAccess | null> {
   const access = await resolveLiveAccess(projectId);
-  if (!access) return null;
-  if (!roleAtLeast(access.role, minRole)) return null;
+  if (!access || !roleAtLeast(access.role, minRole)) return null;
   return access;
 }

@@ -236,7 +236,19 @@ function Viewport({
 function ActivityFeed({ projectId }: { projectId: string }) {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [streamState, setStreamState] = useState<"connecting" | "live" | "reconnecting">(
+    "connecting",
+  );
   const sinceRef = useRef<string | null>(null);
+
+  const mergeEvents = useCallback((incoming: EventRow[]) => {
+    if (incoming.length === 0) return;
+    setEvents((prev) => {
+      const seen = new Set(prev.map((event) => event.id));
+      const fresh = incoming.filter((event) => !seen.has(event.id));
+      return [...fresh.reverse(), ...prev].slice(0, 60);
+    });
+  }, []);
 
   const poll = useCallback(async () => {
     try {
@@ -245,26 +257,54 @@ function ActivityFeed({ projectId }: { projectId: string }) {
         cache: "no-store",
       });
       if (!res.ok) return;
-      const data = (await res.json()) as { events: EventRow[] };
-      setLoaded(true);
+      const data = (await res.json()) as { events: EventRow[]; serverTime?: string };
       if (data.events.length > 0) {
         sinceRef.current = data.events[0].ts;
-        setEvents((prev) => {
-          const seen = new Set(prev.map((e) => e.id));
-          const fresh = data.events.filter((e) => !seen.has(e.id));
-          return [...fresh, ...prev].slice(0, 60);
-        });
+        mergeEvents([...data.events].reverse());
+      } else if (!sinceRef.current && data.serverTime) {
+        sinceRef.current = data.serverTime;
       }
     } catch {
       /* silencioso */
+    } finally {
+      setLoaded(true);
     }
-  }, [projectId]);
+  }, [mergeEvents, projectId]);
 
   useEffect(() => {
-    poll();
-    const t = setInterval(poll, 8000);
-    return () => clearInterval(t);
-  }, [poll]);
+    let cancelled = false;
+    let source: EventSource | null = null;
+
+    async function connect() {
+      await poll();
+      if (cancelled) return;
+
+      const qs = sinceRef.current
+        ? `?since=${encodeURIComponent(sinceRef.current)}`
+        : "";
+      source = new EventSource(`/api/live/${projectId}/events/stream${qs}`);
+      source.onopen = () => setStreamState("live");
+      source.onerror = () => setStreamState("reconnecting");
+      source.onmessage = (message) => {
+        try {
+          const data = JSON.parse(message.data) as { event?: EventRow };
+          if (!data.event) return;
+          sinceRef.current = data.event.ts;
+          mergeEvents([data.event]);
+        } catch {
+          /* ignora un frame inválido; EventSource sigue conectado */
+        }
+      };
+    }
+
+    void connect();
+    const fallback = setInterval(() => void poll(), 30_000);
+    return () => {
+      cancelled = true;
+      source?.close();
+      clearInterval(fallback);
+    };
+  }, [mergeEvents, poll, projectId]);
 
   return (
     <motion.div
@@ -278,7 +318,12 @@ function ActivityFeed({ projectId }: { projectId: string }) {
         title="Actividad en vivo"
         right={
           <span className="flex items-center gap-1 text-[10px] text-[var(--fg-muted)]">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> en vivo
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                streamState === "live" ? "bg-emerald-400" : "bg-amber-400"
+              }`}
+            />
+            {streamState === "live" ? "en vivo" : "conectando"}
           </span>
         }
       />
@@ -344,7 +389,9 @@ function CommentsPanel({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   useEffect(() => {
-    load();
+    void load();
+    const timer = setInterval(() => void load(), 8_000);
+    return () => clearInterval(timer);
   }, [load]);
 
   async function send() {
