@@ -171,14 +171,18 @@ function parsedSince(url) {
   if (!raw) return { ok: true, value: null };
   const date = new Date(raw);
   if (Number.isNaN(date.getTime())) return { ok: false, value: null };
-  return { ok: true, value: date.toISOString() };
+  return { ok: true, value: raw.trim() };
 }
 
 async function queryEvents(projectId, since, limit = 40, ascending = false) {
   const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
   if (since) {
     return sql.query(
-      `SELECT id, event_type, details, severity, ts
+      `SELECT id,
+              event_type,
+              details,
+              severity,
+              to_char(ts AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS ts
          FROM project_events
         WHERE project_id = $1 AND ts > $2
         ORDER BY ts ${ascending ? "ASC" : "DESC"}
@@ -187,7 +191,11 @@ async function queryEvents(projectId, since, limit = 40, ascending = false) {
     );
   }
   return sql.query(
-    `SELECT id, event_type, details, severity, ts
+    `SELECT id,
+            event_type,
+            details,
+            severity,
+            to_char(ts AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS ts
        FROM project_events
       WHERE project_id = $1
       ORDER BY ts ${ascending ? "ASC" : "DESC"}
@@ -278,7 +286,7 @@ async function streamEvents(req, res, projectId, url) {
       for (const event of events) {
         if (closed) break;
         res.write(`data: ${JSON.stringify({ event })}\n\n`);
-        cursor = new Date(event.ts).toISOString();
+        cursor = String(event.ts);
       }
     } catch (error) {
       console.error(
