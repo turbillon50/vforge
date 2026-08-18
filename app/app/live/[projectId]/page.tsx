@@ -1,13 +1,10 @@
 /**
- * /app/live/[projectId] — Portal en vivo del proyecto (server component).
+ * /app/live/[projectId] — portal en vivo del proyecto.
  *
- * Resuelve el acceso con el helper central (fail-closed). Si el usuario es
- * miembro (o platform owner) → renderiza el portal. Si no → gate que puede
- * aceptar una invitación (?invite=token). La membresía fina y el gating por
- * rol viven en el helper y en /api/live/*.
+ * La identidad se resuelve en el BFF de Next y los datos/roles se obtienen de
+ * la API propia de VForge en Hetzner. El token interno nunca llega al browser.
  */
-import { resolveLiveAccess } from "@/lib/projects/access";
-import { getProjectViewports } from "@/lib/projects/live-portal";
+import { loadVForgeLiveProject } from "@/lib/api/vforge-owned";
 import { LivePortal } from "@/components/live/LivePortal";
 import { LiveGate } from "@/components/live/LiveGate";
 
@@ -19,36 +16,11 @@ export default async function LivePortalPage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
+  const payload = await loadVForgeLiveProject(projectId);
 
-  const access = await resolveLiveAccess(projectId);
-  if (!access) {
+  if (!payload) {
     return <LiveGate projectId={projectId} />;
   }
 
-  const project = await getProjectViewports(projectId);
-  if (!project) {
-    return <LiveGate projectId={projectId} />;
-  }
-
-  // El viewport admin es solo para owner/reviewer: no serialices la URL hacia
-  // el cliente para un observer (defensa en profundidad, no solo ocultarlo en UI).
-  const canSeeAdmin = access.role === "owner" || access.role === "reviewer";
-
-  return (
-    <LivePortal
-      project={{
-        id: project.id,
-        name: project.name,
-        status: project.status,
-        desktop_url: project.desktop_url,
-        mobile_url: project.mobile_url,
-        admin_url: canSeeAdmin ? project.admin_url : null,
-      }}
-      me={{
-        name: access.name,
-        role: access.role,
-        isPlatformOwner: access.isPlatformOwner,
-      }}
-    />
-  );
+  return <LivePortal project={payload.project} me={payload.me} />;
 }
