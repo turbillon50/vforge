@@ -406,6 +406,21 @@ function methodNotAllowed(res, allowed) {
 
 async function handle(req, res) {
   const url = new URL(req.url || "/", "http://localhost");
+  if (url.pathname === "/") {
+    if (req.method !== "GET") {
+      methodNotAllowed(res, "GET");
+      return;
+    }
+    json(res, 200, {
+      service: "vforge-api",
+      status: "ok",
+      app: "https://vforge.site",
+      health: "https://api.vforge.site/api/v1/health",
+      version: "v1",
+    });
+    return;
+  }
+
   if (url.pathname === "/api/v1/health") {
     if (req.method !== "GET") {
       methodNotAllowed(res, "GET");
