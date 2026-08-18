@@ -36,7 +36,7 @@ export async function GET(
         { status: 400, headers: noStore },
       );
     }
-    path += `?since=${encodeURIComponent(since.toISOString())}`;
+    path += `?since=${encodeURIComponent(rawSince.trim())}`;
   }
 
   try {
