@@ -1,33 +1,51 @@
 /**
- * API portal en vivo — comentarios de un proyecto.
- *
- * Auth DENTRO del handler (requireLiveAccess, fail-closed). Cualquier miembro
- * activo (observer+) puede leer y comentar. Aislado por project_id.
- *
- *   GET  → lista comentarios (recientes primero).
- *   POST → crea un comentario. Body { body }. Valida tamaño.
+ * BFF de comentarios del portal en vivo.
+ * El browser nunca recibe credenciales de infraestructura ni acceso directo a
+ * Neon; la API propia vuelve a comprobar membresía y aislamiento por proyecto.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { requireLiveAccess } from "@/lib/projects/access";
-import { listComments, createComment } from "@/lib/projects/live-portal";
+import {
+  fetchVForgeApi,
+  getCurrentVForgeIdentity,
+  mirrorJsonResponse,
+  projectApiPath,
+} from "@/lib/api/vforge-owned";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const noStore = { "Cache-Control": "no-store" };
-const MAX_BODY = 4000;
+const maxBodyLength = 4_000;
+
+async function context(projectId: string) {
+  const identity = await getCurrentVForgeIdentity();
+  if (!identity) return null;
+  return { identity, path: projectApiPath(projectId, "comments") };
+}
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ projectId: string }> },
 ) {
   const { projectId } = await params;
-  const access = await requireLiveAccess(projectId);
-  if (!access) {
+  const requestContext = await context(projectId);
+  if (!requestContext) {
     return NextResponse.json({ error: "not_found" }, { status: 404, headers: noStore });
   }
-  const comments = await listComments(projectId);
-  return NextResponse.json({ comments }, { headers: noStore });
+
+  try {
+    const upstream = await fetchVForgeApi(
+      requestContext.path,
+      requestContext.identity,
+      { signal: req.signal },
+    );
+    return mirrorJsonResponse(upstream);
+  } catch {
+    return NextResponse.json(
+      { error: "service_unavailable" },
+      { status: 503, headers: noStore },
+    );
+  }
 }
 
 export async function POST(
@@ -35,29 +53,39 @@ export async function POST(
   { params }: { params: Promise<{ projectId: string }> },
 ) {
   const { projectId } = await params;
-  const access = await requireLiveAccess(projectId);
-  if (!access) {
+  const requestContext = await context(projectId);
+  if (!requestContext) {
     return NextResponse.json({ error: "not_found" }, { status: 404, headers: noStore });
   }
 
-  const payload = await req.json().catch(() => null);
-  const raw = (payload as Record<string, unknown> | null)?.body;
+  const payload: unknown = await req.json().catch(() => null);
+  const raw =
+    payload && typeof payload === "object"
+      ? (payload as Record<string, unknown>).body
+      : null;
   if (typeof raw !== "string" || !raw.trim()) {
     return NextResponse.json({ error: "empty" }, { status: 400, headers: noStore });
   }
-  if (raw.length > MAX_BODY) {
+  if (raw.length > maxBodyLength) {
     return NextResponse.json({ error: "too_long" }, { status: 413, headers: noStore });
   }
 
-  const comment = await createComment({
-    projectId,
-    authorEmail: access.email,
-    authorName: access.name,
-    authorClerkId: access.clerkUserId,
-    body: raw,
-  });
-  if (!comment) {
-    return NextResponse.json({ error: "empty" }, { status: 400, headers: noStore });
+  try {
+    const upstream = await fetchVForgeApi(
+      requestContext.path,
+      requestContext.identity,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: raw }),
+        signal: req.signal,
+      },
+    );
+    return mirrorJsonResponse(upstream);
+  } catch {
+    return NextResponse.json(
+      { error: "service_unavailable" },
+      { status: 503, headers: noStore },
+    );
   }
-  return NextResponse.json({ comment }, { status: 201, headers: noStore });
 }
