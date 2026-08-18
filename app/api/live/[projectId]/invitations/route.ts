@@ -77,4 +77,22 @@ export async function POST(
     typeof ttlHours === "number" && Number.isFinite(ttlHours) ? ttlHours : undefined;
 
   try {
-    const { invitation, token } =
+    const { invitation, token } = await createInvitation({
+      projectId,
+      email: email.trim(),
+      role: cleanRole,
+      invitedBy: access.email,
+      ttlHours: cleanTtl,
+    });
+
+    const origin = req.nextUrl.origin;
+    const acceptUrl = `${origin}/app/live/${encodeURIComponent(projectId)}?invite=${encodeURIComponent(token)}`;
+
+    return NextResponse.json(
+      { invitation, token, acceptUrl },
+      { status: 201, headers: noStore },
+    );
+  } catch {
+    return NextResponse.json({ error: "invite_failed" }, { status: 500, headers: noStore });
+  }
+}

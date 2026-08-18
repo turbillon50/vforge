@@ -50,4 +50,49 @@ CREATE TABLE IF NOT EXISTS project_live_members (
 CREATE UNIQUE INDEX IF NOT EXISTS uq_plm_project_email
   ON project_live_members (project_id, lower(email));
 CREATE INDEX IF NOT EXISTS idx_plm_project ON project_live_members (project_id);
-CREATE INDEX IF NOT EXI
+CREATE INDEX IF NOT EXISTS idx_plm_clerk   ON project_live_members (clerk_user_id);
+
+-- ----------------------------------------------------------------------------
+-- project_live_invitations — invitaciones seguras con token HASHEADO.
+--   · token_hash: SHA-256 (hex) del token en claro. El token en claro solo se
+--     devuelve UNA vez al crear la invitación; nunca se persiste.
+--   · expira (expires_at NOT NULL) y es de uso único (accepted_at NULL = sin
+--     usar; una vez aceptada no se puede reutilizar).
+--   · email: la invitación queda ligada a un correo — al aceptar se verifica
+--     que coincida con el de la sesión.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS project_live_invitations (
+  id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id     text NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  email          text NOT NULL,
+  role           text NOT NULL DEFAULT 'observer'
+                   CHECK (role IN ('owner','reviewer','observer')),
+  token_hash     text NOT NULL,
+  invited_by     text,
+  created_at     timestamptz NOT NULL DEFAULT now(),
+  expires_at     timestamptz NOT NULL,
+  accepted_at    timestamptz,
+  accepted_by    text,
+  revoked_at     timestamptz
+);
+-- El hash del token es único a nivel global (localiza la invitación al aceptar).
+CREATE UNIQUE INDEX IF NOT EXISTS uq_pli_token_hash
+  ON project_live_invitations (token_hash);
+CREATE INDEX IF NOT EXISTS idx_pli_project ON project_live_invitations (project_id);
+CREATE INDEX IF NOT EXISTS idx_pli_email   ON project_live_invitations (project_id, lower(email));
+
+-- ----------------------------------------------------------------------------
+-- project_comments — comentarios por proyecto dentro del portal en vivo.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS project_comments (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id      text NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  author_clerk_id text,
+  author_email    text NOT NULL,
+  author_name     text,
+  body            text NOT NULL CHECK (char_length(body) BETWEEN 1 AND 4000),
+  created_at      timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_pc_project ON project_comments (project_id, created_at DESC);
+
+SELECT 'migracion 024 (live portal) OK' AS resultado;

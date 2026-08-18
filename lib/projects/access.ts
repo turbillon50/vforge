@@ -101,4 +101,14 @@ export async function resolveLiveAccess(
 /**
  * Igual que resolveLiveAccess pero exige un rol MÍNIMO (jerárquico). Devuelve
  * null si no hay acceso o el rol no alcanza. Úsalo en handlers que requieren
- * r
+ * reviewer u owner.
+ */
+export async function requireLiveAccess(
+  projectId: string,
+  minRole: LiveRole = "observer",
+): Promise<LiveAccess | null> {
+  const access = await resolveLiveAccess(projectId);
+  if (!access) return null;
+  if (!roleAtLeast(access.role, minRole)) return null;
+  return access;
+}

@@ -100,4 +100,30 @@ export type InvitationCheck =
   | { ok: false; reason: "expired" | "used" | "revoked" | "email_mismatch" | "invalid" };
 
 /**
- * Valida de forma PURA si una inv
+ * Valida de forma PURA si una invitación puede aceptarse por `sessionEmail`
+ * en el instante `now`. Fail-closed: cualquier ambigüedad → not ok.
+ */
+export function checkInvitation(
+  row: InvitationRow | null | undefined,
+  sessionEmail: string,
+  now: Date = new Date(),
+): InvitationCheck {
+  if (!row || !isLiveRole(row.role)) return { ok: false, reason: "invalid" };
+  if (row.revoked_at != null) return { ok: false, reason: "revoked" };
+  if (row.accepted_at != null) return { ok: false, reason: "used" };
+
+  const exp = row.expires_at instanceof Date
+    ? row.expires_at
+    : new Date(row.expires_at);
+  if (Number.isNaN(exp.getTime()) || exp.getTime() <= now.getTime()) {
+    return { ok: false, reason: "expired" };
+  }
+
+  const invited = (row.email ?? "").trim().toLowerCase();
+  const session = (sessionEmail ?? "").trim().toLowerCase();
+  if (!invited || !session || invited !== session) {
+    return { ok: false, reason: "email_mismatch" };
+  }
+
+  return { ok: true, role: row.role };
+}

@@ -98,3 +98,102 @@ export function InvitePanel({ projectId }: { projectId: string }) {
       /* clipboard bloqueado */
     }
   }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ease: [0.22, 1, 0.36, 1] }}
+      className="rounded-2xl border border-[var(--border-1)] bg-[#0a0a12] p-4"
+    >
+      <div className="mb-3 flex items-center gap-2 text-violet-300">
+        <IconUsers size={14} />
+        <span className="text-[13px] font-semibold text-[var(--fg-primary)]">
+          Invitaciones
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="correo@cliente.com"
+          className="w-full rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5 text-[13px] text-white placeholder-white/25 outline-none focus:border-violet-500/50"
+        />
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value as LiveRole)}
+          className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5 text-[13px] text-white outline-none focus:border-violet-500/50"
+        >
+          {ROLES.map((r) => (
+            <option key={r.value} value={r.value} className="bg-[#0a0a12]">
+              {r.label}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={create}
+          disabled={busy || !email.trim()}
+          className="flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 px-4 py-2.5 text-[13px] font-semibold text-white transition active:scale-95 disabled:opacity-40"
+        >
+          {busy ? <IconLoader size={14} className="animate-spin" /> : <IconPlus size={14} />}
+          Invitar
+        </button>
+      </div>
+      {error && <p className="mt-2 text-[11px] text-red-300">{error}</p>}
+
+      {lastLink && (
+        <div className="mt-3 rounded-xl border border-violet-500/25 bg-violet-500/10 p-3">
+          <p className="mb-1.5 text-[11px] text-violet-200">
+            Link de invitación (se muestra una sola vez):
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="min-w-0 flex-1 truncate rounded-lg bg-black/40 px-2.5 py-1.5 text-[11px] text-violet-100">
+              {lastLink}
+            </code>
+            <button
+              onClick={copyLink}
+              className="flex shrink-0 items-center gap-1 rounded-lg border border-violet-500/30 px-2.5 py-1.5 text-[11px] text-violet-200 transition active:scale-95"
+            >
+              {copied ? <IconCheck size={12} /> : <IconCopy size={12} />}
+              {copied ? "Copiado" : "Copiar"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-3 space-y-2">
+        {invitations.length === 0 ? (
+          <p className="py-3 text-center text-[12px] text-[var(--fg-muted)]">
+            Sin invitaciones.
+          </p>
+        ) : (
+          invitations.map((inv) => {
+            const st = inviteState(inv);
+            return (
+              <div
+                key={inv.id}
+                className="flex items-center justify-between rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-[12px] font-medium text-[var(--fg-primary)]">
+                    {inv.email}
+                  </p>
+                  <p className="text-[10px] text-[var(--fg-muted)]">
+                    {ROLES.find((r) => r.value === inv.role)?.label ?? inv.role}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${st.cls}`}
+                >
+                  {st.label}
+                </span>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </motion.div>
+  );
+}

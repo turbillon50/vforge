@@ -93,4 +93,35 @@ test("checkInvitation: happy path", () => {
   assert.deepEqual(r, { ok: true, role: "reviewer" });
 });
 
-test("checkInvitation: 
+test("checkInvitation: email mismatch", () => {
+  const r = checkInvitation(
+    { role: "reviewer", email: "a@test.com", expires_at: future, accepted_at: null },
+    "b@test.com",
+    NOW,
+  );
+  assert.deepEqual(r, { ok: false, reason: "email_mismatch" });
+});
+
+test("checkInvitation: expired / used / revoked / invalid", () => {
+  assert.equal(
+    checkInvitation({ role: "owner", email: "a@t.com", expires_at: past, accepted_at: null }, "a@t.com", NOW).ok,
+    false,
+  );
+  assert.deepEqual(
+    checkInvitation({ role: "owner", email: "a@t.com", expires_at: future, accepted_at: future }, "a@t.com", NOW),
+    { ok: false, reason: "used" },
+  );
+  assert.deepEqual(
+    checkInvitation(
+      { role: "owner", email: "a@t.com", expires_at: future, accepted_at: null, revoked_at: past },
+      "a@t.com",
+      NOW,
+    ),
+    { ok: false, reason: "revoked" },
+  );
+  assert.deepEqual(
+    checkInvitation({ role: "nope", email: "a@t.com", expires_at: future, accepted_at: null }, "a@t.com", NOW),
+    { ok: false, reason: "invalid" },
+  );
+  assert.deepEqual(checkInvitation(null, "a@t.com", NOW), { ok: false, reason: "invalid" });
+});
