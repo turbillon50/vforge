@@ -17,9 +17,9 @@ const hanken = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "VForge — Construye y opera productos completos con una conversación",
+  title: "VForge — Proyectos en vivo, frente a todos",
   description:
-    "VForge es un workspace operativo nativo de IA. Crea apps, genera frontend y backend, despliega y orquesta cada servicio conversando con V.",
+    "Visor privado para revisar desktop, móvil y administración al mismo tiempo, con actividad, comentarios e invitados por proyecto.",
   applicationName: "VForge",
   manifest: "/manifest.webmanifest",
   icons: {
@@ -31,18 +31,15 @@ export const metadata: Metadata = {
   },
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "VForge" },
   openGraph: {
-    title: "VForge — Opera productos con una conversación",
+    title: "VForge — Proyectos en vivo, frente a todos",
     description:
-      "Un workspace operativo nativo de IA. Frontend, backend, deployments, integraciones e infraestructura — orquestados por V.",
+      "Revisa cada proyecto en desktop, móvil y administración desde una sola vista privada.",
     type: "website",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0a0814" },
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-  ],
+  themeColor: "#030306",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
