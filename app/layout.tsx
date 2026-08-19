@@ -1,15 +1,25 @@
 import type { Metadata, Viewport } from "next";
+import { Hanken_Grotesk } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { ClerkShell } from "@/components/auth/ClerkShell";
 import { RegisterSW } from "@/components/pwa/RegisterSW";
 import { AppProviders } from "@/i18n/AppProviders";
+import { ThemeBootScript } from "@/components/ThemeBootScript";
+import SplashScreen from "@/components/SplashScreen";
+
+const hanken = Hanken_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-hanken",
+  display: "swap",
+  weight: ["300", "400", "500", "600"],
+});
 
 export const metadata: Metadata = {
-  title: "VForge — Todo el proyecto, en una sola mirada",
+  title: "VForge — Proyectos en vivo, frente a todos",
   description:
-    "Una sala privada para revisar desktop, móvil y administración en tiempo real con clientes y equipo.",
+    "Visor privado para revisar desktop, móvil y administración al mismo tiempo, con actividad, comentarios e invitados por proyecto.",
   applicationName: "VForge",
   manifest: "/manifest.webmanifest",
   icons: {
@@ -21,15 +31,15 @@ export const metadata: Metadata = {
   },
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "VForge" },
   openGraph: {
-    title: "VForge — Todo el proyecto, en una sola mirada",
+    title: "VForge — Proyectos en vivo, frente a todos",
     description:
-      "Revisa desktop, móvil y administración desde una sola sala privada.",
+      "Revisa cada proyecto en desktop, móvil y administración desde una sola vista privada.",
     type: "website",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f4f1ea",
+  themeColor: "#030306",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -44,11 +54,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="es"
-      data-theme="light"
-      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      data-theme="dark"
+      className={`${GeistSans.variable} ${GeistMono.variable} ${hanken.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-dvh font-sans">
+      <head>
+        <ThemeBootScript />
+      </head>
+      <body className="font-sans bg-void text-on-surface min-h-dvh scanlines">
+        <SplashScreen />
         <AppProviders>
           <ClerkShell>{children}</ClerkShell>
         </AppProviders>
