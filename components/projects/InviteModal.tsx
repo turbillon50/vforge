@@ -42,10 +42,10 @@ export interface Member {
 
 /** Scopes de acceso (cara visible). key = lo que espera /api/invitations. */
 export const SCOPES = [
-  { key: "cliente", label: "Cliente", sub: "Solo lectura", Icon: IconEye, color: "#8b5cf6" },
-  { key: "colaborador", label: "Colaborador", sub: "Edición", Icon: IconPen, color: "#a78bfa" },
-  { key: "admin", label: "Admin", sub: "Control total", Icon: IconShield, color: "#34d399" },
-  { key: "invitado", label: "Invitado", sub: "Vista demo", Icon: IconRocket, color: "#f59e0b" },
+  { key: "cliente", label: "Cliente", sub: "Solo lectura", Icon: IconEye, color: "#ff5c35" },
+  { key: "colaborador", label: "Colaborador", sub: "Edición", Icon: IconPen, color: "#6270c8" },
+  { key: "admin", label: "Admin", sub: "Control total", Icon: IconShield, color: "#3f9464" },
+  { key: "invitado", label: "Invitado", sub: "Vista demo", Icon: IconRocket, color: "#bd7b25" },
 ] as const;
 
 export function scopeLabel(scope?: string | null): string {
@@ -62,7 +62,7 @@ export function scopeLabel(scope?: string | null): string {
 }
 
 export function scopeColor(scope?: string | null): string {
-  return SCOPES.find((s) => s.key === scope)?.color ?? "#8b5cf6";
+  return SCOPES.find((s) => s.key === scope)?.color ?? "#ff5c35";
 }
 
 function initialOf(member: Member): string {
@@ -82,14 +82,14 @@ export function MemberStack({ members, max = 4 }: { members: Member[]; max?: num
         <span
           key={m.id}
           title={`${m.contact || m.email} · ${scopeLabel(m.scope)}`}
-          className="flex h-6 w-6 items-center justify-center rounded-full border border-[#0e0e16] text-[10px] font-semibold text-white"
+          className="flex h-6 w-6 items-center justify-center rounded-full border border-[#fbfaf7] text-[10px] font-semibold text-white"
           style={{ backgroundColor: scopeColor(m.scope) + "cc" }}
         >
           {initialOf(m)}
         </span>
       ))}
       {extra > 0 && (
-        <span className="flex h-6 w-6 items-center justify-center rounded-full border border-[#0e0e16] bg-white/10 text-[10px] font-semibold text-muted">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full border border-[#fbfaf7] bg-[#ebe7df] text-[10px] font-semibold text-[#625e56]">
           +{extra}
         </span>
       )}
@@ -208,7 +208,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           onClick={onClose}
-          className="fixed inset-0 z-[120] flex items-end justify-center bg-black/70 backdrop-blur-md md:items-center md:p-6"
+          className="fixed inset-0 z-[120] flex items-end justify-center bg-[#1b1a17]/35 backdrop-blur-sm md:items-center md:p-6"
         >
           <motion.div
             role="dialog"
@@ -218,18 +218,15 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ duration: 0.32, ease: EASE }}
             onClick={(e) => e.stopPropagation()}
-            className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-[var(--border-1)] bg-[#0e0e16] shadow-2xl md:rounded-3xl"
+            className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-[24px] border border-[#d9d4c9] bg-[#fbfaf7] shadow-[0_24px_80px_rgba(36,31,25,.18)] md:rounded-[24px]"
           >
-            {/* Sheen */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-
             {/* Header */}
             <div className="flex items-start justify-between gap-3 border-b border-[var(--border-1)] px-5 py-4 md:px-6">
               <div className="min-w-0">
-                <p className="font-mono text-[10px] uppercase tracking-widest text-violet-400">
+                <p className="text-xs font-medium text-[#ff5c35]">
                   Invitar al proyecto
                 </p>
-                <h2 className="mt-0.5 truncate font-display text-lg font-semibold text-on-surface">
+                <h2 className="mt-1 truncate font-display text-xl font-semibold tracking-[-0.035em] text-on-surface">
                   {project.name}
                 </h2>
               </div>
@@ -245,7 +242,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
             <div className="space-y-5 px-5 py-5 md:px-6">
               {/* Método de contacto */}
               <div>
-                <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted">
+                <p className="mb-2 text-xs font-medium text-muted">
                   Cómo lo contactamos
                 </p>
                 <div className="grid grid-cols-2 gap-2">
@@ -277,10 +274,10 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
 
               {/* Campo de contacto */}
               <div>
-                <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted">
+                <p className="mb-2 text-xs font-medium text-muted">
                   {method === "whatsapp" ? "Número de WhatsApp" : "Correo electrónico"}
                 </p>
-                <div className="flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-[#0a0a0f] px-3 py-2.5 focus-within:border-violet-500/50">
+                <div className="flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-white px-3 py-2.5 focus-within:border-[#ff5c35]">
                   {method === "whatsapp" ? (
                     <IconChat size={16} className="shrink-0 text-muted" />
                   ) : (
@@ -309,7 +306,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
 
               {/* Scope */}
               <div>
-                <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted">
+                <p className="mb-2 text-xs font-medium text-muted">
                   Nivel de acceso (scope)
                 </p>
                 <div className="grid grid-cols-2 gap-2">
@@ -361,7 +358,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
               <button
                 onClick={send}
                 disabled={!canSend}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-violet-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:from-violet-400 hover:to-violet-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-[#1b1a17] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#ff5c35] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {sending ? (
                   <>
@@ -386,7 +383,7 @@ export default function InviteModal({ project, open, onClose, onMembersChange }:
               <div className="border-t border-[var(--border-1)] pt-4">
                 <div className="mb-3 flex items-center gap-2">
                   <IconUsers size={14} className="text-muted" />
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
+                  <p className="text-xs font-medium text-muted">
                     Participantes {members.length > 0 && `(${members.length})`}
                   </p>
                 </div>
