@@ -1,7 +1,17 @@
 "use client";
-
+/**
+ * Panel de invitaciones (solo owner) — crea invitaciones seguras y lista las
+ * existentes. El token en claro se muestra UNA sola vez tras crearla.
+ */
 import { useCallback, useEffect, useState } from "react";
-import { Check, Copy, LoaderCircle, Plus, Users } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  IconUsers,
+  IconPlus,
+  IconLoader,
+  IconCopy,
+  IconCheck,
+} from "@/components/brand/VFIcons";
 import type { LiveRole } from "@/lib/projects/roles";
 
 interface Invitation {
@@ -14,17 +24,18 @@ interface Invitation {
   revoked_at: string | null;
 }
 
-const ROLES: Array<{ value: LiveRole; label: string }> = [
+const ROLES: { value: LiveRole; label: string }[] = [
   { value: "observer", label: "Observador" },
   { value: "reviewer", label: "Revisor" },
-  { value: "owner", label: "Propietario" },
+  { value: "owner", label: "Owner" },
 ];
 
-function inviteState(invitation: Invitation) {
-  if (invitation.revoked_at) return { label: "Revocada", className: "bg-[#ebe7df] text-[#777168]" };
-  if (invitation.accepted_at) return { label: "Aceptada", className: "bg-[#dff0e5] text-[#28704a]" };
-  if (new Date(invitation.expires_at).getTime() <= Date.now()) return { label: "Expirada", className: "bg-[#f6e9cf] text-[#8a6218]" };
-  return { label: "Pendiente", className: "bg-[#fff0eb] text-[#b94327]" };
+function inviteState(inv: Invitation): { label: string; cls: string } {
+  if (inv.revoked_at) return { label: "Revocada", cls: "bg-white/[0.06] text-[var(--fg-muted)]" };
+  if (inv.accepted_at) return { label: "Aceptada", cls: "bg-emerald-500/15 text-emerald-300" };
+  if (new Date(inv.expires_at).getTime() <= Date.now())
+    return { label: "Expirada", cls: "bg-amber-500/15 text-amber-300" };
+  return { label: "Pendiente", cls: "bg-violet-500/15 text-violet-200" };
 }
 
 export function InvitePanel({ projectId }: { projectId: string }) {
@@ -38,16 +49,20 @@ export function InvitePanel({ projectId }: { projectId: string }) {
 
   const load = useCallback(async () => {
     try {
-      const response = await fetch(`/api/live/${projectId}/invitations`, { cache: "no-store" });
-      if (!response.ok) return;
-      const data = (await response.json()) as { invitations: Invitation[] };
+      const res = await fetch(`/api/live/${projectId}/invitations`, {
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as { invitations: Invitation[] };
       setInvitations(data.invitations);
     } catch {
-      // El panel conserva la última lista disponible.
+      /* silencioso */
     }
   }, [projectId]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   async function create() {
     if (!email.trim() || busy) return;
@@ -55,13 +70,16 @@ export function InvitePanel({ projectId }: { projectId: string }) {
     setError("");
     setLastLink(null);
     try {
-      const response = await fetch(`/api/live/${projectId}/invitations`, {
+      const res = await fetch(`/api/live/${projectId}/invitations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), role }),
       });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) { setError("No se pudo crear la invitación."); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError("No se pudo crear la invitación.");
+        return;
+      }
       setEmail("");
       setLastLink(data.acceptUrl ?? null);
       await load();
@@ -77,40 +95,105 @@ export function InvitePanel({ projectId }: { projectId: string }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      setError("El navegador bloqueó el portapapeles.");
+      /* clipboard bloqueado */
     }
   }
 
   return (
-    <section className="rounded-[20px] border border-[#d9d4c9] bg-[#fbfaf7] p-5">
-      <div className="mb-4 flex items-center gap-2"><Users className="h-4 w-4" /><h2 className="text-sm font-semibold text-[#1b1a17]">Invitar a la sala</h2></div>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ease: [0.22, 1, 0.36, 1] }}
+      className="rounded-2xl border border-[var(--border-1)] bg-[#0a0a12] p-4"
+    >
+      <div className="mb-3 flex items-center gap-2 text-violet-300">
+        <IconUsers size={14} />
+        <span className="text-[13px] font-semibold text-[var(--fg-primary)]">
+          Invitaciones
+        </span>
+      </div>
+
       <div className="flex flex-col gap-2 sm:flex-row">
-        <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="cliente@correo.com" className="h-11 w-full rounded-full border border-[#d9d4c9] bg-white px-4 text-sm text-[#1b1a17] outline-none placeholder:text-[#aaa49b] focus:border-[#ff5c35]" />
-        <select value={role} onChange={(event) => setRole(event.target.value as LiveRole)} className="h-11 rounded-full border border-[#d9d4c9] bg-white px-4 text-sm text-[#1b1a17] outline-none focus:border-[#ff5c35]">
-          {ROLES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="correo@cliente.com"
+          className="w-full rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5 text-[13px] text-white placeholder-white/25 outline-none focus:border-violet-500/50"
+        />
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value as LiveRole)}
+          className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5 text-[13px] text-white outline-none focus:border-violet-500/50"
+        >
+          {ROLES.map((r) => (
+            <option key={r.value} value={r.value} className="bg-[#0a0a12]">
+              {r.label}
+            </option>
+          ))}
         </select>
-        <button onClick={create} disabled={busy || !email.trim()} className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-[#1b1a17] px-5 text-sm font-semibold text-white transition hover:bg-[#ff5c35] disabled:cursor-not-allowed disabled:opacity-40">{busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}Invitar</button>
+        <button
+          onClick={create}
+          disabled={busy || !email.trim()}
+          className="flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 px-4 py-2.5 text-[13px] font-semibold text-white transition active:scale-95 disabled:opacity-40"
+        >
+          {busy ? <IconLoader size={14} className="animate-spin" /> : <IconPlus size={14} />}
+          Invitar
+        </button>
       </div>
-      {error ? <p className="mt-2 text-xs text-[#a33925]">{error}</p> : null}
+      {error && <p className="mt-2 text-[11px] text-red-300">{error}</p>}
 
-      {lastLink ? (
-        <div className="mt-4 rounded-[15px] border border-[#f1b9aa] bg-[#fff2ed] p-3">
-          <p className="mb-2 text-xs font-medium text-[#8f3b27]">Este enlace se muestra una sola vez</p>
-          <div className="flex gap-2"><code className="min-w-0 flex-1 truncate rounded-[10px] bg-white px-3 py-2 text-xs text-[#625e56]">{lastLink}</code><button onClick={copyLink} className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] border border-[#e4a997] bg-white px-3 text-xs font-medium text-[#8f3b27]">{copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{copied ? "Copiado" : "Copiar"}</button></div>
+      {lastLink && (
+        <div className="mt-3 rounded-xl border border-violet-500/25 bg-violet-500/10 p-3">
+          <p className="mb-1.5 text-[11px] text-violet-200">
+            Link de invitación (se muestra una sola vez):
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="min-w-0 flex-1 truncate rounded-lg bg-black/40 px-2.5 py-1.5 text-[11px] text-violet-100">
+              {lastLink}
+            </code>
+            <button
+              onClick={copyLink}
+              className="flex shrink-0 items-center gap-1 rounded-lg border border-violet-500/30 px-2.5 py-1.5 text-[11px] text-violet-200 transition active:scale-95"
+            >
+              {copied ? <IconCheck size={12} /> : <IconCopy size={12} />}
+              {copied ? "Copiado" : "Copiar"}
+            </button>
+          </div>
         </div>
-      ) : null}
+      )}
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-        {invitations.length === 0 ? <p className="py-4 text-sm text-[#777168]">Aún no hay invitaciones.</p> : invitations.map((invitation) => {
-          const state = inviteState(invitation);
-          return (
-            <div key={invitation.id} className="flex items-center justify-between gap-3 rounded-[14px] border border-[#e3dfd6] bg-white p-3">
-              <div className="min-w-0"><p className="truncate text-sm font-medium text-[#1b1a17]">{invitation.email}</p><p className="mt-0.5 text-xs text-[#8a847a]">{ROLES.find((item) => item.value === invitation.role)?.label ?? invitation.role}</p></div>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium ${state.className}`}>{state.label}</span>
-            </div>
-          );
-        })}
+      <div className="mt-3 space-y-2">
+        {invitations.length === 0 ? (
+          <p className="py-3 text-center text-[12px] text-[var(--fg-muted)]">
+            Sin invitaciones.
+          </p>
+        ) : (
+          invitations.map((inv) => {
+            const st = inviteState(inv);
+            return (
+              <div
+                key={inv.id}
+                className="flex items-center justify-between rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-[12px] font-medium text-[var(--fg-primary)]">
+                    {inv.email}
+                  </p>
+                  <p className="text-[10px] text-[var(--fg-muted)]">
+                    {ROLES.find((r) => r.value === inv.role)?.label ?? inv.role}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${st.cls}`}
+                >
+                  {st.label}
+                </span>
+              </div>
+            );
+          })
+        )}
       </div>
-    </section>
+    </motion.div>
   );
 }

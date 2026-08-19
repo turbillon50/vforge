@@ -5,109 +5,178 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, useUser } from "@clerk/nextjs";
 import type { LucideIcon } from "lucide-react";
-import { Activity, Boxes, FolderKanban, Rocket } from "lucide-react";
-import { VWordmark } from "@/components/brand/VMark";
-import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
+import {
+  Activity,
+  FolderKanban,
+  PlugZap,
+  Rocket,
+  Settings,
+} from "lucide-react";
+import { VMark } from "@/components/brand/VMark";
 
-type NavItem = { href: string; label: string; short: string; Icon: LucideIcon };
+type NavItem = {
+  href: string;
+  label: string;
+  Icon: LucideIcon;
+};
 
 const navigation: NavItem[] = [
-  { href: "/app/projects", label: "Proyectos", short: "Proyectos", Icon: FolderKanban },
-  { href: "/app/activity", label: "Actividad", short: "Actividad", Icon: Activity },
-  { href: "/app/deployments", label: "Despliegues", short: "Deploys", Icon: Rocket },
-  { href: "/app/integrations", label: "Conexiones", short: "Conectar", Icon: Boxes },
+  { href: "/app/projects", label: "Proyectos", Icon: FolderKanban },
+  { href: "/app/activity", label: "Actividad", Icon: Activity },
+  { href: "/app/deployments", label: "Despliegues", Icon: Rocket },
+  { href: "/app/integrations", label: "Conexiones", Icon: PlugZap },
+  { href: "/app/settings", label: "Ajustes", Icon: Settings },
 ];
 
-function isActive(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`);
+function isActivePath(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(href + "/");
 }
 
-function routeTitle(pathname: string) {
-  if (pathname.startsWith("/app/live/")) return "Sala en vivo";
-  return navigation.find((item) => isActive(pathname, item.href))?.label ?? "VForge";
+function currentTitle(pathname: string): string {
+  if (pathname.startsWith("/app/live/")) return "Vista en vivo";
+  const item = navigation.find(({ href }) => isActivePath(pathname, href));
+  if (item) return item.label;
+
+  const routeTitle: Record<string, string> = {
+    "/app/chat": "Conversación",
+    "/app/taller": "Taller",
+    "/app/repovision": "RepoVisión",
+    "/app/blueprint": "Blueprint",
+    "/app/crm": "CRM",
+    "/app/contracts": "Contratos",
+    "/app/vault": "Baúl",
+    "/app/community": "Comunidad",
+    "/app/changelog": "Cambios",
+    "/app/admin": "Administración",
+  };
+
+  return routeTitle[pathname] ?? "VForge";
 }
 
-function DesktopNavItem({ item, pathname }: { item: NavItem; pathname: string }) {
-  const active = isActive(pathname, item.href);
+function NavLink({
+  item,
+  pathname,
+  mobile = false,
+}: {
+  item: NavItem;
+  pathname: string;
+  mobile?: boolean;
+}) {
+  const active = isActivePath(pathname, item.href);
   const { Icon } = item;
+
+  if (mobile) {
+    return (
+      <Link
+        href={item.href}
+        aria-label={item.label}
+        aria-current={active ? "page" : undefined}
+        className={
+          "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 py-2 text-[9px] transition " +
+          (active ? "text-cyan-100" : "text-white/32 hover:text-white/65")
+        }
+      >
+        {active ? <span className="absolute top-0 h-px w-8 bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,.8)]" /> : null}
+        <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2 : 1.6} />
+        <span className="max-w-full truncate px-1">{item.label}</span>
+      </Link>
+    );
+  }
+
   return (
-    <Link href={item.href} aria-current={active ? "page" : undefined} className={`group relative flex h-11 items-center gap-3 rounded-[12px] px-3 text-sm transition ${active ? "bg-[#f0ede6] font-medium text-[#1b1a17]" : "text-[#777168] hover:bg-[#f7f5ef] hover:text-[#1b1a17]"}`}>
-      {active ? <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-[#ff5c35]" /> : null}
-      <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2 : 1.7} />
-      <span>{item.label}</span>
+    <Link
+      href={item.href}
+      aria-label={item.label}
+      aria-current={active ? "page" : undefined}
+      className={
+        "group relative flex h-11 w-11 items-center justify-center rounded-xl border transition " +
+        (active
+          ? "border-cyan-300/15 bg-cyan-300/[0.075] text-cyan-100 shadow-[0_0_24px_rgba(34,211,238,.06)]"
+          : "border-transparent text-white/34 hover:border-white/[0.07] hover:bg-white/[0.03] hover:text-white/75")
+      }
+    >
+      <Icon className="h-[19px] w-[19px]" strokeWidth={active ? 2 : 1.65} />
+      <span className="pointer-events-none absolute left-[54px] z-50 whitespace-nowrap rounded-lg border border-white/[0.08] bg-[#0b0b11] px-2.5 py-1.5 text-[11px] font-medium text-white/75 opacity-0 shadow-xl transition group-hover:opacity-100">
+        {item.label}
+      </span>
     </Link>
   );
 }
 
 export default function ProductShell({ children }: { children: ReactNode }) {
-  if (!hasClerkPublishableKey()) {
-    return (
-      <ProductShellFrame
-        name="Mi cuenta"
-        accountControl={<span className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#1b1a17] text-xs font-semibold text-white">V</span>}
-      >
-        {children}
-      </ProductShellFrame>
-    );
-  }
-  return <AuthenticatedProductShell>{children}</AuthenticatedProductShell>;
-}
-
-function AuthenticatedProductShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname() ?? "";
   const { user } = useUser();
-  const name = user?.firstName || user?.fullName || user?.username || "Mi cuenta";
-  return (
-    <ProductShellFrame name={name} accountControl={<UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: { width: 34, height: 34 } } }} />}>
-      {children}
-    </ProductShellFrame>
-  );
-}
-
-function ProductShellFrame({ children, name, accountControl }: { children: ReactNode; name: string; accountControl: ReactNode }) {
-  const pathname = usePathname();
-  const liveRoute = pathname.startsWith("/app/live/");
+  const title = currentTitle(pathname);
+  const displayName =
+    user?.firstName ||
+    user?.username ||
+    user?.primaryEmailAddress?.emailAddress?.split("@")[0] ||
+    "Cuenta";
 
   return (
-    <div className="vf-studio min-h-dvh bg-[#f4f1ea] text-[#1b1a17]">
-      <div className="flex min-h-dvh">
-        <aside className="sticky top-0 hidden h-dvh w-[232px] shrink-0 flex-col border-r border-[#d9d4c9] bg-[#fbfaf7] px-4 py-5 md:flex">
-          <Link href="/app/projects" aria-label="Ir a proyectos" className="w-fit px-2 text-[#1b1a17]"><VWordmark /></Link>
-          <p className="mt-10 px-3 text-[11px] font-medium uppercase tracking-[0.12em] text-[#9a948a]">Espacio de trabajo</p>
-          <nav aria-label="VForge" className="mt-3 space-y-1">
-            {navigation.map((item) => <DesktopNavItem key={item.href} item={item} pathname={pathname} />)}
-          </nav>
+    <div className="min-h-screen bg-[#030306] text-white">
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 opacity-60"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 82% 4%, rgba(139,92,246,.065), transparent 24%), radial-gradient(circle at 26% 100%, rgba(34,211,238,.035), transparent 26%)",
+        }}
+      />
 
-          <div className="mt-auto border-t border-[#ded9cf] pt-4">
-            <div className="flex items-center gap-3 rounded-[14px] px-2 py-2">
-              {accountControl}
-              <div className="min-w-0"><p className="truncate text-sm font-medium text-[#1b1a17]">{name}</p><p className="mt-0.5 text-[11px] text-[#8a847a]">Propietario</p></div>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[76px] flex-col items-center border-r border-white/[0.06] bg-[#050509]/95 py-4 backdrop-blur-xl lg:flex">
+        <Link href="/app/projects" aria-label="VForge — Proyectos" className="flex h-10 w-10 items-center justify-center rounded-xl transition hover:bg-white/[0.04]">
+          <VMark size={22} glow />
+        </Link>
+
+        <nav aria-label="Navegación de VForge" className="mt-8 flex flex-1 flex-col items-center gap-2">
+          {navigation.map((item) => (
+            <NavLink key={item.href} item={item} pathname={pathname} />
+          ))}
+        </nav>
+
+        <div className="flex flex-col items-center gap-4">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,.7)]" title="Sistemas en línea" />
+          <UserButton />
+        </div>
+      </aside>
+
+      <header className="fixed inset-x-0 top-0 z-30 h-16 border-b border-white/[0.06] bg-[#030306]/88 backdrop-blur-2xl lg:left-[76px]">
+        <div className="flex h-full items-center justify-between gap-4 px-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <Link href="/app/projects" aria-label="VForge" className="lg:hidden">
+              <VMark size={21} />
+            </Link>
+            <span className="hidden text-[11px] font-medium uppercase tracking-[0.18em] text-white/25 sm:inline">
+              VForge
+            </span>
+            <span className="hidden h-3 w-px bg-white/10 sm:inline" />
+            <h1 className="truncate text-sm font-medium text-white/82">{title}</h1>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="hidden items-center gap-2 rounded-full border border-emerald-300/10 bg-emerald-300/[0.04] px-3 py-1.5 text-[9px] font-medium uppercase tracking-[0.14em] text-emerald-100/55 sm:flex">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 motion-safe:animate-pulse" />
+              Sistemas en línea
+            </div>
+            <span className="hidden max-w-32 truncate text-xs text-white/35 md:inline">
+              {displayName}
+            </span>
+            <div className="lg:hidden">
+              <UserButton />
             </div>
           </div>
-        </aside>
-
-        <div className="min-w-0 flex-1 pb-[74px] md:pb-0">
-          {!liveRoute ? (
-            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#d9d4c9] bg-[#f4f1ea]/92 px-5 backdrop-blur-xl sm:px-7 lg:px-9">
-              <div><p className="text-[11px] text-[#8a847a]">VForge</p><h1 className="mt-0.5 text-base font-semibold tracking-[-0.025em] text-[#1b1a17]">{routeTitle(pathname)}</h1></div>
-              <div className="flex items-center gap-2 text-xs text-[#777168]"><span className="h-2 w-2 rounded-full bg-[#58ad7b]" />Servicios conectados</div>
-            </header>
-          ) : null}
-          <main className="min-w-0">{children}</main>
         </div>
-      </div>
+      </header>
 
-      <nav aria-label="Navegación móvil" className="fixed inset-x-0 bottom-0 z-50 flex h-[74px] border-t border-[#d9d4c9] bg-[#fbfaf7]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
-        {navigation.map((item) => {
-          const active = isActive(pathname, item.href);
-          const { Icon } = item;
-          return (
-            <Link key={item.href} href={item.href} aria-label={item.label} aria-current={active ? "page" : undefined} className={`relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[9px] ${active ? "font-medium text-[#1b1a17]" : "text-[#8a847a]"}`}>
-              {active ? <span className="absolute top-0 h-0.5 w-8 rounded-full bg-[#ff5c35]" /> : null}
-              <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.1 : 1.7} />
-              <span className="max-w-full truncate px-1">{item.short}</span>
-            </Link>
-          );
-        })}
+      <main className="relative min-h-screen pb-24 pt-16 lg:ml-[76px] lg:pb-0">
+        {children}
+      </main>
+
+      <nav aria-label="Navegación móvil de VForge" className="fixed inset-x-0 bottom-0 z-40 flex h-[66px] border-t border-white/[0.07] bg-[#050509]/95 px-1 backdrop-blur-2xl lg:hidden">
+        {navigation.map((item) => (
+          <NavLink key={item.href} item={item} pathname={pathname} mobile />
+        ))}
       </nav>
     </div>
   );

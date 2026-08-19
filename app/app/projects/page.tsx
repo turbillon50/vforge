@@ -1,9 +1,24 @@
 "use client";
-
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ExternalLink, Github, Globe2, Plus, Search, Users, X } from "lucide-react";
-import InviteModal, { MemberStack, scopeColor, scopeLabel, type Member } from "@/components/projects/InviteModal";
+import { AnimatePresence, motion } from "framer-motion";
+import { PageHeader } from "@/components/workspace/PageHeader";
+import {
+  IconSparkles,
+  IconUsers,
+  IconPlus,
+  IconExtLink,
+  IconX,
+  IconCode,
+  IconGlobe,
+} from "@/components/brand/VFIcons";
+import { useT, interpolate } from "@/i18n/AppProviders";
+import InviteModal, {
+  MemberStack,
+  scopeLabel,
+  scopeColor,
+  type Member,
+} from "@/components/projects/InviteModal";
 
 interface RealProject {
   id: string;
@@ -17,10 +32,7 @@ interface RealProject {
   domain?: string | null;
 }
 
-type DisplayStatus = "live" | "preview" | "draft" | "archived";
-type FilterTab = "all" | Exclude<DisplayStatus, "archived">;
-
-const STATUS_FROM_CATEGORY: Record<string, DisplayStatus> = {
+const STATUS_FROM_CATEGORY: Record<string, "live" | "preview" | "draft" | "archived"> = {
   produccion: "live",
   activo: "preview",
   en_revision: "preview",
@@ -29,27 +41,26 @@ const STATUS_FROM_CATEGORY: Record<string, DisplayStatus> = {
   pendiente_borrado: "archived",
 };
 
-const STATUS_LABEL: Record<DisplayStatus, string> = {
-  live: "En vivo",
-  preview: "Preview",
-  draft: "Borrador",
-  archived: "Archivado",
-};
+const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-function initials(name: string) {
-  return name.split(/ +|-+|_+/).slice(0, 2).map((word) => word[0]?.toUpperCase() ?? "").join("");
+function initials(name: string): string {
+  return name
+    .split(/ +|-+|_+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
-function projectStatus(project: RealProject): DisplayStatus {
-  return STATUS_FROM_CATEGORY[project.category] ?? "draft";
+function nameToHue(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffff;
+  return h % 360;
 }
 
-function Status({ value }: { value: DisplayStatus }) {
-  const color = value === "live" ? "bg-[#4ca873]" : value === "preview" ? "bg-[#ff7b5d]" : "bg-[#aaa49b]";
-  return <span className="inline-flex items-center gap-2 text-xs text-[#625e56]"><span className={`h-2 w-2 rounded-full ${color}`} />{STATUS_LABEL[value]}</span>;
-}
+type FilterTab = "all" | "live" | "preview" | "draft";
 
 export default function ProjectsPage() {
+  const t = useT();
   const [projects, setProjects] = useState<RealProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,155 +71,359 @@ export default function ProjectsPage() {
   const [membersByProject, setMembersByProject] = useState<Record<string, Member[]>>({});
 
   const handleMembersChange = useCallback((projectId: string, members: Member[]) => {
-    setMembersByProject((current) => ({ ...current, [projectId]: members }));
+    setMembersByProject((prev) => ({ ...prev, [projectId]: members }));
   }, []);
 
   useEffect(() => {
     fetch("/api/projects", { cache: "no-store" })
-      .then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
       })
-      .then((data: { projects: RealProject[] }) => setProjects(data.projects ?? []))
-      .catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)))
+      .then((d: { projects: RealProject[] }) => setProjects(d.projects ?? []))
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (projects.length === 0) return;
     let cancelled = false;
-    void (async () => {
-      const entries = await Promise.all(projects.map(async (project) => {
-        try {
-          const response = await fetch(`/api/invitations?project_id=${encodeURIComponent(project.id)}`, { cache: "no-store" });
-          if (!response.ok) return null;
-          const data = (await response.json()) as { members: Member[] };
-          return [project.id, data.members ?? []] as const;
-        } catch {
-          return null;
-        }
-      }));
-      if (cancelled) return;
-      const next: Record<string, Member[]> = {};
-      for (const entry of entries) if (entry) next[entry[0]] = entry[1];
-      setMembersByProject(next);
+    (async () => {
+      await Promise.all(
+        projects.map(async (p) => {
+          try {
+            const r = await fetch(`/api/invitations?project_id=${encodeURIComponent(p.id)}`, { cache: "no-store" });
+            if (!r.ok) return;
+            const d = (await r.json()) as { members: Member[] };
+            if (!cancelled) setMembersByProject((prev) => ({ ...prev, [p.id]: d.members ?? [] }));
+          } catch { /* ignore */ }
+        }),
+      );
     })();
     return () => { cancelled = true; };
   }, [projects]);
 
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return projects.filter((project) => {
-      const matchesStatus = filter === "all" || projectStatus(project) === filter;
-      const matchesSearch = !query || project.name.toLowerCase().includes(query) || (project.domain ?? "").toLowerCase().includes(query);
-      return matchesStatus && matchesSearch;
-    });
-  }, [filter, projects, search]);
+  const filtered = projects.filter((p) => {
+    const matchTab =
+      filter === "all" ? true : (STATUS_FROM_CATEGORY[p.category] ?? "draft") === filter;
+    const matchSearch =
+      search.trim() === "" ||
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      (p.domain ?? "").toLowerCase().includes(search.toLowerCase());
+    return matchTab && matchSearch;
+  });
 
-  const counts = useMemo(() => ({
-    live: projects.filter((project) => projectStatus(project) === "live").length,
-    preview: projects.filter((project) => projectStatus(project) === "preview").length,
-    draft: projects.filter((project) => projectStatus(project) === "draft").length,
-  }), [projects]);
-
-  const tabs: Array<{ key: FilterTab; label: string; count: number }> = [
-    { key: "all", label: "Todos", count: projects.length },
-    { key: "live", label: "En vivo", count: counts.live },
-    { key: "preview", label: "Preview", count: counts.preview },
-    { key: "draft", label: "Borrador", count: counts.draft },
-  ];
-
+  const liveCount = projects.filter((p) => STATUS_FROM_CATEGORY[p.category] === "live").length;
+  const previewCount = projects.filter((p) => STATUS_FROM_CATEGORY[p.category] === "preview").length;
   const detailMembers = detailProject ? membersByProject[detailProject.id] ?? [] : [];
 
+  const TABS: { key: FilterTab; label: string; count?: number }[] = [
+    { key: "all", label: `Todos (${projects.length})` },
+    { key: "live", label: `Live (${liveCount})` },
+    { key: "preview", label: `Preview (${previewCount})` },
+    { key: "draft", label: "Draft" },
+  ];
+
   return (
-    <div className="px-5 py-8 sm:px-7 lg:px-9 lg:py-10">
-      <div className="mx-auto max-w-[1180px]">
-        <header className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-          <div><p className="text-sm font-medium text-[#ff5c35]">Espacio de trabajo</p><h2 className="mt-2 text-4xl font-semibold tracking-[-0.055em] text-[#1b1a17] sm:text-5xl">Tus proyectos</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[#777168]">Abre una sala, compara las tres vistas e invita a las personas que necesitan mirar.</p></div>
-          <div className="flex gap-2">
-            <Link href="/app/integrations" className="inline-flex h-11 items-center justify-center rounded-full border border-[#cfc9be] bg-white/65 px-4 text-sm font-medium text-[#1b1a17] transition hover:bg-white">Conectar repositorio</Link>
-            <Link href="/app/chat" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#1b1a17] px-4 text-sm font-semibold text-white transition hover:bg-[#ff5c35]"><Plus className="h-4 w-4" />Nuevo proyecto</Link>
-          </div>
-        </header>
+    <>
+      <PageHeader
+        eyebrow={t.projects.eyebrow}
+        title={t.projects.title}
+        description={t.projects.body}
+        actions={
+          <>
+            <button className="btn-ghost flex-1 !px-3 md:flex-none md:!px-5">{t.projects.cta_import}</button>
+            <Link href="/app/chat" className="btn-primary flex-1 !px-3 md:flex-none md:!px-5">
+              <IconSparkles size={13} /> {t.projects.cta_new}
+            </Link>
+          </>
+        }
+      />
 
-        <div className="mt-9 flex flex-col gap-3 rounded-[18px] border border-[#d9d4c9] bg-[#fbfaf7] p-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 gap-1 overflow-x-auto">
-            {tabs.map((tab) => (
-              <button key={tab.key} onClick={() => setFilter(tab.key)} className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-medium transition ${filter === tab.key ? "bg-[#1b1a17] text-white" : "text-[#777168] hover:bg-[#eeebe4] hover:text-[#1b1a17]"}`}>{tab.label} <span className={filter === tab.key ? "text-white/60" : "text-[#aaa49b]"}>{tab.count}</span></button>
-            ))}
-          </div>
-          <label className="flex h-10 min-w-0 items-center gap-2 rounded-full border border-[#ded9cf] bg-white px-3 sm:w-[250px]"><Search className="h-4 w-4 shrink-0 text-[#8a847a]" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar proyecto" className="min-w-0 flex-1 bg-transparent text-sm text-[#1b1a17] outline-none placeholder:text-[#aaa49b]" /></label>
+      {/* Tabs + search bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-1)] px-5 md:px-8">
+        <div className="flex items-center gap-0">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setFilter(tab.key)}
+              className={`relative px-4 py-3 font-mono text-[11px] uppercase tracking-widest transition-colors ${
+                filter === tab.key
+                  ? "text-on-surface"
+                  : "text-muted hover:text-on-surface-variant"
+              }`}
+            >
+              {tab.label}
+              {filter === tab.key && (
+                <motion.span
+                  layoutId="projects-tab-indicator"
+                  className="absolute inset-x-0 bottom-0 h-px bg-violet-400"
+                />
+              )}
+            </button>
+          ))}
         </div>
-
-        {error ? <div className="mt-4 rounded-[16px] border border-[#e7aaa0] bg-[#fff3f0] px-4 py-3 text-sm text-[#9f2d1b]">No pudimos cargar los proyectos: {error}</div> : null}
-
-        <section className="mt-4 overflow-hidden rounded-[22px] border border-[#d9d4c9] bg-white">
-          <div className="hidden grid-cols-[minmax(0,1fr)_130px_150px_150px] border-b border-[#e3dfd6] bg-[#f7f5ef] px-5 py-3 text-[11px] font-medium uppercase tracking-[0.08em] text-[#918b82] md:grid">
-            <span>Proyecto</span><span>Estado</span><span>Participantes</span><span className="text-right">Acciones</span>
-          </div>
-
-          {loading ? Array.from({ length: 5 }, (_, index) => (
-            <div key={index} className="flex items-center gap-4 border-b border-[#eeeae3] px-5 py-5 last:border-b-0"><span className="h-10 w-10 rounded-[12px] bg-[#ebe7df]" /><div className="flex-1"><span className="block h-3 w-36 rounded bg-[#ebe7df]" /><span className="mt-2 block h-2.5 w-52 rounded bg-[#f0ede6]" /></div></div>
-          )) : null}
-
-          {!loading && filtered.length === 0 && !error ? (
-            <div className="px-5 py-20 text-center"><p className="text-lg font-semibold text-[#1b1a17]">No hay proyectos aquí</p><p className="mt-2 text-sm text-[#777168]">{search ? "Prueba con otra búsqueda." : "Conecta un repositorio o crea tu primer proyecto."}</p></div>
-          ) : null}
-
-          {!loading ? filtered.map((project) => {
-            const status = projectStatus(project);
-            const domain = project.domain || project.vercel_url?.replace(/^https?:\/\//, "") || "Sin dominio";
-            const members = membersByProject[project.id] ?? [];
-            return (
-              <article key={project.id} className="group grid gap-4 border-b border-[#eeeae3] px-5 py-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_130px_150px_150px] md:items-center">
-                <button onClick={() => setDetailProject(project)} className="flex min-w-0 items-center gap-3 text-left">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#ebe7df] text-xs font-semibold text-[#1b1a17]">{initials(project.name)}</span>
-                  <span className="min-w-0"><span className="block truncate text-sm font-semibold text-[#1b1a17]">{project.name}</span><span className="mt-1 block truncate text-xs text-[#8a847a]">{domain}</span></span>
-                </button>
-                <Status value={status} />
-                <div>{members.length ? <MemberStack members={members} /> : <span className="text-xs text-[#aaa49b]">Solo tú</span>}</div>
-                <div className="flex items-center justify-start gap-2 md:justify-end">
-                  <button onClick={() => setInviteProject({ id: project.id, name: project.name })} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#d9d4c9] px-3 text-xs font-medium text-[#625e56] transition hover:border-[#ff5c35] hover:text-[#1b1a17]"><Users className="h-3.5 w-3.5" />Invitar</button>
-                  <Link href={`/app/live/${project.id}`} aria-label={`Abrir sala de ${project.name}`} className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1b1a17] text-white transition hover:bg-[#ff5c35]"><ArrowRight className="h-4 w-4" /></Link>
-                </div>
-              </article>
-            );
-          }) : null}
-        </section>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar proyecto..."
+          className="w-48 rounded-lg border border-[var(--border-1)] bg-transparent px-3 py-1.5 font-mono text-[12px] text-on-surface placeholder-muted outline-none transition focus:border-violet-500/50 focus:ring-0"
+        />
       </div>
 
-      {detailProject ? (
-        <div className="fixed inset-0 z-[110] flex justify-end">
-          <button aria-label="Cerrar detalle" onClick={() => setDetailProject(null)} className="absolute inset-0 bg-[#1b1a17]/35 backdrop-blur-sm" />
-          <aside className="relative z-10 flex h-full w-full max-w-[460px] flex-col overflow-y-auto border-l border-[#d9d4c9] bg-[#fbfaf7] shadow-[-24px_0_70px_rgba(37,32,25,.12)]">
-            <div className="flex items-start justify-between gap-4 border-b border-[#ded9cf] px-6 py-6">
-              <div className="min-w-0"><p className="text-xs font-medium text-[#ff5c35]">Detalle del proyecto</p><h2 className="mt-2 truncate text-2xl font-semibold tracking-[-0.045em] text-[#1b1a17]">{detailProject.name}</h2><p className="mt-2 flex items-center gap-1.5 truncate text-xs text-[#777168]"><Globe2 className="h-3.5 w-3.5" />{detailProject.domain || detailProject.vercel_url?.replace(/^https?:\/\//, "") || "Sin dominio"}</p></div>
-              <button onClick={() => setDetailProject(null)} aria-label="Cerrar" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#d9d4c9] text-[#625e56] hover:bg-[#f0ede6]"><X className="h-4 w-4" /></button>
-            </div>
-
-            <div className="space-y-6 px-6 py-6">
-              {detailProject.github_repo ? <div className="flex items-center gap-2 rounded-[14px] border border-[#ded9cf] bg-white px-3 py-3 text-xs text-[#625e56]"><Github className="h-4 w-4" /><span className="truncate">{detailProject.github_repo}</span></div> : null}
-              <div className="grid gap-2">
-                <Link href={`/app/live/${detailProject.id}`} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#ff5c35] px-4 text-sm font-semibold text-white hover:bg-[#e84a27]">Abrir sala en vivo<ArrowRight className="h-4 w-4" /></Link>
-                {detailProject.vercel_url ? <a href={detailProject.vercel_url} target="_blank" rel="noreferrer" className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[#d9d4c9] bg-white px-4 text-sm font-medium text-[#1b1a17] hover:bg-[#f7f5ef]">Abrir despliegue<ExternalLink className="h-4 w-4" /></a> : null}
-                <button onClick={() => { setInviteProject({ id: detailProject.id, name: detailProject.name }); setDetailProject(null); }} className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[#d9d4c9] px-4 text-sm font-medium text-[#1b1a17] hover:border-[#ff5c35]"><Users className="h-4 w-4" />Invitar participante</button>
-              </div>
-
-              <div className="border-t border-[#ded9cf] pt-5"><p className="text-xs font-medium uppercase tracking-[0.08em] text-[#918b82]">Participantes {detailMembers.length ? `(${detailMembers.length})` : ""}</p>
-                {detailMembers.length ? <ul className="mt-3 space-y-2">{detailMembers.map((member) => (
-                  <li key={member.id} className="flex items-center gap-3 rounded-[14px] border border-[#ded9cf] bg-white p-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white" style={{ backgroundColor: scopeColor(member.scope) }}>{(member.contact || member.email || "?").replace(/^\+/, "")[0]?.toUpperCase() ?? "?"}</span>
-                    <div className="min-w-0 flex-1"><p className="truncate text-sm text-[#1b1a17]">{member.contact || member.email}</p><p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.08em]" style={{ color: scopeColor(member.scope) }}>{scopeLabel(member.scope)}</p></div>
-                    <span className="text-[10px] text-[#777168]">{member.status === "active" ? "Activo" : member.status === "revoked" ? "Revocado" : "Invitado"}</span>
-                  </li>
-                ))}</ul> : <p className="mt-3 text-sm text-[#777168]">Aún no has invitado a nadie.</p>}
-              </div>
-            </div>
-          </aside>
+      {error && (
+        <div className="mx-5 mt-4 rounded-xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-400 md:mx-8">
+          ⚠ {error}
         </div>
-      ) : null}
+      )}
 
-      <InviteModal project={inviteProject} open={inviteProject !== null} onClose={() => setInviteProject(null)} onMembersChange={handleMembersChange} />
-    </div>
+      {/* Project list */}
+      <div className="divide-y divide-[var(--border-1)]">
+        {loading &&
+          [0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-4 px-5 py-4 md:px-8">
+              <div className="h-9 w-9 animate-pulse rounded-lg bg-[var(--surface-2)]" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-36 animate-pulse rounded bg-[var(--surface-2)]" />
+                <div className="h-2.5 w-52 animate-pulse rounded bg-[var(--surface-2)]" />
+              </div>
+            </div>
+          ))}
+
+        {!loading && filtered.length === 0 && !error && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="py-20 text-center text-on-surface-variant"
+          >
+            <p className="font-display text-base font-semibold">Sin proyectos</p>
+            <p className="mt-1 text-sm opacity-60">
+              {search ? "Intenta con otro término." : "Habla con V para crear tu primer proyecto."}
+            </p>
+          </motion.div>
+        )}
+
+        <AnimatePresence initial={false}>
+          {!loading &&
+            filtered.map((p, idx) => {
+              const status = STATUS_FROM_CATEGORY[p.category] ?? "draft";
+              const domain = p.domain || p.vercel_url?.replace(/^https?:\/\//, "") || null;
+              const hue = nameToHue(p.id);
+              const avatarBg = `hsl(${hue}, 60%, 28%)`;
+              const avatarFg = `hsl(${hue}, 80%, 75%)`;
+              const members = membersByProject[p.id] ?? [];
+
+              return (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25, ease: EASE, delay: idx * 0.03 }}
+                  className="group flex cursor-pointer items-center gap-4 px-5 py-4 transition-colors hover:bg-white/[0.02] md:px-8"
+                  onClick={() => setDetailProject(p)}
+                >
+                  {/* Avatar */}
+                  <span
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[12px] font-bold"
+                    style={{ backgroundColor: avatarBg, color: avatarFg }}
+                  >
+                    {initials(p.name)}
+                  </span>
+
+                  {/* Name + domain */}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[14px] font-semibold text-on-surface">{p.name}</p>
+                    {domain && (
+                      <p className="truncate font-mono text-[11px] text-muted">{domain}</p>
+                    )}
+                  </div>
+
+                  {/* Member stack */}
+                  {members.length > 0 && (
+                    <div className="hidden shrink-0 sm:block">
+                      <MemberStack members={members} />
+                    </div>
+                  )}
+
+                  {/* Status dot */}
+                  <div className="shrink-0 flex items-center gap-1.5">
+                    <span
+                      className={`h-2 w-2 rounded-full ${
+                        status === "live"
+                          ? "bg-emerald-400"
+                          : status === "preview"
+                          ? "bg-violet-400"
+                          : "bg-zinc-600"
+                      } ${status === "live" ? "animate-pulse" : ""}`}
+                    />
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted hidden sm:block">
+                      {status}
+                    </span>
+                  </div>
+
+                  {/* Invite button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setInviteProject({ id: p.id, name: p.name });
+                    }}
+                    className="shrink-0 rounded-md border border-violet-500/30 bg-violet-500/8 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-widest text-violet-300 opacity-0 transition-all group-hover:opacity-100 hover:bg-violet-500/20"
+                  >
+                    <IconPlus size={10} />
+                  </button>
+                </motion.div>
+              );
+            })}
+        </AnimatePresence>
+      </div>
+
+      {/* Detail drawer */}
+      <AnimatePresence>
+        {detailProject && (
+          <motion.div
+            className="fixed inset-0 z-[110] flex justify-end"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <button
+              aria-label="Cerrar"
+              onClick={() => setDetailProject(null)}
+              className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            />
+            <motion.aside
+              initial={{ x: 80, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 80, opacity: 0 }}
+              transition={{ duration: 0.34, ease: EASE }}
+              className="relative z-10 flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-[var(--border-1)] bg-[#0c0c14] shadow-2xl"
+            >
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-violet-400/40 to-transparent" />
+
+              <div className="flex items-start justify-between gap-3 border-b border-[var(--border-1)] px-6 py-5">
+                <div className="min-w-0">
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-violet-400">
+                    Detalle
+                  </p>
+                  <h2 className="mt-1 truncate font-display text-xl font-semibold text-on-surface">
+                    {detailProject.name}
+                  </h2>
+                  {(detailProject.domain || detailProject.vercel_url) && (
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                      <IconGlobe size={11} className="shrink-0 text-muted" />
+                      <p className="truncate font-mono text-[11px] text-muted">
+                        {detailProject.domain || detailProject.vercel_url?.replace(/^https?:\/\//, "")}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setDetailProject(null)}
+                  className="shrink-0 rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] p-2 text-muted transition-colors hover:text-on-surface"
+                >
+                  <IconX size={15} />
+                </button>
+              </div>
+
+              <div className="space-y-3 px-6 py-6">
+                {detailProject.github_repo && (
+                  <div className="flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5">
+                    <IconCode size={13} className="shrink-0 text-muted" />
+                    <span className="truncate font-mono text-[12px] text-muted">
+                      {detailProject.github_repo}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2">
+                  {detailProject.vercel_url && (
+                    <a
+                      href={detailProject.vercel_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-3 text-sm font-medium text-on-surface transition-all hover:bg-[var(--surface-2)]"
+                    >
+                      <IconExtLink size={14} /> Abrir deploy
+                    </a>
+                  )}
+                  <button
+                    onClick={() => {
+                      setInviteProject({ id: detailProject.id, name: detailProject.name });
+                      setDetailProject(null);
+                    }}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 px-4 py-3 text-sm font-semibold text-white shadow-glow-violet transition-all hover:from-violet-500 hover:to-violet-400"
+                  >
+                    <IconUsers size={15} /> Invitar participante
+                  </button>
+                  <Link
+                    href="/app/chat"
+                    className="flex items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] px-4 py-3 text-sm font-medium text-violet-300 transition-all hover:bg-[var(--surface-1)]"
+                  >
+                    <IconSparkles size={14} /> {interpolate(t.projects.ask_b, { name: detailProject.name.split(" ")[0] })}
+                  </Link>
+                </div>
+
+                {/* Members */}
+                <div className="border-t border-[var(--border-1)] pt-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <IconUsers size={14} className="text-muted" />
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
+                      Participantes {detailMembers.length > 0 && `(${detailMembers.length})`}
+                    </p>
+                  </div>
+                  {detailMembers.length === 0 ? (
+                    <p className="text-[13px] text-muted">Sin participantes aún.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {detailMembers.map((m) => (
+                        <li
+                          key={m.id}
+                          className="flex items-center gap-3 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5"
+                        >
+                          <span
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold text-white"
+                            style={{ backgroundColor: scopeColor(m.scope) + "cc" }}
+                          >
+                            {(m.contact || m.email || "?").replace(/^\+/, "").trim()[0]?.toUpperCase() ?? "?"}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] text-on-surface">{m.contact || m.email}</p>
+                            <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: scopeColor(m.scope) }}>
+                              {scopeLabel(m.scope)}
+                            </p>
+                          </div>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest ${
+                              m.status === "active"
+                                ? "border border-emerald-500/30 bg-emerald-500/8 text-emerald-400"
+                                : m.status === "revoked"
+                                ? "border border-[var(--border-1)] text-muted"
+                                : "border border-violet-400/30 bg-violet-400/8 text-violet-400"
+                            }`}
+                          >
+                            {m.status === "active" ? "Activo" : m.status === "revoked" ? "Revocado" : "Invitado"}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Invite modal */}
+      <InviteModal
+        project={inviteProject}
+        open={inviteProject !== null}
+        onClose={() => setInviteProject(null)}
+        onMembersChange={handleMembersChange}
+      />
+    </>
   );
 }

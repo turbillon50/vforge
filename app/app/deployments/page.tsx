@@ -1,7 +1,9 @@
 "use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ExternalLink, GitBranch, LoaderCircle, RefreshCw, Rocket, TriangleAlert } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { PageHeader } from "@/components/workspace/PageHeader";
+import { IconRocket, IconCheck, IconWarn, IconExtLink, IconBranch, IconLoader } from "@/components/brand/VFIcons";
+import { useT } from "@/i18n/AppProviders";
 
 interface Deployment {
   id: string;
@@ -13,99 +15,238 @@ interface Deployment {
   project_name?: string;
 }
 
-const STATE_META: Record<string, { label: string; dot: string; surface: string }> = {
-  READY: { label: "Producción", dot: "#4ca873", surface: "#e4f1e8" },
-  BUILDING: { label: "Construyendo", dot: "#d68733", surface: "#f7ead6" },
-  QUEUED: { label: "En cola", dot: "#d68733", surface: "#f7ead6" },
-  ERROR: { label: "Error", dot: "#bd4b38", surface: "#fae5df" },
-  CANCELED: { label: "Cancelado", dot: "#918b82", surface: "#ebe7df" },
+function timeAgo(ms: number) {
+  const s = Math.floor((Date.now() - ms) / 1000);
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s/60)}m`;
+  if (s < 86400) return `${Math.floor(s/3600)}h`;
+  return `${Math.floor(s/86400)}d`;
+}
+
+const STATE_META: Record<string, { label: string; color: string; bg: string; pulse: boolean }> = {
+  READY:    { label:"live",      color:"#22c55e", bg:"rgba(34,197,94,0.1)",    pulse:false },
+  BUILDING: { label:"building",  color:"#a78bfa", bg:"rgba(167,139,250,0.1)",  pulse:true  },
+  QUEUED:   { label:"en cola",   color:"#a78bfa", bg:"rgba(167,139,250,0.08)", pulse:true  },
+  ERROR:    { label:"error",     color:"#ef4444", bg:"rgba(239,68,68,0.1)",    pulse:false },
+  CANCELED: { label:"cancelado", color:"#6b7280", bg:"rgba(107,114,128,0.08)", pulse:false },
 };
 
-function timeAgo(milliseconds: number) {
-  const seconds = Math.floor((Date.now() - milliseconds) / 1000);
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-  return `${Math.floor(seconds / 86400)}d`;
-}
-
-function deploymentUrl(value: string) {
-  return value.startsWith("http://") || value.startsWith("https://") ? value : `https://${value}`;
-}
-
-function DeploymentRow({ deployment, onRefresh }: { deployment: Deployment; onRefresh: () => void }) {
-  const meta = STATE_META[deployment.state] ?? STATE_META.CANCELED;
-  const building = deployment.state === "BUILDING" || deployment.state === "QUEUED";
+function StatusBadge({ state }: { state: string }) {
+  const meta = STATE_META[state] ?? STATE_META.CANCELED;
   return (
-    <article className="grid gap-4 border-b border-[#eeeae3] px-5 py-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_150px_120px] sm:items-center">
-      <div className="min-w-0"><div className="flex items-center gap-2"><span className="truncate text-sm font-semibold text-[#1b1a17]">{deployment.project_name || deployment.name || deployment.id.slice(0, 18)}</span>{building ? <LoaderCircle className="h-3.5 w-3.5 animate-spin text-[#d68733]" /> : null}</div><p className="mt-1 truncate text-xs text-[#8a847a]">{deployment.name || deployment.id}</p>{deployment.state === "ERROR" ? <p className="mt-2 flex items-center gap-1.5 text-xs text-[#a33925]"><TriangleAlert className="h-3.5 w-3.5" />El build necesita revisión en Vercel.</p> : null}</div>
-      <div><span className="inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[11px] font-medium text-[#514c45]" style={{ backgroundColor: meta.surface }}><span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.dot }} />{meta.label}</span><p className="mt-1.5 flex items-center gap-1 text-[10px] text-[#aaa49b]"><GitBranch className="h-3 w-3" />{deployment.branch || "main"} · {timeAgo(deployment.created_at)}</p></div>
-      <div className="flex justify-start gap-2 sm:justify-end">
-        {building ? <button onClick={onRefresh} aria-label="Actualizar despliegue" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d9d4c9] text-[#625e56] hover:bg-[#f0ede6]"><RefreshCw className="h-3.5 w-3.5" /></button> : null}
-        {deployment.url && deployment.state === "READY" ? <a href={deploymentUrl(deployment.url)} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#1b1a17] px-3 text-xs font-medium text-white hover:bg-[#ff5c35]">Abrir<ExternalLink className="h-3.5 w-3.5" /></a> : null}
+    <span className="flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider"
+      style={{ background: meta.bg, color: meta.color, border:`1px solid ${meta.color}22` }}>
+      {meta.pulse && (
+        <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: meta.color }} />
+      )}
+      {meta.label}
+    </span>
+  );
+}
+
+function DeployCard({ d, onRefresh }: { d: Deployment; onRefresh: () => void }) {
+  const isBuilding = d.state === "BUILDING" || d.state === "QUEUED";
+  return (
+    <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}
+      transition={{ duration:0.4, ease:[0.22,1,0.36,1] }}
+      className="rounded-2xl p-4 transition-all"
+      style={{ background:"rgba(255,255,255,0.02)", border:`1px solid ${isBuilding ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.07)"}` }}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <StatusBadge state={d.state} />
+            {d.project_name && (
+              <span className="truncate text-[11px]" style={{ color:"rgba(255,255,255,0.3)" }}>
+                {d.project_name}
+              </span>
+            )}
+          </div>
+          <p className="truncate font-mono text-[12px] font-semibold" style={{ color:"rgba(255,255,255,0.85)" }}>
+            {d.name || d.id.slice(0, 20)}
+          </p>
+          <div className="mt-1.5 flex items-center gap-3">
+            {d.branch && (
+              <span className="flex items-center gap-1 text-[11px]" style={{ color:"rgba(255,255,255,0.3)" }}>
+                <IconBranch size={10} /> {d.branch}
+              </span>
+            )}
+            <span className="font-mono text-[10px]" style={{ color:"rgba(255,255,255,0.2)" }}>
+              {timeAgo(d.created_at)}
+            </span>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {isBuilding && (
+            <button onClick={onRefresh}
+              className="rounded-lg p-1.5 transition-all"
+              style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.4)" }}
+              title="Actualizar">
+              <IconLoader size={13} className="animate-spin" />
+            </button>
+          )}
+          {d.url && d.state === "READY" && (
+            <a href={`https://${d.url}`} target="_blank" rel="noreferrer"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all"
+              style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:"rgba(255,255,255,0.7)" }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background="rgba(255,255,255,0.09)"; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background="rgba(255,255,255,0.05)"; }}>
+              <IconExtLink size={11} /> Abrir
+            </a>
+          )}
+        </div>
       </div>
-    </article>
+      {d.state === "ERROR" && (
+        <div className="mt-3 flex items-center gap-2 rounded-lg px-3 py-2"
+          style={{ background:"rgba(239,68,68,0.06)", border:"1px solid rgba(239,68,68,0.15)" }}>
+          <IconWarn size={12} style={{ color:"#f87171", flexShrink:0 }} />
+          <span className="text-[11px]" style={{ color:"#f87171" }}>
+            Build falló — revisa los logs en{" "}
+            <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer"
+              className="underline">Vercel Dashboard</a>
+          </span>
+        </div>
+      )}
+    </motion.div>
   );
 }
 
 export default function DeploymentsPage() {
+  const t = useT();
   const [deployments, setDeployments] = useState<Deployment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState<string | null>(null);
   const [lastPoll, setLastPoll] = useState<Date | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/deployments", { cache: "no-store" });
-      const data = response.ok ? await response.json() : {};
-      const next: Deployment[] = data.deployments ?? [];
-      setDeployments(next);
+      /* Intentar Vercel API primero; fallback a proyectos internos */
+      const r = await fetch("/api/deployments", { cache:"no-store" });
+      const d = r.ok ? await r.json() : {};
+      const deps: Deployment[] = d.deployments ?? [];
+      setDeployments(deps);
       setLastPoll(new Date());
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = null;
-      if (next.some((deployment) => deployment.state === "BUILDING" || deployment.state === "QUEUED")) {
-        timerRef.current = setTimeout(() => void load(true), 8000);
+      /* Si hay alguno building, volver a polling en 8s */
+      const anyBuilding = deps.some(dep => dep.state === "BUILDING" || dep.state === "QUEUED");
+      if (anyBuilding) {
+        timerRef.current = setTimeout(() => load(true), 8000);
       }
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : String(reason));
+    } catch(e) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void load();
-    const interval = setInterval(() => void load(true), 30_000);
-    return () => { clearInterval(interval); if (timerRef.current) clearTimeout(timerRef.current); };
+    load();
+    /* Polling cada 30s siempre */
+    const interval = setInterval(() => load(true), 30000);
+    return () => {
+      clearInterval(interval);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [load]);
 
-  const activeCount = deployments.filter((deployment) => deployment.state === "BUILDING" || deployment.state === "QUEUED").length;
-  const productionCount = deployments.filter((deployment) => deployment.state === "READY").length;
+  const building = deployments.filter(d => d.state === "BUILDING" || d.state === "QUEUED");
+  const ready    = deployments.filter(d => d.state === "READY");
+  const failed   = deployments.filter(d => d.state === "ERROR" || d.state === "CANCELED");
 
   return (
-    <div className="px-5 py-8 sm:px-7 lg:px-9 lg:py-10">
-      <div className="mx-auto max-w-[1080px]">
-        <header className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-          <div><p className="text-sm font-medium text-[#ff5c35]">Vercel</p><h2 className="mt-2 text-4xl font-semibold tracking-[-0.055em] text-[#1b1a17] sm:text-5xl">Despliegues</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[#777168]">Qué está construyéndose, qué ya está en producción y qué necesita atención.</p></div>
-          <button onClick={() => void load(false)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#cfc9be] bg-white/65 px-4 text-sm font-medium text-[#1b1a17] hover:bg-white"><RefreshCw className="h-4 w-4" />Actualizar</button>
-        </header>
+    <>
+      <PageHeader eyebrow={t.deployments?.eyebrow ?? "Infraestructura"} title="Deployments"
+        description="Estado en tiempo real de tus deployments en Vercel."
+        actions={
+          <div className="flex items-center gap-2">
+            {lastPoll && (
+              <span className="font-mono text-[10px]" style={{ color:"rgba(255,255,255,0.2)" }}>
+                Actualizado {timeAgo(lastPoll.getTime())} ago
+              </span>
+            )}
+            <button onClick={() => load(false)}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] transition-all"
+              style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.5)" }}>
+              <IconLoader size={12} /> Refrescar
+            </button>
+            <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all"
+              style={{ background:"#fff", color:"#000" }}>
+              <IconRocket size={12} /> Vercel →
+            </a>
+          </div>
+        } />
 
-        <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          {[{ label: "Total", value: deployments.length }, { label: "En curso", value: activeCount }, { label: "Producción", value: productionCount }].map((item) => <div key={item.label} className="rounded-[18px] border border-[#d9d4c9] bg-[#fbfaf7] p-4"><p className="text-xs text-[#8a847a]">{item.label}</p><p className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#1b1a17]">{item.value}</p></div>)}
-        </div>
+      <div className="px-5 py-6 md:px-8">
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-[13px]" style={{ color:"#f87171" }}>
+            ⚠ {error}
+          </div>
+        )}
 
-        {error ? <div className="mt-4 rounded-[16px] border border-[#e7aaa0] bg-[#fff3f0] px-4 py-3 text-sm text-[#9f2d1b]">No pudimos actualizar Vercel: {error}</div> : null}
+        {/* Building — siempre arriba */}
+        <AnimatePresence>
+          {building.length > 0 && (
+            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} className="mb-6">
+              <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em]"
+                style={{ color:"rgba(167,139,250,0.7)" }}>
+                En curso ({building.length})
+              </p>
+              <div className="space-y-3">
+                {building.map(d => <DeployCard key={d.id} d={d} onRefresh={() => load(true)} />)}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <section className="mt-4 overflow-hidden rounded-[22px] border border-[#d9d4c9] bg-white">
-          <div className="flex items-center justify-between border-b border-[#e3dfd6] bg-[#f7f5ef] px-5 py-3"><p className="text-xs font-medium text-[#625e56]">Historial reciente</p>{lastPoll ? <p className="text-[10px] text-[#aaa49b]">Actualizado hace {timeAgo(lastPoll.getTime())}</p> : null}</div>
-          {loading ? Array.from({ length: 4 }, (_, index) => <div key={index} className="h-[84px] border-b border-[#eeeae3] bg-[#fbfaf7] last:border-b-0" />) : null}
-          {!loading && deployments.length === 0 ? <div className="flex flex-col items-center py-20 text-center"><span className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-[#ebe7df] text-[#777168]"><Rocket className="h-6 w-6" /></span><p className="mt-4 text-lg font-semibold text-[#1b1a17]">Todavía no hay despliegues</p><p className="mt-2 max-w-sm text-sm leading-6 text-[#777168]">Conecta Vercel para reunir previews y producción en esta vista.</p></div> : null}
-          {!loading ? deployments.map((deployment) => <DeploymentRow key={deployment.id} deployment={deployment} onRefresh={() => void load(true)} />) : null}
-        </section>
+        {loading ? (
+          <div className="space-y-3">
+            {[0,1,2,3].map(i => (
+              <div key={i} className="h-[88px] animate-pulse rounded-2xl"
+                style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)" }} />
+            ))}
+          </div>
+        ) : deployments.length === 0 ? (
+          <div className="flex flex-col items-center gap-4 py-20 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl"
+              style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)" }}>
+              <IconRocket size={28} style={{ color:"rgba(167,139,250,0.5)" }} />
+            </div>
+            <p className="text-[15px] font-semibold" style={{ color:"rgba(255,255,255,0.5)" }}>
+              Sin deployments aún
+            </p>
+            <p className="max-w-xs text-[13px]" style={{ color:"rgba(255,255,255,0.25)" }}>
+              Conecta Vercel en Settings → Integraciones para ver tus deploys aquí.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {ready.length > 0 && (
+              <div>
+                <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em]"
+                  style={{ color:"rgba(34,197,94,0.6)" }}>
+                  En producción ({ready.length})
+                </p>
+                <div className="space-y-3">
+                  {ready.map(d => <DeployCard key={d.id} d={d} onRefresh={() => load(true)} />)}
+                </div>
+              </div>
+            )}
+            {failed.length > 0 && (
+              <div>
+                <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em]"
+                  style={{ color:"rgba(239,68,68,0.6)" }}>
+                  Fallidos / cancelados ({failed.length})
+                </p>
+                <div className="space-y-3">
+                  {failed.map(d => <DeployCard key={d.id} d={d} onRefresh={() => load(true)} />)}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }

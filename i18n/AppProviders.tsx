@@ -18,7 +18,7 @@ type AppContextValue = {
 const AppContext = createContext<AppContextValue | null>(null);
 
 const LOCALE_KEY = "vforge.locale";
-const THEME_KEY = "vf-theme";
+const THEME_KEY = "vf-theme"; // unificado con ThemeToggle/ThemeBootScript
 
 function readCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
@@ -33,7 +33,7 @@ function writeCookie(name: string, value: string) {
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(defaultLocale);
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [theme, setThemeState] = useState<Theme>("dark");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -43,10 +43,10 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       const browser = navigator.language?.slice(0, 2) as Locale;
       if (locales.includes(browser)) setLocaleState(browser);
     }
-    // VForge Studio tiene una sola base visual. Neutraliza preferencias de la
-    // etapa obsidian para que no reaparezcan en menús o rutas secundarias.
-    localStorage.removeItem("vforge.theme");
-    setThemeState("light");
+    // Dark-first (marca VForge obsidian). Llave unica vf-theme; migra la vieja.
+    // NO usar prefers-color-scheme: el SO no debe forzar light sobre la marca.
+    const t = (localStorage.getItem("vf-theme") || localStorage.getItem("vforge.theme")) as Theme | null;
+    setThemeState(t === "light" ? "light" : "dark");
     setMounted(true);
   }, []);
 

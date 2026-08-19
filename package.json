@@ -13,7 +13,6 @@
     },
     "dependencies": {
         "@anthropic-ai/sdk": "^0.96.0",
-        "@clerk/localizations": "^4.15.4",
         "@clerk/nextjs": "^6.12.0",
         "@clerk/themes": "^2.2.0",
         "@neondatabase/serverless": "^1.1.0",
