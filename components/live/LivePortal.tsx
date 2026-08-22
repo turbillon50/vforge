@@ -167,7 +167,7 @@ export function LivePortal({
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <main className="min-w-0 flex-1 overflow-y-auto bg-[#f7f7f5] p-3 md:p-4">
-            <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(230px,0.42fr)] 2xl:grid-cols-[minmax(360px,1.25fr)_minmax(220px,0.58fr)_minmax(320px,0.95fr)]">
+            <div className="grid items-start gap-3 xl:grid-cols-[minmax(280px,1.12fr)_minmax(150px,0.48fr)_minmax(260px,0.92fr)] 2xl:grid-cols-[minmax(360px,1.25fr)_minmax(220px,0.58fr)_minmax(320px,0.95fr)]">
               <Viewport
                 kind="desktop"
                 title="Escritorio"
@@ -179,10 +179,9 @@ export function LivePortal({
                   kind="admin"
                   title="Administración"
                   url={project.admin_url}
-                  className="xl:col-span-2 2xl:col-span-1"
                 />
               ) : (
-                <section className="flex min-h-[260px] flex-col items-center justify-center border border-dashed border-black bg-white p-6 text-center xl:col-span-2 2xl:col-span-1">
+                <section className="flex min-h-[260px] flex-col items-center justify-center border border-dashed border-black bg-white p-6 text-center">
                   <IconShield size={19} />
                   <p className="mt-3 text-[12px] font-medium text-black">
                     Administración restringida
@@ -305,7 +304,7 @@ function Viewport({
   const url = useMemo(() => normalizeUrl(rawUrl), [rawUrl]);
   const frameClass =
     kind === "mobile"
-      ? "min-h-[520px] aspect-[9/16]"
+      ? "min-h-[520px] aspect-[9/16] xl:min-h-[380px] 2xl:min-h-[520px]"
       : "min-h-[380px] aspect-[16/10]";
 
   return (
