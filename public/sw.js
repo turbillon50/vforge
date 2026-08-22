@@ -1,8 +1,7 @@
 // VForge minimal service worker — offline shell + network-first for documents
 // Bump VERSION on every deploy where you want forced cache invalidation
-// (Luis: "se ve de la verga todavía" → asset cache pegado).
-const VERSION = "vforge-v17-2026-06-11-vchat-persist";
-const SHELL = ["/", "/app/chat", "/offline"];
+const VERSION = "vforge-monochrome-control-room-2026-08-22";
+const SHELL = ["/", "/app/projects", "/offline"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).catch(() => {}));
@@ -63,7 +62,7 @@ self.addEventListener("fetch", (event) => {
 // ── Push notifications (VAPID) ──
 self.addEventListener("push", (event) => {
   let data = { title: "VForge", body: "Tienes una novedad.", url: "/app" };
-  try { if (event.data) data = { ...data, ...event.data.json() }; } catch (e) {}
+  try { if (event.data) data = { ...data, ...event.data.json() }; } catch {}
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,

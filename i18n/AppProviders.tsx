@@ -18,8 +18,6 @@ type AppContextValue = {
 const AppContext = createContext<AppContextValue | null>(null);
 
 const LOCALE_KEY = "vforge.locale";
-const THEME_KEY = "vf-theme"; // unificado con ThemeToggle/ThemeBootScript
-
 function readCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
   const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
@@ -33,7 +31,7 @@ function writeCookie(name: string, value: string) {
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(defaultLocale);
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const [theme, setThemeState] = useState<Theme>("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -43,18 +41,14 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       const browser = navigator.language?.slice(0, 2) as Locale;
       if (locales.includes(browser)) setLocaleState(browser);
     }
-    // Dark-first (marca VForge obsidian). Llave unica vf-theme; migra la vieja.
-    // NO usar prefers-color-scheme: el SO no debe forzar light sobre la marca.
-    const t = (localStorage.getItem("vf-theme") || localStorage.getItem("vforge.theme")) as Theme | null;
-    setThemeState(t === "light" ? "light" : "dark");
+    setThemeState("light");
     setMounted(true);
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem(THEME_KEY, theme);
-  }, [theme, mounted]);
+    document.documentElement.setAttribute("data-theme", "light");
+  }, [mounted]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -68,11 +62,8 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     () => setLocaleState((l) => (l === "es" ? "en" : "es")),
     []
   );
-  const setTheme = useCallback((t: Theme) => setThemeState(t), []);
-  const toggleTheme = useCallback(
-    () => setThemeState((t) => (t === "dark" ? "light" : "dark")),
-    []
-  );
+  const setTheme = useCallback((_next: Theme) => setThemeState("light"), []);
+  const toggleTheme = useCallback(() => setThemeState("light"), []);
 
   const value = useMemo<AppContextValue>(
     () => ({

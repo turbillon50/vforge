@@ -1,29 +1,26 @@
 "use client";
-/**
- * Portal en vivo del proyecto — 3 viewports simultáneos (desktop / mobile /
- * admin) + actividad en vivo + comentarios, con el look VForge.
- *
- * El viewport ADMIN solo se muestra a reviewer/owner. La actividad hace
- * short-polling seguro a /api/live/[id]/events (aislado por proyecto). Sin
- * dependencias extra (fetch + hooks nativos).
- */
-import { useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { VWordmark } from "@/components/brand/VMark";
 import {
-  IconGlobe,
-  IconLayout,
-  IconShield,
-  IconChat,
   IconActivity,
-  IconSend,
-  IconLoader,
-  IconExtLink,
+  IconArrowL,
+  IconChat,
   IconCheck,
+  IconExtLink,
+  IconLayout,
+  IconLoader,
+  IconMenu,
+  IconRefresh,
+  IconSend,
+  IconShield,
+  IconUsers,
+  IconX,
 } from "@/components/brand/VFIcons";
 import type { LiveRole } from "@/lib/projects/roles";
 import { InvitePanel } from "@/components/live/InvitePanel";
-
-const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 export interface LivePortalProject {
   id: string;
@@ -33,11 +30,13 @@ export interface LivePortalProject {
   mobile_url: string | null;
   admin_url: string | null;
 }
+
 export interface LivePortalMe {
   name: string;
   role: LiveRole;
   isPlatformOwner: boolean;
 }
+
 interface EventRow {
   id: string;
   event_type: string;
@@ -45,6 +44,7 @@ interface EventRow {
   severity: string;
   ts: string;
 }
+
 interface CommentRow {
   id: string;
   author_email: string;
@@ -53,28 +53,35 @@ interface CommentRow {
   created_at: string;
 }
 
-const SEV_COLOR: Record<string, string> = {
-  low: "#64748b",
-  medium: "#fbbf24",
-  high: "#fb923c",
-  critical: "#f87171",
-};
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "ahora";
-  if (m < 60) return `hace ${m} min`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `hace ${h} h`;
-  return `hace ${Math.floor(h / 24)} d`;
-}
-
 const ROLE_LABEL: Record<LiveRole, string> = {
   owner: "Owner",
   reviewer: "Revisor",
   observer: "Observador",
 };
+
+function timeAgo(iso: string) {
+  const timestamp = new Date(iso).getTime();
+  if (Number.isNaN(timestamp)) return "fecha desconocida";
+  const minutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60_000));
+  if (minutes < 1) return "ahora";
+  if (minutes < 60) return "hace " + minutes + " min";
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return "hace " + hours + " h";
+  return "hace " + Math.floor(hours / 24) + " d";
+}
+
+function normalizeUrl(value: string | null) {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:"
+      ? parsed.href
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 export function LivePortal({
   project,
@@ -83,92 +90,202 @@ export function LivePortal({
   project: LivePortalProject;
   me: LivePortalMe;
 }) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const canSeeAdmin = me.role === "owner" || me.role === "reviewer";
-  const isOwner = me.role === "owner";
+  const canInvite = me.role === "owner";
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDrawerOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [drawerOpen]);
 
   return (
-    <div className="min-h-screen bg-[#03020a] pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-20 border-b border-[var(--border-1)] bg-[#03020a]/85 backdrop-blur-2xl">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-5 py-3.5">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">
-              {project.name}
-            </p>
-            <p className="text-[11px] text-[var(--fg-muted)]">
-              Portal en vivo · {me.name}
-            </p>
-          </div>
-          <span className="shrink-0 rounded-full border border-violet-500/25 bg-violet-500/10 px-3 py-1 text-[10px] font-medium uppercase tracking-wide text-violet-200">
-            {ROLE_LABEL[me.role]}
-          </span>
-        </div>
-      </div>
+    <div className="flex h-dvh overflow-hidden bg-white text-black">
+      <aside className="hidden h-dvh w-[208px] shrink-0 border-r border-[var(--border-1)] bg-white lg:block">
+        <LiveSidebar project={project} me={me} />
+      </aside>
 
-      <div className="mx-auto max-w-[1440px] space-y-6 px-4 pt-6 md:px-6">
-        {/* Viewports */}
-        <section>
-          <SectionTitle icon={<IconLayout size={14} />} title="Vista en vivo" />
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <Viewport
-              kind="desktop"
-              title="Escritorio"
-              icon={<IconGlobe size={13} />}
-              url={project.desktop_url}
-            />
-            <Viewport
-              kind="mobile"
-              title="Móvil"
-              icon={<IconLayout size={13} />}
-              url={project.mobile_url}
-            />
-            {canSeeAdmin ? (
+      {drawerOpen ? (
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/30"
+            onClick={() => setDrawerOpen(false)}
+            aria-label="Cerrar menú"
+          />
+          <aside className="absolute inset-y-0 left-0 w-[min(86vw,300px)] border-r border-black bg-white">
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(false)}
+              className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-md border border-[var(--border-1)] bg-white"
+              aria-label="Cerrar menú"
+            >
+              <IconX size={14} />
+            </button>
+            <LiveSidebar project={project} me={me} />
+          </aside>
+        </div>
+      ) : null}
+
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex min-h-[74px] shrink-0 items-center justify-between gap-4 border-b border-[var(--border-1)] bg-white px-4 md:px-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-[var(--border-1)] lg:hidden"
+              aria-label="Abrir menú"
+            >
+              <IconMenu size={16} />
+            </button>
+            <div className="min-w-0">
+              <p className="mono-label flex items-center gap-2">
+                <span className="status-shape" data-active="true" />
+                Portal autorizado · {project.status}
+              </p>
+              <h1 className="mt-1 truncate text-[22px] font-medium tracking-[-0.04em] md:text-[26px]">
+                {project.name}
+              </h1>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="hidden rounded-full border border-black px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.12em] sm:inline-flex">
+              {ROLE_LABEL[me.role]}
+            </span>
+            {canInvite ? (
+              <a href="#live-invitations" className="btn-primary !min-h-9 !px-3">
+                <IconUsers size={12} /> <span className="hidden sm:inline">Invitar</span>
+              </a>
+            ) : null}
+          </div>
+        </header>
+
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <main className="min-w-0 flex-1 overflow-y-auto bg-[#f7f7f5] p-3 md:p-4">
+            <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(230px,0.42fr)] 2xl:grid-cols-[minmax(360px,1.25fr)_minmax(220px,0.58fr)_minmax(320px,0.95fr)]">
               <Viewport
-                kind="admin"
-                title="Admin"
-                icon={<IconShield size={13} />}
-                url={project.admin_url}
+                kind="desktop"
+                title="Escritorio"
+                url={project.desktop_url}
               />
-            ) : (
-              <div className="flex min-h-[240px] flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border-1)] bg-[#0a0a12] p-6 text-center">
-                <IconShield size={20} className="text-[var(--fg-muted)]" />
-                <p className="mt-2 text-[12px] text-[var(--fg-muted)]">
-                  El viewport admin es solo para revisores.
-                </p>
+              <Viewport kind="mobile" title="Móvil" url={project.mobile_url} />
+              {canSeeAdmin ? (
+                <Viewport
+                  kind="admin"
+                  title="Administración"
+                  url={project.admin_url}
+                  className="xl:col-span-2 2xl:col-span-1"
+                />
+              ) : (
+                <section className="flex min-h-[260px] flex-col items-center justify-center border border-dashed border-black bg-white p-6 text-center xl:col-span-2 2xl:col-span-1">
+                  <IconShield size={19} />
+                  <p className="mt-3 text-[12px] font-medium text-black">
+                    Administración restringida
+                  </p>
+                  <p className="mt-1 max-w-xs text-[11px] leading-5">
+                    Tu rol puede observar las vistas públicas del proyecto, pero
+                    no recibió alcance administrativo.
+                  </p>
+                </section>
+              )}
+            </div>
+
+            <div className="mt-3 grid gap-3 xl:hidden">
+              <ActivityFeed projectId={project.id} />
+              <CommentsPanel projectId={project.id} />
+            </div>
+
+            {canInvite ? (
+              <div id="live-invitations" className="mt-3 scroll-mt-4">
+                <InvitePanel projectId={project.id} />
               </div>
-            )}
-          </div>
-        </section>
+            ) : null}
+          </main>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <ActivityFeed projectId={project.id} />
-          <CommentsPanel projectId={project.id} />
+          <aside className="hidden h-full w-[300px] shrink-0 overflow-y-auto border-l border-[var(--border-1)] bg-white xl:block 2xl:w-[320px]">
+            <ActivityFeed projectId={project.id} rail />
+            <CommentsPanel projectId={project.id} rail />
+          </aside>
         </div>
-
-        {isOwner && <InvitePanel projectId={project.id} />}
       </div>
     </div>
   );
 }
 
-function SectionTitle({
-  icon,
-  title,
-  right,
+function LiveSidebar({
+  project,
+  me,
 }: {
-  icon: React.ReactNode;
-  title: string;
-  right?: React.ReactNode;
+  project: LivePortalProject;
+  me: LivePortalMe;
 }) {
+  const views = [
+    { label: "Escritorio", available: Boolean(normalizeUrl(project.desktop_url)) },
+    { label: "Móvil", available: Boolean(normalizeUrl(project.mobile_url)) },
+    {
+      label: "Administración",
+      available:
+        (me.role === "owner" || me.role === "reviewer") &&
+        Boolean(normalizeUrl(project.admin_url)),
+    },
+  ];
+
   return (
-    <div className="mb-3 flex items-center justify-between">
-      <div className="flex items-center gap-2 text-violet-300">
-        {icon}
-        <span className="text-[13px] font-semibold text-[var(--fg-primary)]">
-          {title}
-        </span>
+    <div className="flex h-full flex-col">
+      <div className="border-b border-[var(--border-1)] px-5 py-5">
+        <VWordmark />
+        <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.17em] text-[var(--fg-muted)]">
+          Live control room
+        </p>
       </div>
-      {right}
+
+      <div className="px-4 py-5">
+        <Link
+          href="/app/projects"
+          className="inline-flex items-center gap-2 text-[11px] text-[var(--fg-muted)] hover:text-black"
+        >
+          <IconArrowL size={12} /> Proyectos
+        </Link>
+
+        <div className="mt-7 border-l-2 border-black pl-3">
+          <p className="text-[13px] font-medium leading-5 text-black">{project.name}</p>
+          <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.13em] text-[var(--fg-muted)]">
+            {ROLE_LABEL[me.role]}
+          </p>
+        </div>
+      </div>
+
+      <nav className="border-t border-[var(--border-1)] px-4 py-5" aria-label="Vistas de la sala">
+        <p className="mono-label mb-3">Viewports</p>
+        <div className="space-y-1">
+          {views.map((view) => (
+            <div
+              key={view.label}
+              className="flex items-center justify-between rounded-md px-2 py-2 text-[11px]"
+            >
+              <span>{view.label}</span>
+              <span
+                className="status-shape"
+                data-active={view.available}
+                aria-label={view.available ? "Disponible" : "No disponible"}
+              />
+            </div>
+          ))}
+        </div>
+      </nav>
+
+      <div className="mt-auto border-t border-[var(--border-1)] px-5 py-5">
+        <p className="mono-label">Estado del proyecto</p>
+        <p className="mt-2 break-words text-[11px] text-black">{project.status}</p>
+        <p className="mt-4 text-[9px] leading-4 text-[var(--fg-muted)]">
+          La sala sólo muestra URLs y eventos autorizados para este proyecto.
+        </p>
+      </div>
     </div>
   );
 }
@@ -176,100 +293,142 @@ function SectionTitle({
 function Viewport({
   kind,
   title,
-  icon,
-  url,
+  url: rawUrl,
+  className,
 }: {
   kind: "desktop" | "mobile" | "admin";
   title: string;
-  icon: React.ReactNode;
   url: string | null;
+  className?: string;
 }) {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const url = useMemo(() => normalizeUrl(rawUrl), [rawUrl]);
   const frameClass =
     kind === "mobile"
-      ? "aspect-[9/16] max-h-[520px]"
-      : "aspect-[16/10]";
+      ? "min-h-[520px] aspect-[9/16]"
+      : "min-h-[380px] aspect-[16/10]";
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ease: EASE }}
-      className="overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[#0a0a12]"
+    <section
+      className={cn(
+        "min-w-0 overflow-hidden rounded-[8px] border border-[var(--border-1)] bg-white",
+        className,
+      )}
     >
-      <div className="flex items-center justify-between border-b border-[var(--border-1)] px-3 py-2">
-        <div className="flex items-center gap-1.5 text-[var(--fg-tertiary)]">
-          {icon}
-          <span className="text-[11px] font-medium">{title}</span>
+      <header className="flex h-10 items-center justify-between border-b border-[var(--border-1)] px-3">
+        <div className="flex items-center gap-2">
+          {kind === "admin" ? <IconShield size={12} /> : <IconLayout size={12} />}
+          <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+            {title}
+          </span>
         </div>
-        {url && (
-          <a
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1 text-[10px] text-violet-300 hover:text-violet-200"
-          >
-            <IconExtLink size={11} /> abrir
-          </a>
-        )}
-      </div>
+        {url ? (
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setRefreshKey((value) => value + 1)}
+              className="grid h-7 w-7 place-items-center rounded-md hover:bg-[#f2f2f0]"
+              aria-label={"Actualizar vista " + title}
+            >
+              <IconRefresh size={11} />
+            </button>
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="grid h-7 w-7 place-items-center rounded-md hover:bg-[#f2f2f0]"
+              aria-label={"Abrir vista " + title + " en otra pestaña"}
+            >
+              <IconExtLink size={11} />
+            </a>
+          </div>
+        ) : null}
+      </header>
+
       {url ? (
-        <div className={`relative w-full ${frameClass} bg-black`}>
+        <div className={cn("relative w-full overflow-hidden bg-white", frameClass)}>
           <iframe
+            key={refreshKey}
             src={url}
-            title={`${title} preview`}
-            className="absolute inset-0 h-full w-full border-0"
+            title={"Vista " + title + " de " + rawUrl}
+            className="absolute inset-0 h-full w-full border-0 bg-white"
             loading="lazy"
             referrerPolicy="no-referrer"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
           />
         </div>
       ) : (
-        <div className={`flex w-full ${frameClass} items-center justify-center bg-[#07060f] p-4 text-center`}>
-          <p className="text-[11px] text-[var(--fg-muted)]">
-            Sin URL configurada para {title.toLowerCase()}.
-          </p>
+        <div className={cn("grid w-full place-items-center bg-white p-6 text-center", frameClass)}>
+          <div>
+            <p className="text-[12px] font-medium text-black">
+              Sin URL para {title.toLowerCase()}
+            </p>
+            <p className="mt-2 max-w-xs text-[10px] leading-4 text-[var(--fg-muted)]">
+              Esta vista aparecerá cuando el proyecto tenga una URL autorizada.
+            </p>
+          </div>
         </div>
       )}
-    </motion.div>
+    </section>
   );
 }
 
-function ActivityFeed({ projectId }: { projectId: string }) {
+function ActivityFeed({
+  projectId,
+  rail = false,
+}: {
+  projectId: string;
+  rail?: boolean;
+}) {
+  const encodedProjectId = encodeURIComponent(projectId);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [streamState, setStreamState] = useState<"connecting" | "live" | "reconnecting">(
-    "connecting",
-  );
+  const [error, setError] = useState<string | null>(null);
+  const [streamState, setStreamState] = useState<
+    "connecting" | "live" | "reconnecting"
+  >("connecting");
   const sinceRef = useRef<string | null>(null);
 
   const mergeEvents = useCallback((incoming: EventRow[]) => {
     if (incoming.length === 0) return;
-    setEvents((prev) => {
-      const seen = new Set(prev.map((event) => event.id));
-      const fresh = incoming.filter((event) => !seen.has(event.id));
-      return [...fresh.reverse(), ...prev].slice(0, 60);
+    setEvents((previous) => {
+      const existing = new Set(previous.map((event) => event.id));
+      const fresh = incoming.filter((event) => !existing.has(event.id));
+      return [...fresh, ...previous].slice(0, 60);
     });
   }, []);
 
   const poll = useCallback(async () => {
     try {
-      const qs = sinceRef.current ? `?since=${encodeURIComponent(sinceRef.current)}` : "";
-      const res = await fetch(`/api/live/${projectId}/events${qs}`, {
-        cache: "no-store",
-      });
-      if (!res.ok) return;
-      const data = (await res.json()) as { events: EventRow[]; serverTime?: string };
-      if (data.events.length > 0) {
-        sinceRef.current = data.events[0].ts;
-        mergeEvents([...data.events].reverse());
-      } else if (!sinceRef.current && data.serverTime) {
-        sinceRef.current = data.serverTime;
+      const suffix = sinceRef.current
+        ? "?since=" + encodeURIComponent(sinceRef.current)
+        : "";
+      const response = await fetch(
+        "/api/live/" + encodedProjectId + "/events" + suffix,
+        { cache: "no-store" },
+      );
+      if (!response.ok) {
+        setError("No se pudo leer la actividad.");
+        return;
       }
+      const payload = (await response.json()) as {
+        events?: EventRow[];
+        serverTime?: string;
+      };
+      const next = Array.isArray(payload.events) ? payload.events : [];
+      if (next.length > 0) {
+        sinceRef.current = next[0]?.ts ?? sinceRef.current;
+        mergeEvents(next);
+      } else if (!sinceRef.current && payload.serverTime) {
+        sinceRef.current = payload.serverTime;
+      }
+      setError(null);
     } catch {
-      /* silencioso */
+      setError("La actividad no está disponible en este momento.");
     } finally {
       setLoaded(true);
     }
-  }, [mergeEvents, projectId]);
+  }, [encodedProjectId, mergeEvents]);
 
   useEffect(() => {
     let cancelled = false;
@@ -278,201 +437,238 @@ function ActivityFeed({ projectId }: { projectId: string }) {
     async function connect() {
       await poll();
       if (cancelled) return;
-
-      const qs = sinceRef.current
-        ? `?since=${encodeURIComponent(sinceRef.current)}`
+      const suffix = sinceRef.current
+        ? "?since=" + encodeURIComponent(sinceRef.current)
         : "";
-      source = new EventSource(`/api/live/${projectId}/events/stream${qs}`);
+      source = new EventSource(
+        "/api/live/" + encodedProjectId + "/events/stream" + suffix,
+      );
       source.onopen = () => setStreamState("live");
       source.onerror = () => setStreamState("reconnecting");
       source.onmessage = (message) => {
         try {
-          const data = JSON.parse(message.data) as { event?: EventRow };
-          if (!data.event) return;
-          sinceRef.current = data.event.ts;
-          mergeEvents([data.event]);
+          const payload = JSON.parse(message.data) as { event?: EventRow };
+          if (!payload.event) return;
+          sinceRef.current = payload.event.ts;
+          mergeEvents([payload.event]);
         } catch {
-          /* ignora un frame inválido; EventSource sigue conectado */
+          // Un frame inválido no interrumpe el canal.
         }
       };
     }
 
     void connect();
-    const fallback = setInterval(() => void poll(), 30_000);
+    const fallback = window.setInterval(() => void poll(), 30_000);
     return () => {
       cancelled = true;
       source?.close();
-      clearInterval(fallback);
+      window.clearInterval(fallback);
     };
-  }, [mergeEvents, poll, projectId]);
+  }, [encodedProjectId, mergeEvents, poll]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ease: EASE }}
-      className="rounded-2xl border border-[var(--border-1)] bg-[#0a0a12] p-4"
+    <section
+      className={cn(
+        "bg-white",
+        rail
+          ? "border-b border-[var(--border-1)] px-5 py-5"
+          : "rounded-[8px] border border-[var(--border-1)] p-4",
+      )}
+      aria-live="polite"
     >
-      <SectionTitle
-        icon={<IconActivity size={14} />}
-        title="Actividad en vivo"
-        right={
-          <span className="flex items-center gap-1 text-[10px] text-[var(--fg-muted)]">
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                streamState === "live" ? "bg-emerald-400" : "bg-amber-400"
-              }`}
-            />
-            {streamState === "live" ? "en vivo" : "conectando"}
-          </span>
-        }
-      />
-      {!loaded ? (
-        <div className="flex justify-center py-6">
-          <IconLoader size={16} className="animate-spin text-violet-400" />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <IconActivity size={13} />
+          <h2 className="text-[12px] font-medium">Actividad en vivo</h2>
         </div>
+        <span className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+          <span
+            className="status-shape"
+            data-active={streamState === "live"}
+          />
+          {streamState === "live" ? "Conectado" : "Conectando"}
+        </span>
+      </div>
+
+      {!loaded ? (
+        <div className="grid min-h-28 place-items-center">
+          <IconLoader size={14} className="animate-spin" />
+        </div>
+      ) : error ? (
+        <p className="mt-5 border-l border-black pl-3 text-[11px] leading-5">{error}</p>
       ) : events.length === 0 ? (
-        <p className="py-6 text-center text-[12px] text-[var(--fg-muted)]">
-          Aún no hay actividad registrada.
+        <p className="mt-5 border-l border-[var(--border-1)] pl-3 text-[11px] leading-5 text-[var(--fg-muted)]">
+          Aún no hay eventos registrados para este proyecto.
         </p>
       ) : (
-        <div className="max-h-[360px] space-y-2.5 overflow-y-auto pr-1">
-          {events.map((e) => (
-            <div key={e.id} className="flex gap-2.5">
-              <span
-                className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
-                style={{
-                  background: SEV_COLOR[e.severity] ?? SEV_COLOR.low,
-                  boxShadow: `0 0 6px ${SEV_COLOR[e.severity] ?? SEV_COLOR.low}80`,
-                }}
-              />
-              <div className="min-w-0">
-                <p className="text-[12px] font-medium text-[var(--fg-primary)]">
-                  {e.event_type}
+        <div className={cn("mt-5 space-y-4 overflow-y-auto pr-1", rail ? "max-h-[300px]" : "max-h-[360px]")}>
+          {events.map((event) => (
+            <article key={event.id} className="border-l border-black/20 pl-3">
+              <div className="flex items-start justify-between gap-2">
+                <p className="break-words text-[11px] font-medium text-black">
+                  {event.event_type}
                 </p>
-                {typeof e.details?.message === "string" && (
-                  <p className="truncate text-[11px] text-[var(--fg-tertiary)]">
-                    {e.details.message as string}
-                  </p>
-                )}
-                <p className="text-[10px] text-[var(--fg-muted)]">
-                  {timeAgo(e.ts)}
-                </p>
+                <span className="mt-1 status-shape shrink-0" data-active={event.severity === "critical"} />
               </div>
-            </div>
+              {typeof event.details?.message === "string" ? (
+                <p className="mt-1 break-words text-[10px] leading-4 text-[var(--fg-muted)]">
+                  {event.details.message}
+                </p>
+              ) : null}
+              <p className="mt-1 font-mono text-[8px] text-[var(--fg-muted)]">
+                {timeAgo(event.ts)}
+              </p>
+            </article>
           ))}
         </div>
       )}
-    </motion.div>
+    </section>
   );
 }
 
-function CommentsPanel({ projectId }: { projectId: string }) {
+function CommentsPanel({
+  projectId,
+  rail = false,
+}: {
+  projectId: string;
+  rail?: boolean;
+}) {
+  const encodedProjectId = encodeURIComponent(projectId);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/live/${projectId}/comments`, {
-        cache: "no-store",
-      });
-      if (!res.ok) return;
-      const data = (await res.json()) as { comments: CommentRow[] };
-      setComments(data.comments);
+      const response = await fetch(
+        "/api/live/" + encodedProjectId + "/comments",
+        { cache: "no-store" },
+      );
+      if (!response.ok) {
+        setError("No se pudieron cargar los comentarios.");
+        return;
+      }
+      const payload = (await response.json()) as { comments?: CommentRow[] };
+      setComments(Array.isArray(payload.comments) ? payload.comments : []);
+      setError(null);
     } catch {
-      /* silencioso */
+      setError("Los comentarios no están disponibles.");
     } finally {
       setLoaded(true);
     }
-  }, [projectId]);
+  }, [encodedProjectId]);
 
   useEffect(() => {
     void load();
-    const timer = setInterval(() => void load(), 8_000);
-    return () => clearInterval(timer);
+    const timer = window.setInterval(() => void load(), 10_000);
+    return () => window.clearInterval(timer);
   }, [load]);
 
   async function send() {
     const text = body.trim();
     if (!text || busy) return;
     setBusy(true);
+    setError(null);
     try {
-      const res = await fetch(`/api/live/${projectId}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: text }),
-      });
-      if (res.ok) {
-        setBody("");
-        await load();
+      const response = await fetch(
+        "/api/live/" + encodedProjectId + "/comments",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body: text }),
+        },
+      );
+      if (!response.ok) {
+        setError("No se pudo publicar el comentario.");
+        return;
       }
+      setBody("");
+      await load();
+    } catch {
+      setError("No se pudo publicar el comentario.");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ease: EASE }}
-      className="rounded-2xl border border-[var(--border-1)] bg-[#0a0a12] p-4"
+    <section
+      className={cn(
+        "bg-white",
+        rail ? "px-5 py-5" : "rounded-[8px] border border-[var(--border-1)] p-4",
+      )}
     >
-      <SectionTitle icon={<IconChat size={14} />} title="Comentarios" />
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
+        <IconChat size={13} />
+        <h2 className="text-[12px] font-medium">Comentarios</h2>
+      </div>
+
+      <div className="mt-4">
         <textarea
           value={body}
-          onChange={(e) => setBody(e.target.value)}
-          rows={2}
+          onChange={(event) => setBody(event.target.value)}
+          onKeyDown={(event) => {
+            if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+              event.preventDefault();
+              void send();
+            }
+          }}
+          rows={3}
           maxLength={4000}
-          placeholder="Escribe un comentario…"
-          className="w-full resize-none rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5 text-[13px] text-white placeholder-white/25 outline-none focus:border-violet-500/50"
+          placeholder="Deja una observación…"
+          className="w-full resize-y rounded-md border border-[var(--border-1)] bg-white px-3 py-2.5 text-[12px] text-black placeholder:text-[var(--fg-muted)] focus:border-black"
         />
         <button
-          onClick={send}
+          type="button"
+          onClick={() => void send()}
           disabled={busy || !body.trim()}
-          aria-label="Enviar comentario"
-          className="flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 px-3 text-white transition active:scale-95 disabled:opacity-40"
+          className="btn-primary mt-2 w-full disabled:opacity-40"
         >
-          {busy ? <IconLoader size={15} className="animate-spin" /> : <IconSend size={15} />}
+          {busy ? <IconLoader size={13} className="animate-spin" /> : <IconSend size={13} />}
+          Comentar
         </button>
       </div>
 
-      <div className="mt-3 max-h-[300px] space-y-2 overflow-y-auto pr-1">
+      {error ? (
+        <p className="mt-3 text-[10px] leading-4 text-black">{error}</p>
+      ) : null}
+
+      <div className={cn("mt-5 space-y-3 overflow-y-auto pr-1", rail ? "max-h-[360px]" : "max-h-[300px]")}>
         {!loaded ? (
-          <div className="flex justify-center py-6">
-            <IconLoader size={16} className="animate-spin text-violet-400" />
+          <div className="grid min-h-20 place-items-center">
+            <IconLoader size={13} className="animate-spin" />
           </div>
         ) : comments.length === 0 ? (
-          <p className="py-4 text-center text-[12px] text-[var(--fg-muted)]">
-            Sin comentarios todavía.
+          <p className="text-[11px] leading-5 text-[var(--fg-muted)]">
+            No hay comentarios todavía.
           </p>
         ) : (
-          comments.map((c) => (
-            <div
-              key={c.id}
-              className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3"
+          comments.map((comment) => (
+            <article
+              key={comment.id}
+              className="rounded-md border border-[var(--border-1)] bg-[#f7f7f5] p-3"
             >
-              <div className="mb-1 flex items-center gap-2">
-                <span className="text-[11px] font-medium text-[var(--fg-secondary)]">
-                  {c.author_name ?? c.author_email}
-                </span>
-                <span className="text-[10px] text-[var(--fg-muted)]">
-                  {timeAgo(c.created_at)}
+              <div className="flex items-center justify-between gap-2">
+                <p className="truncate text-[10px] font-medium text-black">
+                  {comment.author_name ?? comment.author_email}
+                </p>
+                <span className="shrink-0 font-mono text-[8px] text-[var(--fg-muted)]">
+                  {timeAgo(comment.created_at)}
                 </span>
               </div>
-              <p className="whitespace-pre-wrap text-[13px] text-[var(--fg-primary)]">
-                {c.body}
+              <p className="mt-2 whitespace-pre-wrap break-words text-[11px] leading-5 text-[var(--fg-secondary)]">
+                {comment.body}
               </p>
-            </div>
+            </article>
           ))
         )}
       </div>
-      <p className="mt-2 flex items-center justify-center gap-1.5 text-[10px] text-[var(--fg-muted)]">
-        <IconCheck size={10} /> Solo visible para los miembros del proyecto
+
+      <p className="mt-4 flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+        <IconCheck size={10} /> Sólo miembros del proyecto
       </p>
-    </motion.div>
+    </section>
   );
 }

@@ -50,24 +50,36 @@ const config: Config = {
         "vf-fg":      "var(--vf-fg)",
         "vf-fg-1":    "var(--vf-fg-1)",
         "vf-fg-2":    "var(--vf-fg-2)",
-        "vf-green":   "#22c55e",
-        "vf-error":   "#ef4444",
+        "vf-green":   "#171717",
+        "vf-error":   "#34363a",
 
         // Static palettes (still useful for explicit tailwind shades elsewhere)
         violet: {
-          100: "#e9ddff",
-          200: "#d0bcff",
-          300: "#b497ff",
-          400: "#a078ff",
-          500: "#8b5cf6",
-          600: "#7c3aed",
-          700: "#6d28d9",
-          800: "#5b21b6",
-          900: "#4c1d95",
+          100: "#f2f2f0",
+          200: "#dededb",
+          300: "#9b9da1",
+          400: "#73767b",
+          500: "#34363a",
+          600: "#262626",
+          700: "#171717",
+          800: "#0d0d0d",
+          900: "#000000",
         },
         cyan: {
-          400: "#22d3ee",
-          500: "#06b6d4",
+          400: "#73767b",
+          500: "#34363a",
+        },
+        green: {
+          300: "#9b9da1", 400: "#73767b", 500: "#34363a", 600: "#262626",
+        },
+        emerald: {
+          100: "#f2f2f0", 200: "#dededb", 300: "#9b9da1", 400: "#73767b", 500: "#34363a", 600: "#262626",
+        },
+        red: {
+          300: "#9b9da1", 400: "#73767b", 500: "#34363a", 600: "#262626",
+        },
+        amber: {
+          200: "#dededb", 300: "#9b9da1", 400: "#73767b", 500: "#34363a", 600: "#262626",
         },
       },
       fontFamily: {
@@ -107,14 +119,14 @@ const config: Config = {
         container: "1440px",
       },
       backgroundImage: {
-        "violet-cyan": "linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%)",
+        "violet-cyan": "linear-gradient(135deg, #000000 0%, #34363a 100%)",
         "violet-aura":
-          "radial-gradient(120% 80% at 50% 0%, rgba(139,92,246,calc(0.18 * var(--aura-opacity))), transparent 60%)",
+          "radial-gradient(120% 80% at 50% 0%, rgba(0,0,0,calc(0.08 * var(--aura-opacity))), transparent 60%)",
       },
       boxShadow: {
-        glow: "0 0 24px rgba(139,92,246,0.25), 0 0 60px rgba(34,211,238,0.10)",
-        "glow-cyan": "0 0 24px rgba(34,211,238,0.25)",
-        "glow-violet": "0 0 24px rgba(139,92,246,0.30)",
+        glow: "0 12px 30px rgba(0,0,0,0.08)",
+        "glow-cyan": "0 12px 30px rgba(0,0,0,0.08)",
+        "glow-violet": "0 12px 30px rgba(0,0,0,0.08)",
         elev: "var(--shadow-elev)",
       },
       animation: {
@@ -125,8 +137,8 @@ const config: Config = {
       },
       keyframes: {
         breathe: {
-          "0%, 100%": { opacity: "0.55", filter: "drop-shadow(0 0 12px rgba(139,92,246,0.45))" },
-          "50%": { opacity: "1", filter: "drop-shadow(0 0 36px rgba(34,211,238,0.55))" },
+          "0%, 100%": { opacity: "0.55" },
+          "50%": { opacity: "1" },
         },
         "pulse-soft": {
           "0%, 100%": { opacity: "0.85" },

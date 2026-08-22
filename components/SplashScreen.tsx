@@ -1,52 +1,50 @@
 "use client";
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 
-/**
- * Splash screen — VULCANO PWA STANDARD v2 §4.
- * Fondo = color principal (void #03020a). Logo fade-in 0.8s, duración fija 2.0s,
- * fade-out 0.3s. Aparece en cada arranque en frío de la PWA.
- */
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { VMark } from "@/components/brand/VMark";
+
+const SPLASH_KEY = "vf-monochrome-splash-v1";
+
 export default function SplashScreen() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    // Solo en el primer arranque de la sesion; NUNCA al cambiar de pagina.
-    if (sessionStorage.getItem("vf-splash")) return;
-    sessionStorage.setItem("vf-splash", "1");
+    try {
+      if (sessionStorage.getItem(SPLASH_KEY)) return;
+      sessionStorage.setItem(SPLASH_KEY, "1");
+    } catch {
+      // El splash no depende del almacenamiento para funcionar.
+    }
+
     setVisible(true);
-    const t = setTimeout(() => setVisible(false), 1300);
-    return () => clearTimeout(t);
+    const timer = window.setTimeout(() => setVisible(false), 560);
+    return () => window.clearTimeout(timer);
   }, []);
 
   return (
     <AnimatePresence>
-      {visible && (
+      {visible ? (
         <motion.div
+          aria-hidden="true"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "#03020a",
-          }}
+          transition={{ duration: 0.14 }}
+          className="fixed inset-0 z-[9999] grid place-items-center bg-white text-black"
         >
-          <motion.img
-            src="/icon-512.png"
-            alt="VForge"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }} // fade-in 0.8s
-            style={{ width: 96, height: 96 }}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 3 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex items-center gap-3"
+          >
+            <VMark size={30} />
+            <span className="font-display text-[20px] font-semibold tracking-[-0.04em]">
+              VForge
+            </span>
+          </motion.div>
         </motion.div>
-      )}
+      ) : null}
     </AnimatePresence>
   );
 }

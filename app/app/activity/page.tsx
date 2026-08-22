@@ -1,90 +1,206 @@
 "use client";
-import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
+
+import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/workspace/PageHeader";
 import {
-  IconActivity, IconBranch, IconRocket, IconKey, IconGlobe,
-  IconCheck, IconWarn, IconSparkles, IconShield,
+  IconActivity,
+  IconBranch,
+  IconCheck,
+  IconDownload,
+  IconGlobe,
+  IconKey,
+  IconRefresh,
+  IconRocket,
+  IconShield,
+  IconWarn,
 } from "@/components/brand/VFIcons";
-import { useT } from "@/i18n/AppProviders";
 
-interface AuditEvent { id:string; action:string; resource_type:string|null; resource_id:string|null; ring:number|null; payload:unknown; created_at:string; }
-type IconComp = (p:{size?:number;className?:string;style?:React.CSSProperties})=>ReactNode;
-
-function timeAgo(iso:string):string {
-  const ms=Date.now()-new Date(iso).getTime();
-  const d=Math.floor(ms/(1000*60*60*24)); if(d>=1) return d+"d";
-  const h=Math.floor(ms/(1000*60*60)); if(h>=1) return h+"h";
-  const m=Math.floor(ms/(1000*60)); if(m>=1) return m+"m";
-  return "ahora";
+interface AuditEvent {
+  id: string;
+  action: string;
+  resource_type: string | null;
+  resource_id: string | null;
+  ring: number | null;
+  payload: unknown;
+  created_at: string;
 }
 
-function iconFor(action:string):{Icon:IconComp;color:string} {
-  if(action.startsWith("forge.chat"))  return {Icon:IconSparkles,color:"#a78bfa"};
-  if(action.startsWith("project."))    return {Icon:IconBranch,color:"#a78bfa"};
-  if(action.includes("deploy")||action.startsWith("vercel.")) return {Icon:IconRocket,color:"#34d399"};
-  if(action.includes("secret")||action.startsWith("vault."))  return {Icon:IconKey,color:"#8b5cf6"};
-  if(action.includes("dns"))           return {Icon:IconGlobe,color:"#34d399"};
-  if(action.includes("error")||action.includes("fail")) return {Icon:IconWarn,color:"#ef4444"};
-  if(action.includes("ok")||action.includes("complete")) return {Icon:IconCheck,color:"#34d399"};
-  if(action.includes("auth")||action.includes("seal")) return {Icon:IconShield,color:"#8b5cf6"};
-  return {Icon:IconActivity,color:"#a78bfa"};
+type EventIcon = typeof IconActivity;
+
+function timeAgo(iso: string) {
+  const elapsed = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(elapsed)) return "fecha desconocida";
+  const minutes = Math.max(0, Math.floor(elapsed / 60_000));
+  if (minutes < 1) return "ahora";
+  if (minutes < 60) return `hace ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `hace ${hours} h`;
+  return `hace ${Math.floor(hours / 24)} d`;
+}
+
+function iconFor(action: string): EventIcon {
+  if (action.startsWith("project.")) return IconBranch;
+  if (action.includes("deploy") || action.startsWith("vercel.")) return IconRocket;
+  if (action.includes("secret") || action.startsWith("vault.")) return IconKey;
+  if (action.includes("dns")) return IconGlobe;
+  if (action.includes("error") || action.includes("fail")) return IconWarn;
+  if (action.includes("ok") || action.includes("complete")) return IconCheck;
+  if (action.includes("auth") || action.includes("seal")) return IconShield;
+  return IconActivity;
 }
 
 export default function ActivityPage() {
-  const t=useT();
-  const [events,setEvents]=useState<AuditEvent[]>([]);
-  const [loading,setLoading]=useState(true);
-  const [error,setError]=useState<string|null>(null);
-  useEffect(()=>{
-    fetch("/api/forge/activity?limit=50",{cache:"no-store"})
-      .then(r=>r.ok?r.json():{events:[]})
-      .then((d:{events:AuditEvent[];error?:string})=>{ if(d.error) setError(d.error); setEvents(d.events??[]); })
-      .catch(e=>setError(e instanceof Error?e.message:String(e)))
-      .finally(()=>setLoading(false));
-  },[]);
+  const [events, setEvents] = useState<AuditEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (manual = false) => {
+    manual ? setRefreshing(true) : setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/forge/activity?limit=50", {
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        throw new Error(`No se pudo leer la actividad (HTTP ${response.status}).`);
+      }
+      const payload = (await response.json()) as {
+        events?: AuditEvent[];
+        error?: string;
+      };
+      if (payload.error) throw new Error(payload.error);
+      setEvents(Array.isArray(payload.events) ? payload.events : []);
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "No se pudo leer la actividad.",
+      );
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  function exportEvents() {
+    if (events.length === 0) return;
+    const blob = new Blob([JSON.stringify(events, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `vforge-actividad-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
-    <>
-      <PageHeader eyebrow={t.activity.eyebrow} title={t.activity.title} description={t.activity.body}
-        actions={<button className="btn-ghost">{t.activity.export}</button>}/>
-      <div className="mx-auto max-w-2xl px-5 py-6 md:px-8">
-        {error&&<div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">⚠ {error}</div>}
-        {loading&&<div className="space-y-2">{[0,1,2,3,4].map(i=><div key={i} className="h-[68px] rounded-xl border border-[var(--border-1)] bg-white/[0.015] animate-pulse"/>)}</div>}
-        {!loading&&events.length===0&&!error&&(
-          <div className="py-16 text-center">
-            <p className="font-display text-lg text-[var(--fg-tertiary)]">Sin eventos todavía.</p>
-            <p className="mt-2 text-sm text-[var(--fg-muted)]">Cuando V actúe sobre tus proyectos, los registros aparecen aquí.</p>
+    <div className="mx-auto w-full max-w-[1440px]">
+      <PageHeader
+        eyebrow="Registro real"
+        title="Actividad."
+        description="Eventos autorizados del sistema y de tus proyectos, en orden cronológico."
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => void load(true)}
+              disabled={refreshing}
+              className="btn-ghost"
+            >
+              <IconRefresh size={12} className={refreshing ? "animate-spin" : ""} />
+              Actualizar
+            </button>
+            <button
+              type="button"
+              onClick={exportEvents}
+              disabled={events.length === 0}
+              className="btn-primary disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              <IconDownload size={12} /> Exportar JSON
+            </button>
+          </>
+        }
+      />
+
+      {error ? (
+        <div className="m-5 border border-black bg-white px-4 py-4 md:m-8">
+          <p className="text-[13px] font-medium">{error}</p>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="mt-3 text-[12px] underline underline-offset-4"
+          >
+            Volver a intentar
+          </button>
+        </div>
+      ) : null}
+
+      <section className="bg-white px-5 py-6 md:px-8 md:py-8">
+        {loading ? (
+          <div className="space-y-2">
+            {[0, 1, 2, 3, 4].map((item) => (
+              <div
+                key={item}
+                className="h-[76px] animate-pulse border border-[var(--border-1)] bg-[#f7f7f5]"
+              />
+            ))}
           </div>
-        )}
-        {!loading&&events.length>0&&(
-          <ol className="relative space-y-2 border-l border-[var(--border-1)] pl-5">
-            {events.map(ev=>{
-              const {Icon,color}=iconFor(ev.action);
+        ) : events.length === 0 && !error ? (
+          <div className="border border-dashed border-black px-6 py-20 text-center">
+            <IconActivity size={19} className="mx-auto" />
+            <p className="mt-4 text-[14px] font-medium">Todavía no hay eventos.</p>
+            <p className="mx-auto mt-2 max-w-md text-[12px] leading-5">
+              Cuando un proyecto genere actividad autorizada aparecerá aquí; no
+              llenamos la línea de tiempo con datos de demostración.
+            </p>
+          </div>
+        ) : (
+          <ol className="border-t border-[var(--border-1)]">
+            {events.map((event) => {
+              const Icon = iconFor(event.action);
               return (
-                <li key={ev.id} className="relative">
-                  <span className="absolute -left-[22px] top-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full ring-2 ring-[#050509]"
-                    style={{background:color}}/>
-                  <div className="overflow-hidden rounded-xl border border-[var(--border-1)] bg-[#0a0a12] p-4 transition hover:border-[var(--border-1)]">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <Icon size={14} style={{color,flexShrink:0}}/>
-                        <p className="font-display text-[13px] font-semibold text-[var(--fg-primary)] truncate">{ev.action}</p>
-                        {ev.ring!==null&&<span className="font-mono text-[9px] text-[var(--fg-muted)] shrink-0">ring {ev.ring}</span>}
-                      </div>
-                      <span className="font-mono text-[10px] text-[var(--fg-muted)] shrink-0">{timeAgo(ev.created_at)}</span>
-                    </div>
-                    {(ev.resource_type||ev.resource_id)&&(
-                      <p className="mt-1.5 font-mono text-[11px] text-[var(--fg-muted)]">
-                        {[ev.resource_type,ev.resource_id].filter(Boolean).join(" · ")}
+                <li
+                  key={event.id}
+                  className="grid gap-3 border-b border-[var(--border-1)] py-4 sm:grid-cols-[28px_minmax(0,1fr)_110px] sm:items-start"
+                >
+                  <span className="grid h-7 w-7 place-items-center border border-black bg-white">
+                    <Icon size={12} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-medium">{event.action}</p>
+                    {event.resource_type || event.resource_id ? (
+                      <p className="mt-1 truncate font-mono text-[9px] text-[var(--fg-muted)]">
+                        {[event.resource_type, event.resource_id]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    ) : (
+                      <p className="mt-1 font-mono text-[9px] text-[var(--fg-muted)]">
+                        Evento de plataforma
                       </p>
                     )}
+                  </div>
+                  <div className="flex items-center gap-3 sm:justify-end">
+                    {event.ring !== null ? (
+                      <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+                        ring {event.ring}
+                      </span>
+                    ) : null}
+                    <time className="font-mono text-[9px] text-[var(--fg-muted)]">
+                      {timeAgo(event.created_at)}
+                    </time>
                   </div>
                 </li>
               );
             })}
           </ol>
         )}
-      </div>
-    </>
+      </section>
+    </div>
   );
 }

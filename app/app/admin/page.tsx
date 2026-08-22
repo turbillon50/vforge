@@ -1,106 +1,165 @@
-import Link from "next/link";
 import { clerkClient } from "@clerk/nextjs/server";
+import { PageHeader } from "@/components/workspace/PageHeader";
+import { IconShield, IconUsers } from "@/components/brand/VFIcons";
 import { isOwnerUser } from "@/lib/auth/owner";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Panel de administración del owner: quién está registrado en VForge,
- * con qué correo, rol y última actividad. Solo el owner llega aquí
- * (gating en middleware sobre /app).
- */
+interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  owner: boolean;
+  created: string;
+  lastActive: string;
+}
+
+function formatDate(value: number | null | undefined, includeTime = false) {
+  if (!value) return "—";
+  return new Date(value).toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "short",
+    year: includeTime ? undefined : "numeric",
+    hour: includeTime ? "2-digit" : undefined,
+    minute: includeTime ? "2-digit" : undefined,
+  });
+}
+
 export default async function AdminPage() {
-  let users: Array<{
-    id: string;
-    name: string;
-    email: string;
-    owner: boolean;
-    created: string;
-    lastActive: string;
-  }> = [];
+  let users: AdminUser[] = [];
   let error: string | null = null;
 
   try {
-    const cc = await clerkClient();
-    const list = await cc.users.getUserList({ limit: 100, orderBy: "-last_active_at" });
-    users = list.data.map((u) => ({
-      id: u.id,
-      name: [u.firstName, u.lastName].filter(Boolean).join(" ") || u.username || "—",
-      email: u.emailAddresses[0]?.emailAddress ?? "—",
-      owner: isOwnerUser(u),
-      created: new Date(u.createdAt).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }),
-      lastActive: u.lastActiveAt
-        ? new Date(u.lastActiveAt).toLocaleDateString("es-MX", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
-        : "—",
+    const client = await clerkClient();
+    const list = await client.users.getUserList({
+      limit: 100,
+      orderBy: "-last_active_at",
+    });
+    users = list.data.map((user) => ({
+      id: user.id,
+      name:
+        [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+        user.username ||
+        "Sin nombre",
+      email: user.emailAddresses[0]?.emailAddress ?? "Sin correo",
+      owner: isOwnerUser(user),
+      created: formatDate(user.createdAt),
+      lastActive: formatDate(user.lastActiveAt, true),
     }));
   } catch {
-    error = "No pude leer los usuarios de Clerk. Revisa CLERK_SECRET_KEY.";
+    error =
+      "No se pudo leer el directorio real de Clerk. Revisa la configuración de autenticación.";
   }
 
+  const ownerCount = users.filter((user) => user.owner).length;
+
   return (
-    <main className="mx-auto w-full max-w-5xl px-5 pb-28 pt-10 md:px-8 md:pt-14">
-      <header>
-        <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-violet-300">Administración</p>
-        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-on-surface md:text-5xl">
-          Usuarios
-        </h1>
-        <p className="mt-2 text-on-surface-variant">
-          {users.length} {users.length === 1 ? "persona registrada" : "personas registradas"} en VForge.
-        </p>
-        <p className="mt-3">
-          <Link
-            href="/app/admin/billing"
-            className="inline-flex items-center text-sm text-violet-400 hover:underline"
-            style={{ minHeight: 44, touchAction: "manipulation" }}
-          >
-            Quién pagó qué →
-          </Link>
-        </p>
-      </header>
+    <div className="mx-auto w-full max-w-[1440px]">
+      <PageHeader
+        eyebrow="Alcance y permisos"
+        title="Administración."
+        description="Personas registradas, propietario de plataforma y última actividad. Esta vista se alimenta directamente de Clerk."
+      />
+
+      <section className="grid border-b border-[var(--border-1)] bg-[#f7f7f5] sm:grid-cols-3">
+        <Metric label="Usuarios registrados" value={String(users.length)} />
+        <Metric label="Propietarios" value={String(ownerCount)} />
+        <Metric
+          label="Usuarios estándar"
+          value={String(Math.max(0, users.length - ownerCount))}
+        />
+      </section>
 
       {error ? (
-        <p className="mt-10 rounded-xl border border-error-crimson/30 bg-error-crimson/5 px-4 py-3 text-sm text-error-crimson">
-          {error}
-        </p>
-      ) : (
-        <div className="mt-8 overflow-hidden rounded-2xl border border-app bg-[var(--color-surface-low)] backdrop-blur-md">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-app text-muted">
-                <th className="px-4 py-3 font-mono text-[10px] uppercase tracking-[0.18em]">Usuario</th>
-                <th className="hidden px-4 py-3 font-mono text-[10px] uppercase tracking-[0.18em] sm:table-cell">Correo</th>
-                <th className="px-4 py-3 font-mono text-[10px] uppercase tracking-[0.18em]">Rol</th>
-                <th className="hidden px-4 py-3 font-mono text-[10px] uppercase tracking-[0.18em] md:table-cell">Alta</th>
-                <th className="hidden px-4 py-3 font-mono text-[10px] uppercase tracking-[0.18em] md:table-cell">Última actividad</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id} className="border-b border-app/40 last:border-0">
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-on-surface">{u.name}</p>
-                    <p className="text-[12px] text-muted sm:hidden">{u.email}</p>
-                  </td>
-                  <td className="hidden px-4 py-3 text-on-surface-variant sm:table-cell">{u.email}</td>
-                  <td className="px-4 py-3">
-                    {u.owner ? (
-                      <span className="rounded-full bg-violet-500/15 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-violet-300 ring-1 ring-violet-500/30">
-                        Owner
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-tint-2/[0.08] px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-on-surface-variant">
-                        Usuario
-                      </span>
-                    )}
-                  </td>
-                  <td className="hidden px-4 py-3 text-on-surface-variant md:table-cell">{u.created}</td>
-                  <td className="hidden px-4 py-3 text-on-surface-variant md:table-cell">{u.lastActive}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="m-5 border border-black bg-white px-4 py-4 md:m-8">
+          <div className="flex items-start gap-3">
+            <IconShield size={15} className="mt-0.5 shrink-0" />
+            <p className="text-[13px] leading-5">{error}</p>
+          </div>
         </div>
-      )}
-    </main>
+      ) : null}
+
+      <section className="bg-white px-5 py-6 md:px-8 md:py-8">
+        {users.length === 0 && !error ? (
+          <div className="border border-dashed border-black px-6 py-20 text-center">
+            <IconUsers size={19} className="mx-auto" />
+            <p className="mt-4 text-[14px] font-medium">
+              No hay usuarios para mostrar.
+            </p>
+            <p className="mt-2 text-[12px] text-[var(--fg-muted)]">
+              El directorio no agrega personas de demostración.
+            </p>
+          </div>
+        ) : users.length > 0 ? (
+          <div className="overflow-x-auto border border-[var(--border-1)]">
+            <table className="w-full min-w-[720px] text-left">
+              <thead>
+                <tr className="border-b border-black bg-black text-white">
+                  <th className="px-4 py-3 font-mono text-[8px] font-normal uppercase tracking-[0.15em]">
+                    Usuario
+                  </th>
+                  <th className="px-4 py-3 font-mono text-[8px] font-normal uppercase tracking-[0.15em]">
+                    Correo
+                  </th>
+                  <th className="px-4 py-3 font-mono text-[8px] font-normal uppercase tracking-[0.15em]">
+                    Rol
+                  </th>
+                  <th className="px-4 py-3 font-mono text-[8px] font-normal uppercase tracking-[0.15em]">
+                    Alta
+                  </th>
+                  <th className="px-4 py-3 font-mono text-[8px] font-normal uppercase tracking-[0.15em]">
+                    Última actividad
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr
+                    key={user.id}
+                    className="border-b border-[var(--border-1)] last:border-b-0 hover:bg-[#f7f7f5]"
+                  >
+                    <td className="px-4 py-4">
+                      <p className="text-[12px] font-medium">{user.name}</p>
+                      <p className="mt-1 font-mono text-[8px] text-[var(--fg-muted)]">
+                        {user.id}
+                      </p>
+                    </td>
+                    <td className="px-4 py-4 text-[11px] text-[var(--fg-secondary)]">
+                      {user.email}
+                    </td>
+                    <td className="px-4 py-4">
+                      <span
+                        className={
+                          user.owner
+                            ? "inline-flex border border-black bg-black px-2 py-1 font-mono text-[8px] uppercase tracking-[0.12em] text-white"
+                            : "inline-flex border border-[var(--border-1)] px-2 py-1 font-mono text-[8px] uppercase tracking-[0.12em]"
+                        }
+                      >
+                        {user.owner ? "Owner" : "Usuario"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 font-mono text-[9px] text-[var(--fg-muted)]">
+                      {user.created}
+                    </td>
+                    <td className="px-4 py-4 font-mono text-[9px] text-[var(--fg-muted)]">
+                      {user.lastActive}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </section>
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border-b border-[var(--border-1)] px-5 py-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 md:px-8">
+      <p className="mono-label">{label}</p>
+      <p className="mt-3 text-[28px] font-medium tracking-[-0.05em]">{value}</p>
+    </div>
   );
 }
