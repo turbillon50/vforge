@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// El visor de proyectos es la puerta canónica del producto.
+// El estudio conversacional es la puerta canónica del producto owner.
 export default function AppRoot() {
-  redirect("/app/projects");
+  redirect("/app/chat");
 }
