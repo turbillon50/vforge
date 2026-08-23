@@ -15,7 +15,7 @@ export default async function HomePage() {
     // La portada pública sigue disponible si Clerk no está configurado.
   }
 
-  if (userId) redirect("/app/projects");
+  if (userId) redirect("/app/chat");
 
   return <MonochromeHome />;
 }

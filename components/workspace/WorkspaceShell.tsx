@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { VWordmark } from "@/components/brand/VMark";
 import {
   IconActivity,
+  IconChat,
   IconHome,
   IconLayers,
   IconMenu,
@@ -32,6 +33,12 @@ type NavItem = {
 };
 
 const PRIMARY_NAV: NavItem[] = [
+  {
+    href: "/app/chat",
+    label: "Construir",
+    description: "Chat, herramientas y preview",
+    Icon: IconChat,
+  },
   {
     href: "/app/projects",
     label: "Proyectos",
@@ -59,6 +66,8 @@ const PRIMARY_NAV: NavItem[] = [
 ];
 
 const TITLES: Record<string, string> = {
+  "/app/chat": "Estudio",
+  "/app/home": "Estudio",
   "/app/projects": "Proyectos",
   "/app/activity": "Actividad",
   "/app/integrations": "Conexiones",
@@ -80,11 +89,11 @@ function Sidebar({
   return (
     <div className="flex h-full flex-col bg-white">
       <div className="border-b border-[var(--border-1)] px-5 py-5">
-        <Link href="/app/projects" onClick={onNavigate} aria-label="VForge, proyectos">
+        <Link href="/app/chat" onClick={onNavigate} aria-label="VForge, estudio">
           <VWordmark />
         </Link>
         <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.17em] text-[var(--fg-muted)]">
-          Project control room
+          Build control room
         </p>
       </div>
 

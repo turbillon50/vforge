@@ -36,7 +36,7 @@ export async function GET(req: Request) {
       u.searchParams.set("github", status);
       return Response.redirect(u.toString(), 302);
     }
-    return Response.redirect(`${site}/workspace/conexiones?github=${status}`, 302);
+    return Response.redirect(`${site}/app/integrations?github=${status}`, 302);
   };
 
   if (!code) return back("error_no_code");

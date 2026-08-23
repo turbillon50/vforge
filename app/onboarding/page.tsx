@@ -79,7 +79,7 @@ function OnboardingWithClerk() {
         }),
       });
     } finally {
-      router.push("/app/projects");
+      router.push("/app/chat");
       router.refresh();
     }
   }
