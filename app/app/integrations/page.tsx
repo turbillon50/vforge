@@ -14,6 +14,7 @@ import {
   IconRefresh,
   IconSend,
 } from "@/components/brand/VFIcons";
+import { AgentFabricPanel } from "@/components/integrations/AgentFabricPanel";
 
 type ServiceIcon = typeof IconGithub;
 type ServiceMode = "oauth" | "key";
@@ -225,6 +226,8 @@ export default function IntegrationsPage() {
           }
         />
       </section>
+
+      <AgentFabricPanel />
 
       <section className="bg-white px-5 py-6 md:px-8 md:py-8">
         <div className="mb-5 flex items-end justify-between gap-4">
