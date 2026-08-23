@@ -83,6 +83,7 @@ html {
 
 body {
   min-height: 100vh;
+  min-height: 100svh;
   margin: 0;
   overflow-x: hidden;
   background: var(--color-background);
@@ -90,6 +91,23 @@ body {
   font-family: var(--font-geist-sans), Geist, Arial, sans-serif;
   font-size: 0.9375rem;
   line-height: 1.55;
+}
+
+/*
+ * Superficies tipo app en móvil: 100svh no cambia cuando Safari/Chrome
+ * muestran u ocultan su barra. Los campos a 16px evitan el zoom automático
+ * de iOS, otra fuente común de saltos en un chat de pantalla completa.
+ */
+@media (max-width: 767px) {
+  .vf-mobile-stable input:not([type="checkbox"]):not([type="radio"]),
+  .vf-mobile-stable textarea,
+  .vf-mobile-stable select {
+    font-size: 16px;
+  }
+
+  .vf-studio-composer {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
 }
 
 h1,

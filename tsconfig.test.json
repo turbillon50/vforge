@@ -15,6 +15,7 @@
   },
   "include": [
     "tests/**/*.ts",
+    "lib/auth/owner.ts",
     "lib/projects/roles.ts",
     "lib/projects/invite-token.ts"
   ]

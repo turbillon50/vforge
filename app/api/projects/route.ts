@@ -1,5 +1,5 @@
 import { queryAll, sql } from "@/lib/db/client";
-import { resolveAccess } from "@/lib/connect/resolve-token";
+import { resolveRequestOwner } from "@/lib/auth/request-owner";
 import { createRepo } from "@/lib/github/client";
 import { neon } from "@neondatabase/serverless";
 
@@ -36,16 +36,14 @@ const OPERATOR_USER_ID = "operator_luis";
  */
 export async function GET() {
   // AISLAMIENTO: el catálogo `projects` es del owner. Un no-owner NO lo ve.
-  const access = await resolveAccess();
+  const access = await resolveRequestOwner();
   if (!access.userId) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401, headers: { "Content-Type": "application/json" },
     });
   }
   if (!access.isOwner) {
-    return new Response(JSON.stringify({ projects: [] }), {
-      status: 200, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-    });
+    return jsonError("forbidden", 403);
   }
   const rows = await queryAll<ProjectRow>(
     `SELECT id, name, category, status,
@@ -66,7 +64,7 @@ export async function GET() {
   );
   return new Response(JSON.stringify({ projects: rows }), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }
 
@@ -77,6 +75,10 @@ export async function GET() {
  * Validates id format and category enum, audit-logs the action.
  */
 export async function POST(req: Request) {
+  const access = await resolveRequestOwner();
+  if (!access.userId) return jsonError("unauthorized", 401);
+  if (!access.isOwner) return jsonError("forbidden", 403);
+
   let body: {
     id?: string;
     name?: string;
@@ -195,7 +197,7 @@ export async function POST(req: Request) {
       }),
       {
         status: 201,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
       },
     );
   } catch (err) {
@@ -211,6 +213,6 @@ export async function POST(req: Request) {
 function jsonError(message: string, status: number): Response {
   return new Response(JSON.stringify({ error: message }), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }

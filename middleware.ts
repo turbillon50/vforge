@@ -86,6 +86,7 @@ const isProtected = createRouteMatcher([
   "/api/billing(.*)",
   "/api/v/bridge(.*)",
   "/api/v/voice(.*)",
+  "/api/vulcano(.*)",
   "/api/live(.*)",
 ]);
 
@@ -102,6 +103,7 @@ const isOwnerOnly = createRouteMatcher([
   "/api/forge(.*)",
   "/api/builder(.*)",
   "/api/vault(.*)",
+  "/api/vulcano(.*)",
   "/api/admin(.*)",
   "/api/projects(.*)",
   "/api/v/bridge(.*)",
@@ -153,18 +155,13 @@ export default hasClerk
         return redirectToSignIn({ returnBackUrl: req.url });
       }
 
-      const claimRole = (
-        sessionClaims?.publicMetadata as { role?: string } | undefined
-      )?.role;
-
       // --- Rutas API ---
       // Solo las owner-only necesitan gating extra; el resto ya pasó el auth
       // de arriba. El onboarding NO bloquea APIs (rompería /api/onboarding/*
       // y /api/user/complete-onboarding, que el flujo necesita).
       if (isApi) {
         if (isOwnerOnly(req)) {
-          const owner =
-            claimRole === "owner" ? true : await resolveOwner(userId);
+          const owner = await resolveOwner(userId);
           if (!owner) {
             return new NextResponse(JSON.stringify({ error: "forbidden" }), {
               status: 403,
@@ -176,7 +173,7 @@ export default hasClerk
       }
 
       // --- Rutas de página: los 3 tipos de usuario ---
-      const owner = claimRole === "owner" ? true : await resolveOwner(userId);
+      const owner = await resolveOwner(userId);
       const onOnboarding = req.nextUrl.pathname.startsWith("/onboarding");
 
       // Tipo 1 — Owner (Luis/Jaime): acceso total a todo, nunca onboarding.

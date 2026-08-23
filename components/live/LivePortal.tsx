@@ -104,8 +104,8 @@ export function LivePortal({
   }, [drawerOpen]);
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-white text-black">
-      <aside className="hidden h-dvh w-[208px] shrink-0 border-r border-[var(--border-1)] bg-white lg:block">
+    <div className="vf-mobile-stable flex h-svh overflow-hidden overscroll-none bg-[var(--color-surface)] text-[var(--color-ink)] lg:h-dvh">
+      <aside className="hidden h-full w-[208px] shrink-0 border-r border-[var(--border-1)] bg-[var(--color-surface)] lg:block">
         <LiveSidebar project={project} me={me} />
       </aside>
 
@@ -166,7 +166,7 @@ export function LivePortal({
         </header>
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
-          <main className="min-w-0 flex-1 overflow-y-auto bg-[#f7f7f5] p-3 md:p-4">
+          <main className="min-w-0 flex-1 overflow-y-auto overscroll-contain bg-[var(--color-background)] p-3 md:p-4">
             <div className="grid items-start gap-3 xl:grid-cols-[minmax(280px,1.12fr)_minmax(150px,0.48fr)_minmax(260px,0.92fr)] 2xl:grid-cols-[minmax(360px,1.25fr)_minmax(220px,0.58fr)_minmax(320px,0.95fr)]">
               <Viewport
                 kind="desktop"
@@ -245,7 +245,7 @@ function LiveSidebar({
 
       <div className="px-4 py-5">
         <Link
-          href="/app/projects"
+          href={me.isPlatformOwner ? "/app/projects" : "/workspace"}
           className="inline-flex items-center gap-2 text-[11px] text-[var(--fg-muted)] hover:text-black"
         >
           <IconArrowL size={12} /> Proyectos

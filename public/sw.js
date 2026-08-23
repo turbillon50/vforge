@@ -1,6 +1,6 @@
 // VForge minimal service worker — offline shell + network-first for documents
 // Bump VERSION on every deploy where you want forced cache invalidation
-const VERSION = "vforge-monochrome-studio-2026-08-23";
+const VERSION = "vforge-monochrome-stability-2026-08-23";
 const SHELL = ["/", "/app/chat", "/offline"];
 
 self.addEventListener("install", (event) => {

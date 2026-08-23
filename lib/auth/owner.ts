@@ -1,20 +1,30 @@
 /**
  * Owner gating — V (y todo su cockpit) es para los owners (Luis + Jaime).
  *
- * Un usuario es owner si:
- *  1. publicMetadata.role === "owner" en Clerk, o
- *  2. alguno de sus emails está en VFORGE_OWNER_EMAILS (env, CSV).
+ * Un usuario es owner únicamente si alguno de sus emails está en
+ * VFORGE_OWNER_EMAILS (env, CSV). El metadata de Clerk nunca eleva permisos:
+ * puede quedar obsoleto, copiarse entre instancias o haber sido escrito por
+ * un onboarding antiguo.
  *
- * Default de emails: las cuentas de Luis + Jaime (owners de V·Forge).
+ * Default de emails: las cuentas canónicas de Luis + Jaime. Las cuentas
+ * secundarias se comportan como clientes y sólo ven proyectos por membresía.
  */
-export const OWNER_EMAILS: string[] = (
-  process.env.VFORGE_OWNER_EMAILS ??
-  "turbillon50@gmail.com,dluisdelatorre@gmail.com,luisdelator@vmomentums.info,jaime@vmomentums.info"
-)
+export const DEFAULT_OWNER_EMAILS = [
+  "turbillon50@gmail.com",
+  "jaime@vmomentums.info",
+] as const;
+
+export function parseOwnerEmails(value?: string): string[] {
+  return (value ?? DEFAULT_OWNER_EMAILS.join(","))
   .toLowerCase()
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
+}
+
+export const OWNER_EMAILS: string[] = parseOwnerEmails(
+  process.env.VFORGE_OWNER_EMAILS,
+);
 
 export function isOwnerEmail(email: string | null | undefined): boolean {
   if (!email) return false;
@@ -22,15 +32,11 @@ export function isOwnerEmail(email: string | null | undefined): boolean {
 }
 
 type MinimalUser = {
-  publicMetadata?: Record<string, unknown> | null;
   emailAddresses?: Array<{ emailAddress: string }>;
 };
 
 export function isOwnerUser(user: MinimalUser | null | undefined): boolean {
   if (!user) return false;
-  if ((user.publicMetadata as { role?: string } | null)?.role === "owner") {
-    return true;
-  }
   return (user.emailAddresses ?? []).some((e) => isOwnerEmail(e.emailAddress));
 }
 
