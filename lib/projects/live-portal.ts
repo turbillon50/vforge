@@ -16,6 +16,7 @@ import {
   generateInviteToken,
   hashInviteToken,
 } from "@/lib/projects/invite-token";
+import { resolveProjectViewportUrls } from "@/lib/projects/viewport-url";
 
 const INVITE_DEFAULT_TTL_HOURS = 168; // 7 días
 const INVITE_MAX_TTL_HOURS = 24 * 30; // 30 días
@@ -36,11 +37,17 @@ export interface ProjectViewports {
 export async function getProjectViewports(
   projectId: string,
 ): Promise<ProjectViewports | null> {
-  return queryOne<ProjectViewports>(
+  const project = await queryOne<ProjectViewports>(
     `SELECT id, name, status, desktop_url, mobile_url, admin_url, vercel_url, domain
        FROM projects WHERE id = $1 LIMIT 1`,
     [projectId],
   );
+  if (!project) return null;
+
+  return {
+    ...project,
+    ...resolveProjectViewportUrls(project),
+  };
 }
 
 export interface InvitationSummary {
