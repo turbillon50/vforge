@@ -1,5 +1,5 @@
-import { ChatExperience } from "@/components/workspace/chat/ChatExperience";
+import { ForgeStudio } from "@/components/studio/ForgeStudio";
 
 export default function ChatPage() {
-  return <ChatExperience />;
+  return <ForgeStudio />;
 }
