@@ -46,6 +46,7 @@
 | [008](./008-zero-knowledge-vault.md) | Accepted | Zero-Knowledge Vault con Vault Master Password separado del Clerk password |
 | [009](./009-external-service-stack.md) | Accepted | Stack de servicios externos: OpenRouter, E2B, Trigger.dev, Turso, Liveblocks, Polar.sh, Unkey, Resend |
 | [010](./010-execute-first-doctrine.md) | Accepted | V ejecuta directo — sin gates de pre-confirmación; anillos = clasificación de blast radius (supersede en parte ADR-004) |
+| [011](./011-owner-studio-and-client-boundary.md) | Accepted | `/app/chat` es el estudio owner canónico; `/workspace` y `/app/live` conservan aislamiento de clientes |
 
 ---
 
