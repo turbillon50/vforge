@@ -11,7 +11,7 @@ export default function OfflinePage() {
       <VWordmark />
       <h1 className="mt-8 font-display text-3xl font-semibold tracking-tight md:text-4xl">{t.offline.title}</h1>
       <p className="mt-3 max-w-md text-on-surface-variant">{t.offline.body}</p>
-      <Link href="/app/projects" className="btn-primary mt-8">
+      <Link href="/app/chat" className="btn-primary mt-8">
         {t.offline.open_shell}
       </Link>
     </div>
