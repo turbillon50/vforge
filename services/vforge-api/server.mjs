@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { timingSafeEqual } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
+import { resolveProjectViewportUrls } from "./viewport-url.mjs";
 
 const databaseUrl = process.env.DATABASE_URL?.trim();
 const internalToken = process.env.VFORGE_API_INTERNAL_TOKEN?.trim();
@@ -209,7 +210,8 @@ async function liveProject(req, res, projectId) {
   if (!access) return;
 
   const rows = await sql.query(
-    `SELECT id, name, status, desktop_url, mobile_url, admin_url
+    `SELECT id, name, status,
+            desktop_url, mobile_url, admin_url, vercel_url, domain
        FROM projects
       WHERE id = $1
       LIMIT 1`,
@@ -222,14 +224,15 @@ async function liveProject(req, res, projectId) {
   }
 
   const canSeeAdmin = access.role === "owner" || access.role === "reviewer";
+  const viewports = resolveProjectViewportUrls(project);
   json(res, 200, {
     project: {
       id: project.id,
       name: project.name,
       status: project.status,
-      desktop_url: project.desktop_url,
-      mobile_url: project.mobile_url,
-      admin_url: canSeeAdmin ? project.admin_url : null,
+      desktop_url: viewports.desktop_url,
+      mobile_url: viewports.mobile_url,
+      admin_url: canSeeAdmin ? viewports.admin_url : null,
     },
     me: {
       name: access.name,
