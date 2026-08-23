@@ -2,7 +2,7 @@
   "name": "VForge",
   "short_name": "VForge",
   "description": "Escritorio, móvil y administración en una sala privada de revisión.",
-  "start_url": "/app/projects",
+  "start_url": "/app/chat",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
