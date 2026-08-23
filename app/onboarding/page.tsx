@@ -74,7 +74,6 @@ function OnboardingWithClerk() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: user?.fullName ?? user?.firstName ?? "",
-          role: "owner",
           services: connected.length,
         }),
       });

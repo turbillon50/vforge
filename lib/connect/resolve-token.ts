@@ -80,13 +80,9 @@ export async function resolveAccess(): Promise<ResolvedAccess> {
     const a = await auth();
     userId = a.userId ?? null;
     if (userId) {
-      const claimRole = (a.sessionClaims?.publicMetadata as { role?: string } | undefined)?.role;
-      if (claimRole === "owner") owner = true;
-      else {
-        const cc = await clerkClient();
-        const u = await cc.users.getUser(userId).catch(() => null);
-        owner = isOwnerUser(u);
-      }
+      const cc = await clerkClient();
+      const u = await cc.users.getUser(userId).catch(() => null);
+      owner = isOwnerUser(u);
     }
   } catch {
     /* sin sesión */

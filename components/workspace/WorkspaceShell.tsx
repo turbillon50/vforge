@@ -161,6 +161,7 @@ function Sidebar({
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const isStudio = pathname === "/app/chat";
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -184,7 +185,14 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
     "VForge";
 
   return (
-    <div className="min-h-dvh bg-[#f7f7f5] text-black">
+    <div
+      className={cn(
+        "bg-[var(--color-background)] text-[var(--color-ink)]",
+        isStudio
+          ? "h-svh overflow-hidden overscroll-none lg:h-dvh"
+          : "min-h-svh",
+      )}
+    >
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] border-r border-[var(--border-1)] md:block">
         <Sidebar pathname={pathname} />
       </aside>
@@ -211,8 +219,18 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <div className="min-h-dvh md:pl-[220px]">
-        <header className="sticky top-0 z-20 border-b border-[var(--border-1)] bg-white/95 backdrop-blur-md">
+      <div
+        className={cn(
+          "md:pl-[220px]",
+          isStudio ? "h-full overflow-hidden" : "min-h-svh",
+        )}
+      >
+        <header
+          className={cn(
+            "z-20 border-b border-[var(--border-1)] bg-white/95 backdrop-blur-md",
+            isStudio ? "relative shrink-0" : "sticky top-0",
+          )}
+        >
           <div className="flex h-[58px] items-center justify-between gap-4 px-4 md:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <button
@@ -236,7 +254,15 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="min-h-[calc(100dvh-58px)]">{children}</main>
+        <main
+          className={cn(
+            isStudio
+              ? "h-[calc(100svh-58px)] overflow-hidden lg:h-[calc(100dvh-58px)]"
+              : "min-h-[calc(100svh-58px)]",
+          )}
+        >
+          {children}
+        </main>
       </div>
     </div>
   );

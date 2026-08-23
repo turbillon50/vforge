@@ -245,7 +245,7 @@ export function ForgeStudio() {
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const endRef = useRef<HTMLDivElement>(null);
+  const conversationViewportRef = useRef<HTMLDivElement>(null);
 
   const loadProjects = useCallback(async (preferredId?: string) => {
     setProjectsLoading(true);
@@ -463,7 +463,12 @@ export function ForgeStudio() {
   }, [activeProjectId]);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "end" });
+    const viewport = conversationViewportRef.current;
+    if (!viewport) return;
+    const frame = window.requestAnimationFrame(() => {
+      viewport.scrollTop = viewport.scrollHeight;
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [messages, sending]);
 
   const fallbackPreviewUrl = useMemo(
@@ -722,7 +727,7 @@ export function ForgeStudio() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-58px)] min-h-[620px] flex-col overflow-hidden bg-[var(--vf-bg)] text-[var(--vf-fg)]">
+    <div className="vf-mobile-stable flex h-full min-h-0 flex-col overflow-hidden overscroll-none bg-[var(--vf-bg)] text-[var(--vf-fg)]">
       <StudioToolbar
         projects={projects}
         activeProjectId={activeProjectId}
@@ -772,7 +777,10 @@ export function ForgeStudio() {
             </button>
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-5">
+          <div
+            ref={conversationViewportRef}
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 md:px-5"
+          >
             {conversationLoading ? (
               <div className="grid h-full min-h-[260px] place-items-center">
                 <div className="text-center">
@@ -792,12 +800,11 @@ export function ForgeStudio() {
                 {messages.map((message) => (
                   <Message key={message.id} message={message} />
                 ))}
-                <div ref={endRef} />
               </div>
             )}
           </div>
 
-          <div className="shrink-0 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] p-3 md:p-4">
+          <div className="vf-studio-composer shrink-0 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] p-3 md:p-4">
             {attachment ? (
               <div className="mb-2 flex items-center justify-between gap-3 rounded-md border border-[var(--vf-border)] bg-[var(--vf-bg-2)] px-3 py-2">
                 <div className="min-w-0">
@@ -889,7 +896,7 @@ export function ForgeStudio() {
             }}
           />
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-3 md:p-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 md:p-4">
             {!activeProjectId ? (
               <NoProject onCreate={() => setShowCreate(true)} />
             ) : projectLoading && !project ? (
