@@ -304,8 +304,13 @@ iframe {
   background: #ffffff;
 }
 
+.live-workspace-grid {
+  transition: none !important;
+}
+
 .live-workspace-grid .react-grid-item {
   min-width: 0;
+  transition: none !important;
 }
 
 .live-workspace-grid .react-grid-item > section {
@@ -321,8 +326,8 @@ iframe {
 
 .live-workspace-grid .react-resizable-handle {
   z-index: 20;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   background-image: none;
 }
 
@@ -334,21 +339,23 @@ iframe {
   border-color: #090909;
 }
 
-.live-workspace-grid .react-resizable-handle-e,
-.live-workspace-grid .react-resizable-handle-s {
-  opacity: 0;
+.live-workspace-grid:not(.live-grid-editing) .live-grid-drag-handle {
+  cursor: default;
 }
 
-.live-workspace-grid .react-grid-item:hover .react-resizable-handle-e,
-.live-workspace-grid .react-grid-item:hover .react-resizable-handle-s {
+.live-grid-editing .react-grid-item > .react-resizable-handle {
   opacity: 1;
+}
+
+.live-grid-editing .react-grid-item:hover > section {
+  box-shadow: 0 0 0 1px #090909;
 }
 
 .live-grid-is-interacting iframe {
   pointer-events: none;
 }
 
-@media (max-width: 599px) {
+@media (max-width: 649px) {
   .live-workspace-grid .react-grid-item {
     transition: none !important;
   }

@@ -86,16 +86,16 @@ const PANEL_LABELS: Record<WorkspacePanelId, string> = {
 };
 
 const WORKSPACE_BREAKPOINTS: Record<WorkspaceBreakpoint, number> = {
-  lg: 1200,
-  md: 900,
-  sm: 600,
+  lg: 1000,
+  md: 800,
+  sm: 650,
   xs: 0,
 };
 
 const WORKSPACE_COLS: Record<WorkspaceBreakpoint, number> = {
   lg: 12,
-  md: 8,
-  sm: 4,
+  md: 12,
+  sm: 12,
   xs: 1,
 };
 
@@ -108,54 +108,40 @@ function presetLayouts(preset: WorkspacePreset): ResponsiveLayouts<WorkspaceBrea
     { i: "comments", x: 0, y: 45, w: 1, h: 11, minH: 8 },
   ];
 
+  const stableDesktop = (desktop: Layout): ResponsiveLayouts<WorkspaceBreakpoint> => ({
+    lg: desktop,
+    md: desktop.map((item) => ({ ...item })),
+    sm: desktop.map((item) => ({ ...item })),
+    xs: mobileStack,
+  });
+
   if (preset === "previews") {
-    return {
-      lg: [
-        { i: "desktop", x: 0, y: 0, w: 7, h: 15, minW: 4, minH: 8 },
-        { i: "mobile", x: 7, y: 0, w: 2, h: 15, minW: 2, minH: 9 },
-        { i: "admin", x: 9, y: 0, w: 3, h: 15, minW: 3, minH: 8 },
-        { i: "activity", x: 0, y: 15, w: 5, h: 7, minW: 3, minH: 6 },
-        { i: "comments", x: 5, y: 15, w: 7, h: 7, minW: 4, minH: 7 },
-      ],
-      md: [
-        { i: "desktop", x: 0, y: 0, w: 5, h: 13, minW: 4, minH: 8 },
-        { i: "mobile", x: 5, y: 0, w: 3, h: 13, minW: 2, minH: 9 },
-        { i: "admin", x: 0, y: 13, w: 8, h: 11, minW: 4, minH: 8 },
-        { i: "activity", x: 0, y: 24, w: 3, h: 8, minW: 3, minH: 6 },
-        { i: "comments", x: 3, y: 24, w: 5, h: 8, minW: 4, minH: 7 },
-      ],
-      sm: mobileStack.map((item) => ({ ...item, w: 4 })),
-      xs: mobileStack,
-    };
+    return stableDesktop([
+      { i: "desktop", x: 0, y: 0, w: 7, h: 15, minW: 4, minH: 8 },
+      { i: "mobile", x: 7, y: 0, w: 2, h: 15, minW: 2, minH: 9 },
+      { i: "admin", x: 9, y: 0, w: 3, h: 15, minW: 3, minH: 8 },
+      { i: "activity", x: 0, y: 15, w: 5, h: 7, minW: 3, minH: 6 },
+      { i: "comments", x: 5, y: 15, w: 7, h: 7, minW: 4, minH: 7 },
+    ]);
   }
 
   if (preset === "review") {
-    return {
-      lg: [
-        { i: "desktop", x: 0, y: 0, w: 8, h: 14, minW: 4, minH: 8 },
-        { i: "mobile", x: 8, y: 0, w: 4, h: 14, minW: 2, minH: 9 },
-        { i: "admin", x: 0, y: 14, w: 6, h: 11, minW: 3, minH: 8 },
-        { i: "activity", x: 6, y: 14, w: 2, h: 11, minW: 2, minH: 6 },
-        { i: "comments", x: 8, y: 14, w: 4, h: 11, minW: 3, minH: 7 },
-      ],
-      md: presetLayouts("previews").md,
-      sm: mobileStack.map((item) => ({ ...item, w: 4 })),
-      xs: mobileStack,
-    };
+    return stableDesktop([
+      { i: "desktop", x: 0, y: 0, w: 8, h: 14, minW: 4, minH: 8 },
+      { i: "mobile", x: 8, y: 0, w: 4, h: 14, minW: 2, minH: 9 },
+      { i: "admin", x: 0, y: 14, w: 6, h: 11, minW: 3, minH: 8 },
+      { i: "activity", x: 6, y: 14, w: 2, h: 11, minW: 2, minH: 6 },
+      { i: "comments", x: 8, y: 14, w: 4, h: 11, minW: 3, minH: 7 },
+    ]);
   }
 
-  return {
-    lg: [
-      { i: "desktop", x: 0, y: 0, w: 6, h: 13, minW: 4, minH: 8 },
-      { i: "mobile", x: 6, y: 0, w: 2, h: 13, minW: 2, minH: 9 },
-      { i: "admin", x: 8, y: 0, w: 4, h: 13, minW: 3, minH: 8 },
-      { i: "activity", x: 0, y: 13, w: 4, h: 8, minW: 3, minH: 6 },
-      { i: "comments", x: 4, y: 13, w: 8, h: 8, minW: 4, minH: 7 },
-    ],
-    md: presetLayouts("previews").md,
-    sm: mobileStack.map((item) => ({ ...item, w: 4 })),
-    xs: mobileStack,
-  };
+  return stableDesktop([
+    { i: "desktop", x: 0, y: 0, w: 6, h: 13, minW: 4, minH: 8 },
+    { i: "mobile", x: 6, y: 0, w: 2, h: 13, minW: 2, minH: 9 },
+    { i: "admin", x: 8, y: 0, w: 4, h: 13, minW: 3, minH: 8 },
+    { i: "activity", x: 0, y: 13, w: 4, h: 8, minW: 3, minH: 6 },
+    { i: "comments", x: 4, y: 13, w: 8, h: 8, minW: 4, minH: 7 },
+  ]);
 }
 
 function timeAgo(iso: string) {
@@ -305,7 +291,7 @@ function LiveWorkspace({
   me: LivePortalMe;
   canSeeAdmin: boolean;
 }) {
-  const storageKey = `vforge:live-layout:v2:${project.id}:${me.role}`;
+  const storageKey = `vforge:live-layout:v3:${project.id}:${me.role}`;
   const availablePanels = useMemo<WorkspacePanelId[]>(
     () => [
       "desktop",
@@ -323,6 +309,8 @@ function LiveWorkspace({
   const [focusedPanel, setFocusedPanel] = useState<WorkspacePanelId | null>(null);
   const [breakpoint, setBreakpoint] = useState<WorkspaceBreakpoint>("lg");
   const [interacting, setInteracting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [gap, setGap] = useState(10);
   const [hydratedLayout, setHydratedLayout] = useState(false);
 
   useEffect(() => {
@@ -332,12 +320,16 @@ function LiveWorkspace({
         const parsed = JSON.parse(saved) as {
           layouts?: ResponsiveLayouts<WorkspaceBreakpoint>;
           hiddenPanels?: WorkspacePanelId[];
+          gap?: number;
         };
         if (parsed.layouts?.lg && parsed.layouts?.xs) setLayouts(parsed.layouts);
         if (Array.isArray(parsed.hiddenPanels)) {
           setHiddenPanels(
             parsed.hiddenPanels.filter((panel) => availablePanels.includes(panel)),
           );
+        }
+        if (typeof parsed.gap === "number" && parsed.gap >= 0 && parsed.gap <= 24) {
+          setGap(parsed.gap);
         }
       }
     } catch {
@@ -351,9 +343,9 @@ function LiveWorkspace({
     if (!hydratedLayout) return;
     window.localStorage.setItem(
       storageKey,
-      JSON.stringify({ layouts, hiddenPanels }),
+      JSON.stringify({ layouts, hiddenPanels, gap }),
     );
-  }, [hiddenPanels, hydratedLayout, layouts, storageKey]);
+  }, [gap, hiddenPanels, hydratedLayout, layouts, storageKey]);
 
   const visiblePanels = availablePanels.filter(
     (panel) => !hiddenPanels.includes(panel) && (!focusedPanel || focusedPanel === panel),
@@ -394,11 +386,25 @@ function LiveWorkspace({
 
   const focusAction = (panel: WorkspacePanelId) =>
     setFocusedPanel((current) => (current === panel ? null : panel));
-  const compact = breakpoint === "sm" || breakpoint === "xs";
+  const compact = breakpoint === "xs";
 
   return (
     <div className="min-w-0 px-2 py-2 md:px-3 md:py-3">
       <div className="mb-2 flex min-w-0 items-center gap-2 overflow-x-auto rounded-[8px] border border-[var(--border-1)] bg-white p-2 no-scrollbar">
+        <button
+          type="button"
+          onClick={() => {
+            setFocusedPanel(null);
+            setEditing((value) => !value);
+          }}
+          aria-pressed={editing}
+          className={cn(
+            "shrink-0 rounded-md border px-3 py-2 font-mono text-[8px] uppercase tracking-[0.1em]",
+            editing ? "border-black bg-black text-white" : "border-black bg-white text-black",
+          )}
+        >
+          {editing ? "Listo · fijar" : "Ajustar layout"}
+        </button>
         <div className="flex shrink-0 items-center gap-1 border-r border-[var(--border-1)] pr-2">
           {(["balanced", "previews", "review"] as WorkspacePreset[]).map((preset) => (
             <button
@@ -411,6 +417,40 @@ function LiveWorkspace({
             </button>
           ))}
         </div>
+        {editing ? (
+          <div className="flex shrink-0 items-center gap-1 border-r border-[var(--border-1)] pr-2">
+            <span className="px-1 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+              Espacio
+            </span>
+            <button
+              type="button"
+              onClick={() => setGap((value) => Math.max(0, value - 2))}
+              className="grid h-8 w-8 place-items-center rounded-md border border-[var(--border-1)] text-sm hover:border-black"
+              aria-label="Reducir espacio entre paneles"
+            >
+              −
+            </button>
+            <output className="w-7 text-center font-mono text-[9px]">{gap}</output>
+            <button
+              type="button"
+              onClick={() => setGap((value) => Math.min(24, value + 2))}
+              className="grid h-8 w-8 place-items-center rounded-md border border-[var(--border-1)] text-sm hover:border-black"
+              aria-label="Aumentar espacio entre paneles"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setGap(10);
+                applyPreset("balanced");
+              }}
+              className="rounded-md px-2.5 py-2 font-mono text-[8px] uppercase tracking-[0.1em] hover:bg-[#f2f2f0]"
+            >
+              Restablecer
+            </button>
+          </div>
+        ) : null}
         <div className="flex shrink-0 items-center gap-1" aria-label="Paneles visibles">
           {availablePanels.map((panel) => {
             const visible = !hiddenPanels.includes(panel);
@@ -431,7 +471,7 @@ function LiveWorkspace({
           })}
         </div>
         <p className="ml-auto hidden shrink-0 px-2 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)] lg:block">
-          Arrastra el encabezado · ajusta desde la esquina
+          {editing ? "Arrastra el encabezado · usa cualquier borde" : "Layout fijo · entra a ajustar para mover"}
         </p>
       </div>
 
@@ -447,25 +487,30 @@ function LiveWorkspace({
         </div>
       ) : (
         <ResponsiveGrid
-          className={cn("live-workspace-grid", interacting && "live-grid-is-interacting")}
+          className={cn(
+            "live-workspace-grid",
+            editing && "live-grid-editing",
+            interacting && "live-grid-is-interacting",
+          )}
           layouts={activeLayouts}
           breakpoints={WORKSPACE_BREAKPOINTS}
           cols={WORKSPACE_COLS}
           rowHeight={28}
-          margin={[10, 10]}
+          margin={[gap, gap]}
           containerPadding={[0, 0]}
-          compactType="vertical"
+          compactType={null}
+          preventCollision
           isBounded
-          isDraggable={!compact && !focusedPanel}
-          isResizable={!compact && !focusedPanel}
+          isDraggable={editing && !compact && !focusedPanel}
+          isResizable={editing && !compact && !focusedPanel}
           useCSSTransforms={!compact}
           draggableHandle=".live-grid-drag-handle"
           draggableCancel="button,a,textarea,input,iframe"
-          resizeHandles={["se", "s", "e"]}
+          resizeHandles={["n", "s", "e", "w", "ne", "nw", "se", "sw"]}
           measureBeforeMount
           onBreakpointChange={(next) => setBreakpoint(next)}
           onLayoutChange={(_, nextLayouts) => {
-            if (focusedPanel) return;
+            if (focusedPanel || !editing) return;
             setLayouts((current) => {
               const merged = Object.fromEntries(
                 (Object.keys(WORKSPACE_COLS) as WorkspaceBreakpoint[]).map((key) => {
