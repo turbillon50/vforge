@@ -6,11 +6,6 @@ import { getOperatorSecret } from "@/lib/vault/get-secret";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * GET /api/auth/stripe/callback — Stripe regresa con ?code&state.
- * Intercambia el code por el stripe_user_id (la cuenta conectada) y un
- * access token; los guarda cifrados por usuario. NO mueve dinero.
- */
 export async function GET(req: Request) {
   const site = process.env.NEXT_PUBLIC_SITE_URL || "https://vforge.site";
   const { userId } = await auth();
@@ -25,7 +20,7 @@ export async function GET(req: Request) {
   jar.delete("stripe_oauth_state");
 
   const back = (s: string) =>
-    Response.redirect(`${site}/app/integrations?stripe=${s}`, 302);
+    Response.redirect(`${site}/app/setup?stripe=${s}`, 302);
 
   if (errParam) return back("error_denied");
   if (!code) return back("error_no_code");
@@ -51,10 +46,9 @@ export async function GET(req: Request) {
       access_token?: string;
       refresh_token?: string;
       error?: string;
-      error_description?: string;
     };
     if (!data.stripe_user_id) {
-      console.error("[stripe connect] sin stripe_user_id:", data.error, data.error_description);
+      console.error("[stripe connect] sin stripe_user_id:", data.error);
       return back("error_token");
     }
 
