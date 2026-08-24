@@ -1,7 +1,6 @@
 /**
  * Link permanente de revisión por proyecto — SERVER ONLY.
  * Sin email, sin caducidad, sin revocación (es “su” proyecto).
- * Quien tiene el token ve solo ese proyecto como observador.
  */
 import "server-only";
 import { randomBytes } from "crypto";
@@ -14,7 +13,7 @@ async function ensureTable() {
   if (tableReady) return;
   await queryAll(
     `CREATE TABLE IF NOT EXISTS project_share_links (
-       project_id text PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+       project_id text PRIMARY KEY,
        token text NOT NULL UNIQUE,
        created_at timestamptz NOT NULL DEFAULT now()
      )`,
@@ -26,7 +25,6 @@ function newToken(): string {
   return randomBytes(24).toString("base64url");
 }
 
-/** Owner: obtiene o crea el link permanente del proyecto. */
 export async function getOrCreateShareLink(projectId: string): Promise<string> {
   await ensureTable();
   const existing = await queryOne<{ token: string }>(
@@ -58,7 +56,6 @@ export interface ShareProject {
   domain: string | null;
 }
 
-/** Público: resuelve token → proyecto (solo datos de preview). */
 export async function resolveShareToken(
   token: string,
 ): Promise<ShareProject | null> {
