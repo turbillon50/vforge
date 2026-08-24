@@ -1,7 +1,6 @@
 /**
  * BFF de comentarios del portal en vivo.
- * El browser nunca recibe credenciales de infraestructura ni acceso directo a
- * Neon; la API propia vuelve a comprobar membresía y aislamiento por proyecto.
+ * Tras un POST exitoso, si el autor no es owner de plataforma, push a owners.
  */
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -10,6 +9,8 @@ import {
   mirrorJsonResponse,
   projectApiPath,
 } from "@/lib/api/vforge-owned";
+import { isOwnerEmail } from "@/lib/auth/owner";
+import { sendPushToOwners } from "@/lib/push/send";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,16 +72,23 @@ export async function POST(
   }
 
   try {
-    const upstream = await fetchVForgeApi(
-      requestContext.path,
-      requestContext.identity,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: raw }),
-        signal: req.signal,
-      },
-    );
+    const upstream = await fetchVForgeApi(requestContext.path, requestContext.identity, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body: raw }),
+      signal: req.signal,
+    });
+
+    if (upstream.ok && !isOwnerEmail(requestContext.identity.email)) {
+      const preview = raw.trim().length > 120 ? raw.trim().slice(0, 117) + "…" : raw.trim();
+      const who = requestContext.identity.name || requestContext.identity.email;
+      void sendPushToOwners({
+        title: `Proyecto · mensaje nuevo`,
+        body: `${who}: ${preview}`,
+        url: `/app/live/${encodeURIComponent(projectId)}`,
+      });
+    }
+
     return mirrorJsonResponse(upstream);
   } catch {
     return NextResponse.json(
