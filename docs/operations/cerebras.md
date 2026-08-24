@@ -1,25 +1,26 @@
 # Motor Cerebras (sin OpenRouter)
 
+## Origen de credenciales
+
+En Hetzner (`/root/mesh-router/config.json` → bloque `cerebras`):
+
+- `base`: `https://api.cerebras.ai/v1`
+- `default_model`: `gpt-oss-120b`
+- `models`: `gpt-oss-120b`, `gemma-4-31b`
+
+También alimenta `/opt/vchat-local` (v.mindcontextia.one).
+
 ## Variables en Vercel (`vforge`)
 
 | Variable | Uso |
 |----------|-----|
-| `CEREBRAS_API_KEY` | API key Cerebras (obligatoria para el motor nuevo) |
-| `CEREBRAS_BASE_URL` | Default `https://api.cerebras.ai/v1`. Si tienes **endpoint dedicado / nuestras GPUs**, pon aquí la base OpenAI-compatible (`https://tu-endpoint/.../v1`) |
-| `CEREBRAS_MODEL` | Default del chat, ej. `llama-3.3-70b`, `qwen-3-32b`, `gpt-oss-120b` |
-| `MODEL_CHAT_MAIN` | Override opcional (misma forma) |
+| `CEREBRAS_API_KEY` | Key del mesh (encrypted) |
+| `CEREBRAS_BASE_URL` | `https://api.cerebras.ai/v1` (o endpoint GPU dedicado) |
+| `CEREBRAS_MODEL` | Default `gpt-oss-120b` |
+| `MODEL_CHAT_MAIN` | Override chat Estudio |
 
 ## Comportamiento
 
-1. Si existe `CEREBRAS_API_KEY` → **todo el chat de Estudio usa Cerebras**.
-2. Slugs viejos `anthropic/claude-*` se **remapear** al modelo Cerebras default (no se llama OpenRouter ni Claude).
-3. OpenRouter solo si **no** hay key de Cerebras (fallback de emergencia).
-
-## Modelos públicos típicos
-
-- `llama-3.3-70b`
-- `llama3.1-8b`
-- `qwen-3-32b`
-- `gpt-oss-120b`
-
-Ver catálogo: https://inference-docs.cerebras.ai/
+1. Con `CEREBRAS_API_KEY` → Estudio usa **solo Cerebras**.
+2. Slugs `anthropic/claude-*` se remapean al modelo Cerebras.
+3. OpenRouter solo si no hay key Cerebras.
