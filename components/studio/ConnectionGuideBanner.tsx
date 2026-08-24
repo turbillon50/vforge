@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   IconGithub,
   IconGlobe,
@@ -10,7 +10,6 @@ import {
   IconCheck,
   IconCopy,
   IconLoader,
-  IconRefresh,
 } from "@/components/brand/VFIcons";
 
 type Props = {
@@ -18,29 +17,31 @@ type Props = {
   onRefresh: () => void;
 };
 
+/** Banner mínimo y secuencial: solo muestra el siguiente paso pendiente. */
 export function ConnectionGuideBanner({ connections, onRefresh }: Props) {
   const [mcpToken, setMcpToken] = useState<string | null>(null);
-  const [mcpUrl, setMcpUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const gh = connections.has("github");
   const vc = connections.has("vercel");
   const st = connections.has("stripe");
-  const allConnected = gh && vc;
+
+  // Solo el siguiente paso
+  const next = !gh
+    ? { id: "github", label: "Conectar GitHub", href: "/api/auth/github/start", why: "Base del código y del historial real." }
+    : !vc
+      ? { id: "vercel", label: "Conectar Vercel", href: "/api/auth/vercel/start", why: "Previews y dominio en vivo para tus clientes." }
+      : !st
+        ? { id: "stripe", label: "Conectar Stripe", href: "/api/auth/stripe/start", why: "Cobrar cuando el producto esté listo." }
+        : null;
 
   async function generateMcp() {
     setLoading(true);
-    setMcpToken(null);
     try {
       const res = await fetch("/api/mcp/token", { method: "POST" });
       const data = await res.json();
-      if (data?.token) {
-        setMcpToken(data.token);
-        setMcpUrl(data.url || "https://vforge.site/api/mcp");
-      }
-    } catch {
-      /* silent */
+      if (data?.token) setMcpToken(data.token);
     } finally {
       setLoading(false);
     }
@@ -50,10 +51,11 @@ export function ConnectionGuideBanner({ connections, onRefresh }: Props) {
     if (!mcpToken) return;
     await navigator.clipboard.writeText(mcpToken);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 1600);
   }
 
-  if (allConnected && !mcpToken) {
+  // Todo listo → solo token MCP compacto
+  if (!next) {
     return (
       <div
         style={{
@@ -64,202 +66,115 @@ export function ConnectionGuideBanner({ connections, onRefresh }: Props) {
           alignItems: "center",
           justifyContent: "space-between",
           gap: 12,
+          flexWrap: "wrap",
         }}
       >
         <span style={{ fontSize: 10, color: "var(--vf-fg-2)", fontFamily: "monospace", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-          GitHub + Vercel listos · genera tu token MCP para Claude / Grok / ChatGPT
+          Conectores listos
         </span>
-        <button
-          type="button"
-          onClick={() => void generateMcp()}
-          disabled={loading}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            height: 28,
-            padding: "0 10px",
-            border: "1px solid var(--vf-border-1)",
-            background: "var(--vf-fg)",
-            color: "var(--vf-bg-1)",
-            fontSize: 10,
-            cursor: loading ? "wait" : "pointer",
-          }}
-        >
-          {loading ? <IconLoader size={11} className="animate-spin" /> : <IconKey size={11} />}
-          Generar token MCP
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
-      style={{
-        borderBottom: "1px solid var(--vf-border)",
-        background: "var(--vf-bg-1)",
-        padding: "12px 16px",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-        <p style={{ fontFamily: "monospace", fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--vf-fg-2)" }}>
-          Conecta tu empresa · GitHub · Vercel · Stripe · MCP
-        </p>
-        <button
-          type="button"
-          onClick={onRefresh}
-          aria-label="Actualizar conexiones"
-          style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--vf-fg-2)" }}
-        >
-          <IconRefresh size={12} />
-        </button>
-      </div>
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {gh ? (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, color: "var(--vf-fg)" }}>
-            <IconCheck size={11} /> GitHub
-          </span>
-        ) : (
-          <a
-            href="/api/auth/github/start"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5,
-              height: 28,
-              padding: "0 10px",
-              border: "1px solid var(--vf-fg)",
-              background: "var(--vf-fg)",
-              color: "var(--vf-bg-1)",
-              fontSize: 10,
-              textDecoration: "none",
-            }}
-          >
-            <IconGithub size={12} /> Conectar GitHub
-          </a>
-        )}
-
-        {vc ? (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, color: "var(--vf-fg)" }}>
-            <IconCheck size={11} /> Vercel
-          </span>
-        ) : (
-          <a
-            href="/api/auth/vercel/start"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5,
-              height: 28,
-              padding: "0 10px",
-              border: "1px solid var(--vf-border-1)",
-              color: "var(--vf-fg)",
-              fontSize: 10,
-              textDecoration: "none",
-            }}
-          >
-            <IconGlobe size={12} /> Conectar Vercel
-          </a>
-        )}
-
-        {st ? (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, color: "var(--vf-fg)" }}>
-            <IconCheck size={11} /> Stripe
-          </span>
-        ) : (
-          <a
-            href="/api/auth/stripe/start"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5,
-              height: 28,
-              padding: "0 10px",
-              border: "1px solid var(--vf-border-1)",
-              color: "var(--vf-fg)",
-              fontSize: 10,
-              textDecoration: "none",
-            }}
-          >
-            <IconCreditCard size={12} /> Conectar Stripe
-          </a>
-        )}
-
-        <button
-          type="button"
-          onClick={() => void generateMcp()}
-          disabled={loading}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 5,
-            height: 28,
-            padding: "0 10px",
-            border: "1px solid var(--vf-border-1)",
-            background: "transparent",
-            color: "var(--vf-fg)",
-            fontSize: 10,
-            cursor: loading ? "wait" : "pointer",
-          }}
-        >
-          {loading ? <IconLoader size={11} className="animate-spin" /> : <IconKey size={11} />}
-          Token MCP
-        </button>
-      </div>
-
-      <AnimatePresence>
         {mcpToken ? (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}
-          >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <input
               readOnly
               value={mcpToken}
               style={{
-                flex: 1,
-                height: 32,
-                padding: "0 10px",
+                width: 180,
+                height: 28,
+                padding: "0 8px",
                 border: "1px solid var(--vf-border)",
                 background: "var(--vf-bg)",
                 color: "var(--vf-fg)",
                 fontFamily: "monospace",
-                fontSize: 11,
+                fontSize: 10,
               }}
             />
             <button
               type="button"
               onClick={() => void copyToken()}
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 5,
-                height: 32,
-                padding: "0 12px",
+                height: 28,
+                padding: "0 10px",
                 border: "1px solid var(--vf-fg)",
                 background: "var(--vf-fg)",
                 color: "var(--vf-bg-1)",
                 fontSize: 10,
                 cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
               }}
             >
-              {copied ? <IconCheck size={11} /> : <IconCopy size={11} />}
-              {copied ? "Copiado" : "Copiar"}
+              {copied ? <IconCheck size={10} /> : <IconCopy size={10} />}
+              {copied ? "Ok" : "Copiar MCP"}
             </button>
-            {mcpUrl ? (
-              <span style={{ fontSize: 9, color: "var(--vf-fg-2)", fontFamily: "monospace" }}>
-                {mcpUrl}
-              </span>
-            ) : null}
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void generateMcp()}
+            disabled={loading}
+            style={{
+              height: 28,
+              padding: "0 10px",
+              border: "1px solid var(--vf-border-1)",
+              background: "transparent",
+              color: "var(--vf-fg)",
+              fontSize: 10,
+              cursor: loading ? "wait" : "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+            }}
+          >
+            {loading ? <IconLoader size={10} className="animate-spin" /> : <IconKey size={10} />}
+            Token MCP
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{
+        borderBottom: "1px solid var(--vf-border)",
+        background: "var(--vf-bg-1)",
+        padding: "10px 16px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 16,
+        flexWrap: "wrap",
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <p style={{ fontFamily: "monospace", fontSize: 8, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--vf-fg-2)" }}>
+          Siguiente paso
+        </p>
+        <p style={{ marginTop: 2, fontSize: 12, color: "var(--vf-fg)" }}>{next.why}</p>
+      </div>
+      <a
+        href={next.href}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          height: 32,
+          padding: "0 12px",
+          background: "var(--vf-fg)",
+          color: "var(--vf-bg-1)",
+          textDecoration: "none",
+          fontSize: 11,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {next.id === "github" && <IconGithub size={12} />}
+        {next.id === "vercel" && <IconGlobe size={12} />}
+        {next.id === "stripe" && <IconCreditCard size={12} />}
+        {next.label}
+      </a>
     </motion.div>
   );
 }
