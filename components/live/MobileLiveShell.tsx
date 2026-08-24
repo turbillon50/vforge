@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   IconChat,
   IconExtLink,
@@ -55,10 +55,6 @@ function timeAgo(iso: string) {
   return `hace ${Math.floor(hours / 24)} d`;
 }
 
-/**
- * Móvil: tarjetas de dispositivo (App / Web / Admin) que se pueden ampliar.
- * Chat en hoja inferior. Sin pelear dos tab bars a la vez.
- */
 export function MobileLiveShell({
   project,
   canSeeAdmin,
@@ -115,7 +111,6 @@ export function MobileLiveShell({
     return list;
   }, [canSeeAdmin, urls]);
 
-  // Pantalla completa de una vista
   if (expanded) {
     const card = cards.find((c) => c.id === expanded);
     const url = card?.url ?? null;
@@ -175,13 +170,12 @@ export function MobileLiveShell({
 
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-[#f2f2f0]">
-      {/* Galería de tarjetas */}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-24 pt-3">
         <p className="mb-3 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
-          Vistas del proyecto · toca para ampliar
+          Vistas · desliza · toca para ampliar
         </p>
 
-        <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory no-scrollbar">
+        <div className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {cards.map((card) => (
             <DeviceCard
               key={card.id}
@@ -191,18 +185,18 @@ export function MobileLiveShell({
               kind={card.kind}
               refreshKey={refreshKey}
               onExpand={() => setExpanded(card.id)}
-              onOpenExternal={card.url ? () => window.open(card.url!, "_blank") : undefined}
+              onOpenExternal={
+                card.url ? () => window.open(card.url!, "_blank") : undefined
+              }
             />
           ))}
         </div>
 
-        <p className="mt-4 text-center text-[11px] leading-4 text-[var(--fg-muted)]">
-          Desliza las tarjetas · Ampliar ocupa toda la pantalla · El ícono externo
-          abre la app real sin el marco de VForge
+        <p className="mt-2 text-center text-[11px] leading-4 text-[var(--fg-muted)]">
+          Ampliar = pantalla completa · Abrir = pestaña nueva sin marco VForge
         </p>
       </div>
 
-      {/* Barra inferior fija: solo chat + refrescar (no compite con tabs de la app) */}
       <div className="absolute inset-x-0 bottom-0 border-t border-[var(--border-1)] bg-white/95 backdrop-blur-md pb-[env(safe-area-inset-bottom,0px)]">
         <div className="flex h-14 items-center justify-around px-2">
           <button
@@ -258,7 +252,24 @@ function DeviceCard({
   onExpand: () => void;
   onOpenExternal?: () => void;
 }) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.5);
   const isPhone = kind === "phone";
+  const designW = isPhone ? 390 : 1280;
+  const designH = isPhone ? 844 : 800;
+  const frameH = isPhone ? 480 : 260;
+
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      const w = el.clientWidth;
+      if (w > 0) setScale(w / designW);
+    });
+    ro.observe(el);
+    setScale(el.clientWidth / designW);
+    return () => ro.disconnect();
+  }, [designW]);
 
   return (
     <div className="w-[min(78vw,300px)] shrink-0 snap-center">
@@ -291,61 +302,39 @@ function DeviceCard({
         </div>
       </div>
 
-      <button
-        type="button"
+      <div
+        ref={frameRef}
+        role="button"
+        tabIndex={0}
         onClick={onExpand}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onExpand();
+          }
+        }}
         className={
           isPhone
-            ? "relative mx-auto block w-full overflow-hidden rounded-[28px] border-[3px] border-black bg-white shadow-[0_12px_40px_rgba(0,0,0,0.12)]"
-            : "relative block w-full overflow-hidden rounded-xl border border-black bg-white shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
+            ? "relative w-full cursor-pointer overflow-hidden rounded-[28px] border-[3px] border-black bg-white shadow-[0_12px_40px_rgba(0,0,0,0.12)]"
+            : "relative w-full cursor-pointer overflow-hidden rounded-xl border border-black bg-white shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
         }
-        style={{ height: isPhone ? 520 : 280 }}
+        style={{ height: frameH }}
       >
         {isPhone ? (
-          <span className="absolute left-1/2 top-2 z-10 h-1.5 w-16 -translate-x-1/2 rounded-full bg-black/20" />
+          <span className="pointer-events-none absolute left-1/2 top-2 z-20 h-1.5 w-16 -translate-x-1/2 rounded-full bg-black/25" />
         ) : null}
 
         {url ? (
-          <div className="absolute inset-0 overflow-hidden">
-            {/*
-              Escala el contenido para que quepa legible en la tarjeta.
-              phone: ~390 CSS px → escala al ancho de la tarjeta
-              desktop: viewport 1280 → escala fuerte
-            */}
-            <div
-              className="origin-top-left"
-              style={
-                isPhone
-                  ? {
-                      width: 390,
-                      height: 844,
-                      transform: "scale(var(--card-scale))",
-                      // scale se fija vía CSS var en el contenedor
-                    }
-                  : {
-                      width: 1280,
-                      height: 800,
-                      transform: "scale(var(--desk-scale))",
-                    }
-              }
-            >
-              <iframe
-                key={`${label}-${refreshKey}`}
-                src={url}
-                title={label}
-                className="pointer-events-none h-full w-full border-0"
-                sandbox="allow-scripts allow-same-origin"
-                loading="lazy"
-                tabIndex={-1}
-              />
-            </div>
-            <style jsx>{`
-              button {
-                --card-scale: calc(100% / 390);
-                --desk-scale: calc(100% / 1280);
-              }
-            `}</style>
-            {/* Fallback scale sin styled-jsx fragile: use absolute fill with transform via inline on wrapper */}
+          <div className="absolute left-0 top-0 origin-top-left" style={{ width: designW, height: designH, transform: `scale(${scale})` }}>
+            <iframe
+              key={`${label}-${refreshKey}`}
+              src={url}
+              title={label}
+              className="pointer-events-none h-full w-full border-0"
+              sandbox="allow-scripts allow-same-origin"
+              loading="lazy"
+              tabIndex={-1}
+            />
           </div>
         ) : (
           <div className="grid h-full place-items-center px-4 text-center">
@@ -355,12 +344,12 @@ function DeviceCard({
               <IconLayout size={20} className="mx-auto text-[var(--fg-muted)]" />
             )}
             <p className="mt-2 text-[12px] text-[var(--fg-muted)]">Sin URL aún</p>
+            <p className="mt-1 text-[10px] text-[var(--fg-muted)]">Se genera cuando haya URL</p>
           </div>
         )}
 
-        {/* Overlay para capturar tap (iframe pointer-events none) */}
-        <span className="absolute inset-0 z-10" />
-      </button>
+        <span className="absolute inset-0 z-10" aria-hidden />
+      </div>
     </div>
   );
 }
