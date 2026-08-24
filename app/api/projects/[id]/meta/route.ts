@@ -1,8 +1,8 @@
 /**
  * PATCH /api/projects/[id]/meta
- * Actualiza prioridad de entrega, % avance y código de familia (duplicados/relacionados).
+ * Prioridad de entrega, % avance, código de familia (relacionados/duplicados).
  */
-import { sql } from "@/lib/db/client";
+import { queryOne } from "@/lib/db/client";
 import { resolveRequestOwner } from "@/lib/auth/request-owner";
 import {
   clampProgress,
@@ -62,54 +62,27 @@ export async function PATCH(
   }
 
   vals.push(id);
-  const rows = (await sql.query(
+  const updated = await queryOne<{
+    id: string;
+    delivery_priority: boolean;
+    progress_pct: number;
+    family_code: string | null;
+  }>(
     `UPDATE projects SET ${sets.join(", ")}, updated_at = now()
       WHERE id = $${i}
-      RETURNING id, delivery_priority, progress_pct, family_code`,
+      RETURNING id,
+               COALESCE(delivery_priority, false) AS delivery_priority,
+               COALESCE(progress_pct, 0) AS progress_pct,
+               family_code`,
     vals,
-  )) as Array<{
-    id: string;
-    delivery_priority: boolean;
-    progress_pct: number;
-    family_code: string | null;
-  }>;
+  );
 
-  // neon sql.query vs tagged - check client API
-  // Fallback with tagged if query not available
-  if (!rows || !Array.isArray(rows)) {
-    // use sequential tagged updates
-    if (typeof body.delivery_priority === "boolean") {
-      await sql`UPDATE projects SET delivery_priority = ${body.delivery_priority}, updated_at = now() WHERE id = ${id}`;
-    }
-    if (body.progress_pct !== undefined) {
-      const pct = clampProgress(body.progress_pct);
-      await sql`UPDATE projects SET progress_pct = ${pct}, updated_at = now() WHERE id = ${id}`;
-    }
-    if ("family_code" in body) {
-      const code = cleanFamilyCode(body.family_code);
-      await sql`UPDATE projects SET family_code = ${code}, updated_at = now() WHERE id = ${id}`;
-    }
-  }
-
-  const updated = (await sql`
-    SELECT id,
-           COALESCE(delivery_priority, false) AS delivery_priority,
-           COALESCE(progress_pct, 0) AS progress_pct,
-           family_code
-      FROM projects WHERE id = ${id}
-  `) as Array<{
-    id: string;
-    delivery_priority: boolean;
-    progress_pct: number;
-    family_code: string | null;
-  }>;
-
-  if (!updated[0]) {
+  if (!updated) {
     return Response.json({ error: "not_found" }, { status: 404 });
   }
 
   return Response.json(
-    { project: updated[0] },
+    { project: updated },
     { headers: { "Cache-Control": "no-store" } },
   );
 }
