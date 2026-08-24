@@ -5,11 +5,6 @@ import { saveUserSecret } from "@/lib/connect/user-vault";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * GET /api/auth/vercel/callback — Vercel regresa con ?code&state (y
- * configurationId, teamId). Intercambia code→access token y lo guarda
- * cifrado en el vault del usuario.
- */
 export async function GET(req: Request) {
   const site = process.env.NEXT_PUBLIC_SITE_URL || "https://vforge.site";
   const { userId } = await auth();
@@ -25,10 +20,9 @@ export async function GET(req: Request) {
   jar.delete("vc_oauth_state");
 
   const back = (status: string) =>
-    Response.redirect(`${site}/app/integrations?vercel=${status}`, 302);
+    Response.redirect(`${site}/app/setup?vercel=${status}`, 302);
 
   if (!code) return back("error_no_code");
-  // Vercel a veces no reenvía state en installs desde marketplace; si viene, validamos.
   if (state && expected && state !== expected) return back("error_state");
 
   const clientId = process.env.VERCEL_INTEGRATION_CLIENT_ID;
@@ -50,11 +44,9 @@ export async function GET(req: Request) {
       access_token?: string;
       team_id?: string | null;
       error?: string;
-      error_description?: string;
     };
     if (!data.access_token) {
-      const raw = encodeURIComponent(JSON.stringify(data)).slice(0, 400);
-      return back("err:" + raw);
+      return back("err:" + encodeURIComponent(JSON.stringify(data)).slice(0, 200));
     }
 
     await saveUserSecret(userId, "VERCEL_USER_TOKEN", data.access_token, "vercel");
@@ -66,6 +58,6 @@ export async function GET(req: Request) {
     return back("connected");
   } catch (e) {
     console.error("[vercel oauth] fallo:", e);
-    return back("err:exc:" + encodeURIComponent(String(e)).slice(0, 200));
+    return back("err:exc");
   }
 }

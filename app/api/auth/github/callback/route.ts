@@ -6,13 +6,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/auth/github/callback — GitHub regresa aquí con ?code&state.
- * Intercambia el code por un access token de usuario y lo guarda cifrado
- * en el vault por Clerk userId, igual que siempre. Luego redirige a
- * /app/integrations — salvo que esta autorizacion vino de un puente
- * (otra app, ej V-Admin, mando al usuario aqui via ?return_to), en cuyo
- * caso el token TAMBIEN se entrega server-a-server a esa app, y al
- * usuario se le regresa ahi en vez de a /onboarding.
+ * GET /api/auth/github/callback — intercambia code→token, guarda en vault,
+ * redirige a /app/setup (stepper) o al puente si aplica.
  */
 export async function GET(req: Request) {
   const { userId } = await auth();
@@ -36,7 +31,7 @@ export async function GET(req: Request) {
       u.searchParams.set("github", status);
       return Response.redirect(u.toString(), 302);
     }
-    return Response.redirect(`${site}/app/integrations?github=${status}`, 302);
+    return Response.redirect(`${site}/app/setup?github=${status}`, 302);
   };
 
   if (!code) return back("error_no_code");
@@ -86,9 +81,6 @@ export async function GET(req: Request) {
       }
     } catch { /* no crítico */ }
 
-    // Puente: si la autorizacion vino de otra app (V-Admin), le entregamos
-    // el token server-a-server. Falla "suave": si el puente truena, el
-    // usuario igual queda conectado en VForge (no se pierde el trabajo).
     if (bridgeReturnTo && bridgeTenant) {
       try {
         const bridgeSecret = process.env.VFORGE_BRIDGE_SECRET;
@@ -108,11 +100,9 @@ export async function GET(req: Request) {
               source: "vforge-bridge",
             }),
           });
-        } else {
-          console.error("[gh oauth bridge] VFORGE_BRIDGE_SECRET no configurado");
         }
       } catch (e) {
-        console.error("[gh oauth bridge] fallo entregando token:", e);
+        console.error("[gh oauth bridge] fallo:", e);
       }
     }
 
