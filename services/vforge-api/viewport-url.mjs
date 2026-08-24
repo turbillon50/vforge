@@ -21,13 +21,25 @@ export function resolveInstitutionalAdminUrl(base) {
   try {
     const url = new URL(normalized);
     const path = url.pathname.replace(/\/+$/, "") || "";
-    if (path === "/admin" || path.endsWith("/admin")) return url.href;
-    url.pathname = "/admin";
-    url.search = "";
+    if (path !== "/admin" && !path.endsWith("/admin")) {
+      url.pathname = "/admin";
+    }
+    url.searchParams.set("embed", "1");
     url.hash = "";
     return url.href;
   } catch {
     return null;
+  }
+}
+
+function withAdminEmbed(admin) {
+  if (!admin) return null;
+  try {
+    const url = new URL(admin);
+    if (!url.searchParams.has("embed")) url.searchParams.set("embed", "1");
+    return url.href;
+  } catch {
+    return admin;
   }
 }
 
@@ -43,6 +55,8 @@ export function resolveProjectViewportUrls(project) {
       normalizePublishedUrl(project.desktop_url) ?? publishedFallback,
     mobile_url:
       normalizePublishedUrl(project.mobile_url) ?? publishedFallback,
-    admin_url: explicitAdmin ?? resolveInstitutionalAdminUrl(publishedFallback),
+    admin_url: withAdminEmbed(
+      explicitAdmin ?? resolveInstitutionalAdminUrl(publishedFallback),
+    ),
   };
 }
