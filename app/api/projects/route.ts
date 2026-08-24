@@ -2,6 +2,7 @@ import { queryAll, sql } from "@/lib/db/client";
 import { resolveRequestOwner } from "@/lib/auth/request-owner";
 import { createRepo } from "@/lib/github/client";
 import { neon } from "@neondatabase/serverless";
+import { ensureDeliveryColumns } from "@/lib/projects/delivery-meta";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,9 @@ interface ProjectRow {
   github_language?: string | null;
   vercel_url: string | null;
   domain?: string | null;
+  delivery_priority?: boolean;
+  progress_pct?: number;
+  family_code?: string | null;
 }
 
 const VALID_CATEGORIES = new Set([
@@ -29,28 +33,30 @@ const VALID_CATEGORIES = new Set([
 
 const OPERATOR_USER_ID = "operator_luis";
 
-/**
- * GET /api/projects
- *
- * Returns the live catalog from the projects table.
- */
 export async function GET() {
-  // AISLAMIENTO: el catálogo `projects` es del owner. Un no-owner NO lo ve.
   const access = await resolveRequestOwner();
   if (!access.userId) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
-      status: 401, headers: { "Content-Type": "application/json" },
+      status: 401,
+      headers: { "Content-Type": "application/json" },
     });
   }
   if (!access.isOwner) {
     return jsonError("forbidden", 403);
   }
+
+  await ensureDeliveryColumns();
+
   const rows = await queryAll<ProjectRow>(
     `SELECT id, name, category, status,
             github_repo, github_private, github_language,
-            vercel_url, domain
+            vercel_url, domain,
+            COALESCE(delivery_priority, false) AS delivery_priority,
+            COALESCE(progress_pct, 0) AS progress_pct,
+            family_code
        FROM projects
        ORDER BY
+         COALESCE(delivery_priority, false) DESC,
          CASE category
            WHEN 'produccion' THEN 1
            WHEN 'activo' THEN 2
@@ -60,6 +66,7 @@ export async function GET() {
            WHEN 'pendiente_borrado' THEN 6
            ELSE 99
          END,
+         COALESCE(progress_pct, 0) DESC,
          name`,
   );
   return new Response(JSON.stringify({ projects: rows }), {
@@ -68,12 +75,6 @@ export async function GET() {
   });
 }
 
-/**
- * POST /api/projects
- *
- * Creates a new project. Used by the /projects "Dar de alta" modal.
- * Validates id format and category enum, audit-logs the action.
- */
 export async function POST(req: Request) {
   const access = await resolveRequestOwner();
   if (!access.userId) return jsonError("unauthorized", 401);
@@ -118,9 +119,6 @@ export async function POST(req: Request) {
   const vercel_url = body.vercel_url ?? null;
   const domain = body.domain ?? null;
 
-  // Atomic: project.insert + audit_events.insert in one transaction.
-  // If either fails, neither commits — avoids the orphan-project /
-  // duplicate-id retry loop that would otherwise occur (Codex P2).
   const dburl = process.env.DATABASE_URL;
   if (!dburl) {
     return jsonError("DATABASE_URL not configured", 500);
@@ -129,6 +127,7 @@ export async function POST(req: Request) {
   const auditPayload = JSON.stringify({ name, category, github_repo });
 
   try {
+    await ensureDeliveryColumns();
     await txClient.transaction([
       txClient`
         INSERT INTO projects (
@@ -153,14 +152,12 @@ export async function POST(req: Request) {
       `,
     ]);
 
-    // Crear repo en GitHub si el modal pidió create_repo. No es fatal:
-    // el proyecto ya quedó dado de alta; si GitHub falla solo lo logueamos.
     let createdRepo: { full_name: string; url: string } | null = null;
     let repoError: string | null = null;
     if (body.create_repo && !github_repo) {
       try {
         const repo = await createRepo({
-          name: id, // `id` ya está validado como slug GitHub-compatible
+          name: id,
           description: description ?? undefined,
           private: true,
         });
@@ -176,7 +173,6 @@ export async function POST(req: Request) {
       }
     }
 
-    // Notify V Momentum engine
     fetch("http://178.105.135.26:3003/notify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -208,7 +204,6 @@ export async function POST(req: Request) {
     return jsonError(`db error: ${message}`, 500);
   }
 }
-
 
 function jsonError(message: string, status: number): Response {
   return new Response(JSON.stringify({ error: message }), {

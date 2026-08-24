@@ -22,9 +22,15 @@ interface Project {
   github_language?: string | null;
   vercel_url: string | null;
   domain?: string | null;
+  delivery_priority?: boolean;
+  progress_pct?: number;
+  family_code?: string | null;
 }
 
-type Filter = "all" | "produccion" | "revision" | "pausa";
+type CategoryFilter = "all" | "produccion" | "revision" | "pausa";
+type DomainFilter = "all" | "with_domain" | "no_domain";
+type PriorityFilter = "all" | "priority";
+type FamilyFilter = "all" | "grouped";
 
 const CATEGORY_LABELS: Record<string, string> = {
   produccion: "Producción",
@@ -35,13 +41,17 @@ const CATEGORY_LABELS: Record<string, string> = {
   pendiente_borrado: "Pendiente de borrar",
 };
 
-function categoryMatches(category: string, filter: Filter) {
+function categoryMatches(category: string, filter: CategoryFilter) {
   if (filter === "all") return true;
   if (filter === "produccion") return category === "produccion";
   if (filter === "revision") {
     return category === "activo" || category === "en_revision";
   }
   return category === "en_pausa";
+}
+
+function hasDomain(p: Project) {
+  return Boolean(p.domain?.trim());
 }
 
 function normalizeExternalUrl(value: string | null | undefined) {
@@ -51,14 +61,30 @@ function normalizeExternalUrl(value: string | null | undefined) {
   return `https://${trimmed}`;
 }
 
+/** Raíz para detectar posibles duplicados (vliving-demo → vliving). */
+function nameRoot(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(
+      /-(demo|v\d+|app|site|admin|preview|front|backend|api|new|old|copy|test)$/g,
+      "",
+    )
+    .replace(/^-+|-+$/g, "");
+}
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [domainFilter, setDomainFilter] = useState<DomainFilter>("all");
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
+  const [familyFilter, setFamilyFilter] = useState<FamilyFilter>("all");
   const [inviteProject, setInviteProject] = useState<Project | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const loadProjects = useCallback(async (manual = false) => {
     manual ? setRefreshing(true) : setLoading(true);
@@ -88,29 +114,107 @@ export default function ProjectsPage() {
     void loadProjects();
   }, [loadProjects]);
 
+  const familyCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of projects) {
+      const code = p.family_code?.trim().toLowerCase();
+      if (code) map.set(code, (map.get(code) ?? 0) + 1);
+      const root = nameRoot(p.name || p.id);
+      if (root) map.set(`~${root}`, (map.get(`~${root}`) ?? 0) + 1);
+    }
+    return map;
+  }, [projects]);
+
   const filteredProjects = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return projects.filter((project) => {
-      const matchesCategory = categoryMatches(project.category, filter);
+      if (!categoryMatches(project.category, categoryFilter)) return false;
+      if (domainFilter === "with_domain" && !hasDomain(project)) return false;
+      if (domainFilter === "no_domain" && hasDomain(project)) return false;
+      if (priorityFilter === "priority" && !project.delivery_priority) return false;
+
+      if (familyFilter === "grouped") {
+        const code = project.family_code?.trim().toLowerCase();
+        const root = nameRoot(project.name || project.id);
+        const byCode = code ? (familyCounts.get(code) ?? 0) > 1 : false;
+        const byRoot = root ? (familyCounts.get(`~${root}`) ?? 0) > 1 : false;
+        if (!byCode && !byRoot) return false;
+      }
+
       const matchesSearch =
         !needle ||
         project.name.toLowerCase().includes(needle) ||
         project.id.toLowerCase().includes(needle) ||
         (project.domain ?? "").toLowerCase().includes(needle) ||
-        (project.github_repo ?? "").toLowerCase().includes(needle);
-      return matchesCategory && matchesSearch;
+        (project.github_repo ?? "").toLowerCase().includes(needle) ||
+        (project.family_code ?? "").toLowerCase().includes(needle);
+      return matchesSearch;
     });
-  }, [filter, projects, search]);
+  }, [
+    categoryFilter,
+    domainFilter,
+    familyCounts,
+    familyFilter,
+    priorityFilter,
+    projects,
+    search,
+  ]);
 
-  const productionCount = projects.filter(
-    (project) => project.category === "produccion",
-  ).length;
+  async function patchMeta(
+    projectId: string,
+    patch: {
+      delivery_priority?: boolean;
+      progress_pct?: number;
+      family_code?: string | null;
+    },
+  ) {
+    setSavingId(projectId);
+    try {
+      const res = await fetch(
+        `/api/projects/${encodeURIComponent(projectId)}/meta`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(patch),
+        },
+      );
+      if (!res.ok) throw new Error("save_failed");
+      const data = (await res.json()) as {
+        project: {
+          id: string;
+          delivery_priority: boolean;
+          progress_pct: number;
+          family_code: string | null;
+        };
+      };
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === projectId
+            ? {
+                ...p,
+                delivery_priority: data.project.delivery_priority,
+                progress_pct: data.project.progress_pct,
+                family_code: data.project.family_code,
+              }
+            : p,
+        ),
+      );
+    } catch {
+      setError("No se pudo guardar el cambio. Reintenta.");
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  const productionCount = projects.filter((p) => p.category === "produccion").length;
   const reviewCount = projects.filter(
-    (project) =>
-      project.category === "activo" || project.category === "en_revision",
+    (p) => p.category === "activo" || p.category === "en_revision",
   ).length;
+  const priorityCount = projects.filter((p) => p.delivery_priority).length;
+  const withDomainCount = projects.filter((p) => hasDomain(p)).length;
+  const noDomainCount = projects.length - withDomainCount;
 
-  const filters: { id: Filter; label: string }[] = [
+  const categoryFilters: { id: CategoryFilter; label: string }[] = [
     { id: "all", label: `Todos · ${projects.length}` },
     { id: "produccion", label: `Producción · ${productionCount}` },
     { id: "revision", label: `En revisión · ${reviewCount}` },
@@ -127,8 +231,8 @@ export default function ProjectsPage() {
               Tus proyectos.
             </h1>
             <p className="mt-4 max-w-xl text-[14px] leading-6">
-              Abre la sala en vivo o invita al cliente por WhatsApp: ve solo su
-              proyecto, comenta y recibe notificaciones — sin secretos ni código.
+              Prioriza entregas, marca avance, filtra por dominio y agrupa
+              posibles duplicados o familias (código).
             </p>
           </div>
           <button
@@ -156,31 +260,56 @@ export default function ProjectsPage() {
       ) : null}
 
       <section className="border-b border-[var(--border-1)] bg-[#f7f7f5] px-5 py-4 md:px-8">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex max-w-full gap-1 overflow-x-auto pb-1 lg:pb-0">
-            {filters.map((item) => (
-              <button
+        <div className="flex flex-col gap-3">
+          <div className="flex max-w-full gap-1 overflow-x-auto pb-1">
+            {categoryFilters.map((item) => (
+              <FilterChip
                 key={item.id}
-                type="button"
-                onClick={() => setFilter(item.id)}
-                className={
-                  filter === item.id
-                    ? "whitespace-nowrap rounded-md border border-black bg-black px-3 py-2 font-mono text-[9px] uppercase tracking-[0.11em] text-white"
-                    : "whitespace-nowrap rounded-md border border-transparent px-3 py-2 font-mono text-[9px] uppercase tracking-[0.11em] text-[var(--fg-muted)] hover:border-[var(--border-1)] hover:text-black"
-                }
-              >
-                {item.label}
-              </button>
+                active={categoryFilter === item.id}
+                label={item.label}
+                onClick={() => setCategoryFilter(item.id)}
+              />
             ))}
           </div>
 
-          <label className="flex min-h-10 w-full items-center gap-2 rounded-md border border-[var(--border-1)] bg-white px-3 lg:w-[300px]">
+          <div className="flex max-w-full flex-wrap gap-1">
+            <FilterChip
+              active={priorityFilter === "priority"}
+              label={`Prioridad entrega · ${priorityCount}`}
+              onClick={() =>
+                setPriorityFilter((v) => (v === "priority" ? "all" : "priority"))
+              }
+            />
+            <FilterChip
+              active={domainFilter === "with_domain"}
+              label={`Con dominio · ${withDomainCount}`}
+              onClick={() =>
+                setDomainFilter((v) => (v === "with_domain" ? "all" : "with_domain"))
+              }
+            />
+            <FilterChip
+              active={domainFilter === "no_domain"}
+              label={`Sin dominio · ${noDomainCount}`}
+              onClick={() =>
+                setDomainFilter((v) => (v === "no_domain" ? "all" : "no_domain"))
+              }
+            />
+            <FilterChip
+              active={familyFilter === "grouped"}
+              label="Posibles duplicados / familia"
+              onClick={() =>
+                setFamilyFilter((v) => (v === "grouped" ? "all" : "grouped"))
+              }
+            />
+          </div>
+
+          <label className="flex min-h-10 w-full items-center gap-2 rounded-md border border-[var(--border-1)] bg-white px-3 lg:max-w-[360px]">
             <IconSearch size={13} className="shrink-0 text-[var(--fg-muted)]" />
             <span className="sr-only">Buscar proyectos</span>
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar proyecto, dominio o repo"
+              placeholder="Buscar nombre, dominio, repo o familia"
               className="min-w-0 flex-1 bg-transparent text-[12px] text-black placeholder:text-[var(--fg-muted)]"
             />
           </label>
@@ -201,10 +330,11 @@ export default function ProjectsPage() {
       ) : null}
 
       <section className="bg-white">
-        <div className="hidden grid-cols-[minmax(0,1.2fr)_minmax(180px,.8fr)_150px_280px] border-b border-[var(--border-1)] px-8 py-3 font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--fg-muted)] md:grid">
+        <div className="hidden grid-cols-[minmax(0,1.1fr)_minmax(140px,.7fr)_100px_120px_minmax(200px,.9fr)] border-b border-[var(--border-1)] px-8 py-3 font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--fg-muted)] lg:grid">
           <span>Proyecto</span>
           <span>Origen</span>
-          <span>Estado</span>
+          <span>Avance</span>
+          <span>Entrega</span>
           <span className="text-right">Acciones</span>
         </div>
 
@@ -225,7 +355,32 @@ export default function ProjectsPage() {
               <ProjectRow
                 key={project.id}
                 project={project}
+                saving={savingId === project.id}
+                relatedHint={
+                  (() => {
+                    const code = project.family_code?.trim().toLowerCase();
+                    if (code && (familyCounts.get(code) ?? 0) > 1) {
+                      return `Familia ${code} · ${familyCounts.get(code)}`;
+                    }
+                    const root = nameRoot(project.name || project.id);
+                    if (root && (familyCounts.get(`~${root}`) ?? 0) > 1) {
+                      return `Posible grupo · ${root}`;
+                    }
+                    return null;
+                  })()
+                }
                 onInvite={() => setInviteProject(project)}
+                onTogglePriority={() =>
+                  void patchMeta(project.id, {
+                    delivery_priority: !project.delivery_priority,
+                  })
+                }
+                onProgress={(pct) =>
+                  void patchMeta(project.id, { progress_pct: pct })
+                }
+                onFamily={(code) =>
+                  void patchMeta(project.id, { family_code: code })
+                }
               />
             ))}
           </div>
@@ -235,31 +390,97 @@ export default function ProjectsPage() {
   );
 }
 
+function FilterChip({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        active
+          ? "whitespace-nowrap rounded-md border border-black bg-black px-3 py-2 font-mono text-[9px] uppercase tracking-[0.11em] text-white"
+          : "whitespace-nowrap rounded-md border border-transparent px-3 py-2 font-mono text-[9px] uppercase tracking-[0.11em] text-[var(--fg-muted)] hover:border-[var(--border-1)] hover:text-black"
+      }
+    >
+      {label}
+    </button>
+  );
+}
+
 function ProjectRow({
   project,
+  saving,
+  relatedHint,
   onInvite,
+  onTogglePriority,
+  onProgress,
+  onFamily,
 }: {
   project: Project;
+  saving: boolean;
+  relatedHint: string | null;
   onInvite: () => void;
+  onTogglePriority: () => void;
+  onProgress: (pct: number) => void;
+  onFamily: (code: string | null) => void;
 }) {
   const externalUrl = normalizeExternalUrl(project.domain || project.vercel_url);
   const active =
     project.category === "produccion" ||
     project.category === "activo" ||
     project.category === "en_revision";
+  const pct = Math.max(0, Math.min(100, project.progress_pct ?? 0));
 
   return (
-    <article className="grid gap-4 px-5 py-5 transition hover:bg-[#fafaf8] md:grid-cols-[minmax(0,1.2fr)_minmax(180px,.8fr)_150px_280px] md:items-center md:px-8">
+    <article className="grid gap-4 px-5 py-5 transition hover:bg-[#fafaf8] lg:grid-cols-[minmax(0,1.1fr)_minmax(140px,.7fr)_100px_120px_minmax(200px,.9fr)] lg:items-center lg:px-8">
       <div className="min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="status-shape shrink-0" data-active={active} />
           <h2 className="truncate text-[14px] font-medium tracking-[-0.02em]">
             {project.name}
           </h2>
+          {project.delivery_priority ? (
+            <span className="rounded-full border border-black px-2 py-0.5 font-mono text-[8px] uppercase tracking-[0.1em]">
+              Prioridad
+            </span>
+          ) : null}
+          {hasDomain(project) ? (
+            <span className="rounded-full border border-[var(--border-1)] px-2 py-0.5 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+              Dominio
+            </span>
+          ) : (
+            <span className="rounded-full border border-dashed border-[var(--border-1)] px-2 py-0.5 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+              Sin dominio
+            </span>
+          )}
         </div>
         <p className="mt-1 truncate pl-[15px] font-mono text-[9px] text-[var(--fg-muted)]">
           {project.id}
+          {relatedHint ? ` · ${relatedHint}` : ""}
         </p>
+        <div className="mt-2 pl-[15px]">
+          <input
+            type="text"
+            defaultValue={project.family_code ?? ""}
+            disabled={saving}
+            placeholder="Código familia (ej. vliving)"
+            className="w-full max-w-[220px] rounded border border-[var(--border-1)] bg-[#f7f7f5] px-2 py-1 font-mono text-[10px]"
+            onBlur={(e) => {
+              const next = e.target.value.trim() || null;
+              if ((project.family_code ?? null) !== next) onFamily(next);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+            }}
+          />
+        </div>
       </div>
 
       <div className="min-w-0">
@@ -278,19 +499,47 @@ function ProjectRow({
             {project.domain ?? project.vercel_url}
           </p>
         ) : null}
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span
-          className="status-shape"
-          data-active={project.category === "produccion"}
-        />
-        <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--fg-secondary)]">
+        <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
           {CATEGORY_LABELS[project.category] ?? project.category}
-        </span>
+        </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 md:justify-end">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[11px] tabular-nums">{pct}%</span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={pct}
+            disabled={saving}
+            onChange={(e) => onProgress(Number(e.target.value))}
+            className="w-full max-w-[90px]"
+            aria-label="Porcentaje de avance"
+          />
+        </div>
+        <div className="mt-1 h-1 w-full max-w-[100px] overflow-hidden rounded-full bg-black/10">
+          <div className="h-full bg-black" style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+
+      <div>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={onTogglePriority}
+          className={
+            project.delivery_priority
+              ? "rounded-md border border-black bg-black px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-white"
+              : "rounded-md border border-[var(--border-1)] bg-white px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--fg-muted)]"
+          }
+        >
+          {project.delivery_priority ? "Prioritario" : "Marcar"}
+        </button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 lg:justify-end">
         {externalUrl ? (
           <a
             href={externalUrl}
@@ -328,12 +577,13 @@ function ProjectSkeleton() {
       {[0, 1, 2, 3].map((index) => (
         <div
           key={index}
-          className="grid animate-pulse gap-4 px-5 py-5 md:grid-cols-[minmax(0,1.2fr)_minmax(180px,.8fr)_150px_280px] md:px-8"
+          className="grid animate-pulse gap-4 px-5 py-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(140px,.7fr)_100px_120px_minmax(200px,.9fr)] lg:px-8"
         >
           <div className="h-4 w-1/2 rounded bg-black/10" />
           <div className="h-4 w-2/3 rounded bg-black/10" />
-          <div className="h-4 w-20 rounded bg-black/10" />
-          <div className="h-9 w-28 rounded bg-black/10 md:justify-self-end" />
+          <div className="h-4 w-16 rounded bg-black/10" />
+          <div className="h-4 w-16 rounded bg-black/10" />
+          <div className="h-9 w-28 rounded bg-black/10 lg:justify-self-end" />
         </div>
       ))}
     </div>
