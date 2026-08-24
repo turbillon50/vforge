@@ -259,11 +259,12 @@ export function ForgeStudio() {
         return isObject(item) && typeof item.id === "string" && typeof item.name === "string";
       });
       setProjects(next);
+      // No seleccionar proyecto por defecto: el usuario elige o crea uno.
+      // preferredId solo aplica tras "Crear proyecto".
       setActiveProjectId((current) => {
-        const stored = window.localStorage.getItem("vforge.activeProject") ?? "";
-        const candidate = preferredId || current || stored;
+        const candidate = preferredId || current;
         if (candidate && next.some((item) => item.id === candidate)) return candidate;
-        return next[0]?.id ?? "";
+        return "";
       });
     } catch (caught) {
       setProjectError(
@@ -345,7 +346,12 @@ export function ForgeStudio() {
       return;
     }
 
-    window.localStorage.setItem("vforge.activeProject", activeProjectId);
+    // Solo persiste si el usuario eligió un proyecto (no forzar al entrar)
+    if (activeProjectId) {
+      window.localStorage.setItem("vforge.activeProject", activeProjectId);
+    } else {
+      window.localStorage.removeItem("vforge.activeProject");
+    }
     const controller = new AbortController();
     let cancelled = false;
     setProjectLoading(true);
@@ -991,7 +997,9 @@ function StudioToolbar({
             disabled={sending || loading}
             className="h-10 w-full appearance-none rounded-md border border-[var(--vf-border-1)] bg-[var(--vf-bg-1)] pl-3 pr-8 text-[11px] font-medium text-[var(--vf-fg)] disabled:opacity-55"
           >
-            {projects.length === 0 ? <option value="">Sin proyectos</option> : null}
+            <option value="">
+              {projects.length === 0 ? "Sin proyectos" : "Selecciona un proyecto"}
+            </option>
             {projects.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
