@@ -32,6 +32,7 @@
         "qrcode": "^1.5.4",
         "react": "^19",
         "react-dom": "^19",
+        "react-grid-layout": "^2.2.4",
         "react-markdown": "^10.1.0",
         "rehype-sanitize": "^6.0.0",
         "remark-gfm": "^4.0.1",
