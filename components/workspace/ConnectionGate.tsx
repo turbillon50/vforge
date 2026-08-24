@@ -3,18 +3,18 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-/**
- * Si el owner aún no conectó GitHub o Vercel, la plataforma no es un taller:
- * es un visor vacío. Forzamos /app/setup antes de dejar entrar al estudio.
- *
- * Excepciones: setup, live (clientes), integrations (por si llega del OAuth).
- */
+const SKIP_KEY = "vforge.setupSkipped";
+
 const SKIP_PREFIXES = [
   "/app/setup",
   "/app/live",
   "/app/integrations",
 ];
 
+/**
+ * Sin GitHub + Vercel el taller no existe.
+ * Si el usuario eligió "Saltar", respetamos la bandera (sin loop).
+ */
 export function ConnectionGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
@@ -27,6 +27,15 @@ export function ConnectionGate({ children }: { children: React.ReactNode }) {
       if (SKIP_PREFIXES.some((p) => pathname.startsWith(p))) {
         if (!cancelled) setReady(true);
         return;
+      }
+
+      try {
+        if (typeof window !== "undefined" && localStorage.getItem(SKIP_KEY) === "1") {
+          if (!cancelled) setReady(true);
+          return;
+        }
+      } catch {
+        /* private mode */
       }
 
       try {
@@ -47,7 +56,7 @@ export function ConnectionGate({ children }: { children: React.ReactNode }) {
           }
         }
       } catch {
-        /* si falla status, no bloqueamos el estudio */
+        /* no bloquear si status cae */
       }
       if (!cancelled) setReady(true);
     }
@@ -69,4 +78,20 @@ export function ConnectionGate({ children }: { children: React.ReactNode }) {
   }
 
   return <>{children}</>;
+}
+
+export function markSetupSkipped() {
+  try {
+    localStorage.setItem(SKIP_KEY, "1");
+  } catch {
+    /* ok */
+  }
+}
+
+export function clearSetupSkipped() {
+  try {
+    localStorage.removeItem(SKIP_KEY);
+  } catch {
+    /* ok */
+  }
 }
