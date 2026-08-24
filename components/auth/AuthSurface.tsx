@@ -22,10 +22,10 @@ export function AuthSurface({
 
         <div className="max-w-[620px]">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/55">
-            VForge · sala privada
+            The Architect&apos;s Vault
           </p>
           <h1 className="mt-6 text-[clamp(3.2rem,6vw,6.8rem)] font-semibold leading-[0.88] tracking-[-0.075em] text-white">
-            Todo el proyecto, en una sola mirada.
+            Plan. Integrate. Execute.
           </h1>
           <div className="mt-10 grid grid-cols-3 border-y border-white/20 py-5">
             {[
