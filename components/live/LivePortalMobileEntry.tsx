@@ -33,6 +33,8 @@ export function LivePortalMobileEntry({
 }) {
   const canSeeAdmin = me.role === "owner" || me.role === "reviewer";
   const canInvite = me.role === "owner";
+  // Accept → cola solo owner de plataforma o role owner del proyecto
+  const canAccept = me.isPlatformOwner || me.role === "owner";
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -67,7 +69,11 @@ export function LivePortalMobileEntry({
       </header>
 
       <div className="min-h-0 flex-1">
-        <MobileLiveShell project={project} canSeeAdmin={canSeeAdmin} />
+        <MobileLiveShell
+          project={project}
+          canSeeAdmin={canSeeAdmin}
+          canAccept={canAccept}
+        />
       </div>
 
       {menuOpen ? (
