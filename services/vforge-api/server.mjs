@@ -350,18 +350,19 @@ async function readJsonBody(req) {
   }
 }
 
-async function liveComments(req, res, projectId) {
+async function liveComments(req, res, projectId, url) {
   const access = await authorizeProject(req, res, projectId);
   if (!access) return;
 
   if (req.method === "GET") {
+    const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit")) || 100));
     const comments = await sql.query(
       `SELECT id, author_email, author_name, body, created_at
          FROM project_comments
         WHERE project_id = $1
         ORDER BY created_at DESC
-        LIMIT 100`,
-      [projectId],
+        LIMIT $2`,
+      [projectId, limit],
     );
     json(res, 200, { comments });
     return;
@@ -471,7 +472,7 @@ async function handle(req, res) {
       methodNotAllowed(res, "GET, POST");
       return;
     }
-    await liveComments(req, res, route.projectId);
+    await liveComments(req, res, route.projectId, url);
     return;
   }
 
