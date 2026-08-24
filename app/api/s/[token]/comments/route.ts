@@ -1,11 +1,11 @@
 /**
  * Comentarios del link público permanente /s/{token}.
- * Sin login: el cliente deja mensajes; el owner los ve en la sala live (eventos).
- * Rate limit simple por IP en memoria de instancia (no es anti-abuso fuerte).
+ * Sin login: el cliente deja mensajes; el owner recibe push + evento en sala.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { resolveShareToken } from "@/lib/projects/share-link";
 import { queryOne, queryAll } from "@/lib/db/client";
+import { sendPushToOwners } from "@/lib/push/send";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,7 +74,10 @@ export async function POST(
   }
 
   const payload: unknown = await req.json().catch(() => null);
-  const obj = payload && typeof payload === "object" ? (payload as Record<string, unknown>) : null;
+  const obj =
+    payload && typeof payload === "object"
+      ? (payload as Record<string, unknown>)
+      : null;
   const rawBody = obj && typeof obj.body === "string" ? obj.body : "";
   const rawName = obj && typeof obj.name === "string" ? obj.name : "";
   const body = rawBody.trim().slice(0, MAX_BODY);
@@ -84,7 +87,6 @@ export async function POST(
     return NextResponse.json({ error: "empty" }, { status: 400, headers: noStore });
   }
 
-  // author_email sintético: no es login, solo etiqueta en el feed del owner
   const authorEmail = `guest+${token.slice(0, 8)}@share.vforge.local`;
 
   const comment = await queryOne<{
@@ -118,6 +120,14 @@ export async function POST(
   if (!comment) {
     return NextResponse.json({ error: "failed" }, { status: 500, headers: noStore });
   }
+
+  // Fire-and-forget push a owners
+  const preview = body.length > 120 ? body.slice(0, 117) + "…" : body;
+  void sendPushToOwners({
+    title: `${project.name} · mensaje nuevo`,
+    body: `${name}: ${preview}`,
+    url: `/app/live/${encodeURIComponent(project.id)}`,
+  });
 
   return NextResponse.json({ comment }, { status: 201, headers: noStore });
 }
