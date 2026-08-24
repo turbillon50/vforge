@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import "react-grid-layout/css/styles.css";
 import "./globals.css";
 import { ClerkShell } from "@/components/auth/ClerkShell";
 import { RegisterSW } from "@/components/pwa/RegisterSW";
