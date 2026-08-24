@@ -1,6 +1,7 @@
 /**
  * Live room tools for V — list comments & tasks from salas live.
- * Wired into lib/forge/tools.ts TOOLS + dispatch (observe ring).
+ * Wire into lib/forge/tools.ts: spread LIVE_TOOLS into TOOLS and
+ * call executeLiveTool at the top of dispatch (or in default).
  */
 import type { Tool } from "@anthropic-ai/sdk/resources/messages";
 import { queryAll } from "@/lib/db/client";
@@ -10,7 +11,12 @@ import {
   listProjectTasks,
   type CommentTaskStatus,
 } from "@/lib/live/comment-tasks";
-import type { ToolExecutionResult } from "@/lib/forge/tools";
+
+export interface LiveToolResult {
+  ok: boolean;
+  content: string;
+  summary: string;
+}
 
 export const LIVE_TOOLS: Tool[] = [
   {
@@ -66,7 +72,7 @@ function clamp(n: unknown, min: number, max: number, def: number): number {
 export async function executeLiveTool(
   name: string,
   input: Record<string, unknown>,
-): Promise<ToolExecutionResult | null> {
+): Promise<LiveToolResult | null> {
   if (name === "live_list_comments") {
     const projectId =
       typeof input.projectId === "string" ? input.projectId.trim() : "";
@@ -78,13 +84,13 @@ export async function executeLiveTool(
       };
     }
     const limit = clamp(input.limit, 1, 100, 40);
-    const rows = await queryAll<{{
+    const rows = await queryAll<{
       id: string;
       author_email: string;
       author_name: string | null;
       body: string;
       created_at: string;
-    }}>(
+    }>(
       `SELECT id, author_email, author_name, body, created_at
          FROM project_comments
         WHERE project_id = $1
@@ -97,12 +103,12 @@ export async function executeLiveTool(
       content: JSON.stringify({
         projectId,
         total: rows.length,
-        comments: rows.map((c) => ({{
+        comments: rows.map((c) => ({
           id: c.id,
           author: c.author_name ?? c.author_email,
           body: c.body.slice(0, 800),
           created_at: c.created_at,
-        }})),
+        })),
       }),
       summary: `${rows.length} comentarios en ${projectId}`,
     };
@@ -123,7 +129,7 @@ export async function executeLiveTool(
         content: JSON.stringify({
           scope: "global_open",
           total: tasks.length,
-          tasks: tasks.map((t) => ({{
+          tasks: tasks.map((t) => ({
             id: t.id,
             project_id: t.project_id,
             project_name: t.project_name,
@@ -131,7 +137,7 @@ export async function executeLiveTool(
             source_preview: t.source_preview,
             created_at: t.created_at,
             prompt_preview: (t.prompt ?? "").slice(0, 240),
-          }})),
+          })),
         }),
         summary: `cola global: ${tasks.length} abiertas`,
       };
@@ -147,7 +153,7 @@ export async function executeLiveTool(
       content: JSON.stringify({
         projectId,
         total: tasks.length,
-        tasks: tasks.map((t) => ({{
+        tasks: tasks.map((t) => ({
           id: t.id,
           comment_id: t.comment_id,
           status: t.status,
@@ -155,7 +161,7 @@ export async function executeLiveTool(
           created_at: t.created_at,
           result_summary: t.result_summary,
           prompt_preview: t.prompt.slice(0, 240),
-        }})),
+        })),
       }),
       summary: `${tasks.length} tareas en ${projectId}`,
     };
