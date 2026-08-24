@@ -13,5 +13,5 @@ export default async function PublicSharePage({
   const project = await resolveShareToken(token);
   if (!project) notFound();
 
-  return <PublicLiveRoom project={project} />;
+  return <PublicLiveRoom project={project} shareToken={token} />;
 }
