@@ -35,7 +35,7 @@ export async function GET(
 
   try {
     const upstream = await fetchVForgeApi(
-      requestContext.path,
+      requestContext.path + "?limit=200",
       requestContext.identity,
       { signal: req.signal },
     );

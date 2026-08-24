@@ -15,6 +15,7 @@ import {
   IconArrowL,
   IconChat,
   IconCheck,
+  IconCopy,
   IconExtLink,
   IconLayout,
   IconLoader,
@@ -23,6 +24,7 @@ import {
   IconRefresh,
   IconSend,
   IconShield,
+  IconSparkles,
   IconUsers,
   IconX,
 } from "@/components/brand/VFIcons";
@@ -93,9 +95,9 @@ const WORKSPACE_BREAKPOINTS: Record<WorkspaceBreakpoint, number> = {
 };
 
 const WORKSPACE_COLS: Record<WorkspaceBreakpoint, number> = {
-  lg: 12,
-  md: 12,
-  sm: 12,
+  lg: 48,
+  md: 48,
+  sm: 48,
   xs: 1,
 };
 
@@ -108,12 +110,21 @@ function presetLayouts(preset: WorkspacePreset): ResponsiveLayouts<WorkspaceBrea
     { i: "comments", x: 0, y: 45, w: 1, h: 11, minH: 8 },
   ];
 
-  const stableDesktop = (desktop: Layout): ResponsiveLayouts<WorkspaceBreakpoint> => ({
-    lg: desktop,
-    md: desktop.map((item) => ({ ...item })),
-    sm: desktop.map((item) => ({ ...item })),
-    xs: mobileStack,
-  });
+  const stableDesktop = (desktop: Layout): ResponsiveLayouts<WorkspaceBreakpoint> => {
+    const scaled = desktop.map((item) => ({
+      ...item,
+      x: item.x * 4,
+      w: item.w * 4,
+      minW: typeof item.minW === "number" ? item.minW * 4 : undefined,
+      maxW: typeof item.maxW === "number" ? item.maxW * 4 : undefined,
+    }));
+    return {
+      lg: scaled,
+      md: scaled.map((item) => ({ ...item })),
+      sm: scaled.map((item) => ({ ...item })),
+      xs: mobileStack,
+    };
+  };
 
   if (preset === "previews") {
     return stableDesktop([
@@ -291,7 +302,7 @@ function LiveWorkspace({
   me: LivePortalMe;
   canSeeAdmin: boolean;
 }) {
-  const storageKey = `vforge:live-layout:v3:${project.id}:${me.role}`;
+  const storageKey = `vforge:live-layout:v4:${project.id}:${me.role}`;
   const availablePanels = useMemo<WorkspacePanelId[]>(
     () => [
       "desktop",
@@ -390,7 +401,7 @@ function LiveWorkspace({
 
   return (
     <div className="min-w-0 px-2 py-2 md:px-3 md:py-3">
-      <div className="mb-2 flex min-w-0 items-center gap-2 overflow-x-auto rounded-[8px] border border-[var(--border-1)] bg-white p-2 no-scrollbar">
+      <div className="sticky top-0 z-40 mb-2 flex min-w-0 items-center gap-2 overflow-x-auto rounded-[8px] border border-[var(--border-1)] bg-white p-2 shadow-[0_8px_20px_-18px_rgba(0,0,0,0.8)] no-scrollbar">
         <button
           type="button"
           onClick={() => {
@@ -552,7 +563,7 @@ function LiveWorkspace({
           ) : null}
           {visiblePanels.includes("comments") ? (
             <div key="comments">
-              <CommentsPanel projectId={project.id} workspace onFocus={() => focusAction("comments")} focused={focusedPanel === "comments"} />
+              <CommentsPanel projectId={project.id} projectName={project.name} workspace onFocus={() => focusAction("comments")} focused={focusedPanel === "comments"} />
             </div>
           ) : null}
         </ResponsiveGrid>
@@ -912,12 +923,14 @@ function ActivityFeed({
 
 function CommentsPanel({
   projectId,
+  projectName,
   rail = false,
   workspace = false,
   focused = false,
   onFocus,
 }: {
   projectId: string;
+  projectName: string;
   rail?: boolean;
   workspace?: boolean;
   focused?: boolean;
@@ -929,6 +942,37 @@ function CommentsPanel({
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const promptText = useMemo(() => {
+    if (comments.length === 0) return "";
+    const elements = [...comments]
+      .reverse()
+      .map((comment, index) => {
+        const author = comment.author_name ?? comment.author_email;
+        const date = new Date(comment.created_at).toLocaleString("es-MX", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        });
+        return `${index + 1}. [${date}] ${author}:\n${comment.body}`;
+      })
+      .join("\n\n");
+    return `PROYECTO: ${projectName} (${projectId})
+
+OBJETIVO
+Analiza el feedback registrado por los miembros del proyecto y conviértelo en mejoras concretas, coherentes y verificables. Conserva la intención del producto y no inventes requisitos que no estén respaldados por los comentarios.
+
+ELEMENTOS DE FEEDBACK (${comments.length})
+${elements}
+
+ENTREGA ESPERADA
+1. Agrupa comentarios repetidos o relacionados.
+2. Señala contradicciones y decisiones que necesitan confirmación.
+3. Prioriza por impacto y dependencia.
+4. Propón cambios específicos de producto, interfaz y funcionamiento.
+5. Devuelve un plan ejecutable con criterios de aceptación y pruebas.
+6. No marques nada como terminado sin evidencia.`;
+  }, [comments, projectId, projectName]);
 
   const load = useCallback(async () => {
     try {
@@ -983,6 +1027,17 @@ function CommentsPanel({
     }
   }
 
+  async function copyPrompt() {
+    if (!promptText) return;
+    try {
+      await navigator.clipboard.writeText(promptText);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1_800);
+    } catch {
+      setError("No se pudo copiar el prompt. Selecciona el texto manualmente.");
+    }
+  }
+
   return (
     <section
       className={cn(
@@ -999,7 +1054,18 @@ function CommentsPanel({
           <IconChat size={13} />
           <h2 className="text-[12px] font-medium">Comentarios</h2>
         </div>
-        {onFocus ? <FocusButton focused={focused} onClick={onFocus} label="comentarios" /> : null}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setPromptOpen((value) => !value)}
+            disabled={comments.length === 0}
+            className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 font-mono text-[8px] uppercase tracking-[0.08em] hover:bg-[#f2f2f0] disabled:opacity-35"
+            aria-expanded={promptOpen}
+          >
+            <IconSparkles size={11} /> Prompt ({comments.length})
+          </button>
+          {onFocus ? <FocusButton focused={focused} onClick={onFocus} label="comentarios" /> : null}
+        </div>
       </div>
 
       <div className="mt-4">
@@ -1032,6 +1098,30 @@ function CommentsPanel({
         <p className="mt-3 text-[10px] leading-4 text-black">{error}</p>
       ) : null}
 
+      {promptOpen && promptText ? (
+        <div className="mt-4 rounded-md border border-black bg-[#f7f7f5] p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-medium text-black">Prompt de mejora</p>
+              <p className="mt-0.5 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+                Generado desde {comments.length} elementos registrados
+              </p>
+            </div>
+            <button type="button" onClick={() => void copyPrompt()} className="btn-secondary !min-h-8 !px-2.5">
+              {copied ? <IconCheck size={11} /> : <IconCopy size={11} />}
+              {copied ? "Copiado" : "Copiar"}
+            </button>
+          </div>
+          <textarea
+            readOnly
+            value={promptText}
+            rows={8}
+            className="mt-3 w-full resize-y rounded-md border border-[var(--border-1)] bg-white px-3 py-2 font-mono text-[9px] leading-4 text-black"
+            aria-label="Prompt generado desde comentarios"
+          />
+        </div>
+      ) : null}
+
       <div className={cn("mt-5 space-y-3 overflow-y-auto pr-1", workspace ? "min-h-0 flex-1" : rail ? "max-h-[360px]" : "max-h-[300px]")}>
         {!loaded ? (
           <div className="grid min-h-20 place-items-center">
@@ -1048,9 +1138,14 @@ function CommentsPanel({
               className="rounded-md border border-[var(--border-1)] bg-[#f7f7f5] p-3"
             >
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-[10px] font-medium text-black">
-                  {comment.author_name ?? comment.author_email}
-                </p>
+                <div className="min-w-0">
+                  <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+                    Elemento de feedback
+                  </p>
+                  <p className="truncate text-[10px] font-medium text-black">
+                    {comment.author_name ?? comment.author_email}
+                  </p>
+                </div>
                 <span className="shrink-0 font-mono text-[8px] text-[var(--fg-muted)]">
                   {timeAgo(comment.created_at)}
                 </span>
