@@ -35,7 +35,6 @@ export async function ensurePushTable() {
       created_at timestamptz DEFAULT now()
     )
   `;
-  // columnas nuevas en installs antiguas
   await sql()`ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS email text`;
 }
 
@@ -85,28 +84,19 @@ export async function sendPushToUser(
   return deliver(subs, payload);
 }
 
-/**
- * Notifica a todos los owners de plataforma que tengan push activo
- * (por email canónico o por cualquier suscripción marcada owner).
- */
 export async function sendPushToOwners(payload: PushPayload): Promise<number> {
   try {
     await ensurePushTable();
-    const emails = OWNER_EMAILS.map((e) => e.toLowerCase());
+    const emails = OWNER_EMAILS.map((e) => e.toLowerCase()).filter(Boolean);
     if (emails.length === 0) return 0;
 
+    // Neon: pasar array JS → text[]
     const subs = (await sql()`
-      SELECT DISTINCT ON (endpoint) id, endpoint, p256dh, auth
+      SELECT id, endpoint, p256dh, auth
         FROM push_subscriptions
        WHERE lower(coalesce(email, '')) = ANY(${emails})
-          OR clerk_user_id IN (
-               SELECT clerk_user_id FROM push_subscriptions
-                WHERE lower(coalesce(email, '')) = ANY(${emails})
-             )
     `) as Array<{ id: string; endpoint: string; p256dh: string; auth: string }>;
 
-    // Fallback: si no hay email guardado, no spameamos a todos — 0.
-    // El owner debe opt-in una vez con la sesión owner.
     return deliver(subs, payload);
   } catch (err) {
     console.error("[push] sendPushToOwners failed", err);
