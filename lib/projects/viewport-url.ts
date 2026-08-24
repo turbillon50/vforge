@@ -35,11 +35,34 @@ export function normalizePublishedUrl(value: string | null | undefined): string 
 }
 
 /**
+ * Panel institucional V·Momentum / Ssante: siempre vive en `/admin` del deploy.
+ * Si el proyecto no tiene admin_url explícita, se deriva del dominio o Vercel.
+ */
+export function resolveInstitutionalAdminUrl(
+  base: string | null | undefined,
+): string | null {
+  const normalized = normalizePublishedUrl(base ?? null);
+  if (!normalized) return null;
+  try {
+    const url = new URL(normalized);
+    // No pisar si ya apunta a /admin
+    const path = url.pathname.replace(/\/+$/, "") || "";
+    if (path === "/admin" || path.endsWith("/admin")) return url.href;
+    url.pathname = "/admin";
+    url.search = "";
+    url.hash = "";
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Resuelve los viewports históricos sin escribir en la base.
  *
- * Escritorio y móvil pueden compartir el deploy responsive cuando sus URLs
- * explícitas aún no existían. Administración nunca se infiere: sólo se expone
- * cuando fue registrada de forma intencional.
+ * Escritorio y móvil pueden compartir el deploy responsive.
+ * Administración: URL explícita o, como base institucional, `{site}/admin`
+ * (Protocolo Estandarte / vmomentum-panel-core).
  */
 export function resolveProjectViewportUrls(
   project: ProjectViewportFields,
@@ -48,11 +71,13 @@ export function resolveProjectViewportUrls(
     normalizePublishedUrl(project.vercel_url) ??
     normalizePublishedUrl(project.domain);
 
+  const explicitAdmin = normalizePublishedUrl(project.admin_url);
+
   return {
     desktop_url:
       normalizePublishedUrl(project.desktop_url) ?? publishedFallback,
     mobile_url:
       normalizePublishedUrl(project.mobile_url) ?? publishedFallback,
-    admin_url: normalizePublishedUrl(project.admin_url),
+    admin_url: explicitAdmin ?? resolveInstitutionalAdminUrl(publishedFallback),
   };
 }
