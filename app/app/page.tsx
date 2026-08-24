@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
-// Entrada del área autenticada: el ConnectionGate decide si setup o estudio.
-// Empezamos en setup; si ya hay conexiones, el gate deja pasar al chat.
+// Entrada autenticada: al estudio. Setup es opcional desde el menú.
 export default function AppRoot() {
-  redirect("/app/setup");
+  redirect("/app/chat");
 }

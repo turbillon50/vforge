@@ -49,8 +49,8 @@ export function ClerkShell({ children }: { children: React.ReactNode }) {
       publishableKey={publishableKey}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/app/setup"
-      signUpFallbackRedirectUrl="/app/setup"
+      signInFallbackRedirectUrl="/app/chat"
+      signUpFallbackRedirectUrl="/app/chat"
       appearance={monochromeClerkAppearance}
     >
       {children}
