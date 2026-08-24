@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { ClerkShell } from "@/components/auth/ClerkShell";
 import { RegisterSW } from "@/components/pwa/RegisterSW";
+import { OwnerPushBanner } from "@/components/pwa/OwnerPushBanner";
 import { AppProviders } from "@/i18n/AppProviders";
 import SplashScreen from "@/components/SplashScreen";
 
@@ -56,7 +57,10 @@ export default function RootLayout({
       <body className="min-h-svh bg-background font-sans text-ink">
         <SplashScreen />
         <AppProviders>
-          <ClerkShell>{children}</ClerkShell>
+          <ClerkShell>
+            {children}
+            <OwnerPushBanner />
+          </ClerkShell>
         </AppProviders>
         <RegisterSW />
       </body>
