@@ -8,7 +8,9 @@ import {
   IconLayout,
   IconRefresh,
   IconSearch,
+  IconUsers,
 } from "@/components/brand/VFIcons";
+import { InviteShare } from "@/components/live/InviteShare";
 
 interface Project {
   id: string;
@@ -56,6 +58,7 @@ export default function ProjectsPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [inviteProject, setInviteProject] = useState<Project | null>(null);
 
   const loadProjects = useCallback(async (manual = false) => {
     manual ? setRefreshing(true) : setLoading(true);
@@ -124,8 +127,8 @@ export default function ProjectsPage() {
               Tus proyectos.
             </h1>
             <p className="mt-4 max-w-xl text-[14px] leading-6">
-              Abre una sala para comparar escritorio, móvil y administración;
-              revisar actividad y recibir comentarios con permisos por proyecto.
+              Abre la sala en vivo o invita al cliente por WhatsApp: ve solo su
+              proyecto, comenta y recibe notificaciones — sin secretos ni código.
             </p>
           </div>
           <button
@@ -139,6 +142,18 @@ export default function ProjectsPage() {
           </button>
         </div>
       </header>
+
+      {inviteProject ? (
+        <div className="border-b border-[var(--border-1)] bg-[#f7f7f5] px-5 py-6 md:px-8">
+          <div className="mx-auto max-w-lg">
+            <InviteShare
+              projectId={inviteProject.id}
+              projectName={inviteProject.name}
+              onClose={() => setInviteProject(null)}
+            />
+          </div>
+        </div>
+      ) : null}
 
       <section className="border-b border-[var(--border-1)] bg-[#f7f7f5] px-5 py-4 md:px-8">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -186,7 +201,7 @@ export default function ProjectsPage() {
       ) : null}
 
       <section className="bg-white">
-        <div className="hidden grid-cols-[minmax(0,1.2fr)_minmax(180px,.8fr)_150px_220px] border-b border-[var(--border-1)] px-8 py-3 font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--fg-muted)] md:grid">
+        <div className="hidden grid-cols-[minmax(0,1.2fr)_minmax(180px,.8fr)_150px_280px] border-b border-[var(--border-1)] px-8 py-3 font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--fg-muted)] md:grid">
           <span>Proyecto</span>
           <span>Origen</span>
           <span>Estado</span>
@@ -203,16 +218,15 @@ export default function ProjectsPage() {
                 ? "No hay proyectos disponibles para esta cuenta."
                 : "Ningún proyecto coincide con el filtro."}
             </p>
-            <p className="mx-auto mt-2 max-w-md text-[12px] leading-5">
-              {projects.length === 0
-                ? "Cuando el catálogo tenga proyectos autorizados aparecerán aquí; no mostramos ejemplos inventados."
-                : "Cambia el filtro o limpia la búsqueda."}
-            </p>
           </div>
         ) : (
           <div className="divide-y divide-[var(--border-1)]">
             {filteredProjects.map((project) => (
-              <ProjectRow key={project.id} project={project} />
+              <ProjectRow
+                key={project.id}
+                project={project}
+                onInvite={() => setInviteProject(project)}
+              />
             ))}
           </div>
         )}
@@ -221,7 +235,13 @@ export default function ProjectsPage() {
   );
 }
 
-function ProjectRow({ project }: { project: Project }) {
+function ProjectRow({
+  project,
+  onInvite,
+}: {
+  project: Project;
+  onInvite: () => void;
+}) {
   const externalUrl = normalizeExternalUrl(project.domain || project.vercel_url);
   const active =
     project.category === "produccion" ||
@@ -229,7 +249,7 @@ function ProjectRow({ project }: { project: Project }) {
     project.category === "en_revision";
 
   return (
-    <article className="grid gap-4 px-5 py-5 transition hover:bg-[#fafaf8] md:grid-cols-[minmax(0,1.2fr)_minmax(180px,.8fr)_150px_220px] md:items-center md:px-8">
+    <article className="grid gap-4 px-5 py-5 transition hover:bg-[#fafaf8] md:grid-cols-[minmax(0,1.2fr)_minmax(180px,.8fr)_150px_280px] md:items-center md:px-8">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span className="status-shape shrink-0" data-active={active} />
@@ -242,7 +262,7 @@ function ProjectRow({ project }: { project: Project }) {
         </p>
       </div>
 
-      <div className="min-w-0 md:pl-0">
+      <div className="min-w-0">
         {project.github_repo ? (
           <span className="inline-flex max-w-full items-center gap-1.5 font-mono text-[10px] text-[var(--fg-secondary)]">
             <IconGithub size={11} className="shrink-0" />
@@ -270,24 +290,32 @@ function ProjectRow({ project }: { project: Project }) {
         </span>
       </div>
 
-      <div className="flex items-center gap-2 md:justify-end">
+      <div className="flex flex-wrap items-center gap-2 md:justify-end">
         {externalUrl ? (
           <a
             href={externalUrl}
             target="_blank"
             rel="noreferrer"
             className="btn-ghost !min-h-9 !px-3"
-            aria-label={`Abrir ${project.name} en otra pestaña`}
+            aria-label={`Abrir ${project.name}`}
           >
             <IconExtLink size={12} />
-            <span className="hidden lg:inline">Sitio</span>
           </a>
         ) : null}
+        <button
+          type="button"
+          onClick={onInvite}
+          className="btn-ghost !min-h-9 !px-3"
+          title="Invitar por WhatsApp"
+        >
+          <IconUsers size={12} />
+          <span className="hidden sm:inline">Invitar</span>
+        </button>
         <Link
           href={`/app/live/${encodeURIComponent(project.id)}`}
           className="btn-primary !min-h-9 !px-4"
         >
-          <IconLayout size={12} /> Abrir sala
+          <IconLayout size={12} /> Sala
         </Link>
       </div>
     </article>
@@ -300,7 +328,7 @@ function ProjectSkeleton() {
       {[0, 1, 2, 3].map((index) => (
         <div
           key={index}
-          className="grid animate-pulse gap-4 px-5 py-5 md:grid-cols-[minmax(0,1.2fr)_minmax(180px,.8fr)_150px_220px] md:px-8"
+          className="grid animate-pulse gap-4 px-5 py-5 md:grid-cols-[minmax(0,1.2fr)_minmax(180px,.8fr)_150px_280px] md:px-8"
         >
           <div className="h-4 w-1/2 rounded bg-black/10" />
           <div className="h-4 w-2/3 rounded bg-black/10" />
