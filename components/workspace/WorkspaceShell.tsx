@@ -19,6 +19,7 @@ import {
 } from "@/components/brand/VFIcons";
 import { monochromeClerkAppearance } from "@/components/auth/ClerkShell";
 import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
+import { ConnectionGate } from "@/components/workspace/ConnectionGate";
 
 type IconComponent = (props: {
   size?: number;
@@ -73,6 +74,7 @@ const TITLES: Record<string, string> = {
   "/app/integrations": "Conexiones",
   "/app/admin": "Administración",
   "/app/settings": "Configuración",
+  "/app/setup": "Setup",
 };
 
 function routeIsActive(pathname: string, href: string) {
@@ -140,6 +142,13 @@ function Sidebar({
 
       <div className="border-t border-[var(--border-1)] p-3">
         <Link
+          href="/app/setup"
+          onClick={onNavigate}
+          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-[11px] text-[var(--fg-secondary)] hover:bg-[#f2f2f0] hover:text-black"
+        >
+          <IconZap size={14} /> Setup / conexiones
+        </Link>
+        <Link
           href="/app/settings"
           onClick={onNavigate}
           className="flex items-center gap-3 rounded-md px-3 py-2.5 text-[11px] text-[var(--fg-secondary)] hover:bg-[#f2f2f0] hover:text-black"
@@ -162,6 +171,8 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isStudio = pathname === "/app/chat";
+  const isSetup = pathname.startsWith("/app/setup");
+  const isLive = pathname.startsWith("/app/live/");
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -176,8 +187,9 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [drawerOpen]);
 
-  if (pathname.startsWith("/app/live/")) {
-    return <>{children}</>;
+  // Live y Setup: pantalla completa, sin chrome del shell
+  if (isLive || isSetup) {
+    return <ConnectionGate>{children}</ConnectionGate>;
   }
 
   const title =
@@ -185,86 +197,88 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
     "VForge";
 
   return (
-    <div
-      className={cn(
-        "bg-[var(--color-background)] text-[var(--color-ink)]",
-        isStudio
-          ? "h-svh overflow-hidden overscroll-none lg:h-dvh"
-          : "min-h-svh",
-      )}
-    >
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] border-r border-[var(--border-1)] md:block">
-        <Sidebar pathname={pathname} />
-      </aside>
-
-      {drawerOpen ? (
-        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/30"
-            onClick={() => setDrawerOpen(false)}
-            aria-label="Cerrar navegación"
-          />
-          <aside className="absolute inset-y-0 left-0 w-[min(86vw,300px)] border-r border-black bg-white shadow-2xl">
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(false)}
-              className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-md border border-[var(--border-1)] bg-white"
-              aria-label="Cerrar menú"
-            >
-              <IconX size={14} />
-            </button>
-            <Sidebar pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
-          </aside>
-        </div>
-      ) : null}
-
+    <ConnectionGate>
       <div
         className={cn(
-          "md:pl-[220px]",
-          isStudio ? "h-full overflow-hidden" : "min-h-svh",
+          "bg-[var(--color-background)] text-[var(--color-ink)]",
+          isStudio
+            ? "h-svh overflow-hidden overscroll-none lg:h-dvh"
+            : "min-h-svh",
         )}
       >
-        <header
-          className={cn(
-            "z-20 border-b border-[var(--border-1)] bg-white/95 backdrop-blur-md",
-            isStudio ? "relative shrink-0" : "sticky top-0",
-          )}
-        >
-          <div className="flex h-[58px] items-center justify-between gap-4 px-4 md:px-6">
-            <div className="flex min-w-0 items-center gap-3">
+        <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] border-r border-[var(--border-1)] md:block">
+          <Sidebar pathname={pathname} />
+        </aside>
+
+        {drawerOpen ? (
+          <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/30"
+              onClick={() => setDrawerOpen(false)}
+              aria-label="Cerrar navegación"
+            />
+            <aside className="absolute inset-y-0 left-0 w-[min(86vw,300px)] border-r border-black bg-white shadow-2xl">
               <button
                 type="button"
-                onClick={() => setDrawerOpen(true)}
-                className="grid h-9 w-9 place-items-center rounded-md border border-[var(--border-1)] md:hidden"
-                aria-label="Abrir menú"
+                onClick={() => setDrawerOpen(false)}
+                className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-md border border-[var(--border-1)] bg-white"
+                aria-label="Cerrar menú"
               >
-                <IconMenu size={16} />
+                <IconX size={14} />
               </button>
-              <div className="min-w-0">
-                <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
-                  VForge
-                </p>
-                <h1 className="truncate text-[15px] font-medium tracking-[-0.025em]">
-                  {title}
-                </h1>
-              </div>
-            </div>
-            <AccountMenu />
+              <Sidebar pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
+            </aside>
           </div>
-        </header>
+        ) : null}
 
-        <main
+        <div
           className={cn(
-            isStudio
-              ? "h-[calc(100svh-58px)] overflow-hidden lg:h-[calc(100dvh-58px)]"
-              : "min-h-[calc(100svh-58px)]",
+            "md:pl-[220px]",
+            isStudio ? "h-full overflow-hidden" : "min-h-svh",
           )}
         >
-          {children}
-        </main>
+          <header
+            className={cn(
+              "z-20 border-b border-[var(--border-1)] bg-white/95 backdrop-blur-md",
+              isStudio ? "relative shrink-0" : "sticky top-0",
+            )}
+          >
+            <div className="flex h-[58px] items-center justify-between gap-4 px-4 md:px-6">
+              <div className="flex min-w-0 items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen(true)}
+                  className="grid h-9 w-9 place-items-center rounded-md border border-[var(--border-1)] md:hidden"
+                  aria-label="Abrir menú"
+                >
+                  <IconMenu size={16} />
+                </button>
+                <div className="min-w-0">
+                  <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+                    VForge
+                  </p>
+                  <h1 className="truncate text-[15px] font-medium tracking-[-0.025em]">
+                    {title}
+                  </h1>
+                </div>
+              </div>
+              <AccountMenu />
+            </div>
+          </header>
+
+          <main
+            className={cn(
+              isStudio
+                ? "h-[calc(100svh-58px)] overflow-hidden lg:h-[calc(100dvh-58px)]"
+                : "min-h-[calc(100svh-58px)]",
+            )}
+          >
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </ConnectionGate>
   );
 }
 
