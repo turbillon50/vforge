@@ -15,9 +15,9 @@ export default function SignInPage() {
 
   return (
     <AuthSurface
-      eyebrow="Acceso a la sala"
-      title="Entra a VForge"
-      body="Abre tus proyectos, revisa las tres vistas y comparte avances con cada invitado autorizado."
+      eyebrow="Acceso"
+      title="Entra a Forge"
+      body="Plan. Integra. Ejecuta. Abre tus proyectos y conecta GitHub, Vercel y el resto cuando estés listo."
     >
       {clerkEnabled ? (
         <>
