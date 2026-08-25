@@ -1,322 +1,279 @@
-import Link from "next/link";
-import { VWordmark } from "@/components/brand/VMark";
-import {
-  IconActivity,
-  IconArrowR,
-  IconEye,
-  IconShield,
-  IconGithub,
-  IconGlobe,
-  IconCreditCard,
-  IconKey,
-} from "@/components/brand/VFIcons";
+"use client";
 
-function StudioPreview() {
+import Link from "next/link";
+import { useEffect } from "react";
+import "./monochrome-home.css";
+
+/* Logo aprobado VForge: triángulo invertido relleno */
+function ForgeMark({ size = 19, className = "" }: { size?: number; className?: string }) {
   return (
-    <div
-      id="taller"
-      className="overflow-hidden rounded-[14px] border border-black bg-white shadow-[0_24px_70px_rgba(0,0,0,0.10)]"
-      aria-label="Vista del taller VForge"
-    >
-      <div className="flex h-11 items-center justify-between border-b border-[var(--border-1)] px-4">
-        <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--fg-muted)]">
-          VForge · MCP conectado
-        </span>
-        <span className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-black">
-          <span className="status-shape" data-active="true" />
-          Visión activa
-        </span>
-      </div>
-      <div className="grid min-h-[380px] md:grid-cols-[0.9fr_1.1fr]">
-        <div className="border-b border-[var(--border-1)] p-4 md:border-b-0 md:border-r">
-          <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
-            Tu IA (Claude · Grok · ChatGPT)
-          </p>
-          <div className="mt-6 space-y-3">
-            <div className="ml-auto max-w-[88%] rounded-md bg-black px-3 py-2">
-              <p className="text-[10px] leading-4 text-white">
-                ¿Qué preview está vivo en el proyecto X?
-              </p>
-            </div>
-            <div className="max-w-[90%] rounded-md border border-[var(--border-1)] px-3 py-2">
-              <p className="text-[10px] leading-4 text-[var(--fg-secondary)]">
-                VForge MCP · 3 proyectos · preview desktop + mobile
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="p-4">
-          <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
-            Preview real
-          </p>
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <div className="min-h-[140px] rounded-md border border-[var(--border-1)] p-2">
-              <div className="mx-auto mt-5 h-2 w-2/3 rounded-full bg-black/10" />
-              <div className="mx-auto mt-2 h-2 w-1/2 rounded-full bg-black/10" />
-              <div className="mx-auto mt-5 h-14 w-[78%] border border-black/10" />
-            </div>
-            <div className="flex min-h-[140px] items-center justify-center rounded-md border border-[var(--border-1)] bg-[#f2f2f0]">
-              <div className="h-[100px] w-[48px] rounded-[10px] border border-black bg-white p-1" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <svg viewBox="0 0 16 14" width={size} height={(size * 14) / 16} aria-hidden="true" className={className}>
+      <path d="M0 0h16L8 14z" fill="currentColor" />
+    </svg>
   );
 }
 
-const HOW = [
-  {
-    n: "01",
-    title: "Login",
-    body: "Entras a VForge. Una cuenta, vault de secretos y proyectos aislados.",
-  },
-  {
-    n: "02",
-    title: "Genera MCP",
-    body: "Un token por tu login. Lo pegas en Claude, Grok o ChatGPT.",
-  },
-  {
-    n: "03",
-    title: "Conecta infra",
-    body: "GitHub, Vercel, Clerk, Neon, Stripe. OAuth real, secretos cifrados, manuales de integración.",
-  },
-  {
-    n: "04",
-    title: "Visión",
-    body: "Tu IA ve cuenta, previews y deploys. Tú sigues construyendo con la herramienta que ya usas.",
-  },
-];
+/* Logo oficial de GitHub (Octocat mark) */
+function GitHubMark({ size = 40, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 98 96" width={size} height={size} aria-hidden="true" className={className}>
+      <path
+        fill="#fff"
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"
+      />
+    </svg>
+  );
+}
 
-const INTEGRATIONS = [
-  { name: "GitHub", detail: "Repos y versionado", Icon: IconGithub },
-  { name: "Vercel", detail: "Preview y producción", Icon: IconGlobe },
-  { name: "Clerk", detail: "Auth y roles", Icon: IconShield },
-  { name: "Neon", detail: "Postgres serverless", Icon: IconActivity },
-  { name: "Stripe", detail: "Cobros e invoices", Icon: IconCreditCard },
-  { name: "MCP", detail: "Claude · Grok · ChatGPT", Icon: IconKey },
-];
+/* Logo oficial de Vercel (triángulo) */
+function VercelMark({ size = 38, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 76 65" width={size} height={(size * 65) / 76} aria-hidden="true" className={className}>
+      <path fill="#fff" d="M37.527 0 75.054 65H0z" />
+    </svg>
+  );
+}
+
+const CHECK = (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
 
 export function MonochromeHome() {
+  useEffect(() => {
+    const splash = document.getElementById("fx-splash");
+    const main = document.getElementById("fx-main");
+    const hdr = document.getElementById("fx-hdr");
+    const DUR = 4200;
+    let done = false;
+    let io: IntersectionObserver | null = null;
+
+    function startReveal() {
+      io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) e.target.classList.add("in");
+          });
+        },
+        { threshold: 0.12 }
+      );
+      document.querySelectorAll(".fx-reveal").forEach((el) => io!.observe(el));
+    }
+
+    function finish() {
+      if (done) return;
+      done = true;
+      splash?.classList.add("gone");
+      main?.classList.add("live");
+      startReveal();
+    }
+
+    const timer = window.setTimeout(finish, DUR);
+    const onSkip = () => {
+      window.clearTimeout(timer);
+      finish();
+    };
+    splash?.addEventListener("click", onSkip);
+
+    const onScroll = () => {
+      if (window.scrollY > 20) hdr?.classList.add("stuck");
+      else hdr?.classList.remove("stuck");
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      window.clearTimeout(timer);
+      splash?.removeEventListener("click", onSkip);
+      window.removeEventListener("scroll", onScroll);
+      io?.disconnect();
+    };
+  }, []);
+
   return (
-    <div className="min-h-dvh bg-[#f7f7f5] text-black">
-      <header className="border-b border-[var(--border-1)] bg-white">
-        <div className="mx-auto flex h-[68px] max-w-[1440px] items-center justify-between px-5 md:px-8">
-          <Link href="/" aria-label="VForge">
-            <VWordmark />
-          </Link>
-          <nav className="hidden items-center gap-6 text-[13px] md:flex">
-            <a href="#como" className="text-[var(--fg-secondary)] hover:text-black">
-              Cómo funciona
-            </a>
-            <a href="#integraciones" className="text-[var(--fg-secondary)] hover:text-black">
-              Integraciones
-            </a>
-            <a href="#precios" className="text-[var(--fg-secondary)] hover:text-black">
-              Precios
-            </a>
-          </nav>
-          <div className="flex items-center gap-2">
-            <Link href="/sign-in" className="hidden px-3 py-2 text-[13px] font-medium sm:inline-flex">
-              Entrar
-            </Link>
-            <Link href="/sign-in" className="btn-primary !min-h-9 !px-4">
-              Generar MCP <IconArrowR size={13} />
-            </Link>
+    <div className="fx-root">
+      {/* ===== SPLASH ===== */}
+      <div id="fx-splash" className="fx-splash">
+        <div className="fx-seq">
+          {/* dos cimientos: GitHub + Vercel */}
+          <div className="fx-cimientos">
+            <span className="fx-b fx-b-gh"><GitHubMark size={40} /></span>
+            <span className="fx-b fx-b-vc"><VercelMark size={40} /></span>
           </div>
+          {/* nace VForge */}
+          <div className="fx-nace">
+            <ForgeMark size={38} className="fx-tri" />
+            <span className="fx-word">Forge</span>
+          </div>
+        </div>
+        <div className="fx-skip">Toca para saltar</div>
+      </div>
+
+      {/* ===== HEADER ===== */}
+      <header id="fx-hdr" className="fx-hdr">
+        <div className="fx-brand"><ForgeMark size={22} /><span className="name">Forge</span></div>
+        <nav className="fx-links">
+          <Link href="#como">Cómo funciona</Link>
+          <Link href="#que">Qué hace</Link>
+          <Link href="#integraciones">Integraciones</Link>
+          <Link href="#precios">Precios</Link>
+        </nav>
+        <div className="fx-navcta">
+          <Link className="fx-pill ghost" href="/sign-in">Entrar</Link>
+          <Link className="fx-pill solid" href="/sign-up">Empezar gratis</Link>
         </div>
       </header>
 
-      <main>
-        {/* Hero */}
-        <section className="mx-auto grid max-w-[1440px] gap-12 px-5 pb-16 pt-16 md:px-8 md:pb-24 md:pt-24 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div className="max-w-[640px]">
-            <p className="mono-label mb-6 flex items-center gap-2">
-              <span className="status-shape" data-active="true" />
-              Visión para tu IA de confianza
-            </p>
-            <h1 className="max-w-[640px] text-[clamp(2.4rem,5.5vw,4.8rem)] font-semibold leading-[0.94] tracking-[-0.065em]">
-              Cuando construyes con Claude, Grok o ChatGPT, no tienes visión.
-            </h1>
-            <p className="mt-7 max-w-[520px] text-[clamp(1.05rem,1.5vw,1.28rem)] leading-[1.45] text-[var(--fg-secondary)]">
-              VForge genera un MCP con tu login. Lo conectas en la IA que ya usas
-              y ganas visión de cuenta, previews y deploys — sin montar otro modelo
-              adentro ni quemar tokens en una plataforma más.
-            </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Link href="/sign-in" className="btn-primary !min-h-12 !px-7">
-                Empezar gratis <IconArrowR size={14} />
-              </Link>
-              <a href="#como" className="btn-ghost !min-h-12 !px-7">
-                Cómo funciona
-              </a>
+      {/* ===== MAIN ===== */}
+      <main id="fx-main" className="fx-main">
+        {/* HERO */}
+        <section className="fx-hero">
+          <div className="fx-eyebrow fx-reveal"><span className="dot" />Model Context Protocol · v1</div>
+          <h1 className="fx-reveal d1">Visión para tu <b>IA de confianza</b></h1>
+          <p className="fx-sub fx-reveal d2">
+            Forge genera un MCP con tu propio acceso y lo conectas en tu IA — Claude, ChatGPT o la que uses.
+            Tu asistente ve tus proyectos, lanza previews y despliega sobre la infraestructura que ya tienes.
+          </p>
+          <div className="fx-herocta fx-reveal d3">
+            <Link className="fx-pill solid" href="/sign-up">Empezar gratis</Link>
+            <Link className="fx-pill ghost" href="#como">Ver cómo funciona</Link>
+          </div>
+          <div className="fx-scroll fx-reveal d5"><span>Desliza</span><div className="bar" /></div>
+        </section>
+
+        {/* COMO FUNCIONA */}
+        <section id="como">
+          <div className="fx-wrap">
+            <div className="fx-sechead fx-reveal">
+              <span className="tag">/ Cómo funciona</span>
+              <h2>Cuatro pasos. <b>Cero fricción.</b></h2>
+              <p>No migras nada. Forge se monta sobre lo que ya usas y le da ojos a tu IA.</p>
             </div>
-            <p className="mt-5 max-w-md text-[12px] leading-5 text-[var(--fg-muted)]">
-              No competimos con Lovable ni Replit. Ellos generan. Nosotros damos
-              ojos y control sobre lo que ya construyes.
-            </p>
-          </div>
-          <StudioPreview />
-        </section>
-
-        {/* Problema / solución corta */}
-        <section className="border-y border-[var(--border-1)] bg-white">
-          <div className="mx-auto grid max-w-[1440px] md:grid-cols-2">
-            <article className="border-b border-[var(--border-1)] px-6 py-10 md:border-b-0 md:border-r md:px-10 md:py-14">
-              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
-                El problema
-              </p>
-              <h2 className="mt-3 text-[22px] font-medium tracking-[-0.02em]">
-                La IA escribe código a ciegas
-              </h2>
-              <p className="mt-3 max-w-md text-[14px] leading-6 text-[var(--fg-secondary)]">
-                No ve tu repo vivo, tus previews ni tus secretos bien integrados.
-                Cada sesión empieza de cero. En las plataformas de coding el
-                manejo de secrets es un desmadre.
-              </p>
-            </article>
-            <article className="px-6 py-10 md:px-10 md:py-14">
-              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
-                Qué resuelve VForge
-              </p>
-              <h2 className="mt-3 text-[22px] font-medium tracking-[-0.02em]">
-                MCP + vault + previews reales
-              </h2>
-              <p className="mt-3 max-w-md text-[14px] leading-6 text-[var(--fg-secondary)]">
-                Login → token MCP → lo conectas en tu IA. Visión de cuenta y
-                previews. Integraciones con OAuth y secretos cifrados. Manuales
-                para no improvisar cada cable.
-              </p>
-            </article>
-          </div>
-        </section>
-
-        {/* Cómo funciona */}
-        <section id="como" className="mx-auto max-w-[1440px] px-5 py-14 md:px-8 md:py-20">
-          <p className="mono-label">Cómo funciona</p>
-          <h2 className="mt-3 max-w-2xl text-[clamp(1.8rem,3.5vw,3rem)] font-semibold tracking-[-0.045em]">
-            Tu IA de siempre. Nuestros ojos sobre el producto.
-          </h2>
-          <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {HOW.map(({ n, title, body }) => (
-              <article key={n}>
-                <p className="font-mono text-[10px] tracking-[0.14em] text-[var(--fg-muted)]">{n}</p>
-                <h3 className="mt-3 text-[18px] font-medium">{title}</h3>
-                <p className="mt-2 text-[14px] leading-6 text-[var(--fg-secondary)]">{body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        {/* Integraciones + secrets */}
-        <section id="integraciones" className="border-y border-[var(--border-1)] bg-white">
-          <div className="mx-auto max-w-[1440px] px-5 py-14 md:px-8 md:py-20">
-            <p className="mono-label">Integraciones y secrets</p>
-            <h2 className="mt-3 max-w-2xl text-[clamp(1.8rem,3.5vw,3rem)] font-semibold tracking-[-0.045em]">
-              La infraestructura unida. Sin pegar tokens a lo loco.
-            </h2>
-            <p className="mt-4 max-w-2xl text-[15px] leading-6 text-[var(--fg-secondary)]">
-              OAuth real, vault cifrado y guías de integración. No montamos una IA
-              adentro para cobrarte tokens: te apoyamos a conectar lo que ya usas
-              y a que tu modelo de confianza vea el estado real del producto.
-            </p>
-            <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {INTEGRATIONS.map(({ name, detail, Icon }) => (
-                <div
-                  key={name}
-                  className="flex items-center gap-4 border border-[var(--border-1)] bg-[#f7f7f5] px-5 py-4"
-                >
-                  <Icon size={18} />
-                  <div>
-                    <p className="text-[14px] font-medium">{name}</p>
-                    <p className="text-[12px] text-[var(--fg-muted)]">{detail}</p>
-                  </div>
+            <div className="fx-steps">
+              {[
+                ["01", "Inicia sesión", "Entras con tu cuenta. Sin configurar servidores ni claves a mano.",
+                  <path key="a" d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />],
+                ["02", "Genera tu MCP", "Forge crea un endpoint MCP con tu acceso, listo para pegar en tu IA.",
+                  <path key="b" d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3" />],
+                ["03", "Conecta tu infra", "GitHub, Vercel, Clerk, Neon y Stripe — enlazados con un clic.",
+                  <path key="c" d="M9 12h6M12 9v6M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4z" />],
+                ["04", "Tu IA ya ve todo", "Pregunta, previsualiza y despliega. Tu asistente opera tu stack.",
+                  <g key="d"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></g>],
+              ].map(([n, t, d, ic], i) => (
+                <div className={`fx-step fx-reveal d${i + 1}`} key={n as string}>
+                  <div className="ic"><svg viewBox="0 0 24 24">{ic}</svg></div>
+                  <span className="n">{n}</span>
+                  <h3>{t}</h3>
+                  <p>{d}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Precios */}
-        <section id="precios" className="mx-auto max-w-[1440px] px-5 py-14 md:px-8 md:py-20">
-          <p className="mono-label">Precios</p>
-          <h2 className="mt-3 max-w-2xl text-[clamp(1.8rem,3.5vw,3rem)] font-semibold tracking-[-0.045em]">
-            Simple. Sin quemar presupuesto en un agente interno.
-          </h2>
-          <p className="mt-4 max-w-xl text-[15px] leading-6 text-[var(--fg-secondary)]">
-            Un equipo de coding con IA ya te puede costar ~100 USD al mes más
-            invoices. VForge es la capa de visión y control, no otra suscripción
-            de modelo.
-          </p>
-
-          <div className="mt-12 grid gap-4 md:grid-cols-2">
-            <div className="border border-[var(--border-1)] bg-white p-8">
-              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
-                Free
-              </p>
-              <p className="mt-3 text-[40px] font-semibold tracking-[-0.04em]">$0</p>
-              <p className="mt-1 text-[14px] text-[var(--fg-secondary)]">1 proyecto</p>
-              <ul className="mt-6 space-y-2 text-[13px] leading-6 text-[var(--fg-secondary)]">
-                <li>MCP con tu login</li>
-                <li>Vault de secrets</li>
-                <li>Preview y sala de revisión</li>
-                <li>Integraciones esenciales</li>
-              </ul>
-              <Link href="/sign-in" className="btn-ghost mt-8 !min-h-11 !px-5 inline-flex">
-                Empezar free <IconArrowR size={13} />
-              </Link>
+        {/* QUE HACEMOS */}
+        <section id="que">
+          <div className="fx-wrap">
+            <div className="fx-sechead fx-reveal">
+              <span className="tag">/ Qué hace</span>
+              <h2>Tu infraestructura, <b>hablada.</b></h2>
+              <p>Todo lo que harías en cinco pestañas, tu IA lo hace en una conversación.</p>
             </div>
-
-            <div className="border border-black bg-white p-8">
-              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
-                Starter
-              </p>
-              <p className="mt-3 text-[40px] font-semibold tracking-[-0.04em]">
-                $20<span className="text-[16px] font-medium text-[var(--fg-muted)]"> / mes</span>
-              </p>
-              <p className="mt-1 text-[14px] text-[var(--fg-secondary)]">
-                Hasta 10 proyectos · + invoices
-              </p>
-              <ul className="mt-6 space-y-2 text-[13px] leading-6 text-[var(--fg-secondary)]">
-                <li>Todo lo de Free</li>
-                <li>Más proyectos y equipo</li>
-                <li>Manuales de integración</li>
-                <li>Facturación / invoices</li>
-              </ul>
-              <Link href="/sign-in" className="btn-primary mt-8 !min-h-11 !px-5 inline-flex">
-                Ir a Starter <IconArrowR size={13} />
-              </Link>
+            <div className="fx-feats">
+              {[
+                ["Visión de cuenta", "Proyectos, repos, deploys y bases de datos — todo el estado de tu cuenta a la vista de tu IA en tiempo real.",
+                  <path key="a" d="M3 9h18M9 21V9M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" />],
+                ["Previews al vuelo", "Pide un cambio y obtén una URL de preview lista para revisar, antes de tocar producción.",
+                  <path key="b" d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />],
+                ["Deploys por voz", "\"Sube a producción.\" Forge encadena commit, build y deploy sobre tu Vercel — con tu firma.",
+                  <path key="c" d="M22 12h-4l-3 9L9 3l-3 9H2" />],
+                ["Bóveda de secretos", "Tus claves viven cifradas. Se usan sin exponerse y se rotan cuando lo pides.",
+                  <g key="d"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></g>],
+                ["Verificación real", "Forge comprueba que cada conexión responde — nada de \"listo\" sin evidencia.",
+                  <path key="e" d="M20 6 9 17l-5-5" />],
+                ["Historial vivo", "Cada acción queda registrada: quién, qué y cuándo. Auditable de punta a punta.",
+                  <g key="f"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></g>],
+              ].map(([t, d, ic], i) => (
+                <div className={`fx-feat fx-reveal d${(i % 3) + 1}`} key={t as string}>
+                  <div className="ic"><svg viewBox="0 0 24 24">{ic}</svg></div>
+                  <h3>{t}</h3>
+                  <p>{d}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* CTA final */}
-        <section className="border-t border-[var(--border-1)] bg-white">
-          <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-8 md:py-20">
-            <div className="flex flex-col gap-8 border border-black p-8 md:flex-row md:items-center md:justify-between md:p-12">
-              <div>
-                <p className="mono-label">MCP</p>
-                <h2 className="mt-3 text-[clamp(1.5rem,2.8vw,2.2rem)] font-semibold tracking-[-0.04em]">
-                  Genera el token. Conéctalo. Tu IA deja de trabajar a ciegas.
-                </h2>
-                <p className="mt-2 max-w-md text-[14px] text-[var(--fg-secondary)]">
-                  Free para un proyecto. Starter cuando el taller crece.
-                </p>
+        {/* INTEGRACIONES */}
+        <section id="integraciones" className="fx-integ">
+          <div className="fx-wrap">
+            <div className="lbl fx-reveal">Construido sobre lo que ya confías</div>
+            <div className="fx-logos fx-reveal d1">
+              {["GitHub", "Vercel", "Neon", "Clerk", "Stripe", "MCP"].map((n) => (
+                <div className="lg" key={n}><ForgeMark size={20} /><span>{n}</span></div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* PRECIOS */}
+        <section id="precios">
+          <div className="fx-wrap">
+            <div className="fx-sechead center fx-reveal">
+              <span className="tag">/ Precios</span>
+              <h2>Empieza gratis. <b>Crece cuando quieras.</b></h2>
+            </div>
+            <div className="fx-prices">
+              <div className="fx-plan fx-reveal d1">
+                <div className="pname">Free</div>
+                <div className="amt">$0<small> /mes</small></div>
+                <p className="pdesc">Para probar la visión con un proyecto.</p>
+                <ul>
+                  {["1 proyecto conectado", "MCP con tu acceso", "Previews ilimitados", "Bóveda de secretos"].map((f) => (
+                    <li key={f}>{CHECK}{f}</li>
+                  ))}
+                </ul>
+                <Link className="fx-pill ghost" href="/sign-up">Empezar gratis</Link>
               </div>
-              <Link href="/sign-in" className="btn-primary !min-h-12 !px-8 shrink-0">
-                Abrir VForge <IconArrowR size={14} />
-              </Link>
+              <div className="fx-plan hi fx-reveal d2">
+                <div className="badge">Recomendado</div>
+                <div className="pname">Starter</div>
+                <div className="amt">$20<small> /mes</small></div>
+                <p className="pdesc">Para operar tu stack completo con tu IA.</p>
+                <ul>
+                  {["Hasta 10 proyectos", "Deploys a producción", "Todas las integraciones", "Historial y auditoría", "Rotación de claves"].map((f) => (
+                    <li key={f}>{CHECK}{f}</li>
+                  ))}
+                </ul>
+                <Link className="fx-pill solid" href="/sign-up">Elegir Starter</Link>
+              </div>
             </div>
           </div>
         </section>
-      </main>
 
-      <footer className="border-t border-[var(--border-1)] bg-white">
-        <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-5 py-6 text-[11px] text-[var(--fg-muted)] sm:flex-row sm:items-center sm:justify-between md:px-8">
-          <VWordmark className="origin-left scale-90" />
-          <span>VForge · Visión y control para builders con IA</span>
-        </div>
-      </footer>
+        {/* CTA FINAL */}
+        <section className="fx-ctafinal">
+          <div className="fx-wrap">
+            <h2 className="fx-reveal">Dale <b>ojos</b> a tu IA.</h2>
+            <p className="fx-reveal d1">Conecta tu infraestructura en minutos y deja que tu asistente construya contigo.</p>
+            <div className="fx-reveal d2"><Link className="fx-pill solid" href="/sign-up">Empezar gratis</Link></div>
+          </div>
+        </section>
+
+        {/* FOOTER */}
+        <footer className="fx-footer">
+          <div className="fx-brand"><ForgeMark size={19} /><span className="name">Forge</span></div>
+          <nav>
+            <Link href="#como">Cómo funciona</Link>
+            <Link href="#precios">Precios</Link>
+            <Link href="/developers">Docs</Link>
+            <Link href="/legal/terminos">Términos</Link>
+          </nav>
+          <div className="fmeta">© 2026 · vforge.site</div>
+        </footer>
+      </main>
     </div>
   );
 }
