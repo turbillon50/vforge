@@ -65,8 +65,8 @@
 }
 
 @keyframes emberBreathe {
-  0%, 100% { opacity: 0.038; transform: translate(-50%, -54%) scale(1); }
-  50%      { opacity: 0.075; transform: translate(-50%, -54%) scale(1.04); }
+  0%, 100% { opacity: 0.028; transform: translate(-50%, -54%) scale(1); }
+  50%      { opacity: 0.052; transform: translate(-50%, -54%) scale(1.04); }
 }
 
 /* ---- columna de contenido ---- */
@@ -306,6 +306,24 @@
 .auth-scene .cl-logoBox,
 .auth-scene .cl-internal-1fcj7sw,
 .auth-scene .cl-footer .cl-internal-uyu30o { display: none !important; }
+
+/* ---- fixes: el widget de Clerk debe caber en el cristal ---- */
+.auth-scene .cl-rootBox,
+.auth-scene .cl-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+}
+.auth-scene .cl-socialButtons { gap: 8px !important; }
+.auth-scene .cl-formFieldInput,
+.auth-scene .cl-formButtonPrimary { width: 100% !important; }
+
+/* iconos social -> blanco monocromo (Google a color y X negro quedan en b/n) */
+.auth-scene .vf-social-icon {
+  filter: grayscale(1) brightness(0) invert(1) !important;
+  opacity: 0.9 !important;
+}
 
 /* accesibilidad: sin movimiento si el usuario lo pide */
 @media (prefers-reduced-motion: reduce) {

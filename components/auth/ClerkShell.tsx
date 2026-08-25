@@ -23,6 +23,8 @@ export const monochromeClerkAppearance = {
     header: "hidden",
     socialButtonsBlockButton: "vf-social",
     socialButtonsBlockButtonText: "vf-social-txt",
+    socialButtonsIconButton: "vf-social",
+    socialButtonsProviderIcon: "vf-social-icon",
     dividerLine: "vf-divider-line",
     dividerText: "vf-divider-txt",
     formFieldLabel: "vf-label",
