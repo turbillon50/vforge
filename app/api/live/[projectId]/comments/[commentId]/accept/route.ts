@@ -132,7 +132,7 @@ export async function POST(
     authorEmail: identity.email,
     authorName: "VForge · sistema",
     clerkId: identity.userId,
-    body: `✓ Tarea aceptada (${shortId}) · en cola para el Estudio / agente.\nOrigen: “${comment.body.slice(0, 160)}${comment.body.length > 160 ? "…” : "”"}`,
+    body: `✓ Tarea aceptada (${shortId}) · en cola para el Estudio / agente.\nOrigen: “${comment.body.slice(0, 160)}${comment.body.length > 160 ? "…" : ""}”`,
   });
 
   const estudioPath = `/app/chat?projectId=${encodeURIComponent(projectId)}&task=${encodeURIComponent(task.id)}`;

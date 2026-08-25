@@ -56,7 +56,7 @@ export async function POST(
     authorEmail: identity.email,
     authorName: "VForge · sistema",
     clerkId: identity.userId,
-    body: `Resuelto sin tarea · “${comment.body.slice(0, 120)}${comment.body.length > 120 ? "…” : "”"}`,
+    body: `Resuelto sin tarea · “${comment.body.slice(0, 120)}${comment.body.length > 120 ? "…" : ""}”`,
   });
 
   return NextResponse.json({ ok: true }, { status: 201 });
