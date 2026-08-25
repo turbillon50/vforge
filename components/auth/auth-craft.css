@@ -307,17 +307,36 @@
 .auth-scene .cl-internal-1fcj7sw,
 .auth-scene .cl-footer .cl-internal-uyu30o { display: none !important; }
 
-/* ---- fixes: el widget de Clerk debe caber en el cristal ---- */
+/* ---- fixes: el widget de Clerk debe caber en el cristal (nada de ancho fijo) ---- */
 .auth-scene .cl-rootBox,
-.auth-scene .cl-card {
+.auth-scene .cl-cardBox,
+.auth-scene .cl-card,
+.auth-scene .cl-main,
+.auth-scene .cl-form,
+.auth-scene .cl-socialButtons,
+.auth-scene .cl-footer {
   width: 100% !important;
   min-width: 0 !important;
   max-width: 100% !important;
-  padding: 0 !important;
+  box-sizing: border-box !important;
 }
-.auth-scene .cl-socialButtons { gap: 8px !important; }
+.auth-scene .cl-card,
+.auth-scene .cl-cardBox { padding: 0 !important; }
+.auth-scene .cl-rootBox * { max-width: 100% !important; box-sizing: border-box !important; }
+
+/* social en rejilla fluida: se reparten el ancho sin desbordar */
+.auth-scene .cl-socialButtons {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+.auth-scene .cl-socialButtonsIconButton { width: 100% !important; min-width: 0 !important; }
 .auth-scene .cl-formFieldInput,
-.auth-scene .cl-formButtonPrimary { width: 100% !important; }
+.auth-scene .cl-formButtonPrimary {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
 
 /* iconos social -> blanco monocromo (Google a color y X negro quedan en b/n) */
 .auth-scene .vf-social-icon {
