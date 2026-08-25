@@ -169,7 +169,12 @@ export async function listGlobalOpenTasks(limit = 100): Promise<
   >
 > {
   await ensureCommentTasksTable();
-  return queryAll(
+  return queryAll<
+    CommentTaskRow & {
+      project_name: string | null;
+      source_preview: string | null;
+    }
+  >(
     `SELECT t.id, t.project_id, t.comment_id, t.status, t.prompt, t.source_body,
             t.created_by, t.created_by_email, t.created_at, t.result_summary,
             p.name AS project_name,
