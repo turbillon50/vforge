@@ -322,7 +322,7 @@ export function MonochromeHome() {
         .fx-links :global(a){ font-size:14px; color:var(--ink2); transition:color .2s; }
         .fx-links :global(a:hover){ color:var(--ink); }
         .fx-navcta{ display:flex; align-items:center; gap:14px; }
-        .fx-pill{ display:inline-flex; align-items:center; gap:8px; border-radius:999px; font-size:14px; font-weight:500; padding:11px 22px; transition:all .25s var(--ease); cursor:pointer; border:1px solid transparent; white-space:nowrap; }
+        :global(.fx-pill){ display:inline-flex; align-items:center; justify-content:center; gap:8px; border-radius:999px; font-size:14px; font-weight:500; line-height:1; padding:12px 24px; transition:all .25s var(--ease); cursor:pointer; border:1px solid transparent; white-space:nowrap; text-decoration:none; }
         :global(.fx-pill.solid){ background:var(--ink); color:var(--white); }
         :global(.fx-pill.solid:hover){ background:#2A2A2A; transform:translateY(-1px); }
         :global(.fx-pill.ghost){ background:transparent; color:var(--ink); border-color:var(--line2); }
