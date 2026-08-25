@@ -3,11 +3,34 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
-/* Logo aprobado: triángulo invertido relleno + wordmark ligero */
+/* Logo aprobado VForge: triángulo invertido relleno */
 function ForgeMark({ size = 19, className = "" }: { size?: number; className?: string }) {
   return (
     <svg viewBox="0 0 16 14" width={size} height={(size * 14) / 16} aria-hidden="true" className={className}>
       <path d="M0 0h16L8 14z" fill="currentColor" />
+    </svg>
+  );
+}
+
+/* Logo oficial de GitHub (Octocat mark) */
+function GitHubMark({ size = 40, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 98 96" width={size} height={size} aria-hidden="true" className={className}>
+      <path
+        fill="#fff"
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"
+      />
+    </svg>
+  );
+}
+
+/* Logo oficial de Vercel (triángulo) */
+function VercelMark({ size = 38, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 76 65" width={size} height={(size * 65) / 76} aria-hidden="true" className={className}>
+      <path fill="#fff" d="M37.527 0 75.054 65H0z" />
     </svg>
   );
 }
@@ -22,65 +45,49 @@ export function MonochromeHome() {
   useEffect(() => {
     const splash = document.getElementById("fx-splash");
     const main = document.getElementById("fx-main");
-    const cap = document.getElementById("fx-cap");
-    const stage = document.getElementById("fx-stage");
-    const birth = document.getElementById("fx-birth");
-    const pillars = Array.from(document.querySelectorAll<HTMLElement>(".fx-pillar"));
     const hdr = document.getElementById("fx-hdr");
-    if (!splash || !main) return;
-
-    const timers: number[] = [];
-    let io: IntersectionObserver | null = null;
+    const DUR = 4200;
     let done = false;
+    let io: IntersectionObserver | null = null;
 
-    const setCap = (t: string) => {
-      if (!cap) return;
-      cap.classList.remove("show");
-      timers.push(window.setTimeout(() => { cap.textContent = t; cap.classList.add("show"); }, 260));
-    };
-
-    const startReveal = () => {
-      const hero = document.querySelectorAll<HTMLElement>(".fx-hero .fx-reveal");
-      hero.forEach((el, i) => timers.push(window.setTimeout(() => el.classList.add("in"), 120 + i * 90)));
+    function startReveal() {
       io = new IntersectionObserver(
-        (entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io?.unobserve(e.target); } }),
-        { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) e.target.classList.add("in");
+          });
+        },
+        { threshold: 0.12 }
       );
-      document.querySelectorAll<HTMLElement>("section:not(.fx-hero) .fx-reveal").forEach((el) => io?.observe(el));
-    };
+      document.querySelectorAll(".fx-reveal").forEach((el) => io!.observe(el));
+    }
 
-    const finish = () => {
+    function finish() {
       if (done) return;
       done = true;
-      splash.classList.add("gone");
-      main.classList.add("live");
+      splash?.classList.add("gone");
+      main?.classList.add("live");
       startReveal();
+    }
+
+    const timer = window.setTimeout(finish, DUR);
+    const onSkip = () => {
+      window.clearTimeout(timer);
+      finish();
     };
+    splash?.addEventListener("click", onSkip);
 
-    const T: Array<[number, () => void]> = [
-      [200, () => { setCap("Tres pilares. Tres fortalezas."); pillars[0]?.classList.add("show"); }],
-      [520, () => pillars[1]?.classList.add("show")],
-      [840, () => pillars[2]?.classList.add("show")],
-      [1900, () => setCap("Cada uno aporta lo mejor.")],
-      [3100, () => { setCap("Confluyen."); stage?.classList.add("merge"); }],
-      [4300, () => { setCap("Se transforma."); pillars.forEach((p) => (p.style.opacity = "0")); }],
-      [4900, () => { birth?.classList.add("show"); setCap("Nace Forge. Sobre lo mejor."); }],
-      [6400, () => setCap("El futuro. Impulsado por IA.")],
-      [8000, finish],
-    ];
-    T.forEach(([t, fn]) => timers.push(window.setTimeout(fn, t)));
-
-    const skip = () => { if (!splash.classList.contains("gone")) finish(); };
-    splash.addEventListener("click", skip);
-
-    const onScroll = () => hdr?.classList.toggle("stuck", window.scrollY > 40);
+    const onScroll = () => {
+      if (window.scrollY > 20) hdr?.classList.add("stuck");
+      else hdr?.classList.remove("stuck");
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
-      timers.forEach(clearTimeout);
-      io?.disconnect();
-      splash.removeEventListener("click", skip);
+      window.clearTimeout(timer);
+      splash?.removeEventListener("click", onSkip);
       window.removeEventListener("scroll", onScroll);
+      io?.disconnect();
     };
   }, []);
 
@@ -88,30 +95,22 @@ export function MonochromeHome() {
     <div className="fx-root">
       {/* ===== SPLASH ===== */}
       <div id="fx-splash" className="fx-splash">
-        <div id="fx-stage" className="fx-stage">
-          <div className="fx-pillars">
-            <div className="fx-pillar">
-              <svg className="fx-glyph" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 6v12M6 12h12" /></svg>
-              <span>GitHub</span>
-            </div>
-            <div className="fx-pillar">
-              <svg className="fx-glyph" viewBox="0 0 24 24"><polygon className="fill" points="12,3 22,20 2,20" /></svg>
-              <span>Vercel</span>
-            </div>
-            <div className="fx-pillar">
-              <svg className="fx-glyph" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" /><path d="M9 15V9l6 6V9" /></svg>
-              <span>Neon · Clerk</span>
-            </div>
+        <div className="fx-seq">
+          {/* dos cimientos: GitHub + Vercel */}
+          <div className="fx-cimientos">
+            <span className="fx-b fx-b-gh"><GitHubMark size={40} /></span>
+            <span className="fx-b fx-b-vc"><VercelMark size={40} /></span>
           </div>
-          <div id="fx-birth" className="fx-birth">
-            <div className="mark"><ForgeMark size={40} /><span className="word">Forge</span></div>
-            <div className="tag">Impulsado por IA</div>
+          {/* nace VForge */}
+          <div className="fx-nace">
+            <ForgeMark size={38} className="fx-tri" />
+            <span className="fx-word">Forge</span>
           </div>
-          <div id="fx-cap" className="fx-cap" />
         </div>
+        <div className="fx-skip">Toca para saltar</div>
       </div>
 
-      {/* ===== NAV ===== */}
+      {/* ===== HEADER ===== */}
       <header id="fx-hdr" className="fx-hdr">
         <div className="fx-brand"><ForgeMark size={22} /><span className="name">Forge</span></div>
         <nav className="fx-links">
@@ -279,29 +278,42 @@ export function MonochromeHome() {
         .fx-root { --ink:#0A0A0A; --ink2:#3F3F46; --muted:#71717A; --line:#E8E8E8; --line2:#DADADA; --soft:#F6F6F6; --black:#0A0A0A; --white:#FFFFFF; --ease:cubic-bezier(.22,.61,.36,1); color:var(--ink); }
         .fx-root :global(*){ box-sizing:border-box; }
 
-        .fx-splash{ position:fixed; inset:0; z-index:9999; background:var(--black); display:flex; align-items:center; justify-content:center; transition:opacity 1s var(--ease),visibility 1s var(--ease); }
-        .fx-splash.gone{ opacity:0; visibility:hidden; }
-        .fx-stage{ position:relative; width:min(90vw,640px); height:340px; display:flex; align-items:center; justify-content:center; }
-        .fx-pillars{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:96px; }
-        .fx-pillar{ display:flex; flex-direction:column; align-items:center; gap:18px; opacity:0; transform:translateY(20px); transition:opacity .9s var(--ease),transform .9s var(--ease); }
-        .fx-pillar.show{ opacity:1; transform:translateY(0); }
-        .fx-pillar :global(svg){ width:44px; height:44px; }
-        .fx-pillar :global(.fx-glyph path), .fx-pillar :global(.fx-glyph rect), .fx-pillar :global(.fx-glyph circle){ stroke:var(--white); stroke-width:1.6; fill:none; }
-        .fx-pillar :global(.fx-glyph .fill){ fill:var(--white); stroke:none; }
-        .fx-pillar span{ font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:#8A8A8A; }
-        .fx-stage.merge .fx-pillars{ gap:0; }
-        .fx-stage.merge .fx-pillar span{ opacity:0; transition:opacity .5s; }
-        .fx-stage.merge .fx-pillar :global(svg){ transform:scale(.6); transition:transform .9s var(--ease); }
+        /* ===== SPLASH (CSS puro, sin flash: fill-mode both mantiene el estado 0% desde el frame 0) ===== */
+        .fx-splash{ position:fixed; inset:0; z-index:9999; background:var(--black); display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .7s var(--ease),visibility .7s var(--ease); cursor:pointer; }
+        .fx-splash.gone{ opacity:0; visibility:hidden; pointer-events:none; }
 
-        .fx-birth{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; opacity:0; transform:scale(.94); pointer-events:none; transition:opacity 1s var(--ease),transform 1s var(--ease); }
-        .fx-birth.show{ opacity:1; transform:scale(1); }
-        .fx-birth .mark{ display:flex; align-items:center; gap:18px; color:var(--white); }
-        .fx-birth .word{ font-weight:300; letter-spacing:.34em; font-size:34px; color:var(--white); text-transform:uppercase; }
-        .fx-birth .tag{ font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#7A7A7A; }
+        .fx-seq{ position:relative; width:min(90vw,520px); height:120px; }
+        .fx-cimientos{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:72px; }
+        .fx-b{ display:flex; align-items:center; justify-content:center; opacity:0; }
+        .fx-b :global(svg){ display:block; }
+        .fx-b-gh{ animation:fxGH 2.4s var(--ease) .3s both; }
+        .fx-b-vc{ animation:fxVC 2.4s var(--ease) .5s both; }
+        @keyframes fxGH{
+          0%{ opacity:0; transform:translateX(-30px) translateY(6px) scale(.92); }
+          22%{ opacity:1; transform:translateX(0) translateY(0) scale(1); }
+          62%{ opacity:1; transform:translateX(30px) scale(.96); }
+          100%{ opacity:0; transform:translateX(46px) scale(.7); }
+        }
+        @keyframes fxVC{
+          0%{ opacity:0; transform:translateX(30px) translateY(6px) scale(.92); }
+          22%{ opacity:1; transform:translateX(0) translateY(0) scale(1); }
+          62%{ opacity:1; transform:translateX(-30px) scale(.96); }
+          100%{ opacity:0; transform:translateX(-46px) scale(.7); }
+        }
 
-        .fx-cap{ position:absolute; bottom:-56px; left:0; right:0; text-align:center; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:#6E6E6E; opacity:0; transition:opacity .6s var(--ease); }
-        .fx-cap.show{ opacity:1; }
+        .fx-nace{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:20px; opacity:0; animation:fxNace 1.5s var(--ease) 2.5s both; }
+        .fx-nace :global(svg){ color:var(--white); }
+        .fx-word{ font-weight:300; letter-spacing:.34em; font-size:clamp(28px,5vw,36px); color:var(--white); text-transform:uppercase; }
+        @keyframes fxNace{
+          0%{ opacity:0; transform:scale(.82); }
+          60%{ opacity:1; }
+          100%{ opacity:1; transform:scale(1); }
+        }
 
+        .fx-skip{ position:absolute; bottom:38px; left:0; right:0; text-align:center; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:#565656; opacity:0; animation:fxSkip .6s var(--ease) 1.2s forwards; }
+        @keyframes fxSkip{ to{ opacity:1; } }
+
+        /* ===== HEADER ===== */
         .fx-hdr{ position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:22px clamp(20px,5vw,64px); background:rgba(255,255,255,0); border-bottom:1px solid transparent; transition:background .4s var(--ease),border-color .4s var(--ease),padding .4s var(--ease); }
         .fx-hdr.stuck{ background:rgba(255,255,255,.82); backdrop-filter:blur(18px); border-bottom:1px solid var(--line); padding-top:16px; padding-bottom:16px; }
         .fx-brand{ display:flex; align-items:center; gap:12px; color:var(--ink); }
