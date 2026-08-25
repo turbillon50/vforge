@@ -113,7 +113,11 @@ export function ConexionesView() {
   useEffect(() => {
     fetch("/api/onboarding/status")
       .then(r => r.json())
-      .then(d => { setStatus(d); setLoading(false); })
+      .then(d => {
+        const c = Array.isArray(d?.connected) ? d.connected : [];
+        setStatus({ llm: c.includes("llm"), vercel: c.includes("vercel"), github: c.includes("github") });
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
