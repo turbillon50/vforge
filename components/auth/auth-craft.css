@@ -1,0 +1,316 @@
+/* ============================================================
+   VForge · Auth craft/crystal — negro absoluto, cristal ahumado,
+   brasa ▽ latiendo, sweep de forjado. Monocromo estricto.
+   ============================================================ */
+
+.auth-scene {
+  --void: #000000;
+  --spark: #ffffff;
+  --ash: #8a8a8f;
+  --smoke: rgba(255, 255, 255, 0.6);
+  --glass-top: rgba(255, 255, 255, 0.07);
+  --glass-bot: rgba(255, 255, 255, 0.025);
+  --edge: rgba(255, 255, 255, 0.14);
+
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 56px 20px;
+  background: var(--void);
+  color: var(--spark);
+  font-family: var(--font-geist-sans), Geist, Arial, sans-serif;
+  isolation: isolate;
+}
+
+/* glow radial superior — profundidad */
+.auth-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  background: radial-gradient(
+    120% 80% at 50% 8%,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0) 55%
+  );
+  pointer-events: none;
+}
+
+/* grano film — textura craft */
+.auth-grain {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* brasa ▽ de Forge — late detrás del cristal */
+.auth-ember {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: min(74vw, 460px);
+  height: auto;
+  transform: translate(-50%, -54%);
+  color: #fff;
+  opacity: 0.05;
+  filter: blur(2px) drop-shadow(0 0 60px rgba(255, 255, 255, 0.28));
+  animation: emberBreathe 9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes emberBreathe {
+  0%, 100% { opacity: 0.038; transform: translate(-50%, -54%) scale(1); }
+  50%      { opacity: 0.075; transform: translate(-50%, -54%) scale(1.04); }
+}
+
+/* ---- columna de contenido ---- */
+.auth-stack {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  z-index: 1;
+}
+
+.auth-back {
+  position: absolute;
+  top: -34px;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  color: var(--ash);
+  text-decoration: none;
+  transition: color 0.25s ease, gap 0.25s ease;
+}
+.auth-back:hover { color: var(--spark); gap: 10px; }
+
+.auth-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 30px;
+}
+.auth-brand svg { display: block; }
+.auth-brand .wm {
+  font-size: 15px;
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--spark);
+}
+
+.auth-eyebrow {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+.auth-title {
+  margin-top: 12px;
+  font-size: clamp(30px, 8vw, 40px);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  color: var(--spark);
+}
+.auth-body {
+  margin-top: 14px;
+  max-width: 34ch;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--smoke);
+}
+
+/* ---- el cristal ---- */
+.auth-card {
+  position: relative;
+  margin-top: 26px;
+  padding: 26px 24px 22px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, var(--glass-top), var(--glass-bot));
+  border: 1px solid var(--edge);
+  backdrop-filter: blur(26px) saturate(125%);
+  -webkit-backdrop-filter: blur(26px) saturate(125%);
+  box-shadow:
+    0 40px 120px -30px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+  animation: cardForge 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* highlight specular fijo (borde que capta luz, esquina superior) */
+.auth-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.45),
+    rgba(255, 255, 255, 0) 32%,
+    rgba(255, 255, 255, 0) 70%,
+    rgba(255, 255, 255, 0.12)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* sweep de forjado — recorre el cristal una vez al montar */
+.auth-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.14),
+    transparent
+  );
+  transform: skewX(-18deg);
+  animation: cardSweep 1.5s ease 0.35s 1 both;
+  pointer-events: none;
+}
+
+@keyframes cardForge {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); filter: blur(7px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes cardSweep {
+  from { left: -60%; }
+  to   { left: 130%; }
+}
+
+/* ============================================================
+   Override del widget de Clerk (clases vf-* vía appearance)
+   ============================================================ */
+
+/* social buttons — cristalitos craft */
+.auth-scene .vf-social {
+  background: rgba(255, 255, 255, 0.045) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 11px !important;
+  box-shadow: none !important;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease !important;
+}
+.auth-scene .vf-social:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px -10px rgba(255, 255, 255, 0.18) !important;
+}
+/* logos social -> blanco monocromo */
+.auth-scene .vf-social img,
+.auth-scene .vf-social svg {
+  filter: grayscale(1) brightness(0) invert(1);
+  opacity: 0.88;
+  transition: opacity 0.22s ease;
+}
+.auth-scene .vf-social:hover img,
+.auth-scene .vf-social:hover svg { opacity: 1; }
+
+/* divider */
+.auth-scene .vf-divider-line { background: rgba(255, 255, 255, 0.1) !important; }
+.auth-scene .vf-divider-txt {
+  font-family: var(--font-geist-mono), monospace !important;
+  font-size: 10px !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: var(--ash) !important;
+}
+
+/* labels */
+.auth-scene .vf-label {
+  font-family: var(--font-geist-mono), monospace !important;
+  font-size: 10px !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: var(--ash) !important;
+}
+
+/* inputs — halo chispa al focus */
+.auth-scene .vf-input {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.13) !important;
+  border-radius: 10px !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease !important;
+}
+.auth-scene .vf-input::placeholder { color: rgba(255, 255, 255, 0.32) !important; }
+.auth-scene .vf-input:focus {
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06),
+              0 0 22px rgba(255, 255, 255, 0.09) !important;
+}
+
+/* botón primario — metal pulido con shimmer */
+.auth-scene .vf-primary {
+  position: relative;
+  overflow: hidden;
+  background: #fff !important;
+  color: #000 !important;
+  font-weight: 600 !important;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  transition: transform 0.2s ease, box-shadow 0.25s ease !important;
+}
+.auth-scene .vf-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 32px rgba(255, 255, 255, 0.28) !important;
+}
+.auth-scene .vf-primary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(0, 0, 0, 0.14),
+    transparent
+  );
+  transform: skewX(-18deg);
+  transition: left 0.6s ease;
+}
+.auth-scene .vf-primary:hover::after { left: 130%; }
+
+/* footer del widget (¿No tienes cuenta? Regístrate) */
+.auth-scene .vf-footer-txt { color: var(--ash) !important; }
+.auth-scene .vf-footer-link {
+  color: #fff !important;
+  font-weight: 500 !important;
+}
+.auth-scene .vf-footer-link:hover { color: rgba(255, 255, 255, 0.7) !important; }
+
+/* esconder branding/badges internos si aparecen */
+.auth-scene .cl-logoBox,
+.auth-scene .cl-internal-1fcj7sw,
+.auth-scene .cl-footer .cl-internal-uyu30o { display: none !important; }
+
+/* accesibilidad: sin movimiento si el usuario lo pide */
+@media (prefers-reduced-motion: reduce) {
+  .auth-ember { animation: none; opacity: 0.05; }
+  .auth-card { animation: none; }
+  .auth-card::after { animation: none; display: none; }
+  .auth-scene .vf-primary::after { transition: none; }
+}

@@ -1,39 +1,38 @@
 import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
+import { esES } from "@clerk/localizations";
 import { isClerkPublishableKey } from "@/lib/auth/clerk-key";
 
 export const monochromeClerkAppearance = {
+  baseTheme: dark,
   variables: {
-    colorPrimary: "#000000",
-    colorText: "#090909",
-    colorTextSecondary: "#73767b",
-    colorBackground: "#ffffff",
-    colorInputBackground: "#ffffff",
-    colorInputText: "#090909",
-    colorDanger: "#090909",
-    borderRadius: "8px",
+    colorPrimary: "#ffffff",
+    colorText: "#ffffff",
+    colorTextSecondary: "#8a8a8f",
+    colorBackground: "transparent",
+    colorInputBackground: "rgba(255,255,255,0.04)",
+    colorInputText: "#ffffff",
+    colorNeutral: "#ffffff",
+    colorDanger: "#e6e6e6",
+    borderRadius: "10px",
     fontFamily: "var(--font-geist-sans), Geist, Arial, sans-serif",
   },
   elements: {
     rootBox: "w-full",
-    card: "border border-black/15 shadow-none",
-    headerTitle: "font-semibold tracking-tight text-black",
-    headerSubtitle: "text-neutral-500",
-    socialButtonsBlockButton:
-      "border-black/15 bg-white text-black shadow-none hover:bg-neutral-100",
-    socialButtonsBlockButtonText: "font-medium text-black",
-    dividerLine: "bg-black/10",
-    dividerText:
-      "font-mono text-[10px] uppercase tracking-[0.14em] text-neutral-500",
-    formFieldLabel:
-      "font-mono text-[10px] uppercase tracking-[0.12em] text-neutral-600",
-    formFieldInput:
-      "border-black/20 bg-white text-black shadow-none focus:border-black focus:ring-0",
-    formButtonPrimary:
-      "bg-black font-medium text-white shadow-none hover:bg-neutral-800",
-    footerActionText: "text-neutral-500",
-    footerActionLink: "font-medium text-black hover:text-neutral-600",
-    identityPreview: "border-black/15",
+    card: "bg-transparent shadow-none border-none p-0 gap-6",
+    header: "hidden",
+    socialButtonsBlockButton: "vf-social",
+    socialButtonsBlockButtonText: "vf-social-txt",
+    dividerLine: "vf-divider-line",
+    dividerText: "vf-divider-txt",
+    formFieldLabel: "vf-label",
+    formFieldInput: "vf-input",
+    formButtonPrimary: "vf-primary",
+    footerActionText: "vf-footer-txt",
+    footerActionLink: "vf-footer-link",
+    identityPreview: "border-white/15",
     logoBox: "hidden",
+    footer: "bg-transparent",
   },
 } as const;
 
@@ -47,6 +46,7 @@ export function ClerkShell({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
       publishableKey={publishableKey}
+      localization={esES}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
       signInFallbackRedirectUrl="/app/chat"

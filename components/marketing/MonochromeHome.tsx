@@ -288,7 +288,7 @@ export function MonochromeHome() {
             <Link href="#como">Cómo funciona</Link>
             <Link href="#precios">Precios</Link>
             <Link href="/developers">Docs</Link>
-            <Link href="/legal/terminos">Términos</Link>
+            <Link href="/terminos">Términos</Link>
           </nav>
           <div className="fmeta">© 2026 · vforge.site</div>
         </footer>

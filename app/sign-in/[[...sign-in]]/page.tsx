@@ -22,8 +22,8 @@ export default function SignInPage() {
       {clerkEnabled ? (
         <>
           <ClerkLoading>
-            <div className="grid min-h-[420px] place-items-center rounded-lg border border-[var(--border-1)] bg-white">
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--fg-muted)]">
+            <div className="grid min-h-[380px] place-items-center">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">
                 Cargando acceso
               </p>
             </div>
