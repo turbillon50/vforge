@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { VConversationPanel } from "@/components/live/VConversationPanel";
 import {
   IconBranch,
   IconCheck,
@@ -15,6 +16,7 @@ import {
 } from "@/components/brand/VFIcons";
 
 type Executor = "auto" | "codex" | "claude" | "grok" | "team";
+type ControlMode = "talk" | "plan" | "execute";
 type RunStatus =
   | "preparing"
   | "queued"
@@ -117,6 +119,7 @@ export function VControlPanel({
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [controlMode, setControlMode] = useState<ControlMode>("talk");
   const pollingRef = useRef(false);
 
   const load = useCallback(async () => {
@@ -264,10 +267,10 @@ export function VControlPanel({
           </span>
           <div className="min-w-0">
             <p className="font-mono text-[9px] uppercase tracking-[0.13em]">
-              Control de ejecución
+              V · conversación y control
             </p>
             <p className="truncate text-[9px] text-[var(--fg-muted)]">
-              Rama aislada · agentes · preview · aprobación · producción
+              Plática · planeación · ejecución protegida
             </p>
           </div>
         </div>
@@ -286,7 +289,34 @@ export function VControlPanel({
         </div>
       </header>
 
-      {canWrite ? (
+      <nav
+        className="flex shrink-0 gap-1 border-b border-[var(--border-1)] bg-white px-3 py-2"
+        aria-label="Modo de V"
+      >
+        {(
+          [
+            ["talk", "Plática"],
+            ["plan", "Planeación"],
+            ["execute", "Ejecución"],
+          ] as Array<[ControlMode, string]>
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setControlMode(id)}
+            className={cn(
+              "rounded-md border px-3 py-1.5 text-[10px] font-medium",
+              controlMode === id
+                ? "border-black bg-black text-white"
+                : "border-[var(--border-1)] bg-white hover:border-black",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {canWrite && controlMode === "execute" ? (
         <form
           onSubmit={startRun}
           className="shrink-0 border-b border-[var(--border-1)] bg-[var(--color-background)] p-3"
@@ -355,271 +385,289 @@ export function VControlPanel({
         </p>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 md:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="min-h-0 overflow-y-auto border-b border-[var(--border-1)] md:border-b-0 md:border-r">
-          {loading ? (
-            <div className="flex items-center gap-2 p-4 text-[11px] text-[var(--fg-muted)]">
-              <IconLoader size={12} className="animate-spin" /> Cargando runs…
-            </div>
-          ) : runs.length ? (
-            <div className="divide-y divide-[var(--border-1)]">
-              {runs.map((run) => (
-                <button
-                  key={run.id}
-                  type="button"
-                  onClick={() => setSelectedId(run.id)}
-                  className={cn(
-                    "w-full p-3 text-left hover:bg-[var(--color-background)]",
-                    selected?.id === run.id &&
-                      "bg-black text-white hover:bg-black",
-                  )}
-                >
-                  <span className="flex items-center justify-between gap-2">
-                    <strong className="truncate text-[11px] font-medium">
-                      {run.instruction}
-                    </strong>
-                    <span
-                      className={cn(
-                        "status-shape shrink-0",
-                        ACTIVE.has(run.status) && "animate-pulse",
-                      )}
-                      data-active={
-                        run.status === "preview_ready" ||
-                        run.status === "approved" ||
-                        run.status === "published"
-                      }
-                    />
-                  </span>
-                  <span
+      {controlMode !== "execute" ? (
+        <VConversationPanel
+          projectId={projectId}
+          mode={controlMode}
+          canWrite={canWrite}
+          repositories={repositories}
+          repository={repository}
+          onRepositoryChange={setRepository}
+          onUseAsTask={(plan) => {
+            setInstruction(plan.slice(0, 12000));
+            setControlMode("execute");
+          }}
+        />
+      ) : (
+        <div className="grid min-h-0 flex-1 md:grid-cols-[300px_minmax(0,1fr)]">
+          <aside className="min-h-0 overflow-y-auto border-b border-[var(--border-1)] md:border-b-0 md:border-r">
+            {loading ? (
+              <div className="flex items-center gap-2 p-4 text-[11px] text-[var(--fg-muted)]">
+                <IconLoader size={12} className="animate-spin" /> Cargando runs…
+              </div>
+            ) : runs.length ? (
+              <div className="divide-y divide-[var(--border-1)]">
+                {runs.map((run) => (
+                  <button
+                    key={run.id}
+                    type="button"
+                    onClick={() => setSelectedId(run.id)}
                     className={cn(
-                      "mt-2 flex items-center justify-between font-mono text-[8px] uppercase tracking-[0.08em]",
-                      selected?.id === run.id
-                        ? "text-white/65"
-                        : "text-[var(--fg-muted)]",
+                      "w-full p-3 text-left hover:bg-[var(--color-background)]",
+                      selected?.id === run.id &&
+                        "bg-black text-white hover:bg-black",
                     )}
                   >
-                    <span>
-                      {run.requested_executor === "team"
-                        ? "Equipo"
-                        : run.resolved_executor}
+                    <span className="flex items-center justify-between gap-2">
+                      <strong className="truncate text-[11px] font-medium">
+                        {run.instruction}
+                      </strong>
+                      <span
+                        className={cn(
+                          "status-shape shrink-0",
+                          ACTIVE.has(run.status) && "animate-pulse",
+                        )}
+                        data-active={
+                          run.status === "preview_ready" ||
+                          run.status === "approved" ||
+                          run.status === "published"
+                        }
+                      />
                     </span>
-                    <span>{STATUS_LABELS[run.status]}</span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="p-5 text-[11px] leading-5 text-[var(--fg-muted)]">
-              Todavía no hay ejecuciones. Dale una instrucción a V para crear la
-              primera rama aislada.
-            </div>
-          )}
-        </aside>
-
-        <div className="min-h-0 overflow-y-auto bg-[var(--color-background)]">
-          {selected ? (
-            <div className="grid min-h-full gap-3 p-3 xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.8fr)]">
-              <div className="space-y-3">
-                <section className="rounded-[8px] border border-[var(--border-1)] bg-white p-3">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <p className="mono-label">Instrucción</p>
-                      <p className="mt-2 whitespace-pre-wrap text-[12px] leading-5">
-                        {selected.instruction}
-                      </p>
-                    </div>
-                    <span className="rounded-full border border-black px-2 py-1 font-mono text-[8px] uppercase tracking-[0.08em]">
-                      {STATUS_LABELS[selected.status]}
+                    <span
+                      className={cn(
+                        "mt-2 flex items-center justify-between font-mono text-[8px] uppercase tracking-[0.08em]",
+                        selected?.id === run.id
+                          ? "text-white/65"
+                          : "text-[var(--fg-muted)]",
+                      )}
+                    >
+                      <span>
+                        {run.requested_executor === "team"
+                          ? "Equipo"
+                          : run.resolved_executor}
+                      </span>
+                      <span>{STATUS_LABELS[run.status]}</span>
                     </span>
-                  </div>
-                  <div className="mt-3 grid gap-2 border-t border-[var(--border-1)] pt-3 text-[9px] sm:grid-cols-2">
-                    <p className="truncate">
-                      <span className="text-[var(--fg-muted)]">Repo </span>
-                      {selected.repo_full_name}
-                    </p>
-                    <p className="truncate">
-                      <span className="text-[var(--fg-muted)]">Rama </span>
-                      {selected.work_branch}
-                    </p>
-                  </div>
-                </section>
-
-                <section className="rounded-[8px] border border-[var(--border-1)] bg-white">
-                  <header className="border-b border-[var(--border-1)] px-3 py-2">
-                    <p className="mono-label">Circuito</p>
-                  </header>
-                  <div className="divide-y divide-[var(--border-1)]">
-                    {selected.queue_jobs.map((jobRef, index) => {
-                      const job = jobMap.get(jobRef.id);
-                      const done =
-                        job &&
-                        ["done", "completed", "success", "succeeded"].includes(
-                          job.status.toLowerCase(),
-                        );
-                      return (
-                        <div
-                          key={jobRef.id}
-                          className="grid grid-cols-[26px_minmax(0,1fr)_auto] items-start gap-2 px-3 py-3"
-                        >
-                          <span
-                            className={cn(
-                              "grid h-6 w-6 place-items-center rounded-full border text-[9px]",
-                              done
-                                ? "border-black bg-black text-white"
-                                : "border-[var(--border-1)]",
-                            )}
-                          >
-                            {done ? <IconCheck size={10} /> : index + 1}
-                          </span>
-                          <div>
-                            <p className="text-[11px] font-medium capitalize">
-                              {jobRef.agent} · {jobRef.role}
-                            </p>
-                            <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-[9px] leading-4 text-[var(--fg-muted)]">
-                              {job?.logTail ||
-                                job?.result ||
-                                "Esperando al runner…"}
-                            </p>
-                          </div>
-                          <span className="font-mono text-[8px] uppercase text-[var(--fg-muted)]">
-                            {job?.status || "queued"}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </section>
-
-                {selected.summary ? (
-                  <section className="rounded-[8px] border border-[var(--border-1)] bg-white p-3">
-                    <p className="mono-label">Resultado más reciente</p>
-                    <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-[10px] leading-5">
-                      {selected.summary}
-                    </pre>
-                  </section>
-                ) : null}
-                {selected.error ? (
-                  <section className="rounded-[8px] border border-black bg-white p-3 text-[10px] leading-5">
-                    {selected.error}
-                  </section>
-                ) : null}
+                  </button>
+                ))}
               </div>
+            ) : (
+              <div className="p-5 text-[11px] leading-5 text-[var(--fg-muted)]">
+                Todavía no hay ejecuciones. Dale una instrucción a V para crear
+                la primera rama aislada.
+              </div>
+            )}
+          </aside>
 
-              <div className="space-y-3">
-                <section className="overflow-hidden rounded-[8px] border border-[var(--border-1)] bg-white">
-                  <header className="flex items-center justify-between border-b border-[var(--border-1)] px-3 py-2">
-                    <p className="mono-label">Preview antes de publicar</p>
-                    {selected.preview_url ? (
-                      <a
-                        href={selected.preview_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="grid h-7 w-7 place-items-center rounded-md hover:bg-[var(--color-background)]"
-                        aria-label="Abrir preview"
-                      >
-                        <IconExtLink size={10} />
-                      </a>
-                    ) : null}
-                  </header>
-                  {selected.preview_url ? (
-                    <iframe
-                      src={selected.preview_url}
-                      title={`Preview ${selected.id}`}
-                      className="h-[380px] w-full border-0 bg-white"
-                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="grid min-h-52 place-items-center p-6 text-center">
+          <div className="min-h-0 overflow-y-auto bg-[var(--color-background)]">
+            {selected ? (
+              <div className="grid min-h-full gap-3 p-3 xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.8fr)]">
+                <div className="space-y-3">
+                  <section className="rounded-[8px] border border-[var(--border-1)] bg-white p-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
-                        <IconSparkles size={20} className="mx-auto" />
-                        <p className="mt-3 text-[11px] font-medium">
-                          El preview aparecerá aquí
-                        </p>
-                        <p className="mt-2 max-w-xs text-[9px] leading-4 text-[var(--fg-muted)]">
-                          Cuando el agente haga push a la rama, Vercel enviará
-                          la URL a esta sala. Producción permanece intacta.
+                        <p className="mono-label">Instrucción</p>
+                        <p className="mt-2 whitespace-pre-wrap text-[12px] leading-5">
+                          {selected.instruction}
                         </p>
                       </div>
+                      <span className="rounded-full border border-black px-2 py-1 font-mono text-[8px] uppercase tracking-[0.08em]">
+                        {STATUS_LABELS[selected.status]}
+                      </span>
                     </div>
-                  )}
-                </section>
+                    <div className="mt-3 grid gap-2 border-t border-[var(--border-1)] pt-3 text-[9px] sm:grid-cols-2">
+                      <p className="truncate">
+                        <span className="text-[var(--fg-muted)]">Repo </span>
+                        {selected.repo_full_name}
+                      </p>
+                      <p className="truncate">
+                        <span className="text-[var(--fg-muted)]">Rama </span>
+                        {selected.work_branch}
+                      </p>
+                    </div>
+                  </section>
 
-                <section className="rounded-[8px] border border-black bg-white p-3">
-                  <div className="flex flex-wrap gap-2">
-                    <a
-                      href={`https://github.com/${selected.repo_full_name}/tree/${selected.work_branch}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn-ghost"
-                    >
-                      <IconBranch size={11} /> Rama
-                    </a>
-                    {selected.pr_url ? (
+                  <section className="rounded-[8px] border border-[var(--border-1)] bg-white">
+                    <header className="border-b border-[var(--border-1)] px-3 py-2">
+                      <p className="mono-label">Circuito</p>
+                    </header>
+                    <div className="divide-y divide-[var(--border-1)]">
+                      {selected.queue_jobs.map((jobRef, index) => {
+                        const job = jobMap.get(jobRef.id);
+                        const done =
+                          job &&
+                          [
+                            "done",
+                            "completed",
+                            "success",
+                            "succeeded",
+                          ].includes(job.status.toLowerCase());
+                        return (
+                          <div
+                            key={jobRef.id}
+                            className="grid grid-cols-[26px_minmax(0,1fr)_auto] items-start gap-2 px-3 py-3"
+                          >
+                            <span
+                              className={cn(
+                                "grid h-6 w-6 place-items-center rounded-full border text-[9px]",
+                                done
+                                  ? "border-black bg-black text-white"
+                                  : "border-[var(--border-1)]",
+                              )}
+                            >
+                              {done ? <IconCheck size={10} /> : index + 1}
+                            </span>
+                            <div>
+                              <p className="text-[11px] font-medium capitalize">
+                                {jobRef.agent} · {jobRef.role}
+                              </p>
+                              <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-[9px] leading-4 text-[var(--fg-muted)]">
+                                {job?.logTail ||
+                                  job?.result ||
+                                  "Esperando al runner…"}
+                              </p>
+                            </div>
+                            <span className="font-mono text-[8px] uppercase text-[var(--fg-muted)]">
+                              {job?.status || "queued"}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  {selected.summary ? (
+                    <section className="rounded-[8px] border border-[var(--border-1)] bg-white p-3">
+                      <p className="mono-label">Resultado más reciente</p>
+                      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-[10px] leading-5">
+                        {selected.summary}
+                      </pre>
+                    </section>
+                  ) : null}
+                  {selected.error ? (
+                    <section className="rounded-[8px] border border-black bg-white p-3 text-[10px] leading-5">
+                      {selected.error}
+                    </section>
+                  ) : null}
+                </div>
+
+                <div className="space-y-3">
+                  <section className="overflow-hidden rounded-[8px] border border-[var(--border-1)] bg-white">
+                    <header className="flex items-center justify-between border-b border-[var(--border-1)] px-3 py-2">
+                      <p className="mono-label">Preview antes de publicar</p>
+                      {selected.preview_url ? (
+                        <a
+                          href={selected.preview_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="grid h-7 w-7 place-items-center rounded-md hover:bg-[var(--color-background)]"
+                          aria-label="Abrir preview"
+                        >
+                          <IconExtLink size={10} />
+                        </a>
+                      ) : null}
+                    </header>
+                    {selected.preview_url ? (
+                      <iframe
+                        src={selected.preview_url}
+                        title={`Preview ${selected.id}`}
+                        className="h-[380px] w-full border-0 bg-white"
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="grid min-h-52 place-items-center p-6 text-center">
+                        <div>
+                          <IconSparkles size={20} className="mx-auto" />
+                          <p className="mt-3 text-[11px] font-medium">
+                            El preview aparecerá aquí
+                          </p>
+                          <p className="mt-2 max-w-xs text-[9px] leading-4 text-[var(--fg-muted)]">
+                            Cuando el agente haga push a la rama, Vercel enviará
+                            la URL a esta sala. Producción permanece intacta.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="rounded-[8px] border border-black bg-white p-3">
+                    <div className="flex flex-wrap gap-2">
                       <a
-                        href={selected.pr_url}
+                        href={`https://github.com/${selected.repo_full_name}/tree/${selected.work_branch}`}
                         target="_blank"
                         rel="noreferrer"
                         className="btn-ghost"
                       >
-                        <IconExtLink size={11} /> PR
+                        <IconBranch size={11} /> Rama
                       </a>
-                    ) : null}
-                    {canWrite && selected.status === "preview_ready" ? (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void runAction("approve")}
-                        className="btn-primary"
-                      >
-                        <IconCheck size={11} /> Aprobar y crear PR
-                      </button>
-                    ) : null}
-                    {canWrite && selected.status === "approved" ? (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void runAction("publish")}
-                        className="btn-primary"
-                      >
-                        <IconRocket size={11} /> Publicar
-                      </button>
-                    ) : null}
-                    {canWrite && ACTIVE.has(selected.status) ? (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void runAction("cancel")}
-                        className="btn-ghost"
-                      >
-                        <IconStop size={11} /> Cancelar
-                      </button>
-                    ) : null}
-                  </div>
-                  <p className="mt-3 text-[9px] leading-4 text-[var(--fg-muted)]">
-                    Aprobar crea el PR. Publicar lo fusiona a{" "}
-                    {selected.base_branch} y entonces comienza producción.
+                      {selected.pr_url ? (
+                        <a
+                          href={selected.pr_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-ghost"
+                        >
+                          <IconExtLink size={11} /> PR
+                        </a>
+                      ) : null}
+                      {canWrite && selected.status === "preview_ready" ? (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void runAction("approve")}
+                          className="btn-primary"
+                        >
+                          <IconCheck size={11} /> Aprobar y crear PR
+                        </button>
+                      ) : null}
+                      {canWrite && selected.status === "approved" ? (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void runAction("publish")}
+                          className="btn-primary"
+                        >
+                          <IconRocket size={11} /> Publicar
+                        </button>
+                      ) : null}
+                      {canWrite && ACTIVE.has(selected.status) ? (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void runAction("cancel")}
+                          className="btn-ghost"
+                        >
+                          <IconStop size={11} /> Cancelar
+                        </button>
+                      ) : null}
+                    </div>
+                    <p className="mt-3 text-[9px] leading-4 text-[var(--fg-muted)]">
+                      Aprobar crea el PR. Publicar lo fusiona a{" "}
+                      {selected.base_branch} y entonces comienza producción.
+                    </p>
+                  </section>
+                </div>
+              </div>
+            ) : (
+              <div className="grid h-full place-items-center p-8 text-center">
+                <div>
+                  <span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-black font-semibold text-white">
+                    V
+                  </span>
+                  <p className="mt-3 text-[12px] font-medium">
+                    Tu cabina de ejecución
                   </p>
-                </section>
+                  <p className="mt-2 text-[10px] text-[var(--fg-muted)]">
+                    Selecciona un run o inicia una tarea.
+                  </p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="grid h-full place-items-center p-8 text-center">
-              <div>
-                <span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-black font-semibold text-white">
-                  V
-                </span>
-                <p className="mt-3 text-[12px] font-medium">
-                  Tu cabina de ejecución
-                </p>
-                <p className="mt-2 text-[10px] text-[var(--fg-muted)]">
-                  Selecciona un run o inicia una tarea.
-                </p>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }
