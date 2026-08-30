@@ -24,6 +24,15 @@ const sql = neon(databaseUrl);
 const liveRoles = new Set(["owner", "reviewer", "observer"]);
 const commentMaxLength = 4_000;
 const jsonBodyMaxBytes = 8_192;
+const contextMaxLength = 100_000;
+const extractedTextMaxLength = 2_097_152;
+const assetFinalizeMaxBytes = 2_300_000;
+const archiveMaxBytes = 50 * 1024 * 1024;
+const archiveContentTypes = new Set([
+  "application/zip",
+  "application/x-zip-compressed",
+  "application/octet-stream",
+]);
 
 function json(res, status, body, extraHeaders = {}) {
   const payload = JSON.stringify(body);
@@ -67,14 +76,56 @@ function cleanProjectId(rawValue) {
 }
 
 function projectRoute(pathname) {
-  const match = /^\/api\/v1\/projects\/([^/]+)\/(live|events|events\/stream|comments)$/.exec(
+  const match = /^\/api\/v1\/projects\/([^/]+)\/(live|events|events\/stream|comments|context|assets)(?:\/([^/]+))?$/.exec(
     pathname,
   );
   if (!match) return null;
 
   const projectId = cleanProjectId(match[1]);
   if (!projectId) return null;
-  return { projectId, resource: match[2] };
+  const assetId = match[3] || null;
+  if (assetId && match[2] !== "assets") return null;
+  if (assetId && !/^[0-9a-f-]{36}$/i.test(assetId)) return null;
+  return { projectId, resource: match[2], assetId };
+}
+
+function canWriteContext(role) {
+  return role === "owner" || role === "reviewer";
+}
+
+function cleanAnchor(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const viewport = String(value.viewport || "");
+  const x = value.x;
+  const y = value.y;
+  const rawUrl = typeof value.url === "string" ? value.url : "";
+  if (
+    !["desktop", "mobile", "admin"].includes(viewport) ||
+    typeof x !== "number" ||
+    typeof y !== "number" ||
+    !Number.isFinite(x) ||
+    !Number.isFinite(y) ||
+    x < 0 || x > 1 || y < 0 || y > 1 ||
+    rawUrl.length > 2048
+  ) return null;
+  let url;
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+    url = parsed.href;
+  } catch {
+    return null;
+  }
+  const label = typeof value.label === "string"
+    ? value.label.replace(/[\r\n]/g, " ").trim().slice(0, 120)
+    : "";
+  return {
+    viewport,
+    x: Math.round(x * 10_000) / 10_000,
+    y: Math.round(y * 10_000) / 10_000,
+    url,
+    label: label || `${viewport} · ${Math.round(x * 100)}%, ${Math.round(y * 100)}%`,
+  };
 }
 
 function requestIdentity(req) {
@@ -318,7 +369,7 @@ async function streamEvents(req, res, projectId, url) {
   res.once("close", close);
 }
 
-async function readJsonBody(req) {
+async function readJsonBody(req, maxBytes = jsonBodyMaxBytes) {
   const contentType = String(req.headers["content-type"] || "")
     .split(";", 1)[0]
     .trim()
@@ -333,7 +384,7 @@ async function readJsonBody(req) {
   const chunks = [];
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > jsonBodyMaxBytes) {
+    if (size > maxBytes) {
       const error = new Error("payload_too_large");
       error.statusCode = 413;
       throw error;
@@ -357,7 +408,7 @@ async function liveComments(req, res, projectId, url) {
   if (req.method === "GET") {
     const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit")) || 100));
     const comments = await sql.query(
-      `SELECT id, author_email, author_name, body, created_at
+      `SELECT id, author_email, author_name, body, anchor, created_at
          FROM project_comments
         WHERE project_id = $1
         ORDER BY created_at DESC
@@ -380,28 +431,179 @@ async function liveComments(req, res, projectId, url) {
   }
 
   const body = rawBody.trim();
+  const anchor = payload.anchor == null ? null : cleanAnchor(payload.anchor);
+  if (payload.anchor != null && !anchor) {
+    json(res, 400, { error: "invalid_anchor" });
+    return;
+  }
   const rows = await sql.query(
     `WITH created AS (
        INSERT INTO project_comments
-         (project_id, author_clerk_id, author_email, author_name, body)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, author_email, author_name, body, created_at
+         (project_id, author_clerk_id, author_email, author_name, body, anchor)
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb)
+       RETURNING id, author_email, author_name, body, anchor, created_at
      ), activity AS (
        INSERT INTO project_events (project_id, event_type, details, severity)
        SELECT $1,
               'comment.created',
               jsonb_build_object(
                 'message', 'Nuevo comentario de ' || COALESCE(author_name, author_email),
-                'comment_id', id
+                'comment_id', id,
+                'anchor', anchor
               ),
               'low'
          FROM created
      )
-     SELECT id, author_email, author_name, body, created_at FROM created`,
-    [projectId, access.userId, access.email, access.name, body],
+     SELECT id, author_email, author_name, body, anchor, created_at FROM created`,
+    [projectId, access.userId, access.email, access.name, body, anchor ? JSON.stringify(anchor) : null],
   );
 
   json(res, 201, { comment: rows[0] });
+}
+
+async function liveContext(req, res, projectId) {
+  const access = await authorizeProject(req, res, projectId);
+  if (!access) return;
+
+  if (req.method === "PUT") {
+    if (!canWriteContext(access.role)) {
+      json(res, 403, { error: "forbidden" });
+      return;
+    }
+    const payload = await readJsonBody(req, 120_000);
+    const content = payload && typeof payload === "object" ? payload.content : null;
+    if (typeof content !== "string" || content.length > contextMaxLength) {
+      json(res, 400, { error: "invalid_content" });
+      return;
+    }
+    const rows = await sql.query(
+      `INSERT INTO project_context_documents (project_id, content, updated_by)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (project_id) DO UPDATE
+         SET content = EXCLUDED.content,
+             updated_by = EXCLUDED.updated_by,
+             updated_at = now()
+       RETURNING content, updated_by, updated_at`,
+      [projectId, content, access.email],
+    );
+    await sql.query(
+      `INSERT INTO project_events (project_id, event_type, details, severity)
+       VALUES ($1, 'context.updated', jsonb_build_object('message', 'CONTENIDO.md actualizado'), 'low')`,
+      [projectId],
+    );
+    json(res, 200, { document: rows[0] });
+    return;
+  }
+
+  const [projects, integrations, documents, assets] = await Promise.all([
+    sql.query(
+      `SELECT id, name, description, github_repo, github_default_branch,
+              github_url, vercel_url, domain, status, last_audit_score, last_audit_at
+         FROM projects WHERE id = $1 LIMIT 1`,
+      [projectId],
+    ),
+    sql.query(
+      `SELECT kind, label, status
+         FROM project_integrations
+        WHERE project_id = $1
+        ORDER BY kind`,
+      [projectId],
+    ),
+    sql.query(
+      `SELECT content, updated_by, updated_at
+         FROM project_context_documents
+        WHERE project_id = $1 LIMIT 1`,
+      [projectId],
+    ),
+    sql.query(
+      `SELECT id, filename, content_type, size_bytes, extracted_text_bytes,
+              uploaded_by_email, created_at
+         FROM project_context_assets
+        WHERE project_id = $1
+        ORDER BY created_at DESC
+        LIMIT 50`,
+      [projectId],
+    ),
+  ]);
+  if (!projects[0]) {
+    json(res, 404, { error: "not_found" });
+    return;
+  }
+  json(res, 200, {
+    project: projects[0],
+    integrations,
+    document: documents[0] || { content: "", updated_by: null, updated_at: null },
+    assets,
+    me: { role: access.role, canWrite: canWriteContext(access.role) },
+  });
+}
+
+async function liveAssets(req, res, projectId, assetId) {
+  const access = await authorizeProject(req, res, projectId);
+  if (!access) return;
+  if (req.method === "GET") {
+    if (!assetId) {
+      json(res, 404, { error: "not_found" });
+      return;
+    }
+    const rows = await sql.query(
+      `SELECT id, filename, blob_pathname, content_type, size_bytes,
+              extracted_text_bytes, uploaded_by_email, created_at
+         FROM project_context_assets
+        WHERE project_id = $1 AND id = $2
+        LIMIT 1`,
+      [projectId, assetId],
+    );
+    if (!rows[0]) {
+      json(res, 404, { error: "not_found" });
+      return;
+    }
+    json(res, 200, { asset: rows[0] });
+    return;
+  }
+  if (!canWriteContext(access.role)) {
+    json(res, 403, { error: "forbidden" });
+    return;
+  }
+  const payload = await readJsonBody(req, assetFinalizeMaxBytes);
+  const filename = typeof payload.filename === "string" ? payload.filename.trim().slice(0, 180) : "";
+  const blobPathname = typeof payload.blobPathname === "string" ? payload.blobPathname.trim() : "";
+  const contentType = typeof payload.contentType === "string" ? payload.contentType.trim().toLowerCase() : "";
+  const size = Number(payload.size);
+  const extractedText = typeof payload.extractedText === "string" ? payload.extractedText : "";
+  const prefix = `context/${projectId}/`;
+  if (
+    !filename.toLowerCase().endsWith(".zip") ||
+    !blobPathname.startsWith(prefix) ||
+    blobPathname.includes("..") ||
+    !archiveContentTypes.has(contentType) ||
+    !Number.isInteger(size) || size < 1 || size > archiveMaxBytes ||
+    extractedText.length > extractedTextMaxLength
+  ) {
+    json(res, 400, { error: "invalid_asset" });
+    return;
+  }
+  const extractedBytes = Buffer.byteLength(extractedText, "utf8");
+  const rows = await sql.query(
+    `WITH created AS (
+       INSERT INTO project_context_assets
+         (project_id, filename, blob_pathname, content_type, size_bytes,
+          extracted_text, extracted_text_bytes, uploaded_by_user_id, uploaded_by_email)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING id, filename, content_type, size_bytes, extracted_text_bytes,
+                 uploaded_by_email, created_at
+     ), activity AS (
+       INSERT INTO project_events (project_id, event_type, details, severity)
+       SELECT $1, 'context.archive_uploaded',
+              jsonb_build_object('message', 'Conversación de cliente cargada', 'asset_id', id),
+              'low'
+         FROM created
+     )
+     SELECT * FROM created`,
+    [projectId, filename, blobPathname, contentType, size, extractedText,
+      extractedBytes, access.userId, access.email],
+  );
+  json(res, 201, { asset: rows[0] });
 }
 
 function methodNotAllowed(res, allowed) {
@@ -473,6 +675,24 @@ async function handle(req, res) {
       return;
     }
     await liveComments(req, res, route.projectId, url);
+    return;
+  }
+
+  if (route.resource === "context") {
+    if (req.method !== "GET" && req.method !== "PUT") {
+      methodNotAllowed(res, "GET, PUT");
+      return;
+    }
+    await liveContext(req, res, route.projectId);
+    return;
+  }
+
+  if (route.resource === "assets") {
+    if (req.method !== "POST" && req.method !== "GET") {
+      methodNotAllowed(res, "GET, POST");
+      return;
+    }
+    await liveAssets(req, res, route.projectId, route.assetId);
     return;
   }
 
