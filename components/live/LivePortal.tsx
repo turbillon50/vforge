@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   Group,
   Panel,
@@ -41,6 +42,11 @@ import {
   type ReviewBridgeViewport,
 } from "@/lib/live/review-context";
 
+const CodeEditorPanel = dynamic(
+  () => import("@/components/live/CodeEditorPanel").then((module) => module.CodeEditorPanel),
+  { ssr: false },
+);
+
 export interface LivePortalProject {
   id: string;
   name: string;
@@ -76,7 +82,8 @@ type WorkspacePanelId =
   | "admin"
   | "activity"
   | "comments"
-  | "context";
+  | "context"
+  | "code";
 type WorkspacePreset = "balanced" | "previews" | "review";
 type PreviewKind = "desktop" | "mobile" | "admin";
 
@@ -119,6 +126,7 @@ const PANEL_LABELS: Record<WorkspacePanelId, string> = {
   activity: "Actividad",
   comments: "Comentarios",
   context: "Contexto",
+  code: "Código",
 };
 
 
@@ -296,6 +304,7 @@ function LiveWorkspace({
       "activity",
       "comments",
       "context",
+      "code",
     ],
     [canSeeAdmin],
   );
@@ -317,6 +326,7 @@ function LiveWorkspace({
     activity: false,
     comments: false,
     context: false,
+    code: false,
   });
   const savedLayoutsRef = useRef(DOCK_LAYOUTS.balanced);
 
@@ -382,7 +392,7 @@ function LiveWorkspace({
       feedback: source.feedback,
     };
     setFocusedPanel(null);
-    setCollapsed({ desktop: false, mobile: false, admin: false, activity: false, comments: false, context: false });
+    setCollapsed({ desktop: false, mobile: false, admin: false, activity: false, comments: false, context: false, code: false });
     desktopRef.current?.expand();
     mobileRef.current?.expand();
     adminRef.current?.expand();
@@ -412,6 +422,7 @@ function LiveWorkspace({
     activity: activityRef.current,
     comments: commentsRef.current,
     context: contextRef.current,
+    code: null,
   };
 
   const updateCollapsed = (panel: WorkspacePanelId, pixels: number) => {
@@ -431,6 +442,8 @@ function LiveWorkspace({
     <CommentsPanel projectId={project.id} projectName={project.name} canAccept={me.role === "owner" || me.isPlatformOwner} workspace onFocus={() => setFocusedPanel(null)} focused />
   ) : focusedPanel === "context" ? (
     <ProjectContextPanel projectId={project.id} workspace onFocus={() => setFocusedPanel(null)} focused />
+  ) : focusedPanel === "code" ? (
+    <CodeEditorPanel projectId={project.id} onClose={() => setFocusedPanel(null)} />
   ) : null;
 
   return (
@@ -451,12 +464,12 @@ function LiveWorkspace({
         </div>
         <div className="flex shrink-0 items-center gap-1" aria-label="Paneles visibles">
           {availablePanels.map((panel) => {
-            const visible = !collapsed[panel];
+            const visible = panel === "code" ? focusedPanel === "code" : !collapsed[panel];
             return (
               <button
                 key={panel}
                 type="button"
-                onClick={() => togglePanel(panel, panelHandles[panel])}
+                onClick={() => panel === "code" ? focusAction("code") : togglePanel(panel, panelHandles[panel])}
                 aria-pressed={visible}
                 className={cn(
                   "rounded-md border px-2.5 py-2 font-mono text-[8px] uppercase tracking-[0.1em]",
