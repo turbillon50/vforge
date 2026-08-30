@@ -14,11 +14,9 @@ https://{dominio-o-vercel}/admin
 
 1. Si `projects.admin_url` está definida → se usa tal cual.
 2. Si coincide con la landing pública → se rechaza como panel administrativo.
-3. Si no está definida → la sala muestra “Administración no configurada”.
+3. Si no está definida → se usa `{desktop|dominio}/admin?embed=1` (panel institucional).
 
-La ruta `/admin` debe existir y guardarse explícitamente después de verificarla.
-VForge no inventa la ruta porque una app puede responder 404 o reutilizar la
-landing, lo que hacía que la sala mostrara una administración falsa.
+Así el visor de Administración deja de quedar vacío cuando el proyecto ya publica `/admin` y sólo faltaba guardarlo en Neon.
 
 ## Qué no es
 
