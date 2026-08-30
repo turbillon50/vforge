@@ -76,3 +76,17 @@ export function safeArchiveName(value: string): string {
   const clean = value.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/_+/g, "_");
   return (clean || "conversacion.zip").slice(-120);
 }
+
+export function isSafeProjectBlobPath(projectId: string, pathname: string): boolean {
+  const prefix = `context/${projectId}/`;
+  if (!pathname.startsWith(prefix) || pathname.length <= prefix.length || pathname.includes("\\")) {
+    return false;
+  }
+  let decoded = pathname;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return false;
+  }
+  return decoded.split("/").every((segment) => segment !== "." && segment !== "..");
+}
