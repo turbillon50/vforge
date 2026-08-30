@@ -35,9 +35,10 @@ export function RegisterSW() {
     };
 
     navigator.serviceWorker
-      .register("/sw.js")
+      .register("/sw.js", { updateViaCache: "none" })
       .then((registration) => {
         reg = registration;
+        void registration.update().catch(() => {});
 
         // Ya hay uno esperando de una visita anterior.
         if (registration.waiting) promote(registration.waiting);
