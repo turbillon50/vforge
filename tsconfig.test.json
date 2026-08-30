@@ -26,6 +26,7 @@
     "lib/live/room-context.ts",
     "lib/live/project-memory.ts",
     "lib/forge/cerebras-usage.ts",
-    "lib/projects/repository-groups.ts"
+    "lib/projects/repository-groups.ts",
+    "lib/live/read-page.ts"
   ]
 }

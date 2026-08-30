@@ -25,6 +25,12 @@ export interface RoomProjectInfo {
   status?: string | null;
 }
 
+export interface RoomPage {
+  url: string;
+  title?: string | null;
+  text: string;
+}
+
 export interface RoomRepository {
   repo_full_name: string;
   role?: string | null;
@@ -40,6 +46,7 @@ export interface RoomContextInput {
   assets?: Array<{ filename: string }>;
   repositories?: RoomRepository[];
   decisions?: string | null;
+  pages?: RoomPage[];
 }
 
 export function isSystemComment(comment: RoomComment): boolean {
@@ -145,6 +152,17 @@ export function formatRoomContext(input: RoomContextInput): string {
     }
   }
 
+  const pages = (input.pages ?? []).filter((page) => page.text?.trim()).slice(0, 5);
+  if (pages.length) {
+    lines.push("");
+    lines.push(`CONTENIDO LEÍDO DE LAS URLS (${pages.length}):`);
+    for (const page of pages) {
+      const title = page.title?.trim() ? ` — ${page.title.trim()}` : "";
+      lines.push(`### ${page.url}${title}`);
+      lines.push(clip(page.text, 1600));
+    }
+  }
+
   const document = input.document?.trim();
   lines.push("");
   if (document) {
@@ -164,6 +182,6 @@ export function formatRoomContext(input: RoomContextInput): string {
   }
 
   let text = lines.join("\n");
-  if (text.length > 9000) text = `${text.slice(0, 8999)}…`;
+  if (text.length > 14000) text = `${text.slice(0, 13999)}…`;
   return text;
 }
