@@ -12,6 +12,7 @@ import {
   fallbackNotice,
   cerebrasModelId,
   modeSystemRules,
+  ROOM_CEREBRAS_MODEL,
 } from "../lib/forge/ask-v-policy";
 
 test("weekly limit is quota, never a valid V reply", () => {
@@ -49,22 +50,32 @@ test("a real greeting is valid output", () => {
   assert.equal(assertValidModelOutput(text, "cerebras", 40), text);
 });
 
-test("talk and plan use GPT OSS then mesh then claude last", () => {
+test("talk and plan use only Cerebras GPT OSS 120B", () => {
   const talk = providersForMode("talk");
+  const plan = providersForMode("plan");
   assert.deepEqual(
     talk.map((item) => item.provider),
-    ["cerebras", "mesh", "hetzner-claude"],
+    ["cerebras"],
   );
-  assert.equal(talk[0].model, "gpt-oss-120b");
-  assert.equal(talk[1].policy, "fast");
+  assert.equal(talk[0].model, ROOM_CEREBRAS_MODEL);
+  assert.deepEqual(
+    plan.map((item) => item.provider),
+    ["cerebras"],
+  );
+  assert.equal(plan[0].model, "gpt-oss-120b");
   assert.equal(providersForMode("execute").length, 0);
 });
 
-test("preferred claude slug does not skip own infra", () => {
+test("preferred claude or openrouter slug cannot leave Cerebras", () => {
   const plan = providersForMode("plan", "anthropic/claude-sonnet-4.6");
+  assert.equal(plan.length, 1);
   assert.equal(plan[0].provider, "cerebras");
   assert.equal(plan[0].model, "gpt-oss-120b");
+  const openrouter = providersForMode("talk", "openai/gpt-oss-120b");
+  assert.equal(openrouter[0].provider, "cerebras");
+  assert.equal(openrouter[0].model, "gpt-oss-120b");
   assert.equal(cerebrasModelId("openai/gpt-oss-120b"), "gpt-oss-120b");
+  assert.equal(cerebrasModelId("openrouter/auto"), "auto");
 });
 
 test("fallback notice is a system status, not V voice", () => {

@@ -1,7 +1,5 @@
 import "server-only";
 
-import { meshAdapter } from "@/lib/forge/adapters/mesh";
-import type { AdapterContext } from "@/lib/forge/adapters/_contract";
 import { resolveLlmEngine } from "@/lib/forge/llm-engine";
 import {
   assertValidModelOutput,
@@ -9,15 +7,14 @@ import {
   providerUnavailableFromUnknown,
 } from "@/lib/forge/provider-errors";
 import {
-  fallbackNotice,
   modeSystemRules,
   providersForMode,
+  ROOM_CEREBRAS_MODEL,
   type VAskMode,
   type VConversationMode,
 } from "@/lib/forge/ask-v-policy";
-import { callHetznerClaude, type ChatTurn } from "@/lib/forge/v-brain";
+import type { ChatTurn } from "@/lib/forge/v-brain";
 import { V_TEXT_SYSTEM_PROMPT } from "@/lib/forge/v-text-persona";
-import { getOperatorSecret } from "@/lib/vault/get-secret";
 
 export interface AskVInput {
   mode: VAskMode;
@@ -70,20 +67,6 @@ function buildMessages(input: AskVInput): Array<{
   ];
 }
 
-function meshContext(input: AskVInput, signal: AbortSignal): AdapterContext {
-  return {
-    userId: "operator_luis",
-    sessionId: `askv:${input.projectId}:${input.mode}`,
-    projectId: input.projectId,
-    signal,
-    vault: {
-      getOperatorSecret: (name) => getOperatorSecret(name),
-      getProjectSecret: (projectId, name) =>
-        getOperatorSecret(name, { projectId }),
-    },
-  };
-}
-
 async function completeCerebras(
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
   model: string,
@@ -111,60 +94,6 @@ async function completeCerebras(
   } catch (caught) {
     throw providerUnavailableFromUnknown(
       "cerebras",
-      caught,
-      Date.now() - started,
-    );
-  }
-}
-
-async function completeMesh(
-  input: AskVInput,
-  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
-  maxTokens: number,
-): Promise<{ text: string; layer: string | null }> {
-  const started = Date.now();
-  try {
-    const result = await meshAdapter.execute(
-      {
-        messages,
-        policy: "fast",
-        maxTokens,
-        temperature: 0.4,
-      },
-      meshContext(input, AbortSignal.timeout(45000)),
-    );
-    const text = assertValidModelOutput(
-      result.content,
-      "mesh",
-      Date.now() - started,
-    );
-    return { text, layer: result.layer };
-  } catch (caught) {
-    throw providerUnavailableFromUnknown("mesh", caught, Date.now() - started);
-  }
-}
-
-async function completeHetzner(
-  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
-): Promise<string> {
-  const started = Date.now();
-  const prompt = messages
-    .map((item) => {
-      if (item.role === "system") return item.content;
-      return `${item.role === "user" ? "Luis" : "V"}: ${item.content}`;
-    })
-    .concat(["V:"])
-    .join("\n\n");
-  try {
-    const text = await callHetznerClaude(prompt, 50000);
-    return assertValidModelOutput(
-      text,
-      "hetzner-claude",
-      Date.now() - started,
-    );
-  } catch (caught) {
-    throw providerUnavailableFromUnknown(
-      "hetzner-claude",
       caught,
       Date.now() - started,
     );
@@ -199,68 +128,53 @@ export async function askV(input: AskVInput): Promise<AskVResult> {
   }
 
   const targets = providersForMode(input.mode, input.preferredModel);
-  const messages = buildMessages(input);
-  const maxTokens = input.mode === "plan" ? 2048 : 1024;
-  const attempts: AskVAttempt[] = [];
-  const started = Date.now();
-
-  for (const target of targets) {
-    const hopStart = Date.now();
-    try {
-      let text = "";
-      let model = target.model;
-      if (target.provider === "cerebras") {
-        text = await completeCerebras(messages, target.model, maxTokens);
-      } else if (target.provider === "mesh") {
-        const mesh = await completeMesh(input, messages, maxTokens);
-        text = mesh.text;
-        if (mesh.layer) model = mesh.layer;
-      } else {
-        text = await completeHetzner(messages);
-      }
-      const attempt = {
-        provider: target.provider,
-        model,
-        durationMs: Date.now() - hopStart,
-        cause: "ok",
-      };
-      attempts.push(attempt);
-      logAttempt(input, attempt, true);
-      const failed = attempts.filter((item) => item.cause !== "ok");
-      const notice =
-        failed.length > 0
-          ? fallbackNotice(failed[failed.length - 1].provider, target.provider)
-          : null;
-      return {
-        text,
-        provider: target.provider,
-        model,
-        status: failed.length > 0 ? "fallback" : "ok",
-        durationMs: Date.now() - started,
-        notice,
-        attempts,
-      };
-    } catch (caught) {
-      const err = providerUnavailableFromUnknown(
-        target.provider,
-        caught,
-        Date.now() - hopStart,
-      );
-      const attempt = {
-        provider: target.provider,
-        model: target.model,
-        durationMs: err.durationMs,
-        cause: err.cause,
-      };
-      attempts.push(attempt);
-      logAttempt(input, attempt, false);
-    }
+  if (targets.length === 0) {
+    throw new Error("Ejecución no habla por askV. Usa el circuito de agentes.");
   }
 
-  throw new ProviderUnavailable(
-    "all",
-    "unavailable",
-    "Ningún proveedor de V respondió.",
-    Date.now() - started,
-  );
+  const messages = buildMessages(input);
+  const maxTokens = input.mode === "plan" ? 2048 : 1024;
+  const started = Date.now();
+  const hopStart = Date.now();
+
+  try {
+    const text = await completeCerebras(
+      messages,
+      ROOM_CEREBRAS_MODEL,
+      maxTokens,
+    );
+    const attempt = {
+      provider: "cerebras",
+      model: ROOM_CEREBRAS_MODEL,
+      durationMs: Date.now() - hopStart,
+      cause: "ok",
+    };
+    logAttempt(input, attempt, true);
+    return {
+      text,
+      provider: "cerebras",
+      model: ROOM_CEREBRAS_MODEL,
+      status: "ok",
+      durationMs: Date.now() - started,
+      notice: null,
+      attempts: [attempt],
+    };
+  } catch (caught) {
+    const err = providerUnavailableFromUnknown(
+      "cerebras",
+      caught,
+      Date.now() - hopStart,
+    );
+    logAttempt(
+      input,
+      {
+        provider: "cerebras",
+        model: ROOM_CEREBRAS_MODEL,
+        durationMs: err.durationMs,
+        cause: err.cause,
+      },
+      false,
+    );
+    throw err;
+  }
 }

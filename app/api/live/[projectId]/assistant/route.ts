@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { askV } from "@/lib/forge/ask-v";
+import { ROOM_CEREBRAS_MODEL } from "@/lib/forge/ask-v-policy";
 import { humanProviderLabel, ProviderUnavailable } from "@/lib/forge/provider-errors";
 import {
   authorizeAgentRunAccess,
@@ -77,10 +78,7 @@ export async function POST(
       repository: repoContext,
       message,
       history,
-      preferredModel:
-        typeof payload?.preferredModel === "string"
-          ? payload.preferredModel
-          : "gpt-oss-120b",
+      preferredModel: ROOM_CEREBRAS_MODEL,
     });
 
     await saveProjectAssistantTurn({
@@ -117,10 +115,9 @@ export async function POST(
     return json(
       {
         error: "V no pudo responder en este momento.",
-        notice:
-          unavailable && caught.provider !== "all"
-            ? `${humanProviderLabel(caught.provider)} no disponible`
-            : "Ningún proveedor de V respondió",
+        notice: unavailable
+          ? `${humanProviderLabel(caught.provider)} no disponible`
+          : "GPT OSS no disponible",
         cause: unavailable ? caught.cause : "unknown",
       },
       502,
