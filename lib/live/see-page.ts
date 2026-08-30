@@ -1,13 +1,16 @@
 /**
- * Ojos de la sala: captura Escritorio / Móvil / Admin en un Chrome aislado
- * (sin cookies del owner) y las devuelve como imagen MCP.
+ * Ojos de la sala: Navegador Pro (CDP del Chrome vivo en Hetzner) primero.
+ * Si CDP falla, Chrome aislado. El plugin de Chrome sube fotos aparte.
  */
+import { buildCdpCurrentCommand, buildCdpNavigateCommand } from "./see-cdp";
+
 const RELAY = (process.env.VULCANO_RELAY_URL || "http://178.105.135.26").replace(
   /\/$/,
   "",
 );
 const CONTAINER = "vulcano-browser";
 const CAPTURE_TIMEOUT_MS = 25_000;
+const CDP_TIMEOUT_MS = 40_000;
 const MAX_BASE64_CHARS = 1_800_000;
 
 export const SEE_VIEWPORTS = {
@@ -22,8 +25,9 @@ export interface SeeShot {
   viewport: SeeViewportId;
   label: string;
   url: string;
-  mimeType: "image/png";
+  mimeType: "image/png" | "image/jpeg";
   data: string;
+  engine?: "navegador" | "isolated" | "plugin";
 }
 
 export interface SeeFailure {
@@ -81,13 +85,48 @@ export function isPngBase64(value: string): boolean {
   }
 }
 
-/** El relay a veces mezcla logs; el PNG en base64 empieza por iVBORw0KGgo. */
+export function isJpegBase64(value: string): boolean {
+  const trimmed = value.trim().replace(/\s+/g, "");
+  if (trimmed.length < 80 || trimmed.length > MAX_BASE64_CHARS) return false;
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(trimmed)) return false;
+  try {
+    const header = Buffer.from(trimmed.slice(0, 24), "base64");
+    return header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff;
+  } catch {
+    return false;
+  }
+}
+
+/** El relay a veces mezcla logs; PNG empieza por iVBORw0KGgo, JPEG por /9j/. */
 export function extractPngBase64(raw: string): string | null {
+  const found = extractImageBase64(raw);
+  return found?.mimeType === "image/png" ? found.data : null;
+}
+
+export function extractImageBase64(
+  raw: string,
+): { data: string; mimeType: "image/png" | "image/jpeg" } | null {
   const compact = raw.replace(/\s+/g, "");
-  const idx = compact.indexOf("iVBORw0KGgo");
-  if (idx < 0) return isPngBase64(compact) ? compact : null;
-  const candidate = compact.slice(idx).replace(/[^A-Za-z0-9+/=]/g, "");
-  return isPngBase64(candidate) ? candidate : null;
+  const pngIdx = compact.indexOf("iVBORw0KGgo");
+  const jpgIdx = compact.indexOf("/9j/");
+  const pick =
+    pngIdx >= 0 && (jpgIdx < 0 || pngIdx < jpgIdx)
+      ? { idx: pngIdx, mimeType: "image/png" as const }
+      : jpgIdx >= 0
+        ? { idx: jpgIdx, mimeType: "image/jpeg" as const }
+        : null;
+  const candidate = pick ? compact.slice(pick.idx).replace(/[^A-Za-z0-9+/=]/g, "") : compact;
+  if (!isPngBase64(candidate) && !isJpegBase64(candidate)) return null;
+  return {
+    data: candidate,
+    mimeType: pick?.mimeType || (isPngBase64(candidate) ? "image/png" : "image/jpeg"),
+  };
+}
+
+export function parseEyeImage(raw: string): { mimeType: "image/png" | "image/jpeg"; data: string } | null {
+  const trimmed = raw.trim();
+  const match = trimmed.match(/^data:(image\/(?:png|jpeg));base64,(.+)$/i);
+  return extractImageBase64(match ? match[2] : trimmed);
 }
 
 const CAPTURE_SCRIPT = `set -euo pipefail
@@ -146,7 +185,7 @@ export function buildSeeHostCommand(input: {
   ].join(" ");
 }
 
-async function relayExec(cmd: string): Promise<string> {
+async function relayExec(cmd: string, timeoutMs = CAPTURE_TIMEOUT_MS): Promise<string> {
   const secret = process.env.BRAIN_SECRET ?? "";
   if (!secret) throw new Error("ojos no disponibles: falta el relay");
   const res = await fetch(`${RELAY}/brain/exec`, {
@@ -154,7 +193,7 @@ async function relayExec(cmd: string): Promise<string> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ secret, cmd }),
     cache: "no-store",
-    signal: AbortSignal.timeout(CAPTURE_TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) throw new Error(`relay HTTP ${res.status}`);
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
@@ -162,20 +201,13 @@ async function relayExec(cmd: string): Promise<string> {
   return typeof out === "string" ? out : JSON.stringify(out);
 }
 
-export async function captureOneViewport(input: {
-  viewport: SeeViewportId;
-  url: string;
-}): Promise<SeeShot> {
+async function shotFromStdout(
+  stdout: string,
+  input: { viewport: SeeViewportId; url: string; engine: NonNullable<SeeShot["engine"]> },
+): Promise<SeeShot> {
   const spec = SEE_VIEWPORTS[input.viewport];
-  const cmd = buildSeeHostCommand({
-    url: input.url,
-    width: spec.width,
-    height: spec.height,
-    mobile: spec.mobile,
-  });
-  const stdout = await relayExec(cmd);
-  const data = extractPngBase64(stdout);
-  if (!data) {
+  const found = extractImageBase64(stdout);
+  if (!found) {
     const hint = stdout.replace(/\s+/g, " ").trim().slice(0, 180) || "sin salida";
     throw new Error(`no se pudo fotografiar ${spec.label}: ${hint}`);
   }
@@ -183,9 +215,47 @@ export async function captureOneViewport(input: {
     viewport: input.viewport,
     label: spec.label,
     url: input.url,
-    mimeType: "image/png",
-    data,
+    mimeType: found.mimeType,
+    data: found.data,
+    engine: input.engine,
   };
+}
+
+export async function captureOneViewport(input: {
+  viewport: SeeViewportId;
+  url: string;
+  preferCdp?: boolean;
+}): Promise<SeeShot> {
+  const spec = SEE_VIEWPORTS[input.viewport];
+  if (input.preferCdp !== false) {
+    try {
+      const cmd = buildCdpNavigateCommand({
+        url: input.url,
+        width: spec.width,
+        height: spec.height,
+        mobile: spec.mobile,
+      });
+      const stdout = await relayExec(cmd, CDP_TIMEOUT_MS);
+      return await shotFromStdout(stdout, { ...input, engine: "navegador" });
+    } catch {
+      /* Navegador Pro ocupado o sin CDP — cae a Chrome aislado */
+    }
+  }
+  const cmd = buildSeeHostCommand({
+    url: input.url,
+    width: spec.width,
+    height: spec.height,
+    mobile: spec.mobile,
+  });
+  const stdout = await relayExec(cmd);
+  return shotFromStdout(stdout, { ...input, engine: "isolated" });
+}
+
+export async function captureNavegadorCurrent(): Promise<SeeShot> {
+  const stdout = await relayExec(buildCdpCurrentCommand(), CDP_TIMEOUT_MS);
+  const tab = stdout.match(/TAB\s+(\S+)/);
+  const url = tab?.[1] && isSafeCaptureUrl(tab[1]) ? tab[1] : "https://navegador.local";
+  return shotFromStdout(stdout, { viewport: "desktop", url, engine: "navegador" });
 }
 
 export async function captureSeeViewports(input: {
@@ -193,6 +263,7 @@ export async function captureSeeViewports(input: {
   mobile_url: string | null;
   admin_url: string | null;
   viewports: SeeViewportId[];
+  preferCdp?: boolean;
 }): Promise<{ shots: SeeShot[]; failures: SeeFailure[] }> {
   const urls: Record<SeeViewportId, string | null> = {
     desktop: input.desktop_url,
@@ -215,7 +286,14 @@ export async function captureSeeViewports(input: {
         };
       }
       try {
-        return { ok: true as const, shot: await captureOneViewport({ viewport, url }) };
+        return {
+          ok: true as const,
+          shot: await captureOneViewport({
+            viewport,
+            url,
+            preferCdp: input.preferCdp,
+          }),
+        };
       } catch (error) {
         return {
           ok: false as const,
@@ -236,6 +314,13 @@ export async function captureSeeViewports(input: {
     else failures.push(result.failure);
   }
   return { shots, failures };
+}
+
+function engineLabel(engine: SeeShot["engine"]): string {
+  if (engine === "navegador") return "Navegador Pro";
+  if (engine === "plugin") return "plugin Chrome";
+  if (engine === "isolated") return "Chrome aislado";
+  return "captura";
 }
 
 export function mcpSeeResult(
@@ -259,10 +344,10 @@ export function mcpSeeResult(
   }
   const lines = [
     `Ojos de la sala — ${projectName} (${projectId}).`,
-    ...result.shots.map(
-      (shot) =>
-        `• ${shot.label} ${SEE_VIEWPORTS[shot.viewport].width}×${SEE_VIEWPORTS[shot.viewport].height} — ${shot.url}`,
-    ),
+    ...result.shots.map((shot) => {
+      const size = SEE_VIEWPORTS[shot.viewport];
+      return `• ${shot.label} ${size.width}×${size.height} (${engineLabel(shot.engine)}) — ${shot.url}`;
+    }),
     ...result.failures.map((item) => `• ${item.label} no se vio: ${item.error}`),
   ];
   return {

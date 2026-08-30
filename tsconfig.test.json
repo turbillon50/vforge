@@ -28,6 +28,8 @@
     "lib/forge/cerebras-usage.ts",
     "lib/projects/repository-groups.ts",
     "lib/live/read-page.ts",
-    "lib/live/project-tools.ts"
+    "lib/live/project-tools.ts",
+    "lib/live/see-page.ts",
+    "lib/live/see-cdp.ts"
   ]
 }

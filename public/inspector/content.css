@@ -1,0 +1,64 @@
+#vforge-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483646;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  font: 700 13px/1 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+#vforge-btn.vforge-btn-on {
+  background: #000;
+  color: #fff;
+}
+#vforge-hover-outline {
+  position: absolute;
+  z-index: 2147483645;
+  pointer-events: none;
+  border: 1px solid #000;
+  background: rgba(0, 0, 0, 0.04);
+}
+.vforge-mini-panel {
+  position: absolute;
+  z-index: 2147483647;
+  width: 260px;
+  padding: 8px;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  font: 12px/1.4 ui-sans-serif, system-ui, sans-serif;
+}
+.vforge-mini-panel-header {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  margin-bottom: 6px;
+  word-break: break-all;
+}
+.vforge-mini-panel textarea {
+  width: 100%;
+  border: 1px solid #000;
+  padding: 6px;
+  font: 12px/1.4 ui-sans-serif, system-ui, sans-serif;
+  resize: vertical;
+}
+.vforge-mini-panel-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.vforge-mini-panel button {
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  font: 11px ui-sans-serif, system-ui, sans-serif;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.vforge-mini-panel .vforge-send {
+  background: #000;
+  color: #fff;
+}
