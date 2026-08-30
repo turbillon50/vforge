@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { PageHeader } from "@/components/PageHeader";
-import { Button } from "@/components/Button";
-import { VFIcons } from "@/components/VFIcons";
+import { PageHeader } from "@/components/workspace/PageHeader";
+import {
+  IconActivity,
+  IconExtLink,
+  IconGithub,
+  IconRefresh,
+  IconRocket,
+  IconWarn,
+} from "@/components/brand/VFIcons";
 
-/**
- * Types
- */
 type App = {
   id: string;
   name: string;
@@ -21,9 +24,6 @@ type ApiResponse = {
   apps: App[];
 };
 
-/**
- * Helper to format date in a readable way
- */
 const formatDate = (iso: string) => {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, {
@@ -35,12 +35,9 @@ const formatDate = (iso: string) => {
   });
 };
 
-/**
- * MemberActivityView
- */
-export const MemberActivityView = () => {
+export function MemberActivityView() {
   const [apps, setApps] = useState<App[] | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchApps = useCallback(async () => {
@@ -50,19 +47,14 @@ export const MemberActivityView = () => {
       const res = await fetch("/api/forja/apps", {
         method: "GET",
         credentials: "include",
-        headers: {
-          Accept: "application/json",
-        },
+        headers: { Accept: "application/json" },
       });
-
-      if (!res.ok) {
-        throw new Error(`Error ${res.status}`);
-      }
-
+      if (!res.ok) throw new Error(`Error ${res.status}`);
       const data: ApiResponse = await res.json();
       setApps(data.apps);
-    } catch (e: any) {
-      setError(e.message ?? "Error desconocido");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Error desconocido";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -72,62 +64,53 @@ export const MemberActivityView = () => {
     fetchApps();
   }, [fetchApps]);
 
-  const renderSkeleton = () => (
-    <div className="space-y-4">
-      {[1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="h-4 bg-[var(--color-skeleton-bg)] rounded animate-pulse"
-        />
-      ))}
+  const renderLoading = () => (
+    <div className="p-4 text-center">
+      <IconRefresh className="animate-spin inline-block w-6 h-6 text-black" />
+      <p className="mt-2 text-black">Cargando...</p>
     </div>
   );
 
   const renderError = () => (
-    <div className="flex flex-col items-center gap-4 p-6 bg-[var(--color-bg-light)] rounded">
-      <VFIcons.AlertTriangle className="w-8 h-8 text-[var(--color-error)]" />
-      <p className="text-[var(--color-text)]">
+    <div className="p-4 text-center bg-white">
+      <IconWarn className="w-8 h-8 text-black inline-block" />
+      <p className="mt-2 text-black">
         No se pudo cargar la actividad: {error}
       </p>
-      <Button variant="secondary" onClick={fetchApps}>
+      <button
+        onClick={fetchApps}
+        className="mt-4 bg-black text-white px-4 py-2 rounded"
+      >
         Reintentar
-      </Button>
+      </button>
     </div>
   );
 
   const renderEmpty = () => (
-    <div className="flex flex-col items-center gap-2 p-6 bg-[var(--color-bg-light)] rounded">
-      <VFIcons.Inbox className="w-12 h-12 text-[var(--color-muted)]" />
-      <p className="text-[var(--color-muted)]">
-        No hay actividad en tu espacio todavía.
-      </p>
+    <div className="p-4 text-center bg-white">
+      <IconActivity className="w-12 h-12 text-black inline-block" />
+      <p className="mt-2 text-black">No hay actividad en tu espacio todavía.</p>
     </div>
   );
 
   const renderTimeline = () => (
-    <ul className="space-y-6 border-l-2 border-[var(--color-divider)] pl-4">
+    <ul className="space-y-6 border-l-2 border-black pl-4">
       {apps!.map((app) => (
         <li key={app.id} className="relative">
           <span
-            className="absolute -left-3 top-1 w-6 h-6 bg-[var(--color-primary)] rounded-full flex items-center justify-center"
+            className="absolute -left-3 top-2 w-4 h-4 bg-black rounded-full"
             aria-hidden="true"
-          >
-            <VFIcons.Circle className="w-3 h-3 text-white" />
-          </span>
+          />
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div className="flex items-center gap-2">
-              <VFIcons.App className="w-5 h-5 text-[var(--color-primary)]" />
-              <h3 className="text-[var(--color-text)] font-medium">{app.name}</h3>
+              <IconRocket className="w-5 h-5 text-black" />
+              <h3 className="text-black font-medium">{app.name}</h3>
             </div>
-            <time
-              dateTime={app.created_at}
-              className="text-sm text-[var(--color-muted)]"
-            >
+            <time dateTime={app.created_at} className="text-sm text-black">
               {formatDate(app.created_at)}
             </time>
           </div>
-
-          <p className="mt-1 text-[var(--color-text)]">
+          <p className="mt-1 text-black">
             {app.repo_url && app.deploy_url
               ? "Repositorio y despliegue configurados."
               : app.repo_url
@@ -136,17 +119,16 @@ export const MemberActivityView = () => {
               ? "Despliegue configurado."
               : "Aplicación basada en plantilla."}
           </p>
-
           <div className="mt-2 flex flex-wrap gap-2">
             {app.repo_url && (
               <a
                 href={app.repo_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-[var(--color-bg-accent)] rounded hover:bg-[var(--color-bg-accent-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+                className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-black text-white rounded"
               >
-                <VFIcons.GitBranch className="w-4 h-4" />
-                Repositorio
+                <IconGithub className="w-4 h-4" />
+                Repo
               </a>
             )}
             {app.deploy_url && (
@@ -154,10 +136,10 @@ export const MemberActivityView = () => {
                 href={app.deploy_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-[var(--color-bg-accent)] rounded hover:bg-[var(--color-bg-accent-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+                className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-black text-white rounded"
               >
-                <VFIcons.CloudUpload className="w-4 h-4" />
-                Despliegue
+                <IconExtLink className="w-4 h-4" />
+                Deploy
               </a>
             )}
           </div>
@@ -167,23 +149,27 @@ export const MemberActivityView = () => {
   );
 
   return (
-    <section className="max-w-4xl mx-auto p-4">
+    <section className="max-w-4xl mx-auto p-4 bg-white">
       <PageHeader
         eyebrow="Actividad de tu espacio"
         title="Actividad."
         description="Revisa las últimas aplicaciones que has creado o actualizado en tu espacio."
       >
-        <Button variant="primary" onClick={fetchApps} disabled={loading}>
+        <button
+          onClick={fetchApps}
+          disabled={loading}
+          className="bg-black text-white px-4 py-2 rounded disabled:opacity-50"
+        >
           {loading ? "Actualizando…" : "Actualizar"}
-        </Button>
+        </button>
       </PageHeader>
 
       <div className="mt-6">
-        {loading && renderSkeleton()}
+        {loading && renderLoading()}
         {error && !loading && renderError()}
         {!loading && apps && apps.length === 0 && renderEmpty()}
         {!loading && apps && apps.length > 0 && renderTimeline()}
       </div>
     </section>
   );
-};
+}
