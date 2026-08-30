@@ -6,6 +6,7 @@ import {
   authorizeAgentRunAccess,
   selectAgentRepository,
 } from "@/lib/live/agent-runs";
+import { loadRoomContextBrief } from "@/lib/live/load-room-context";
 import {
   listProjectAssistantMessages,
   projectAssistantHistory,
@@ -72,6 +73,11 @@ export async function POST(
     const repoContext = repository
       ? `${repository.repo_full_name} (rama ${repository.default_branch || "main"})`
       : null;
+    const roomContext = await loadRoomContextBrief(
+      projectId,
+      access.identity,
+      req.signal,
+    ).catch(() => null);
     const result = await askV({
       mode,
       projectId,
@@ -79,6 +85,7 @@ export async function POST(
       message,
       history,
       preferredModel: ROOM_CEREBRAS_MODEL,
+      roomContext,
     });
 
     await saveProjectAssistantTurn({
