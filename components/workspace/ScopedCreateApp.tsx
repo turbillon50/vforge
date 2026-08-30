@@ -34,6 +34,16 @@ interface BuilderError {
   service?: "github" | "vercel";
 }
 
+interface SavedDraft {
+  name: string;
+  description: string;
+  template: string;
+  modules: string[];
+  isPrivate: boolean;
+}
+
+const DRAFT_KEY = "vforge:member-app-draft";
+
 const templates = [
   {
     value: "landing",
@@ -119,6 +129,37 @@ export function ScopedCreateApp({
     void loadApps();
   }, [loadApps]);
 
+  useEffect(() => {
+    try {
+      const rawDraft = window.localStorage.getItem(DRAFT_KEY);
+      if (!rawDraft) return;
+
+      const saved = JSON.parse(rawDraft) as Partial<SavedDraft>;
+      if (typeof saved.name === "string") setName(saved.name);
+      if (typeof saved.description === "string") {
+        setDescription(saved.description);
+      }
+      if (
+        typeof saved.template === "string" &&
+        templates.some((item) => item.value === saved.template)
+      ) {
+        setTemplate(saved.template);
+      }
+      if (Array.isArray(saved.modules)) {
+        setModules(
+          saved.modules.filter(
+            (item): item is string => typeof item === "string",
+          ),
+        );
+      }
+      if (typeof saved.isPrivate === "boolean") {
+        setIsPrivate(saved.isPrivate);
+      }
+    } catch {
+      window.localStorage.removeItem(DRAFT_KEY);
+    }
+  }, []);
+
   function toggleModule(module: string) {
     setModules((current) =>
       current.includes(module)
@@ -127,8 +168,37 @@ export function ScopedCreateApp({
     );
   }
 
+  function persistDraft() {
+    const draft: SavedDraft = {
+      name,
+      description,
+      template,
+      modules,
+      isPrivate,
+    };
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }
+
+  function connectService(service: "github" | "vercel") {
+    persistDraft();
+    const endpoint =
+      service === "github"
+        ? "/api/auth/github/start?return_to=%2Fworkspace"
+        : "/api/auth/vercel/start?return_to=%2Fworkspace";
+    window.location.assign(endpoint);
+  }
+
   async function createApp() {
     if (!name.trim() || creating) return;
+    if (!githubConnected) {
+      connectService("github");
+      return;
+    }
+    if (!vercelConnected) {
+      connectService("vercel");
+      return;
+    }
+
     setCreating(true);
     setError(null);
     setResult(null);
@@ -196,6 +266,7 @@ export function ScopedCreateApp({
       }
 
       setResult(payload);
+      window.localStorage.removeItem(DRAFT_KEY);
       setName("");
       setDescription("");
       setModules([]);
@@ -232,7 +303,7 @@ export function ScopedCreateApp({
     >
       <div className="flex flex-col gap-4 border-b border-[var(--color-ink)] pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mono-label">Paso 02 · Constructor</p>
+          <p className="mono-label">Paso 01 · Constructor</p>
           <h2
             id="create-app-title"
             className="mt-2 max-w-3xl text-[34px] font-medium leading-[0.98] tracking-[-0.06em] sm:text-[46px]"
@@ -418,27 +489,31 @@ export function ScopedCreateApp({
 
           {!connectionsReady ? (
             <div className="mb-5 border border-[var(--color-ink)] bg-[var(--color-surface)] p-4">
-              <p className="text-[13px] font-medium">Termina tus conexiones</p>
+              <p className="text-[13px] font-medium">
+                Conecta sólo cuando publiques
+              </p>
               <p className="mt-1 text-[11px] leading-5 text-[var(--fg-secondary)]">
-                VForge necesita ambas cuentas antes de crear y publicar. Tu
-                brief no se perderá.
+                Puedes preparar todo sin permisos. VForge conservará este brief
+                y pedirá cada conexión cuando pulses continuar.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {!githubConnected ? (
-                  <a
-                    href="/api/auth/github/start?return_to=/workspace"
-                    className="btn-primary !min-h-9 !px-3"
+                  <button
+                    type="button"
+                    onClick={() => connectService("github")}
+                    className="btn-ghost !min-h-9 !px-3"
                   >
-                    Conectar GitHub
-                  </a>
+                    Activar GitHub
+                  </button>
                 ) : null}
                 {!vercelConnected ? (
-                  <a
-                    href="/api/auth/vercel/start?return_to=/workspace"
-                    className="btn-primary !min-h-9 !px-3"
+                  <button
+                    type="button"
+                    onClick={() => connectService("vercel")}
+                    className="btn-ghost !min-h-9 !px-3"
                   >
-                    Conectar Vercel
-                  </a>
+                    Activar Vercel
+                  </button>
                 ) : null}
               </div>
             </div>
@@ -462,7 +537,7 @@ export function ScopedCreateApp({
           <button
             type="button"
             onClick={createApp}
-            disabled={creating || !name.trim() || !connectionsReady}
+            disabled={creating || !name.trim()}
             className="mt-6 flex min-h-14 w-full items-center justify-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium text-[var(--color-background)] transition hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-30"
           >
             {creating ? (
@@ -470,8 +545,14 @@ export function ScopedCreateApp({
                 <IconLoader size={14} className="animate-spin" />
                 VForge está construyendo
               </>
-            ) : !connectionsReady ? (
-              <>Completa GitHub y Vercel primero</>
+            ) : !githubConnected ? (
+              <>
+                Activar GitHub y continuar <IconArrowR size={13} />
+              </>
+            ) : !vercelConnected ? (
+              <>
+                Activar Vercel y publicar <IconArrowR size={13} />
+              </>
             ) : (
               <>
                 Construir y publicar <IconArrowR size={13} />
@@ -494,17 +575,14 @@ export function ScopedCreateApp({
                 </p>
                 {error.service ? (
                   <div className="mt-4">
-                    <a
-                      href={
-                        error.service === "github"
-                          ? "/api/auth/github/start?return_to=/workspace"
-                          : "/api/auth/vercel/start?return_to=/workspace"
-                      }
+                    <button
+                      type="button"
+                      onClick={() => connectService(error.service!)}
                       className="btn-primary !min-h-9 !px-3"
                     >
                       Reparar conexión de{" "}
                       {error.service === "github" ? "GitHub" : "Vercel"}
-                    </a>
+                    </button>
                   </div>
                 ) : null}
               </div>
