@@ -13,6 +13,7 @@ import {
   IconShield,
 } from "@/components/brand/VFIcons";
 import { monochromeClerkAppearance } from "@/components/auth/ClerkShell";
+import { ScopedCreateApp } from "@/components/workspace/ScopedCreateApp";
 import type { ScopedProject } from "@/lib/projects/scoped-catalog";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -163,8 +164,10 @@ export function ScopedWorkspaceHome({
           </div>
         </section>
 
+        <ScopedCreateApp />
+
         <section className="mt-12 sm:mt-16" aria-labelledby="projects-title">
-          <p className="mono-label">Paso 02</p>
+          <p className="mono-label">Paso 03</p>
           <h2
             id="projects-title"
             className="mt-2 text-[28px] font-medium tracking-[-0.05em]"
