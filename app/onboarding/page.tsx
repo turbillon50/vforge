@@ -110,14 +110,14 @@ function OnboardingWithClerk() {
     {
       id: "github",
       title: "GitHub",
-      body: "Repositorios y cambios que alimentan el proyecto.",
+      body: "Conecta tu cuenta o crea una nueva. Quedará vinculada sólo a tu usuario.",
       href: "/api/auth/github/start?return_to=%2Fonboarding",
       icon: IconGithub,
     },
     {
       id: "vercel",
       title: "Vercel",
-      body: "Previews y URLs que se muestran dentro del visor.",
+      body: "Conecta tu cuenta o crea una nueva. Quedará vinculada sólo a tu usuario.",
       href: "/api/auth/vercel/start?return_to=%2Fonboarding",
       icon: IconRocket,
     },
@@ -178,8 +178,11 @@ function OnboardingWithClerk() {
                       <IconCheck size={12} /> Conectado
                     </span>
                   ) : (
-                    <a href={href} className="btn-ghost !min-h-9 !px-3">
-                      Conectar
+                    <a
+                      href={href}
+                      className="btn-ghost !min-h-10 !px-3 text-center !leading-4"
+                    >
+                      Conectar o crear cuenta
                     </a>
                   )}
                 </div>
