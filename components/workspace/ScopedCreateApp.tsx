@@ -31,6 +31,7 @@ interface BuilderError {
   title: string;
   message: string;
   permission?: boolean;
+  service?: "github" | "vercel";
 }
 
 const templates = [
@@ -79,7 +80,13 @@ function detailMessage(detail: unknown): string {
   }
 }
 
-export function ScopedCreateApp() {
+export function ScopedCreateApp({
+  githubConnected,
+  vercelConnected,
+}: {
+  githubConnected: boolean;
+  vercelConnected: boolean;
+}) {
   const [apps, setApps] = useState<GeneratedApp[]>([]);
   const [loadingApps, setLoadingApps] = useState(true);
   const [name, setName] = useState("");
@@ -100,7 +107,7 @@ export function ScopedCreateApp() {
     try {
       const response = await fetch("/api/forja/apps", { cache: "no-store" });
       const payload = (await response.json()) as { apps?: GeneratedApp[] };
-      setApps(response.ok ? payload.apps ?? [] : []);
+      setApps(response.ok ? (payload.apps ?? []) : []);
     } catch {
       setApps([]);
     } finally {
@@ -144,12 +151,16 @@ export function ScopedCreateApp() {
         if (payload.error === "connect_github") {
           setError({
             title: "Falta conectar GitHub",
-            message: "Conecta tu cuenta y vuelve a intentar desde este mismo espacio.",
+            message:
+              "Conecta tu cuenta y vuelve a intentar desde este mismo espacio.",
+            service: "github",
           });
         } else if (payload.error === "connect_vercel") {
           setError({
             title: "Falta conectar Vercel",
-            message: "Conecta tu cuenta para que VForge pueda publicar el proyecto.",
+            message:
+              "Conecta tu cuenta para que VForge pueda publicar el proyecto.",
+            service: "vercel",
           });
         } else if (payload.error === "github_repo_permission") {
           setError({
@@ -157,10 +168,12 @@ export function ScopedCreateApp() {
             message:
               "Tu cuenta está conectada, pero la instalación todavía no autoriza crear repositorios. Actualiza el acceso de VForge en GitHub y vuelve a publicar.",
             permission: true,
+            service: "github",
           });
         } else if (payload.error === "repo_create") {
           setError({
             title: "GitHub rechazó el repositorio",
+            service: "github",
             message:
               detailMessage(payload.detail) ||
               "Revisa el acceso de la integración e intenta nuevamente.",
@@ -168,13 +181,15 @@ export function ScopedCreateApp() {
         } else if (payload.error === "deploy") {
           setError({
             title: "El repositorio se creó, pero falta publicar",
+            service: "vercel",
             message:
               "Vercel rechazó el despliegue. Tu código quedó seguro en GitHub para reintentarlo.",
           });
         } else {
           setError({
             title: "La construcción no terminó",
-            message: "VForge conservó tu brief. Intenta nuevamente en un momento.",
+            message:
+              "VForge conservó tu brief. Intenta nuevamente en un momento.",
           });
         }
         return;
@@ -195,18 +210,16 @@ export function ScopedCreateApp() {
     }
   }
 
+  const connectionsReady = githubConnected && vercelConnected;
   const githubState = error?.permission
     ? "error"
-    : result?.ok
+    : result?.ok || githubConnected
       ? "done"
       : creating
         ? "active"
         : "idle";
-  const vercelState = result?.ok
-    ? "done"
-    : creating
-      ? "waiting"
-      : "idle";
+  const vercelState =
+    result?.ok || vercelConnected ? "done" : creating ? "waiting" : "idle";
 
   return (
     <section className="mt-12 sm:mt-16" aria-labelledby="create-app-title">
@@ -221,8 +234,8 @@ export function ScopedCreateApp() {
           </h2>
         </div>
         <p className="max-w-sm text-[12px] leading-5 text-[var(--fg-secondary)] sm:text-right">
-          Elige una dirección, define lo necesario y VForge prepara el repo y
-          la publicación con tus propias cuentas.
+          Elige una dirección, define lo necesario y VForge prepara el repo y la
+          publicación con tus propias cuentas.
         </p>
       </div>
 
@@ -355,7 +368,9 @@ export function ScopedCreateApp() {
             </p>
             <p className="mt-2 text-[12px] leading-5 text-[var(--fg-secondary)]">
               {selectedTemplate.label}
-              {modules.length ? ` · ${modules.length} necesidades` : " · Base inicial"}
+              {modules.length
+                ? ` · ${modules.length} necesidades`
+                : " · Base inicial"}
             </p>
           </div>
 
@@ -394,6 +409,34 @@ export function ScopedCreateApp() {
             </div>
           </div>
 
+          {!connectionsReady ? (
+            <div className="mb-5 border border-[var(--color-ink)] bg-[var(--color-surface)] p-4">
+              <p className="text-[13px] font-medium">Termina tus conexiones</p>
+              <p className="mt-1 text-[11px] leading-5 text-[var(--fg-secondary)]">
+                VForge necesita ambas cuentas antes de crear y publicar. Tu
+                brief no se perderá.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {!githubConnected ? (
+                  <a
+                    href="/api/auth/github/start?return_to=/workspace"
+                    className="btn-primary !min-h-9 !px-3"
+                  >
+                    Conectar GitHub
+                  </a>
+                ) : null}
+                {!vercelConnected ? (
+                  <a
+                    href="/api/auth/vercel/start?return_to=/workspace"
+                    className="btn-primary !min-h-9 !px-3"
+                  >
+                    Conectar Vercel
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
           <label className="inline-flex items-start gap-3 text-[11px] leading-4 text-[var(--fg-secondary)]">
             <input
               type="checkbox"
@@ -412,7 +455,7 @@ export function ScopedCreateApp() {
           <button
             type="button"
             onClick={createApp}
-            disabled={creating || !name.trim()}
+            disabled={creating || !name.trim() || !connectionsReady}
             className="mt-6 flex min-h-14 w-full items-center justify-center gap-2 bg-[var(--color-ink)] px-5 text-[12px] font-medium text-[var(--color-background)] transition hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-30"
           >
             {creating ? (
@@ -420,6 +463,8 @@ export function ScopedCreateApp() {
                 <IconLoader size={14} className="animate-spin" />
                 VForge está construyendo
               </>
+            ) : !connectionsReady ? (
+              <>Completa GitHub y Vercel primero</>
             ) : (
               <>
                 Construir y publicar <IconArrowR size={13} />
@@ -440,24 +485,21 @@ export function ScopedCreateApp() {
                 <p className="mt-2 text-[11px] leading-5 text-[var(--fg-secondary)]">
                   {error.message}
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {error.permission ? (
+                {error.service ? (
+                  <div className="mt-4">
                     <a
-                      href="https://github.com/settings/installations"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={
+                        error.service === "github"
+                          ? "/api/auth/github/start?return_to=/workspace"
+                          : "/api/auth/vercel/start?return_to=/workspace"
+                      }
                       className="btn-primary !min-h-9 !px-3"
                     >
-                      Revisar acceso en GitHub
+                      Reparar conexión de{" "}
+                      {error.service === "github" ? "GitHub" : "Vercel"}
                     </a>
-                  ) : null}
-                  <a
-                    href="/api/auth/github/start?return_to=/workspace"
-                    className="btn-ghost !min-h-9 !px-3"
-                  >
-                    Reconectar
-                  </a>
-                </div>
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
@@ -517,7 +559,9 @@ export function ScopedCreateApp() {
           </div>
         ) : apps.length === 0 ? (
           <div className="border-x border-b border-[var(--border-1)] p-5">
-            <p className="text-[13px]">Tu primera publicación aparecerá aquí.</p>
+            <p className="text-[13px]">
+              Tu primera publicación aparecerá aquí.
+            </p>
             <p className="mt-1 text-[11px] text-[var(--fg-muted)]">
               Sin proyectos heredados ni cuentas mezcladas.
             </p>
