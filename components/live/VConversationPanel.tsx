@@ -17,6 +17,8 @@ interface AssistantMessage {
   role: "user" | "assistant";
   content: string;
   created_at: string;
+  provider?: string | null;
+  model?: string | null;
 }
 
 interface Repository {
@@ -47,6 +49,7 @@ export function VConversationPanel({
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const pollingRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -106,6 +109,7 @@ export function VConversationPanel({
     if (!trimmed || busy || !canWrite) return;
     setBusy(true);
     setError(null);
+    setNotice(null);
     try {
       const response = await fetch(
         `/api/live/${encodeURIComponent(projectId)}/assistant`,
@@ -118,9 +122,11 @@ export function VConversationPanel({
       const payload = (await response.json().catch(() => null)) as {
         messages?: AssistantMessage[];
         error?: string;
+        notice?: string;
       } | null;
       if (!response.ok)
-        throw new Error(payload?.error || "V no pudo responder.");
+        throw new Error(payload?.notice || payload?.error || "V no pudo responder.");
+      if (payload?.notice) setNotice(payload.notice);
       setMessages(Array.isArray(payload?.messages) ? payload.messages : []);
       setMessage("");
     } catch (caught) {
@@ -171,25 +177,34 @@ export function VConversationPanel({
         ) : visibleMessages.length ? (
           <div className="mx-auto flex w-full max-w-4xl flex-col gap-3">
             {visibleMessages.map((item) => (
-              <article
+              <div
                 key={item.id}
                 className={cn(
-                  "max-w-[86%] rounded-[12px] px-4 py-3 text-[12px] leading-5",
-                  item.role === "user"
-                    ? "ml-auto bg-black text-white"
-                    : "mr-auto border border-[var(--border-1)] bg-white text-black",
+                  "flex w-full",
+                  item.role === "user" ? "justify-end" : "justify-start",
                 )}
               >
-                <p className="mb-1 font-mono text-[8px] uppercase tracking-[0.1em] opacity-55">
-                  {item.role === "user" ? "Tú" : "V"}
-                </p>
-                <p className="whitespace-pre-wrap">{item.content}</p>
-              </article>
+                <article
+                  className={cn(
+                    "min-w-[10rem] max-w-[min(86%,40rem)] break-words rounded-[12px] px-4 py-3 text-[12px] leading-5 [overflow-wrap:anywhere]",
+                    item.role === "user"
+                      ? "bg-black text-white"
+                      : "border border-[var(--border-1)] bg-white text-black",
+                  )}
+                >
+                  <p className="mb-1 font-mono text-[8px] uppercase tracking-[0.1em] opacity-55">
+                    {item.role === "user" ? "Tú" : "V"}
+                  </p>
+                  <p className="whitespace-pre-wrap break-words">{item.content}</p>
+                </article>
+              </div>
             ))}
             {busy ? (
-              <div className="mr-auto flex items-center gap-2 rounded-[12px] border border-[var(--border-1)] bg-white px-4 py-3 text-[10px] text-[var(--fg-muted)]">
-                <IconLoader size={12} className="animate-spin" /> V está
-                pensando…
+              <div className="flex justify-start">
+                <div className="flex min-w-[10rem] items-center gap-2 rounded-[12px] border border-[var(--border-1)] bg-white px-4 py-3 text-[10px] text-[var(--fg-muted)]">
+                  <IconLoader size={12} className="animate-spin" /> V está
+                  pensando…
+                </div>
               </div>
             ) : null}
             <div ref={endRef} />
@@ -215,14 +230,20 @@ export function VConversationPanel({
         )}
       </div>
 
+      {notice ? (
+        <p className="shrink-0 bg-white px-3 py-1.5 text-center font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
+          {notice}
+        </p>
+      ) : null}
+
       {error ? (
-        <p className="shrink-0 border-t border-[var(--border-1)] px-3 py-2 text-[10px] text-[var(--color-danger)]">
+        <p className="shrink-0 bg-white px-3 py-2 text-center text-[10px] text-[var(--color-danger)]">
           {error}
         </p>
       ) : null}
 
       {mode === "plan" && latestPlan ? (
-        <div className="flex shrink-0 justify-end border-t border-[var(--border-1)] bg-white px-3 py-2">
+        <div className="flex shrink-0 justify-end bg-white px-3 py-2">
           <button
             type="button"
             onClick={() => onUseAsTask(latestPlan)}
@@ -234,11 +255,8 @@ export function VConversationPanel({
       ) : null}
 
       {canWrite ? (
-        <form
-          onSubmit={send}
-          className="shrink-0 border-t border-[var(--border-1)] bg-white p-3"
-        >
-          <div className="mx-auto flex max-w-4xl items-end gap-2">
+        <form onSubmit={send} className="shrink-0 bg-white px-3 pb-3 pt-1">
+          <div className="mx-auto flex max-w-4xl items-end gap-2 rounded-[12px] border border-[var(--border-1)] px-2 py-2">
             <textarea
               value={message}
               onChange={(event) => setMessage(event.target.value)}
@@ -255,7 +273,7 @@ export function VConversationPanel({
                   ? "Platícale a V…"
                   : "¿Qué necesitamos planear antes de ejecutar?"
               }
-              className="min-h-12 flex-1 resize-y rounded-[10px] border border-[var(--border-1)] px-3 py-2 text-[12px] leading-5 outline-none focus:border-black"
+              className="min-h-12 flex-1 resize-y border-0 bg-transparent px-2 py-1.5 text-[12px] leading-5 outline-none"
             />
             <button
               type="submit"
@@ -275,7 +293,7 @@ export function VConversationPanel({
           </p>
         </form>
       ) : (
-        <p className="shrink-0 border-t border-[var(--border-1)] bg-white px-3 py-3 text-[10px] text-[var(--fg-muted)]">
+        <p className="shrink-0 bg-white px-3 py-3 text-[10px] text-[var(--fg-muted)]">
           Vista de lectura. Sólo el owner puede conversar o planear con V.
         </p>
       )}

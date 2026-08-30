@@ -20,6 +20,8 @@
     "lib/projects/invite-token.ts",
     "lib/projects/viewport-url.ts",
     "lib/live/review-context.ts",
-    "lib/live/archive-text.ts"
+    "lib/live/archive-text.ts",
+    "lib/forge/provider-errors.ts",
+    "lib/forge/ask-v-policy.ts"
   ]
 }

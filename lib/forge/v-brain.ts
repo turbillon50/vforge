@@ -11,6 +11,7 @@
 
 import { V_VOICE_SYSTEM_PROMPT } from "@/lib/forge/v-voice-persona";
 import { V_TEXT_SYSTEM_PROMPT } from "@/lib/forge/v-text-persona";
+import { assertValidModelOutput } from "@/lib/forge/provider-errors";
 
 // URL del v-server en Hetzner (via nginx /v-server/ → localhost:5000)
 const HETZNER_BASE = (process.env.HETZNER_URL || "http://178.105.135.26").replace(/\/$/, "");
@@ -52,7 +53,7 @@ function buildPrompt(
  * Llama al v-server de Hetzner con el prompt construido.
  * Retorna la respuesta de Claude (texto plano).
  */
-async function callHetznerClaude(
+export async function callHetznerClaude(
   prompt: string,
   timeoutMs = 50000,
 ): Promise<string> {
@@ -78,7 +79,11 @@ async function callHetznerClaude(
   const data = (await res.json()) as { respuesta?: string; error?: string };
   if (data.error) throw new Error(data.error);
 
-  return (data.respuesta || "").trim();
+  return assertValidModelOutput(
+    data.respuesta || "",
+    "hetzner-claude",
+    0,
+  );
 }
 
 /**
