@@ -1,196 +1,546 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
-import { VWordmark } from "@/components/brand/VMark";
 
-type App = { id: string; name: string; deploy_url: string | null; repo_url: string | null };
+type App = {
+  id: string;
+  name: string;
+  deploy_url: string | null;
+  repo_url: string | null;
+};
+
 type Msg = { role: "user" | "assistant"; content: string };
 
 export function WorkspaceStudio() {
-  const [leftW, setLeftW] = useState(330);
+  // Layout state
+  const [leftW, setLeftW] = useState(300);
   const [rightW, setRightW] = useState(300);
   const drag = useRef<null | "left" | "right">(null);
+
   useEffect(() => {
     const move = (e: MouseEvent) => {
       if (!drag.current) return;
-      if (drag.current === "left") setLeftW(Math.max(240, Math.min(540, e.clientX)));
-      else setRightW(Math.max(240, Math.min(540, window.innerWidth - e.clientX)));
+      if (drag.current === "left") {
+        setLeftW(Math.max(200, Math.min(500, e.clientX)));
+      } else {
+        setRightW(Math.max(200, Math.min(500, window.innerWidth - e.clientX)));
+      }
     };
     const up = () => (drag.current = null);
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", up);
-    return () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
   }, []);
 
+  // Data state
   const [apps, setApps] = useState<App[]>([]);
   const [active, setActive] = useState<App | null>(null);
-  const [tab, setTab] = useState<"preview" | "codigo" | "consola" | "detalles">("preview");
+  const [tab, setTab] = useState<"preview" | "codigo" | "consola" | "detalles">(
+    "preview"
+  );
   const [conn, setConn] = useState<string[]>([]);
-  const [files, setFiles] = useState<{ name: string; path: string; type: string }[]>([]);
-  const [code, setCode] = useState<{ path: string; content: string } | null>(null);
+  const [files, setFiles] = useState<
+    { name: string; path: string; type: string }[]
+  >([]);
+  const [code, setCode] = useState<{ path: string; content: string } | null>(
+    null
+  );
   const [saving, setSaving] = useState(false);
   const [split, setSplit] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [depMsg, setDepMsg] = useState<string | null>(null);
-  useEffect(() => {
-    fetch("/api/forja/apps").then(r => r.ok ? r.json() : { apps: [] }).then(d => { setApps(d.apps || []); if (d.apps?.[0]) setActive(d.apps[0]); }).catch(() => {});
-    fetch("/api/onboarding/status").then(r => r.ok ? r.json() : { connected: [] }).then(d => setConn(d.connected || [])).catch(() => {});
-  }, []);
-  useEffect(() => {
-    setFiles([]); setCode(null);
-    if (active?.id) fetch("/api/forja/app-files?app=" + active.id).then(r => r.ok ? r.json() : { files: [] }).then(d => setFiles(d.files || [])).catch(() => {});
-  }, [active]);
-  const openFile = (path: string) => {
-    if (!active?.id) return;
-    setTab("codigo");
-    fetch("/api/forja/app-files?app=" + active.id + "&path=" + encodeURIComponent(path)).then(r => r.ok ? r.json() : null).then(d => { if (d && d.content !== undefined) setCode({ path, content: d.content }); }).catch(() => {});
-  };
-  const saveFile = async () => {
-    if (!code || !active?.id || saving) return;
-    setSaving(true);
-    try { await fetch("/api/forja/app-files", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ app: active.id, path: code.path, content: code.content }) }); } catch {}
-    setSaving(false);
-  };
-  const deploy = async () => {
-    if (!active?.id || deploying) return;
-    setDeploying(true); setDepMsg(null);
-    try {
-      const r = await fetch("/api/forja/app-deploy", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ app: active.id }) });
-      const d = await r.json();
-      setDepMsg(d.ok ? "Publicado" + (d.url ? ": " + d.url : "") : "Error: " + (d.error || "deploy"));
-    } catch { setDepMsg("Error de red"); }
-    setDeploying(false);
-  };
 
-  const [msgs, setMsgs] = useState<Msg[]>([{ role: "assistant", content: "Que onda, hermano? Soy V. Dime que construimos o conectame y le entramos." }]);
+  // Chat state
+  const [msgs, setMsgs] = useState<Msg[]>([
+    {
+      role: "assistant",
+      content:
+        "¡Hola! Soy V. Cuéntame qué deseas crear o conecta una cuenta y empezamos.",
+    },
+  ]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, busy]);
+
+  // Initial load
+  useEffect(() => {
+    fetch("/api/forja/apps")
+      .then((r) => (r.ok ? r.json() : { apps: [] }))
+      .then((d) => {
+        setApps(d.apps || []);
+        if (d.apps?.[0]) setActive(d.apps[0]);
+      })
+      .catch(() => {});
+
+    fetch("/api/onboarding/status")
+      .then((r) => (r.ok ? r.json() : { connected: [] }))
+      .then((d) => setConn(d.connected || []))
+      .catch(() => {});
+  }, []);
+
+  // Load files when app changes
+  useEffect(() => {
+    setFiles([]);
+    setCode(null);
+    if (active?.id) {
+      fetch("/api/forja/app-files?app=" + active.id)
+        .then((r) => (r.ok ? r.json() : { files: [] }))
+        .then((d) => setFiles(d.files || []))
+        .catch(() => {});
+    }
+  }, [active]);
+
+  const openFile = (path: string) => {
+    if (!active?.id) return;
+    setTab("codigo");
+    fetch(
+      "/api/forja/app-files?app=" +
+        active.id +
+        "&path=" +
+        encodeURIComponent(path)
+    )
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d && d.content !== undefined) {
+          setCode({ path, content: d.content });
+        }
+      })
+      .catch(() => {});
+  };
+
+  const saveFile = async () => {
+    if (!code || !active?.id || saving) return;
+    setSaving(true);
+    try {
+      await fetch("/api/forja/app-files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          app: active.id,
+          path: code.path,
+          content: code.content,
+        }),
+      });
+    } catch {}
+    setSaving(false);
+  };
+
+  const deploy = async () => {
+    if (!active?.id || deploying) return;
+    setDeploying(true);
+    setDepMsg(null);
+    try {
+      const r = await fetch("/api/forja/app-deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ app: active.id }),
+      });
+      const d = await r.json();
+      setDepMsg(
+        d.ok
+          ? "Publicado" + (d.url ? ": " + d.url : "")
+          : "Error: " + (d.error || "deploy")
+      );
+    } catch {
+      setDepMsg("Error de red");
+    }
+    setDeploying(false);
+  };
+
+  // Chat helpers
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [msgs, busy]);
+
   const send = async () => {
-    const t = input.trim(); if (!t || busy) return; setInput("");
-    const nx = [...msgs, { role: "user" as const, content: t }]; setMsgs(nx); setBusy(true);
-    try { const r = await fetch("/api/v/client-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: t, history: nx.slice(0, -1) }) }); const d = await r.json(); setMsgs(m => [...m, { role: "assistant", content: d.ok ? d.reply : "Ando despertando, dame un segundo." }]); }
-    catch { setMsgs(m => [...m, { role: "assistant", content: "No pude conectar." }]); } finally { setBusy(false); }
+    const t = input.trim();
+    if (!t || busy) return;
+    setInput("");
+    const next = [...msgs, { role: "user", content: t }];
+    setMsgs(next);
+    setBusy(true);
+    try {
+      const r = await fetch("/api/v/client-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: t, history: next.slice(0, -1) }),
+      });
+      const d = await r.json();
+      setMsgs((m) => [
+        ...m,
+        {
+          role: "assistant",
+          content: d.ok ? d.reply : "Estoy procesando, dame un momento.",
+        },
+      ]);
+    } catch {
+      setMsgs((m) => [
+        ...m,
+        { role: "assistant", content: "No se pudo conectar al servidor." },
+      ]);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const Handle = ({ side }: { side: "left" | "right" }) => (
-    <div onMouseDown={() => (drag.current = side)} className="w-1.5 cursor-col-resize bg-white/[0.04] transition-colors hover:bg-[#7c3aed]/40" />
+    <div
+      onMouseDown={() => (drag.current = side)}
+      className="w-1.5 cursor-col-resize bg-[var(--border-1)] hover:bg-[var(--border-1)]/70 transition-colors"
+      aria-label={`Resize ${side} pane`}
+    />
   );
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-[#0a0a0f] text-white">
-      <header className="flex h-12 items-center gap-4 border-b border-white/[0.08] px-4">
-        <Link href="/workspace"><VWordmark /></Link>
-        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-white/40">Estudio</span>
-        <select value={active?.id || ""} onChange={e => setActive(apps.find(a => a.id === e.target.value) || null)} className="ml-2 rounded-full border border-white/[0.1] bg-white/[0.05] px-3 py-1 text-[12.5px] outline-none">
-          {apps.length === 0 && <option value="">Sin apps aun</option>}
-          {apps.map(a => <option key={a.id} value={a.id} className="text-black">{a.name}</option>)}
+    <div className="flex flex-col h-full min-h-0 bg-[var(--color-background)] text-[var(--color-ink)]">
+      {/* Toolbar */}
+      <header className="flex h-14 items-center gap-4 border-b border-[var(--border-1)] px-4 bg-[var(--color-surface)]">
+        <h1 className="text-lg font-medium">Estudio VForge</h1>
+        <select
+          aria-label="Seleccionar aplicación"
+          value={active?.id || ""}
+          onChange={(e) =>
+            setActive(apps.find((a) => a.id === e.target.value) || null)
+          }
+          className="rounded border border-[var(--border-1)] bg-[var(--color-surface)] px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+        >
+          {apps.length === 0 && <option value="">Sin apps</option>}
+          {apps.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
+          ))}
         </select>
-        <button onClick={deploy} disabled={!active || deploying} className="ml-auto rounded-full px-4 py-1.5 text-[12.5px] font-semibold text-white disabled:opacity-50" style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}>{deploying ? "Publicando..." : "Deploy"}</button>
-        {depMsg && <span className="max-w-[260px] truncate text-[11.5px]" style={{ color: depMsg.startsWith("Error") ? "#fca5a5" : "#86efac" }}>{depMsg}</span>}
-        <div><UserButton afterSignOutUrl="/" /></div>
+
+        <nav className="flex gap-2">
+          {(
+            [
+              ["preview", "Preview"],
+              ["codigo", "Código"],
+              ["consola", "Consola"],
+              ["detalles", "Detalles"],
+            ] as const
+          ).map(([k, l]) => (
+            <button
+              key={k}
+              onClick={() => setTab(k)}
+              className={`px-3 py-1 text-sm rounded border border-[var(--border-1)] ${
+                tab === k
+                  ? "bg-black text-white"
+                  : "bg-[var(--color-surface)] text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </nav>
+
+        <button
+          onClick={deploy}
+          disabled={!active || deploying}
+          className={`ml-auto px-3 py-1 text-sm rounded ${
+            deploying ? "bg-black opacity-55" : "bg-black"
+          } text-white disabled:opacity-50`}
+        >
+          {deploying ? "Publicando…" : "Deploy"}
+        </button>
+
+        {depMsg && (
+          <span
+            className="ml-2 text-sm"
+            style={{
+              color: depMsg.startsWith("Error") ? "#fca5a5" : "#86efac",
+            }}
+          >
+            {depMsg}
+          </span>
+        )}
       </header>
-      <div className="flex min-h-0 flex-1">
-        <aside style={{ width: leftW }} className="flex shrink-0 flex-col border-r border-white/[0.08]">
-          <div className="flex items-center gap-2 border-b border-white/[0.08] px-4 py-3">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-bold" style={{ background: "linear-gradient(135deg,#a78bfa,#7c3aed)" }}>V</span>
-            <span className="text-[13px] font-semibold">V - tu copiloto</span>
+
+      {/* Main area */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Chat panel */}
+        <aside
+          style={{ width: leftW }}
+          className="flex shrink-0 flex-col border-r border-[var(--border-1)] bg-[var(--color-surface)]"
+        >
+          <div className="flex items-center gap-2 border-b border-[var(--border-1)] px-3 py-2">
+            <span className="h-6 w-6 flex items-center justify-center rounded bg-black text-sm font-semibold text-white">
+              V
+            </span>
+            <span className="text-sm font-medium">Asistente V</span>
           </div>
-          <div className="flex-1 space-y-3 overflow-y-auto p-3">
+          <div className="flex-1 overflow-y-auto p-3 space-y-3">
             {msgs.map((m, i) => (
-              <div key={i} className={m.role === "user" ? "ml-auto max-w-[88%]" : "mr-auto max-w-[92%]"}>
-                <div className="rounded-2xl px-3.5 py-2 text-[13px] leading-relaxed" style={m.role === "user" ? { background: "linear-gradient(135deg,#7c3aed,#6d28d9)" } : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>{m.content}</div>
-              </div>
-            ))}
-            {busy && <div className="text-[12px] text-white/40">V esta pensando...</div>}
-            <div ref={endRef} />
-          </div>
-          <div className="flex gap-2 border-t border-white/[0.08] p-3">
-            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()} placeholder="Escribele a V..." className="flex-1 rounded-full border border-white/[0.1] bg-white/[0.05] px-4 py-2 text-[13px] outline-none placeholder-white/40 focus:border-[#7c3aed]/50" />
-            <button onClick={send} disabled={busy || !input.trim()} className="rounded-full px-4 text-[13px] font-semibold disabled:opacity-50" style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}>{">"}</button>
-          </div>
-        </aside>
-        <Handle side="left" />
-        <main className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-center gap-1 border-b border-white/[0.08] px-3 py-2">
-            {([["preview", "Preview"], ["codigo", "Codigo"], ["consola", "Consola"], ["detalles", "Detalles"]] as const).map(([k, l]) => (
-              <button key={k} onClick={() => setTab(k)} className="rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition-colors" style={tab === k ? { background: "rgba(255,255,255,0.1)", color: "#fff" } : { color: "rgba(255,255,255,0.55)" }}>{l}</button>
-            ))}
-            <button onClick={() => setSplit((v) => !v)} className="ml-auto rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors" style={split ? { background: "rgba(124,58,237,0.2)", color: "#c4b5fd" } : { color: "rgba(255,255,255,0.55)" }}>Dividir</button>
-            {active?.deploy_url && <a href={active.deploy_url} target="_blank" rel="noreferrer" className="rounded-full border border-white/[0.1] px-3 py-1.5 text-[12px] text-white/70 hover:text-white">Abrir</a>}
-          </div>
-          <div className="flex min-h-0 flex-1 overflow-hidden">
-            {split && (
-              <div className="w-1/2 border-r border-white/[0.08]">
-                {active?.deploy_url ? <iframe title="preview2" src={active.deploy_url} className="h-full w-full border-0 bg-white" /> : <div className="flex h-full items-center justify-center text-[13px] text-white/40">Sin preview</div>}
-              </div>
-            )}
-            <div className={split ? "min-h-0 w-1/2 overflow-auto" : "min-h-0 flex-1 overflow-auto"}>
-            {tab === "preview" ? (
-              active?.deploy_url ? <iframe title="preview" src={active.deploy_url} className="h-full w-full border-0 bg-white" />
-              : <div className="flex h-full items-center justify-center p-6 text-center text-[14px] text-white/45"><div>Aun no hay app que previsualizar.<br /><Link href="/workspace#crear" className="mt-3 inline-block rounded-full px-4 py-2 text-[13px] font-semibold text-black" style={{ background: "linear-gradient(180deg,#fff,#ededf2)" }}>Crear una app</Link></div></div>
-) : tab === "codigo" ? (
-              <div className="h-full overflow-auto bg-[#0b0b10] p-4">
-                {code ? (
-                  <div className="flex h-full flex-col">
-                    <div className="mb-2 flex items-center justify-between">
-                      <p className="font-mono text-[11.5px] text-white/40">{code.path}</p>
-                      <button onClick={saveFile} disabled={saving} className="rounded-full px-3.5 py-1.5 text-[12px] font-semibold disabled:opacity-50" style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}>{saving ? "Guardando..." : "Guardar y commitear"}</button>
-                    </div>
-                    <textarea value={code.content} onChange={(e) => setCode({ path: code.path, content: e.target.value })} spellCheck={false} className="min-h-0 flex-1 w-full resize-none rounded-xl border border-white/[0.08] bg-[#0d0d12] p-4 font-mono text-[12px] leading-relaxed text-white/85 outline-none" />
-                  </div>
-                ) : (
-                  <div className="flex h-full items-center justify-center text-center text-[13px] text-white/40">{active ? "Elige un archivo del panel derecho para ver su codigo." : "Crea o selecciona una app."}</div>
-                )}
-              </div>
-            ) : tab === "consola" ? (
-              <div className="h-full overflow-auto bg-[#070709] p-4 font-mono text-[12.5px] leading-relaxed">
-                <p className="text-emerald-400">$ vforge dev</p>
-                <p className="text-white/50">{active ? "Build OK - " + active.name : "Sin app activa."}</p>
-                <p className="text-white/40">{active?.deploy_url ? "Sirviendo en " + active.deploy_url : "Crea una app para ver logs."}</p>
-                <p className="mt-2 text-white/55">Proximamente: logs en vivo y shell real.</p>
-              </div>
-            ) : (
-              <div className="p-6 text-[13.5px]">
-                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-white/40">Detalles</p>
-                <h2 className="mt-2 text-[22px] font-semibold">{active?.name || "-"}</h2>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  {active?.deploy_url && <a href={active.deploy_url} target="_blank" rel="noreferrer" className="rounded-full px-4 py-2 text-[12.5px]" style={{ background: "rgba(124,58,237,0.16)", border: "1px solid rgba(124,58,237,0.35)", color: "#c4b5fd" }}>En vivo</a>}
-                  {active?.repo_url && <a href={active.repo_url} target="_blank" rel="noreferrer" className="rounded-full border border-white/[0.1] px-4 py-2 text-[12.5px] text-white/70">Repositorio</a>}
+              <div
+                key={i}
+                className={`max-w-[85%] ${
+                  m.role === "user" ? "ml-auto text-right" : "mr-auto"
+                }`}
+              >
+                <div
+                  className={`rounded px-3 py-2 text-sm ${
+                    m.role === "user"
+                      ? "bg-black text-white"
+                      : "bg-[var(--color-surface)] text-[var(--color-ink)]"
+                  }`}
+                >
+                  {m.content}
                 </div>
               </div>
+            ))}
+            {busy && (
+              <p className="text-sm text-[var(--fg-muted)]">V está procesando…</p>
             )}
+            <div ref={endRef} />
+          </div>
+          <div className="flex gap-2 border-t border-[var(--border-1)] p-3">
+            <input
+              aria-label="Mensaje al asistente"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder="Escribe tu mensaje..."
+              className="flex-1 rounded border border-[var(--border-1)] bg-[var(--color-surface)] px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+            />
+            <button
+              onClick={send}
+              disabled={busy || !input.trim()}
+              className="px-3 py-1 rounded bg-black text-white disabled:opacity-50"
+            >
+              ►
+            </button>
+          </div>
+        </aside>
+
+        <Handle side="left" />
+
+        {/* Central content */}
+        <section className="flex flex-1 flex-col min-w-0 overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-[var(--border-1)] px-3 py-2 bg-[var(--color-surface)]">
+            <button
+              onClick={() => setSplit((s) => !s)}
+              className="ml-auto px-3 py-1 text-sm rounded bg-[var(--color-surface)] border border-[var(--border-1)] text-[var(--color-ink)]"
+            >
+              {split ? "Unir" : "Dividir"}
+            </button>
+            {active?.deploy_url && (
+              <a
+                href={active.deploy_url}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded px-3 py-1 text-sm border border-[var(--border-1)] text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
+              >
+                Abrir preview
+              </a>
+            )}
+          </div>
+
+          <div className="flex flex-1 min-h-0 overflow-hidden">
+            {split && (
+              <div className="w-1/2 border-r border-[var(--border-1)] overflow-auto bg-white">
+                {active?.deploy_url ? (
+                  <iframe
+                    title="preview-2"
+                    src={active.deploy_url}
+                    className="h-full w-full border-0"
+                  />
+                ) : (
+                  <p className="flex h-full items-center justify-center text-[var(--fg-muted)]">
+                    Sin preview disponible
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div
+              className={`flex-1 overflow-auto ${
+                split ? "w-1/2" : "w-full"
+              } bg-white p-4`}
+            >
+              {tab === "preview" ? (
+                active?.deploy_url ? (
+                  <iframe
+                    title="preview"
+                    src={active.deploy_url}
+                    className="h-full w-full border-0"
+                  />
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center text-center text-[var(--fg-muted)]">
+                    <p>Aún no hay aplicación para previsualizar.</p>
+                    <a
+                      href="/workspace#crear"
+                      className="mt-3 rounded px-4 py-2 bg-[var(--color-surface)] text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
+                    >
+                      Crear una app
+                    </a>
+                  </div>
+                )
+              ) : tab === "codigo" ? (
+                <div className="h-full">
+                  {code ? (
+                    <div className="flex h-full flex-col">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs text-[var(--fg-muted)]">
+                          {code.path}
+                        </span>
+                        <button
+                          onClick={saveFile}
+                          disabled={saving}
+                          className="px-3 py-1 rounded bg-black text-sm text-white disabled:opacity-50"
+                        >
+                          {saving ? "Guardando…" : "Guardar"}
+                        </button>
+                      </div>
+                      <textarea
+                        value={code.content}
+                        onChange={(e) =>
+                          setCode({ path: code.path, content: e.target.value })
+                        }
+                        className="flex-1 w-full rounded resize-none border border-[var(--border-1)] bg-[var(--color-surface)] p-3 font-mono text-sm text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-black"
+                        spellCheck={false}
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-center text-[var(--fg-muted)]">
+                      {active
+                        ? "Selecciona un archivo del panel derecho para editar."
+                        : "Crea o selecciona una aplicación."}
+                    </p>
+                  )}
+                </div>
+              ) : tab === "consola" ? (
+                <pre className="font-mono text-sm text-[var(--color-ink)]">
+                  <code>
+                    $ vforge dev{"\n"}
+                    {active
+                      ? `Build OK - ${active.name}`
+                      : "Sin app activa."}
+                    {"\n"}
+                    {active?.deploy_url
+                      ? `Sirviendo en ${active.deploy_url}`
+                      : "Crea una app para ver logs."}
+                  </code>
+                </pre>
+              ) : (
+                // Detalles
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold">
+                    {active?.name || "—"}
+                  </h2>
+                  <div className="flex flex-wrap gap-2">
+                    {active?.deploy_url && (
+                      <a
+                        href={active.deploy_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1 rounded bg-[var(--color-surface)] text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
+                      >
+                        En vivo
+                      </a>
+                    )}
+                    {active?.repo_url && (
+                      <a
+                        href={active.repo_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1 rounded border border-[var(--border-1)] text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
+                      >
+                        Repositorio
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </main>
+        </section>
+
         <Handle side="right" />
-        <aside style={{ width: rightW }} className="flex shrink-0 flex-col border-l border-white/[0.08]">
-          <div className="border-b border-white/[0.08] px-4 py-3 text-[12px] font-semibold text-white/80">Archivos</div>
-          <div className="max-h-44 space-y-0.5 overflow-y-auto p-2">
-            {!active && <p className="px-2 py-1 text-[12px] text-white/40">Sin app activa.</p>}
-            {active && files.length === 0 && <p className="px-2 py-1 text-[12px] text-white/40">Sin archivos / conecta GitHub.</p>}
+
+        {/* Files & apps side panel */}
+        <aside
+          style={{ width: rightW }}
+          className="flex shrink-0 flex-col border-l border-[var(--border-1)] bg-[var(--color-surface)]"
+        >
+          <div className="px-3 py-2 border-b border-[var(--border-1)] font-medium text-[var(--color-ink)]">
+            Archivos
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            {!active && (
+              <p className="text-sm text-[var(--fg-muted)]">
+                Sin aplicación activa.
+              </p>
+            )}
+            {active && files.length === 0 && (
+              <p className="text-sm text-[var(--fg-muted)]">
+                No hay archivos. Conecta GitHub para obtener contenido.
+              </p>
+            )}
             {files.map((f) => (
-              <button key={f.path} onClick={() => f.type === "file" && openFile(f.path)} className="block w-full truncate rounded-lg px-3 py-1.5 text-left font-mono text-[12px] text-white/65 transition-colors hover:bg-white/[0.06] hover:text-white">{f.type === "dir" ? "📁 " : ""}{f.name}</button>
+              <button
+                key={f.path}
+                onClick={() => f.type === "file" && openFile(f.path)}
+                className="block w-full text-left truncate rounded px-2 py-1 text-sm font-mono text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
+              >
+                {f.type === "dir" ? "📁 " : ""}
+                {f.name}
+              </button>
             ))}
           </div>
-          <div className="border-b border-t border-white/[0.08] px-4 py-3 text-[12px] font-semibold text-white/80">Tus apps</div>
-          <div className="space-y-1 overflow-y-auto p-2">
-            {apps.length === 0 && <p className="px-2 py-2 text-[12.5px] text-white/40">Aun no creas apps.</p>}
-            {apps.map(a => (
-              <button key={a.id} onClick={() => setActive(a)} className="block w-full rounded-lg px-3 py-2 text-left text-[12.5px] transition-colors" style={active?.id === a.id ? { background: "rgba(255,255,255,0.08)", color: "#fff" } : { color: "rgba(255,255,255,0.6)" }}>{a.name}</button>
+
+          <div className="px-3 py-2 border-t border-b border-[var(--border-1)] font-medium text-[var(--color-ink)]">
+            Tus apps
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            {apps.length === 0 && (
+              <p className="text-sm text-[var(--fg-muted)]">
+                Aún no tienes aplicaciones.
+              </p>
+            )}
+            {apps.map((a) => (
+              <button
+                key={a.id}
+                onClick={() => setActive(a)}
+                className={`block w-full text-left rounded px-2 py-1 text-sm ${
+                  active?.id === a.id
+                    ? "bg-black text-white"
+                    : "text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
+                }`}
+              >
+                {a.name}
+              </button>
             ))}
           </div>
-          <div className="border-t border-white/[0.08] px-4 py-3 text-[12px] font-semibold text-white/80">Baul - conexiones</div>
-          <div className="space-y-1 p-2">
-            {["github", "vercel", "stripe", "mindcontext"].map(s => (
-              <div key={s} className="flex items-center justify-between rounded-lg px-3 py-2 text-[12.5px]">
-                <span className="capitalize text-white/70">{s}</span>
-                <span style={{ color: conn.includes(s) ? "#86efac" : "rgba(255,255,255,0.35)" }}>{conn.includes(s) ? "conectado" : "-"}</span>
+
+          <div className="px-3 py-2 border-t border-[var(--border-1)] font-medium text-[var(--color-ink)]">
+            Conexiones
+          </div>
+          <div className="p-2 space-y-1">
+            {["github", "vercel", "stripe", "mindcontext"].map((s) => (
+              <div
+                key={s}
+                className="flex justify-between items-center rounded px-2 py-1 text-sm text-[var(--color-ink)]"
+              >
+                <span className="capitalize">{s}</span>
+                <span
+                  className="font-medium"
+                  style={{
+                    color: conn.includes(s) ? "#86efac" : "rgba(0,0,0,0.35)",
+                  }}
+                >
+                  {conn.includes(s) ? "conectado" : "-"}
+                </span>
               </div>
             ))}
-            <Link href="/workspace/conexiones" className="mt-1 block rounded-lg px-3 py-2 text-[12px] text-[#c4b5fd]">Gestionar conexiones</Link>
+            <a
+              href="/workspace/conexiones"
+              className="block mt-1 text-sm text-[var(--color-ink)] hover:underline"
+            >
+              Gestionar conexiones
+            </a>
           </div>
         </aside>
       </div>
