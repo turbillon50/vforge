@@ -27,7 +27,7 @@ export async function GET(req: Request) {
   const teamId = url.searchParams.get("teamId");
 
   const back = (status: string) =>
-    Response.redirect(`${site}/workspace/conexiones?vercel=${status}`, 302);
+    Response.redirect(`${site}/app/integrations?vercel=${status}`, 302);
 
   // 1) Sesion de Clerk si existe; 2) si no, el userId firmado en el state.
   let userId: string | null = null;
