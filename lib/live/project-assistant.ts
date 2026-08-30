@@ -1,6 +1,7 @@
 import "server-only";
 
 import { queryAll, queryOne } from "@/lib/db/client";
+import { isInvalidModelOutput, dropInvalidAssistantTurns } from "@/lib/forge/provider-errors";
 
 export type ProjectAssistantMode = "talk" | "plan";
 
@@ -11,6 +12,10 @@ export interface ProjectAssistantMessage {
   created_by_email: string;
   content: string;
   created_at: string;
+  provider: string | null;
+  model: string | null;
+  status: string | null;
+  duration_ms: number | null;
 }
 
 export async function ensureProjectAssistantTable(): Promise<void> {
@@ -27,6 +32,13 @@ export async function ensureProjectAssistantTable(): Promise<void> {
     )`,
   );
   await queryOne(
+    `ALTER TABLE project_v_messages
+       ADD COLUMN IF NOT EXISTS provider text,
+       ADD COLUMN IF NOT EXISTS model text,
+       ADD COLUMN IF NOT EXISTS status text,
+       ADD COLUMN IF NOT EXISTS duration_ms integer`,
+  );
+  await queryOne(
     `CREATE INDEX IF NOT EXISTS idx_project_v_messages_thread
        ON project_v_messages (project_id, mode, created_at DESC)`,
   );
@@ -36,10 +48,12 @@ export async function listProjectAssistantMessages(
   projectId: string,
 ): Promise<ProjectAssistantMessage[]> {
   await ensureProjectAssistantTable();
-  return queryAll<ProjectAssistantMessage>(
-    `SELECT id::text, mode, role, created_by_email, content, created_at
+  const rows = await queryAll<ProjectAssistantMessage>(
+    `SELECT id::text, mode, role, created_by_email, content, created_at,
+            provider, model, status, duration_ms
        FROM (
-         SELECT id, mode, role, created_by_email, content, created_at
+         SELECT id, mode, role, created_by_email, content, created_at,
+                provider, model, status, duration_ms
            FROM project_v_messages
           WHERE project_id = $1
           ORDER BY created_at DESC, id DESC
@@ -48,26 +62,20 @@ export async function listProjectAssistantMessages(
       ORDER BY created_at ASC, id ASC`,
     [projectId],
   );
+  return dropInvalidAssistantTurns(rows);
 }
 
 export async function projectAssistantHistory(
   projectId: string,
   mode: ProjectAssistantMode,
 ): Promise<Array<{ role: "user" | "assistant"; content: string }>> {
-  await ensureProjectAssistantTable();
-  const rows = await queryAll<{ role: "user" | "assistant"; content: string }>(
-    `SELECT role, content
-       FROM (
-         SELECT role, content, created_at, id
-           FROM project_v_messages
-          WHERE project_id = $1 AND mode = $2
-          ORDER BY created_at DESC, id DESC
-          LIMIT 20
-       ) recent
-      ORDER BY created_at ASC, id ASC`,
-    [projectId, mode],
+  const rows = (await listProjectAssistantMessages(projectId)).filter(
+    (row) => row.mode === mode,
   );
-  return rows;
+  return rows.slice(-20).map((row) => ({
+    role: row.role,
+    content: row.content,
+  }));
 }
 
 export async function saveProjectAssistantTurn(args: {
@@ -77,14 +85,22 @@ export async function saveProjectAssistantTurn(args: {
   email: string;
   userText: string;
   assistantText: string;
+  provider: string;
+  model: string;
+  status: string;
+  durationMs: number;
 }): Promise<void> {
+  if (isInvalidModelOutput(args.assistantText)) {
+    throw new Error("Refusing to persist invalid provider output.");
+  }
   await ensureProjectAssistantTable();
   await queryOne(
     `INSERT INTO project_v_messages
-      (project_id, mode, role, created_by_user_id, created_by_email, content)
+      (project_id, mode, role, created_by_user_id, created_by_email, content,
+       provider, model, status, duration_ms)
      VALUES
-      ($1, $2, 'user', $3, $4, $5),
-      ($1, $2, 'assistant', $3, $4, $6)`,
+      ($1, $2, 'user', $3, $4, $5, NULL, NULL, NULL, NULL),
+      ($1, $2, 'assistant', $3, $4, $6, $7, $8, $9, $10)`,
     [
       args.projectId,
       args.mode,
@@ -92,6 +108,10 @@ export async function saveProjectAssistantTurn(args: {
       args.email,
       args.userText,
       args.assistantText,
+      args.provider,
+      args.model,
+      args.status,
+      args.durationMs,
     ],
   );
 }

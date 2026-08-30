@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { textBrain } from "@/lib/forge/v-brain";
+import { askV } from "@/lib/forge/ask-v";
+import { ROOM_CEREBRAS_MODEL } from "@/lib/forge/ask-v-policy";
+import { humanProviderLabel, ProviderUnavailable } from "@/lib/forge/provider-errors";
 import {
   authorizeAgentRunAccess,
   selectAgentRepository,
@@ -13,6 +15,7 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 
 const noStore = { "Cache-Control": "no-store" };
 
@@ -68,20 +71,15 @@ export async function POST(
     const history = await projectAssistantHistory(projectId, mode);
     const repoContext = repository
       ? `${repository.repo_full_name} (rama ${repository.default_branch || "main"})`
-      : "sin repositorio seleccionado";
-    const modeRules =
-      mode === "plan"
-        ? `MODO PLANEACIÓN. Analiza y entrega un plan concreto, ordenado y verificable para el proyecto. No escribas código, no crees ramas, no llames agentes y nunca afirmes que ejecutaste cambios. Señala decisiones, riesgos y criterios de aceptación. El usuario podrá convertir después este plan en una tarea de Ejecución.`
-        : `MODO PLÁTICA. Conversa naturalmente sobre el proyecto, haz preguntas cuando falte contexto y ayuda a pensar. No crees ramas, no llames agentes y nunca afirmes que ejecutaste cambios.`;
-    const prompt = `${modeRules}
-
-SALA VFORGE: ${projectId}
-REPOSITORIO AUTORIZADO: ${repoContext}
-
-MENSAJE DEL USUARIO:
-${message}`;
-    const reply = await textBrain(prompt, history);
-    if (!reply.trim()) throw new Error("V no devolvió una respuesta.");
+      : null;
+    const result = await askV({
+      mode,
+      projectId,
+      repository: repoContext,
+      message,
+      history,
+      preferredModel: ROOM_CEREBRAS_MODEL,
+    });
 
     await saveProjectAssistantTurn({
       projectId,
@@ -89,17 +87,40 @@ ${message}`;
       userId: access.identity.userId,
       email: access.identity.email,
       userText: message,
-      assistantText: reply.slice(0, 12000),
+      assistantText: result.text.slice(0, 12000),
+      provider: result.provider,
+      model: result.model,
+      status: result.status,
+      durationMs: result.durationMs,
     });
     const messages = await listProjectAssistantMessages(projectId);
-    return json({ messages, reply });
+    return json({
+      messages,
+      reply: result.text,
+      provider: result.provider,
+      model: result.model,
+      status: result.status,
+      durationMs: result.durationMs,
+      notice: result.notice,
+    });
   } catch (caught) {
-    const detail = caught instanceof Error ? caught.message : String(caught);
+    const unavailable = caught instanceof ProviderUnavailable;
     console.error("[project assistant] response failed", {
       projectId,
       mode,
-      detail,
+      provider: unavailable ? caught.provider : "unknown",
+      cause: unavailable ? caught.cause : "unknown",
+      durationMs: unavailable ? caught.durationMs : undefined,
     });
-    return json({ error: "V no pudo responder en este momento." }, 502);
+    return json(
+      {
+        error: "V no pudo responder en este momento.",
+        notice: unavailable
+          ? `${humanProviderLabel(caught.provider)} no disponible`
+          : "GPT OSS no disponible",
+        cause: unavailable ? caught.cause : "unknown",
+      },
+      502,
+    );
   }
 }
