@@ -202,7 +202,8 @@ async function advanceRun(
 
   await queryOne(
     `UPDATE project_agent_runs
-        SET phase = 'validation', status = CASE WHEN preview_url IS NULL THEN 'awaiting_preview' ELSE 'preview_ready' END,
+        SET phase = 'validation',
+            status = CASE WHEN preview_url IS NULL THEN 'awaiting_approval' ELSE 'preview_ready' END,
             summary = $1, updated_at = now()
       WHERE id = $2`,
     [result, run.id],

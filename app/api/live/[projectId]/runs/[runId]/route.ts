@@ -61,47 +61,105 @@ export async function PATCH(
   if (!parsed) return json({ error: "invalid_repository" }, 409);
   const [owner, repo] = parsed;
 
-  if (action === "approve") {
-    if (
-      !run.preview_url ||
-      (run.status !== "preview_ready" && run.status !== "awaiting_approval")
-    ) {
-      return json({ error: "preview_required" }, 409);
-    }
+  if (action === "approve" || action === "apply") {
+    const ready =
+      run.status === "preview_ready" ||
+      run.status === "awaiting_approval" ||
+      run.status === "awaiting_preview" ||
+      run.status === "approved";
+    if (!ready) return json({ error: "not_ready" }, 409);
     try {
-      const pull = await withUserGithub(
+      let prNumber = run.pr_number;
+      let prUrl = run.pr_url;
+      if (!prNumber || !prUrl) {
+        const pull = await withUserGithub(
+          access.identity.userId,
+          async (github) => {
+            const created = await github.request(
+              "POST /repos/{owner}/{repo}/pulls",
+              {
+                owner,
+                repo,
+                title: `VForge: ${run.instruction.replace(/\s+/g, " ").slice(0, 90)}`,
+                head: run.work_branch,
+                base: run.base_branch,
+                body: `Run VForge ${run.id}\n\n${run.instruction}${run.preview_url ? `\n\nPreview: ${run.preview_url}` : ""}`,
+                draft: false,
+              },
+            );
+            return created.data;
+          },
+        );
+        if (!pull) return json({ error: "connect_github" }, 409);
+        prNumber = pull.number;
+        prUrl = pull.html_url;
+        await queryOne(
+          `UPDATE project_agent_runs
+              SET status = 'approved', pr_number = $1, pr_url = $2, approved_at = now(), updated_at = now()
+            WHERE id = $3`,
+          [prNumber, prUrl, runId],
+        );
+        await recordProjectDecision({
+          projectId,
+          kind: "approved",
+          summary: `Aprobado ${run.work_branch} → PR ${prUrl}`,
+          sourceId: runId,
+          email: access.identity.email,
+        }).catch(() => null);
+      }
+      if (action === "approve") {
+        const updated = await queryOne<AgentRunRow>(
+          `SELECT * FROM project_agent_runs WHERE id = $1 LIMIT 1`,
+          [runId],
+        );
+        return json({ run: updated });
+      }
+
+      const merged = await withUserGithub(
         access.identity.userId,
         async (github) => {
-          const created = await github.request(
-            "POST /repos/{owner}/{repo}/pulls",
+          const response = await github.request(
+            "PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge",
             {
               owner,
               repo,
-              title: `VForge: ${run.instruction.replace(/\s+/g, " ").slice(0, 90)}`,
-              head: run.work_branch,
-              base: run.base_branch,
-              body: `Run VForge ${run.id}\n\n${run.instruction}\n\nPreview: ${run.preview_url}`,
-              draft: false,
+              pull_number: prNumber!,
+              merge_method: "squash",
+              commit_title: `VForge: ${run.instruction.replace(/\s+/g, " ").slice(0, 72)}`,
             },
           );
-          return created.data;
+          return response.data;
         },
       );
-      if (!pull) return json({ error: "connect_github" }, 409);
+      if (!merged) return json({ error: "connect_github" }, 409);
+      if (!merged.merged)
+        return json({ error: merged.message || "merge_blocked" }, 409);
       const updated = await queryOne<AgentRunRow>(
         `UPDATE project_agent_runs
-            SET status = 'approved', pr_number = $1, pr_url = $2, approved_at = now(), updated_at = now()
-          WHERE id = $3 RETURNING *`,
-        [pull.number, pull.html_url, runId],
+            SET status = 'published', phase = 'complete', published_at = now(), updated_at = now()
+          WHERE id = $1 RETURNING *`,
+        [runId],
       );
+      await queryOne(
+        `INSERT INTO project_events (project_id, event_type, details, severity)
+         VALUES ($1, 'agent.run.published', $2::jsonb, 'high')`,
+        [
+          projectId,
+          JSON.stringify({
+            message: `Run publicado: ${run.work_branch}`,
+            run_id: runId,
+            pr_url: prUrl,
+          }),
+        ],
+      ).catch(() => null);
       await recordProjectDecision({
         projectId,
-        kind: "approved",
-        summary: `Aprobado ${run.work_branch} → PR ${pull.html_url}`,
+        kind: "published",
+        summary: `Publicado ${run.work_branch}`,
         sourceId: runId,
         email: access.identity.email,
       }).catch(() => null);
-      return json({ run: updated });
+      return json({ run: updated, merged: true });
     } catch (caught) {
       return json(
         {

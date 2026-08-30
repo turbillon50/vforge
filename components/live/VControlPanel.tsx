@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { VConversationPanel } from "@/components/live/VConversationPanel";
 import { RunLiveConsole } from "@/components/live/RunLiveConsole";
+import { canApplyRun } from "@/lib/live/run-console";
 import { repositoryGroupLabel } from "@/lib/projects/repository-groups";
 import {
   IconBranch,
@@ -234,11 +235,11 @@ export function VControlPanel({
     await launchRun(instruction);
   }
 
-  async function runAction(action: "approve" | "publish" | "cancel") {
+  async function runAction(action: "approve" | "publish" | "cancel" | "apply") {
     if (!selected || busy) return;
     const message =
-      action === "publish"
-        ? "Esto fusionará el PR y activará producción. ¿Publicar ahora?"
+      action === "publish" || action === "apply"
+        ? "Esto fusionará a main. ¿Aplicar ahora?"
         : action === "cancel"
           ? "¿Cancelar este run? La rama se conservará para auditoría."
           : null;
@@ -679,11 +680,10 @@ export function VControlPanel({
                         <div>
                           <IconSparkles size={20} className="mx-auto" />
                           <p className="mt-3 text-[11px] font-medium">
-                            El preview aparecerá aquí
+                            El preview no es obligatorio
                           </p>
                           <p className="mt-2 max-w-xs text-[9px] leading-4 text-[var(--fg-muted)]">
-                            Cuando el agente haga push a la rama, Vercel enviará
-                            la URL a esta sala. Producción permanece intacta.
+                            Grok ya trabajó en la rama. Aplica a main sin esperar Vercel.
                           </p>
                         </div>
                       </div>
@@ -710,14 +710,24 @@ export function VControlPanel({
                           <IconExtLink size={11} /> PR
                         </a>
                       ) : null}
+                      {canWrite && canApplyRun(selected.status) ? (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void runAction("apply")}
+                          className="btn-primary"
+                        >
+                          <IconRocket size={11} /> Aplicar
+                        </button>
+                      ) : null}
                       {canWrite && selected.status === "preview_ready" ? (
                         <button
                           type="button"
                           disabled={busy}
                           onClick={() => void runAction("approve")}
-                          className="btn-primary"
+                          className="btn-ghost"
                         >
-                          <IconCheck size={11} /> Aprobar y crear PR
+                          <IconCheck size={11} /> Sólo PR
                         </button>
                       ) : null}
                       {canWrite && selected.status === "approved" ? (
