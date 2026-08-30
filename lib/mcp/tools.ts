@@ -76,7 +76,7 @@ export const MCP_TOOLS: McpToolDef[] = [
   {
     name: "vforge_project_feedback",
     description:
-      "DATOS (admin|client): lee las observaciones de una sala live y el estado de la tarea ligada a cada comentario. Exige project_id y valida que el token sea owner del tenant o miembro activo del proyecto.",
+      "DATOS (admin|client): lee las observaciones/anotaciones de una sala live (texto, ancla viewport/selector/URL y estado de la tarea). Exige project_id y valida que el token sea owner del tenant o miembro activo del proyecto.",
     inputSchema: {
       type: "object",
       properties: {
@@ -95,7 +95,7 @@ export const MCP_TOOLS: McpToolDef[] = [
   {
     name: "vforge_project_context",
     description:
-      "DATOS (admin|client): devuelve estado real de código/deploy, integraciones sin secretos, CONTENIDO.md y archivos privados disponibles en una sala autorizada.",
+      "DATOS (admin|client): estado de código/deploy, URLs de referencia con contenido leído, CONTENIDO.md, integraciones sin secretos y archivos privados de una sala autorizada.",
     inputSchema: {
       type: "object",
       properties: {
@@ -565,8 +565,8 @@ function helpText(principal: McpPrincipal): string {
   lines.push("• help — esta ayuda.\n");
   lines.push("## De datos (requieren token admin|client; aisladas por tenant)");
   lines.push("• vforge_project_status — estado de tus proyectos.");
-  lines.push("• vforge_project_feedback — observaciones de una sala y estado de sus tareas.");
-  lines.push("• vforge_project_context — código, integraciones, CONTENIDO.md y archivos autorizados.");
+  lines.push("• vforge_project_feedback — observaciones y anclas de una sala.");
+  lines.push("• vforge_project_context — código, referencias (con contenido leído), CONTENIDO.md y archivos.");
   lines.push("• vforge_project_file — texto extraído de un ZIP privado, leído por fragmentos.");
   lines.push("• vforge_payments — avance financiero (total/pagado/pendiente).");
   lines.push("• vforge_apps_health — salud de despliegue de tus apps.");
@@ -884,7 +884,7 @@ export async function runMcpTool(
           : "observación abierta";
         const result = row.task_result ? `\nResultado: ${row.task_result}` : "";
         const anchor = row.anchor
-          ? `\nAncla: ${String(row.anchor.viewport ?? "vista")} · ${Math.round(Number(row.anchor.x ?? 0) * 100)}%, ${Math.round(Number(row.anchor.y ?? 0) * 100)}% · ${String(row.anchor.url ?? "")}`
+          ? `\nAncla: ${String(row.anchor.viewport ?? "vista")} · ${String(row.anchor.label ?? "")} · ${Math.round(Number(row.anchor.x ?? 0) * 100)}%, ${Math.round(Number(row.anchor.y ?? 0) * 100)}% · ${String(row.anchor.url ?? "")}${row.anchor.selector ? ` · ${String(row.anchor.selector)}` : ""}`
           : "";
         return `${index + 1}. [${row.created_at}] ${author}\nEstado: ${task}\nID: ${row.id}${anchor}\n${row.body}${result}`;
       });
@@ -901,7 +901,7 @@ export async function runMcpTool(
       const allowed = await authorizeMcpProject(projectId, principal);
       if (!allowed) return err("Proyecto no encontrado o sin acceso para este token MCP.");
 
-      const [project, integrations, repositories, document, assets] = await Promise.all([
+      const [project, integrations, repositories, document, assets, references] = await Promise.all([
         queryOne<{
           id: string; name: string; description: string | null; github_repo: string | null;
           github_default_branch: string | null; github_url: string | null; vercel_url: string | null;
@@ -932,8 +932,20 @@ export async function runMcpTool(
              FROM project_context_assets WHERE project_id = $1 ORDER BY created_at DESC LIMIT 50`,
           [projectId],
         ).catch(() => []),
+        queryAll<{ label: string; url: string; kind: string; notes: string }>(
+          `SELECT label, url, kind, notes
+             FROM project_references
+            WHERE project_id = $1
+            ORDER BY created_at DESC
+            LIMIT 20`,
+          [projectId],
+        ).catch(() => []),
       ]);
       if (!project) return err("Proyecto no encontrado.");
+      const { readPublicPages } = await import("@/lib/live/load-page-text");
+      const pages = references.length
+        ? await readPublicPages(references.map((item) => item.url)).catch(() => [])
+        : [];
       const integrationsText = integrations.length
         ? integrations.map((item) => `• ${item.label} (${item.kind}): ${item.status}`).join("\n")
         : "• Sin integraciones registradas.";
@@ -945,14 +957,35 @@ export async function runMcpTool(
       const assetsText = assets.length
         ? assets.map((item) => `• ${item.filename} · id ${item.id} · ${item.size_bytes} bytes · texto extraído ${item.extracted_text_bytes} bytes`).join("\n")
         : "• Sin archivos de contexto.";
+      const referencesText = references.length
+        ? references
+            .map((item) => {
+              const notes = item.notes?.trim() ? ` — ${item.notes.trim()}` : "";
+              return `• [${item.kind}] ${item.label}: ${item.url}${notes}`;
+            })
+            .join("\n")
+        : "• Sin URLs de referencia.";
+      const pagesText = !references.length
+        ? "• No hay URLs que leer."
+        : pages.length
+          ? pages
+              .map((page) => {
+                const title = page.title?.trim() ? ` — ${page.title.trim()}` : "";
+                const body = page.text.trim().slice(0, 1600);
+                return `### ${page.url}${title}\n${body}`;
+              })
+              .join("\n\n")
+          : "• No se pudo leer el HTML público de las referencias.";
       return text(
         `# Contexto — ${project.name} (${project.id})\n\n` +
         `## Código y publicación\nEstado: ${project.status}\nRepo principal: ${project.github_repo ?? "sin repo"}\nRama principal: ${project.github_default_branch ?? "sin rama"}\nGitHub: ${project.github_url ?? "sin URL"}\nVercel: ${project.vercel_url ?? "sin URL"}\nDominio: ${project.domain ?? "sin dominio"}\nAuditoría: ${project.last_audit_score ?? "sin score"} · ${project.last_audit_at ?? "sin fecha"}\n\n` +
         `## Grupo de repositorios\n${repositoriesText}\n\n` +
         `## Integraciones\n${integrationsText}\n\n` +
+        `## URLs de referencia\n${referencesText}\n\n` +
+        `## Contenido leído de las URLs\n${pagesText}\n\n` +
         `## CONTENIDO.md\n${document?.content?.trim() || project.description || "Sin contenido documentado todavía."}\n\n` +
         `## Archivos privados\n${assetsText}\n\n` +
-        `Usa vforge_project_file con project_id + asset_id para leer el texto extraído.`,
+        `Usa vforge_project_file con project_id + asset_id para leer el texto extraído. Usa vforge_project_feedback para las anotaciones de la sala.`,
       );
     }
 
