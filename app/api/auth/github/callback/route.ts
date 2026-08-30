@@ -1,30 +1,37 @@
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { saveUserSecret } from "@/lib/connect/user-vault";
-import { normalizarOAuthReturnPath } from "@/lib/connect/oauth-state";
+import {
+  leerStateCompleto,
+  normalizarOAuthReturnPath,
+  resolverOAuthCallbackIdentity,
+} from "@/lib/connect/oauth-state";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
  * GET /api/auth/github/callback — intercambia code→token, guarda en vault,
- * redirige a /app/setup (stepper) o al puente si aplica.
+ * redirige al return_to permitido o al puente si aplica.
+ *
+ * El userId va firmado en `state` (igual que Vercel). Si la sesión de Clerk
+ * no viaja de vuelta desde github.com, el token igual se guarda al usuario
+ * que inició el flujo — no se tira el code a /sign-in.
  */
 export async function GET(req: Request) {
-  const { userId } = await auth();
   const site = process.env.NEXT_PUBLIC_SITE_URL || "https://vforge.site";
-  if (!userId) return Response.redirect(new URL("/sign-in", site), 302);
-
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
+  const stateData = leerStateCompleto(state);
+
   const jar = await cookies();
   const expected = jar.get("gh_oauth_state")?.value;
   const bridgeReturnTo = jar.get("gh_bridge_return_to")?.value;
   const bridgeTenant = jar.get("gh_bridge_tenant")?.value;
-  const internalReturnPath = normalizarOAuthReturnPath(
-    jar.get("gh_oauth_return_path")?.value,
-  );
+  const internalReturnPath =
+    stateData?.returnPath ??
+    normalizarOAuthReturnPath(jar.get("gh_oauth_return_path")?.value);
   jar.delete("gh_oauth_state");
   jar.delete("gh_bridge_return_to");
   jar.delete("gh_bridge_tenant");
@@ -41,8 +48,27 @@ export async function GET(req: Request) {
     return Response.redirect(destination, 302);
   };
 
+  let sessionUserId: string | null = null;
+  try {
+    sessionUserId = (await auth()).userId ?? null;
+  } catch {
+    sessionUserId = null;
+  }
+  const identity = resolverOAuthCallbackIdentity(
+    sessionUserId,
+    stateData?.userId,
+  );
+  if (identity.mismatch) return back("error_state");
+  const userId = identity.userId;
+
   if (!code) return back("error_no_code");
-  if (!state || !expected || state !== expected) return back("error_state");
+  // Cookie presente y distinta → CSRF. State firmado válido basta si la
+  // cookie no viajó. States viejos (hex sin firma) siguen exigiendo cookie.
+  if (expected && state && expected !== state) return back("error_state");
+  if (!stateData && (!state || !expected || state !== expected)) {
+    return back("error_state");
+  }
+  if (!userId) return back("error_sin_sesion");
 
   const clientId = process.env.GITHUB_APP_CLIENT_ID || "";
   const clientSecret = process.env.GITHUB_APP_CLIENT_SECRET;

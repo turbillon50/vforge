@@ -96,3 +96,20 @@ export function leerStateCompleto(
 export function leerState(state: string | null | undefined): string | null {
   return leerStateCompleto(state)?.userId ?? null;
 }
+
+/**
+ * Une la sesión de Clerk (si viajó) con el userId firmado en `state`.
+ * Si ambos existen y no coinciden, es un intento de pegar el code en otra
+ * sesión: se rechaza. Si la cookie de Clerk se perdió, el state basta.
+ */
+export function resolverOAuthCallbackIdentity(
+  sessionUserId: string | null | undefined,
+  stateUserId: string | null | undefined,
+): { userId: string | null; mismatch: boolean } {
+  const session = sessionUserId?.trim() || null;
+  const fromState = stateUserId?.trim() || null;
+  if (session && fromState && session !== fromState) {
+    return { userId: session, mismatch: true };
+  }
+  return { userId: session ?? fromState, mismatch: false };
+}
