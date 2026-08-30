@@ -2,13 +2,13 @@
  * Ojos de la sala: Navegador Pro (CDP del Chrome vivo en Hetzner) primero.
  * Si CDP falla, Chrome aislado. El plugin de Chrome sube fotos aparte.
  */
-import { buildCdpCurrentCommand, buildCdpNavigateCommand } from "./see-cdp";
+import { buildCdpCurrentCommand, buildCdpNavigateCommand, CDP_CONTAINER } from "./see-cdp";
 
 const RELAY = (process.env.VULCANO_RELAY_URL || "http://178.105.135.26").replace(
   /\/$/,
   "",
 );
-const CONTAINER = "vulcano-browser";
+const CONTAINER = CDP_CONTAINER;
 const CAPTURE_TIMEOUT_MS = 25_000;
 const CDP_TIMEOUT_MS = 40_000;
 const MAX_BASE64_CHARS = 1_800_000;

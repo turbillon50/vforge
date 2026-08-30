@@ -20,21 +20,27 @@ let ensured = false;
 
 export async function ensureProjectEyesTable(): Promise<void> {
   if (ensured) return;
-  await sql`
-    CREATE TABLE IF NOT EXISTS project_eyes (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      project_id text NOT NULL,
-      source text NOT NULL DEFAULT 'plugin',
-      viewport text,
-      url text,
-      selector text,
-      note text,
-      mime_type text NOT NULL DEFAULT 'image/jpeg',
-      data_b64 text NOT NULL,
-      created_at timestamptz DEFAULT now()
-    )
-  `;
-  await sql`CREATE INDEX IF NOT EXISTS idx_project_eyes_project ON project_eyes (project_id, created_at DESC)`;
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS project_eyes (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        project_id text NOT NULL,
+        source text NOT NULL DEFAULT 'plugin',
+        viewport text,
+        url text,
+        selector text,
+        note text,
+        mime_type text NOT NULL DEFAULT 'image/jpeg',
+        data_b64 text NOT NULL,
+        created_at timestamptz DEFAULT now()
+      )
+    `;
+    await sql`CREATE INDEX IF NOT EXISTS idx_project_eyes_project ON project_eyes (project_id, created_at DESC)`;
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error ? String((error as { code?: unknown }).code) : "";
+    if (code !== "23505") throw error;
+  }
   ensured = true;
 }
 
