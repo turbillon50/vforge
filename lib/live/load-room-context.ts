@@ -15,6 +15,8 @@ import {
 import { parseReviewAnchor } from "@/lib/live/review-context";
 import { readPublicPages } from "@/lib/live/load-page-text";
 import { listProjectDecisionLog } from "@/lib/live/load-project-memory";
+import { loadBrainBrief } from "@/lib/live/load-brain-brief";
+import { listProjectEyes, listVisorEyes } from "@/lib/live/project-eyes";
 import { ensureProjectReferencesTable } from "@/lib/live/project-references";
 
 async function readJson(response: Response): Promise<Record<string, unknown> | null> {
@@ -100,14 +102,29 @@ export async function loadRoomContextBrief(
     }),
   ];
   const pages = await readPublicPages(pageUrls).catch(() => []);
+  const [visorEyes, pluginEyes, brain] = await Promise.all([
+    listVisorEyes(projectId).catch(() => []),
+    listProjectEyes(projectId, 6).catch(() => []),
+    loadBrainBrief(projectId, project?.name).catch(
+      () => "EXPERIENCIA V / BRAIN: no disponible en este turno.",
+    ),
+  ]);
+  const eyes = [...visorEyes, ...pluginEyes].map((eye) => ({
+    source: eye.source,
+    viewport: eye.viewport,
+    url: eye.url,
+    note: eye.note,
+    created_at: eye.created_at,
+  }));
   console.info("[room-context]", {
     projectId,
     comments: comments.length,
     references: references.length,
     pages: pages.length,
+    eyes: eyes.length,
   });
 
-  return formatRoomContext({
+  const room = formatRoomContext({
     projectId,
     project,
     comments,
@@ -121,5 +138,7 @@ export async function loadRoomContextBrief(
       filename: item.filename,
       text: item.extracted_text,
     })),
+    eyes,
   });
+  return `${room}\n\n${brain}`;
 }

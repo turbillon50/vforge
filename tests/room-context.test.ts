@@ -69,7 +69,8 @@ test("room brief surfaces observations, reference urls and content", () => {
 test("empty room still tells V there is nothing yet", () => {
   const brief = formatRoomContext({ projectId: "apsus" });
   assert.match(brief, /OBSERVACIONES: ninguna todavía/);
-  assert.match(brief, /REFERENCIAS: ninguna todavía/);
+  assert.match(brief, /MARCAS Y REFERENCIAS VISUALES: ninguna todavía/);
+  assert.match(brief, /OJOS DE LA SALA/);
   assert.match(brief, /MCP/);
 });
 

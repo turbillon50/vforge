@@ -1,9 +1,9 @@
 /** Copy honesta cuando el runner aún no escribe log. No finge voz de Grok. */
 export function runnerWaitCopy(elapsedMs: number, hasLog: boolean): string | null {
   if (hasLog) return null;
-  if (elapsedMs < 8_000) return "En cola de Vulcano. Grok aún no escribe.";
+  if (elapsedMs < 8_000) return "En cola de Vulcano. Claude o Grok aún no escriben.";
   if (elapsedMs < 25_000) return "Sigue en cola. El daemon no ha soltado log.";
-  return "El runner no ha escrito nada. Si pasa de un minuto, Grok no tomó el job.";
+  return "El runner no ha escrito nada. Si pasa de un minuto, Claude o Grok no tomaron el job.";
 }
 
 export function formatElapsed(ms: number): string {

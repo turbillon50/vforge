@@ -38,6 +38,14 @@ export interface RoomRepository {
   is_primary?: boolean;
 }
 
+export interface RoomEye {
+  source: string;
+  viewport?: string | null;
+  url?: string | null;
+  note?: string | null;
+  created_at?: string | null;
+}
+
 export interface RoomContextInput {
   projectId: string;
   project?: RoomProjectInfo | null;
@@ -49,6 +57,7 @@ export interface RoomContextInput {
   decisions?: string | null;
   pages?: RoomPage[];
   archives?: Array<{ filename: string; text: string }>;
+  eyes?: RoomEye[];
 }
 
 export function isSystemComment(comment: RoomComment): boolean {
@@ -142,12 +151,33 @@ export function formatRoomContext(input: RoomContextInput): string {
   const references = (input.references ?? [])
     .filter((item) => item.url?.trim())
     .slice(0, 20);
+  const visualKinds = new Set(["inspiration", "component", "marca", "brand", "visual"]);
+  const visualRefs = references.filter((item) =>
+    visualKinds.has((item.kind || "").toLowerCase()),
+  );
+  const pageRefs = references.filter(
+    (item) => !visualKinds.has((item.kind || "").toLowerCase()),
+  );
   lines.push("");
-  if (references.length === 0) {
-    lines.push("REFERENCIAS: ninguna todavía.");
+  if (visualRefs.length === 0) {
+    lines.push("MARCAS Y REFERENCIAS VISUALES: ninguna todavía.");
   } else {
-    lines.push(`URLS DE REFERENCIA (${references.length}):`);
-    for (const item of references) {
+    lines.push(
+      `MARCAS Y REFERENCIAS VISUALES (${visualRefs.length}). Están en la sala. No digas que no las ves.`,
+    );
+    for (const item of visualRefs) {
+      const kind = item.kind?.trim() ? `[${item.kind}] ` : "";
+      const label = item.label?.trim() || item.url;
+      const notes = item.notes?.trim() ? ` — ${clip(item.notes, 180)}` : "";
+      lines.push(`- ${kind}${label}: ${item.url}${notes}`);
+    }
+  }
+  lines.push("");
+  if (pageRefs.length === 0 && visualRefs.length === 0) {
+    lines.push("REFERENCIAS DE PÁGINA: ninguna todavía.");
+  } else if (pageRefs.length) {
+    lines.push(`URLS DE REFERENCIA (${pageRefs.length}):`);
+    for (const item of pageRefs) {
       const kind = item.kind?.trim() ? `[${item.kind}] ` : "";
       const label = item.label?.trim() || item.url;
       const notes = item.notes?.trim() ? ` — ${clip(item.notes, 180)}` : "";
@@ -189,12 +219,72 @@ export function formatRoomContext(input: RoomContextInput): string {
     .map((asset) => asset.filename?.trim())
     .filter(Boolean)
     .slice(0, 20);
-  if (assets.length) {
+  const imageAssets = assets.filter((name) =>
+    /\.(png|jpe?g|webp|gif|svg|avif)$/i.test(name),
+  );
+  const otherAssets = assets.filter((name) => !imageAssets.includes(name));
+  if (imageAssets.length) {
     lines.push("");
-    lines.push(`ARCHIVOS EN CONTEXTO: ${assets.join(", ")}`);
+    lines.push(
+      `ARCHIVOS VISUALES EN CONTEXTO (${imageAssets.length}): ${imageAssets.join(", ")}`,
+    );
+  }
+  if (otherAssets.length) {
+    lines.push("");
+    lines.push(`ARCHIVOS EN CONTEXTO: ${otherAssets.join(", ")}`);
+  }
+
+  const eyes = (input.eyes ?? []).slice(0, 12);
+  lines.push("");
+  if (eyes.length === 0) {
+    lines.push(
+      "OJOS DE LA SALA: sin fotos todavía. Pide fotografiar visores o usa el plugin.",
+    );
+  } else {
+    lines.push(
+      `OJOS DE LA SALA (${eyes.length}). Fotos reales de visores y plugin. No digas que la sala no tiene marca.`,
+    );
+    for (const eye of eyes) {
+      const when = eye.created_at
+        ? ` · ${eye.created_at.slice(0, 16).replace("T", " ")}`
+        : "";
+      const view = eye.viewport?.trim() || eye.source;
+      const note = eye.note?.trim() ? ` — ${clip(eye.note, 120)}` : "";
+      const url = eye.url?.trim() ? ` · ${eye.url}` : "";
+      lines.push(`- [${eye.source}] ${view}${when}${url}${note}`);
+    }
   }
 
   let text = lines.join("\n");
   if (text.length > 14000) text = `${text.slice(0, 13999)}…`;
+  return text;
+}
+
+export function formatBrainBrief(input: {
+  files: Array<{ title: string; content: string }>;
+  lessons: Array<{ title: string; content: string }>;
+}): string {
+  const lines = [
+    "EXPERIENCIA V / BRAIN. Esto no es la sala: es la memoria de la fábrica.",
+    "Úsalo. No pidas que te lo reescriban. No inventes proyectos que no estén aquí.",
+    "Doctrina: toda app tiene MCP. Código lo hace Claude Code en Hetzner. Grok investiga. Codex cubre si Claude no puede. Nunca n8n.",
+  ];
+  if (input.files.length) {
+    lines.push(`MEMORIA (${input.files.length}):`);
+    for (const file of input.files.slice(0, 6)) {
+      lines.push(`- ${clip(file.title, 80)}: ${clip(file.content, 280)}`);
+    }
+  }
+  if (input.lessons.length) {
+    lines.push(`LECCIONES (${input.lessons.length}):`);
+    for (const lesson of input.lessons.slice(0, 5)) {
+      lines.push(`- ${clip(lesson.title, 80)}: ${clip(lesson.content, 220)}`);
+    }
+  }
+  if (!input.files.length && !input.lessons.length) {
+    lines.push("Sin fichas del Brain para este proyecto todavía.");
+  }
+  let text = lines.join("\n");
+  if (text.length > 2200) text = `${text.slice(0, 2199)}…`;
   return text;
 }
