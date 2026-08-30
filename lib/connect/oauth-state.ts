@@ -17,6 +17,23 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 const VENTANA_MS = 15 * 60 * 1000; // 15 min de vida
 
+export const OAUTH_RETURN_PATHS = [
+  "/onboarding",
+  "/workspace",
+  "/app/integrations",
+] as const;
+
+export type OAuthReturnPath = (typeof OAUTH_RETURN_PATHS)[number];
+
+export function normalizarOAuthReturnPath(
+  value: string | null | undefined,
+  fallback: OAuthReturnPath = "/app/integrations",
+): OAuthReturnPath {
+  return OAUTH_RETURN_PATHS.includes(value as OAuthReturnPath)
+    ? (value as OAuthReturnPath)
+    : fallback;
+}
+
 function llave(): Buffer {
   const s =
     process.env.VFORGE_MASTER_PEPPER ||
@@ -28,11 +45,19 @@ function llave(): Buffer {
 
 const b64u = (b: Buffer) => b.toString("base64url");
 
-/** Crea un state firmado que carga el userId. */
-export function firmarState(userId: string): string {
+/** Crea un state firmado que carga el userId y su destino interno permitido. */
+export function firmarState(
+  userId: string,
+  returnPath: OAuthReturnPath = "/app/integrations",
+): string {
   const cuerpo = b64u(
     Buffer.from(
-      JSON.stringify({ u: userId, n: randomBytes(8).toString("hex"), t: Date.now() }),
+      JSON.stringify({
+        u: userId,
+        n: randomBytes(8).toString("hex"),
+        t: Date.now(),
+        r: returnPath,
+      }),
       "utf8",
     ),
   );
@@ -44,7 +69,9 @@ export function firmarState(userId: string): string {
  * Verifica el state y devuelve el userId. `null` si viene manipulado,
  * caducado o con otro formato (p.ej. states viejos sin firma).
  */
-export function leerState(state: string | null | undefined): string | null {
+export function leerStateCompleto(
+  state: string | null | undefined,
+): { userId: string; returnPath: OAuthReturnPath } | null {
   if (!state || !state.includes(".")) return null;
   const [cuerpo, firma] = state.split(".");
   if (!cuerpo || !firma) return null;
@@ -56,8 +83,16 @@ export function leerState(state: string | null | undefined): string | null {
     const d = JSON.parse(Buffer.from(cuerpo, "base64url").toString("utf8"));
     if (!d?.u || typeof d.t !== "number") return null;
     if (Date.now() - d.t > VENTANA_MS) return null;
-    return String(d.u);
+    return {
+      userId: String(d.u),
+      returnPath: normalizarOAuthReturnPath(d.r),
+    };
   } catch {
     return null;
   }
+}
+
+/** Compatibilidad con consumidores que sólo necesitan el userId. */
+export function leerState(state: string | null | undefined): string | null {
+  return leerStateCompleto(state)?.userId ?? null;
 }
