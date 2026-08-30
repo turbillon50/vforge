@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { githubClientFromToken } from "@/lib/github/client";
 import { getCurrentVForgeIdentity, fetchVForgeApi, projectApiPath } from "@/lib/api/vforge-owned";
-import { getUserSecret } from "@/lib/connect/user-vault";
+import { getUserSecret, saveUserSecret } from "@/lib/connect/user-vault";
 import { sql } from "@/lib/db/client";
 
 export const runtime = "nodejs";
@@ -68,9 +68,113 @@ function selectedRepository(access: Access, requested: string | null): Repositor
   return access.repositories.find((repo) => repo.repo_full_name.toLowerCase() === requested.toLowerCase()) ?? null;
 }
 
-async function githubForUser(userId: string) {
+type GithubClient = ReturnType<typeof githubClientFromToken>;
+
+function githubStatus(caught: unknown): number {
+  return typeof caught === "object" && caught && "status" in caught
+    ? Number(caught.status)
+    : 500;
+}
+
+async function refreshGithubUserToken(userId: string): Promise<string | null> {
+  const refreshToken = await getUserSecret(userId, "GITHUB_REFRESH_TOKEN");
+  const clientId = process.env.GITHUB_APP_CLIENT_ID?.trim();
+  const clientSecret = process.env.GITHUB_APP_CLIENT_SECRET?.trim();
+  if (!refreshToken || !clientId || !clientSecret) return null;
+
+  const response = await fetch("https://github.com/login/oauth/access_token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
+    cache: "no-store",
+  });
+  const payload = (await response.json().catch(() => null)) as
+    | { access_token?: string; refresh_token?: string }
+    | null;
+  if (!response.ok || !payload?.access_token) return null;
+
+  await saveUserSecret(userId, "GITHUB_USER_TOKEN", payload.access_token, "github");
+  if (payload.refresh_token) {
+    await saveUserSecret(userId, "GITHUB_REFRESH_TOKEN", payload.refresh_token, "github");
+  }
+  return payload.access_token;
+}
+
+async function withGithubUser<T>(
+  userId: string,
+  operation: (github: GithubClient) => Promise<T>,
+): Promise<T | null> {
   const token = await getUserSecret(userId, "GITHUB_USER_TOKEN");
-  return token ? githubClientFromToken(token) : null;
+  if (!token) return null;
+  try {
+    return await operation(githubClientFromToken(token));
+  } catch (caught) {
+    if (githubStatus(caught) !== 401) throw caught;
+    const refreshed = await refreshGithubUserToken(userId);
+    if (!refreshed) throw caught;
+    return operation(githubClientFromToken(refreshed));
+  }
+}
+
+async function listRepositoryFiles(
+  github: GithubClient,
+  owner: string,
+  repo: string,
+  branch: string,
+) {
+  try {
+    const { data: branchData } = await github.request("GET /repos/{owner}/{repo}/branches/{branch}", {
+      owner,
+      repo,
+      branch,
+    });
+    const { data } = await github.request("GET /repos/{owner}/{repo}/git/trees/{tree_sha}", {
+      owner,
+      repo,
+      tree_sha: branchData.commit.sha,
+      recursive: "true",
+    });
+    const files = data.tree
+      .filter((item) => item.type === "blob" && item.path)
+      .slice(0, 5_000)
+      .map((item) => ({ path: item.path!, size: item.size ?? null, sha: item.sha ?? null }));
+    if (files.length || !data.truncated) {
+      return { files, truncated: Boolean(data.truncated), source: "tree" };
+    }
+  } catch (caught) {
+    if (githubStatus(caught) === 401) throw caught;
+    // Algunos tokens de GitHub App pueden leer Contents pero no Git Trees.
+  }
+
+  const files: Array<{ path: string; size: number | null; sha: string | null }> = [];
+  const directories = [""];
+  let visited = 0;
+  while (directories.length && files.length < 5_000 && visited < 1_000) {
+    const path = directories.shift()!;
+    visited += 1;
+    const { data } = await github.request("GET /repos/{owner}/{repo}/contents/{path}", {
+      owner,
+      repo,
+      path,
+      ref: branch,
+    });
+    if (!Array.isArray(data)) continue;
+    for (const item of data) {
+      if (item.type === "dir") directories.push(item.path);
+      if (item.type === "file") files.push({ path: item.path, size: item.size, sha: item.sha });
+      if (files.length >= 5_000) break;
+    }
+  }
+  return {
+    files,
+    truncated: Boolean(directories.length || visited >= 1_000),
+    source: "contents",
+  };
 }
 
 export async function GET(
@@ -91,60 +195,44 @@ export async function GET(
   if (!repository) return json({ error: "repository_not_found" }, 404);
   const parsed = parseRepo(repository.repo_full_name);
   if (!parsed) return json({ error: "invalid_repository" }, 400);
-  const github = await githubForUser(access.identity.userId);
-  if (!github) return json({ error: "connect_github" }, 409);
   const [owner, repo] = parsed;
   const branch = repository.default_branch || "main";
 
   try {
-    if (action === "tree") {
-      const { data: branchData } = await github.request("GET /repos/{owner}/{repo}/branches/{branch}", {
-        owner,
-        repo,
-        branch,
-      });
-      const { data } = await github.request("GET /repos/{owner}/{repo}/git/trees/{tree_sha}", {
-        owner,
-        repo,
-        tree_sha: branchData.commit.sha,
-        recursive: "true",
-      });
-      const files = data.tree
-        .filter((item) => item.type === "blob" && item.path)
-        .slice(0, 5_000)
-        .map((item) => ({ path: item.path!, size: item.size ?? null, sha: item.sha ?? null }));
-      return json({ repository, branch, files, truncated: Boolean(data.truncated) });
-    }
-
-    if (action === "file") {
-      const path = safePath(url.searchParams.get("path"));
-      if (!path) return json({ error: "invalid_path" }, 400);
-      const { data } = await github.request("GET /repos/{owner}/{repo}/contents/{path}", {
-        owner,
-        repo,
-        path,
-        ref: branch,
-      });
-      if (Array.isArray(data) || data.type !== "file") return json({ error: "not_a_file" }, 400);
-      if (data.size > maxFileBytes || typeof data.content !== "string") return json({ error: "file_too_large" }, 413);
-      const content = Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8");
-      if (content.includes("\0")) return json({ error: "binary_file" }, 415);
-      return json({
-        repository: repository.repo_full_name,
-        branch,
-        path,
-        sha: data.sha,
-        size: data.size,
-        content,
-        canWrite: access.canWrite,
-      });
-    }
-    return json({ error: "invalid_action" }, 400);
+    const result = await withGithubUser(access.identity.userId, async (github) => {
+      if (action === "tree") {
+        const tree = await listRepositoryFiles(github, owner, repo, branch);
+        return json({ repository, branch, ...tree });
+      }
+      if (action === "file") {
+        const path = safePath(url.searchParams.get("path"));
+        if (!path) return json({ error: "invalid_path" }, 400);
+        const { data } = await github.request("GET /repos/{owner}/{repo}/contents/{path}", {
+          owner,
+          repo,
+          path,
+          ref: branch,
+        });
+        if (Array.isArray(data) || data.type !== "file") return json({ error: "not_a_file" }, 400);
+        if (data.size > maxFileBytes || typeof data.content !== "string") return json({ error: "file_too_large" }, 413);
+        const content = Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8");
+        if (content.includes("\0")) return json({ error: "binary_file" }, 415);
+        return json({ repository: repository.repo_full_name, branch, path, sha: data.sha, size: data.size, content, canWrite: access.canWrite });
+      }
+      return json({ error: "invalid_action" }, 400);
+    });
+    return result ?? json({ error: "connect_github" }, 409);
   } catch (caught) {
-    const status = typeof caught === "object" && caught && "status" in caught ? Number(caught.status) : 500;
+    const status = githubStatus(caught);
+    console.error("[live code] GitHub read failed", {
+      action,
+      repository: repository.repo_full_name,
+      status,
+      message: caught instanceof Error ? caught.message.slice(0, 180) : "unknown",
+    });
     return json(
-      { error: status === 404 ? "github_not_found" : status === 403 ? "github_forbidden" : "github_error" },
-      status === 404 || status === 403 ? status : 502,
+      { error: status === 401 ? "connect_github" : status === 404 ? "github_not_found" : status === 403 ? "github_forbidden" : "github_error" },
+      status === 401 ? 409 : status === 404 || status === 403 ? status : 502,
     );
   }
 }
@@ -169,32 +257,26 @@ export async function PUT(
   }
 
   const parsed = parseRepo(repository.repo_full_name);
-  const github = await githubForUser(access.identity.userId);
-  if (!parsed || !github) return json({ error: github ? "invalid_repository" : "connect_github" }, 409);
+  if (!parsed) return json({ error: "invalid_repository" }, 409);
   const [owner, repo] = parsed;
   const branch = repository.default_branch || "main";
 
   try {
-    const current = await github.request("GET /repos/{owner}/{repo}/contents/{path}", {
-      owner,
-      repo,
-      path,
-      ref: branch,
+    const mutation = await withGithubUser(access.identity.userId, async (github) => {
+      const current = await github.request("GET /repos/{owner}/{repo}/contents/{path}", { owner, repo, path, ref: branch });
+      if (Array.isArray(current.data) || current.data.type !== "file") return { response: json({ error: "not_a_file" }, 400) };
+      if (expectedSha && current.data.sha !== expectedSha) return { response: json({ error: "conflict", currentSha: current.data.sha }, 409) };
+      const result = await github.request("PUT /repos/{owner}/{repo}/contents/{path}", {
+        owner, repo, path, branch, sha: current.data.sha,
+        message: `VForge: actualizar ${path}`,
+        content: Buffer.from(content, "utf8").toString("base64"),
+      });
+      return { result, currentSha: current.data.sha };
     });
-    if (Array.isArray(current.data) || current.data.type !== "file") return json({ error: "not_a_file" }, 400);
-    if (expectedSha && current.data.sha !== expectedSha) {
-      return json({ error: "conflict", currentSha: current.data.sha }, 409);
-    }
-    const result = await github.request("PUT /repos/{owner}/{repo}/contents/{path}", {
-      owner,
-      repo,
-      path,
-      branch,
-      sha: current.data.sha,
-      message: `VForge: actualizar ${path}`,
-      content: Buffer.from(content, "utf8").toString("base64"),
-    });
-    const nextSha = result.data.content?.sha ?? current.data.sha;
+    if (!mutation) return json({ error: "connect_github" }, 409);
+    if ("response" in mutation) return mutation.response;
+    const { result, currentSha } = mutation;
+    const nextSha = result.data.content?.sha ?? currentSha;
     const commitSha = result.data.commit.sha ?? null;
     const auditPayload = JSON.stringify({
       message: `Código actualizado: ${path}`,
@@ -216,7 +298,8 @@ export async function PUT(
     ]);
     return json({ ok: true, sha: nextSha, commitSha, branch });
   } catch (caught) {
-    const status = typeof caught === "object" && caught && "status" in caught ? Number(caught.status) : 500;
-    return json({ error: status === 403 ? "github_forbidden" : "github_error" }, status === 403 ? 403 : 502);
+    const status = githubStatus(caught);
+    console.error("[live code] GitHub write failed", { repository: repository.repo_full_name, status });
+    return json({ error: status === 401 ? "connect_github" : status === 403 ? "github_forbidden" : "github_error" }, status === 401 ? 409 : status === 403 ? 403 : 502);
   }
 }
