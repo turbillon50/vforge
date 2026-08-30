@@ -7,6 +7,7 @@ import { useClerk, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { VWordmark } from "@/components/brand/VMark";
 import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
+import { oauthCallbackMessage } from "@/lib/connect/connection-scopes";
 import {
   IconArrowR,
   IconCheck,
@@ -43,6 +44,7 @@ function OnboardingWithClerk() {
   const [finishing, setFinishing] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
+  const [oauthError, setOauthError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) router.replace("/sign-in");
@@ -65,7 +67,22 @@ function OnboardingWithClerk() {
   }, []);
 
   useEffect(() => {
-    if (isSignedIn) void loadStatus();
+    if (!isSignedIn) return;
+    void loadStatus();
+    const params = new URLSearchParams(window.location.search);
+    setOauthError(
+      oauthCallbackMessage("GitHub", params.get("github")) ??
+        oauthCallbackMessage("Vercel", params.get("vercel")),
+    );
+  }, [isSignedIn, loadStatus]);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    const onPageShow = () => {
+      void loadStatus();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
   }, [isSignedIn, loadStatus]);
 
   async function leaveAccount() {
@@ -241,9 +258,9 @@ function OnboardingWithClerk() {
                   </>
                 )}
               </button>
-              {finishError ? (
+              {oauthError || finishError ? (
                 <p role="alert" className="mt-3 text-[12px] leading-5 text-black">
-                  {finishError}
+                  {oauthError ?? finishError}
                 </p>
               ) : null}
             </div>

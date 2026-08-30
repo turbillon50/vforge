@@ -1,6 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { encryptOperatorSecret } from "@/lib/vault/operator-crypto";
 import { decryptOperatorSecret } from "@/lib/vault/operator-crypto";
+import { normalizeConnectionScopes } from "@/lib/connect/connection-scopes";
 
 const getDb = () => {
   const url = process.env.DATABASE_URL;
@@ -90,7 +91,7 @@ export async function listUserConnections(userId: string): Promise<string[]> {
     SELECT DISTINCT scope FROM user_secrets
     WHERE user_id = ${userId} AND scope IS NOT NULL
   `) as Array<{ scope: string }>;
-  return rows.map((r) => r.scope).filter(Boolean);
+  return normalizeConnectionScopes(rows.map((r) => r.scope).filter(Boolean));
 }
 
 /**

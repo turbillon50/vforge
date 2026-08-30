@@ -36,6 +36,13 @@ const isWorkspaceInvite = createRouteMatcher(["/workspace/join(.*)"]);
  * si no, cae al control normal de Clerk. Nunca expone la ruta: hace falta token
  * válido O sesión válida.
  */
+/** Same-origin bounce that keeps OAuth result flags (?github= / ?vercel=). */
+function redirectKeepingSearch(path: string, req: Request): NextResponse {
+  const url = new URL(path, req.url);
+  url.search = new URL(req.url).search;
+  return NextResponse.redirect(url);
+}
+
 function hasValidOperatorToken(req: Request): boolean {
   const expected = process.env.VFORGE_OPERATOR_TOKEN?.trim();
   if (!expected) return false;
@@ -208,17 +215,17 @@ export default hasClerk
       )?.onboardingComplete;
       const onboarded = await resolveOnboardingComplete(userId, claimOnboard);
       if (!onboarded && !onOnboarding) {
-        return NextResponse.redirect(new URL("/onboarding", req.url));
+        return redirectKeepingSearch("/onboarding", req);
       }
       if (onboarded && onOnboarding) {
-        return NextResponse.redirect(new URL("/workspace", req.url));
+        return redirectKeepingSearch("/workspace", req);
       }
 
       // Tipo 2 — Cliente intentando entrar a una ruta exclusiva del owner
       // (/app, /forge, /v): se le redirige a su propio workspace, pero sólo
       // después de completar su onboarding.
       if (isOwnerOnly(req)) {
-        return NextResponse.redirect(new URL("/workspace", req.url));
+        return redirectKeepingSearch("/workspace", req);
       }
     }, { signInUrl: "/sign-in", signUpUrl: "/sign-up" })
   : () => NextResponse.next();
