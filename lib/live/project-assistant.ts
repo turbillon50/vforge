@@ -67,12 +67,10 @@ export async function listProjectAssistantMessages(
 
 export async function projectAssistantHistory(
   projectId: string,
-  mode: ProjectAssistantMode,
+  _mode?: ProjectAssistantMode,
 ): Promise<Array<{ role: "user" | "assistant"; content: string }>> {
-  const rows = (await listProjectAssistantMessages(projectId)).filter(
-    (row) => row.mode === mode,
-  );
-  return rows.slice(-20).map((row) => ({
+  const rows = await listProjectAssistantMessages(projectId);
+  return rows.slice(-24).map((row) => ({
     role: row.role,
     content: row.content,
   }));
