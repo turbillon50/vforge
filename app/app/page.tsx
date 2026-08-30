@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// La conversación es el centro de VForge: /app aterriza directo en el chat.
+// Entrada autenticada: al estudio. Setup es opcional desde el menú.
 export default function AppRoot() {
   redirect("/app/chat");
 }

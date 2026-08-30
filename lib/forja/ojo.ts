@@ -56,10 +56,8 @@ export const OJO_BASE = resolveOjoBase();
 
 /** Solo el owner (Luis/Jaime) puede tocar la Forja. */
 export async function isOwnerRequest(): Promise<boolean> {
-  const { userId, sessionClaims } = await auth();
+  const { userId } = await auth();
   if (!userId) return false;
-  const role = (sessionClaims?.publicMetadata as { role?: string } | undefined)?.role;
-  if (role === "owner") return true;
   try {
     const cc = await clerkClient();
     const u = await cc.users.getUser(userId);

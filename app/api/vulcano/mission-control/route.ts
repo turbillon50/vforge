@@ -3,6 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { queryAll, queryOne } from "@/lib/db/client";
+import { resolveRequestOwner } from "@/lib/auth/request-owner";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,7 +29,8 @@ interface JobRow {
 
 async function fetchBrain(path: string, body?: object) {
   const BRAIN = process.env.RELAY_BASE_URL || "http://178.105.135.26";
-  const SECRET = process.env.HETZNER_SECRET || "superclaude2025";
+  const SECRET = process.env.HETZNER_SECRET;
+  if (!SECRET) return null;
   try {
     const r = await fetch(`${BRAIN}${path}`, {
       method: "POST",
@@ -42,6 +44,20 @@ async function fetchBrain(path: string, body?: object) {
 }
 
 export async function GET() {
+  const access = await resolveRequestOwner();
+  if (!access.userId) {
+    return NextResponse.json(
+      { error: "unauthorized" },
+      { status: 401, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+  if (!access.isOwner) {
+    return NextResponse.json(
+      { error: "forbidden" },
+      { status: 403, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   const [
     projects,
     vState,
@@ -70,31 +86,44 @@ export async function GET() {
     query: "SELECT id, agent, source, status, LEFT(result,150) as result_preview, created_at FROM dispatch_queue ORDER BY created_at DESC LIMIT 20"
   });
 
-  return NextResponse.json({
-    timestamp: new Date().toISOString(),
-    v: {
-      state: vState,
-      memory: vMemory,
-      proactive: vProactive,
-      episodes,
+  return NextResponse.json(
+    {
+      timestamp: new Date().toISOString(),
+      v: {
+        state: vState,
+        memory: vMemory,
+        proactive: vProactive,
+        episodes,
+      },
+      projects: projects.map((p) => ({
+        ...p,
+        health: p.blocked
+          ? "blocked"
+          : p.phase === "produccion"
+            ? "live"
+            : "building",
+      })),
+      brain: {
+        skills: brainData?.skills || 0,
+        projects_count: brainData?.projects?.length || 0,
+        lessons_count: brainData?.lessons?.length || 0,
+        recent_memory: brainData?.recent_memory || [],
+        top_lessons: brainData?.lessons?.slice(0, 5) || [],
+      },
+      enjambre: {
+        jobs: (enjambreData?.rows ?? []) as JobRow[],
+        done: ((enjambreData?.rows ?? []) as JobRow[]).filter(
+          (j) => j.status === "done",
+        ).length,
+        running: ((enjambreData?.rows ?? []) as JobRow[]).filter(
+          (j) => j.status === "running",
+        ).length,
+        pending: ((enjambreData?.rows ?? []) as JobRow[]).filter(
+          (j) => j.status === "pending",
+        ).length,
+      },
+      conversations: recentConvs,
     },
-    projects: projects.map((p) => ({
-      ...p,
-      health: p.blocked ? "blocked" : p.phase === "produccion" ? "live" : "building",
-    })),
-    brain: {
-      skills: brainData?.skills || 0,
-      projects_count: brainData?.projects?.length || 0,
-      lessons_count: brainData?.lessons?.length || 0,
-      recent_memory: brainData?.recent_memory || [],
-      top_lessons: brainData?.lessons?.slice(0, 5) || [],
-    },
-    enjambre: {
-      jobs: (enjambreData?.rows ?? []) as JobRow[],
-      done: ((enjambreData?.rows ?? []) as JobRow[]).filter((j) => j.status === "done").length,
-      running: ((enjambreData?.rows ?? []) as JobRow[]).filter((j) => j.status === "running").length,
-      pending: ((enjambreData?.rows ?? []) as JobRow[]).filter((j) => j.status === "pending").length,
-    },
-    conversations: recentConvs,
-  });
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }

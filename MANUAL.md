@@ -1,7 +1,7 @@
 # VForge — Manual / README completo
 
 **Dominio:** https://vforge.site · **Stack:** Next.js 16.2.4 (App Router, React 19) · Clerk (auth) · Neon Postgres · Vercel (deploy) · Tailwind 3 · framer-motion · MCP (mcp-handler).
-**Tema visual:** obsidian dark, dos esferas (la forja VForge + el copiloto Vulcano/V).
+**Tema visual:** sistema propio blanco y negro, mobile-first, con estudio del owner y salas privadas por proyecto.
 **Última verificación:** 2026-06-10 — deploy READY, alias vforge.site, consola y red **limpias** en todas las rutas (0 errores).
 
 ---
@@ -19,14 +19,16 @@ VForge es "la fábrica de apps con IA": dos piezas en un sistema —
 La autorización vive en `middleware.ts` + `lib/auth/owner.ts`. Hay tres formas de identidad:
 
 ### a) Owner (Luis) — acceso total
-Un usuario es **owner** si:
-- su `publicMetadata.role === "owner"` en Clerk, **o**
-- alguno de sus emails está en `VFORGE_OWNER_EMAILS` (CSV en env). Default: `turbillon50@gmail.com, dluisdelatorre@gmail.com, luisdelator@vmomentums.info`.
+Un usuario es **owner** únicamente si alguno de sus emails está en
+`VFORGE_OWNER_EMAILS` (CSV en env). Default:
+`turbillon50@gmail.com, jaime@vmomentums.info`. La metadata de Clerk nunca
+eleva permisos; las cuentas secundarias sólo ven proyectos donde tienen una
+membresía activa.
 
 El owner ve todo el cockpit `/app/*`, la V (`/forge`, `/v`) y todos los endpoints owner-only.
 
 ### b) Usuario registrado NO-owner — su propio workspace
-Cualquier persona que se registra con Clerk y **no** es owner. Al intentar entrar a una ruta owner-only es redirigida automáticamente a **`/workspace`** (su espacio propio). No ve los datos privados de la V ni el cockpit de Luis.
+Cualquier persona que se registra con Clerk y **no** es owner. Al intentar entrar a una ruta owner-only es redirigida automáticamente a **`/workspace`** (su espacio propio). El catálogo sólo incluye proyectos ligados a su correo por una membresía activa; no ve los datos privados de la V ni el cockpit de Luis.
 
 ### c) Operator token — para CLI / curl del owner
 Endpoints `/api/admin/*` aceptan además un **Bearer token** (`VFORGE_OPERATOR_TOKEN`) con comparación de tiempo constante en el edge. Sirve para automatización (migraciones, seed, health) sin sesión de navegador.

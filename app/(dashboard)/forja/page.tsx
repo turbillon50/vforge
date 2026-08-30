@@ -7,19 +7,16 @@ export const metadata = { title: "La Forja — VForge" };
 export const dynamic = "force-dynamic";
 
 export default async function ForjaPage() {
-  const { userId, sessionClaims } = await auth();
+  const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const role = (sessionClaims?.publicMetadata as { role?: string } | undefined)?.role;
-  let owner = role === "owner";
-  if (!owner) {
-    try {
-      const cc = await clerkClient();
-      const u = await cc.users.getUser(userId);
-      owner = isOwnerUser(u);
-    } catch {
-      owner = false;
-    }
+  let owner = false;
+  try {
+    const cc = await clerkClient();
+    const u = await cc.users.getUser(userId);
+    owner = isOwnerUser(u);
+  } catch {
+    owner = false;
   }
   if (!owner) redirect("/workspace");
 

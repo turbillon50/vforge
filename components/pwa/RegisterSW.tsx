@@ -82,28 +82,22 @@ export function RegisterSW() {
       style={{ paddingBottom: "max(env(safe-area-inset-bottom,0px),0px)" }}
       className="fixed inset-x-0 bottom-0 z-[200] flex justify-center px-3 pb-3"
     >
-      <div className="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-violet-400/25 bg-[#06040f]/90 px-4 py-3 shadow-[0_24px_80px_rgba(0,0,0,0.7),0_0_0_1px_rgba(124,58,237,0.18)] backdrop-blur-2xl">
+      <div className="flex w-full max-w-sm items-center gap-3 border border-black bg-white px-4 py-3 shadow-[0_24px_70px_rgba(0,0,0,0.16)]">
         <span
           aria-hidden
-          className="h-2.5 w-2.5 shrink-0 rounded-full"
-          style={{
-            background: "radial-gradient(circle,#8b5cf6,#7c3aed)",
-            boxShadow: "0 0 10px rgba(34,211,238,0.6)",
-            animation: "swPulse 1.6s ease-in-out infinite",
-          }}
+          className="h-2.5 w-2.5 shrink-0 rounded-full bg-black"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-semibold text-white">Nueva versión disponible</p>
-          <p className="truncate text-[11px] text-[var(--fg-tertiary)]">Actualiza para ver lo último de VForge.</p>
+          <p className="text-[13px] font-semibold text-black">Nueva versión disponible</p>
+          <p className="truncate text-[11px] text-[var(--fg-muted)]">Actualiza para ver lo último de VForge.</p>
         </div>
         <button
           onClick={applyUpdate}
-          className="shrink-0 rounded-xl border border-violet-400/40 bg-gradient-to-r from-violet-600/40 to-violet-500/25 px-3.5 py-2 text-[12px] font-semibold text-white transition active:scale-95 hover:from-violet-600/55 hover:to-violet-500/35"
+          className="shrink-0 border border-black bg-black px-3.5 py-2 text-[12px] font-semibold text-white transition active:scale-95 hover:bg-[#2b2b2b]"
         >
           Actualizar
         </button>
       </div>
-      <style>{`@keyframes swPulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.25)}}`}</style>
     </div>
   );
 }

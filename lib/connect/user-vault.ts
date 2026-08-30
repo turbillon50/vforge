@@ -73,8 +73,8 @@ export async function getUserSecret(
   try {
     return decryptOperatorSecret({
       ciphertext: Buffer.from(rows[0].ciphertext, "hex"),
-      iv:         Buffer.from(rows[0].iv, "hex"),
-      authTag:    Buffer.from(rows[0].auth_tag, "hex"),
+      iv: Buffer.from(rows[0].iv, "hex"),
+      authTag: Buffer.from(rows[0].auth_tag, "hex"),
     });
   } catch {
     return null;
@@ -82,15 +82,30 @@ export async function getUserSecret(
 }
 
 /**
- * Lista los servicios conectados del usuario.
+ * Lista los servicios realmente conectados del usuario.
+ * GitHub sólo cuenta cuando existen tanto el token OAuth como una instalación
+ * validada de la App; un token aislado ya no produce un falso "Conectado".
  */
 export async function listUserConnections(userId: string): Promise<string[]> {
   const sql = getDb();
   const rows = (await sql`
-    SELECT DISTINCT scope FROM user_secrets
+    SELECT name, scope FROM user_secrets
     WHERE user_id = ${userId} AND scope IS NOT NULL
-  `) as Array<{ scope: string }>;
-  return rows.map((r) => r.scope).filter(Boolean);
+  `) as Array<{ name: string; scope: string }>;
+
+  const names = new Set(rows.map((row) => row.name));
+  const scopes = new Set(rows.map((row) => row.scope).filter(Boolean));
+
+  scopes.delete("github");
+  scopes.delete("github-clerk");
+  if (
+    names.has("GITHUB_USER_TOKEN") &&
+    names.has("GITHUB_INSTALLATION_ID")
+  ) {
+    scopes.add("github");
+  }
+
+  return Array.from(scopes);
 }
 
 /**
@@ -101,7 +116,9 @@ export async function markOnboardingDone(clerkId: string): Promise<void> {
   // Columna onboarding_done puede no existir — silencioso si falla
   try {
     await sql`UPDATE users SET role = 'member' WHERE id = ${clerkId}`;
-  } catch { /* ok */ }
+  } catch {
+    /* ok */
+  }
 }
 
 /**

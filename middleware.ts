@@ -27,6 +27,7 @@ const isMcpRoute = createRouteMatcher(["/api/mcp", "/api/mcp/(.*)", "/api/mcp/pu
 // por proyecto y rol vive en la página (/app/live) y en /api/live/*, que
 // resuelven la membresía con fail-closed. Aquí solo exigimos sesión.
 const isLivePortal = createRouteMatcher(["/app/live(.*)", "/api/live(.*)"]);
+const isWorkspaceInvite = createRouteMatcher(["/workspace/join(.*)"]);
 
 /**
  * Valida el operator token del header Authorization en el edge. Comparación de
@@ -86,6 +87,7 @@ const isProtected = createRouteMatcher([
   "/api/billing(.*)",
   "/api/v/bridge(.*)",
   "/api/v/voice(.*)",
+  "/api/vulcano(.*)",
   "/api/live(.*)",
 ]);
 
@@ -102,6 +104,7 @@ const isOwnerOnly = createRouteMatcher([
   "/api/forge(.*)",
   "/api/builder(.*)",
   "/api/vault(.*)",
+  "/api/vulcano(.*)",
   "/api/admin(.*)",
   "/api/projects(.*)",
   "/api/v/bridge(.*)",
@@ -153,18 +156,13 @@ export default hasClerk
         return redirectToSignIn({ returnBackUrl: req.url });
       }
 
-      const claimRole = (
-        sessionClaims?.publicMetadata as { role?: string } | undefined
-      )?.role;
-
       // --- Rutas API ---
       // Solo las owner-only necesitan gating extra; el resto ya pasó el auth
       // de arriba. El onboarding NO bloquea APIs (rompería /api/onboarding/*
       // y /api/user/complete-onboarding, que el flujo necesita).
       if (isApi) {
         if (isOwnerOnly(req)) {
-          const owner =
-            claimRole === "owner" ? true : await resolveOwner(userId);
+          const owner = await resolveOwner(userId);
           if (!owner) {
             return new NextResponse(JSON.stringify({ error: "forbidden" }), {
               status: 403,
@@ -176,7 +174,7 @@ export default hasClerk
       }
 
       // --- Rutas de página: los 3 tipos de usuario ---
-      const owner = claimRole === "owner" ? true : await resolveOwner(userId);
+      const owner = await resolveOwner(userId);
       const onOnboarding = req.nextUrl.pathname.startsWith("/onboarding");
 
       // Tipo 1 — Owner (Luis/Jaime): acceso total a todo, nunca onboarding.
@@ -194,10 +192,10 @@ export default hasClerk
         return;
       }
 
-      // Tipo 2 — Cliente intentando entrar a una ruta exclusiva del owner
-      // (/app, /forge, /v): se le redirige a su propio workspace.
-      if (isOwnerOnly(req)) {
-        return NextResponse.redirect(new URL("/workspace", req.url));
+      // Una invitación debe poder aceptarse antes del onboarding. El acceso
+      // real al proyecto sigue verificándose dentro de la ruta de invitación.
+      if (isWorkspaceInvite(req)) {
+        return;
       }
 
       // Tipo 2 — Cliente en su propio espacio: gate de onboarding.
@@ -209,10 +207,17 @@ export default hasClerk
           | undefined
       )?.onboardingComplete;
       const onboarded = await resolveOnboardingComplete(userId, claimOnboard);
-      if (!onboarded && !onOnboarding && !req.nextUrl.pathname.startsWith("/workspace")) {
+      if (!onboarded && !onOnboarding) {
         return NextResponse.redirect(new URL("/onboarding", req.url));
       }
       if (onboarded && onOnboarding) {
+        return NextResponse.redirect(new URL("/workspace", req.url));
+      }
+
+      // Tipo 2 — Cliente intentando entrar a una ruta exclusiva del owner
+      // (/app, /forge, /v): se le redirige a su propio workspace, pero sólo
+      // después de completar su onboarding.
+      if (isOwnerOnly(req)) {
         return NextResponse.redirect(new URL("/workspace", req.url));
       }
     }, { signInUrl: "/sign-in", signUpUrl: "/sign-up" })

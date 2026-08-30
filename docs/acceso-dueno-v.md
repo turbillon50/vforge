@@ -31,8 +31,8 @@ oculta para `client`).
 - Token de Luis (`vfmcp_7dce…`) → `scope=admin`, `org_id=null`. Es el que conecta
   V desde cualquier cuenta/cliente. El token completo está en el CLAUDE.md de Luis.
 - Clerk owner: `turbillon50@gmail.com` (`user_3Ds7ij…`, `role=owner`).
-- Owners se detectan por `lib/auth/owner.ts` (`VFORGE_OWNER_EMAILS` o
-  `publicMetadata.role === "owner"`); los tokens nuevos de un owner se emiten
+- Owners se detectan exclusivamente por `lib/auth/owner.ts`
+  (`VFORGE_OWNER_EMAILS`); la metadata de Clerk no eleva permisos. Los tokens nuevos de un owner se emiten
   como `admin` automáticamente (`scopeForUser` en `lib/mcp/tokens.ts`).
 
 ## Conectar V desde otra cuenta / cliente MCP

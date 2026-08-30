@@ -12,11 +12,6 @@ export interface ResolvedProjectViewports {
   admin_url: string | null;
 }
 
-/**
- * Normaliza una URL publicable sin permitir protocolos ejecutables ni
- * credenciales embebidas. Los proyectos históricos suelen guardar sólo el
- * dominio, así que un host sin esquema se interpreta como HTTPS.
- */
 export function normalizePublishedUrl(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
   if (!trimmed) return null;
@@ -34,13 +29,56 @@ export function normalizePublishedUrl(value: string | null | undefined): string 
   }
 }
 
-/**
- * Resuelve los viewports históricos sin escribir en la base.
- *
- * Escritorio y móvil pueden compartir el deploy responsive cuando sus URLs
- * explícitas aún no existían. Administración nunca se infiere: sólo se expone
- * cuando fue registrada de forma intencional.
- */
+/** Panel institucional /ops: {site}/admin con flag embed para iframes VForge. */
+export function resolveInstitutionalAdminUrl(
+  base: string | null | undefined,
+): string | null {
+  const normalized = normalizePublishedUrl(base ?? null);
+  if (!normalized) return null;
+  try {
+    const url = new URL(normalized);
+    const path = url.pathname.replace(/\/+$/, "") || "";
+    if (path !== "/admin" && !path.endsWith("/admin")) {
+      url.pathname = "/admin";
+    }
+    url.searchParams.set("embed", "1");
+    url.hash = "";
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+function withAdminEmbed(admin: string | null): string | null {
+  if (!admin) return null;
+  try {
+    const url = new URL(admin);
+    if (!url.searchParams.has("embed")) url.searchParams.set("embed", "1");
+    return url.href;
+  } catch {
+    return admin;
+  }
+}
+
+function distinctAdminUrl(
+  admin: string | null,
+  publicUrl: string | null,
+): string | null {
+  if (!admin) return null;
+  if (!publicUrl) return admin;
+  try {
+    const candidate = new URL(admin);
+    const published = new URL(publicUrl);
+    const sameSurface =
+      candidate.origin === published.origin &&
+      candidate.pathname.replace(/\/+$/, "") ===
+        published.pathname.replace(/\/+$/, "");
+    return sameSurface ? null : admin;
+  } catch {
+    return null;
+  }
+}
+
 export function resolveProjectViewportUrls(
   project: ProjectViewportFields,
 ): ResolvedProjectViewports {
@@ -48,11 +86,15 @@ export function resolveProjectViewportUrls(
     normalizePublishedUrl(project.vercel_url) ??
     normalizePublishedUrl(project.domain);
 
+  const explicitAdmin = normalizePublishedUrl(project.admin_url);
+
   return {
     desktop_url:
       normalizePublishedUrl(project.desktop_url) ?? publishedFallback,
     mobile_url:
       normalizePublishedUrl(project.mobile_url) ?? publishedFallback,
-    admin_url: normalizePublishedUrl(project.admin_url),
+    // Administración sólo existe cuando el proyecto declara una superficie
+    // distinta. Inventar /admin produce 404 y usar la landing pública engaña.
+    admin_url: withAdminEmbed(distinctAdminUrl(explicitAdmin, publishedFallback)),
   };
 }

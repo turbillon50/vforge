@@ -1,11 +1,8 @@
 /**
  * /app/live/[projectId] — portal en vivo del proyecto.
- *
- * La identidad se resuelve en el BFF de Next y los datos/roles se obtienen de
- * la API propia de VForge en Hetzner. El token interno nunca llega al browser.
  */
 import { loadVForgeLiveProject } from "@/lib/api/vforge-owned";
-import { LivePortal } from "@/components/live/LivePortal";
+import { LivePortalRoot } from "@/components/live/LivePortalRoot";
 import { LiveGate } from "@/components/live/LiveGate";
 
 export const dynamic = "force-dynamic";
@@ -22,5 +19,5 @@ export default async function LivePortalPage({
     return <LiveGate projectId={projectId} />;
   }
 
-  return <LivePortal project={payload.project} me={payload.me} />;
+  return <LivePortalRoot project={payload.project} me={payload.me} />;
 }

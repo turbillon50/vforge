@@ -1,7 +1,6 @@
 /**
  * BFF de comentarios del portal en vivo.
- * El browser nunca recibe credenciales de infraestructura ni acceso directo a
- * Neon; la API propia vuelve a comprobar membresía y aislamiento por proyecto.
+ * Tras un POST exitoso, si el autor no es owner de plataforma, push a owners.
  */
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -10,6 +9,9 @@ import {
   mirrorJsonResponse,
   projectApiPath,
 } from "@/lib/api/vforge-owned";
+import { isOwnerEmail } from "@/lib/auth/owner";
+import { sendPushToOwners } from "@/lib/push/send";
+import { parseReviewAnchor } from "@/lib/live/review-context";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,7 +37,7 @@ export async function GET(
 
   try {
     const upstream = await fetchVForgeApi(
-      requestContext.path,
+      requestContext.path + "?limit=200",
       requestContext.identity,
       { signal: req.signal },
     );
@@ -63,24 +65,39 @@ export async function POST(
     payload && typeof payload === "object"
       ? (payload as Record<string, unknown>).body
       : null;
+  const rawAnchor =
+    payload && typeof payload === "object"
+      ? (payload as Record<string, unknown>).anchor
+      : null;
   if (typeof raw !== "string" || !raw.trim()) {
     return NextResponse.json({ error: "empty" }, { status: 400, headers: noStore });
   }
   if (raw.length > maxBodyLength) {
     return NextResponse.json({ error: "too_long" }, { status: 413, headers: noStore });
   }
+  const anchor = rawAnchor == null ? null : parseReviewAnchor(rawAnchor);
+  if (rawAnchor != null && !anchor) {
+    return NextResponse.json({ error: "invalid_anchor" }, { status: 400, headers: noStore });
+  }
 
   try {
-    const upstream = await fetchVForgeApi(
-      requestContext.path,
-      requestContext.identity,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: raw }),
-        signal: req.signal,
-      },
-    );
+    const upstream = await fetchVForgeApi(requestContext.path, requestContext.identity, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body: raw, anchor }),
+      signal: req.signal,
+    });
+
+    if (upstream.ok && !isOwnerEmail(requestContext.identity.email)) {
+      const preview = raw.trim().length > 120 ? raw.trim().slice(0, 117) + "…" : raw.trim();
+      const who = requestContext.identity.name || requestContext.identity.email;
+      void sendPushToOwners({
+        title: `Proyecto · mensaje nuevo`,
+        body: `${who}: ${preview}`,
+        url: `/app/live/${encodeURIComponent(projectId)}`,
+      });
+    }
+
     return mirrorJsonResponse(upstream);
   } catch {
     return NextResponse.json(

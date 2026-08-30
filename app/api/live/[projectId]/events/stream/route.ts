@@ -1,6 +1,10 @@
 /**
  * Proxy SSE autenticado. El browser conserva la sesión Clerk del mismo origen;
  * solo el BFF conoce el token interno usado para llegar a Hetzner.
+ *
+ * Ciclo suave: el stream se cierra limpio antes del límite de la plataforma y
+ * EventSource reconecta solo usando `retry:`. Sin esto, cada conexión moría a
+ * los 300s como "Vercel Runtime Timeout Error" (55 errores en 2 días).
  */
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -12,7 +16,10 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60;
+
+const SOFT_CLOSE_MS = 55_000;
+const RETRY_HINT_MS = 2_500;
 
 const noStore = { "Cache-Control": "no-store" };
 
@@ -40,13 +47,60 @@ export async function GET(
   }
 
   try {
+    const softAbort = new AbortController();
     const upstream = await fetchVForgeApi(path, identity, {
       headers: { Accept: "text/event-stream" },
-      signal: req.signal,
+      signal: AbortSignal.any([req.signal, softAbort.signal]),
     });
     if (!upstream.ok || !upstream.body) return mirrorJsonResponse(upstream);
 
-    return new Response(upstream.body, {
+    const encoder = new TextEncoder();
+    const upstreamBody = upstream.body;
+    let softTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        // Le dice al EventSource cada cuanto reintentar tras un cierre limpio.
+        controller.enqueue(encoder.encode(`retry: ${RETRY_HINT_MS}\n\n`));
+
+        softTimer = setTimeout(() => {
+          try {
+            controller.enqueue(
+              encoder.encode('event: cycle\ndata: {"reason":"soft_close"}\n\n'),
+            );
+          } catch {
+            // El controller pudo cerrarse justo antes; no pasa nada.
+          }
+          softAbort.abort();
+        }, SOFT_CLOSE_MS);
+
+        const reader = upstreamBody.getReader();
+        void (async () => {
+          try {
+            for (;;) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              if (value) controller.enqueue(value);
+            }
+          } catch {
+            // Abort esperado: soft close o el cliente se desconectó.
+          } finally {
+            if (softTimer) clearTimeout(softTimer);
+            try {
+              controller.close();
+            } catch {
+              // Ya estaba cerrado.
+            }
+          }
+        })();
+      },
+      cancel() {
+        if (softTimer) clearTimeout(softTimer);
+        softAbort.abort();
+      },
+    });
+
+    return new Response(stream, {
       status: 200,
       headers: {
         "Cache-Control": "no-cache, no-store",

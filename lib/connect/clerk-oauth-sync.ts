@@ -4,11 +4,10 @@ import { getUserSecret, saveUserSecret } from "@/lib/connect/user-vault";
 /**
  * Mirror de tokens OAuth de Clerk → user_vault.
  *
- * Cuando un usuario conecta GitHub/Vercel como social connection de Clerk,
- * Clerk custodia el access token y lo entrega (refrescado) vía Backend API.
- * Aquí lo copiamos a user_secrets (GITHUB_USER_TOKEN / VERCEL_USER_TOKEN) para
- * que VForge lo use directamente —igual que un token pegado a mano o por el
- * flujo OAuth propio— sin pedirle al usuario un segundo OAuth.
+ * Vercel sí puede reutilizar su conexión social de Clerk. GitHub no: el token
+ * social no prueba que la GitHub App de VForge esté instalada ni que tenga
+ * Administration:write, por lo que GitHub sólo se considera disponible tras
+ * completar el flujo propio de instalación + OAuth.
  */
 
 // Respuesta de cc.users.getUserOauthAccessToken según versión del SDK:
@@ -56,29 +55,19 @@ export interface ClerkSyncResult {
 }
 
 /**
- * Espeja a user_vault los tokens OAuth que el usuario ya tenga conectados en
- * Clerk. Idempotente y best-effort: si el vault ya tiene el token NO llama a
- * Clerk (evita latencia); si no, lo trae y lo guarda. Devuelve qué proveedores
- * quedaron disponibles tras el sync.
+ * Espeja a user_vault el token de Vercel que el usuario ya tenga conectado en
+ * Clerk. Para GitHub únicamente reporta true si ya existe una conexión propia
+ * validada (token + installation ID); nunca importa el token social de Clerk.
  */
 export async function syncClerkOAuthTokens(userId: string): Promise<ClerkSyncResult> {
-  const [ghExisting, vcExisting] = await Promise.all([
+  const [ghExisting, ghInstallation, vcExisting] = await Promise.all([
     getUserSecret(userId, "GITHUB_USER_TOKEN"),
+    getUserSecret(userId, "GITHUB_INSTALLATION_ID"),
     getUserSecret(userId, "VERCEL_USER_TOKEN"),
   ]);
 
-  let github = Boolean(ghExisting);
+  const github = Boolean(ghExisting && ghInstallation);
   let vercel = Boolean(vcExisting);
-
-  if (!github) {
-    const token = await getClerkOauthToken(userId, ["github", "oauth_github"]);
-    if (token) {
-      await saveUserSecret(userId, "GITHUB_USER_TOKEN", token, "github-clerk").catch(
-        () => {},
-      );
-      github = true;
-    }
-  }
 
   if (!vercel) {
     const token = await getClerkOauthToken(userId, [

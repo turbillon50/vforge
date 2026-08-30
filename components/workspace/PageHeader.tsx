@@ -6,26 +6,25 @@ type Props = {
 };
 export function PageHeader({ eyebrow, title, description, actions, className }: Props) {
   return (
-    <header className={cn("relative overflow-hidden border-b border-[var(--border-1)] px-5 py-6 md:px-8", className)}>
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent"/>
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
+    <header className={cn("border-b border-[var(--border-1)] bg-white px-5 py-7 md:px-8 md:py-9", className)}>
+      <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
           {eyebrow && (
-            <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.2em] text-violet-400">
+            <p className="mono-label">
               {eyebrow}
             </p>
           )}
-          <h1 className="font-display text-xl font-bold text-[var(--fg-primary)] md:text-2xl">
+          <h1 className="mt-3 text-[clamp(2.2rem,5vw,4.8rem)] font-semibold leading-[0.92] tracking-[-0.065em] text-black">
             {title}
           </h1>
           {description && (
-            <p className="mt-1 max-w-lg text-[13px] leading-relaxed text-[var(--fg-secondary)]">
+            <p className="mt-4 max-w-xl text-[14px] leading-6 text-[var(--fg-secondary)]">
               {description}
             </p>
           )}
         </div>
         {actions && (
-          <div className="flex flex-wrap items-center gap-2 md:shrink-0 md:pt-0.5">{actions}</div>
+          <div className="flex flex-wrap items-center gap-2 md:shrink-0">{actions}</div>
         )}
       </div>
     </header>

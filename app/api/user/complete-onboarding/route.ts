@@ -7,6 +7,7 @@
  * el saludo de V en el workspace. Idempotente: llamarlo dos veces no rompe nada.
  */
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import { isOwnerUser } from "@/lib/auth/owner";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,19 +18,21 @@ export async function POST(req: Request) {
 
   const body = (await req.json().catch(() => ({}))) as {
     name?: string;
-    role?: string;
     services?: number;
   };
 
   try {
     const cc = await clerkClient();
     const user = await cc.users.getUser(userId);
+    const metadata = { ...(user.publicMetadata ?? {}) } as Record<string, unknown>;
+    const owner = isOwnerUser(user);
+    if (!owner && metadata.role === "owner") metadata.role = "user";
     await cc.users.updateUser(userId, {
       publicMetadata: {
-        ...(user.publicMetadata ?? {}),
+        ...metadata,
         onboardingComplete: true,
         onboardingName: body.name?.trim() || undefined,
-        onboardingRole: body.role || undefined,
+        onboardingRole: owner ? "owner" : "client",
         servicesConnected:
           typeof body.services === "number" ? body.services : undefined,
       },

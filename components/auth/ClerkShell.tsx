@@ -1,62 +1,59 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { esES } from "@clerk/localizations";
 import { isClerkPublishableKey } from "@/lib/auth/clerk-key";
 
-export function ClerkShell({ children }: { children: React.ReactNode }) {
-  const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+export const monochromeClerkAppearance = {
+  baseTheme: dark,
+  variables: {
+    colorPrimary: "#ffffff",
+    colorText: "#ffffff",
+    colorTextSecondary: "#8a8a8f",
+    colorBackground: "transparent",
+    colorInputBackground: "rgba(255,255,255,0.04)",
+    colorInputText: "#ffffff",
+    colorNeutral: "#ffffff",
+    colorDanger: "#e6e6e6",
+    borderRadius: "10px",
+    fontFamily: "var(--font-geist-sans), Geist, Arial, sans-serif",
+  },
+  elements: {
+    rootBox: "w-full",
+    card: "bg-transparent shadow-none border-none p-0 gap-6",
+    header: "hidden",
+    socialButtonsBlockButton: "vf-social",
+    socialButtonsBlockButtonText: "vf-social-txt",
+    socialButtonsIconButton: "vf-social",
+    socialButtonsProviderIcon: "vf-social-icon",
+    dividerLine: "vf-divider-line",
+    dividerText: "vf-divider-txt",
+    formFieldLabel: "vf-label",
+    formFieldInput: "vf-input",
+    formButtonPrimary: "vf-primary",
+    footerActionText: "vf-footer-txt",
+    footerActionLink: "vf-footer-link",
+    identityPreview: "border-white/15",
+    logoBox: "hidden",
+    footer: "bg-transparent",
+  },
+} as const;
 
-  if (!isClerkPublishableKey(pk)) {
+export function ClerkShell({ children }: { children: React.ReactNode }) {
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  if (!isClerkPublishableKey(publishableKey)) {
     return <>{children}</>;
   }
 
   return (
     <ClerkProvider
-      publishableKey={pk}
+      publishableKey={publishableKey}
+      localization={esES}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
       signInFallbackRedirectUrl="/app/chat"
-      signUpFallbackRedirectUrl="/onboarding"
-      appearance={{
-        baseTheme: dark,
-        variables: {
-          colorPrimary: "#8b5cf6",
-          colorBackground: "#0d0d0f",
-          colorInputBackground: "#1a1a1f",
-          colorInputText: "#e5e5e5",
-          colorText: "#e5e5e5",
-          colorTextSecondary: "#777",
-          borderRadius: "0.5rem",
-          fontFamily: "var(--font-hanken), Hanken Grotesk, system-ui, sans-serif",
-        },
-        elements: {
-          card: "shadow-none",
-
-          // ── Social buttons base: borde sutil, fondo muy oscuro ──
-          socialButtonsBlockButton:
-            "border transition-colors",
-          socialButtonsBlockButtonText: "font-medium",
-
-          // ── X/Twitter: fondo blanco para que el logo negro sea legible ──
-          // Clerk renderiza el SVG de X en negro nativo, necesita fondo claro
-          socialButtonsBlockButton__x_twitter:
-            "!bg-white !border-white/20 hover:!bg-gray-100 transition-colors",
-          socialButtonsBlockButtonText__x_twitter:
-            "!text-black font-medium",
-
-          // ── Inputs ──
-          formFieldInput:
-            "border-white/[0.1] focus:border-violet-500 transition-colors",
-          formFieldLabel: "text-xs",
-
-          // ── Divider ──
-          dividerLine: "bg-white/[0.08]",
-          dividerText: "text-xs",
-
-          // ── Footer ──
-          footerActionLink: "text-violet-400 hover:text-violet-300",
-          headerTitle: "font-semibold",
-        },
-      }}
+      signUpFallbackRedirectUrl="/app/chat"
+      appearance={monochromeClerkAppearance}
     >
       {children}
     </ClerkProvider>

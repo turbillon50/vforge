@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   const jar = await cookies();
   const expected = jar.get("mci_oauth_state")?.value;
   jar.delete("mci_oauth_state");
-  const back = (s: string) => Response.redirect(`${site}/workspace/conexiones?mindcontext=${s}`, 302);
+  const back = (s: string) => Response.redirect(`${site}/app/integrations?mindcontext=${s}`, 302);
   if (!code) return back("error_no_code");
   if (state && expected && state !== expected) return back("error_state");
   const base = process.env.MINDCONTEXT_BASE || "https://mindcontextia.one";

@@ -1,10 +1,14 @@
-import ForgeLoader from "@/components/forge/ForgeLoader";
+import { VWordmark } from "@/components/brand/VMark";
 
 export default function Loading() {
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ background: "#ffffff" }}>
-      <div className="pointer-events-none fixed inset-x-0 top-0" style={{ height: "2px", background: "#000000" }} aria-hidden />
-      <ForgeLoader />
+    <div className="grid min-h-dvh place-items-center bg-white text-black">
+      <div className="flex flex-col items-center gap-4">
+        <VWordmark />
+        <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-[var(--fg-muted)]">
+          Cargando
+        </span>
+      </div>
     </div>
   );
 }

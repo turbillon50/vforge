@@ -57,24 +57,24 @@ export function LiveGate({ projectId }: { projectId: string }) {
   }, [accept]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#03020a] px-6 text-center">
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-white px-6 text-center text-black">
       {state === "idle" || state === "accepting" ? (
         <>
-          <IconLoader size={24} className="animate-spin text-violet-400" />
+          <IconLoader size={24} className="animate-spin" />
           <p className="text-sm text-[var(--fg-secondary)]">
             Validando tu invitación…
           </p>
         </>
       ) : state === "accepted" ? (
         <>
-          <IconCheck size={26} className="text-emerald-400" />
+          <IconCheck size={26} />
           <p className="text-sm text-[var(--fg-secondary)]">
             Invitación aceptada. Entrando…
           </p>
         </>
       ) : (
         <>
-          <IconShield size={26} className="text-amber-400" />
+          <IconShield size={26} />
           <p className="max-w-sm text-sm text-[var(--fg-secondary)]">
             No tienes acceso a este portal, o tu invitación ya no es válida.
             Pide al equipo de VForge un nuevo enlace.

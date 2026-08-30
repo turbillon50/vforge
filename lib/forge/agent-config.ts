@@ -1,22 +1,13 @@
 /**
  * V's self-config layer.
  *
- * Lets V change its own model per task kind via the `agent_config` table
- * in Neon (migration 007). The router in /api/forge/run reads from this
- * table first, then falls back to env vars, then to the registry defaults
- * in lib/forge/models.ts.
- *
- * Exposed to V through 3 tools (lib/forge/tools.ts):
- *   - agent_config_get()          → current config + which model maps to which task
- *   - agent_config_set(task, mdl) → V changes its own model for that task
- *   - model_set_default(slug)     → alias for "use this model for chat-main"
- *
- * Cache: 60s in-memory per Lambda invocation to keep the hot path fast.
- * Cache busts on any write via clearAgentConfigCache().
+ * Cascade: agent_config (Neon) → env → defaults.
+ * Default chat-main: Cerebras (llama-3.3-70b), no OpenRouter.
  */
 import { sql } from "@/lib/db/client";
 import { MODELS, normalizeSlug, type TaskKind } from "./models";
 import { isValidOpenRouterSlug } from "./openrouter-catalog";
+import { CEREBRAS_DEFAULT_MODEL } from "./llm-engine";
 
 interface ConfigRow {
   task_kind: TaskKind;
@@ -30,13 +21,6 @@ export function clearAgentConfigCache(): void {
   CACHE = null;
 }
 
-/**
- * Returns the model slug V should use for a given task kind, with this
- * cascade:
- *   1. agent_config row in Neon (if exists)
- *   2. env var fallback (e.g. MODEL_CHAT_MAIN)
- *   3. registry default in lib/forge/models.ts
- */
 export async function getModelForTask(task: TaskKind): Promise<string> {
   const cfg = await loadConfig();
   const fromDb = cfg.get(task);
@@ -46,11 +30,9 @@ export async function getModelForTask(task: TaskKind): Promise<string> {
   const fromEnv = envVar ? process.env[envVar] : undefined;
   if (fromEnv) return fromEnv;
 
-  // Registry default — first slug in TASK_PREFERENCES for that kind.
   return DEFAULT_BY_TASK[task];
 }
 
-/** Bulk-load all agent_config rows. Used by agent_config_get tool. */
 export async function listAgentConfig(): Promise<ConfigRow[]> {
   const rows = (await sql`
     SELECT task_kind, model
@@ -60,11 +42,6 @@ export async function listAgentConfig(): Promise<ConfigRow[]> {
   return rows;
 }
 
-/**
- * Persist a new model for a task kind. Validates that the slug
- * normalizes to something we know about (registry hit OR a free-form
- * passthrough that includes a '/'). Throws on garbage input.
- */
 export async function setModelForTask(
   task: TaskKind,
   model: string,
@@ -78,33 +55,28 @@ export async function setModelForTask(
   const normalized = normalizeSlug(model);
   const isKnown = !!MODELS[normalized];
   if (!isKnown) {
-    const looksLikeSlug = normalized.includes("/");
+    const looksLikeSlug = normalized.includes("/") || !normalized.includes(" ");
     if (!looksLikeSlug) {
       throw new Error(
-        `Model '${model}' doesn't look like a slug (expected 'provider/model-name').`,
+        `Model '${model}' doesn't look like a valid id.`,
       );
     }
-    // Confirm against the OpenRouter live catalog. Distinguish a real
-    // "not found" from a transient catalog error: if OR is unreachable
-    // (network blip, rate limit, outage), we accept the write rather
-    // than block a legitimate slug — runtime fallback will catch a
-    // truly bad slug via 4xx on the next chat turn (Codex P1).
-    try {
-      const found = await isValidOpenRouterSlug(normalized);
-      if (!found) {
-        throw new Error(
-          `Model '${normalized}' not found in OpenRouter catalog. Use openrouter_search_models to find a valid slug.`,
+    // Cerebras ids (llama-3.3-70b) no pasan por catálogo OpenRouter
+    if (normalized.includes("/")) {
+      try {
+        const found = await isValidOpenRouterSlug(normalized);
+        if (!found) {
+          throw new Error(
+            `Model '${normalized}' not found in OpenRouter catalog.`,
+          );
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.startsWith("Model '")) throw err;
+        console.warn(
+          `[agent-config] catalog check skipped for '${normalized}': ${msg}`,
         );
       }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      // The "not found" branch above rethrows our own message verbatim;
-      // anything else is a catalog-side failure we shouldn't punish.
-      if (msg.startsWith("Model '")) throw err;
-      // Best-effort: log and proceed.
-      console.warn(
-        `[agent-config] OpenRouter catalog unreachable while validating '${normalized}': ${msg}. Proceeding optimistically.`,
-      );
     }
   }
   const updatedBy = options.updatedBy ?? "operator_luis";
@@ -130,7 +102,7 @@ async function loadConfig(): Promise<Map<string, string>> {
     `) as ConfigRow[];
     for (const r of rows) entries.set(r.task_kind, r.model);
   } catch {
-    // If the table doesn't exist yet (pre-migration), fall back to env/registry.
+    // pre-migration
   }
   CACHE = { entries, expiresAt: Date.now() + CACHE_TTL_MS };
   return entries;
@@ -143,9 +115,6 @@ const ALLOWED_TASKS = new Set<TaskKind>([
   "classification",
   "summarization",
   "extraction",
-  // The registry also has 'web-search' and 'embedding' but those don't
-  // currently route through this code path — V doesn't pick a model for
-  // them, the adapter is fixed.
 ]);
 
 const ENV_BY_TASK: Partial<Record<TaskKind, string>> = {
@@ -154,13 +123,14 @@ const ENV_BY_TASK: Partial<Record<TaskKind, string>> = {
   classification: "MODEL_CLASSIFY",
 };
 
+/** Defaults: Cerebras, no OpenRouter/Claude. */
 const DEFAULT_BY_TASK: Record<TaskKind, string> = {
-  "chat-main": "anthropic/claude-sonnet-4.6",
-  reasoning: "anthropic/claude-sonnet-4.6",
-  "code-edit": "anthropic/claude-sonnet-4.6",
-  classification: "google/gemini-2.5-flash",
-  summarization: "anthropic/claude-haiku-4.5",
-  extraction: "anthropic/claude-haiku-4.5",
-  "web-search": "anthropic/claude-haiku-4.5",
-  embedding: "google/gemini-2.5-flash",
+  "chat-main": CEREBRAS_DEFAULT_MODEL,
+  reasoning: CEREBRAS_DEFAULT_MODEL,
+  "code-edit": CEREBRAS_DEFAULT_MODEL,
+  classification: "llama3.1-8b",
+  summarization: "llama3.1-8b",
+  extraction: "llama3.1-8b",
+  "web-search": "llama3.1-8b",
+  embedding: "llama3.1-8b",
 };

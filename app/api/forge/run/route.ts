@@ -12,6 +12,10 @@ import { getOperatorSecret } from "@/lib/vault/get-secret";
 import { routeFor } from "@/lib/forge/routing";
 import { estimateCostForModel, MODELS, normalizeSlug } from "@/lib/forge/models";
 import { getModelForTask } from "@/lib/forge/agent-config";
+import {
+  modelForEngine,
+  resolveLlmEngine,
+} from "@/lib/forge/llm-engine";
 import { auth } from "@clerk/nextjs/server";
 import { getBridgeStatus, bridgeConfigured } from "@/lib/forge/bridge";
 import {
@@ -27,14 +31,7 @@ import {
 } from "@/lib/forge/semantic-recall";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// Chat principal de V: streaming + loops de tool-calls + cascade de modelos +
-// pre-trabajo bloqueante (recall semántico con Gemini, bridge Hetzner, DB).
-// Sin esto corre con el default de Vercel (~10-15s) y la función se mata antes
-// de emitir el primer byte → el fetch del cliente revienta con "Load failed".
-// 300 = mismo techo que family-respond (probado que deploya en este plan).
 export const maxDuration = 300;
-
-const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 type StructuredBlock =
   | { type: "text"; text: string }
@@ -56,30 +53,24 @@ interface RunRequest {
 
 const OPERATOR_USER_ID = "operator_luis";
 const MAX_TOOL_ROUNDS = 5;
-// Solo las últimas N vueltas viajan al modelo. El historial completo vive
-// en la DB y en la UI, pero un contexto kilométrico (y contaminado de
-// estilos viejos) hace que V imite su pasado en vez de su doctrina.
 const MAX_CONTEXT_TURNS = 24;
-// Usando Anthropic SDK directo
 
-
-/**
- * Filtra tokens de thinking del stream antes de enviarlos al cliente.
- * Maneja el caso donde el tag viene fragmentado entre deltas.
- */
 function filterThinkingToken(delta: string, state: { inThinking: boolean }): string {
   let text = delta;
   let out = "";
   while (text.length > 0) {
     if (state.inThinking) {
       const end = text.search(/<\/(?:thinking|think|antml:thinking)>/i);
-      if (end === -1) return out; // todo el delta es thinking, descartar
+      if (end === -1) return out;
       text = text.slice(end).replace(/^<\/(?:thinking|think|antml:thinking)>/i, "");
       state.inThinking = false;
       continue;
     }
     const start = text.search(/<(?:thinking|think|antml:thinking)>/i);
-    if (start === -1) { out += text; break; }
+    if (start === -1) {
+      out += text;
+      break;
+    }
     out += text.slice(0, start);
     text = text.slice(start).replace(/^<(?:thinking|think|antml:thinking)>/i, "");
     state.inThinking = true;
@@ -96,19 +87,13 @@ export async function POST(req: Request) {
   }
 
   const { messages, sessionId } = body;
-  // El middleware ya garantiza que solo el owner llega aquí; V es
-  // single-user, así que el historial vive bajo el id canónico del
-  // operador. Nunca confiamos en un userId del cliente.
-  // Historial: SIEMPRE bajo el id canónico del operador — conversations
-  // tiene FK a users y la hidratación (active-session, conversations GET)
-  // lee operator_luis. La memoria por cuenta sí usa el id de Clerk.
   const userId = OPERATOR_USER_ID;
   let memoryUserId = OPERATOR_USER_ID;
   try {
     const a = await auth();
     if (a?.userId) memoryUserId = a.userId;
   } catch {
-    // sin Clerk -> operador
+    // sin Clerk
   }
 
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -122,21 +107,14 @@ export async function POST(req: Request) {
     return jsonError("sessionId (string) required", 400);
   }
 
-  // Motor de V: cero ANTHROPIC_API_KEY (doctrina). OpenRouter usa SU propia
-  // key; el relay de Hetzner no necesita ninguna. Solo abortamos si NO hay
-  // ningún motor disponible (ni OpenRouter, ni relay).
-  const apiKey =
-    process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY || "";
-  if (!apiKey && !process.env.HETZNER_SECRET) {
+  const engine = resolveLlmEngine();
+  if (engine.name === "none" && !process.env.HETZNER_SECRET) {
     return jsonError(
-      "No model engine configured (OPENROUTER_API_KEY o HETZNER_SECRET)",
+      "No model engine configured (CEREBRAS_API_KEY, OPENROUTER fallback o HETZNER_SECRET)",
       500,
     );
   }
 
-  // Texto del último turno del usuario. Se calcula ANTES de construir el
-  // system prompt porque la activación de skills depende de él (V detecta
-  // "usa la skill de X" / "activa X" y encarna esa especialidad este turno).
   const lastUserText = stringifyUserTurn(
     messages[messages.length - 1]?.content ?? "",
   );
@@ -147,10 +125,7 @@ export async function POST(req: Request) {
       projectId: body.projectId ?? null,
       userMessage: lastTurnIsUser ? lastUserText : null,
     });
-  // Memoria por cuenta (independiente de la sesion de chat).
   const userMemories = await getUserMemories(memoryUserId);
-  // Memoria semántica: recuerdos relevantes al último turno del usuario.
-  // Silencioso ante fallo — recall() nunca lanza.
   const recallHits =
     messages[messages.length - 1]?.role === "user" && lastUserText
       ? await recall(lastUserText, 12)
@@ -158,11 +133,8 @@ export async function POST(req: Request) {
   const systemPrompt =
     basePrompt +
     memoryPromptSection(userMemories) +
-    formatRecallSection(recallHits, 0.10);
+    formatRecallSection(recallHits, 0.1);
 
-  // Estado del puente de agentes (hub Hetzner). Best-effort: si el hub
-  // no responde en 4s, V opera sin ese bloque. Solo el owner llega aquí
-  // (middleware), así que no se filtra nada a terceros.
   let bridgeSection = "";
   if (bridgeConfigured()) {
     try {
@@ -188,40 +160,33 @@ export async function POST(req: Request) {
         `(agentes: abogado, logistica, qa, valentina). Si hay pendientes, anúncialos con tu estilo — claros y con criterio, nunca JSON crudo — ` +
         `y pregunta a Luis si aprueba, rechaza (con motivo) o delega algo nuevo.`;
     } catch {
-      // hub fuera de línea: V sigue normal
+      // hub offline
     }
   }
   const finalSystemPrompt = systemPrompt + bridgeSection;
 
-  // Resolve the model cascade.
-  // 1. agent_config DB (V's self-config, migration 007) is the canonical
-  //    answer for chat-main. Luis (or V herself via agent_config_set)
-  //    chooses the model without a code deploy.
-  // 2. system_config.default_model is the legacy override, still respected
-  //    if someone updates it manually.
-  // 3. routeFor falls back to the registry default + cascade.
-  const dbConfiguredModel = await getModelForTask("chat-main").catch(
-    () => null,
-  );
-  // Motor de V (decisión de Luis): OpenRouter para optimizar costo, con
-  // Gemini como opción; Anthropic NO es su voz (solo último recurso si
-  // Luis lo aprueba). Respetamos agent_config/default_model tal cual y
-  // dejamos que el cascade haga su trabajo.
-  const configuredModel = dbConfiguredModel ?? config.default_model;
-  const isKnownSlug = !!MODELS[normalizeSlug(configuredModel)];
-  const routing = isKnownSlug
-    ? routeFor("chat-main", { forceSlug: normalizeSlug(configuredModel) })
-    : routeFor("chat-main");
-  const cascade = isKnownSlug
-    ? routing.cascade
-    : [configuredModel, ...routing.cascade];
+  const dbConfiguredModel = await getModelForTask("chat-main").catch(() => null);
+  const configuredModel =
+    dbConfiguredModel ?? config.default_model ?? engine.defaultChatModel;
+
+  // Con Cerebras: un solo modelo mapeado (sin cascade OpenRouter).
+  let cascade: string[];
+  if (engine.name === "cerebras") {
+    cascade = [modelForEngine(engine, configuredModel)];
+  } else {
+    const isKnownSlug = !!MODELS[normalizeSlug(configuredModel)];
+    const routing = isKnownSlug
+      ? routeFor("chat-main", { forceSlug: normalizeSlug(configuredModel) })
+      : routeFor("chat-main");
+    cascade = isKnownSlug
+      ? routing.cascade
+      : [configuredModel, ...routing.cascade];
+  }
+
+  const routing = routeFor("chat-main");
 
   const lastUserTurn = messages[messages.length - 1];
   if (lastUserTurn.role === "user") {
-    // Persist a textual representation of the user turn (image bytes
-    // are not stored in the conversations table — only the surrounding
-    // text plus an optional "[1 imagen adjunta]" marker so rehydration
-    // shows the user posted an image without re-fetching it).
     const textOnly = stringifyUserTurn(lastUserTurn.content);
     try {
       await sql`
@@ -231,20 +196,15 @@ export async function POST(req: Request) {
     } catch (e) {
       console.error("conversations insert failed (no tumba el chat):", e);
     }
-    // Memoria semántica del turno user (fire-and-forget).
     rememberTurn({ role: "user", content: textOnly, sessionId }).catch(
       () => undefined,
     );
   }
 
-  const openrouter = new OpenAI({
-    apiKey,
-    baseURL: OPENROUTER_BASE_URL,
-    defaultHeaders: {
-      "HTTP-Referer": "https://vforge.site",
-      "X-Title": "vForge",
-    },
-  });
+  const llm = engine.client;
+  if (!llm) {
+    // Solo Hetzner posible
+  }
 
   const openaiTools: ChatCompletionTool[] = TOOLS.map((t) => ({
     type: "function",
@@ -255,9 +215,6 @@ export async function POST(req: Request) {
     },
   }));
 
-  // Working copy of the conversation in OpenAI format. We rebuild from
-  // ChatTurn[] (which may have Anthropic-style image blocks from the FE)
-  // and accumulate assistant + tool turns across rounds.
   const conversationMessages: ChatCompletionMessageParam[] = [
     { role: "system", content: finalSystemPrompt },
     ...trimmedMessages.map(toOpenAIMessage),
@@ -267,7 +224,12 @@ export async function POST(req: Request) {
   let actualModel = cascade[0];
   let cascadeIdx = 0;
   const triedSlugs: string[] = [];
-  const fallbackEvents: Array<{ from: string; to: string; status: number | null; reason: string }> = [];
+  const fallbackEvents: Array<{
+    from: string;
+    to: string;
+    status: number | null;
+    reason: string;
+  }> = [];
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -281,17 +243,25 @@ export async function POST(req: Request) {
       let totalTokensIn = 0;
       let totalTokensOut = 0;
       let lastStopReason: string | null = null;
-      // El UI muestra discreto qué modelo responde: nunca más dudar quién escribe.
-      send({ type: "meta", model: actualModel });
-      // Si Luis activó una skill nombrándola, anunciarlo discreto: V la encarna.
+      send({
+        type: "meta",
+        model: actualModel,
+        engine: engine.name,
+        engineLabel: engine.label,
+      });
       if (activeSkill) {
-        send({ type: "skill_active", id: activeSkill.id, name: activeSkill.name });
+        send({
+          type: "skill_active",
+          id: activeSkill.id,
+          name: activeSkill.name,
+        });
       }
 
-      // MOTOR DE V: si la config apunta a un modelo Anthropic, vamos DIRECTO
-      // al relay de Hetzner (claude CLI, cuenta Max, sin API key) — doctrina
-      // cero ANTHROPIC_API_KEY. Config = realidad, cero churn.
-      if (configuredModel.startsWith("anthropic/")) {
+      // Solo relay Hetzner/Claude si NO hay Cerebras y el slug es anthropic/*
+      if (
+        engine.name !== "cerebras" &&
+        configuredModel.startsWith("anthropic/")
+      ) {
         try {
           const handled = await runViaHetznerRelay({
             systemPrompt,
@@ -306,33 +276,39 @@ export async function POST(req: Request) {
             return;
           }
         } catch (e) {
-          console.error("[V] Relay Hetzner (primario) falló, intento OpenRouter:", e);
+          console.error("[V] Relay Hetzner falló:", e);
         }
       }
-      // BUILDER (v0-sin-v0): cuando la tool `design_version` se ejecute en
-      // un round y devuelva {buildId, versionId, n, preview_url}, aquí se
-      // emitirá send({ type: "version", buildId, versionId, n, summary })
-      // justo después del tool_use_result correspondiente, para que el chat
-      // pinte la VersionCard inline. La lógica de modelo NO cambia: solo
-      // falta el cerebro con saldo para que Claude llame la tool.
+
+      if (!llm) {
+        send({
+          type: "error",
+          message:
+            "Cerebras no configurado. Define CEREBRAS_API_KEY (y opcional CEREBRAS_BASE_URL para tus GPUs).",
+        });
+        controller.close();
+        return;
+      }
 
       try {
         for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-          // Try the primary model and cascade through fallbacks on
-          // recoverable errors (402 = balance, 429 = rate limit,
-          // 5xx = provider down). Non-recoverable errors bubble.
           let completion: Awaited<
-            ReturnType<typeof openrouter.chat.completions.create>
+            ReturnType<typeof llm.chat.completions.create>
           > | null = null;
           while (true) {
             const currentSlug = cascade[cascadeIdx];
             if (!triedSlugs.includes(currentSlug)) triedSlugs.push(currentSlug);
             actualModel = currentSlug;
             try {
-              completion = await openrouter.chat.completions.create({
+              completion = await llm.chat.completions.create({
                 model: currentSlug,
                 messages: conversationMessages,
-                tools: openaiTools.length > 0 ? openaiTools : undefined,
+                tools:
+                  openaiTools.length > 0 && engine.name !== "cerebras"
+                    ? openaiTools
+                    : openaiTools.length > 0
+                      ? openaiTools
+                      : undefined,
                 max_tokens: 2048,
                 stream: true,
                 stream_options: { include_usage: true },
@@ -342,7 +318,7 @@ export async function POST(req: Request) {
               const status = errorStatus(err);
               const recoverable =
                 status === 402 ||
-                status === 404 || // modelo inexistente/deprecado en OpenRouter -> siguiente del cascade
+                status === 404 ||
                 status === 429 ||
                 (status !== null && status >= 500 && status <= 599);
               const hasNext = cascadeIdx + 1 < cascade.length;
@@ -350,7 +326,12 @@ export async function POST(req: Request) {
               const next = cascade[cascadeIdx + 1];
               const reason =
                 err instanceof Error ? err.message.slice(0, 180) : String(err);
-              fallbackEvents.push({ from: currentSlug, to: next, status, reason });
+              fallbackEvents.push({
+                from: currentSlug,
+                to: next,
+                status,
+                reason,
+              });
               send({ type: "meta", model: next, fallback: true });
               send({
                 type: "model_fallback",
@@ -366,16 +347,26 @@ export async function POST(req: Request) {
 
           let roundText = "";
           let roundFinish: string | null = null;
-          // Tool calls arrive in chunked deltas indexed by `index`; we
-          // accumulate name + arguments per index until the assistant
-          // message ends.
           const pendingToolCalls = new Map<
             number,
             { id?: string; name?: string; argsBuffer: string }
           >();
 
-          for await (const chunk of completion) {
-            // OpenAI emits an extra chunk with usage info at the end.
+          for await (const chunk of completion as AsyncIterable<{
+            usage?: { prompt_tokens?: number; completion_tokens?: number };
+            model?: string;
+            choices?: Array<{
+              delta?: {
+                content?: string | null;
+                tool_calls?: Array<{
+                  index: number;
+                  id?: string;
+                  function?: { name?: string; arguments?: string };
+                }>;
+              };
+              finish_reason?: string | null;
+            }>;
+          }>) {
             if (chunk.usage) {
               totalTokensIn += chunk.usage.prompt_tokens ?? 0;
               totalTokensOut += chunk.usage.completion_tokens ?? 0;
@@ -386,13 +377,18 @@ export async function POST(req: Request) {
             if (!choice) continue;
 
             const delta = choice.delta;
-            if (delta.content) {
-              roundText += delta.content;
-              assistantTextBuffer += delta.content;
-              send({ type: "text", value: delta.content });
+            if (delta?.content) {
+              const filtered = filterThinkingToken(delta.content, {
+                inThinking: false,
+              });
+              if (filtered) {
+                roundText += filtered;
+                assistantTextBuffer += filtered;
+                send({ type: "text", value: filtered });
+              }
             }
 
-            if (delta.tool_calls) {
+            if (delta?.tool_calls) {
               for (const tcDelta of delta.tool_calls) {
                 const idx = tcDelta.index;
                 let entry = pendingToolCalls.get(idx);
@@ -403,9 +399,6 @@ export async function POST(req: Request) {
                 if (tcDelta.id) entry.id = tcDelta.id;
                 if (tcDelta.function?.name) {
                   entry.name = tcDelta.function.name;
-                  // Surface the tool name to the UI as soon as we know it
-                  // (OpenRouter sends name in the first delta of the tool
-                  // call; arguments stream in subsequent deltas).
                   if (entry.id) {
                     send({
                       type: "tool_use_start",
@@ -427,8 +420,6 @@ export async function POST(req: Request) {
 
           lastStopReason = roundFinish;
 
-          // Materialize the assistant message we just streamed and
-          // append it to conversation history before executing tools.
           const toolCalls: ChatCompletionMessageFunctionToolCall[] = Array.from(
             pendingToolCalls.entries(),
           )
@@ -456,25 +447,23 @@ export async function POST(req: Request) {
             break;
           }
 
-          // Execute every tool call in parallel and append a `tool` role
-          // message per call. OpenAI / OpenRouter expects one tool
-          // message per tool_call_id, in the same order as the assistant
-          // tool_calls.
           await Promise.all(
             toolCalls.map(async (tc) => {
               let parsedInput: Record<string, unknown> = {};
               try {
                 parsedInput = tc.function.arguments
-                  ? (JSON.parse(tc.function.arguments) as Record<string, unknown>)
+                  ? (JSON.parse(tc.function.arguments) as Record<
+                      string,
+                      unknown
+                    >)
                   : {};
               } catch {
                 parsedInput = {};
               }
-              const result = await executeTool(
-                tc.function.name,
-                parsedInput,
-                { userId, sessionId },
-              );
+              const result = await executeTool(tc.function.name, parsedInput, {
+                userId,
+                sessionId,
+              });
               send({
                 type: "tool_use_result",
                 id: tc.id,
@@ -490,17 +479,12 @@ export async function POST(req: Request) {
           );
         }
 
-        // Extrae bloques <memory> emitidos por el modelo (datos durables
-        // del usuario) y guardalos en v_user_memory; no se muestran ni
-        // se persisten en la conversacion.
         const { cleaned: assistantVisible, memories: newMemories } =
           extractMemoryBlocks(assistantTextBuffer);
         for (const m of newMemories) {
           await saveUserMemory(memoryUserId, m.key, m.value);
         }
 
-        // Persist the final assistant text. Tool intermediate steps
-        // are not replayed on rehydrate; only the visible answer.
         await sql`
           INSERT INTO conversations (
             user_id, session_id, role, content, model,
@@ -514,7 +498,6 @@ export async function POST(req: Request) {
           )
         `;
 
-        // Memoria semántica de la respuesta (fire-and-forget).
         rememberTurn({
           role: "assistant",
           content: assistantVisible,
@@ -529,7 +512,7 @@ export async function POST(req: Request) {
               tokens_in: totalTokensIn,
               tokens_out: totalTokensOut,
               model: actualModel,
-              provider: "openrouter",
+              provider: engine.name,
               stop_reason: lastStopReason,
               cascade_tried: triedSlugs,
               fallbacks: fallbackEvents,
@@ -543,13 +526,10 @@ export async function POST(req: Request) {
           tokensIn: totalTokensIn,
           tokensOut: totalTokensOut,
           model: actualModel,
+          engine: engine.name,
         });
         controller.close();
       } catch (err) {
-        // Cascade OpenRouter agotado (o error irrecuperable). Doctrina:
-        // el motor de V es OpenRouter + Gemini; Anthropic directo es el
-        // ULTIMO recurso. Primero intentamos Gemini directo (key propia,
-        // no depende del saldo de OpenRouter).
         try {
           const handledGemini = await runGeminiDirect({
             systemPrompt,
@@ -599,11 +579,6 @@ export async function POST(req: Request) {
   });
 }
 
-/**
- * Vía de respaldo PREFERIDA: Gemini DIRECTO con la GEMINI_API_KEY del vault
- * (endpoint OpenAI-compatible de Google). Sin tools, robusto, no depende
- * del saldo de OpenRouter. Emite los mismos eventos SSE {meta|text|done}.
- */
 async function runGeminiDirect(args: {
   systemPrompt: string;
   turns: ChatTurn[];
@@ -675,21 +650,16 @@ async function runGeminiDirect(args: {
     console.error("conversations insert (gemini directo) failed:", e);
   }
 
-  rememberTurn({ role: "assistant", content: assistantVisible, sessionId }).catch(
-    () => undefined,
-  );
+  rememberTurn({
+    role: "assistant",
+    content: assistantVisible,
+    sessionId,
+  }).catch(() => undefined);
 
   send({ type: "done", tokensIn, tokensOut, model: MODEL_LABEL });
   return true;
 }
 
-/**
- * Motor de V SIN API key: habla con Claude vía el relay de Hetzner
- * (http://178.105.135.26/v/chat) que corre el `claude` CLI con la cuenta
- * Max de Luis. Doctrina: cero ANTHROPIC_API_KEY en el código. Devuelve
- * true si respondió; false si no hay secreto o el relay falla. Emite los
- * mismos eventos SSE {meta|text|done}.
- */
 async function runViaHetznerRelay(args: {
   systemPrompt: string;
   turns: ChatTurn[];
@@ -698,21 +668,23 @@ async function runViaHetznerRelay(args: {
   userId: string;
   memoryUserId: string;
 }): Promise<boolean> {
-  const { systemPrompt, turns, send, sessionId, userId, memoryUserId } = args;
-  const HETZNER_URL = process.env.HETZNER_V_URL || "http://178.105.135.26/v/chat";
+  const { turns, send, sessionId, userId, memoryUserId } = args;
+  const HETZNER_URL =
+    process.env.HETZNER_V_URL || "http://178.105.135.26/v/chat";
   const HETZNER_SECRET = process.env.HETZNER_SECRET || "";
   if (!HETZNER_SECRET) return false;
 
-  // Texto plano de un turno (string o bloques): el relay solo come texto.
   const textFromContent = (c: string | StructuredBlock[]): string =>
     typeof c === "string"
       ? c
       : c
-          .filter((b): b is Extract<StructuredBlock, { type: "text" }> => b.type === "text")
+          .filter(
+            (b): b is Extract<StructuredBlock, { type: "text" }> =>
+              b.type === "text",
+          )
           .map((b) => b.text)
           .join("\n");
 
-  // Extraer último mensaje de usuario y construir history.
   const lastTurn = turns[turns.length - 1];
   const userMessage = textFromContent(lastTurn.content);
   const history = turns.slice(0, -1).map((t) => ({
@@ -720,11 +692,10 @@ async function runViaHetznerRelay(args: {
     content: textFromContent(t.content),
   }));
 
-  const MODEL_LABEL = "anthropic/claude-sonnet-4-6";
+  const MODEL_LABEL = "hetzner-relay";
   send({ type: "meta", model: MODEL_LABEL });
 
   try {
-    // Llamada directa a /v/chat-full — respuesta JSON completa, sin SSE.
     const chatUrl = HETZNER_URL.endsWith("/v/chat-full")
       ? HETZNER_URL
       : HETZNER_URL.replace(/\/v\/chat.*/, "/v/chat-full");
@@ -746,14 +717,15 @@ async function runViaHetznerRelay(args: {
     const reply = vData.reply || "";
     if (!reply || reply.length < 3) return false;
 
-    // Extraer bloques <memory> ANTES de pintar: no se muestran ni viajan al UI.
     const { cleaned: assistantVisible, memories: newMemories } =
       extractMemoryBlocks(reply);
 
-    // Simular streaming: chunks pequeños con la clave `value` (lo que lee el FE).
     const chunkSize = 8;
     for (let i = 0; i < assistantVisible.length; i += chunkSize) {
-      send({ type: "text", value: assistantVisible.slice(i, i + chunkSize) });
+      send({
+        type: "text",
+        value: assistantVisible.slice(i, i + chunkSize),
+      });
     }
 
     for (const m of newMemories) {
@@ -788,13 +760,6 @@ async function runViaHetznerRelay(args: {
   }
 }
 
-
-/**
- * Convert a FE-supplied ChatTurn to OpenAI's ChatCompletionMessageParam.
- * The FE still sends Anthropic-style image blocks
- * ({type:"image", source:{type:"base64", media_type, data}}) so we
- * remap them to OpenAI's image_url data-URI format here.
- */
 function toOpenAIMessage(turn: ChatTurn): ChatCompletionMessageParam {
   if (typeof turn.content === "string") {
     return { role: turn.role, content: turn.content };
@@ -803,13 +768,12 @@ function toOpenAIMessage(turn: ChatTurn): ChatCompletionMessageParam {
     if (b.type === "text") return { type: "text", text: b.text };
     return {
       type: "image_url",
-      image_url: { url: `data:${b.source.media_type};base64,${b.source.data}` },
+      image_url: {
+        url: `data:${b.source.media_type};base64,${b.source.data}`,
+      },
     };
   });
   if (turn.role === "assistant") {
-    // OpenAI assistant content doesn't support image parts; flatten to
-    // text-only. Images in assistant turns shouldn't happen in our flow
-    // (FE only attaches them to user turns) but we degrade gracefully.
     const textOnly = parts
       .filter((p): p is { type: "text"; text: string } => p.type === "text")
       .map((p) => p.text)
@@ -819,11 +783,6 @@ function toOpenAIMessage(turn: ChatTurn): ChatCompletionMessageParam {
   return { role: "user", content: parts };
 }
 
-/**
- * Reduce a user turn's content (string or block array) to a single
- * string for persistence. Images are summarized as "[N imagen(es)]"
- * since we don't store image bytes in the conversations table.
- */
 function stringifyUserTurn(content: string | StructuredBlock[]): string {
   if (typeof content === "string") return content;
   let imageCount = 0;
@@ -846,11 +805,6 @@ function jsonError(message: string, status: number): Response {
   });
 }
 
-/**
- * Best-effort extraction of HTTP status from an OpenAI SDK error.
- * The SDK throws `APIError` subclasses with a `status` field; for any
- * other error shape we try to parse the typical "402 ..." prefix.
- */
 function errorStatus(err: unknown): number | null {
   if (err && typeof err === "object" && "status" in err) {
     const s = (err as { status: unknown }).status;
