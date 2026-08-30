@@ -17,6 +17,10 @@ interface AssistantMessage {
   role: "user" | "assistant";
   content: string;
   created_at: string;
+  provider?: string | null;
+  model?: string | null;
+  status?: string | null;
+  duration_ms?: number | null;
 }
 
 interface Repository {
@@ -47,6 +51,7 @@ export function VConversationPanel({
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [systemNotice, setSystemNotice] = useState<string | null>(null);
   const pollingRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -118,10 +123,18 @@ export function VConversationPanel({
       const payload = (await response.json().catch(() => null)) as {
         messages?: AssistantMessage[];
         error?: string;
+        systemNotice?: string | null;
       } | null;
-      if (!response.ok)
-        throw new Error(payload?.error || "V no pudo responder.");
+      if (!response.ok) {
+        setSystemNotice(payload?.systemNotice || null);
+        throw new Error(
+          payload?.error === "provider_unavailable"
+            ? "V no tiene un proveedor disponible en este momento."
+            : payload?.error || "V no pudo responder.",
+        );
+      }
       setMessages(Array.isArray(payload?.messages) ? payload.messages : []);
+      setSystemNotice(payload?.systemNotice || null);
       setMessage("");
     } catch (caught) {
       setError(
@@ -174,7 +187,7 @@ export function VConversationPanel({
               <article
                 key={item.id}
                 className={cn(
-                  "max-w-[86%] rounded-[12px] px-4 py-3 text-[12px] leading-5",
+                  "min-w-[96px] max-w-[86%] break-words rounded-[12px] px-4 py-3 text-[12px] leading-5 [overflow-wrap:anywhere]",
                   item.role === "user"
                     ? "ml-auto bg-black text-white"
                     : "mr-auto border border-[var(--border-1)] bg-white text-black",
@@ -183,7 +196,7 @@ export function VConversationPanel({
                 <p className="mb-1 font-mono text-[8px] uppercase tracking-[0.1em] opacity-55">
                   {item.role === "user" ? "Tú" : "V"}
                 </p>
-                <p className="whitespace-pre-wrap">{item.content}</p>
+                <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{item.content}</p>
               </article>
             ))}
             {busy ? (
@@ -215,6 +228,12 @@ export function VConversationPanel({
         )}
       </div>
 
+      {systemNotice ? (
+        <p className="shrink-0 px-3 py-1.5 text-center text-[9px] text-[var(--fg-muted)]">
+          {systemNotice}
+        </p>
+      ) : null}
+
       {error ? (
         <p className="shrink-0 border-t border-[var(--border-1)] px-3 py-2 text-[10px] text-[var(--color-danger)]">
           {error}
@@ -236,7 +255,7 @@ export function VConversationPanel({
       {canWrite ? (
         <form
           onSubmit={send}
-          className="shrink-0 border-t border-[var(--border-1)] bg-white p-3"
+          className="shrink-0 bg-white p-3"
         >
           <div className="mx-auto flex max-w-4xl items-end gap-2">
             <textarea

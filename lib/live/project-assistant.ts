@@ -11,6 +11,10 @@ export interface ProjectAssistantMessage {
   created_by_email: string;
   content: string;
   created_at: string;
+  provider: string | null;
+  model: string | null;
+  status: string | null;
+  duration_ms: number | null;
 }
 
 export async function ensureProjectAssistantTable(): Promise<void> {
@@ -26,6 +30,10 @@ export async function ensureProjectAssistantTable(): Promise<void> {
       created_at timestamptz NOT NULL DEFAULT now()
     )`,
   );
+  await queryOne(`ALTER TABLE project_v_messages ADD COLUMN IF NOT EXISTS provider text`);
+  await queryOne(`ALTER TABLE project_v_messages ADD COLUMN IF NOT EXISTS model text`);
+  await queryOne(`ALTER TABLE project_v_messages ADD COLUMN IF NOT EXISTS status text`);
+  await queryOne(`ALTER TABLE project_v_messages ADD COLUMN IF NOT EXISTS duration_ms integer`);
   await queryOne(
     `CREATE INDEX IF NOT EXISTS idx_project_v_messages_thread
        ON project_v_messages (project_id, mode, created_at DESC)`,
@@ -37,9 +45,9 @@ export async function listProjectAssistantMessages(
 ): Promise<ProjectAssistantMessage[]> {
   await ensureProjectAssistantTable();
   return queryAll<ProjectAssistantMessage>(
-    `SELECT id::text, mode, role, created_by_email, content, created_at
+    `SELECT id::text, mode, role, created_by_email, content, created_at, provider, model, status, duration_ms
        FROM (
-         SELECT id, mode, role, created_by_email, content, created_at
+         SELECT id, mode, role, created_by_email, content, created_at, provider, model, status, duration_ms
            FROM project_v_messages
           WHERE project_id = $1
           ORDER BY created_at DESC, id DESC
@@ -77,14 +85,18 @@ export async function saveProjectAssistantTurn(args: {
   email: string;
   userText: string;
   assistantText: string;
+  provider: string;
+  model: string;
+  status: string;
+  durationMs: number;
 }): Promise<void> {
   await ensureProjectAssistantTable();
   await queryOne(
     `INSERT INTO project_v_messages
-      (project_id, mode, role, created_by_user_id, created_by_email, content)
+      (project_id, mode, role, created_by_user_id, created_by_email, content, provider, model, status, duration_ms)
      VALUES
-      ($1, $2, 'user', $3, $4, $5),
-      ($1, $2, 'assistant', $3, $4, $6)`,
+      ($1, $2, 'user', $3, $4, $5, NULL, NULL, NULL, NULL),
+      ($1, $2, 'assistant', $3, $4, $6, $7, $8, $9, $10)`,
     [
       args.projectId,
       args.mode,
@@ -92,6 +104,10 @@ export async function saveProjectAssistantTurn(args: {
       args.email,
       args.userText,
       args.assistantText,
+      args.provider,
+      args.model,
+      args.status,
+      args.durationMs,
     ],
   );
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { textBrain } from "@/lib/forge/v-brain";
+import { askV, ProviderUnavailable } from "@/lib/forge/v-router";
 import {
   authorizeAgentRunAccess,
   selectAgentRepository,
@@ -80,8 +80,13 @@ REPOSITORIO AUTORIZADO: ${repoContext}
 
 MENSAJE DEL USUARIO:
 ${message}`;
-    const reply = await textBrain(prompt, history);
-    if (!reply.trim()) throw new Error("V no devolvió una respuesta.");
+    const result = await askV({
+      mode,
+      projectId,
+      repository: repository?.repo_full_name || null,
+      message: prompt,
+      history,
+    });
 
     await saveProjectAssistantTurn({
       projectId,
@@ -89,17 +94,39 @@ ${message}`;
       userId: access.identity.userId,
       email: access.identity.email,
       userText: message,
-      assistantText: reply.slice(0, 12000),
+      assistantText: result.text.slice(0, 12000),
+      provider: result.provider,
+      model: result.model,
+      status: result.status,
+      durationMs: result.durationMs,
     });
     const messages = await listProjectAssistantMessages(projectId);
-    return json({ messages, reply });
+    return json({
+      messages,
+      reply: result.text,
+      provider: result.provider,
+      model: result.model,
+      status: result.status,
+      durationMs: result.durationMs,
+      systemNotice: result.systemNotice || null,
+    });
   } catch (caught) {
     const detail = caught instanceof Error ? caught.message : String(caught);
     console.error("[project assistant] response failed", {
       projectId,
       mode,
       detail,
+      providerUnavailable: caught instanceof ProviderUnavailable,
     });
+    if (caught instanceof ProviderUnavailable) {
+      return json(
+        {
+          error: "provider_unavailable",
+          systemNotice: "Los proveedores de V no están disponibles en este momento.",
+        },
+        503,
+      );
+    }
     return json({ error: "V no pudo responder en este momento." }, 502);
   }
 }
