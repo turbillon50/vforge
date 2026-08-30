@@ -116,9 +116,13 @@ export function EnablePush({ compact = false }: { compact?: boolean }) {
         type="button"
         onClick={() => void subscribe()}
         disabled={status === "loading"}
-        className="btn-primary !min-h-10 w-full justify-center text-[13px] disabled:opacity-50"
+        className={
+          compact
+            ? "btn-primary !min-h-8 w-auto shrink-0 justify-center px-3 text-[10px] disabled:opacity-50"
+            : "btn-primary !min-h-10 w-full justify-center text-[13px] disabled:opacity-50"
+        }
       >
-        {status === "loading" ? "Activando…" : "Activar avisos push"}
+        {status === "loading" ? "Activando…" : compact ? "Activar" : "Activar avisos push"}
       </button>
       {message ? <p className="mt-1 text-[11px] text-[var(--fg-muted)]">{message}</p> : null}
       {status === "no_vapid" ? (
