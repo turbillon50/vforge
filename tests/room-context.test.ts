@@ -74,3 +74,17 @@ test("talk and plan must read the room", () => {
   assert.match(modeSystemRules("talk"), /observaciones/);
   assert.match(modeSystemRules("plan"), /observaciones/);
 });
+
+test("room brief includes WhatsApp conversation text", () => {
+  const brief = formatRoomContext({
+    projectId: "netmas-distribuidores",
+    archives: [
+      {
+        filename: "Chat de WhatsApp.zip",
+        text: "[10:00] Cliente: Quiero el paquete NET+",
+      },
+    ],
+  });
+  assert.match(brief, /CONVERSACIONES CARGADAS/);
+  assert.match(brief, /paquete NET\+/);
+});

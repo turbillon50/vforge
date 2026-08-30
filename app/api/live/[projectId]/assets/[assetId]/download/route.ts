@@ -5,6 +5,7 @@ import {
   getCurrentVForgeIdentity,
   projectAssetApiPath,
 } from "@/lib/api/vforge-owned";
+import { queryOne } from "@/lib/db/client";
 import { isSafeProjectBlobPath, safeArchiveName } from "@/lib/live/review-context";
 
 export const runtime = "nodejs";
@@ -19,6 +20,25 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
     if (!upstream.ok) return NextResponse.json({ error: "not_found" }, { status: upstream.status });
     const payload = (await upstream.json()) as { asset?: { filename?: string; blob_pathname?: string } };
     const pathname = payload.asset?.blob_pathname;
+    const filename = safeArchiveName(payload.asset?.filename || "conversacion.zip");
+    if (pathname?.includes("/inline-")) {
+      const row = await queryOne<{ extracted_text: string }>(
+        `SELECT extracted_text
+           FROM project_context_assets
+          WHERE id = $1 AND project_id = $2
+          LIMIT 1`,
+        [assetId, projectId],
+      );
+      if (!row?.extracted_text) return NextResponse.json({ error: "not_found" }, { status: 404 });
+      return new Response(row.extracted_text, {
+        headers: {
+          "Cache-Control": "private, no-store",
+          "Content-Type": "text/plain; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${filename.replace(/\.zip$/i, ".txt")}"`,
+          "X-Content-Type-Options": "nosniff",
+        },
+      });
+    }
     if (!pathname || !isSafeProjectBlobPath(projectId, pathname)) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
@@ -30,7 +50,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
       headers: {
         "Cache-Control": "private, no-store",
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="${safeArchiveName(payload.asset?.filename || "conversacion.zip")}"`,
+        "Content-Disposition": `attachment; filename="${filename}"`,
         "X-Content-Type-Options": "nosniff",
       },
     });

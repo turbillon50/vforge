@@ -1,8 +1,8 @@
 "use client";
 
-import { put } from "@vercel/blob/client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { extractArchiveText } from "@/lib/live/archive-text";
 import {
   IconCheck,
   IconCode,
@@ -158,41 +158,30 @@ export function ProjectContextPanel({
       setError("Selecciona un ZIP de WhatsApp de hasta 50 MB.");
       return;
     }
-    const contentType = "application/zip";
     setBusy(true);
-    setProgress(0);
-    setNotice(null);
+    setProgress(1);
+    setNotice("Leyendo el ZIP en tu dispositivo…");
     setError(null);
     try {
-      const tokenResponse = await fetch(`/api/live/${encodedProjectId}/assets/token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, contentType, size: file.size }),
+      const bytes = await readFileBytes(file, (loaded) => {
+        setProgress(Math.max(1, Math.round((loaded / file.size) * 55)));
       });
-      const tokenPayload = (await tokenResponse.json().catch(() => null)) as
-        | { pathname?: string; clientToken?: string; error?: string }
-        | null;
-      if (!tokenResponse.ok || !tokenPayload?.pathname || !tokenPayload?.clientToken) {
-        throw new Error(
-          tokenPayload?.error === "storage_unavailable"
-            ? "El almacén de archivos no está disponible."
-            : "Ese archivo no se aceptó como ZIP.",
-        );
+      setProgress(60);
+      setNotice("Extrayendo el texto del chat…");
+      const extractedText = extractArchiveText(bytes);
+      if (!extractedText.trim()) {
+        throw new Error("No encontré _chat.txt. Exporta el chat de WhatsApp; las fotos se ignoran.");
       }
-      const blob = await put(tokenPayload.pathname, file, {
-        access: "private",
-        token: tokenPayload.clientToken,
-        contentType,
-        multipart: file.size > 4 * 1024 * 1024,
-        onUploadProgress: ({ percentage }) => setProgress(Math.round(percentage)),
-      });
+      const text = extractedText.slice(0, 1_800_000);
+      setProgress(78);
+      setNotice("Guardando la conversación…");
       const finalize = await fetch(`/api/live/${encodedProjectId}/assets`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           filename: file.name,
-          blobPathname: blob.pathname,
-          contentType,
+          extractedText: text,
+          contentType: "application/zip",
           size: file.size,
         }),
       });
@@ -200,13 +189,14 @@ export function ProjectContextPanel({
         | { notice?: string; error?: string }
         | null;
       if (!finalize.ok) {
-        throw new Error(done?.notice || "No se pudo procesar el ZIP.");
+        throw new Error(done?.notice || "No se pudo guardar la conversación.");
       }
-      setNotice("Conversación cargada. V ya puede leer el texto del chat.");
+      setProgress(100);
+      setNotice("Conversación cargada. V ya puede leer el chat.");
       if (inputRef.current) inputRef.current.value = "";
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "No se pudo cargar o procesar el ZIP.");
+      setError(caught instanceof Error ? caught.message : "No se pudo leer el ZIP.");
     } finally {
       setBusy(false);
       setProgress(null);
@@ -350,7 +340,7 @@ export function ProjectContextPanel({
               >
                 <button type="button" onClick={() => inputRef.current?.click()} disabled={busy} className="btn-primary w-full disabled:opacity-40">
                   {busy ? <IconLoader size={12} className="animate-spin" /> : <IconUpload size={12} />}
-                  {progress == null ? "Subir ZIP de WhatsApp" : `Subiendo ${progress}%`}
+                  {progress == null ? "Subir ZIP de WhatsApp" : `${progress}%`}
                 </button>
                 <p className="mt-2 text-center font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
                   o suéltalo aquí
@@ -378,4 +368,22 @@ export function ProjectContextPanel({
       {error ? <p className="mt-2 text-[10px] text-black">{error}</p> : null}
     </section>
   );
+}
+
+function readFileBytes(file: File, onProgress: (loaded: number) => void): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onprogress = (event) => {
+      if (event.lengthComputable) onProgress(event.loaded);
+    };
+    reader.onload = () => {
+      if (reader.result instanceof ArrayBuffer) {
+        resolve(new Uint8Array(reader.result));
+        return;
+      }
+      reject(new Error("No se pudo leer el ZIP."));
+    };
+    reader.onerror = () => reject(new Error("No se pudo leer el ZIP."));
+    reader.readAsArrayBuffer(file);
+  });
 }
