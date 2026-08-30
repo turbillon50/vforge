@@ -30,6 +30,14 @@ interface ContextPayload {
     last_audit_at: string | null;
   };
   integrations: Array<{ kind: string; label: string; status: string }>;
+  repositories: Array<{
+    repo_full_name: string;
+    role: string;
+    is_primary: boolean;
+    default_branch: string | null;
+    language: string | null;
+    html_url: string | null;
+  }>;
   document: { content: string; updated_by: string | null; updated_at: string | null };
   assets: Array<{
     id: string;
@@ -246,11 +254,28 @@ export function ProjectContextPanel({
               <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">Código y publicación</p>
               <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[10px]">
                 <dt className="text-[var(--fg-muted)]">Estado</dt><dd className="truncate text-right">{data.project.status}</dd>
-                <dt className="text-[var(--fg-muted)]">Repositorio</dt><dd className="truncate text-right">{data.project.github_repo || "Sin enlazar"}</dd>
+                <dt className="text-[var(--fg-muted)]">Repositorio principal</dt><dd className="truncate text-right">{data.project.github_repo || "Sin enlazar"}</dd>
                 <dt className="text-[var(--fg-muted)]">Rama</dt><dd className="truncate text-right">{data.project.github_default_branch || "—"}</dd>
                 <dt className="text-[var(--fg-muted)]">Vercel</dt><dd className="truncate text-right">{data.project.domain || data.project.vercel_url || "Sin publicar"}</dd>
                 <dt className="text-[var(--fg-muted)]">Auditoría</dt><dd className="truncate text-right">{data.project.last_audit_score ?? "—"}</dd>
               </dl>
+              {data.repositories?.length ? (
+                <div className="mt-3 border-t border-[var(--border-1)] pt-2">
+                  <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+                    Grupo · {data.repositories.length} repositorios
+                  </p>
+                  <div className="mt-2 space-y-1.5">
+                    {data.repositories.map((repository) => (
+                      <div key={repository.repo_full_name} className="flex items-center justify-between gap-3 text-[9px]">
+                        <span className="truncate">{repository.repo_full_name}</span>
+                        <span className="shrink-0 font-mono text-[7px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
+                          {repository.role}{repository.is_primary ? " · principal" : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
             <div className="rounded-md border border-[var(--border-1)] p-3">
               <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">Integraciones reales</p>
