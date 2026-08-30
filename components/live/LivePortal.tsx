@@ -273,7 +273,7 @@ export function LivePortal({
             >
               <IconX size={12} />
             </button>
-            <InvitePanel projectId={project.id} compact />
+            <InvitePanel projectId={project.id} projectName={project.name} compact />
           </aside>
         </div>
       ) : null}

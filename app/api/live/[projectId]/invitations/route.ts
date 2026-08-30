@@ -6,7 +6,8 @@
  * 404 (no revela existencia).
  *
  *   GET  → lista invitaciones (sin token ni hash).
- *   POST → crea una invitación segura. Body { email, role?, ttlHours? }.
+ *   POST → crea una invitación. Body { email?, role?, ttlHours? }.
+ *          Sin correo = enlace abierto (WhatsApp). Con correo = un solo uso.
  *          Devuelve el token en claro UNA sola vez + el link de aceptación.
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -59,8 +60,12 @@ export async function POST(
   }
   const { email, role, ttlHours } = body as Record<string, unknown>;
 
-  if (typeof email !== "string" || !EMAIL_RE.test(email.trim()) || email.length > 254) {
-    return NextResponse.json({ error: "invalid_email" }, { status: 400, headers: noStore });
+  let cleanEmail: string | null = null;
+  if (typeof email === "string" && email.trim()) {
+    if (!EMAIL_RE.test(email.trim()) || email.length > 254) {
+      return NextResponse.json({ error: "invalid_email" }, { status: 400, headers: noStore });
+    }
+    cleanEmail = email.trim();
   }
   // Solo se puede invitar como observer o reviewer. `owner` (u cualquier valor
   // inválido) se RECHAZA con 400 — nunca se degrada silenciosamente. Ausente ⇒
@@ -79,7 +84,7 @@ export async function POST(
   try {
     const { invitation, token } = await createInvitation({
       projectId,
-      email: email.trim(),
+      email: cleanEmail,
       role: cleanRole,
       invitedBy: access.email,
       ttlHours: cleanTtl,

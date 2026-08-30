@@ -93,6 +93,21 @@ test("checkInvitation: happy path", () => {
   assert.deepEqual(r, { ok: true, role: "reviewer" });
 });
 
+test("checkInvitation: open WhatsApp link binds to whoever registers", () => {
+  const r = checkInvitation(
+    { role: "observer", email: "*", expires_at: future, accepted_at: null },
+    "nuevo@cliente.com",
+    NOW,
+  );
+  assert.deepEqual(r, { ok: true, role: "observer" });
+  const stillOpen = checkInvitation(
+    { role: "observer", email: "*", expires_at: future, accepted_at: future },
+    "otro@cliente.com",
+    NOW,
+  );
+  assert.deepEqual(stillOpen, { ok: true, role: "observer" });
+});
+
 test("checkInvitation: email mismatch", () => {
   const r = checkInvitation(
     { role: "reviewer", email: "a@test.com", expires_at: future, accepted_at: null },

@@ -95,6 +95,13 @@ export interface InvitationRow {
   revoked_at?: string | Date | null;
 }
 
+export const OPEN_INVITE_EMAIL = "*";
+
+export function isOpenInviteEmail(email: string | null | undefined): boolean {
+  const value = (email ?? "").trim().toLowerCase();
+  return value === OPEN_INVITE_EMAIL || value === "open";
+}
+
 export type InvitationCheck =
   | { ok: true; role: LiveRole }
   | { ok: false; reason: "expired" | "used" | "revoked" | "email_mismatch" | "invalid" };
@@ -110,7 +117,8 @@ export function checkInvitation(
 ): InvitationCheck {
   if (!row || !isLiveRole(row.role)) return { ok: false, reason: "invalid" };
   if (row.revoked_at != null) return { ok: false, reason: "revoked" };
-  if (row.accepted_at != null) return { ok: false, reason: "used" };
+  const open = isOpenInviteEmail(row.email);
+  if (row.accepted_at != null && !open) return { ok: false, reason: "used" };
 
   const exp = row.expires_at instanceof Date
     ? row.expires_at
@@ -119,10 +127,13 @@ export function checkInvitation(
     return { ok: false, reason: "expired" };
   }
 
-  const invited = (row.email ?? "").trim().toLowerCase();
   const session = (sessionEmail ?? "").trim().toLowerCase();
-  if (!invited || !session || invited !== session) {
-    return { ok: false, reason: "email_mismatch" };
+  if (!session) return { ok: false, reason: "invalid" };
+  if (!open) {
+    const invited = (row.email ?? "").trim().toLowerCase();
+    if (!invited || invited !== session) {
+      return { ok: false, reason: "email_mismatch" };
+    }
   }
 
   return { ok: true, role: row.role };

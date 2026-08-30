@@ -9,6 +9,7 @@ import {
   IconUsers,
 } from "@/components/brand/VFIcons";
 import type { LiveRole } from "@/lib/projects/roles";
+import { isOpenInviteEmail } from "@/lib/projects/roles";
 
 interface Invitation {
   id: string;
@@ -35,16 +36,27 @@ const ROLES: { value: LiveRole; label: string; description: string }[] = [
 
 function invitationState(invitation: Invitation) {
   if (invitation.revoked_at) return "Revocada";
-  if (invitation.accepted_at) return "Aceptada";
+  if (invitation.accepted_at && !isOpenInviteEmail(invitation.email)) return "Aceptada";
   if (new Date(invitation.expires_at).getTime() <= Date.now()) return "Expirada";
-  return "Pendiente";
+  return isOpenInviteEmail(invitation.email) ? "Activo" : "Pendiente";
+}
+
+function invitationLabel(invitation: Invitation) {
+  return isOpenInviteEmail(invitation.email) ? "Enlace WhatsApp" : invitation.email;
+}
+
+function whatsappShareUrl(link: string, projectName: string) {
+  const text = `Te invito a la sala de ${projectName} en VForge. Entra y, si no tienes cuenta, regístrate:\n${link}`;
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
 
 export function InvitePanel({
   projectId,
+  projectName = "este proyecto",
   compact = false,
 }: {
   projectId: string;
+  projectName?: string;
   compact?: boolean;
 }) {
   const encodedProjectId = encodeURIComponent(projectId);
@@ -85,9 +97,10 @@ export function InvitePanel({
     void load();
   }, [load]);
 
-  async function createInvitation() {
+  async function createInvitation(openLink: boolean) {
+    if (busy) return;
     const trimmedEmail = email.trim();
-    if (!trimmedEmail || busy) return;
+    if (!openLink && !trimmedEmail) return;
     setBusy(true);
     setError(null);
     setLastLink(null);
@@ -97,7 +110,10 @@ export function InvitePanel({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: trimmedEmail, role }),
+          body: JSON.stringify({
+            role,
+            ...(openLink ? {} : { email: trimmedEmail }),
+          }),
         },
       );
       const payload = (await response.json().catch(() => ({}))) as {
@@ -107,7 +123,7 @@ export function InvitePanel({
         setError("No se pudo crear la invitación.");
         return;
       }
-      setEmail("");
+      if (!openLink) setEmail("");
       setLastLink(payload.acceptUrl ?? null);
       await load();
     } catch {
@@ -138,7 +154,7 @@ export function InvitePanel({
           <div>
             <h2 className="text-[12px] font-medium">Invitar al proyecto</h2>
             <p className="mt-0.5 text-[10px] text-[var(--fg-muted)]">
-              El enlace se muestra una sola vez y respeta el alcance elegido.
+              Enlace para WhatsApp, sin correo. Al entrar se registran.
             </p>
           </div>
         </div>
@@ -147,18 +163,7 @@ export function InvitePanel({
         </span>
       </header>
 
-      <div className={compact ? "grid gap-3 px-4 py-4" : "grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_190px_auto] lg:items-start"}>
-        <label>
-          <span className="mono-label">Correo del invitado</span>
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="cliente@empresa.com"
-            className="input-base mt-2"
-          />
-        </label>
-
+      <div className="grid gap-3 px-4 py-4">
         <label>
           <span className="mono-label">Alcance</span>
           <select
@@ -179,12 +184,32 @@ export function InvitePanel({
 
         <button
           type="button"
-          onClick={() => void createInvitation()}
-          disabled={busy || !email.trim()}
-          className={compact ? "btn-primary w-full disabled:opacity-40" : "btn-primary mt-[26px] disabled:opacity-40"}
+          onClick={() => void createInvitation(true)}
+          disabled={busy}
+          className="btn-primary w-full disabled:opacity-40"
         >
           {busy ? <IconLoader size={13} className="animate-spin" /> : <IconPlus size={13} />}
-          Crear invitación
+          Enlace para WhatsApp
+        </button>
+
+        <label>
+          <span className="mono-label">O un correo (un solo uso)</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="cliente@empresa.com"
+            className="input-base mt-2"
+          />
+        </label>
+
+        <button
+          type="button"
+          onClick={() => void createInvitation(false)}
+          disabled={busy || !email.trim()}
+          className="btn-ghost w-full disabled:opacity-40"
+        >
+          Invitar por correo
         </button>
       </div>
 
@@ -193,10 +218,20 @@ export function InvitePanel({
           <code className="min-w-0 flex-1 break-all font-mono text-[9px]">
             {lastLink}
           </code>
-          <button type="button" onClick={() => void copyLink()} className="btn-ghost shrink-0">
-            {copied ? <IconCheck size={12} /> : <IconCopy size={12} />}
-            {copied ? "Copiado" : "Copiar enlace"}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => void copyLink()} className="btn-ghost shrink-0">
+              {copied ? <IconCheck size={12} /> : <IconCopy size={12} />}
+              {copied ? "Copiado" : "Copiar"}
+            </button>
+            <a
+              href={whatsappShareUrl(lastLink, projectName)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary"
+            >
+              Abrir WhatsApp
+            </a>
+          </div>
         </div>
       ) : null}
 
@@ -227,14 +262,14 @@ export function InvitePanel({
                 key={invitation.id}
                 className={compact ? "grid grid-cols-[minmax(0,1fr)_70px_72px] items-center px-4 py-3 text-[10px]" : "grid grid-cols-[minmax(0,1fr)_90px_90px] items-center px-4 py-3 text-[10px]"}
               >
-                <span className="truncate">{invitation.email}</span>
+                <span className="truncate">{invitationLabel(invitation)}</span>
                 <span className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
                   {ROLE_LABEL(invitation.role)}
                 </span>
                 <span className="flex items-center justify-end gap-1.5 font-mono text-[8px] uppercase tracking-[0.08em]">
                   <span
                     className="status-shape"
-                    data-active={invitationState(invitation) === "Aceptada"}
+                    data-active={invitationState(invitation) === "Aceptada" || invitationState(invitation) === "Activo"}
                   />
                   {invitationState(invitation)}
                 </span>
