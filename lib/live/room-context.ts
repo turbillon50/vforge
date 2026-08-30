@@ -25,6 +25,12 @@ export interface RoomProjectInfo {
   status?: string | null;
 }
 
+export interface RoomRepository {
+  repo_full_name: string;
+  role?: string | null;
+  is_primary?: boolean;
+}
+
 export interface RoomContextInput {
   projectId: string;
   project?: RoomProjectInfo | null;
@@ -32,6 +38,8 @@ export interface RoomContextInput {
   references?: RoomReference[];
   document?: string | null;
   assets?: Array<{ filename: string }>;
+  repositories?: RoomRepository[];
+  decisions?: string | null;
 }
 
 export function isSystemComment(comment: RoomComment): boolean {
@@ -55,7 +63,8 @@ function formatAnchor(raw: unknown): string {
   const anchor: ReviewAnchor | null = parseReviewAnchor(raw);
   if (!anchor) return "";
   const pct = `${Math.round(anchor.x * 100)}%, ${Math.round(anchor.y * 100)}%`;
-  return ` [${anchor.viewport} · ${anchor.label} · ${pct} · ${anchor.url}]`;
+  const selector = anchor.selector ? ` · ${anchor.selector}` : "";
+  return ` [${anchor.viewport} · ${anchor.label} · ${pct} · ${anchor.url}${selector}]`;
 }
 
 export function formatRoomContext(input: RoomContextInput): string {
@@ -77,6 +86,23 @@ export function formatRoomContext(input: RoomContextInput): string {
     project.github_url ? `github ${project.github_url}` : null,
   ].filter(Boolean);
   if (urls.length) lines.push(`URLS DEL PROYECTO: ${urls.join(" · ")}`);
+
+  const repositories = (input.repositories ?? [])
+    .filter((repo) => repo.repo_full_name?.trim())
+    .slice(0, 12);
+  if (repositories.length) {
+    lines.push("GRUPO MULTIRREPOSITORIO:");
+    for (const repo of repositories) {
+      const role = repo.role?.trim() || "app";
+      const primary = repo.is_primary ? " · principal" : "";
+      lines.push(`- [${role}] ${repo.repo_full_name}${primary}`);
+    }
+  }
+
+  if (input.decisions?.trim()) {
+    lines.push("");
+    lines.push(input.decisions.trim());
+  }
 
   const observations = (input.comments ?? [])
     .filter((comment) => comment.body?.trim() && !isSystemComment(comment))

@@ -6,6 +6,7 @@ import {
   type AgentRunRow,
 } from "@/lib/live/agent-runs";
 import { parseRepoFullName, withUserGithub } from "@/lib/live/github-user";
+import { recordProjectDecision } from "@/lib/live/load-project-memory";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -88,6 +89,13 @@ export async function PATCH(
           WHERE id = $3 RETURNING *`,
         [pull.number, pull.html_url, runId],
       );
+      await recordProjectDecision({
+        projectId,
+        kind: "approved",
+        summary: `Aprobado ${run.work_branch} → PR ${pull.html_url}`,
+        sourceId: runId,
+        email: access.identity.email,
+      }).catch(() => null);
       return json({ run: updated });
     } catch (caught) {
       return json(
@@ -143,6 +151,13 @@ export async function PATCH(
           }),
         ],
       ).catch(() => null);
+      await recordProjectDecision({
+        projectId,
+        kind: "published",
+        summary: `Publicado ${run.work_branch}`,
+        sourceId: runId,
+        email: access.identity.email,
+      }).catch(() => null);
       return json({ run: updated, merged: true });
     } catch (caught) {
       return json(

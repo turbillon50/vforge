@@ -7,6 +7,7 @@ import {
   selectAgentRepository,
 } from "@/lib/live/agent-runs";
 import { loadRoomContextBrief } from "@/lib/live/load-room-context";
+import { recordCerebrasPulse, todayCerebrasUsage } from "@/lib/forge/cerebras-pulse";
 import {
   listProjectAssistantMessages,
   projectAssistantHistory,
@@ -34,10 +35,16 @@ export async function GET(
 
   try {
     const messages = await listProjectAssistantMessages(projectId);
+    const usage = await todayCerebrasUsage().catch(() => null);
     return json({
       messages,
       canWrite: access.canWrite,
       repositories: access.repositories,
+      translator: {
+        provider: "cerebras",
+        model: ROOM_CEREBRAS_MODEL,
+        today: usage,
+      },
     });
   } catch (caught) {
     console.error("[project assistant] read failed", caught);
@@ -100,6 +107,14 @@ export async function POST(
       status: result.status,
       durationMs: result.durationMs,
     });
+    await recordCerebrasPulse({
+      projectId,
+      ok: true,
+      cause: result.status,
+      durationMs: result.durationMs,
+      usage: result.usage,
+    }).catch(() => null);
+    const usage = await todayCerebrasUsage().catch(() => null);
     const messages = await listProjectAssistantMessages(projectId);
     return json({
       messages,
@@ -109,6 +124,12 @@ export async function POST(
       status: result.status,
       durationMs: result.durationMs,
       notice: result.notice,
+      usage: result.usage,
+      translator: {
+        provider: "cerebras",
+        model: ROOM_CEREBRAS_MODEL,
+        today: usage,
+      },
     });
   } catch (caught) {
     const unavailable = caught instanceof ProviderUnavailable;
@@ -119,6 +140,12 @@ export async function POST(
       cause: unavailable ? caught.cause : "unknown",
       durationMs: unavailable ? caught.durationMs : undefined,
     });
+    await recordCerebrasPulse({
+      projectId,
+      ok: false,
+      cause: unavailable ? caught.cause : "unknown",
+      durationMs: unavailable ? caught.durationMs : 0,
+    }).catch(() => null);
     return json(
       {
         error: "V no pudo responder en este momento.",

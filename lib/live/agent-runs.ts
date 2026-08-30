@@ -189,7 +189,8 @@ ROL ${args.role.toUpperCase()}
 
 REGLAS OBLIGATORIAS
 - ${roleRules}
-- Nunca escribas, hagas push ni merge directo a ${args.baseBranch}.
+- Esto es un SANDBOX. Trabaja sólo en ${args.workBranch}. Nunca escribas, hagas push ni merge directo a ${args.baseBranch}.
+- No abras un pull request. El owner lo crea al aprobar.
 - No despliegues producción.
 - No leas ni expongas secretos ajenos al proyecto.
 - Reporta archivos tocados, comandos de validación, resultado y bloqueos reales.
