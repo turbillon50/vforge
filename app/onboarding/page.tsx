@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useCallback, useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { VWordmark } from "@/components/brand/VMark";
 import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
@@ -36,10 +36,12 @@ export default function OnboardingPage() {
 
 function OnboardingWithClerk() {
   const { isLoaded, isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
   const router = useRouter();
   const [connected, setConnected] = useState<Connection[]>([]);
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [finishing, setFinishing] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -65,6 +67,18 @@ function OnboardingWithClerk() {
   useEffect(() => {
     if (isSignedIn) void loadStatus();
   }, [isSignedIn, loadStatus]);
+
+  async function leaveAccount() {
+    if (signingOut) return;
+    setSigningOut(true);
+    setFinishError(null);
+    try {
+      await signOut({ redirectUrl: "/sign-in" });
+    } catch {
+      setFinishError("No pudimos cerrar tu sesión. Intenta otra vez.");
+      setSigningOut(false);
+    }
+  }
 
   async function enterWorkspace() {
     if (finishing) return;
@@ -131,14 +145,24 @@ function OnboardingWithClerk() {
       <div className="mx-auto max-w-[980px]">
         <header className="flex items-center justify-between border-b border-[var(--border-1)] pb-6">
           <VWordmark />
-          <button
-            type="button"
-            onClick={enterWorkspace}
-            disabled={finishing}
-            className="text-[12px] font-medium text-[var(--fg-muted)] hover:text-black disabled:opacity-50"
-          >
-            Entrar sin conectar
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={leaveAccount}
+              disabled={signingOut || finishing}
+              className="text-[12px] font-medium text-[var(--fg-muted)] hover:text-black disabled:opacity-50"
+            >
+              {signingOut ? "Saliendo..." : "Cerrar sesión"}
+            </button>
+            <button
+              type="button"
+              onClick={enterWorkspace}
+              disabled={finishing || signingOut}
+              className="text-[12px] font-medium text-[var(--fg-muted)] hover:text-black disabled:opacity-50"
+            >
+              Entrar sin conectar
+            </button>
+          </div>
         </header>
 
         <section className="grid gap-12 py-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:py-24">
