@@ -16,6 +16,9 @@
   "include": [
     "tests/**/*.ts",
     "lib/auth/owner.ts",
+    "lib/connect/oauth-state.ts",
+    "lib/connect/connection-scopes.ts",
+    "lib/projects/membership-scope.ts",
     "lib/projects/roles.ts",
     "lib/projects/invite-token.ts",
     "lib/projects/viewport-url.ts"

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentVForgeIdentity } from "@/lib/api/vforge-owned";
 import { isOwnerEmail } from "@/lib/auth/owner";
 import { queryOne } from "@/lib/db/client";
+import { membershipBelongsToUserSql } from "@/lib/projects/membership-scope";
 import {
   ensureCommentTasksTable,
   insertSystemComment,
@@ -13,13 +14,15 @@ export const dynamic = "force-dynamic";
 
 const ALLOWED = new Set(["queued", "running", "done", "cancelled", "failed"]);
 
-async function assertOwner(projectId: string, email: string) {
+async function assertOwner(projectId: string, userId: string, email: string) {
   if (isOwnerEmail(email)) return true;
   const m = await queryOne<{ role: string }>(
     `SELECT role FROM project_live_members
-      WHERE project_id = $1 AND lower(email) = lower($2) AND status = 'active'
+      WHERE project_id = $1
+        AND ${membershipBelongsToUserSql("project_live_members", "$2", "$3")}
+        AND status = 'active'
       LIMIT 1`,
-    [projectId, email],
+    [projectId, userId, email],
   ).catch(() => null);
   return m?.role === "owner";
 }
@@ -33,7 +36,7 @@ export async function PATCH(
   if (!identity) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  if (!(await assertOwner(projectId, identity.email))) {
+  if (!(await assertOwner(projectId, identity.userId, identity.email))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
