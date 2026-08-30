@@ -495,7 +495,7 @@ async function liveContext(req, res, projectId) {
     return;
   }
 
-  const [projects, integrations, documents, assets] = await Promise.all([
+  const [projects, integrations, repositories, documents, assets] = await Promise.all([
     sql.query(
       `SELECT id, name, description, github_repo, github_default_branch,
               github_url, vercel_url, domain, status, last_audit_score, last_audit_at
@@ -509,6 +509,14 @@ async function liveContext(req, res, projectId) {
         ORDER BY kind`,
       [projectId],
     ),
+    sql.query(
+      `SELECT repo_full_name, role, is_primary, default_branch, private,
+              language, html_url, pushed_at
+         FROM project_repositories
+        WHERE project_id = $1
+        ORDER BY is_primary DESC, role, repo_full_name`,
+      [projectId],
+    ).catch(() => []),
     sql.query(
       `SELECT content, updated_by, updated_at
          FROM project_context_documents
@@ -532,6 +540,7 @@ async function liveContext(req, res, projectId) {
   json(res, 200, {
     project: projects[0],
     integrations,
+    repositories,
     document: documents[0] || { content: "", updated_by: null, updated_at: null },
     assets,
     me: { role: access.role, canWrite: canWriteContext(access.role) },
