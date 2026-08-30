@@ -11,6 +11,7 @@ import {
 } from "@/lib/api/vforge-owned";
 import { isOwnerEmail } from "@/lib/auth/owner";
 import { sendPushToOwners } from "@/lib/push/send";
+import { parseReviewAnchor } from "@/lib/live/review-context";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,18 +65,26 @@ export async function POST(
     payload && typeof payload === "object"
       ? (payload as Record<string, unknown>).body
       : null;
+  const rawAnchor =
+    payload && typeof payload === "object"
+      ? (payload as Record<string, unknown>).anchor
+      : null;
   if (typeof raw !== "string" || !raw.trim()) {
     return NextResponse.json({ error: "empty" }, { status: 400, headers: noStore });
   }
   if (raw.length > maxBodyLength) {
     return NextResponse.json({ error: "too_long" }, { status: 413, headers: noStore });
   }
+  const anchor = rawAnchor == null ? null : parseReviewAnchor(rawAnchor);
+  if (rawAnchor != null && !anchor) {
+    return NextResponse.json({ error: "invalid_anchor" }, { status: 400, headers: noStore });
+  }
 
   try {
     const upstream = await fetchVForgeApi(requestContext.path, requestContext.identity, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ body: raw }),
+      body: JSON.stringify({ body: raw, anchor }),
       signal: req.signal,
     });
 
