@@ -44,7 +44,7 @@ const SERVICES: Service[] = [
     description: "Repositorios y aplicación instalada.",
     Icon: IconGithub,
     mode: "oauth",
-    endpoint: "/api/auth/github/start",
+    endpoint: "/api/auth/github/start?return_to=%2Fapp%2Fintegrations",
   },
   {
     id: "vercel",
@@ -52,7 +52,7 @@ const SERVICES: Service[] = [
     description: "Previews, dominios y producción.",
     Icon: IconGlobe,
     mode: "oauth",
-    endpoint: "/api/auth/vercel/start",
+    endpoint: "/api/auth/vercel/start?return_to=%2Fapp%2Fintegrations",
   },
   {
     id: "stripe",
@@ -60,7 +60,7 @@ const SERVICES: Service[] = [
     description: "Cuenta conectada para pagos.",
     Icon: IconCreditCard,
     mode: "oauth",
-    endpoint: "/api/auth/stripe/start",
+    endpoint: "/api/auth/stripe/start?return_to=%2Fapp%2Fintegrations",
   },
   {
     id: "neon",
@@ -133,9 +133,9 @@ export default function IntegrationsPage() {
         setConnected([]);
       }
 
-      const healthPayload = (await healthResponse.json().catch(() => null)) as
-        | PlatformHealth
-        | null;
+      const healthPayload = (await healthResponse
+        .json()
+        .catch(() => null)) as PlatformHealth | null;
       setHealth(healthPayload);
     } finally {
       setLoading(false);
@@ -166,7 +166,9 @@ export default function IntegrationsPage() {
         error?: string;
       };
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || `La conexión respondió HTTP ${response.status}.`);
+        throw new Error(
+          payload.error || `La conexión respondió HTTP ${response.status}.`,
+        );
       }
       setConnected((current) =>
         current.includes(service.id) ? current : [...current, service.id],
@@ -179,7 +181,9 @@ export default function IntegrationsPage() {
       setErrors((current) => ({
         ...current,
         [service.id]:
-          caught instanceof Error ? caught.message : "No se pudo guardar la conexión.",
+          caught instanceof Error
+            ? caught.message
+            : "No se pudo guardar la conexión.",
       }));
     }
   }
@@ -197,7 +201,10 @@ export default function IntegrationsPage() {
             disabled={refreshing}
             className="btn-ghost"
           >
-            <IconRefresh size={12} className={refreshing ? "animate-spin" : ""} />
+            <IconRefresh
+              size={12}
+              className={refreshing ? "animate-spin" : ""}
+            />
             Actualizar
           </button>
         }
@@ -260,7 +267,9 @@ export default function IntegrationsPage() {
                       <service.Icon size={17} />
                     </span>
                     <div className="min-w-0">
-                      <h2 className="text-[14px] font-medium">{service.name}</h2>
+                      <h2 className="text-[14px] font-medium">
+                        {service.name}
+                      </h2>
                       <p className="mt-1 text-[11px] leading-5 text-[var(--fg-muted)]">
                         {service.description}
                       </p>
@@ -276,10 +285,14 @@ export default function IntegrationsPage() {
                   {service.mode === "oauth" ? (
                     <a
                       href={service.endpoint}
-                      className={isConnected ? "btn-ghost w-full" : "btn-primary w-full"}
+                      className={
+                        isConnected ? "btn-ghost w-full" : "btn-primary w-full"
+                      }
                     >
                       <IconLink size={12} />
-                      {isConnected ? `Reconectar ${service.name}` : `Conectar ${service.name}`}
+                      {isConnected
+                        ? `Reconectar ${service.name}`
+                        : `Conectar ${service.name}`}
                     </a>
                   ) : isEditing ? (
                     <div>
@@ -379,7 +392,9 @@ function HealthCell({
           {state ?? "Sin lectura"}
         </span>
         {detail ? (
-          <span className="font-mono text-[9px] text-[var(--fg-muted)]">{detail}</span>
+          <span className="font-mono text-[9px] text-[var(--fg-muted)]">
+            {detail}
+          </span>
         ) : null}
       </div>
     </div>

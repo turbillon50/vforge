@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { normalizarOAuthReturnPath } from "@/lib/connect/oauth-state";
+import { getUserSecret, saveUserSecret } from "@/lib/connect/user-vault";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +22,68 @@ function returnToPermitido(url: string | null): string | null {
     return ok ? url : null;
   } catch {
     return null;
+  }
+}
+
+type GitHubInstallation = {
+  id: number;
+  app_id: number;
+  app_slug?: string;
+  account?: { login?: string } | null;
+  permissions?: Record<string, string>;
+};
+
+async function repairExistingInstallation(userId: string): Promise<boolean> {
+  const token = await getUserSecret(userId, "GITHUB_USER_TOKEN");
+  if (!token) return false;
+
+  try {
+    const response = await fetch(
+      "https://api.github.com/user/installations?per_page=100",
+      {
+        headers: {
+          Authorization: `Bearer `,
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+          "User-Agent": "vforge",
+        },
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) return false;
+
+    const data = (await response.json()) as {
+      installations?: GitHubInstallation[];
+    };
+    const appId = Number(process.env.GITHUB_APP_ID || "3696759");
+    const appSlug = process.env.GITHUB_APP_SLUG || "v-forge-momentum";
+    const installation = data.installations?.find(
+      (item) => item.app_id === appId || item.app_slug === appSlug,
+    );
+    if (!installation || installation.permissions?.administration !== "write") {
+      return false;
+    }
+
+    await saveUserSecret(
+      userId,
+      "GITHUB_INSTALLATION_ID",
+      String(installation.id),
+      "github",
+    );
+    if (installation.account?.login) {
+      await saveUserSecret(
+        userId,
+        "GITHUB_INSTALLATION_ACCOUNT",
+        installation.account.login,
+        "github",
+      );
+    }
+    return true;
+  } catch (error) {
+    console.error("[gh install repair] lookup failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return false;
   }
 }
 
@@ -51,6 +114,15 @@ export async function GET(req: Request) {
     reqUrl.searchParams.get("return_to"),
   );
   const tenant = reqUrl.searchParams.get("tenant");
+
+  // Migración transparente para instalaciones creadas antes del flujo actual.
+  // Si el token existente ya ve la App con el permiso correcto, registramos su
+  // installation_id y regresamos sin mandar al usuario a GitHub otra vez.
+  if (!returnTo && (await repairExistingInstallation(userId))) {
+    const destination = new URL(internalReturnTo, siteUrl());
+    destination.searchParams.set("github", "connected");
+    return Response.redirect(destination.toString(), 302);
+  }
 
   const state = randomBytes(16).toString("hex");
   const jar = await cookies();
