@@ -18,3 +18,10 @@ test("extractArchiveText reads textual WhatsApp exports and ignores media", () =
 test("extractArchiveText returns empty when the ZIP has no readable text", () => {
   assert.equal(extractArchiveText(zipSync({ "foto.jpg": new Uint8Array([1, 2]) })), "");
 });
+
+test("extractArchiveText rejects archives with excessive entries", () => {
+  const entries = Object.fromEntries(
+    Array.from({ length: 201 }, (_, index) => [`archivo-${index}.txt`, strToU8("x")]),
+  );
+  assert.throws(() => extractArchiveText(zipSync(entries)), /archive_entry_limit/);
+});
