@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import PageHeader from "@/components/workspace/PageHeader";
+import { PageHeader } from "@/components/workspace/PageHeader";
 import {
   IconCheck,
   IconGithub,
