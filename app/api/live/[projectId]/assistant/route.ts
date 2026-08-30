@@ -10,8 +10,14 @@ import {
   selectAgentRepository,
 } from "@/lib/live/agent-runs";
 import { loadRoomContextBrief } from "@/lib/live/load-room-context";
-import { listExpedienteEyes } from "@/lib/live/project-eyes";
+import { listExpedienteEyes, saveProjectEye } from "@/lib/live/project-eyes";
 import { pickExpedienteFrames } from "@/lib/live/expediente-vision";
+import {
+  attachmentFrames,
+  attachmentTextBrief,
+  attachmentUserNote,
+  parseChatAttachments,
+} from "@/lib/live/chat-attachments";
 import { recordCerebrasPulse, todayCerebrasUsage } from "@/lib/forge/cerebras-pulse";
 import {
   listProjectAssistantMessages,
@@ -72,10 +78,11 @@ export async function POST(
   > | null;
   const mode: ProjectAssistantMode | null =
     payload?.mode === "talk" || payload?.mode === "plan" ? payload.mode : null;
-  const message =
-    typeof payload?.message === "string"
-      ? payload.message.trim().slice(0, 6000)
-      : "";
+  const files = parseChatAttachments(payload?.attachments);
+  const message = attachmentUserNote(
+    typeof payload?.message === "string" ? payload.message : "",
+    files,
+  ).slice(0, 6000);
   const repository = selectAgentRepository(access, payload?.repository);
   if (!mode || message.length < 1)
     return json({ error: "invalid_message" }, 400);
@@ -93,10 +100,24 @@ export async function POST(
       console.error("[project assistant] room brief failed", { projectId, error });
       return null;
     });
-    const images = pickExpedienteFrames(
+    const expediente = pickExpedienteFrames(
       await listExpedienteEyes(projectId).catch(() => []),
       3,
     );
+    const attached = attachmentFrames(files);
+    const images = [...attached, ...expediente].slice(0, 3);
+    const extra = attachmentTextBrief(files);
+    const brief = [roomContext, extra].filter(Boolean).join("\n\n");
+
+    for (const file of files.filter((item) => item.kind === "image")) {
+      await saveProjectEye({
+        projectId,
+        source: "attach",
+        note: file.name,
+        image: `data:${file.mimeType};base64,${file.data}`,
+      }).catch(() => null);
+    }
+
     const result = await askV({
       mode,
       projectId,
@@ -104,7 +125,7 @@ export async function POST(
       message,
       history,
       preferredModel: cerebrasTalkModel(images.length > 0),
-      roomContext,
+      roomContext: brief || null,
       images,
     });
 
