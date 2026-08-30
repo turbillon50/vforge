@@ -1,5 +1,6 @@
 import { parseReviewAnchor, type ReviewAnchor } from "./review-context";
 import { roomToolsBrief } from "./project-tools";
+import { craftBrief } from "./craft-doctrine";
 
 export interface RoomComment {
   id?: string;
@@ -272,6 +273,8 @@ export function formatBrainBrief(input: {
   lessons: Array<{ title: string; content: string }>;
 }): string {
   const lines = [
+    craftBrief(),
+    "",
     "EXPERIENCIA V / BRAIN. Esto no es la sala: es la memoria de la fábrica.",
     "Úsalo. No pidas que te lo reescriban. No inventes proyectos que no estén aquí.",
     "Doctrina: toda app tiene MCP. Código lo hace Claude Code en Hetzner. Grok investiga. Codex cubre si Claude no puede. Nunca n8n.",
@@ -292,6 +295,6 @@ export function formatBrainBrief(input: {
     lines.push("Sin fichas del Brain para este proyecto todavía.");
   }
   let text = lines.join("\n");
-  if (text.length > 2200) text = `${text.slice(0, 2199)}…`;
+  if (text.length > 5200) text = `${text.slice(0, 5199)}…`;
   return text;
 }
