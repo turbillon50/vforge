@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useMemo,
   useState,
@@ -12,26 +13,77 @@ import type {
   ReviewAnchor,
 } from "@/lib/live/review-context";
 
+export interface ReviewDraftNote {
+  id: string;
+  anchor: ReviewAnchor;
+  body: string;
+}
+
 interface ReviewContextValue {
-  draftAnchor: ReviewAnchor | null;
-  setDraftAnchor: (anchor: ReviewAnchor | null) => void;
+  draftNotes: ReviewDraftNote[];
+  addDraftAnchor: (anchor: ReviewAnchor) => string;
+  updateDraftBody: (id: string, body: string) => void;
+  removeDraftNote: (id: string) => void;
   anchoredComments: AnchoredComment[];
   setAnchoredComments: (comments: AnchoredComment[]) => void;
+  commentsVersion: number;
+  notifyCommentsChanged: () => void;
 }
 
 const ReviewContext = createContext<ReviewContextValue | null>(null);
 
+function draftId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `draft-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export function ReviewContextProvider({ children }: { children: ReactNode }) {
-  const [draftAnchor, setDraftAnchor] = useState<ReviewAnchor | null>(null);
+  const [draftNotes, setDraftNotes] = useState<ReviewDraftNote[]>([]);
   const [anchoredComments, setAnchoredComments] = useState<AnchoredComment[]>([]);
+  const [commentsVersion, setCommentsVersion] = useState(0);
+
+  const addDraftAnchor = useCallback((anchor: ReviewAnchor) => {
+    const id = draftId();
+    setDraftNotes((current) => [...current, { id, anchor, body: "" }]);
+    return id;
+  }, []);
+
+  const updateDraftBody = useCallback((id: string, body: string) => {
+    setDraftNotes((current) =>
+      current.map((note) => (note.id === id ? { ...note, body } : note)),
+    );
+  }, []);
+
+  const removeDraftNote = useCallback((id: string) => {
+    setDraftNotes((current) => current.filter((note) => note.id !== id));
+  }, []);
+
+  const notifyCommentsChanged = useCallback(() => {
+    setCommentsVersion((version) => version + 1);
+  }, []);
+
   const value = useMemo(
     () => ({
-      draftAnchor,
-      setDraftAnchor,
+      draftNotes,
+      addDraftAnchor,
+      updateDraftBody,
+      removeDraftNote,
       anchoredComments,
       setAnchoredComments,
+      commentsVersion,
+      notifyCommentsChanged,
     }),
-    [anchoredComments, draftAnchor],
+    [
+      addDraftAnchor,
+      anchoredComments,
+      commentsVersion,
+      draftNotes,
+      notifyCommentsChanged,
+      removeDraftNote,
+      updateDraftBody,
+    ],
   );
 
   return <ReviewContext.Provider value={value}>{children}</ReviewContext.Provider>;
