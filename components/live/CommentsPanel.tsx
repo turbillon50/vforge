@@ -14,6 +14,8 @@ import {
   IconX,
 } from "@/components/brand/VFIcons";
 import { writePendingPrompt } from "@/lib/live/pending-prompt";
+import { parseReviewAnchor, type ReviewAnchor } from "@/lib/live/review-context";
+import { useReviewContext } from "@/components/live/ReviewContext";
 
 interface CommentRow {
   id: string;
@@ -21,6 +23,7 @@ interface CommentRow {
   author_name: string | null;
   body: string;
   created_at: string;
+  anchor: ReviewAnchor | null;
 }
 
 type ThreadFilter = "all" | "open" | "system";
@@ -72,6 +75,11 @@ export function CommentsPanel({
   onMinimize?: () => void;
 }) {
   const router = useRouter();
+  const {
+    draftAnchor,
+    setDraftAnchor,
+    setAnchoredComments,
+  } = useReviewContext();
   const encodedProjectId = encodeURIComponent(projectId);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -104,7 +112,10 @@ export function CommentsPanel({
           dateStyle: "medium",
           timeStyle: "short",
         });
-        return `${index + 1}. [${date}] ${author}:\n${comment.body}`;
+        const location = comment.anchor
+          ? `\nUbicación: ${comment.anchor.label} (${comment.anchor.viewport}, ${Math.round(comment.anchor.x * 100)}%, ${Math.round(comment.anchor.y * 100)}%)\nURL: ${comment.anchor.url}`
+          : "";
+        return `${index + 1}. [${date}] ${author}:${location}\n${comment.body}`;
       })
       .join("\n\n");
     return `PROYECTO: ${projectName} (${projectId})\n\nOBJETIVO\nAnaliza el feedback y conviértelo en mejoras concretas y verificables.\n\nELEMENTOS (${human.length})\n${elements}\n\nENTREGA\n1. Agrupa relacionados.\n2. Prioriza impacto.\n3. Plan ejecutable + criterios de aceptación.`;
@@ -128,15 +139,21 @@ export function CommentsPanel({
         setError("No se pudieron cargar los comentarios.");
         return;
       }
-      const payload = (await response.json()) as { comments?: CommentRow[] };
-      setComments(Array.isArray(payload.comments) ? payload.comments : []);
+      const payload = (await response.json()) as { comments?: Array<Omit<CommentRow, "anchor"> & { anchor?: unknown }> };
+      const next = Array.isArray(payload.comments)
+        ? payload.comments.map((comment) => ({ ...comment, anchor: parseReviewAnchor(comment.anchor) }))
+        : [];
+      setComments(next);
+      setAnchoredComments(
+        next.flatMap((comment) => comment.anchor ? [{ id: comment.id, anchor: comment.anchor }] : []),
+      );
       setError(null);
     } catch {
       setError("Los comentarios no están disponibles.");
     } finally {
       setLoaded(true);
     }
-  }, [encodedProjectId]);
+  }, [encodedProjectId, setAnchoredComments]);
 
   useEffect(() => {
     void load();
@@ -153,13 +170,14 @@ export function CommentsPanel({
       const response = await fetch("/api/live/" + encodedProjectId + "/comments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: text }),
+        body: JSON.stringify({ body: text, anchor: draftAnchor }),
       });
       if (!response.ok) {
         setError("No se pudo publicar el comentario.");
         return;
       }
       setBody("");
+      setDraftAnchor(null);
       await load();
     } catch {
       setError("No se pudo publicar el comentario.");
@@ -183,7 +201,7 @@ export function CommentsPanel({
   function proposeOne(comment: CommentRow) {
     const author = comment.author_name ?? comment.author_email;
     setDraftPrompt(
-      `PROYECTO: ${projectName} (${projectId})\n\nFEEDBACK DE ${author}\n${comment.body}\n\nOBJETIVO\nCambio concreto y verificable. Sin requisitos inventados.\n\nENTREGA\n1. Interpretación.\n2. Plan.\n3. Criterios de aceptación.`,
+      `PROYECTO: ${projectName} (${projectId})\n\nFEEDBACK DE ${author}${comment.anchor ? `\nUBICACIÓN: ${comment.anchor.label} (${comment.anchor.viewport}, ${Math.round(comment.anchor.x * 100)}%, ${Math.round(comment.anchor.y * 100)}%)\nURL: ${comment.anchor.url}` : ""}\n${comment.body}\n\nOBJETIVO\nCambio concreto y verificable. Sin requisitos inventados.\n\nENTREGA\n1. Interpretación.\n2. Plan.\n3. Criterios de aceptación.`,
     );
     setPromptOpen(true);
   }
@@ -293,6 +311,16 @@ export function CommentsPanel({
       </div>
 
       <div className="mt-3">
+        {draftAnchor ? (
+          <div className="mb-2 flex items-center justify-between gap-2 rounded-md border border-black bg-[var(--color-background)] px-2.5 py-2">
+            <p className="truncate font-mono text-[8px] uppercase tracking-[0.08em]">
+              Anclado · {draftAnchor.label}
+            </p>
+            <button type="button" onClick={() => setDraftAnchor(null)} className="grid h-6 w-6 shrink-0 place-items-center rounded-md border border-[var(--border-1)]" aria-label="Quitar ancla">
+              <IconX size={10} />
+            </button>
+          </div>
+        ) : null}
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -357,6 +385,11 @@ export function CommentsPanel({
                   <span className="shrink-0 font-mono text-[8px] text-[var(--fg-muted)]">{timeAgo(comment.created_at)}</span>
                 </div>
                 <p className="mt-2 whitespace-pre-wrap break-words text-[11px] leading-5 text-[var(--fg-secondary)]">{comment.body}</p>
+                {comment.anchor ? (
+                  <a href={comment.anchor.url} target="_blank" rel="noreferrer" className="mt-2 inline-flex max-w-full items-center rounded-md border border-black px-2 py-1 font-mono text-[8px] uppercase tracking-[0.08em] hover:bg-black hover:text-white">
+                    <span className="truncate">{comment.anchor.label}</span>
+                  </a>
+                ) : null}
                 {!system && canAccept ? (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     <button type="button" onClick={() => proposeOne(comment)} className="inline-flex h-7 items-center gap-1 rounded-md border border-[var(--border-1)] bg-white px-2 font-mono text-[8px] uppercase tracking-[0.08em] hover:border-black">

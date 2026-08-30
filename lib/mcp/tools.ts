@@ -93,6 +93,33 @@ export const MCP_TOOLS: McpToolDef[] = [
     },
   },
   {
+    name: "vforge_project_context",
+    description:
+      "DATOS (admin|client): devuelve estado real de código/deploy, integraciones sin secretos, CONTENIDO.md y archivos privados disponibles en una sala autorizada.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: { type: "string", description: "ID exacto del proyecto" },
+      },
+      required: ["project_id"],
+    },
+  },
+  {
+    name: "vforge_project_file",
+    description:
+      "DATOS (admin|client): lee por fragmentos el texto extraído de un ZIP privado de contexto. Revalida acceso al proyecto y nunca devuelve la URL privada del blob.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: { type: "string", description: "ID exacto del proyecto" },
+        asset_id: { type: "string", description: "ID del archivo listado por vforge_project_context" },
+        offset: { type: "number", description: "Posición inicial en caracteres (default 0)" },
+        limit: { type: "number", description: "Caracteres por fragmento (1-40000; default 20000)" },
+      },
+      required: ["project_id", "asset_id"],
+    },
+  },
+  {
     name: "vforge_payments",
     description: "DATOS (admin|client): pagos y avance financiero (total/pagado/pendiente) de los proyectos. Admin ve todo; client ve SOLO su org_id. Aislado por tenant.",
     inputSchema: { type: "object", properties: {} },
@@ -539,6 +566,8 @@ function helpText(principal: McpPrincipal): string {
   lines.push("## De datos (requieren token admin|client; aisladas por tenant)");
   lines.push("• vforge_project_status — estado de tus proyectos.");
   lines.push("• vforge_project_feedback — observaciones de una sala y estado de sus tareas.");
+  lines.push("• vforge_project_context — código, integraciones, CONTENIDO.md y archivos autorizados.");
+  lines.push("• vforge_project_file — texto extraído de un ZIP privado, leído por fragmentos.");
   lines.push("• vforge_payments — avance financiero (total/pagado/pendiente).");
   lines.push("• vforge_apps_health — salud de despliegue de tus apps.");
   lines.push("• vforge_brain_search — memoria y método de VForge.");
@@ -564,6 +593,33 @@ function helpText(principal: McpPrincipal): string {
     "public (sólo tools públicas)";
   lines.push(`\nTu scope actual: ${scopeName}.`);
   return lines.join("\n");
+}
+
+async function authorizeMcpProject(projectId: string, principal: McpPrincipal) {
+  if (isAdmin(principal)) {
+    return queryOne<{ id: string; name: string }>(
+      "SELECT id, name FROM projects WHERE id = $1 LIMIT 1",
+      [projectId],
+    ).catch(() => null);
+  }
+  if (!principal.userId) return null;
+  return queryOne<{ id: string; name: string }>(
+    `SELECT p.id, p.name
+       FROM projects p
+      WHERE p.id = $1
+        AND (
+          p.org_id = $2
+          OR EXISTS (
+            SELECT 1 FROM project_live_members m
+             WHERE m.project_id = p.id
+               AND m.clerk_user_id = $3
+               AND m.status = 'active'
+               AND (m.expires_at IS NULL OR m.expires_at > now())
+          )
+        )
+      LIMIT 1`,
+    [projectId, principal.orgId, principal.userId],
+  ).catch(() => null);
 }
 
 /* ============================== runMcpTool ============================== */
@@ -781,29 +837,7 @@ export async function runMcpTool(
       // El proyecto se autoriza ANTES de leer comentarios. Un client puede
       // entrar por ser dueño de su tenant o por una membresía live activa.
       // Nunca se acepta email/org desde args: la identidad sale del token MCP.
-      const project = isAdminScope
-        ? await queryOne<{ id: string; name: string }>(
-            "SELECT id, name FROM projects WHERE id = $1 LIMIT 1",
-            [projectId],
-          ).catch(() => null)
-        : await queryOne<{ id: string; name: string }>(
-            `SELECT p.id, p.name
-               FROM projects p
-              WHERE p.id = $1
-                AND (
-                  p.org_id = $2
-                  OR EXISTS (
-                    SELECT 1
-                      FROM project_live_members m
-                     WHERE m.project_id = p.id
-                       AND m.clerk_user_id = $3
-                       AND m.status = 'active'
-                       AND (m.expires_at IS NULL OR m.expires_at > now())
-                  )
-                )
-              LIMIT 1`,
-            [projectId, orgId, userId],
-          ).catch(() => null);
+      const project = await authorizeMcpProject(projectId, principal);
 
       if (!project) {
         return err("Proyecto no encontrado o sin acceso para este token MCP.");
@@ -816,12 +850,13 @@ export async function runMcpTool(
         author_email: string;
         author_name: string | null;
         body: string;
+        anchor: Record<string, unknown> | null;
         created_at: string;
         task_id: string | null;
         task_status: string | null;
         task_result: string | null;
       }>(
-        `SELECT c.id, c.author_email, c.author_name, c.body, c.created_at,
+        `SELECT c.id, c.author_email, c.author_name, c.body, c.anchor, c.created_at,
                 task.id AS task_id, task.status AS task_status,
                 task.result_summary AS task_result
            FROM project_comments c
@@ -848,12 +883,89 @@ export async function runMcpTool(
           ? `tarea ${row.task_status}${row.task_id ? ` (${row.task_id})` : ""}`
           : "observación abierta";
         const result = row.task_result ? `\nResultado: ${row.task_result}` : "";
-        return `${index + 1}. [${row.created_at}] ${author}\nEstado: ${task}\nID: ${row.id}\n${row.body}${result}`;
+        const anchor = row.anchor
+          ? `\nAncla: ${String(row.anchor.viewport ?? "vista")} · ${Math.round(Number(row.anchor.x ?? 0) * 100)}%, ${Math.round(Number(row.anchor.y ?? 0) * 100)}% · ${String(row.anchor.url ?? "")}`
+          : "";
+        return `${index + 1}. [${row.created_at}] ${author}\nEstado: ${task}\nID: ${row.id}${anchor}\n${row.body}${result}`;
       });
       return text(
         `# Feedback — ${project.name} (${project.id})\n\n` +
           `${rows.length} observación(es), más recientes primero.\n\n` +
           items.join("\n\n"),
+      );
+    }
+
+    case "vforge_project_context": {
+      const projectId = String(args.project_id ?? "").trim().slice(0, 160);
+      if (!projectId) return err("Falta 'project_id'.");
+      const allowed = await authorizeMcpProject(projectId, principal);
+      if (!allowed) return err("Proyecto no encontrado o sin acceso para este token MCP.");
+
+      const [project, integrations, document, assets] = await Promise.all([
+        queryOne<{
+          id: string; name: string; description: string | null; github_repo: string | null;
+          github_default_branch: string | null; github_url: string | null; vercel_url: string | null;
+          domain: string | null; status: string; last_audit_score: number | null; last_audit_at: string | null;
+        }>(
+          `SELECT id, name, description, github_repo, github_default_branch, github_url,
+                  vercel_url, domain, status, last_audit_score, last_audit_at
+             FROM projects WHERE id = $1 LIMIT 1`,
+          [projectId],
+        ),
+        queryAll<{ kind: string; label: string; status: string }>(
+          "SELECT kind, label, status FROM project_integrations WHERE project_id = $1 ORDER BY kind",
+          [projectId],
+        ).catch(() => []),
+        queryOne<{ content: string; updated_by: string; updated_at: string }>(
+          "SELECT content, updated_by, updated_at FROM project_context_documents WHERE project_id = $1 LIMIT 1",
+          [projectId],
+        ).catch(() => null),
+        queryAll<{ id: string; filename: string; size_bytes: number; extracted_text_bytes: number; created_at: string }>(
+          `SELECT id, filename, size_bytes, extracted_text_bytes, created_at
+             FROM project_context_assets WHERE project_id = $1 ORDER BY created_at DESC LIMIT 50`,
+          [projectId],
+        ).catch(() => []),
+      ]);
+      if (!project) return err("Proyecto no encontrado.");
+      const integrationsText = integrations.length
+        ? integrations.map((item) => `• ${item.label} (${item.kind}): ${item.status}`).join("\n")
+        : "• Sin integraciones registradas.";
+      const assetsText = assets.length
+        ? assets.map((item) => `• ${item.filename} · id ${item.id} · ${item.size_bytes} bytes · texto extraído ${item.extracted_text_bytes} bytes`).join("\n")
+        : "• Sin archivos de contexto.";
+      return text(
+        `# Contexto — ${project.name} (${project.id})\n\n` +
+        `## Código y publicación\nEstado: ${project.status}\nRepo: ${project.github_repo ?? "sin repo"}\nRama: ${project.github_default_branch ?? "sin rama"}\nGitHub: ${project.github_url ?? "sin URL"}\nVercel: ${project.vercel_url ?? "sin URL"}\nDominio: ${project.domain ?? "sin dominio"}\nAuditoría: ${project.last_audit_score ?? "sin score"} · ${project.last_audit_at ?? "sin fecha"}\n\n` +
+        `## Integraciones\n${integrationsText}\n\n` +
+        `## CONTENIDO.md\n${document?.content?.trim() || project.description || "Sin contenido documentado todavía."}\n\n` +
+        `## Archivos privados\n${assetsText}\n\n` +
+        `Usa vforge_project_file con project_id + asset_id para leer el texto extraído.`,
+      );
+    }
+
+    case "vforge_project_file": {
+      const projectId = String(args.project_id ?? "").trim().slice(0, 160);
+      const assetId = String(args.asset_id ?? "").trim();
+      if (!projectId || !/^[0-9a-f-]{36}$/i.test(assetId)) return err("Falta project_id o asset_id válido.");
+      const allowed = await authorizeMcpProject(projectId, principal);
+      if (!allowed) return err("Proyecto no encontrado o sin acceso para este token MCP.");
+      const requestedOffset = Number(args.offset ?? 0);
+      const requestedLimit = Number(args.limit ?? 20_000);
+      const offset = Number.isFinite(requestedOffset) ? Math.max(0, Math.floor(requestedOffset)) : 0;
+      const limit = Number.isFinite(requestedLimit) ? Math.min(40_000, Math.max(1, Math.floor(requestedLimit))) : 20_000;
+      const asset = await queryOne<{ filename: string; extracted_text: string }>(
+        `SELECT filename, extracted_text FROM project_context_assets
+          WHERE project_id = $1 AND id = $2 LIMIT 1`,
+        [projectId, assetId],
+      ).catch(() => null);
+      if (!asset) return err("Archivo no encontrado o sin acceso.");
+      const total = asset.extracted_text.length;
+      const chunk = asset.extracted_text.slice(offset, offset + limit);
+      const nextOffset = offset + chunk.length < total ? offset + chunk.length : null;
+      return text(
+        `# ${asset.filename}\nProyecto: ${allowed.name} (${projectId})\n` +
+        `Fragmento: ${offset}-${offset + chunk.length} de ${total}\n` +
+        `Siguiente offset: ${nextOffset ?? "fin"}\n\n${chunk || "[El ZIP no contenía texto legible compatible.]"}`,
       );
     }
 

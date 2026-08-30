@@ -19,6 +19,7 @@ import {
   IconExtLink,
   IconLayout,
   IconLoader,
+  IconMap,
   IconMaximize,
   IconMenu,
   IconRefresh,
@@ -29,6 +30,8 @@ import {
 import type { LiveRole } from "@/lib/projects/roles";
 import { InvitePanel } from "@/components/live/InvitePanel";
 import { CommentsPanel } from "@/components/live/CommentsPanel";
+import { ProjectContextPanel } from "@/components/live/ProjectContextPanel";
+import { ReviewContextProvider, useReviewContext } from "@/components/live/ReviewContext";
 
 export interface LivePortalProject {
   id: string;
@@ -64,7 +67,8 @@ type WorkspacePanelId =
   | "mobile"
   | "admin"
   | "activity"
-  | "comments";
+  | "comments"
+  | "context";
 type WorkspacePreset = "balanced" | "previews" | "review";
 type PreviewKind = "desktop" | "mobile" | "admin";
 
@@ -106,6 +110,7 @@ const PANEL_LABELS: Record<WorkspacePanelId, string> = {
   admin: "Administración",
   activity: "Actividad",
   comments: "Comentarios",
+  context: "Contexto",
 };
 
 
@@ -113,17 +118,17 @@ const DOCK_LAYOUTS: Record<WorkspacePreset, { root: DockLayout; previews: DockLa
   balanced: {
     root: { previews: 68, feedback: 32 },
     previews: { desktop: 52, mobile: 20, admin: 28 },
-    feedback: { activity: 34, comments: 66 },
+    feedback: { activity: 24, comments: 42, context: 34 },
   },
   previews: {
     root: { previews: 78, feedback: 22 },
     previews: { desktop: 60, mobile: 18, admin: 22 },
-    feedback: { activity: 42, comments: 58 },
+    feedback: { activity: 28, comments: 40, context: 32 },
   },
   review: {
     root: { previews: 58, feedback: 42 },
     previews: { desktop: 58, mobile: 22, admin: 20 },
-    feedback: { activity: 28, comments: 72 },
+    feedback: { activity: 20, comments: 48, context: 32 },
   },
 };
 
@@ -282,6 +287,7 @@ function LiveWorkspace({
       ...(canSeeAdmin ? (["admin"] as WorkspacePanelId[]) : []),
       "activity",
       "comments",
+      "context",
     ],
     [canSeeAdmin],
   );
@@ -293,6 +299,7 @@ function LiveWorkspace({
   const adminRef = usePanelRef();
   const activityRef = usePanelRef();
   const commentsRef = usePanelRef();
+  const contextRef = usePanelRef();
   const [focusedPanel, setFocusedPanel] = useState<WorkspacePanelId | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<WorkspacePanelId, boolean>>({
@@ -301,6 +308,7 @@ function LiveWorkspace({
     admin: false,
     activity: false,
     comments: false,
+    context: false,
   });
   const savedLayoutsRef = useRef(DOCK_LAYOUTS.balanced);
 
@@ -333,7 +341,7 @@ function LiveWorkspace({
           canSeeAdmin ? ["desktop", "mobile", "admin"] : ["desktop", "mobile"],
           DOCK_LAYOUTS.balanced.previews,
         ),
-        feedback: normalizeDockLayout(parsed.feedback, ["activity", "comments"], DOCK_LAYOUTS.balanced.feedback),
+        feedback: normalizeDockLayout(parsed.feedback, ["activity", "comments", "context"], DOCK_LAYOUTS.balanced.feedback),
       };
       savedLayoutsRef.current = next;
       window.requestAnimationFrame(() => {
@@ -366,12 +374,13 @@ function LiveWorkspace({
       feedback: source.feedback,
     };
     setFocusedPanel(null);
-    setCollapsed({ desktop: false, mobile: false, admin: false, activity: false, comments: false });
+    setCollapsed({ desktop: false, mobile: false, admin: false, activity: false, comments: false, context: false });
     desktopRef.current?.expand();
     mobileRef.current?.expand();
     adminRef.current?.expand();
     activityRef.current?.expand();
     commentsRef.current?.expand();
+    contextRef.current?.expand();
     rootGroupRef.current?.setLayout(next.root);
     previewsGroupRef.current?.setLayout(next.previews);
     feedbackGroupRef.current?.setLayout(next.feedback);
@@ -394,6 +403,7 @@ function LiveWorkspace({
     admin: adminRef.current,
     activity: activityRef.current,
     comments: commentsRef.current,
+    context: contextRef.current,
   };
 
   const updateCollapsed = (panel: WorkspacePanelId, pixels: number) => {
@@ -411,9 +421,12 @@ function LiveWorkspace({
     <ActivityFeed projectId={project.id} workspace onFocus={() => setFocusedPanel(null)} focused />
   ) : focusedPanel === "comments" ? (
     <CommentsPanel projectId={project.id} projectName={project.name} canAccept={me.role === "owner" || me.isPlatformOwner} workspace onFocus={() => setFocusedPanel(null)} focused />
+  ) : focusedPanel === "context" ? (
+    <ProjectContextPanel projectId={project.id} workspace onFocus={() => setFocusedPanel(null)} focused />
   ) : null;
 
   return (
+    <ReviewContextProvider>
     <div className="min-w-0 px-2 py-2 md:px-3 md:py-3">
       <div className="sticky top-0 z-40 mb-2 flex min-w-0 items-center gap-2 overflow-x-auto rounded-[8px] border border-[var(--border-1)] bg-white p-2 shadow-[0_8px_20px_-18px_rgba(0,0,0,0.8)] no-scrollbar">
         <div className="flex shrink-0 items-center gap-1 border-r border-[var(--border-1)] pr-2">
@@ -508,12 +521,17 @@ function LiveWorkspace({
                 <Panel id="comments" panelRef={commentsRef} collapsible collapsedSize={42} minSize={isMobile ? 120 : 180} onResize={(size) => updateCollapsed("comments", size.inPixels)}>
                   {collapsed.comments ? <CollapsedDockPanel label="Comentarios" vertical={!isMobile} onRestore={() => commentsRef.current?.expand()} /> : <CommentsPanel projectId={project.id} projectName={project.name} canAccept={me.role === "owner" || me.isPlatformOwner} workspace onFocus={() => focusAction("comments")} onMinimize={() => commentsRef.current?.collapse()} />}
                 </Panel>
+                <DockSeparator horizontal={!isMobile} />
+                <Panel id="context" panelRef={contextRef} collapsible collapsedSize={42} minSize={isMobile ? 120 : 180} onResize={(size) => updateCollapsed("context", size.inPixels)}>
+                  {collapsed.context ? <CollapsedDockPanel label="Contexto" vertical={!isMobile} onRestore={() => contextRef.current?.expand()} /> : <ProjectContextPanel projectId={project.id} workspace onFocus={() => focusAction("context")} onMinimize={() => contextRef.current?.collapse()} />}
+                </Panel>
               </Group>
             </Panel>
           </Group>
         </div>
       )}
     </div>
+    </ReviewContextProvider>
   );
 }
 
@@ -655,6 +673,8 @@ function Viewport({
   onMinimize?: () => void;
 }) {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [pinMode, setPinMode] = useState(false);
+  const { anchoredComments, draftAnchor, setDraftAnchor } = useReviewContext();
   const url = useMemo(() => normalizeUrl(rawUrl), [rawUrl]);
   const spec = PREVIEW_SPECS[kind];
   const stageRef = useRef<HTMLDivElement>(null);
@@ -703,6 +723,24 @@ function Viewport({
     (stageSize.height - scaledHeight) / 2,
   );
   const scaleLabel = stageSize.width > 0 ? `${Math.round(previewScale * 100)}%` : "…";
+  const markers = anchoredComments.filter(
+    (comment) => comment.anchor.viewport === kind && comment.anchor.url === url,
+  );
+
+  function placeAnchor(event: React.MouseEvent<HTMLDivElement>) {
+    if (!url) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+    const y = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
+    setDraftAnchor({
+      viewport: kind,
+      x: Math.round(x * 10_000) / 10_000,
+      y: Math.round(y * 10_000) / 10_000,
+      url,
+      label: `${title} · ${Math.round(x * 100)}%, ${Math.round(y * 100)}%`,
+    });
+    setPinMode(false);
+  }
 
   return (
     <section
@@ -729,6 +767,19 @@ function Viewport({
         <div className="flex items-center gap-1">
           {url ? (
             <>
+            <button
+              type="button"
+              onClick={() => setPinMode((value) => !value)}
+              className={cn(
+                "inline-flex h-7 items-center gap-1 rounded-md border px-2 font-mono text-[8px] uppercase tracking-[0.08em]",
+                pinMode ? "border-black bg-black text-white" : "border-[var(--border-1)] hover:border-black",
+              )}
+              aria-pressed={pinMode}
+              aria-label={`Anclar comentario en ${title}`}
+              title="Selecciona un punto y escribe el comentario abajo"
+            >
+              <IconMap size={10} /> <span className="hidden xl:inline">Anclar</span>
+            </button>
             <button
               type="button"
               onClick={() => setRefreshKey((value) => value + 1)}
@@ -803,6 +854,38 @@ function Viewport({
                 sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
               />
             )}
+            <div
+              className={cn(
+                "absolute z-20",
+                kind === "mobile" ? "left-[6px] top-[28px]" : "inset-0",
+                pinMode ? "cursor-crosshair bg-black/5" : "pointer-events-none",
+              )}
+              style={{ width: spec.width, height: spec.height }}
+              onClick={placeAnchor}
+              aria-label={pinMode ? `Selecciona un punto en ${title}` : undefined}
+            >
+              {markers.map((comment, index) => (
+                <a
+                  key={comment.id}
+                  href={`#comment-${comment.id}`}
+                  className="pointer-events-auto absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white bg-black font-mono text-[10px] text-white shadow-lg"
+                  style={{ left: `${comment.anchor.x * 100}%`, top: `${comment.anchor.y * 100}%` }}
+                  aria-label={`Ver comentario ${index + 1}: ${comment.anchor.label}`}
+                  title={comment.anchor.label}
+                >
+                  {index + 1}
+                </a>
+              ))}
+              {draftAnchor?.viewport === kind && draftAnchor.url === url ? (
+                <span
+                  className="absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-black bg-white font-mono text-[10px] text-black shadow-lg"
+                  style={{ left: `${draftAnchor.x * 100}%`, top: `${draftAnchor.y * 100}%` }}
+                  aria-label="Ancla pendiente"
+                >
+                  +
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
       ) : (

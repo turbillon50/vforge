@@ -84,9 +84,13 @@ export async function getCurrentVForgeIdentity(): Promise<VForgeIdentity | null>
 
 export function projectApiPath(
   projectId: string,
-  resource: "live" | "events" | "events/stream" | "comments",
+  resource: "live" | "events" | "events/stream" | "comments" | "context" | "assets",
 ): string {
   return `/api/v1/projects/${encodeURIComponent(projectId)}/${resource}`;
+}
+
+export function projectAssetApiPath(projectId: string, assetId: string): string {
+  return `${projectApiPath(projectId, "assets")}/${encodeURIComponent(assetId)}`;
 }
 
 export async function fetchVForgeApi(
