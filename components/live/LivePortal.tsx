@@ -33,6 +33,13 @@ import { CommentsPanel } from "@/components/live/CommentsPanel";
 import { ProjectContextPanel } from "@/components/live/ProjectContextPanel";
 import { ReviewContextProvider, useReviewContext } from "@/components/live/ReviewContext";
 import { ReviewNotesTray } from "@/components/live/ReviewNotesTray";
+import {
+  anchorViewportPosition,
+  documentPointForAnchor,
+  parseReviewBridgeViewport,
+  type ReviewAnchor,
+  type ReviewBridgeViewport,
+} from "@/lib/live/review-context";
 
 export interface LivePortalProject {
   id: string;
@@ -680,7 +687,9 @@ function Viewport({
   const url = useMemo(() => normalizeUrl(rawUrl), [rawUrl]);
   const spec = PREVIEW_SPECS[kind];
   const stageRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [bridgeViewport, setBridgeViewport] = useState<ReviewBridgeViewport | null>(null);
   const frameClass =
     fill
       ? "min-h-0 flex-1"
@@ -709,6 +718,24 @@ function Viewport({
     updateSize(stage.clientWidth, stage.clientHeight);
     return () => observer.disconnect();
   }, [kind]);
+
+  useEffect(() => {
+    setBridgeViewport(null);
+    if (!url) return;
+    let iframeOrigin: string;
+    try {
+      iframeOrigin = new URL(url).origin;
+    } catch {
+      return;
+    }
+    const receive = (event: MessageEvent) => {
+      if (event.source !== iframeRef.current?.contentWindow || event.origin !== iframeOrigin) return;
+      const next = parseReviewBridgeViewport(event.data);
+      if (next) setBridgeViewport(next);
+    };
+    window.addEventListener("message", receive);
+    return () => window.removeEventListener("message", receive);
+  }, [refreshKey, url]);
 
   const stagePadding = kind === "mobile" ? 20 : 12;
   const previewScale =
@@ -743,6 +770,7 @@ function Viewport({
       y: Math.round(y * 10_000) / 10_000,
       url,
       label: `${title} · ${Math.round(x * 100)}%, ${Math.round(y * 100)}%`,
+      ...documentPointForAnchor(x, y, bridgeViewport),
     });
     setPinMode(false);
   }
@@ -781,7 +809,7 @@ function Viewport({
               )}
               aria-pressed={pinMode}
               aria-label={`Anclar comentario en ${title}`}
-              title="Marca varios puntos y escribe sus notas en la bandeja"
+              title={bridgeViewport ? "Anclaje preciso activo: la marca seguirá al contenido" : "Marca varios puntos y escribe sus notas en la bandeja"}
             >
               <IconMap size={10} /> <span className="hidden xl:inline">Anclar</span>
             </button>
@@ -837,6 +865,7 @@ function Viewport({
               <>
                 <div className="absolute left-1/2 top-[9px] z-10 h-[6px] w-[72px] -translate-x-1/2 rounded-full bg-black" aria-hidden="true" />
                 <iframe
+                  ref={iframeRef}
                   key={refreshKey}
                   src={url}
                   title={"Vista móvil real de " + title}
@@ -849,6 +878,7 @@ function Viewport({
               </>
             ) : (
               <iframe
+                ref={iframeRef}
                 key={refreshKey}
                 src={url}
                 title={`Vista ${kind === "admin" ? "administrativa" : "de escritorio"} de ${title}`}
@@ -870,26 +900,24 @@ function Viewport({
               aria-label={pinMode ? `Selecciona un punto en ${title}` : undefined}
             >
               {markers.map((comment, index) => (
-                <a
+                <ReviewMarker
                   key={comment.id}
+                  anchor={comment.anchor}
+                  bridge={bridgeViewport}
                   href={`#comment-${comment.id}`}
-                  className="pointer-events-auto absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white bg-black font-mono text-[10px] text-white shadow-lg"
-                  style={{ left: `${comment.anchor.x * 100}%`, top: `${comment.anchor.y * 100}%` }}
-                  aria-label={`Ver comentario ${index + 1}: ${comment.anchor.label}`}
-                  title={comment.anchor.label}
-                >
-                  {index + 1}
-                </a>
+                  label={`${index + 1}`}
+                  ariaLabel={`Ver comentario ${index + 1}: ${comment.anchor.label}`}
+                  saved
+                />
               ))}
               {pendingMarkers.map((note) => (
-                <span
+                <ReviewMarker
                   key={note.id}
-                  className="absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-black bg-white font-mono text-[10px] text-black shadow-lg"
-                  style={{ left: `${note.anchor.x * 100}%`, top: `${note.anchor.y * 100}%` }}
-                  aria-label={`Ancla pendiente ${draftNotes.indexOf(note) + 1}`}
-                >
-                  {draftNotes.indexOf(note) + 1}
-                </span>
+                  anchor={note.anchor}
+                  bridge={bridgeViewport}
+                  label={`${draftNotes.indexOf(note) + 1}`}
+                  ariaLabel={`Ancla pendiente ${draftNotes.indexOf(note) + 1}`}
+                />
               ))}
             </div>
           </div>
@@ -909,6 +937,41 @@ function Viewport({
         </div>
       )}
     </section>
+  );
+}
+
+function ReviewMarker({
+  anchor,
+  bridge,
+  label,
+  ariaLabel,
+  href,
+  saved = false,
+}: {
+  anchor: ReviewAnchor;
+  bridge: ReviewBridgeViewport | null;
+  label: string;
+  ariaLabel: string;
+  href?: string;
+  saved?: boolean;
+}) {
+  const position = anchorViewportPosition(anchor, bridge);
+  if (!position.visible) return null;
+  const className = cn(
+    "absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 font-mono text-[10px] shadow-lg",
+    saved
+      ? "pointer-events-auto border-white bg-black text-white"
+      : "border-black bg-white text-black",
+  );
+  const style = { left: `${position.x * 100}%`, top: `${position.y * 100}%` };
+  return href ? (
+    <a href={href} className={className} style={style} aria-label={ariaLabel} title={anchor.label}>
+      {label}
+    </a>
+  ) : (
+    <span className={className} style={style} aria-label={ariaLabel} title={anchor.label}>
+      {label}
+    </span>
   );
 }
 
