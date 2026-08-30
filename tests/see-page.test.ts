@@ -40,7 +40,7 @@ test("host command keeps the url quoted and never interpolates it raw", () => {
     height: 900,
     mobile: false,
   });
-  assert.match(cmd, /docker exec -i vulcano-browser bash -s --/);
+  assert.match(cmd, /docker exec -i vulcano-browser-luis bash -s --/);
   assert.match(cmd, new RegExp(shSingleQuote(url).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.equal(cmd.includes(" user:pass"), false);
   assert.equal(cmd.includes("$(rm"), false);
@@ -49,7 +49,7 @@ test("host command keeps the url quoted and never interpolates it raw", () => {
 test("Navegador Pro CDP opens a new tab, screenshots, and quotes the url", () => {
   const url = "https://netmas.mx/app?x=1&y=2";
   const cmd = buildCdpNavigateCommand({ url, width: 1440, height: 900, mobile: false });
-  assert.match(cmd, /docker exec -i vulcano-browser python3 -/);
+  assert.match(cmd, /docker exec -i vulcano-browser-luis python3 -/);
   const b64 = cmd.match(/echo ([A-Za-z0-9+/=]+) /)?.[1] || "";
   const py = Buffer.from(b64, "base64").toString("utf8");
   assert.match(py, /Page.captureScreenshot/);

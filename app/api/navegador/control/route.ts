@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
 
 const RELAY = "http://178.105.135.26";
 const SECRET = process.env.BRAIN_SECRET ?? "";
-const CONTAINER = "vulcano-browser";
+const CONTAINER = process.env.VULCANO_BROWSER_CONTAINER?.trim() || "vulcano-browser-luis";
 const CDP = "http://localhost:9222";
 
 type Action = "navigate" | "tabs" | "close" | "eval" | "click" | "type" | "read" | "screenshot";

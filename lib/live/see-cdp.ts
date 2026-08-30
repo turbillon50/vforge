@@ -2,7 +2,8 @@
  * Ojos vía Navegador Pro (Chrome vivo en Hetzner, CDP :9222).
  * Abre pestaña nueva, fotografía, cierra. No usa el perfil aislado.
  */
-export const CDP_CONTAINER = "vulcano-browser";
+export const CDP_CONTAINER =
+  process.env.VULCANO_BROWSER_CONTAINER?.trim() || "vulcano-browser-luis";
 
 export function quoteArg(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`;
