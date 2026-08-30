@@ -11,6 +11,8 @@ import {
   IconUsers,
 } from "@/components/brand/VFIcons";
 import { InviteShare } from "@/components/live/InviteShare";
+import { RepositoryGroupManager } from "@/components/projects/RepositoryGroupManager";
+import type { ProjectRepository } from "@/lib/projects/repository-groups";
 
 interface Project {
   id: string;
@@ -25,6 +27,8 @@ interface Project {
   delivery_priority?: boolean;
   progress_pct?: number;
   family_code?: string | null;
+  repositories: ProjectRepository[];
+  repository_count: number;
 }
 
 type CategoryFilter = "all" | "produccion" | "revision" | "pausa";
@@ -85,6 +89,8 @@ export default function ProjectsPage() {
   const [familyFilter, setFamilyFilter] = useState<FamilyFilter>("all");
   const [inviteProject, setInviteProject] = useState<Project | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [repositoryProject, setRepositoryProject] = useState<Project | null>(null);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const loadProjects = useCallback(async (manual = false) => {
     manual ? setRefreshing(true) : setLoading(true);
@@ -109,6 +115,41 @@ export default function ProjectsPage() {
       setRefreshing(false);
     }
   }, []);
+
+  const syncProjects = useCallback(async () => {
+    setRefreshing(true);
+    setError(null);
+    setSyncMessage("Sincronizando GitHub y Vercel…");
+    try {
+      const response = await fetch("/api/projects/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const payload = (await response.json()) as {
+        github_count?: number;
+        vercel_count?: number;
+        inserted?: number;
+        errors?: Array<unknown>;
+        error?: string;
+      };
+      if (!response.ok) {
+        throw new Error(payload.error ?? `HTTP ${response.status}`);
+      }
+      setSyncMessage(
+        `${payload.github_count ?? 0} repos · ${payload.vercel_count ?? 0} proyectos Vercel · ${payload.inserted ?? 0} nuevos`,
+      );
+      await loadProjects();
+    } catch (caught) {
+      setSyncMessage(null);
+      setError(
+        caught instanceof Error
+          ? `No se pudo sincronizar: ${caught.message}`
+          : "No se pudo sincronizar GitHub y Vercel.",
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadProjects]);
 
   useEffect(() => {
     void loadProjects();
@@ -147,6 +188,9 @@ export default function ProjectsPage() {
         project.id.toLowerCase().includes(needle) ||
         (project.domain ?? "").toLowerCase().includes(needle) ||
         (project.github_repo ?? "").toLowerCase().includes(needle) ||
+        (project.repositories ?? []).some((repo) =>
+          repo.repo_full_name.toLowerCase().includes(needle),
+        ) ||
         (project.family_code ?? "").toLowerCase().includes(needle);
       return matchesSearch;
     });
@@ -237,15 +281,31 @@ export default function ProjectsPage() {
           </div>
           <button
             type="button"
-            onClick={() => void loadProjects(true)}
+            onClick={() => void syncProjects()}
             disabled={refreshing}
             className="btn-ghost self-start md:self-auto"
           >
             <IconRefresh size={13} className={refreshing ? "animate-spin" : ""} />
-            Actualizar
+            Sincronizar
           </button>
         </div>
       </header>
+
+      {syncMessage ? (
+        <div className="border-b border-[var(--border-1)] bg-white px-5 py-3 font-mono text-[9px] uppercase tracking-[0.11em] text-[var(--fg-secondary)] md:px-8">
+          {syncMessage}
+        </div>
+      ) : null}
+
+      {repositoryProject ? (
+        <RepositoryGroupManager
+          projectId={repositoryProject.id}
+          projectName={repositoryProject.name}
+          initialRepositories={repositoryProject.repositories ?? []}
+          onClose={() => setRepositoryProject(null)}
+          onChanged={() => void loadProjects()}
+        />
+      ) : null}
 
       {inviteProject ? (
         <div className="border-b border-[var(--border-1)] bg-[#f7f7f5] px-5 py-6 md:px-8">
@@ -370,6 +430,7 @@ export default function ProjectsPage() {
                   })()
                 }
                 onInvite={() => setInviteProject(project)}
+                onRepositories={() => setRepositoryProject(project)}
                 onTogglePriority={() =>
                   void patchMeta(project.id, {
                     delivery_priority: !project.delivery_priority,
@@ -419,6 +480,7 @@ function ProjectRow({
   saving,
   relatedHint,
   onInvite,
+  onRepositories,
   onTogglePriority,
   onProgress,
   onFamily,
@@ -427,6 +489,7 @@ function ProjectRow({
   saving: boolean;
   relatedHint: string | null;
   onInvite: () => void;
+  onRepositories: () => void;
   onTogglePriority: () => void;
   onProgress: (pct: number) => void;
   onFamily: (code: string | null) => void;
@@ -502,6 +565,11 @@ function ProjectRow({
         <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
           {CATEGORY_LABELS[project.category] ?? project.category}
         </p>
+        {(project.repository_count ?? project.repositories?.length ?? 0) > 1 ? (
+          <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.1em]">
+            {project.repository_count ?? project.repositories.length} repositorios en el grupo
+          </p>
+        ) : null}
       </div>
 
       <div className="min-w-0">
@@ -540,6 +608,17 @@ function ProjectRow({
       </div>
 
       <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+        <button
+          type="button"
+          onClick={onRepositories}
+          className="btn-ghost !min-h-9 !px-3"
+          title="Agrupar repositorios"
+        >
+          <IconGithub size={12} />
+          <span className="hidden xl:inline">
+            Repos · {project.repository_count ?? project.repositories?.length ?? 0}
+          </span>
+        </button>
         {externalUrl ? (
           <a
             href={externalUrl}
