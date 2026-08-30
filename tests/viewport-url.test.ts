@@ -40,7 +40,7 @@ describe("resolveInstitutionalAdminUrl", () => {
 });
 
 describe("resolveProjectViewportUrls", () => {
-  it("no inventa administración cuando no hay admin_url", () => {
+  it("cae al panel institucional /admin cuando no hay admin_url", () => {
     const resolved = resolveProjectViewportUrls({
       desktop_url: null,
       mobile_url: null,
@@ -50,7 +50,7 @@ describe("resolveProjectViewportUrls", () => {
     });
     assert.equal(resolved.desktop_url, "https://lu-spa.vercel.app/");
     assert.equal(resolved.mobile_url, "https://lu-spa.vercel.app/");
-    assert.equal(resolved.admin_url, null);
+    assert.equal(resolved.admin_url, "https://lu-spa.vercel.app/admin?embed=1");
   });
 
   it("respeta admin_url explícita", () => {
