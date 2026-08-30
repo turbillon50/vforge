@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { saveUserSecret } from "@/lib/connect/user-vault";
+import { normalizarOAuthReturnPath } from "@/lib/connect/oauth-state";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,9 +22,13 @@ export async function GET(req: Request) {
   const expected = jar.get("gh_oauth_state")?.value;
   const bridgeReturnTo = jar.get("gh_bridge_return_to")?.value;
   const bridgeTenant = jar.get("gh_bridge_tenant")?.value;
+  const internalReturnPath = normalizarOAuthReturnPath(
+    jar.get("gh_oauth_return_path")?.value,
+  );
   jar.delete("gh_oauth_state");
   jar.delete("gh_bridge_return_to");
   jar.delete("gh_bridge_tenant");
+  jar.delete("gh_oauth_return_path");
 
   const back = (status: string) => {
     if (bridgeReturnTo) {
@@ -31,7 +36,9 @@ export async function GET(req: Request) {
       u.searchParams.set("github", status);
       return Response.redirect(u.toString(), 302);
     }
-    return Response.redirect(`${site}/app/setup?github=${status}`, 302);
+    const destination = new URL(internalReturnPath, site);
+    destination.searchParams.set("github", status);
+    return Response.redirect(destination, 302);
   };
 
   if (!code) return back("error_no_code");
