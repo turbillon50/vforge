@@ -325,3 +325,35 @@ export function pickCustomDomain(domains: VercelDomain[]): string | null {
   const apex = prod.find((d) => d.apexName && d.name === d.apexName);
   return (apex?.name || prod[0]?.name || custom[0]?.name) ?? null;
 }
+
+export interface VercelEnvVar {
+  id: string;
+  key: string;
+  type: string;
+  target: string[];
+  updatedAt?: number;
+}
+
+/** Lista variables de entorno: nombres, destino y tipo. Nunca el valor. */
+export async function listProjectEnvVars(
+  idOrName: string,
+  options: { auditUserId?: string } = {},
+): Promise<VercelEnvVar[]> {
+  const { token } = await getCreds(options);
+  const team = await getDefaultTeam(options);
+  const data = await vercelJson<{ envs?: Array<Record<string, unknown>> }>(
+    `/v9/projects/${encodeURIComponent(idOrName)}/env?limit=100`,
+    { method: "GET", token, teamId: team.id },
+  );
+  return (data.envs ?? [])
+    .map((item) => ({
+      id: typeof item.id === "string" ? item.id : "",
+      key: typeof item.key === "string" ? item.key : "",
+      type: typeof item.type === "string" ? item.type : "encrypted",
+      target: Array.isArray(item.target)
+        ? item.target.filter((value): value is string => typeof value === "string")
+        : [],
+      updatedAt: typeof item.updatedAt === "number" ? item.updatedAt : undefined,
+    }))
+    .filter((item) => Boolean(item.key));
+}
