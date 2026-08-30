@@ -14,6 +14,14 @@ export function formatElapsed(ms: number): string {
   return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 }
 
+export function canApplyRun(status: string): boolean {
+  return (
+    status === "awaiting_preview" ||
+    status === "awaiting_approval" ||
+    status === "preview_ready"
+  );
+}
+
 export function isLiveRunStatus(status: string): boolean {
   return (
     status === "preparing" ||

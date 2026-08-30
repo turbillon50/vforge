@@ -14,6 +14,7 @@ import {
 import { modeSystemRules, providersForMode } from "../lib/forge/ask-v-policy";
 import { repositoryGroupLabel } from "../lib/projects/repository-groups";
 import {
+  canApplyRun,
   formatElapsed,
   isLiveRunStatus,
   runnerWaitCopy,
@@ -99,4 +100,7 @@ test("live console wait copy is honest and timed", () => {
   assert.equal(formatElapsed(125_000), "2m 05s");
   assert.equal(isLiveRunStatus("running"), true);
   assert.equal(isLiveRunStatus("published"), false);
+  assert.equal(canApplyRun("awaiting_preview"), true);
+  assert.equal(canApplyRun("awaiting_approval"), true);
+  assert.equal(canApplyRun("running"), false);
 });
