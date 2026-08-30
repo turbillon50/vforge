@@ -262,6 +262,11 @@ export function ToolsPanel({
           <div>
             <p className="text-[11px] leading-5">{data.mcp.hint}</p>
             <p className="mt-2 font-mono text-[10px] text-[var(--fg-muted)]">{data.mcp.url}</p>
+            <ul className="mt-3 space-y-1 font-mono text-[10px] leading-4 text-[var(--fg-muted)]">
+              <li>vforge_project_feedback — anotaciones y anclas</li>
+              <li>vforge_project_context — referencias y HTML leído</li>
+              <li>vforge_project_see — plugin de ojos: fotografía Escritorio y Móvil</li>
+            </ul>
             <button
               type="button"
               onClick={() => void postAction({ action: "mcp-token" }, "Token visible una sola vez. Cópialo ahora.")}

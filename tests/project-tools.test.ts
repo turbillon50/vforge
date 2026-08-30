@@ -77,4 +77,5 @@ test("room brief tells V to suggest MCP and skip n8n", () => {
   assert.match(brief, /MCP/);
   assert.match(brief, /n8n/i);
   assert.match(brief, /Vercel/);
+  assert.match(brief, /vforge_project_see/);
 });

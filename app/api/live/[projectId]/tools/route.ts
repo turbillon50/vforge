@@ -178,7 +178,7 @@ export async function GET(
       mcp: {
         url: mcpUrl,
         projectId,
-        hint: "Toda app debe tener su MCP. Genéralo y pégalo en Claude, Cursor o Grok. No usamos n8n.",
+        hint: "Toda app debe tener su MCP. Claude, Cursor y Grok leen anotaciones, referencias y fotografían Escritorio/Móvil con vforge_project_see. No usamos n8n.",
         config: mcpClientConfig({ name: mcpName, url: mcpUrl }),
       },
     },

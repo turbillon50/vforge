@@ -60,6 +60,7 @@ export const TOOL_KIND: Record<string, ToolKind> = {
   vforge_project_feedback: "data",
   vforge_project_context: "data",
   vforge_project_file: "data",
+  vforge_project_see: "data",
   vforge_payments: "data",
   vforge_apps_health: "data",
   vforge_brain_search: "data",
