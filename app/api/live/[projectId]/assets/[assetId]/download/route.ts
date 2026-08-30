@@ -5,7 +5,7 @@ import {
   getCurrentVForgeIdentity,
   projectAssetApiPath,
 } from "@/lib/api/vforge-owned";
-import { safeArchiveName } from "@/lib/live/review-context";
+import { isSafeProjectBlobPath, safeArchiveName } from "@/lib/live/review-context";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
     if (!upstream.ok) return NextResponse.json({ error: "not_found" }, { status: upstream.status });
     const payload = (await upstream.json()) as { asset?: { filename?: string; blob_pathname?: string } };
     const pathname = payload.asset?.blob_pathname;
-    if (!pathname?.startsWith(`context/${projectId}/`)) {
+    if (!pathname || !isSafeProjectBlobPath(projectId, pathname)) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
     const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
