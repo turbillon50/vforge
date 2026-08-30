@@ -30,6 +30,7 @@
     "lib/live/read-page.ts",
     "lib/live/project-tools.ts",
     "lib/live/see-page.ts",
-    "lib/live/see-cdp.ts"
+    "lib/live/see-cdp.ts",
+    "lib/live/run-console.ts"
   ]
 }

@@ -13,6 +13,11 @@ import {
 } from "../lib/forge/cerebras-usage";
 import { modeSystemRules, providersForMode } from "../lib/forge/ask-v-policy";
 import { repositoryGroupLabel } from "../lib/projects/repository-groups";
+import {
+  formatElapsed,
+  isLiveRunStatus,
+  runnerWaitCopy,
+} from "../lib/live/run-console";
 
 test("V stays on Cerebras and names itself translator", () => {
   assert.equal(providersForMode("talk")[0].provider, "cerebras");
@@ -84,4 +89,14 @@ test("decision log and repo labels stay compact", () => {
     repositoryGroupLabel("turbillon50/apsus-web", "frontend", true),
     "Frontend · turbillon50/apsus-web · principal",
   );
+});
+
+test("live console wait copy is honest and timed", () => {
+  assert.equal(runnerWaitCopy(1000, true), null);
+  assert.match(runnerWaitCopy(1000, false) ?? "", /cola/);
+  assert.match(runnerWaitCopy(30_000, false) ?? "", /no tomó/);
+  assert.equal(formatElapsed(4500), "4s");
+  assert.equal(formatElapsed(125_000), "2m 05s");
+  assert.equal(isLiveRunStatus("running"), true);
+  assert.equal(isLiveRunStatus("published"), false);
 });

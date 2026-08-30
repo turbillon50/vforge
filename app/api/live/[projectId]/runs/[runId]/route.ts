@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db/client";
 import {
   authorizeAgentRunAccess,
+  buildAgentPrompt,
   ensureProjectAgentRunsTable,
+  type AgentQueueJob,
   type AgentRunRow,
 } from "@/lib/live/agent-runs";
+import { isLiveRunStatus } from "@/lib/live/run-console";
 import { parseRepoFullName, withUserGithub } from "@/lib/live/github-user";
 import { recordProjectDecision } from "@/lib/live/load-project-memory";
+import { dispatchJob } from "@/lib/vulcano/operator";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,6 +42,7 @@ export async function PATCH(
   if (!run) return json({ error: "not_found" }, 404);
   const payload = (await req.json().catch(() => null)) as {
     action?: string;
+    message?: string;
   } | null;
   const action = payload?.action;
 
@@ -166,6 +171,57 @@ export async function PATCH(
             caught instanceof Error
               ? caught.message.slice(0, 300)
               : "github_error",
+        },
+        502,
+      );
+    }
+  }
+
+  if (action === "nudge") {
+    const message =
+      typeof payload?.message === "string"
+        ? payload.message.trim().slice(0, 4000)
+        : "";
+    if (message.length < 2) return json({ error: "invalid_nudge" }, 400);
+    if (!isLiveRunStatus(run.status)) return json({ error: "run_idle" }, 409);
+    const agent =
+      run.resolved_executor === "claude" || run.resolved_executor === "codex"
+        ? run.resolved_executor
+        : "grok";
+    try {
+      const dispatched = await dispatchJob({
+        agent,
+        prompt: buildAgentPrompt({
+          runId,
+          projectId,
+          repo: run.repo_full_name,
+          baseBranch: run.base_branch,
+          workBranch: run.work_branch,
+          instruction: `CONTINUACIÓN EN VIVO. El owner te habla desde la sala:\n${message}`,
+          role: "builder",
+        }),
+        priority: 2,
+        source: `vforge:${projectId}:${runId}:${access.identity.userId}`,
+      });
+      const jobs = Array.isArray(run.queue_jobs) ? run.queue_jobs : [];
+      const nextJobs: AgentQueueJob[] = [
+        ...jobs,
+        { id: dispatched.id, agent, role: "builder" },
+      ];
+      const updated = await queryOne<AgentRunRow>(
+        `UPDATE project_agent_runs
+            SET queue_jobs = $1::jsonb, status = 'queued', phase = 'building', updated_at = now()
+          WHERE id = $2 RETURNING *`,
+        [JSON.stringify(nextJobs), runId],
+      );
+      return json({ run: updated });
+    } catch (caught) {
+      return json(
+        {
+          error:
+            caught instanceof Error
+              ? caught.message.slice(0, 300)
+              : "nudge_failed",
         },
         502,
       );
