@@ -901,7 +901,7 @@ export async function runMcpTool(
       const allowed = await authorizeMcpProject(projectId, principal);
       if (!allowed) return err("Proyecto no encontrado o sin acceso para este token MCP.");
 
-      const [project, integrations, document, assets] = await Promise.all([
+      const [project, integrations, repositories, document, assets] = await Promise.all([
         queryOne<{
           id: string; name: string; description: string | null; github_repo: string | null;
           github_default_branch: string | null; github_url: string | null; vercel_url: string | null;
@@ -914,6 +914,13 @@ export async function runMcpTool(
         ),
         queryAll<{ kind: string; label: string; status: string }>(
           "SELECT kind, label, status FROM project_integrations WHERE project_id = $1 ORDER BY kind",
+          [projectId],
+        ).catch(() => []),
+        queryAll<{ repo_full_name: string; role: string; is_primary: boolean; default_branch: string | null }>(
+          `SELECT repo_full_name, role, is_primary, default_branch
+             FROM project_repositories
+            WHERE project_id = $1
+            ORDER BY is_primary DESC, role, repo_full_name`,
           [projectId],
         ).catch(() => []),
         queryOne<{ content: string; updated_by: string; updated_at: string }>(
@@ -930,12 +937,18 @@ export async function runMcpTool(
       const integrationsText = integrations.length
         ? integrations.map((item) => `• ${item.label} (${item.kind}): ${item.status}`).join("\n")
         : "• Sin integraciones registradas.";
+      const repositoriesText = repositories.length
+        ? repositories
+            .map((item) => `• ${item.repo_full_name} · ${item.role}${item.is_primary ? " · principal" : ""} · rama ${item.default_branch ?? "sin definir"}`)
+            .join("\n")
+        : `• ${project.github_repo ?? "Sin repositorios enlazados."}`;
       const assetsText = assets.length
         ? assets.map((item) => `• ${item.filename} · id ${item.id} · ${item.size_bytes} bytes · texto extraído ${item.extracted_text_bytes} bytes`).join("\n")
         : "• Sin archivos de contexto.";
       return text(
         `# Contexto — ${project.name} (${project.id})\n\n` +
-        `## Código y publicación\nEstado: ${project.status}\nRepo: ${project.github_repo ?? "sin repo"}\nRama: ${project.github_default_branch ?? "sin rama"}\nGitHub: ${project.github_url ?? "sin URL"}\nVercel: ${project.vercel_url ?? "sin URL"}\nDominio: ${project.domain ?? "sin dominio"}\nAuditoría: ${project.last_audit_score ?? "sin score"} · ${project.last_audit_at ?? "sin fecha"}\n\n` +
+        `## Código y publicación\nEstado: ${project.status}\nRepo principal: ${project.github_repo ?? "sin repo"}\nRama principal: ${project.github_default_branch ?? "sin rama"}\nGitHub: ${project.github_url ?? "sin URL"}\nVercel: ${project.vercel_url ?? "sin URL"}\nDominio: ${project.domain ?? "sin dominio"}\nAuditoría: ${project.last_audit_score ?? "sin score"} · ${project.last_audit_at ?? "sin fecha"}\n\n` +
+        `## Grupo de repositorios\n${repositoriesText}\n\n` +
         `## Integraciones\n${integrationsText}\n\n` +
         `## CONTENIDO.md\n${document?.content?.trim() || project.description || "Sin contenido documentado todavía."}\n\n` +
         `## Archivos privados\n${assetsText}\n\n` +
