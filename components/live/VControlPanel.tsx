@@ -79,7 +79,7 @@ const EXECUTORS: Array<{ id: Executor; label: string; description: string }> = [
     label: "Claude",
     description: "Arquitectura y trabajo largo",
   },
-  { id: "grok", label: "Grok", description: "Investigación y auditoría" },
+  { id: "grok", label: "Grok", description: "Cambia código en sandbox" },
   { id: "team", label: "Equipo", description: "Claude → Codex → Grok" },
 ];
 
@@ -188,9 +188,9 @@ export function VControlPanel({
     [jobs],
   );
 
-  async function startRun(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!instruction.trim() || !repository || busy) return;
+  async function launchRun(nextInstruction: string, nextExecutor: Executor = executor) {
+    const text = nextInstruction.trim().slice(0, 12000);
+    if (text.length < 3 || !repository || busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -199,7 +199,11 @@ export function VControlPanel({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ instruction, executor, repository }),
+          body: JSON.stringify({
+            instruction: text,
+            executor: nextExecutor,
+            repository,
+          }),
         },
       );
       const payload = (await response.json().catch(() => null)) as {
@@ -211,6 +215,7 @@ export function VControlPanel({
       setInstruction("");
       setRuns((current) => [payload.run!, ...current]);
       setSelectedId(payload.run.id);
+      setControlMode("execute");
       await load();
     } catch (caught) {
       setError(
@@ -221,6 +226,11 @@ export function VControlPanel({
     } finally {
       setBusy(false);
     }
+  }
+
+  async function startRun(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await launchRun(instruction);
   }
 
   async function runAction(action: "approve" | "publish" | "cancel") {
@@ -273,7 +283,7 @@ export function VControlPanel({
               V · traductora de la sala
             </p>
             <p className="truncate text-[9px] text-[var(--fg-muted)]">
-              Cerebras habla · las IAs grandes sólo en Ejecución
+              Cerebras habla · Grok entra cuando le das la orden
             </p>
           </div>
         </div>
@@ -418,6 +428,17 @@ export function VControlPanel({
               body: JSON.stringify({
                 kind: "talk_to_plan",
                 summary: talk.slice(0, 400),
+              }),
+            });
+          }}
+          onDispatchGrok={(order) => {
+            void launchRun(order, "grok");
+            void fetch(`/api/live/${encodeURIComponent(projectId)}/memory`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                kind: "plan_to_task",
+                summary: `Grok: ${order.slice(0, 390)}`,
               }),
             });
           }}

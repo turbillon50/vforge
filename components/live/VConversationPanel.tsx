@@ -38,6 +38,7 @@ export function VConversationPanel({
   onRepositoryChange,
   onUseAsTask,
   onPromoteToPlan,
+  onDispatchGrok,
   seed,
 }: {
   projectId: string;
@@ -48,6 +49,7 @@ export function VConversationPanel({
   onRepositoryChange: (repository: string) => void;
   onUseAsTask: (plan: string) => void;
   onPromoteToPlan?: (talk: string) => void;
+  onDispatchGrok?: (order: string) => void;
   seed?: string;
 }) {
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
@@ -147,6 +149,24 @@ export function VConversationPanel({
     }
   }
 
+  function grokOrder(): string {
+    const typed = message.trim();
+    if (typed) return typed;
+    if (latestPlan) return latestPlan;
+    return (
+      [...visibleMessages]
+        .reverse()
+        .find((item) => item.role === "user")
+        ?.content.trim() ?? ""
+    );
+  }
+
+  function dispatchGrok() {
+    const order = grokOrder();
+    if (!order || !onDispatchGrok) return;
+    onDispatchGrok(order.slice(0, 12000));
+  }
+
   async function send(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await sendMessage(message);
@@ -167,8 +187,8 @@ export function VConversationPanel({
           </p>
           <p className="mt-0.5 text-[9px] text-[var(--fg-muted)]">
             {mode === "talk"
-              ? "V traduce. No crea ramas ni llama IAs grandes."
-              : "Define el trabajo. Ejecutar es el único modo que toca GitHub."}
+              ? "V traduce. Grok entra cuando le das la orden."
+              : "Define el trabajo o mándalo directo a Grok."}
           </p>
         </div>
         <select
@@ -294,6 +314,11 @@ export function VConversationPanel({
               Armar plan con lo de la sala
             </button>
           ) : null}
+          {latestPlan && onDispatchGrok ? (
+            <button type="button" onClick={dispatchGrok} className="btn-primary">
+              Mandar a Grok
+            </button>
+          ) : null}
           {latestPlan ? (
             <button
               type="button"
@@ -328,6 +353,14 @@ export function VConversationPanel({
               className="min-h-12 flex-1 resize-y border-0 bg-transparent px-2 py-1.5 text-[12px] leading-5 outline-none"
             />
             <button
+              type="button"
+              onClick={dispatchGrok}
+              disabled={busy || !grokOrder() || !onDispatchGrok}
+              className="btn-ghost min-h-12 px-3 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Grok, hazlo
+            </button>
+            <button
               type="submit"
               disabled={busy || !message.trim()}
               className="btn-primary min-h-12 px-4 disabled:cursor-not-allowed disabled:opacity-40"
@@ -341,7 +374,7 @@ export function VConversationPanel({
             </button>
           </div>
           <p className="mx-auto mt-2 max-w-4xl font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
-            Enter envía · Shift + Enter agrega línea · sin cambios en GitHub
+            Enter envía a V · Grok, hazlo toca el repo en sandbox
           </p>
         </form>
       ) : (

@@ -19,12 +19,12 @@ test("standalone API inherits a historical domain for both responsive previews",
     {
       desktop_url: "https://carnesn.ink/",
       mobile_url: "https://carnesn.ink/",
-      admin_url: null,
+      admin_url: "https://carnesn.ink/admin?embed=1",
     },
   );
 });
 
-test("standalone API prefers explicit viewports and never infers admin", () => {
+test("standalone API prefers explicit viewports and infers institutional admin", () => {
   assert.deepEqual(
     resolveProjectViewportUrls({
       ...emptyProject,
@@ -35,7 +35,7 @@ test("standalone API prefers explicit viewports and never infers admin", () => {
     {
       desktop_url: "https://desktop.example.com/",
       mobile_url: "https://mobile.example.com/",
-      admin_url: null,
+      admin_url: "https://desktop.example.com/admin?embed=1",
     },
   );
 });
