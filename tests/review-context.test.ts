@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   isAcceptedZip,
+  isSafeProjectBlobPath,
   parseReviewAnchor,
   safeArchiveName,
 } from "../lib/live/review-context";
@@ -36,4 +37,12 @@ test("ZIP validation rejects renamed or oversized files", () => {
   assert.equal(isAcceptedZip("chat.pdf", "application/zip", 2048), false);
   assert.equal(isAcceptedZip("chat.zip", "application/zip", 51 * 1024 * 1024), false);
   assert.equal(safeArchiveName("Conversación cliente #1.zip"), "Conversaci_n_cliente_1.zip");
+});
+
+test("private Blob paths stay inside the exact project namespace", () => {
+  assert.equal(isSafeProjectBlobPath("apsus", "context/apsus/123-chat.zip"), true);
+  assert.equal(isSafeProjectBlobPath("apsus", "context/apsus/../secret.zip"), false);
+  assert.equal(isSafeProjectBlobPath("apsus", "context/apsus/%2e%2e/secret.zip"), false);
+  assert.equal(isSafeProjectBlobPath("apsus", "context/apsus\\secret.zip"), false);
+  assert.equal(isSafeProjectBlobPath("apsus", "context/otro/123-chat.zip"), false);
 });
