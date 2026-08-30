@@ -77,6 +77,10 @@ function clip(value: string, max: number): string {
   return `${trimmed.slice(0, max - 1)}…`;
 }
 
+function urlKey(url: string): string {
+  return url.trim().replace(/\/$/, "");
+}
+
 function formatAnchor(raw: unknown): string {
   const anchor: ReviewAnchor | null = parseReviewAnchor(raw);
   if (!anchor) return "";
@@ -89,6 +93,7 @@ export function formatRoomContext(input: RoomContextInput): string {
   const lines: string[] = [
     "CONTEXTO DE LA SALA. Léelo completo. Cuando el usuario dice «puntos», «observaciones», «lo que marqué» o «lo de ahí», se refiere a esto.",
     "No afirmes que no lo ves. No pidas que te lo reescriba si ya está aquí.",
+    "Lee comentarios, URLs de referencia y el HTML extraído. Si una URL no trajo HTML, dílo; no inventes la página.",
   ];
 
   const project = input.project ?? {};
@@ -125,7 +130,7 @@ export function formatRoomContext(input: RoomContextInput): string {
 
   const observations = (input.comments ?? [])
     .filter((comment) => comment.body?.trim() && !isSystemComment(comment))
-    .slice(0, 30);
+    .slice(0, 50);
   lines.push("");
   if (observations.length === 0) {
     lines.push("OBSERVACIONES: ninguna todavía.");
@@ -144,13 +149,16 @@ export function formatRoomContext(input: RoomContextInput): string {
       lines.push(
         `${index + 1}. ${author}${when}${formatAnchor(comment.anchor)}`,
       );
-      lines.push(`   ${clip(comment.body, 500)}`);
+      lines.push(`   ${clip(comment.body, 800)}`);
     });
   }
 
   const references = (input.references ?? [])
     .filter((item) => item.url?.trim())
-    .slice(0, 20);
+    .slice(0, 30);
+  const readKeys = new Set(
+    (input.pages ?? []).map((page) => urlKey(page.url)),
+  );
   const visualKinds = new Set(["inspiration", "component", "marca", "brand", "visual"]);
   const visualRefs = references.filter((item) =>
     visualKinds.has((item.kind || "").toLowerCase()),
@@ -158,6 +166,15 @@ export function formatRoomContext(input: RoomContextInput): string {
   const pageRefs = references.filter(
     (item) => !visualKinds.has((item.kind || "").toLowerCase()),
   );
+
+  const formatRef = (item: RoomReference): string => {
+    const kind = item.kind?.trim() ? `[${item.kind}] ` : "";
+    const label = item.label?.trim() || item.url;
+    const notes = item.notes?.trim() ? ` — ${clip(item.notes, 180)}` : "";
+    const read = readKeys.has(urlKey(item.url)) ? " · HTML leído" : " · sin HTML leído aún";
+    return `- ${kind}${label}: ${item.url}${notes}${read}`;
+  };
+
   lines.push("");
   if (visualRefs.length === 0) {
     lines.push("MARCAS Y REFERENCIAS VISUALES: ninguna todavía.");
@@ -165,34 +182,24 @@ export function formatRoomContext(input: RoomContextInput): string {
     lines.push(
       `MARCAS Y REFERENCIAS VISUALES (${visualRefs.length}). Están en la sala. No digas que no las ves.`,
     );
-    for (const item of visualRefs) {
-      const kind = item.kind?.trim() ? `[${item.kind}] ` : "";
-      const label = item.label?.trim() || item.url;
-      const notes = item.notes?.trim() ? ` — ${clip(item.notes, 180)}` : "";
-      lines.push(`- ${kind}${label}: ${item.url}${notes}`);
-    }
+    for (const item of visualRefs) lines.push(formatRef(item));
   }
   lines.push("");
   if (pageRefs.length === 0 && visualRefs.length === 0) {
     lines.push("REFERENCIAS DE PÁGINA: ninguna todavía.");
   } else if (pageRefs.length) {
     lines.push(`URLS DE REFERENCIA (${pageRefs.length}):`);
-    for (const item of pageRefs) {
-      const kind = item.kind?.trim() ? `[${item.kind}] ` : "";
-      const label = item.label?.trim() || item.url;
-      const notes = item.notes?.trim() ? ` — ${clip(item.notes, 180)}` : "";
-      lines.push(`- ${kind}${label}: ${item.url}${notes}`);
-    }
+    for (const item of pageRefs) lines.push(formatRef(item));
   }
 
-  const pages = (input.pages ?? []).filter((page) => page.text?.trim()).slice(0, 5);
+  const pages = (input.pages ?? []).filter((page) => page.text?.trim()).slice(0, 10);
   if (pages.length) {
     lines.push("");
     lines.push(`CONTENIDO LEÍDO DE LAS URLS (${pages.length}):`);
     for (const page of pages) {
       const title = page.title?.trim() ? ` — ${page.title.trim()}` : "";
       lines.push(`### ${page.url}${title}`);
-      lines.push(clip(page.text, 1600));
+      lines.push(clip(page.text, 2200));
     }
   }
 
@@ -210,7 +217,7 @@ export function formatRoomContext(input: RoomContextInput): string {
   lines.push("");
   if (document) {
     lines.push("CONTENIDO.md DE LA SALA:");
-    lines.push(clip(document, 4000));
+    lines.push(clip(document, 5000));
   } else {
     lines.push("CONTENIDO.md: vacío.");
   }
@@ -256,7 +263,7 @@ export function formatRoomContext(input: RoomContextInput): string {
   }
 
   let text = lines.join("\n");
-  if (text.length > 14000) text = `${text.slice(0, 13999)}…`;
+  if (text.length > 22000) text = `${text.slice(0, 21999)}…`;
   return text;
 }
 
