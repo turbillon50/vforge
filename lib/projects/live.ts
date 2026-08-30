@@ -7,7 +7,7 @@
  *
  * Todo es best-effort: cualquier error se traga (el webhook responde 200).
  */
-import { queryOne, queryAll } from "@/lib/db/client";
+import { queryOne } from "@/lib/db/client";
 import { addTimelineEvent } from "@/lib/projects/timeline";
 
 /** Registra el evento crudo (auditoría) y devuelve si se asoció a un proyecto. */
@@ -186,6 +186,7 @@ export interface DeployInfo {
   state: string; // ready|building|error|canceled
   deploymentId: string | null;
   commitSha: string | null;
+  branch: string | null;
 }
 
 /** Webhook de Vercel → project_deploys + timeline + integración. */
@@ -197,11 +198,24 @@ export async function recordVercelDeploy(d: DeployInfo): Promise<boolean> {
   await queryOne(
     `INSERT INTO project_deploys
         (project_id, provider, vercel_project_id, deployment_id, name, url, state, commit_sha, meta)
-     VALUES ($1, 'vercel', $2, $3, $4, $5, $6, $7, '{}'::jsonb)
+     VALUES ($1, 'vercel', $2, $3, $4, $5, $6, $7, $8::jsonb)
      ON CONFLICT (provider, deployment_id) WHERE deployment_id IS NOT NULL
      DO UPDATE SET state = EXCLUDED.state, url = COALESCE(EXCLUDED.url, project_deploys.url)`,
-    [projectId, d.vercelProjectId, d.deploymentId, d.name, d.url, d.state, d.commitSha],
+    [projectId, d.vercelProjectId, d.deploymentId, d.name, d.url, d.state, d.commitSha, JSON.stringify({ branch: d.branch })],
   );
+
+  if (d.branch && d.url) {
+    const previewUrl = d.url.startsWith("http://") || d.url.startsWith("https://") ? d.url : `https://${d.url}`;
+    await queryOne(
+      `UPDATE project_agent_runs
+          SET preview_url = $1,
+              status = CASE WHEN status IN ('awaiting_preview','awaiting_approval','preview_ready') AND $2 IN ('ready','succeeded')
+                            THEN 'preview_ready' ELSE status END,
+              updated_at = now()
+        WHERE project_id = $3 AND work_branch = $4 AND status NOT IN ('published','cancelled','failed')`,
+      [previewUrl, d.state, projectId, d.branch],
+    ).catch(() => null);
+  }
 
   const ok = d.state === "ready" || d.state === "succeeded";
   const err = d.state === "error" || d.state === "canceled";
