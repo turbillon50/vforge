@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   IconChat,
+  IconFile,
   IconExtLink,
   IconLayout,
   IconLoader,
@@ -12,6 +13,7 @@ import {
   IconShield,
   IconX,
 } from "@/components/brand/VFIcons";
+import { ProjectContextPanel } from "@/components/live/ProjectContextPanel";
 
 type ViewId = "mobile" | "desktop" | "admin";
 
@@ -64,6 +66,7 @@ export function MobileLiveShell({
 }) {
   const [expanded, setExpanded] = useState<ViewId | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [contextOpen, setContextOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const urls = useMemo(
@@ -123,6 +126,14 @@ export function MobileLiveShell({
             className="flex h-9 items-center gap-1 rounded-md px-2 text-[13px]"
           >
             <IconX size={16} /> Cerrar
+          </button>
+          <button
+            type="button"
+            onClick={() => setContextOpen(true)}
+            className="flex flex-col items-center gap-0.5 text-[var(--fg-muted)]"
+          >
+            <IconFile size={18} />
+            <span className="font-mono text-[8px] uppercase tracking-[0.08em]">Contexto</span>
           </button>
           <span className="font-mono text-[9px] uppercase tracking-[0.12em] opacity-70">
             {card?.label}
@@ -231,6 +242,25 @@ export function MobileLiveShell({
       {chatOpen ? (
         <ChatSheet projectId={project.id} onClose={() => setChatOpen(false)} />
       ) : null}
+      {contextOpen ? (
+        <ContextSheet projectId={project.id} onClose={() => setContextOpen(false)} />
+      ) : null}
+    </div>
+  );
+}
+
+function ContextSheet({ projectId, onClose }: { projectId: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-white" role="dialog" aria-modal="true" aria-label="Archivos y contexto">
+      <div className="flex h-12 items-center justify-between border-b border-[var(--border-1)] px-3">
+        <p className="text-[14px] font-medium">Archivos y contexto</p>
+        <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-md border border-[var(--border-1)]" aria-label="Cerrar contexto">
+          <IconX size={14} />
+        </button>
+      </div>
+      <div className="h-[calc(100dvh-48px)] overflow-hidden p-3 pb-[env(safe-area-inset-bottom,0px)]">
+        <ProjectContextPanel projectId={projectId} workspace />
+      </div>
     </div>
   );
 }
