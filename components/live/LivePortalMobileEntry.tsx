@@ -48,7 +48,9 @@ export function LivePortalMobileEntry({
             <IconMenu size={16} />
           </button>
           <div className="min-w-0">
-            <p className="truncate text-[14px] font-medium tracking-[-0.02em]">{project.name}</p>
+            <p className="truncate text-[14px] font-medium tracking-[-0.02em]">
+              {project.name}
+            </p>
             <p className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
               Live · {ROLE_LABEL[me.role]}
             </p>
@@ -98,7 +100,7 @@ export function LivePortalMobileEntry({
               </Link>
               {canInvite ? (
                 <div id="invite">
-                  <InvitePanel projectId={project.id} />
+                  <InvitePanel projectId={project.id} compact />
                 </div>
               ) : null}
             </div>

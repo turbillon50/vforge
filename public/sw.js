@@ -1,18 +1,29 @@
 // VForge minimal service worker — offline shell + network-first for documents
 // Bump VERSION on every deploy where you want forced cache invalidation
-const VERSION = "vforge-project-repos-2026-08-30-2";
+const VERSION = "vforge-live-invite-2026-08-30-3";
 // Nunca precachear pantallas autenticadas: su HTML debe corresponder siempre
 // al deployment actual y a la sesión activa.
 const SHELL = ["/", "/offline"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).catch(() => {}));
+  event.waitUntil(
+    caches
+      .open(VERSION)
+      .then((c) => c.addAll(SHELL))
+      .catch(() => {}),
+  );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)),
+        ),
+      ),
   );
   self.clients.claim();
 });
@@ -31,7 +42,8 @@ self.addEventListener("fetch", (event) => {
   // Datos, bundles y respuestas RSC siempre pasan por red. Next.js ya publica
   // sus assets con hashes; guardarlos aquí puede mezclar dos releases.
   const isNextAsset = url.pathname.startsWith("/_next/");
-  const isRscRequest = url.searchParams.has("_rsc") || req.headers.get("RSC") === "1";
+  const isRscRequest =
+    url.searchParams.has("_rsc") || req.headers.get("RSC") === "1";
   if (url.pathname.startsWith("/api/") || isNextAsset || isRscRequest) {
     return;
   }
@@ -47,7 +59,9 @@ self.addEventListener("fetch", (event) => {
   // peligroso que mostrar la pantalla offline correcta.
   if (isAuthenticatedApp) {
     event.respondWith(
-      fetch(new Request(req, { cache: "no-store" })).catch(() => caches.match("/offline"))
+      fetch(new Request(req, { cache: "no-store" })).catch(() =>
+        caches.match("/offline"),
+      ),
     );
     return;
   }
@@ -61,7 +75,9 @@ self.addEventListener("fetch", (event) => {
           caches.open(VERSION).then((c) => c.put(req, copy));
           return res;
         })
-        .catch(() => caches.match(req).then((r) => r || caches.match("/offline")))
+        .catch(() =>
+          caches.match(req).then((r) => r || caches.match("/offline")),
+        ),
     );
     return;
   }
@@ -75,14 +91,16 @@ self.addEventListener("fetch", (event) => {
         return res;
       });
       return cached || networkPromise;
-    })
+    }),
   );
 });
 
 // ── Push notifications (VAPID) ──
 self.addEventListener("push", (event) => {
   let data = { title: "VForge", body: "Tienes una novedad.", url: "/app" };
-  try { if (event.data) data = { ...data, ...event.data.json() }; } catch {}
+  try {
+    if (event.data) data = { ...data, ...event.data.json() };
+  } catch {}
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
@@ -90,17 +108,25 @@ self.addEventListener("push", (event) => {
       badge: "/icon.svg",
       data: { url: data.url || "/app" },
       vibrate: [80, 40, 80],
-    })
+    }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || "/app";
+  const url =
+    (event.notification.data && event.notification.data.url) || "/app";
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
-      for (const w of wins) { if ("focus" in w) { w.navigate(url); return w.focus(); } }
-      return self.clients.openWindow(url);
-    })
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((wins) => {
+        for (const w of wins) {
+          if ("focus" in w) {
+            w.navigate(url);
+            return w.focus();
+          }
+        }
+        return self.clients.openWindow(url);
+      }),
   );
 });
