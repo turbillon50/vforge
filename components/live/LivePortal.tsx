@@ -186,18 +186,22 @@ export function LivePortal({
   me: LivePortalMe;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const canSeeAdmin = me.role === "owner" || me.role === "reviewer";
   const canInvite = me.role === "owner";
 
   useEffect(() => {
-    if (!drawerOpen) return;
+    if (!drawerOpen && !inviteOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setDrawerOpen(false);
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+        setInviteOpen(false);
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [drawerOpen]);
+  }, [drawerOpen, inviteOpen]);
 
   return (
     <div className="vf-mobile-stable flex h-svh overflow-hidden overscroll-none bg-[var(--color-surface)] text-[var(--color-ink)] lg:h-dvh">
@@ -230,6 +234,28 @@ export function LivePortal({
               <IconX size={14} />
             </button>
             <LiveSidebar project={project} me={me} />
+          </aside>
+        </div>
+      ) : null}
+
+      {inviteOpen ? (
+        <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label="Invitar al proyecto">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/30"
+            onClick={() => setInviteOpen(false)}
+            aria-label="Cerrar invitaciones"
+          />
+          <aside className="absolute inset-y-0 right-0 w-[min(92vw,420px)] overflow-y-auto border-l border-black bg-white shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setInviteOpen(false)}
+              className="absolute right-3 top-2 z-10 grid h-8 w-8 place-items-center rounded-md border border-[var(--border-1)] bg-white hover:border-black"
+              aria-label="Cerrar invitaciones"
+            >
+              <IconX size={12} />
+            </button>
+            <InvitePanel projectId={project.id} compact />
           </aside>
         </div>
       ) : null}
@@ -270,22 +296,15 @@ export function LivePortal({
               {ROLE_LABEL[me.role]}
             </span>
             {canInvite ? (
-              <a href="#live-invitations" className="btn-primary !min-h-9 !px-3">
+              <button type="button" onClick={() => setInviteOpen(true)} className="btn-primary !min-h-9 !px-3">
                 <IconUsers size={12} /> <span className="hidden sm:inline">Invitar</span>
-              </a>
+              </button>
             ) : null}
           </div>
         </header>
 
         <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-[var(--color-background)]">
           <LiveWorkspace project={project} me={me} canSeeAdmin={canSeeAdmin} />
-          <div className="px-3 pb-3 md:px-4 md:pb-4">
-            {canInvite ? (
-              <div id="live-invitations" className="scroll-mt-4">
-                <InvitePanel projectId={project.id} />
-              </div>
-            ) : null}
-          </div>
         </main>
       </div>
     </div>
