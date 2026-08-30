@@ -48,6 +48,19 @@ test("room brief surfaces observations, reference urls and content", () => {
         url: "https://apsus.site/onboarding",
         notes: "flujo que duele",
       },
+      {
+        kind: "inspiration",
+        label: "Aman",
+        url: "https://www.aman.com",
+        notes: "luz",
+      },
+    ],
+    pages: [
+      {
+        url: "https://apsus.site/onboarding",
+        title: "Onboarding",
+        text: "Paso 1: datos. Paso 2: KYC.",
+      },
     ],
     document: "Prioridad: contrastes y onboarding APSUS.",
     assets: [{ filename: "brief.pdf" }],
@@ -58,6 +71,10 @@ test("room brief surfaces observations, reference urls and content", () => {
   assert.match(brief, /https:\/\/apsus\.site\/app/);
   assert.doesNotMatch(brief, /Tarea aceptada/);
   assert.match(brief, /Onboarding: https:\/\/apsus\.site\/onboarding/);
+  assert.match(brief, /HTML leído/);
+  assert.match(brief, /sin HTML leído aún/);
+  assert.match(brief, /CONTENIDO LEÍDO DE LAS URLS/);
+  assert.match(brief, /Paso 1: datos/);
   assert.match(brief, /CONTENIDO\.md DE LA SALA/);
   assert.match(brief, /contrastes y onboarding/);
   assert.match(brief, /brief\.pdf/);
