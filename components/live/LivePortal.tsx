@@ -339,18 +339,18 @@ function LiveWorkspace({
   canSeeAdmin: boolean;
 }) {
   const storageKey = `vforge:dock-layout:v1:${project.id}:${me.role}`;
-  const availablePanels = useMemo<WorkspacePanelId[]>(
+  const factoryPanels = useMemo<WorkspacePanelId[]>(
+    () => ["v", "code", "references", "tools"],
+    [],
+  );
+  const viewPanels = useMemo<WorkspacePanelId[]>(
     () => [
-      "v",
       "desktop",
       "mobile",
       ...(canSeeAdmin ? (["admin"] as WorkspacePanelId[]) : []),
       "activity",
       "comments",
       "context",
-      "code",
-      "references",
-      "tools",
     ],
     [canSeeAdmin],
   );
@@ -527,7 +527,11 @@ function LiveWorkspace({
   ) : focusedPanel === "v" ? (
     <VControlPanel projectId={project.id} onClose={() => setFocusedPanel(null)} />
   ) : focusedPanel === "tools" ? (
-    <ToolsPanel projectId={project.id} onClose={() => setFocusedPanel(null)} />
+    <ToolsPanel
+      projectId={project.id}
+      canWrite={me.role === "owner" || me.isPlatformOwner}
+      onClose={() => setFocusedPanel(null)}
+    />
   ) : null;
 
   return (
@@ -546,15 +550,33 @@ function LiveWorkspace({
             </button>
           ))}
         </div>
-        <div className="flex shrink-0 items-center gap-1" aria-label="Paneles visibles">
-          {availablePanels.map((panel) => {
-            const standalone = panel === "code" || panel === "references" || panel === "v" || panel === "tools";
-            const visible = standalone ? focusedPanel === panel : !collapsed[panel];
+        <div className="flex shrink-0 items-center gap-1" aria-label="Fábrica">
+          {factoryPanels.map((panel) => {
+            const visible = focusedPanel === panel;
             return (
               <button
                 key={panel}
                 type="button"
-                onClick={() => standalone ? focusAction(panel) : togglePanel(panel, panelHandles[panel])}
+                onClick={() => focusAction(panel)}
+                aria-pressed={visible}
+                className={cn(
+                  "rounded-md border px-2.5 py-2 font-mono text-[8px] uppercase tracking-[0.1em]",
+                  visible ? "border-black bg-black text-white" : "border-[var(--border-1)] bg-white text-black",
+                )}
+              >
+                {PANEL_LABELS[panel]}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex shrink-0 items-center gap-1 border-l border-[var(--border-1)] pl-2" aria-label="Vistas">
+          {viewPanels.map((panel) => {
+            const visible = !collapsed[panel];
+            return (
+              <button
+                key={panel}
+                type="button"
+                onClick={() => togglePanel(panel, panelHandles[panel])}
                 aria-pressed={visible}
                 className={cn(
                   "rounded-md border px-2.5 py-2 font-mono text-[8px] uppercase tracking-[0.1em]",

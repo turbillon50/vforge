@@ -334,7 +334,25 @@ export interface VercelEnvVar {
   updatedAt?: number;
 }
 
-/** Lista variables de entorno: nombres, destino y tipo. Nunca el valor. */
+export async function assignAlias(
+  deploymentId: string,
+  alias: string,
+  options: { auditUserId?: string } = {},
+): Promise<{ alias: string; uid?: string }> {
+  const { token } = await getCreds(options);
+  const team = await getDefaultTeam(options);
+  const data = await vercelJson<{ alias?: string; uid?: string }>(
+    `/v2/deployments/${encodeURIComponent(deploymentId)}/aliases`,
+    {
+      method: "POST",
+      token,
+      teamId: team.id,
+      body: JSON.stringify({ alias }),
+    },
+  );
+  return { alias: data.alias || alias, uid: data.uid };
+}
+
 export async function listProjectEnvVars(
   idOrName: string,
   options: { auditUserId?: string } = {},

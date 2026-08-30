@@ -4,16 +4,27 @@ import { queryAll, queryOne, sql } from "@/lib/db/client";
 import { createMcpToken } from "@/lib/mcp/tokens";
 import {
   buildIntegrationCatalog,
+  isSafeDomain,
   isSafeSecretName,
+  mcpClientConfig,
+  parseGithubRepo,
   secretLooksLike,
+  VERCEL_TOOL_ACTIONS,
   type VaultSecretMeta,
 } from "@/lib/live/project-tools";
 import { encryptOperatorSecret } from "@/lib/vault/operator-crypto";
 import { invalidateSecretCache } from "@/lib/vault/get-secret";
 import {
+  addDomain,
+  assignAlias,
+  getProject,
   listDeployments,
   listProjectDomains,
   listProjectEnvVars,
+  pickCustomDomain,
+  setEnvVar,
+  triggerDeployment,
+  type EnvTarget,
 } from "@/lib/vercel/client";
 
 export const runtime = "nodejs";
@@ -32,13 +43,21 @@ interface ProjectRow {
   status: string | null;
 }
 
+function jsonError(error: string, status: number, extra?: Record<string, unknown>) {
+  return NextResponse.json({ error, ...extra }, { status, headers: noStore });
+}
+
+function ownerOnly(live: { me: { role: string; isPlatformOwner: boolean } }) {
+  return live.me.role === "owner" || live.me.isPlatformOwner;
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ projectId: string }> },
 ) {
   const { projectId } = await params;
   const live = await loadVForgeLiveProject(projectId).catch(() => null);
-  if (!live) return NextResponse.json({ error: "not_found" }, { status: 404, headers: noStore });
+  if (!live) return jsonError("not_found", 404);
 
   const project = await queryOne<ProjectRow>(
     `SELECT id, name, github_repo, github_url, vercel_project_id, vercel_url, domain, status
@@ -47,7 +66,7 @@ export async function GET(
       LIMIT 1`,
     [projectId],
   );
-  if (!project) return NextResponse.json({ error: "not_found" }, { status: 404, headers: noStore });
+  if (!project) return jsonError("not_found", 404);
 
   const [integrationRows, secrets] = await Promise.all([
     queryAll<{ kind: string; label: string; status: string }>(
@@ -64,14 +83,18 @@ export async function GET(
   ]);
 
   const secretNames = secrets.map((item) => item.name);
+  const github = parseGithubRepo(project.github_repo) || parseGithubRepo(project.github_url);
   const integrations = buildIntegrationCatalog({
-    github: Boolean(project.github_repo || project.github_url),
+    github: Boolean(github),
     vercel: Boolean(project.vercel_project_id || project.vercel_url),
     neon: secretNames.some((name) => secretLooksLike(name, "NEON") || secretLooksLike(name, "DATABASE")),
     clerk: secretNames.some((name) => secretLooksLike(name, "CLERK")),
     stripe: secretNames.some((name) => secretLooksLike(name, "STRIPE")),
     resend: secretNames.some((name) => secretLooksLike(name, "RESEND")),
     blob: secretNames.some((name) => secretLooksLike(name, "BLOB")),
+    mercadopago: secretNames.some((name) => secretLooksLike(name, "MERCADOPAGO") || secretLooksLike(name, "MERCADO_PAGO")),
+    namecom: secretNames.some((name) => secretLooksLike(name, "NAMECOM") || secretLooksLike(name, "NAME_COM")),
+    hetzner: secretNames.some((name) => secretLooksLike(name, "HETZNER")),
     rows: integrationRows,
   });
 
@@ -80,28 +103,39 @@ export async function GET(
     projectId: project.vercel_project_id,
     url: project.vercel_url,
     domain: project.domain,
+    github,
+    actions: VERCEL_TOOL_ACTIONS,
     deployments: [],
     domains: [],
     env: [],
   };
   if (project.vercel_project_id) {
     try {
-      const [deployments, domains, env] = await Promise.all([
+      const [deployments, domains, env, details] = await Promise.all([
         listDeployments(project.vercel_project_id, { limit: 8 }),
         listProjectDomains(project.vercel_project_id),
         listProjectEnvVars(project.vercel_project_id),
+        getProject(project.vercel_project_id).catch(() => null),
       ]);
       vercel = {
         connected: true,
         projectId: project.vercel_project_id,
         url: project.vercel_url,
-        domain: project.domain,
+        domain: project.domain || pickCustomDomain(domains),
+        github,
+        actions: VERCEL_TOOL_ACTIONS,
+        framework: details?.framework ?? null,
+        rootDirectory: details?.rootDirectory ?? null,
+        name: details?.name ?? project.name,
         deployments: deployments.map((item) => ({
           uid: item.uid,
           url: item.url,
           state: item.readyState || item.state || "unknown",
           target: item.target || "preview",
           createdAt: item.createdAt,
+          commit: item.meta?.githubCommitSha?.slice(0, 7) || null,
+          ref: item.meta?.githubCommitRef || null,
+          message: (item.meta?.githubCommitMessage || "").split("\n")[0]?.slice(0, 80) || null,
         })),
         domains: domains.map((item) => ({
           name: item.name,
@@ -121,14 +155,18 @@ export async function GET(
     }
   }
 
+  const mcpName = `VForge · ${live.project.name}`;
+  const mcpUrl = "https://vforge.site/api/mcp";
+
   return NextResponse.json(
     {
       project: {
         id: project.id,
         name: project.name,
         status: project.status,
-        github: project.github_repo || project.github_url,
+        github,
       },
+      canWrite: ownerOnly(live),
       vercel,
       integrations,
       vault: {
@@ -138,9 +176,10 @@ export async function GET(
         })),
       },
       mcp: {
-        url: "https://vforge.site/api/mcp",
+        url: mcpUrl,
         projectId,
-        hint: "Cada app tiene su MCP. Genéralo y pégalo en tu IA.",
+        hint: "Toda app debe tener su MCP. Genéralo y pégalo en Claude, Cursor o Grok. No usamos n8n.",
+        config: mcpClientConfig({ name: mcpName, url: mcpUrl }),
       },
     },
     { headers: noStore },
@@ -154,27 +193,25 @@ export async function POST(
   const { projectId } = await params;
   const identity = await getCurrentVForgeIdentity();
   const live = await loadVForgeLiveProject(projectId).catch(() => null);
-  if (!identity || !live) {
-    return NextResponse.json({ error: "not_found" }, { status: 404, headers: noStore });
-  }
-  if (live.me.role === "observer") {
-    return NextResponse.json({ error: "forbidden" }, { status: 403, headers: noStore });
-  }
+  if (!identity || !live) return jsonError("not_found", 404);
+  if (live.me.role === "observer") return jsonError("forbidden", 403);
 
   const payload = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const action = typeof payload?.action === "string" ? payload.action : "";
 
   if (action === "mcp-token") {
     const token = await createMcpToken(identity.userId, `VForge MCP · ${projectId}`);
+    const url = "https://vforge.site/api/mcp";
     return NextResponse.json(
       {
         token,
-        url: "https://vforge.site/api/mcp",
+        url,
         config: {
           name: `VForge · ${live.project.name}`,
-          url: "https://vforge.site/api/mcp",
+          url,
           auth: "Bearer",
           token,
+          clients: mcpClientConfig({ name: `VForge · ${live.project.name}`, url }),
         },
       },
       { headers: noStore },
@@ -182,14 +219,12 @@ export async function POST(
   }
 
   if (action === "secret") {
-    if (live.me.role !== "owner" && !live.me.isPlatformOwner) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403, headers: noStore });
-    }
+    if (!ownerOnly(live)) return jsonError("forbidden", 403);
     const name = typeof payload?.name === "string" ? payload.name.trim() : "";
     const value = typeof payload?.value === "string" ? payload.value : "";
     const provider = typeof payload?.provider === "string" ? payload.provider.trim() : null;
     if (!isSafeSecretName(name) || !value || value.length > 8192) {
-      return NextResponse.json({ error: "invalid_secret" }, { status: 400, headers: noStore });
+      return jsonError("invalid_secret", 400);
     }
     try {
       const enc = encryptOperatorSecret(value);
@@ -215,12 +250,81 @@ export async function POST(
       invalidateSecretCache(name, projectId);
       return NextResponse.json({ ok: true, name, preview: "••••••••" }, { headers: noStore });
     } catch {
-      return NextResponse.json(
-        { error: "vault_unavailable", notice: "La bóveda no pudo cifrar el secreto." },
-        { status: 503, headers: noStore },
-      );
+      return jsonError("vault_unavailable", 503, { notice: "La bóveda no pudo cifrar el secreto." });
     }
   }
 
-  return NextResponse.json({ error: "unknown_action" }, { status: 400, headers: noStore });
+  if (
+    action === "vercel-redeploy" ||
+    action === "vercel-domain" ||
+    action === "vercel-env" ||
+    action === "vercel-promote"
+  ) {
+    if (!ownerOnly(live)) return jsonError("forbidden", 403);
+    const project = await queryOne<ProjectRow>(
+      `SELECT id, name, github_repo, github_url, vercel_project_id, vercel_url, domain, status
+         FROM projects
+        WHERE id = $1
+        LIMIT 1`,
+      [projectId],
+    );
+    if (!project?.vercel_project_id) return jsonError("vercel_unlinked", 409);
+
+    try {
+      if (action === "vercel-redeploy") {
+        const github = parseGithubRepo(project.github_repo) || parseGithubRepo(project.github_url);
+        if (!github) return jsonError("github_unlinked", 409);
+        const branch = typeof payload?.branch === "string" && payload.branch.trim() ? payload.branch.trim() : "main";
+        const result = await triggerDeployment({
+          projectId: project.vercel_project_id,
+          name: project.name,
+          ghRepoFullName: github,
+          branch,
+          target: "production",
+        });
+        return NextResponse.json({ ok: true, deployment: result }, { headers: noStore });
+      }
+
+      if (action === "vercel-domain") {
+        const domain = typeof payload?.domain === "string" ? payload.domain.trim().toLowerCase() : "";
+        if (!isSafeDomain(domain)) return jsonError("invalid_domain", 400);
+        const result = await addDomain(project.vercel_project_id, domain);
+        return NextResponse.json({ ok: true, domain: result }, { headers: noStore });
+      }
+
+      if (action === "vercel-env") {
+        const key = typeof payload?.key === "string" ? payload.key.trim() : "";
+        const value = typeof payload?.value === "string" ? payload.value : "";
+        const targetRaw = Array.isArray(payload?.target)
+          ? payload.target.filter((item): item is string => typeof item === "string")
+          : ["production", "preview"];
+        const target = targetRaw.filter((item): item is EnvTarget =>
+          item === "production" || item === "preview" || item === "development",
+        );
+        if (!isSafeSecretName(key) || !value || value.length > 8192 || target.length === 0) {
+          return jsonError("invalid_env", 400);
+        }
+        await setEnvVar(project.vercel_project_id, { key, value, target });
+        return NextResponse.json({ ok: true, key, target, preview: "••••••••" }, { headers: noStore });
+      }
+
+      const deploymentId = typeof payload?.deploymentId === "string" ? payload.deploymentId.trim() : "";
+      if (!deploymentId) return jsonError("invalid_deployment", 400);
+      const domains = await listProjectDomains(project.vercel_project_id);
+      const alias =
+        (typeof payload?.alias === "string" && isSafeDomain(payload.alias) ? payload.alias.trim() : null) ||
+        project.domain ||
+        pickCustomDomain(domains) ||
+        (project.vercel_url || "").replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+      if (!alias) return jsonError("no_production_alias", 409);
+      const result = await assignAlias(deploymentId, alias);
+      return NextResponse.json({ ok: true, alias: result.alias, deploymentId }, { headers: noStore });
+    } catch (error) {
+      return jsonError("vercel_unavailable", 503, {
+        notice: error instanceof Error ? error.message : "Vercel no respondió.",
+      });
+    }
+  }
+
+  return jsonError("unknown_action", 400);
 }

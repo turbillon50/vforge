@@ -62,17 +62,22 @@ test("room brief surfaces observations, reference urls and content", () => {
   assert.match(brief, /contrastes y onboarding/);
   assert.match(brief, /brief\.pdf/);
   assert.match(brief, /no pidas que te lo reescriba/i);
+  assert.match(brief, /toda app debe tener su MCP/i);
+  assert.match(brief, /No uses n8n/i);
 });
 
 test("empty room still tells V there is nothing yet", () => {
   const brief = formatRoomContext({ projectId: "apsus" });
   assert.match(brief, /OBSERVACIONES: ninguna todavía/);
   assert.match(brief, /REFERENCIAS: ninguna todavía/);
+  assert.match(brief, /MCP/);
 });
 
 test("talk and plan must read the room", () => {
   assert.match(modeSystemRules("talk"), /observaciones/);
   assert.match(modeSystemRules("plan"), /observaciones/);
+  assert.match(modeSystemRules("talk"), /MCP/);
+  assert.match(modeSystemRules("plan"), /n8n/);
 });
 
 test("room brief includes WhatsApp conversation text", () => {
