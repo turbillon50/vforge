@@ -1,7 +1,7 @@
 import { queryAll, queryOne, sql } from "@/lib/db/client";
 import { parseEyeImage } from "./see-page";
 
-const KEEP = 8;
+const KEEP_PLUGIN = 8;
 
 export interface ProjectEye {
   id: string;
@@ -50,14 +50,16 @@ export async function saveProjectEye(input: {
   await ensureProjectEyesTable();
   const parsed = parseEyeImage(input.image);
   if (!parsed) throw new Error("imagen inválida");
+  const source = (input.source || "plugin").slice(0, 40);
+  const viewport = input.viewport?.slice(0, 40) || null;
   const row = await queryOne<ProjectEye>(
     `INSERT INTO project_eyes (project_id, source, viewport, url, selector, note, mime_type, data_b64)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
      RETURNING id::text, project_id, source, viewport, url, selector, note, mime_type, data_b64, created_at::text`,
     [
       input.projectId,
-      (input.source || "plugin").slice(0, 40),
-      input.viewport?.slice(0, 40) || null,
+      source,
+      viewport,
       input.url?.slice(0, 500) || null,
       input.selector?.slice(0, 300) || null,
       input.note?.slice(0, 500) || null,
@@ -66,26 +68,58 @@ export async function saveProjectEye(input: {
     ],
   );
   if (!row) throw new Error("no se guardó la foto");
-  await sql`
-    DELETE FROM project_eyes
-     WHERE project_id = ${input.projectId}
-       AND id NOT IN (
-         SELECT id FROM project_eyes WHERE project_id = ${input.projectId}
-         ORDER BY created_at DESC LIMIT ${KEEP}
-       )
-  `;
+  if (source === "visor" && viewport) {
+    await sql`
+      DELETE FROM project_eyes
+       WHERE project_id = ${input.projectId}
+         AND source = 'visor'
+         AND viewport = ${viewport}
+         AND id <> ${row.id}::uuid
+    `;
+  } else if (source !== "visor") {
+    await sql`
+      DELETE FROM project_eyes
+       WHERE project_id = ${input.projectId}
+         AND source <> 'visor'
+         AND id NOT IN (
+           SELECT id FROM project_eyes
+            WHERE project_id = ${input.projectId}
+              AND source <> 'visor'
+            ORDER BY created_at DESC
+            LIMIT ${KEEP_PLUGIN}
+         )
+    `;
+  }
   return row;
 }
 
 export async function listProjectEyes(projectId: string, limit = 4): Promise<ProjectEye[]> {
   await ensureProjectEyesTable();
-  const cap = Math.min(KEEP, Math.max(1, Math.floor(limit)));
+  const cap = Math.min(KEEP_PLUGIN, Math.max(1, Math.floor(limit)));
   return queryAll<ProjectEye>(
     `SELECT id::text, project_id, source, viewport, url, selector, note, mime_type, data_b64, created_at::text
        FROM project_eyes
       WHERE project_id = $1
+        AND source <> 'visor'
       ORDER BY created_at DESC
       LIMIT $2`,
     [projectId, cap],
   ).catch(() => []);
+}
+
+export async function listVisorEyes(projectId: string): Promise<ProjectEye[]> {
+  await ensureProjectEyesTable();
+  const rows = await queryAll<ProjectEye>(
+    `SELECT DISTINCT ON (viewport)
+            id::text, project_id, source, viewport, url, selector, note, mime_type, data_b64, created_at::text
+       FROM project_eyes
+      WHERE project_id = $1
+        AND source = 'visor'
+      ORDER BY viewport, created_at DESC`,
+    [projectId],
+  ).catch(() => []);
+  const order = ["desktop", "mobile", "admin"];
+  return [...rows].sort(
+    (a, b) => order.indexOf(a.viewport || "") - order.indexOf(b.viewport || ""),
+  );
 }

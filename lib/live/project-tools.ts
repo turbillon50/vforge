@@ -161,6 +161,6 @@ export function mcpClientConfig(input: { name: string; url: string }): {
 export function roomToolsBrief(): string {
   return [
     "HERRAMIENTAS DE LA SALA: Vercel (deploys, promover, redeploy, dominios, env sin valores), integraciones, bóveda cifrada y MCP por app.",
-    "MCP: toda app debe tener su MCP. Incluye vforge_project_see (Navegador Pro + plugin Chrome que sí manda la foto). Sugiérelo y explica cómo pegarlo en Claude, Cursor o Grok. No uses n8n.",
+    "MCP: toda app debe tener su MCP. Incluye vforge_project_see (fotografía cada visor y lo guarda en documentos). Sugiérelo. No uses n8n.",
   ].join(" ");
 }

@@ -11,6 +11,7 @@ import {
   parseSeeViewports,
   parseEyeImage,
   shSingleQuote,
+  visorDocumentName,
 } from "../lib/live/see-page";
 import { buildCdpCurrentCommand, buildCdpNavigateCommand } from "../lib/live/see-cdp";
 
@@ -115,4 +116,11 @@ test("MCP result sends real image blocks, not a URL", () => {
   assert.equal(image?.data, png);
   assert.match(String(result.content[0]?.text), /Ojos de la sala/);
   assert.match(String(result.content[0]?.text), /Navegador Pro/);
+  assert.match(String(result.content[0]?.text), /documentos/);
+});
+
+test("visor documents are named per viewport", () => {
+  assert.equal(visorDocumentName("desktop"), "visor-desktop.jpg");
+  assert.equal(visorDocumentName("mobile"), "visor-mobile.jpg");
+  assert.equal(visorDocumentName("admin"), "visor-admin.jpg");
 });

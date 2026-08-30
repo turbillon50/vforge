@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { loadVForgeLiveProject } from "@/lib/api/vforge-owned";
 import { resolveMcpToken } from "@/lib/mcp/tokens";
 import { authorizeMcpProject } from "@/lib/mcp/tools";
-import { listProjectEyes, saveProjectEye } from "@/lib/live/project-eyes";
+import { listProjectEyes, listVisorEyes, saveProjectEye } from "@/lib/live/project-eyes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,17 +38,31 @@ export async function GET(
   if (!(await canWrite(req, projectId))) {
     return NextResponse.json({ error: "no auth" }, { status: 401, headers: noStore });
   }
-  const rows = await listProjectEyes(projectId, 8);
+  const [plugin, visors] = await Promise.all([
+    listProjectEyes(projectId, 8),
+    listVisorEyes(projectId),
+  ]);
   return NextResponse.json(
     {
-      eyes: rows.map((row) => ({
+      eyes: plugin.map((row) => ({
         id: row.id,
         source: row.source,
+        viewport: row.viewport,
         url: row.url,
         selector: row.selector,
         note: row.note,
         mimeType: row.mime_type,
         createdAt: row.created_at,
+      })),
+      visors: visors.map((row) => ({
+        id: row.id,
+        source: row.source,
+        viewport: row.viewport,
+        url: row.url,
+        note: row.note,
+        mimeType: row.mime_type,
+        createdAt: row.created_at,
+        data: row.data_b64,
       })),
     },
     { headers: noStore },

@@ -21,6 +21,10 @@ export const SEE_VIEWPORTS = {
 
 export type SeeViewportId = keyof typeof SEE_VIEWPORTS;
 
+export function visorDocumentName(viewport: SeeViewportId): string {
+  return `visor-${viewport}.jpg`;
+}
+
 export interface SeeShot {
   viewport: SeeViewportId;
   label: string;
@@ -349,6 +353,7 @@ export function mcpSeeResult(
       return `• ${shot.label} ${size.width}×${size.height} (${engineLabel(shot.engine)}) — ${shot.url}`;
     }),
     ...result.failures.map((item) => `• ${item.label} no se vio: ${item.error}`),
+    "Las fotos quedan en documentos de la sala. vforge_project_context las lee.",
   ];
   return {
     content: [

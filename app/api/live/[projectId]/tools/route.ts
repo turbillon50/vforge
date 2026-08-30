@@ -29,6 +29,7 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 
 const noStore = { "Cache-Control": "no-store" };
 
@@ -178,7 +179,7 @@ export async function GET(
       mcp: {
         url: mcpUrl,
         projectId,
-        hint: "Toda app debe tener su MCP. Claude, Cursor y Grok ven la sala con Navegador Pro y el plugin de Chrome (vforge_project_see). No usamos n8n.",
+        hint: "Toda app debe tener su MCP. vforge_project_see fotografía cada visor y lo guarda en documentos. No usamos n8n.",
         config: mcpClientConfig({ name: mcpName, url: mcpUrl }),
       },
     },
@@ -216,6 +217,34 @@ export async function POST(
       },
       { headers: noStore },
     );
+  }
+
+  if (action === "photograph-viewports") {
+    try {
+      const { photographAndStoreVisors } = await import("@/lib/live/photograph-visors");
+      const result = await photographAndStoreVisors({
+        projectId,
+        preferCdp: live.me.isPlatformOwner,
+      });
+      return NextResponse.json(
+        {
+          ok: result.shots.length > 0,
+          shots: result.shots.map((shot) => ({
+            viewport: shot.viewport,
+            label: shot.label,
+            url: shot.url,
+            engine: shot.engine,
+          })),
+          failures: result.failures,
+        },
+        { headers: noStore },
+      );
+    } catch (error) {
+      return jsonError(
+        error instanceof Error ? error.message : "No se pudieron fotografiar los visores",
+        502,
+      );
+    }
   }
 
   if (action === "secret") {
