@@ -1,4 +1,5 @@
 import { parseReviewAnchor, type ReviewAnchor } from "./review-context";
+import { roomToolsBrief } from "./project-tools";
 
 export interface RoomComment {
   id?: string;
@@ -94,6 +95,7 @@ export function formatRoomContext(input: RoomContextInput): string {
     project.github_url ? `github ${project.github_url}` : null,
   ].filter(Boolean);
   if (urls.length) lines.push(`URLS DEL PROYECTO: ${urls.join(" · ")}`);
+  lines.push(roomToolsBrief());
 
   const repositories = (input.repositories ?? [])
     .filter((repo) => repo.repo_full_name?.trim())

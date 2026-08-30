@@ -16,18 +16,26 @@ type Tab = "vercel" | "integrations" | "vault" | "mcp";
 
 interface ToolsPayload {
   project: { id: string; name: string; github?: string | null };
+  canWrite?: boolean;
   vercel: {
     connected: boolean;
     projectId?: string | null;
     url?: string | null;
     domain?: string | null;
+    github?: string | null;
+    framework?: string | null;
+    name?: string | null;
     error?: string;
+    actions?: Array<{ id: string; label: string; detail: string; write: boolean }>;
     deployments?: Array<{
       uid: string;
       url: string;
       state: string;
       target: string;
       createdAt: number;
+      commit?: string | null;
+      ref?: string | null;
+      message?: string | null;
     }>;
     domains?: Array<{ name: string; verified: boolean }>;
     env?: Array<{ key: string; type: string; target: string[] }>;
@@ -37,6 +45,8 @@ interface ToolsPayload {
     label: string;
     status: "connected" | "available" | "missing";
     detail: string;
+    hint?: string;
+    secretHint?: string | null;
   }>;
   vault: {
     secrets: Array<{
@@ -48,14 +58,21 @@ interface ToolsPayload {
       last_used_at: string | null;
     }>;
   };
-  mcp: { url: string; projectId: string; hint: string };
+  mcp: {
+    url: string;
+    projectId: string;
+    hint: string;
+    config?: { claude: unknown; cursor: unknown; grok: unknown };
+  };
 }
 
 export function ToolsPanel({
   projectId,
+  canWrite = false,
   onClose,
 }: {
   projectId: string;
+  canWrite?: boolean;
   onClose: () => void;
 }) {
   const [tab, setTab] = useState<Tab>("vercel");
@@ -66,6 +83,9 @@ export function ToolsPanel({
   const [mcpToken, setMcpToken] = useState<string | null>(null);
   const [secretName, setSecretName] = useState("");
   const [secretValue, setSecretValue] = useState("");
+  const [domain, setDomain] = useState("");
+  const [envKey, setEnvKey] = useState("");
+  const [envValue, setEnvValue] = useState("");
 
   const load = useCallback(async () => {
     const response = await fetch(`/api/live/${encodeURIComponent(projectId)}/tools`, {
@@ -81,50 +101,34 @@ export function ToolsPanel({
     );
   }, [load]);
 
-  async function mintMcp() {
+  async function postAction(body: Record<string, unknown>, okMessage: string) {
     setBusy(true);
     setError(null);
     try {
       const response = await fetch(`/api/live/${encodeURIComponent(projectId)}/tools`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "mcp-token" }),
+        body: JSON.stringify(body),
       });
-      const payload = (await response.json().catch(() => null)) as { token?: string } | null;
-      if (!response.ok || !payload?.token) throw new Error("No se pudo emitir el MCP.");
-      setMcpToken(payload.token);
-      setNotice("Token visible una sola vez. Cópialo ahora.");
+      const payload = (await response.json().catch(() => null)) as
+        | { token?: string; error?: string; notice?: string }
+        | null;
+      if (!response.ok) {
+        throw new Error(payload?.notice || payload?.error || "No se pudo completar.");
+      }
+      if (payload?.token) setMcpToken(payload.token);
+      setNotice(okMessage);
+      if (body.action !== "mcp-token") await load();
+      return payload;
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "No se pudo emitir el MCP.");
+      setError(caught instanceof Error ? caught.message : "No se pudo completar.");
+      return null;
     } finally {
       setBusy(false);
     }
   }
 
-  async function saveSecret() {
-    setBusy(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/live/${encodeURIComponent(projectId)}/tools`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "secret",
-          name: secretName.trim().toUpperCase(),
-          value: secretValue,
-        }),
-      });
-      if (!response.ok) throw new Error("No se pudo guardar el secreto.");
-      setSecretName("");
-      setSecretValue("");
-      setNotice("Secreto cifrado. El valor no se vuelve a mostrar.");
-      await load();
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "No se pudo guardar.");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const write = Boolean(data?.canWrite ?? canWrite);
 
   return (
     <section className="flex h-full min-h-0 flex-col overflow-hidden bg-white">
@@ -158,11 +162,36 @@ export function ToolsPanel({
             <IconLoader size={14} className="animate-spin" />
           </div>
         ) : tab === "vercel" ? (
-          <VercelTools vercel={data.vercel} />
+          <VercelTools
+            vercel={data.vercel}
+            write={write}
+            busy={busy}
+            domain={domain}
+            envKey={envKey}
+            envValue={envValue}
+            onDomain={setDomain}
+            onEnvKey={setEnvKey}
+            onEnvValue={setEnvValue}
+            onRedeploy={() => void postAction({ action: "vercel-redeploy" }, "Redeploy disparado.")}
+            onPromote={(deploymentId) => void postAction({ action: "vercel-promote", deploymentId }, "Preview promovido a producción.")}
+            onDomainSave={() => {
+              void postAction({ action: "vercel-domain", domain }, "Dominio enviado a Vercel.").then((ok) => {
+                if (ok) setDomain("");
+              });
+            }}
+            onEnvSave={() => {
+              void postAction({ action: "vercel-env", key: envKey.trim().toUpperCase(), value: envValue }, "Env cifrada. El valor no se vuelve a mostrar.").then((ok) => {
+                if (ok) {
+                  setEnvKey("");
+                  setEnvValue("");
+                }
+              });
+            }}
+          />
         ) : tab === "integrations" ? (
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {data.integrations.map((item) => (
-              <div key={item.kind} className="rounded-md border border-[var(--border-1)] p-3">
+              <div key={item.kind} className={cn("rounded-md border p-3", item.kind === "mcp" ? "border-black" : "border-[var(--border-1)]")}>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-[12px] font-medium">{item.label}</p>
                   <span className="flex items-center gap-1 font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
@@ -170,22 +199,51 @@ export function ToolsPanel({
                     {item.status === "connected" ? "conectado" : "disponible"}
                   </span>
                 </div>
-                <p className="mt-1 text-[10px] leading-4 text-[var(--fg-muted)]">{item.detail}</p>
+                <p className="mt-1 text-[10px] leading-4 text-[var(--fg-muted)]">{item.hint || item.detail}</p>
+                {item.secretHint ? (
+                  <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
+                    Bóveda · {item.secretHint}
+                  </p>
+                ) : null}
+                {item.kind === "mcp" ? (
+                  <button type="button" className="btn-ghost mt-2" onClick={() => setTab("mcp")}>
+                    Emitir MCP
+                  </button>
+                ) : null}
               </div>
             ))}
           </div>
         ) : tab === "vault" ? (
           <div>
             <p className="text-[10px] leading-4 text-[var(--fg-muted)]">
-              Nombres, alcance y estado. El valor nunca se muestra otra vez.
+              Nombres, alcance y estado. El valor se cifra y nunca se muestra otra vez.
             </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-              <input value={secretName} onChange={(event) => setSecretName(event.target.value)} placeholder="STRIPE_SECRET_KEY" className="rounded-md border border-[var(--border-1)] px-3 py-2 font-mono text-[11px]" />
-              <input value={secretValue} onChange={(event) => setSecretValue(event.target.value)} placeholder="valor" type="password" className="rounded-md border border-[var(--border-1)] px-3 py-2 font-mono text-[11px]" />
-              <button type="button" onClick={() => void saveSecret()} disabled={busy || !secretName || !secretValue} className="btn-primary disabled:opacity-40">
-                {busy ? <IconLoader size={12} className="animate-spin" /> : <IconKey size={12} />} Guardar
-              </button>
-            </div>
+            {write ? (
+              <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                <input value={secretName} onChange={(event) => setSecretName(event.target.value)} placeholder="STRIPE_SECRET_KEY" className="rounded-md border border-[var(--border-1)] px-3 py-2 font-mono text-[11px]" />
+                <input value={secretValue} onChange={(event) => setSecretValue(event.target.value)} placeholder="valor" type="password" className="rounded-md border border-[var(--border-1)] px-3 py-2 font-mono text-[11px]" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    void postAction(
+                      { action: "secret", name: secretName.trim().toUpperCase(), value: secretValue },
+                      "Secreto cifrado. El valor no se vuelve a mostrar.",
+                    ).then((ok) => {
+                      if (ok) {
+                        setSecretName("");
+                        setSecretValue("");
+                      }
+                    });
+                  }}
+                  disabled={busy || !secretName || !secretValue}
+                  className="btn-primary disabled:opacity-40"
+                >
+                  {busy ? <IconLoader size={12} className="animate-spin" /> : <IconKey size={12} />} Guardar
+                </button>
+              </div>
+            ) : (
+              <p className="mt-3 text-[11px] text-[var(--fg-muted)]">Sólo el owner escribe en la bóveda.</p>
+            )}
             <div className="mt-4 space-y-2">
               {data.vault.secrets.length ? data.vault.secrets.map((secret) => (
                 <div key={secret.id} className="flex items-center justify-between gap-3 rounded-md border border-[var(--border-1)] px-3 py-2">
@@ -204,7 +262,12 @@ export function ToolsPanel({
           <div>
             <p className="text-[11px] leading-5">{data.mcp.hint}</p>
             <p className="mt-2 font-mono text-[10px] text-[var(--fg-muted)]">{data.mcp.url}</p>
-            <button type="button" onClick={() => void mintMcp()} disabled={busy} className="btn-primary mt-3 disabled:opacity-40">
+            <button
+              type="button"
+              onClick={() => void postAction({ action: "mcp-token" }, "Token visible una sola vez. Cópialo ahora.")}
+              disabled={busy}
+              className="btn-primary mt-3 disabled:opacity-40"
+            >
               {busy ? <IconLoader size={12} className="animate-spin" /> : <IconKey size={12} />} Emitir MCP de esta app
             </button>
             {mcpToken ? (
@@ -218,6 +281,27 @@ export function ToolsPanel({
                 <p className="mt-2 break-all font-mono text-[10px]">{mcpToken}</p>
               </div>
             ) : null}
+            {data.mcp.config ? (
+              <div className="mt-4 grid gap-2 lg:grid-cols-3">
+                {(["claude", "cursor", "grok"] as const).map((client) => (
+                  <div key={client} className="rounded-md border border-[var(--border-1)] p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-mono text-[8px] uppercase tracking-[0.1em]">{client}</p>
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        onClick={() => void navigator.clipboard.writeText(JSON.stringify(data.mcp.config?.[client], null, 2))}
+                      >
+                        <IconCopy size={11} />
+                      </button>
+                    </div>
+                    <pre className="mt-2 overflow-x-auto font-mono text-[9px] leading-4 text-[var(--fg-muted)]">
+                      {JSON.stringify(data.mcp.config?.[client], null, 2)}
+                    </pre>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         )}
         {notice ? <p className="mt-3 flex items-center gap-1 text-[10px]"><IconCheck size={11} /> {notice}</p> : null}
@@ -227,31 +311,88 @@ export function ToolsPanel({
   );
 }
 
-function VercelTools({ vercel }: { vercel: ToolsPayload["vercel"] }) {
+function VercelTools({
+  vercel,
+  write,
+  busy,
+  domain,
+  envKey,
+  envValue,
+  onDomain,
+  onEnvKey,
+  onEnvValue,
+  onRedeploy,
+  onPromote,
+  onDomainSave,
+  onEnvSave,
+}: {
+  vercel: ToolsPayload["vercel"];
+  write: boolean;
+  busy: boolean;
+  domain: string;
+  envKey: string;
+  envValue: string;
+  onDomain: (value: string) => void;
+  onEnvKey: (value: string) => void;
+  onEnvValue: (value: string) => void;
+  onRedeploy: () => void;
+  onPromote: (deploymentId: string) => void;
+  onDomainSave: () => void;
+  onEnvSave: () => void;
+}) {
   if (!vercel.connected && !vercel.projectId) {
-    return <p className="text-[11px] text-[var(--fg-muted)]">Esta sala aún no tiene proyecto Vercel enlazado.</p>;
+    return (
+      <div>
+        <p className="text-[11px] text-[var(--fg-muted)]">Esta sala aún no tiene proyecto Vercel enlazado.</p>
+        <ActionStrip actions={vercel.actions} />
+      </div>
+    );
   }
+  const production = vercel.url?.startsWith("http") ? vercel.url : vercel.url ? `https://${vercel.url}` : vercel.domain ? `https://${vercel.domain}` : null;
   return (
     <div className="space-y-4">
+      <ActionStrip actions={vercel.actions} />
       <div className="rounded-md border border-[var(--border-1)] p-3">
         <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">Proyecto</p>
-        <p className="mt-1 font-mono text-[11px]">{vercel.projectId || "sin id"}</p>
+        <p className="mt-1 font-mono text-[11px]">{vercel.name || vercel.projectId || "sin id"}</p>
+        <p className="mt-1 font-mono text-[10px] text-[var(--fg-muted)]">
+          {[vercel.framework, vercel.projectId, vercel.github].filter(Boolean).join(" · ")}
+        </p>
         {vercel.domain ? <p className="mt-1 text-[11px]">{vercel.domain}</p> : null}
-        {vercel.url ? (
-          <a href={vercel.url.startsWith("http") ? vercel.url : `https://${vercel.url}`} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-[10px]">
-            Abrir <IconExtLink size={10} />
-          </a>
-        ) : null}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {production ? (
+            <a href={production} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px]">
+              Abrir producción <IconExtLink size={10} />
+            </a>
+          ) : null}
+          {write ? (
+            <button type="button" onClick={onRedeploy} disabled={busy || !vercel.github} className="btn-primary disabled:opacity-40">
+              {busy ? <IconLoader size={12} className="animate-spin" /> : null} Redeploy producción
+            </button>
+          ) : null}
+        </div>
         {vercel.error ? <p className="mt-2 text-[10px]">{vercel.error}</p> : null}
       </div>
       <div>
         <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">Deploys</p>
         <div className="mt-2 space-y-2">
           {(vercel.deployments ?? []).length ? (vercel.deployments ?? []).map((item) => (
-            <a key={item.uid} href={`https://${item.url}`} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-md border border-[var(--border-1)] px-3 py-2">
-              <span className="truncate font-mono text-[10px]">{item.target} · {item.state}</span>
-              <span className="font-mono text-[8px] text-[var(--fg-muted)]">{new Date(item.createdAt).toISOString().slice(5, 16).replace("T", " ")}</span>
-            </a>
+            <div key={item.uid} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--border-1)] px-3 py-2">
+              <a href={`https://${item.url}`} target="_blank" rel="noreferrer" className="min-w-0">
+                <span className="truncate font-mono text-[10px]">{item.target} · {item.state}</span>
+                <p className="truncate font-mono text-[8px] text-[var(--fg-muted)]">
+                  {[item.ref, item.commit, item.message].filter(Boolean).join(" · ")}
+                </p>
+              </a>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[8px] text-[var(--fg-muted)]">{new Date(item.createdAt).toISOString().slice(5, 16).replace("T", " ")}</span>
+                {write && item.target !== "production" && /ready/i.test(item.state) ? (
+                  <button type="button" className="btn-ghost" disabled={busy} onClick={() => onPromote(item.uid)}>
+                    Promover
+                  </button>
+                ) : null}
+              </div>
+            </div>
           )) : <p className="text-[11px] text-[var(--fg-muted)]">Sin deploys leídos.</p>}
         </div>
       </div>
@@ -262,9 +403,22 @@ function VercelTools({ vercel }: { vercel: ToolsPayload["vercel"] }) {
             <p key={item.name} className="font-mono text-[11px]">{item.name} {item.verified ? "" : "· pendiente"}</p>
           ))}
         </div>
+        {write ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            <input value={domain} onChange={(event) => onDomain(event.target.value)} placeholder="app.tudominio.com" className="min-w-[180px] flex-1 rounded-md border border-[var(--border-1)] px-3 py-2 font-mono text-[11px]" />
+            <button type="button" onClick={onDomainSave} disabled={busy || !domain} className="btn-primary disabled:opacity-40">Agregar dominio</button>
+          </div>
+        ) : null}
       </div>
       <div>
         <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">Env · nombres, nunca valores</p>
+        {write ? (
+          <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+            <input value={envKey} onChange={(event) => onEnvKey(event.target.value)} placeholder="NEXT_PUBLIC_APP_URL" className="rounded-md border border-[var(--border-1)] px-3 py-2 font-mono text-[11px]" />
+            <input value={envValue} onChange={(event) => onEnvValue(event.target.value)} placeholder="valor" type="password" className="rounded-md border border-[var(--border-1)] px-3 py-2 font-mono text-[11px]" />
+            <button type="button" onClick={onEnvSave} disabled={busy || !envKey || !envValue} className="btn-primary disabled:opacity-40">Alta env</button>
+          </div>
+        ) : null}
         <div className="mt-2 grid gap-1 sm:grid-cols-2">
           {(vercel.env ?? []).map((item) => (
             <p key={item.key} className="truncate rounded-md border border-[var(--border-1)] px-2 py-1.5 font-mono text-[10px]">
@@ -273,6 +427,27 @@ function VercelTools({ vercel }: { vercel: ToolsPayload["vercel"] }) {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ActionStrip({
+  actions,
+}: {
+  actions?: Array<{ id: string; label: string; detail: string; write: boolean }>;
+}) {
+  if (!actions?.length) return null;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {actions.map((item) => (
+        <span
+          key={item.id}
+          title={item.detail}
+          className="rounded-md border border-[var(--border-1)] px-2 py-1 font-mono text-[8px] uppercase tracking-[0.08em]"
+        >
+          {item.label}
+        </span>
+      ))}
     </div>
   );
 }

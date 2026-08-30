@@ -52,6 +52,7 @@ export function modeSystemRules(mode: VConversationMode): string {
       "Parte de las observaciones, referencias y contenido de la sala; no pidas que te los reescriban.",
       "No escribas código, no crees ramas, no llames agentes y nunca afirmes que ejecutaste cambios.",
       "El usuario podrá convertir después este plan en una tarea de Ejecución con «Usar como tarea».",
+      "Toda app debe tener su MCP. Sugiérelo. No propongas n8n.",
     ].join(" ");
   }
   return [
@@ -61,5 +62,6 @@ export function modeSystemRules(mode: VConversationMode): string {
     "Lee observaciones, puntos marcados, URLs de referencia y CONTENIDO.md de la sala.",
     "Si el usuario habla de «puntos» o «lo que marqué», usa esas observaciones.",
     "No crees ramas, no llames agentes y nunca afirmes que ejecutaste cambios.",
+    "Toda app debe tener su MCP. Sugiérelo. No propongas n8n.",
   ].join(" ");
 }
