@@ -32,6 +32,7 @@ import { InvitePanel } from "@/components/live/InvitePanel";
 import { CommentsPanel } from "@/components/live/CommentsPanel";
 import { ProjectContextPanel } from "@/components/live/ProjectContextPanel";
 import { ReviewContextProvider, useReviewContext } from "@/components/live/ReviewContext";
+import { ReviewNotesTray } from "@/components/live/ReviewNotesTray";
 
 export interface LivePortalProject {
   id: string;
@@ -531,6 +532,7 @@ function LiveWorkspace({
         </div>
       )}
     </div>
+    <ReviewNotesTray projectId={project.id} />
     </ReviewContextProvider>
   );
 }
@@ -674,7 +676,7 @@ function Viewport({
 }) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [pinMode, setPinMode] = useState(false);
-  const { anchoredComments, draftAnchor, setDraftAnchor } = useReviewContext();
+  const { anchoredComments, draftNotes, addDraftAnchor } = useReviewContext();
   const url = useMemo(() => normalizeUrl(rawUrl), [rawUrl]);
   const spec = PREVIEW_SPECS[kind];
   const stageRef = useRef<HTMLDivElement>(null);
@@ -726,13 +728,16 @@ function Viewport({
   const markers = anchoredComments.filter(
     (comment) => comment.anchor.viewport === kind && comment.anchor.url === url,
   );
+  const pendingMarkers = draftNotes.filter(
+    (note) => note.anchor.viewport === kind && note.anchor.url === url,
+  );
 
   function placeAnchor(event: React.MouseEvent<HTMLDivElement>) {
     if (!url) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const x = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
     const y = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
-    setDraftAnchor({
+    addDraftAnchor({
       viewport: kind,
       x: Math.round(x * 10_000) / 10_000,
       y: Math.round(y * 10_000) / 10_000,
@@ -776,7 +781,7 @@ function Viewport({
               )}
               aria-pressed={pinMode}
               aria-label={`Anclar comentario en ${title}`}
-              title="Selecciona un punto y escribe el comentario abajo"
+              title="Marca varios puntos y escribe sus notas en la bandeja"
             >
               <IconMap size={10} /> <span className="hidden xl:inline">Anclar</span>
             </button>
@@ -876,15 +881,16 @@ function Viewport({
                   {index + 1}
                 </a>
               ))}
-              {draftAnchor?.viewport === kind && draftAnchor.url === url ? (
+              {pendingMarkers.map((note) => (
                 <span
+                  key={note.id}
                   className="absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-black bg-white font-mono text-[10px] text-black shadow-lg"
-                  style={{ left: `${draftAnchor.x * 100}%`, top: `${draftAnchor.y * 100}%` }}
-                  aria-label="Ancla pendiente"
+                  style={{ left: `${note.anchor.x * 100}%`, top: `${note.anchor.y * 100}%` }}
+                  aria-label={`Ancla pendiente ${draftNotes.indexOf(note) + 1}`}
                 >
-                  +
+                  {draftNotes.indexOf(note) + 1}
                 </span>
-              ) : null}
+              ))}
             </div>
           </div>
         </div>
