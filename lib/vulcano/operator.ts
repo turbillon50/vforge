@@ -229,6 +229,53 @@ export async function dispatchJob(p: DispatchInput): Promise<{ id: number }> {
   return { id: rows[0].id };
 }
 
+export interface DispatchJobSnapshot {
+  id: number;
+  agent: string | null;
+  status: string;
+  progress: number | null;
+  result: string | null;
+  logTail: string | null;
+  verdict: string | null;
+  updatedAt: string | null;
+}
+
+/** Lee sólo los jobs indicados; se usa para sincronizar runs de una sala. */
+export async function getDispatchJobs(jobIds: number[]): Promise<DispatchJobSnapshot[]> {
+  const unique = Array.from(new Set(jobIds.filter((id) => Number.isInteger(id) && id > 0))).slice(0, 100);
+  if (!unique.length) return [];
+  const sql = getDispatch();
+  const rows = await Promise.all(
+    unique.map(async (id) => {
+      const result = (await sql`
+        SELECT id, agent, status, progress_pct, result, log_tail, grok_verdict,
+               COALESCE(completed_at, started_at, created_at) AS updated_at
+          FROM dispatch_queue WHERE id = ${id} LIMIT 1
+      `) as Array<{
+        id: number;
+        agent: string | null;
+        status: string;
+        progress_pct: number | null;
+        result: string | null;
+        log_tail: string | null;
+        grok_verdict: string | null;
+        updated_at: string | null;
+      }>;
+      return result[0] ?? null;
+    }),
+  );
+  return rows.filter((row): row is NonNullable<typeof row> => Boolean(row)).map((row) => ({
+    id: Number(row.id),
+    agent: row.agent,
+    status: row.status,
+    progress: row.progress_pct == null ? null : Number(row.progress_pct),
+    result: row.result,
+    logTail: row.log_tail,
+    verdict: normalizeVerdict(row.grok_verdict),
+    updatedAt: row.updated_at,
+  }));
+}
+
 /* ---------------------------------- salud --------------------------------- */
 
 export interface SaludFabrica {

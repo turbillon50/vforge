@@ -52,6 +52,11 @@ const ReferencesPanel = dynamic(
   { ssr: false },
 );
 
+const VControlPanel = dynamic(
+  () => import("@/components/live/VControlPanel").then((module) => module.VControlPanel),
+  { ssr: false },
+);
+
 export interface LivePortalProject {
   id: string;
   name: string;
@@ -88,7 +93,8 @@ type WorkspacePanelId =
   | "comments"
   | "context"
   | "code"
-  | "references";
+  | "references"
+  | "v";
 type WorkspacePreset = "balanced" | "previews" | "review";
 type PreviewKind = "desktop" | "mobile" | "admin";
 
@@ -133,6 +139,7 @@ const PANEL_LABELS: Record<WorkspacePanelId, string> = {
   context: "Contexto",
   code: "Código",
   references: "Referencias",
+  v: "V",
 };
 
 
@@ -323,6 +330,7 @@ function LiveWorkspace({
   const storageKey = `vforge:dock-layout:v1:${project.id}:${me.role}`;
   const availablePanels = useMemo<WorkspacePanelId[]>(
     () => [
+      "v",
       "desktop",
       "mobile",
       ...(canSeeAdmin ? (["admin"] as WorkspacePanelId[]) : []),
@@ -354,6 +362,7 @@ function LiveWorkspace({
     context: false,
     code: false,
     references: false,
+    v: false,
   });
   const savedLayoutsRef = useRef(DOCK_LAYOUTS.balanced);
 
@@ -419,7 +428,7 @@ function LiveWorkspace({
       feedback: source.feedback,
     };
     setFocusedPanel(null);
-    setCollapsed({ desktop: false, mobile: false, admin: false, activity: false, comments: false, context: false, code: false, references: false });
+    setCollapsed({ desktop: false, mobile: false, admin: false, activity: false, comments: false, context: false, code: false, references: false, v: false });
     desktopRef.current?.expand();
     mobileRef.current?.expand();
     adminRef.current?.expand();
@@ -451,6 +460,7 @@ function LiveWorkspace({
     context: contextRef.current,
     code: null,
     references: null,
+    v: null,
   };
 
   const updateCollapsed = (panel: WorkspacePanelId, pixels: number) => {
@@ -474,6 +484,8 @@ function LiveWorkspace({
     <CodeEditorPanel projectId={project.id} onClose={() => setFocusedPanel(null)} />
   ) : focusedPanel === "references" ? (
     <ReferencesPanel projectId={project.id} onClose={() => setFocusedPanel(null)} />
+  ) : focusedPanel === "v" ? (
+    <VControlPanel projectId={project.id} onClose={() => setFocusedPanel(null)} />
   ) : null;
 
   return (
@@ -494,7 +506,7 @@ function LiveWorkspace({
         </div>
         <div className="flex shrink-0 items-center gap-1" aria-label="Paneles visibles">
           {availablePanels.map((panel) => {
-            const standalone = panel === "code" || panel === "references";
+            const standalone = panel === "code" || panel === "references" || panel === "v";
             const visible = standalone ? focusedPanel === panel : !collapsed[panel];
             return (
               <button

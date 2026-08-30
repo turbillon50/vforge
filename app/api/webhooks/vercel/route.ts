@@ -50,6 +50,10 @@ export async function POST(req: Request) {
       (dep.meta?.githubCommitSha as string | undefined) ??
       (dep.meta?.gitCommitSha as string | undefined) ??
       null;
+    const branch =
+      (dep.meta?.githubCommitRef as string | undefined) ??
+      (dep.meta?.gitCommitRef as string | undefined) ??
+      null;
     const info: DeployInfo = {
       vercelProjectId: p.project?.id ?? null,
       name: dep.name ?? p.name ?? null,
@@ -57,6 +61,7 @@ export async function POST(req: Request) {
       state,
       deploymentId: dep.id ?? p.deploymentId ?? null,
       commitSha: sha,
+      branch,
     };
     matched = await recordVercelDeploy(info);
   } catch {
