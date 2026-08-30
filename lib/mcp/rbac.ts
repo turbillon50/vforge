@@ -61,6 +61,7 @@ export const TOOL_KIND: Record<string, ToolKind> = {
   vforge_project_context: "data",
   vforge_project_file: "data",
   vforge_project_see: "data",
+  vforge_navegador_see: "data",
   vforge_payments: "data",
   vforge_apps_health: "data",
   vforge_brain_search: "data",
@@ -112,6 +113,7 @@ export const OPERATOR_TOOLS: ReadonlySet<string> = new Set([
   "vulcano_save_lesson",
   "vulcano_memory_search",
   "v_instruct",
+  "vforge_navegador_see",
 ]);
 
 export function isOperatorTool(name: string): boolean {

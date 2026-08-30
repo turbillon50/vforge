@@ -22,6 +22,7 @@ const isTwilioWebhook = createRouteMatcher(["/api/v/voice/twilio(.*)"]);
 // Rutas MCP: Clerk NO debe validar el Bearer (son tokens vfmcp_* propios,
 // no JWTs de Clerk). El handler MCP hace su propia autenticación.
 const isMcpRoute = createRouteMatcher(["/api/mcp", "/api/mcp/(.*)", "/api/mcp/public", "/api/mcp/public/(.*)"]);
+const isLiveEyes = createRouteMatcher(["/api/live/(.*)/eyes"]);
 // Portal en vivo del cliente: accesible a CUALQUIER usuario autenticado
 // (owner/reviewer/observer), no solo al owner de la plataforma. El gating fino
 // por proyecto y rol vive en la página (/app/live) y en /api/live/*, que
@@ -137,6 +138,7 @@ export default hasClerk
       // de Clerk. Clerk los rechaza con token-invalid. El handler MCP (/api/mcp)
       // hace su propia autenticación interna. Dejar pasar siempre.
       if (isMcpRoute(req)) return;
+      if (isLiveEyes(req)) return;
       if (!isProtected(req)) return;
       const { userId, sessionClaims, redirectToSignIn } = await auth();
       const isApi = req.nextUrl.pathname.startsWith("/api");

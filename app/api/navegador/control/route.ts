@@ -14,7 +14,7 @@ const SECRET = process.env.BRAIN_SECRET ?? "";
 const CONTAINER = "vulcano-browser";
 const CDP = "http://localhost:9222";
 
-type Action = "navigate" | "tabs" | "close" | "eval" | "click" | "type" | "read";
+type Action = "navigate" | "tabs" | "close" | "eval" | "click" | "type" | "read" | "screenshot";
 
 /** Ejecuta un cmd en Hetzner vía el relay y devuelve el stdout (texto). */
 async function relayExec(cmd: string): Promise<string> {
@@ -144,6 +144,18 @@ export async function POST(req: Request) {
       }
       const result = await cdpControl({ action: "type", selector: body.selector, text: body.text ?? "" });
       return NextResponse.json({ ok: true, action, result });
+    }
+
+    if (action === "screenshot") {
+      const { captureNavegadorCurrent } = await import("@/lib/live/see-page");
+      const shot = await captureNavegadorCurrent();
+      return NextResponse.json({
+        ok: true,
+        action,
+        url: shot.url,
+        mimeType: shot.mimeType,
+        image: shot.data,
+      });
     }
 
     if (action === "close") {

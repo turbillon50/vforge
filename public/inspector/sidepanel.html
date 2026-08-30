@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>VForge Inspector</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <header>
+    <h1>VForge Inspector</h1>
+    <p>Fotografía la pestaña. La IA la ve por MCP.</p>
+  </header>
+
+  <section>
+    <label>Origen
+      <input id="cfg-origin" value="https://vforge.site" />
+    </label>
+    <label>Proyecto
+      <input id="cfg-project" placeholder="netmas-distribuidores" />
+    </label>
+    <label>Token MCP
+      <input id="cfg-token" type="password" placeholder="vfmcp_…" autocomplete="off" />
+    </label>
+    <button id="save-config" type="button">Guardar</button>
+    <p id="save-feedback"></p>
+  </section>
+
+  <section>
+    <button id="shot" type="button">Fotografiar pestaña</button>
+    <p id="shot-feedback"></p>
+  </section>
+
+  <p class="hint">El plugin viejo copiaba HTML y abría Grok en un iframe bloqueado. Este manda el JPEG a la sala. Claude/Cursor/Grok lo leen con vforge_project_see.</p>
+  <script src="sidepanel.js"></script>
+</body>
+</html>

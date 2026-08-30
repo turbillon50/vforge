@@ -265,8 +265,15 @@ export function ToolsPanel({
             <ul className="mt-3 space-y-1 font-mono text-[10px] leading-4 text-[var(--fg-muted)]">
               <li>vforge_project_feedback — anotaciones y anclas</li>
               <li>vforge_project_context — referencias y HTML leído</li>
-              <li>vforge_project_see — plugin de ojos: fotografía Escritorio y Móvil</li>
+              <li>vforge_project_see — Navegador Pro fotografía Escritorio/Móvil</li>
+              <li>vforge_navegador_see — pestaña abierta del Chrome en Hetzner</li>
             </ul>
+            <a
+              href="/api/inspector/zip"
+              className="btn-ghost mt-3 inline-flex"
+            >
+              Descargar plugin de Chrome
+            </a>
             <button
               type="button"
               onClick={() => void postAction({ action: "mcp-token" }, "Token visible una sola vez. Cópialo ahora.")}

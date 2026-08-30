@@ -122,7 +122,7 @@ export const MCP_TOOLS: McpToolDef[] = [
   {
     name: "vforge_project_see",
     description:
-      "OJOS (admin|client): fotografía Escritorio, Móvil y/o Admin de una sala y devuelve las imágenes. La IA ve el pixel, no sólo el texto. Usa project_id y viewport=desktop|mobile|admin|all.",
+      "OJOS (admin|client): fotografía Escritorio/Móvil vía Navegador Pro (Chrome de Hetzner) y devuelve las imágenes. También incluye fotos del plugin de Chrome. Usa project_id y viewport=desktop|mobile|admin|all.",
     inputSchema: {
       type: "object",
       properties: {
@@ -134,6 +134,12 @@ export const MCP_TOOLS: McpToolDef[] = [
       },
       required: ["project_id"],
     },
+  },
+  {
+    name: "vforge_navegador_see",
+    description:
+      "OJOS (admin): fotografía la pestaña ABIERTA del Navegador Pro en Hetzner. Lo que está en el Chrome de la nube, no un Chrome aislado.",
+    inputSchema: { type: "object", properties: {} },
   },
   {
     name: "vforge_payments",
@@ -550,7 +556,7 @@ VForge es una fábrica de aplicaciones operada por un agente (V): construye, des
    • URL:  https://vforge.site/api/mcp
    • Auth: Bearer <tu-token>
 4. Llama \`help\` para ver las tools, o \`vforge_method\` para el método.
-5. Para ver una sala: \`vforge_project_see\` con el project_id. Recibes fotos de Escritorio y Móvil.
+5. Para ver una sala: \`vforge_project_see\` con el project_id. Fotografía con Navegador Pro. Si hay plugin de Chrome, también manda esas fotos.
 
 ## Scopes
 • Tu token te aísla a TU forge: sólo ves tus propios proyectos, pagos y apps.
@@ -585,7 +591,8 @@ function helpText(principal: McpPrincipal): string {
   lines.push("• vforge_project_feedback — observaciones y anclas de una sala.");
   lines.push("• vforge_project_context — código, referencias (con contenido leído), CONTENIDO.md y archivos.");
   lines.push("• vforge_project_file — texto extraído de un ZIP privado, leído por fragmentos.");
-  lines.push("• vforge_project_see — ojos: fotografía Escritorio/Móvil/Admin y se las manda a la IA.");
+  lines.push("• vforge_project_see — ojos: Navegador Pro fotografía Escritorio/Móvil/Admin. Incluye fotos del plugin de Chrome.");
+  lines.push("• vforge_navegador_see — ojos admin: fotografía la pestaña abierta del Chrome en Hetzner.");
   lines.push("• vforge_payments — avance financiero (total/pagado/pendiente).");
   lines.push("• vforge_apps_health — salud de despliegue de tus apps.");
   lines.push("• vforge_brain_search — memoria y método de VForge.");
@@ -613,7 +620,7 @@ function helpText(principal: McpPrincipal): string {
   return lines.join("\n");
 }
 
-async function authorizeMcpProject(projectId: string, principal: McpPrincipal) {
+export async function authorizeMcpProject(projectId: string, principal: McpPrincipal) {
   if (isAdmin(principal)) {
     return queryOne<{ id: string; name: string }>(
       "SELECT id, name FROM projects WHERE id = $1 LIMIT 1",
@@ -1003,7 +1010,7 @@ export async function runMcpTool(
         `## Contenido leído de las URLs\n${pagesText}\n\n` +
         `## CONTENIDO.md\n${document?.content?.trim() || project.description || "Sin contenido documentado todavía."}\n\n` +
         `## Archivos privados\n${assetsText}\n\n` +
-        `Usa vforge_project_file con project_id + asset_id para leer el texto extraído. Usa vforge_project_feedback para las anotaciones. Usa vforge_project_see para fotografiar Escritorio/Móvil.`,
+        `Usa vforge_project_file con project_id + asset_id para leer el texto extraído. Usa vforge_project_feedback para las anotaciones. Usa vforge_project_see para fotografiar Escritorio/Móvil con Navegador Pro.`,
       );
     }
 
@@ -1042,16 +1049,43 @@ export async function runMcpTool(
       const { captureSeeViewports, parseSeeViewports, mcpSeeResult } = await import(
         "@/lib/live/see-page"
       );
+      const { listProjectEyes } = await import("@/lib/live/project-eyes");
       const project = await getProjectViewports(projectId);
       if (!project) return err("Proyecto no encontrado.");
       const viewports = parseSeeViewports(args.viewport ?? args.viewports);
-      const captured = await captureSeeViewports({
-        desktop_url: project.desktop_url,
-        mobile_url: project.mobile_url,
-        admin_url: project.admin_url,
-        viewports,
-      });
+      const [captured, pluginEyes] = await Promise.all([
+        captureSeeViewports({
+          desktop_url: project.desktop_url,
+          mobile_url: project.mobile_url,
+          admin_url: project.admin_url,
+          viewports,
+          preferCdp: isAdminScope,
+        }),
+        listProjectEyes(projectId, 4),
+      ]);
+      for (const eye of pluginEyes) {
+        captured.shots.push({
+          viewport: "desktop",
+          label: eye.note ? `Plugin: ${eye.note}` : "Plugin Chrome",
+          url: eye.url || project.desktop_url || "",
+          mimeType: eye.mime_type,
+          data: eye.data_b64,
+          engine: "plugin",
+        });
+      }
       return mcpSeeResult(allowed.name, projectId, captured);
+    }
+
+    case "vforge_navegador_see": {
+      if (!isAdminScope) return err("Sólo el owner usa el Navegador Pro.");
+      try {
+        const { captureNavegadorCurrent, mcpSeeResult } = await import("@/lib/live/see-page");
+        const shot = await captureNavegadorCurrent();
+        shot.label = "Pestaña abierta — Navegador Pro";
+        return mcpSeeResult("Navegador Pro", "navegador", { shots: [shot], failures: [] });
+      } catch (error) {
+        return err(error instanceof Error ? error.message : "Navegador Pro no respondió");
+      }
     }
 
     case "vforge_payments": {
