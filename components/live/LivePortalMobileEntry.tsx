@@ -100,7 +100,7 @@ export function LivePortalMobileEntry({
               </Link>
               {canInvite ? (
                 <div id="invite">
-                  <InvitePanel projectId={project.id} compact />
+                  <InvitePanel projectId={project.id} projectName={project.name} compact />
                 </div>
               ) : null}
             </div>

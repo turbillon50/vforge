@@ -31,6 +31,11 @@ export function LiveGate({ projectId }: { projectId: string }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token: t }),
         });
+        if (res.status === 401) {
+          const next = `${window.location.pathname}${window.location.search}`;
+          window.location.assign(`/sign-in?redirect_url=${encodeURIComponent(next)}`);
+          return;
+        }
         if (res.ok) {
           setState("accepted");
           // Limpia el token de la URL y recarga con acceso ya concedido.

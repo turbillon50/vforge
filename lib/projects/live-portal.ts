@@ -11,6 +11,7 @@ import { queryOne, queryAll } from "@/lib/db/client";
 import {
   type LiveRole,
   isLiveRole,
+  OPEN_INVITE_EMAIL,
 } from "@/lib/projects/roles";
 import {
   generateInviteToken,
@@ -87,7 +88,7 @@ export interface CreatedInvitation {
  */
 export async function createInvitation(args: {
   projectId: string;
-  email: string;
+  email?: string | null;
   role: LiveRole;
   invitedBy: string | null;
   ttlHours?: number;
@@ -97,7 +98,8 @@ export async function createInvitation(args: {
     Math.max(1, Math.floor(args.ttlHours ?? INVITE_DEFAULT_TTL_HOURS)),
   );
   const { token, tokenHash } = generateInviteToken();
-  const email = args.email.trim().toLowerCase();
+  const trimmed = (args.email ?? "").trim().toLowerCase();
+  const email = trimmed || OPEN_INVITE_EMAIL;
 
   const invitation = await queryOne<InvitationSummary>(
     `INSERT INTO project_live_invitations
@@ -138,12 +140,15 @@ export async function acceptInvitation(args: {
   const row = await queryOne<{ project_id: string; role: string }>(
     `WITH claimed AS (
         UPDATE project_live_invitations
-           SET accepted_at = now(), accepted_by = $3
+           SET accepted_at = CASE WHEN email = '*' THEN accepted_at ELSE now() END,
+               accepted_by = CASE WHEN email = '*' THEN COALESCE(accepted_by, $3) ELSE $3 END
          WHERE token_hash = $1
-           AND accepted_at IS NULL
            AND revoked_at IS NULL
            AND expires_at > now()
-           AND lower(email) = $2
+           AND (
+             email = '*'
+             OR (accepted_at IS NULL AND lower(email) = $2)
+           )
         RETURNING project_id, role, invited_by
      ),
      membership AS (
