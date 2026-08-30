@@ -75,11 +75,7 @@ export function CommentsPanel({
   onMinimize?: () => void;
 }) {
   const router = useRouter();
-  const {
-    draftAnchor,
-    setDraftAnchor,
-    setAnchoredComments,
-  } = useReviewContext();
+  const { setAnchoredComments, commentsVersion } = useReviewContext();
   const encodedProjectId = encodeURIComponent(projectId);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -159,7 +155,7 @@ export function CommentsPanel({
     void load();
     const timer = window.setInterval(() => void load(), 10_000);
     return () => window.clearInterval(timer);
-  }, [load]);
+  }, [commentsVersion, load]);
 
   async function send() {
     const text = body.trim();
@@ -170,14 +166,13 @@ export function CommentsPanel({
       const response = await fetch("/api/live/" + encodedProjectId + "/comments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: text, anchor: draftAnchor }),
+        body: JSON.stringify({ body: text }),
       });
       if (!response.ok) {
         setError("No se pudo publicar el comentario.");
         return;
       }
       setBody("");
-      setDraftAnchor(null);
       await load();
     } catch {
       setError("No se pudo publicar el comentario.");
@@ -311,16 +306,6 @@ export function CommentsPanel({
       </div>
 
       <div className="mt-3">
-        {draftAnchor ? (
-          <div className="mb-2 flex items-center justify-between gap-2 rounded-md border border-black bg-[var(--color-background)] px-2.5 py-2">
-            <p className="truncate font-mono text-[8px] uppercase tracking-[0.08em]">
-              Anclado · {draftAnchor.label}
-            </p>
-            <button type="button" onClick={() => setDraftAnchor(null)} className="grid h-6 w-6 shrink-0 place-items-center rounded-md border border-[var(--border-1)]" aria-label="Quitar ancla">
-              <IconX size={10} />
-            </button>
-          </div>
-        ) : null}
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
