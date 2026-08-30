@@ -145,8 +145,8 @@ export function ScopedWorkspaceHome({
           </h1>
           <p className="mt-6 max-w-2xl break-words text-[15px] leading-7 text-[var(--fg-secondary)] sm:text-[17px]">
             Esta cuenta pertenece a {email}. No necesitas una invitación:
-            conecta tus propias herramientas y VForge mantendrá tus accesos
-            separados de los de cualquier otra persona.
+            empieza a diseñar y VForge solicitará tus propias herramientas sólo
+            cuando quieras publicar, sin mezclar accesos con otra persona.
           </p>
 
           <div className="mt-7 grid border border-[var(--color-ink)] bg-[var(--color-surface)] sm:grid-cols-[180px_1fr_auto] sm:items-center">
@@ -161,13 +161,13 @@ export function ScopedWorkspaceHome({
             <p className="border-b border-[var(--border-1)] p-4 text-[12px] leading-5 text-[var(--fg-secondary)] sm:border-b-0">
               {connectedCount === 2
                 ? "GitHub y Vercel están listos. Ya puedes construir y publicar."
-                : "Completa las conexiones pendientes. Puedes reconectar cualquiera en todo momento."}
+                : "Puedes empezar sin conectar nada. VForge pedirá los permisos necesarios únicamente al publicar."}
             </p>
             <a
-              href={connectedCount === 2 ? "#create-app" : "#connections-title"}
+              href="#create-app"
               className="m-3 inline-flex min-h-10 items-center justify-center border border-[var(--color-ink)] px-4 text-[11px] font-medium"
             >
-              {connectedCount === 2 ? "Crear una app" : "Gestionar conexiones"}
+              Empezar a crear
             </a>
           </div>
 
@@ -177,17 +177,17 @@ export function ScopedWorkspaceHome({
           >
             <div className="flex items-end justify-between gap-4 border-b border-[var(--color-ink)] pb-4">
               <div>
-                <p className="mono-label">Paso 01</p>
+                <p className="mono-label">Permisos opcionales</p>
                 <h2
                   id="connections-title"
                   className="mt-2 text-[28px] font-medium tracking-[-0.05em]"
                 >
-                  Tus conexiones
+                  Conexiones de publicación
                 </h2>
               </div>
               <p className="hidden max-w-sm text-right text-[12px] leading-5 text-[var(--fg-secondary)] sm:block">
-                Si necesitas una cuenta, créala en otra pestaña. Luego vuelve y
-                conecta sólo para tu usuario.
+                No son necesarias para empezar. VForge las solicitará cuando
+                quieras publicar y las vinculará sólo con tu usuario.
               </p>
             </div>
             <div className="grid md:grid-cols-2">
@@ -264,7 +264,7 @@ export function ScopedWorkspaceHome({
             className="mt-12 scroll-mt-24 sm:mt-16"
             aria-labelledby="projects-title"
           >
-            <p className="mono-label">Paso 03</p>
+            <p className="mono-label">Paso 02</p>
             <h2
               id="projects-title"
               className="mt-2 text-[28px] font-medium tracking-[-0.05em]"
