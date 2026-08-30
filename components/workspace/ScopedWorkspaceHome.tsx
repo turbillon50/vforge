@@ -103,8 +103,8 @@ export function ScopedWorkspaceHome({
               </h2>
             </div>
             <p className="hidden max-w-sm text-right text-[12px] leading-5 text-[var(--fg-secondary)] sm:block">
-              Si todavía no tienes cuenta, puedes crearla al continuar con cada
-              proveedor.
+              Entra con tu cuenta o crea una nueva. La conexión queda sólo en tu
+              usuario.
             </p>
           </div>
           <div className="grid md:grid-cols-2">
@@ -137,8 +137,11 @@ export function ScopedWorkspaceHome({
                     {connected ? (
                       <span className="text-[11px] font-medium">Listo</span>
                     ) : (
-                      <a href={href} className="btn-ghost !min-h-9 !px-3">
-                        Conectar <IconArrowR size={12} />
+                      <a
+                        href={href}
+                        className="btn-ghost !min-h-10 !px-3 text-center !leading-4"
+                      >
+                        Conectar o crear cuenta <IconArrowR size={12} />
                       </a>
                     )}
                   </div>
