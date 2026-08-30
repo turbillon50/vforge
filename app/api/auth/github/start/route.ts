@@ -42,7 +42,7 @@ async function repairExistingInstallation(userId: string): Promise<boolean> {
       "https://api.github.com/user/installations?per_page=100",
       {
         headers: {
-          Authorization: `Bearer `,
+          Authorization: `Bearer ${token}`,
           Accept: "application/vnd.github+json",
           "X-GitHub-Api-Version": "2022-11-28",
           "User-Agent": "vforge",
