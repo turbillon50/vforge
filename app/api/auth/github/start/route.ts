@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
+import { normalizarOAuthReturnPath } from "@/lib/connect/oauth-state";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,10 +45,16 @@ export async function GET(req: Request) {
 
   const reqUrl = new URL(req.url);
   const returnTo = returnToPermitido(reqUrl.searchParams.get("return_to"));
+  const internalReturnTo = normalizarOAuthReturnPath(
+    reqUrl.searchParams.get("return_to"),
+  );
   const tenant = reqUrl.searchParams.get("tenant");
 
   const state = randomBytes(16).toString("hex");
   const jar = await cookies();
+  jar.delete("gh_bridge_return_to");
+  jar.delete("gh_bridge_tenant");
+  jar.delete("gh_oauth_return_path");
   jar.set("gh_oauth_state", state, {
     httpOnly: true,
     secure: true,
@@ -73,6 +80,14 @@ export async function GET(req: Request) {
         path: "/",
       });
     }
+  } else {
+    jar.set("gh_oauth_return_path", internalReturnTo, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 600,
+      path: "/",
+    });
   }
 
   const redirectUri = `${siteUrl()}/api/auth/github/callback`;
