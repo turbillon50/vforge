@@ -105,20 +105,23 @@ function OnboardingWithClerk() {
     title: string;
     body: string;
     href: string;
+    signupHref: string;
     icon: typeof IconGithub;
   }[] = [
     {
       id: "github",
       title: "GitHub",
-      body: "Conecta tu cuenta o crea una nueva. Quedará vinculada sólo a tu usuario.",
+      body: "¿No tienes cuenta? Créala en otra pestaña, vuelve aquí y conecta.",
       href: "/api/auth/github/start?return_to=%2Fonboarding",
+      signupHref: "https://github.com/signup",
       icon: IconGithub,
     },
     {
       id: "vercel",
       title: "Vercel",
-      body: "Conecta tu cuenta o crea una nueva. Quedará vinculada sólo a tu usuario.",
+      body: "¿No tienes cuenta? Créala en otra pestaña, vuelve aquí y conecta.",
       href: "/api/auth/vercel/start?return_to=%2Fonboarding",
+      signupHref: "https://vercel.com/signup",
       icon: IconRocket,
     },
   ];
@@ -157,12 +160,12 @@ function OnboardingWithClerk() {
               </p>
             </div>
 
-            {items.map(({ id, title, body, href, icon: Icon }) => {
+            {items.map(({ id, title, body, href, signupHref, icon: Icon }) => {
               const isConnected = connected.includes(id);
               return (
                 <div
                   key={id}
-                  className="flex items-center gap-4 border-b border-[var(--border-1)] px-5 py-5 last:border-b-0"
+                  className="flex flex-col gap-4 border-b border-[var(--border-1)] px-5 py-5 last:border-b-0 sm:flex-row sm:items-center"
                 >
                   <div className="grid h-10 w-10 shrink-0 place-items-center border border-black">
                     <Icon size={17} />
@@ -178,12 +181,22 @@ function OnboardingWithClerk() {
                       <IconCheck size={12} /> Conectado
                     </span>
                   ) : (
-                    <a
-                      href={href}
-                      className="btn-ghost !min-h-10 !px-3 text-center !leading-4"
-                    >
-                      Conectar o crear cuenta
-                    </a>
+                    <div className="flex w-full gap-2 sm:w-auto">
+                      <a
+                        href={href}
+                        className="btn-primary flex-1 !min-h-10 !px-3 text-center !leading-4 sm:flex-none"
+                      >
+                        Conectar
+                      </a>
+                      <a
+                        href={signupHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-ghost flex-1 !min-h-10 !px-3 text-center !leading-4 sm:flex-none"
+                      >
+                        Crear cuenta
+                      </a>
+                    </div>
                   )}
                 </div>
               );
