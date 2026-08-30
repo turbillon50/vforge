@@ -18,9 +18,9 @@ export default async function WorkspacePage() {
 
   const name = user.firstName || user.username || "";
   const [projects, connections] = await Promise.all([
-    listScopedProjects(email).catch((error: unknown) => {
+    listScopedProjects({ clerkUserId: user.id, email }).catch((error: unknown) => {
       console.error("[workspace] scoped catalog failed", {
-        email,
+        userId: user.id,
         message: error instanceof Error ? error.message : String(error),
       });
       return [];

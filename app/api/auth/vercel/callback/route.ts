@@ -1,7 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { saveUserSecret } from "@/lib/connect/user-vault";
-import { leerStateCompleto } from "@/lib/connect/oauth-state";
+import {
+  leerStateCompleto,
+  resolverOAuthCallbackIdentity,
+} from "@/lib/connect/oauth-state";
 import { registrarIntento } from "@/lib/connect/attempt-log";
 
 export const runtime = "nodejs";
@@ -34,21 +37,26 @@ export async function GET(req: Request) {
   };
 
   // 1) Sesion de Clerk si existe; 2) si no, el userId firmado en el state.
-  let userId: string | null = null;
+  let sessionUserId: string | null = null;
   try {
-    userId = (await auth()).userId ?? null;
+    sessionUserId = (await auth()).userId ?? null;
   } catch {
-    userId = null;
+    sessionUserId = null;
   }
-  const desdeState = stateData?.userId ?? null;
-  if (!userId) userId = desdeState;
-
-  // Si hay sesion Y state, deben coincidir: evita que alguien pegue su code
-  // en la sesion de otro.
-  if (userId && desdeState && userId !== desdeState) {
-    await registrarIntento("vercel", "state_invalido", "sesion != state", userId);
+  const identity = resolverOAuthCallbackIdentity(
+    sessionUserId,
+    stateData?.userId,
+  );
+  if (identity.mismatch) {
+    await registrarIntento(
+      "vercel",
+      "state_invalido",
+      "sesion != state",
+      identity.userId,
+    );
     return back("error_state");
   }
+  const userId = identity.userId;
 
   const jar = await cookies();
   jar.delete("vc_oauth_state");

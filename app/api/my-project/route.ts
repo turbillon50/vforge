@@ -15,14 +15,14 @@ export async function GET() {
   const user = await currentUser();
   const email = user?.emailAddresses?.[0]?.emailAddress;
 
-  if (!email) {
+  if (!user?.id || !email) {
     return NextResponse.json(
       { error: "unauthorized" },
       { status: 401, headers: { "Cache-Control": "no-store" } },
     );
   }
 
-  const rows = await listScopedProjects(email);
+  const rows = await listScopedProjects({ clerkUserId: user.id, email });
 
   return NextResponse.json(
     { projects: rows },

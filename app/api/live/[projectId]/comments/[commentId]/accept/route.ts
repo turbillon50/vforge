@@ -14,6 +14,7 @@ import {
   insertTaskEvent,
 } from "@/lib/live/comment-tasks";
 import { resolveProjectViewportUrls } from "@/lib/projects/viewport-url";
+import { membershipBelongsToUserSql } from "@/lib/projects/membership-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,10 +40,12 @@ export async function POST(
   if (!platformOwner) {
     const membership = await queryOne<{ role: string }>(
       `SELECT role FROM project_live_members
-        WHERE project_id = $1 AND lower(email) = lower($2) AND status = 'active'
+        WHERE project_id = $1
+          AND ${membershipBelongsToUserSql("project_live_members", "$2", "$3")}
+          AND status = 'active'
           AND (expires_at IS NULL OR expires_at > now())
         LIMIT 1`,
-      [projectId, identity.email],
+      [projectId, identity.userId, identity.email],
     ).catch(() => null);
     liveOwner = membership?.role === "owner";
   }

@@ -1,7 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
-import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
-import { normalizarOAuthReturnPath } from "@/lib/connect/oauth-state";
+import {
+  firmarState,
+  normalizarOAuthReturnPath,
+} from "@/lib/connect/oauth-state";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,7 +52,9 @@ export async function GET(req: Request) {
   );
   const tenant = reqUrl.searchParams.get("tenant");
 
-  const state = randomBytes(16).toString("hex");
+  // State firmado con userId: el callback no depende de que la cookie de
+  // Clerk sobreviva el salto a github.com (el mismo fallo que tuvo Vercel).
+  const state = firmarState(userId, internalReturnTo);
   const jar = await cookies();
   jar.delete("gh_bridge_return_to");
   jar.delete("gh_bridge_tenant");

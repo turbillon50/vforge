@@ -1,6 +1,10 @@
 import "server-only";
 
 import { queryAll, queryOne } from "@/lib/db/client";
+import {
+  membershipBelongsToUserSql,
+  normalizeScopedIdentity,
+} from "@/lib/projects/membership-scope";
 
 export interface ScopedProject {
   id: string;
@@ -15,14 +19,17 @@ export interface ScopedProject {
 }
 
 /**
- * Catálogo fail-closed para clientes. Sólo reúne membresías activas ligadas al
- * correo actual; nunca consulta ni devuelve el catálogo global del owner.
- * Si existen las dos membresías históricas para el mismo proyecto, preferimos
- * la sala live nueva porque aplica los roles observer/reviewer por endpoint.
+ * Catálogo fail-closed para clientes. Sólo reúne membresías activas ligadas
+ * al Clerk user id (email legacy sólo si la fila aún no tiene clerk_user_id).
+ * Sin identidad o sin membresías → lista vacía. Nunca el catálogo del owner.
  */
-export async function listScopedProjects(email: string): Promise<ScopedProject[]> {
-  const normalized = email.trim().toLowerCase();
-  if (!normalized || normalized.length > 320) return [];
+export async function listScopedProjects(input: {
+  clerkUserId: string;
+  email: string;
+}): Promise<ScopedProject[]> {
+  const identity = normalizeScopedIdentity(input.clerkUserId, input.email);
+  if (!identity) return [];
+  const normalized = identity.email;
 
   const tables = await queryOne<{
     has_workspace_members: boolean;
@@ -42,7 +49,7 @@ export async function listScopedProjects(email: string): Promise<ScopedProject[]
               'workspace'::text AS access_kind,
               1 AS priority
          FROM project_members pm
-        WHERE lower(pm.email) = $1
+        WHERE ${membershipBelongsToUserSql("pm", "$1", "$2")}
           AND pm.status = 'active'`,
     );
   }
@@ -53,7 +60,7 @@ export async function listScopedProjects(email: string): Promise<ScopedProject[]
               'live'::text AS access_kind,
               2 AS priority
          FROM project_live_members plm
-        WHERE lower(plm.email) = $1
+        WHERE ${membershipBelongsToUserSql("plm", "$1", "$2")}
           AND plm.status = 'active'
           AND (plm.expires_at IS NULL OR plm.expires_at > now())`,
     );
@@ -81,6 +88,6 @@ export async function listScopedProjects(email: string): Promise<ScopedProject[]
        FROM scoped
        JOIN projects p ON p.id = scoped.project_id
       ORDER BY p.name ASC`,
-    [normalized],
+    [identity.clerkUserId, normalized],
   );
 }

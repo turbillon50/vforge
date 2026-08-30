@@ -4,6 +4,7 @@ import { getCurrentVForgeIdentity } from "@/lib/api/vforge-owned";
 import { isOwnerEmail } from "@/lib/auth/owner";
 import { queryOne } from "@/lib/db/client";
 import { insertSystemComment } from "@/lib/live/comment-tasks";
+import { membershipBelongsToUserSql } from "@/lib/projects/membership-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,9 +22,11 @@ export async function POST(
   if (!platformOwner) {
     const m = await queryOne<{ role: string }>(
       `SELECT role FROM project_live_members
-        WHERE project_id = $1 AND lower(email) = lower($2) AND status = 'active'
+        WHERE project_id = $1
+          AND ${membershipBelongsToUserSql("project_live_members", "$2", "$3")}
+          AND status = 'active'
         LIMIT 1`,
-      [projectId, identity.email],
+      [projectId, identity.userId, identity.email],
     ).catch(() => null);
     if (m?.role !== "owner" && m?.role !== "reviewer") {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });

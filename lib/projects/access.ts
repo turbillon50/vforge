@@ -14,6 +14,10 @@ import {
   resolveMembership,
   roleAtLeast,
 } from "@/lib/projects/roles";
+import {
+  membershipBelongsToUserSql,
+  normalizeScopedIdentity,
+} from "@/lib/projects/membership-scope";
 
 export interface LiveAccess {
   projectId: string;
@@ -49,11 +53,11 @@ export async function resolveLiveAccessForIdentity(
   identity: LiveIdentity,
 ): Promise<LiveAccess | null> {
   const cleanProjectId = projectId?.trim();
-  const userId = identity.userId?.trim();
-  const email = identity.email?.trim().toLowerCase();
+  const scoped = normalizeScopedIdentity(identity.userId, identity.email);
+  if (!cleanProjectId || !scoped) return null;
+  const userId = scoped.clerkUserId;
+  const email = scoped.email;
   const name = identity.name?.trim().slice(0, 160) || email;
-
-  if (!cleanProjectId || !userId || !email || email.length > 320) return null;
 
   if (isOwnerEmail(email)) {
     return {
@@ -71,9 +75,10 @@ export async function resolveLiveAccessForIdentity(
     row = await queryOne<MembershipRow>(
       `SELECT role, status, expires_at
          FROM project_live_members
-        WHERE project_id = $1 AND lower(email) = lower($2)
+        WHERE project_id = $1
+          AND ${membershipBelongsToUserSql("project_live_members", "$2", "$3")}
         LIMIT 1`,
-      [cleanProjectId, email],
+      [cleanProjectId, userId, email],
     );
   } catch {
     return null;
