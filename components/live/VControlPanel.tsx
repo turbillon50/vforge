@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { VConversationPanel } from "@/components/live/VConversationPanel";
+import { repositoryGroupLabel } from "@/lib/projects/repository-groups";
 import {
   IconBranch,
   IconCheck,
@@ -33,6 +34,7 @@ interface Repository {
   repo_full_name: string;
   is_primary: boolean;
   default_branch: string | null;
+  role?: string | null;
 }
 
 interface QueueJobRef {
@@ -82,7 +84,7 @@ const EXECUTORS: Array<{ id: Executor; label: string; description: string }> = [
 ];
 
 const STATUS_LABELS: Record<RunStatus, string> = {
-  preparing: "Preparando rama",
+  preparing: "Preparando sandbox",
   queued: "En cola",
   running: "Trabajando",
   awaiting_preview: "Esperando preview",
@@ -120,6 +122,7 @@ export function VControlPanel({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [controlMode, setControlMode] = useState<ControlMode>("talk");
+  const [planSeed, setPlanSeed] = useState("");
   const pollingRef = useRef(false);
 
   const load = useCallback(async () => {
@@ -267,10 +270,10 @@ export function VControlPanel({
           </span>
           <div className="min-w-0">
             <p className="font-mono text-[9px] uppercase tracking-[0.13em]">
-              V · conversación y control
+              V · traductora de la sala
             </p>
             <p className="truncate text-[9px] text-[var(--fg-muted)]">
-              Plática · planeación · ejecución protegida
+              Cerebras habla · las IAs grandes sólo en Ejecución
             </p>
           </div>
         </div>
@@ -330,7 +333,11 @@ export function VControlPanel({
             >
               {repositories.map((repo) => (
                 <option key={repo.repo_full_name} value={repo.repo_full_name}>
-                  {repo.repo_full_name}
+                  {repositoryGroupLabel(
+                    repo.repo_full_name,
+                    repo.role,
+                    repo.is_primary,
+                  )}
                 </option>
               ))}
             </select>
@@ -339,7 +346,7 @@ export function VControlPanel({
               onChange={(event) => setInstruction(event.target.value)}
               maxLength={12000}
               rows={2}
-              placeholder="Dile a V qué debe cambiar, investigar o construir…"
+              placeholder="La IA grande trabajará en un sandbox aislado. Main no se toca hasta Publicar."
               className="min-h-14 resize-y rounded-md border border-[var(--border-1)] bg-white px-3 py-2 text-[12px] leading-5 outline-none focus:border-black"
             />
             <button
@@ -376,6 +383,9 @@ export function VControlPanel({
               </button>
             ))}
           </div>
+          <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
+            Sandbox en rama aislada · preview antes de aprobar · GitHub main sólo al publicar
+          </p>
         </form>
       ) : null}
 
@@ -393,9 +403,35 @@ export function VControlPanel({
           repositories={repositories}
           repository={repository}
           onRepositoryChange={setRepository}
+          seed={controlMode === "plan" ? planSeed : ""}
+          onPromoteToPlan={(talk) => {
+            setPlanSeed(
+              `Convierte esta plática en un plan verificable.\n\n${talk}`.slice(
+                0,
+                6000,
+              ),
+            );
+            setControlMode("plan");
+            void fetch(`/api/live/${encodeURIComponent(projectId)}/memory`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                kind: "talk_to_plan",
+                summary: talk.slice(0, 400),
+              }),
+            });
+          }}
           onUseAsTask={(plan) => {
             setInstruction(plan.slice(0, 12000));
             setControlMode("execute");
+            void fetch(`/api/live/${encodeURIComponent(projectId)}/memory`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                kind: "plan_to_task",
+                summary: plan.slice(0, 400),
+              }),
+            });
           }}
         />
       ) : (

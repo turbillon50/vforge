@@ -12,6 +12,7 @@ import {
   type RoomProjectInfo,
   type RoomReference,
 } from "@/lib/live/room-context";
+import { listProjectDecisionLog } from "@/lib/live/load-project-memory";
 import { ensureProjectReferencesTable } from "@/lib/live/project-references";
 
 async function readJson(response: Response): Promise<Record<string, unknown> | null> {
@@ -28,7 +29,7 @@ export async function loadRoomContextBrief(
   identity: VForgeIdentity,
   signal: AbortSignal,
 ): Promise<string> {
-  const [commentsRes, contextRes, references] = await Promise.all([
+  const [commentsRes, contextRes, references, decisions] = await Promise.all([
     fetchVForgeApi(`${projectApiPath(projectId, "comments")}?limit=80`, identity, {
       signal,
     }).then(readJson).catch(() => null),
@@ -46,6 +47,7 @@ export async function loadRoomContextBrief(
         [projectId],
       );
     })().catch(() => [] as RoomReference[]),
+    listProjectDecisionLog(projectId).catch(() => "DECISIONES: ninguna todavía."),
   ]);
 
   const comments = Array.isArray(commentsRes?.comments)
@@ -64,6 +66,20 @@ export async function loadRoomContextBrief(
         .map((asset) => ({ filename: asset.filename as string }))
     : [];
 
+  const repositories = Array.isArray(contextRes?.repositories)
+    ? (contextRes.repositories as Array<{
+        repo_full_name?: string;
+        role?: string;
+        is_primary?: boolean;
+      }>)
+        .filter((repo) => typeof repo.repo_full_name === "string")
+        .map((repo) => ({
+          repo_full_name: repo.repo_full_name as string,
+          role: repo.role ?? "app",
+          is_primary: Boolean(repo.is_primary),
+        }))
+    : [];
+
   return formatRoomContext({
     projectId,
     project,
@@ -71,5 +87,7 @@ export async function loadRoomContextBrief(
     references,
     document,
     assets,
+    repositories,
+    decisions,
   });
 }

@@ -8,6 +8,7 @@ export interface ReviewAnchor {
   label: string;
   documentX?: number;
   documentY?: number;
+  selector?: string;
 }
 
 export interface ReviewBridgeViewport {
@@ -66,6 +67,10 @@ export function parseReviewAnchor(value: unknown): ReviewAnchor | null {
   const label = typeof raw.label === "string" ? raw.label.trim().slice(0, 120) : "";
   const documentX = finiteDocumentCoordinate(raw.documentX);
   const documentY = finiteDocumentCoordinate(raw.documentY);
+  const selector =
+    typeof raw.selector === "string"
+      ? raw.selector.trim().slice(0, 300)
+      : "";
   return {
     viewport: raw.viewport as ReviewViewport,
     x: Math.round(raw.x * 10_000) / 10_000,
@@ -73,6 +78,7 @@ export function parseReviewAnchor(value: unknown): ReviewAnchor | null {
     url,
     label: label || `${raw.viewport} · ${Math.round(raw.x * 100)}%, ${Math.round(raw.y * 100)}%`,
     ...(documentX != null && documentY != null ? { documentX, documentY } : {}),
+    ...(selector ? { selector } : {}),
   };
 }
 
@@ -86,6 +92,40 @@ function finitePositive(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value > 0 && value <= 10_000_000
     ? value
     : null;
+}
+
+export function parseReviewBridgeHit(value: unknown): {
+  selector: string;
+  text: string;
+  documentX: number;
+  documentY: number;
+} | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  if (raw.source !== "vforge-review-bridge" || raw.type !== "hit" || raw.version !== 1) {
+    return null;
+  }
+  const documentX = finiteDocumentCoordinate(raw.documentX);
+  const documentY = finiteDocumentCoordinate(raw.documentY);
+  if (documentX == null || documentY == null) return null;
+  const selector =
+    typeof raw.selector === "string" ? raw.selector.trim().slice(0, 300) : "";
+  const text = typeof raw.text === "string" ? raw.text.trim().slice(0, 80) : "";
+  return { selector, text, documentX, documentY };
+}
+
+/** Origin + pathname. Query y hash no deben mover un ancla. */
+export function anchorPageKey(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.origin}${parsed.pathname.replace(/\/+$/, "") || "/"}`;
+  } catch {
+    return url.split("?")[0].split("#")[0] || url;
+  }
+}
+
+export function sameReviewPage(left: string, right: string): boolean {
+  return anchorPageKey(left) === anchorPageKey(right);
 }
 
 export function parseReviewBridgeViewport(value: unknown): ReviewBridgeViewport | null {

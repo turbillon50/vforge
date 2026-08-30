@@ -24,6 +24,29 @@ export interface ProjectRepository {
   pushed_at: string | null;
 }
 
+export const PROJECT_REPOSITORY_ROLE_LABEL: Record<ProjectRepositoryRole, string> = {
+  app: "App",
+  frontend: "Frontend",
+  backend: "Backend",
+  api: "API",
+  admin: "Administración",
+  mobile: "Móvil",
+  infra: "Infraestructura",
+  docs: "Documentación",
+  shared: "Compartido",
+  other: "Otro",
+};
+
+export function repositoryGroupLabel(
+  repoFullName: string,
+  role?: string | null,
+  isPrimary?: boolean,
+): string {
+  const key = (role || "app") as ProjectRepositoryRole;
+  const roleLabel = PROJECT_REPOSITORY_ROLE_LABEL[key] || role || "App";
+  return `${roleLabel} · ${repoFullName}${isPrimary ? " · principal" : ""}`;
+}
+
 export function isProjectRepositoryRole(
   value: unknown,
 ): value is ProjectRepositoryRole {
@@ -32,4 +55,5 @@ export function isProjectRepositoryRole(
     PROJECT_REPOSITORY_ROLES.includes(value as ProjectRepositoryRole)
   );
 }
+
 

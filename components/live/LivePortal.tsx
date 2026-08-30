@@ -37,7 +37,9 @@ import { ReviewNotesTray } from "@/components/live/ReviewNotesTray";
 import {
   anchorViewportPosition,
   documentPointForAnchor,
+  parseReviewBridgeHit,
   parseReviewBridgeViewport,
+  sameReviewPage,
   type ReviewAnchor,
   type ReviewBridgeViewport,
 } from "@/lib/live/review-context";
@@ -744,6 +746,7 @@ function Viewport({
   const spec = PREVIEW_SPECS[kind];
   const stageRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const pendingHitRef = useRef<((hit: { selector: string; text: string; documentX: number; documentY: number } | null) => void) | null>(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [bridgeViewport, setBridgeViewport] = useState<ReviewBridgeViewport | null>(null);
   const frameClass =
@@ -788,6 +791,11 @@ function Viewport({
       if (event.source !== iframeRef.current?.contentWindow || event.origin !== iframeOrigin) return;
       const next = parseReviewBridgeViewport(event.data);
       if (next) setBridgeViewport(next);
+      const hit = parseReviewBridgeHit(event.data);
+      if (hit && pendingHitRef.current) {
+        pendingHitRef.current(hit);
+        pendingHitRef.current = null;
+      }
     };
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);
@@ -809,24 +817,58 @@ function Viewport({
   );
   const scaleLabel = stageSize.width > 0 ? `${Math.round(previewScale * 100)}%` : "…";
   const markers = anchoredComments.filter(
-    (comment) => comment.anchor.viewport === kind && comment.anchor.url === url,
+    (comment) => comment.anchor.viewport === kind && sameReviewPage(comment.anchor.url, url || ""),
   );
   const pendingMarkers = draftNotes.filter(
-    (note) => note.anchor.viewport === kind && note.anchor.url === url,
+    (note) => note.anchor.viewport === kind && sameReviewPage(note.anchor.url, url || ""),
   );
 
-  function placeAnchor(event: React.MouseEvent<HTMLDivElement>) {
+  async function placeAnchor(event: React.MouseEvent<HTMLDivElement>) {
     if (!url) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const x = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
     const y = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
+    const fallback = documentPointForAnchor(x, y, bridgeViewport);
+    const hit = await new Promise<{
+      selector: string;
+      text: string;
+      documentX: number;
+      documentY: number;
+    } | null>((resolve) => {
+      const frame = iframeRef.current?.contentWindow;
+      if (!frame) {
+        resolve(null);
+        return;
+      }
+      const timer = window.setTimeout(() => {
+        pendingHitRef.current = null;
+        resolve(null);
+      }, 160);
+      pendingHitRef.current = (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      };
+      try {
+        frame.postMessage(
+          { source: "vforge-review-host", type: "hit", version: 1, x, y },
+          "*",
+        );
+      } catch {
+        window.clearTimeout(timer);
+        pendingHitRef.current = null;
+        resolve(null);
+      }
+    });
+    const labelBit = hit?.text || `${title} · ${Math.round(x * 100)}%, ${Math.round(y * 100)}%`;
     addDraftAnchor({
       viewport: kind,
       x: Math.round(x * 10_000) / 10_000,
       y: Math.round(y * 10_000) / 10_000,
       url,
-      label: `${title} · ${Math.round(x * 100)}%, ${Math.round(y * 100)}%`,
-      ...documentPointForAnchor(x, y, bridgeViewport),
+      label: labelBit.slice(0, 120),
+      ...(hit
+        ? { documentX: hit.documentX, documentY: hit.documentY, selector: hit.selector }
+        : fallback),
     });
     setPinMode(false);
   }

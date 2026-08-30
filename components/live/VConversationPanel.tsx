@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { repositoryGroupLabel } from "@/lib/projects/repository-groups";
 import {
   IconArrowR,
   IconLoader,
@@ -25,6 +26,7 @@ interface Repository {
   repo_full_name: string;
   is_primary: boolean;
   default_branch: string | null;
+  role?: string | null;
 }
 
 export function VConversationPanel({
@@ -35,6 +37,8 @@ export function VConversationPanel({
   repository,
   onRepositoryChange,
   onUseAsTask,
+  onPromoteToPlan,
+  seed,
 }: {
   projectId: string;
   mode: ConversationMode;
@@ -43,6 +47,8 @@ export function VConversationPanel({
   repository: string;
   onRepositoryChange: (repository: string) => void;
   onUseAsTask: (plan: string) => void;
+  onPromoteToPlan?: (talk: string) => void;
+  seed?: string;
 }) {
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [message, setMessage] = useState("");
@@ -52,6 +58,10 @@ export function VConversationPanel({
   const [notice, setNotice] = useState<string | null>(null);
   const pollingRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (seed?.trim()) setMessage(seed);
+  }, [seed]);
 
   const load = useCallback(async () => {
     if (pollingRef.current) return;
@@ -147,8 +157,8 @@ export function VConversationPanel({
           </p>
           <p className="mt-0.5 text-[9px] text-[var(--fg-muted)]">
             {mode === "talk"
-              ? "Conversa sin crear ramas ni ejecutar agentes."
-              : "Define el trabajo antes de permitir cualquier cambio."}
+              ? "V traduce. No crea ramas ni llama IAs grandes."
+              : "Define el trabajo. Ejecutar es el único modo que toca GitHub."}
           </p>
         </div>
         <select
@@ -159,7 +169,7 @@ export function VConversationPanel({
         >
           {repositories.map((repo) => (
             <option key={repo.repo_full_name} value={repo.repo_full_name}>
-              {repo.repo_full_name}
+              {repositoryGroupLabel(repo.repo_full_name, repo.role, repo.is_primary)}
             </option>
           ))}
         </select>
@@ -247,6 +257,24 @@ export function VConversationPanel({
         <p className="shrink-0 bg-white px-3 py-2 text-center text-[10px] text-[var(--color-danger)]">
           {error}
         </p>
+      ) : null}
+
+      {mode === "talk" && latestPlan === null && visibleMessages.length && onPromoteToPlan ? (
+        <div className="flex shrink-0 justify-end bg-white px-3 py-2">
+          <button
+            type="button"
+            onClick={() => {
+              const transcript = visibleMessages
+                .slice(-8)
+                .map((item) => `${item.role === "user" ? "Owner" : "V"}: ${item.content}`)
+                .join("\n\n");
+              onPromoteToPlan(transcript.slice(0, 6000));
+            }}
+            className="btn-ghost"
+          >
+            Convertir a plan <IconArrowR size={11} />
+          </button>
+        </div>
       ) : null}
 
       {mode === "plan" && latestPlan ? (
