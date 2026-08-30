@@ -1,6 +1,6 @@
 // VForge minimal service worker — offline shell + network-first for documents
 // Bump VERSION on every deploy where you want forced cache invalidation
-const VERSION = "vforge-monochrome-stability-2026-08-23";
+const VERSION = "vforge-scoped-workspace-2026-08-30-1";
 const SHELL = ["/", "/app/chat", "/offline"];
 
 self.addEventListener("install", (event) => {
@@ -26,12 +26,15 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // NUNCA cachear /api/* — siempre red (los datos reales son críticos)
-  if (url.pathname.startsWith("/api/")) {
+  // Datos, bundles y respuestas RSC siempre pasan por red. Next.js ya publica
+  // sus assets con hashes; guardarlos aquí puede mezclar dos releases.
+  const isNextAsset = url.pathname.startsWith("/_next/");
+  const isRscRequest = url.searchParams.has("_rsc") || req.headers.get("RSC") === "1";
+  if (url.pathname.startsWith("/api/") || isNextAsset || isRscRequest) {
     return;
   }
 
-  // Network-first para HTML/navigation — siempre intenta versión nueva
+  // Network-first para HTML/navigation — siempre intenta versión nueva.
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req)
@@ -45,8 +48,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Stale-while-revalidate para assets estáticos — sirve del cache pero
-  // refresca en background para que la próxima vez sea versión nueva.
+  // Stale-while-revalidate sólo para assets propios no versionados.
   event.respondWith(
     caches.match(req).then((cached) => {
       const networkPromise = fetch(req).then((res) => {
