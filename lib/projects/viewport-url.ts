@@ -87,14 +87,17 @@ export function resolveProjectViewportUrls(
     normalizePublishedUrl(project.domain);
 
   const explicitAdmin = normalizePublishedUrl(project.admin_url);
+  const institutional = resolveInstitutionalAdminUrl(
+    normalizePublishedUrl(project.desktop_url) ?? publishedFallback,
+  );
 
   return {
     desktop_url:
       normalizePublishedUrl(project.desktop_url) ?? publishedFallback,
     mobile_url:
       normalizePublishedUrl(project.mobile_url) ?? publishedFallback,
-    // Administración sólo existe cuando el proyecto declara una superficie
-    // distinta. Inventar /admin produce 404 y usar la landing pública engaña.
-    admin_url: withAdminEmbed(distinctAdminUrl(explicitAdmin, publishedFallback)),
+    admin_url: withAdminEmbed(
+      distinctAdminUrl(explicitAdmin ?? institutional, publishedFallback),
+    ),
   };
 }
