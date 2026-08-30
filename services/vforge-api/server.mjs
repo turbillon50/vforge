@@ -575,7 +575,8 @@ async function liveAssets(req, res, projectId, assetId) {
   if (
     !filename.toLowerCase().endsWith(".zip") ||
     !blobPathname.startsWith(prefix) ||
-    blobPathname.includes("..") ||
+    blobPathname.includes("..") || blobPathname.includes("\\") ||
+    /%2e|%5c/i.test(blobPathname) ||
     !archiveContentTypes.has(contentType) ||
     !Number.isInteger(size) || size < 1 || size > archiveMaxBytes ||
     extractedText.length > extractedTextMaxLength
