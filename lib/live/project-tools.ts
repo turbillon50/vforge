@@ -53,7 +53,7 @@ const CATALOG: Array<{
   { kind: "blob", label: "Vercel Blob", hint: "Archivos y media.", secretHint: "BLOB_READ_WRITE_TOKEN" },
   { kind: "namecom", label: "Name.com", hint: "Dominios y DNS.", secretHint: "NAMECOM_API_TOKEN" },
   { kind: "hetzner", label: "Hetzner", hint: "Infra propia, MCP y runners.", secretHint: "HETZNER_API_TOKEN" },
-  { kind: "mcp", label: "MCP del proyecto", hint: "Toda app debe tener su MCP. Pégalo en Claude, Cursor o Grok.", secretHint: null },
+  { kind: "mcp", label: "MCP del proyecto", hint: "Toda app tiene MCP. Incluye vforge_craft.", secretHint: null },
 ];
 
 export function isForbiddenAutomation(kind: string): boolean {
@@ -160,7 +160,8 @@ export function mcpClientConfig(input: { name: string; url: string }): {
 
 export function roomToolsBrief(): string {
   return [
-    "HERRAMIENTAS DE LA SALA: Vercel (deploys, promover, redeploy, dominios, env sin valores), integraciones, bóveda cifrada y MCP por app.",
-    "MCP: toda app debe tener su MCP. Incluye vforge_project_see (fotografía cada visor y lo guarda en documentos). Sugiérelo. No uses n8n.",
+    "HERRAMIENTAS DE LA SALA: Vercel, integraciones, bóveda, MCP por app y CRAFT Agencia Premium.",
+    "CRAFT: luz 158deg, cero primarios, cristal real, dos diseños 390/1440, tabbar de 5, SVG propio, cero Lucide.",
+    "MCP: toda app debe tener su MCP. Ojos: vforge_project_see. Craft: vforge_craft. No uses n8n.",
   ].join(" ");
 }
