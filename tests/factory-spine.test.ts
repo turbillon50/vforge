@@ -5,7 +5,7 @@ import {
   parseReviewBridgeHit,
   sameReviewPage,
 } from "../lib/live/review-context";
-import { formatRoomContext } from "../lib/live/room-context";
+import { formatBrainBrief, formatRoomContext } from "../lib/live/room-context";
 import { formatDecisionLog } from "../lib/live/project-memory";
 import {
   isRetryableCerebrasCause,
@@ -81,6 +81,42 @@ test("room brief includes repo groups and decisions", () => {
   assert.match(brief, /plan_to_task/);
 });
 
+test("room brief surfaces marcas, visores and brain doctrine", () => {
+  const brief = formatRoomContext({
+    projectId: "lutor",
+    references: [
+      {
+        label: "Aman",
+        url: "https://www.aman.com",
+        kind: "inspiration",
+        notes: "luz cálida",
+      },
+    ],
+    assets: [{ filename: "logo-lutor.svg" }, { filename: "brief.pdf" }],
+    eyes: [
+      {
+        source: "visor",
+        viewport: "desktop",
+        url: "https://lutor.site",
+        note: "home",
+        created_at: "2026-08-30T17:00:00.000Z",
+      },
+    ],
+  });
+  assert.match(brief, /MARCAS Y REFERENCIAS VISUALES/);
+  assert.match(brief, /Aman/);
+  assert.match(brief, /ARCHIVOS VISUALES/);
+  assert.match(brief, /logo-lutor\.svg/);
+  assert.match(brief, /OJOS DE LA SALA/);
+  assert.match(brief, /desktop/);
+  const brain = formatBrainBrief({
+    files: [{ title: "lutor", content: "cobranza" }],
+    lessons: [],
+  });
+  assert.match(brain, /Claude Code en Hetzner/);
+  assert.match(brain, /lutor/);
+});
+
 test("decision log and repo labels stay compact", () => {
   assert.match(
     formatDecisionLog([{ kind: "talk_to_plan", summary: "puntos del CTA" }]),
@@ -95,7 +131,7 @@ test("decision log and repo labels stay compact", () => {
 test("live console wait copy is honest and timed", () => {
   assert.equal(runnerWaitCopy(1000, true), null);
   assert.match(runnerWaitCopy(1000, false) ?? "", /cola/);
-  assert.match(runnerWaitCopy(30_000, false) ?? "", /no tomó/);
+  assert.match(runnerWaitCopy(30_000, false) ?? "", /no tomaron/);
   assert.equal(formatElapsed(4500), "4s");
   assert.equal(formatElapsed(125_000), "2m 05s");
   assert.equal(isLiveRunStatus("running"), true);
