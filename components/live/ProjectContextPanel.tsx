@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { extractArchiveText } from "@/lib/live/archive-text";
 import {
+  IconCamera,
   IconCheck,
   IconCode,
   IconDownload,
@@ -14,7 +15,7 @@ import {
   IconX,
 } from "@/components/brand/VFIcons";
 
-type ContextTab = "status" | "content" | "archive";
+type ContextTab = "status" | "content" | "visors" | "archive";
 
 interface ContextPayload {
   project: {
@@ -103,6 +104,15 @@ export function ProjectContextPanel({
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [visors, setVisors] = useState<Array<{
+    viewport: string | null;
+    note: string | null;
+    mimeType: string;
+    data: string;
+    url: string | null;
+    createdAt: string;
+  }>>([]);
+  const [visorBusy, setVisorBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -124,9 +134,17 @@ export function ProjectContextPanel({
     }
   }, [encodedProjectId]);
 
+  const loadVisors = useCallback(async () => {
+    const response = await fetch(`/api/live/${encodedProjectId}/eyes`, { cache: "no-store" });
+    if (!response.ok) return;
+    const payload = (await response.json()) as { visors?: typeof visors };
+    setVisors(payload.visors ?? []);
+  }, [encodedProjectId]);
+
   useEffect(() => {
     void load();
-  }, [load]);
+    void loadVisors();
+  }, [load, loadVisors]);
 
   async function saveContent() {
     if (!data?.me.canWrite || busy) return;
@@ -233,7 +251,7 @@ export function ProjectContextPanel({
       </div>
 
       <div className="mt-3 flex gap-1 overflow-x-auto">
-        {(["status", "content", "archive"] as ContextTab[]).map((item) => (
+        {(["status", "content", "visors", "archive"] as ContextTab[]).map((item) => (
           <button
             key={item}
             type="button"
@@ -243,7 +261,7 @@ export function ProjectContextPanel({
               tab === item ? "border-black bg-black text-white" : "border-[var(--border-1)]",
             )}
           >
-            {item === "status" ? "Estado real" : item === "content" ? "CONTENIDO.md" : "Conversación.zip"}
+            {item === "status" ? "Estado real" : item === "content" ? "CONTENIDO.md" : item === "visors" ? "Visores" : "Conversación.zip"}
           </button>
         ))}
       </div>
@@ -315,6 +333,61 @@ export function ProjectContextPanel({
               </button>
             ) : <p className="mt-2 text-[10px] text-[var(--fg-muted)]">Disponible en modo lectura para tu rol.</p>}
             {data.document.updated_at ? <p className="mt-2 text-[9px] text-[var(--fg-muted)]">Última edición: {data.document.updated_by || "miembro del proyecto"}</p> : null}
+          </div>
+        ) : tab === "visors" ? (
+          <div>
+            <p className="text-[10px] leading-4 text-[var(--fg-muted)]">
+              Escritorio, Móvil y Admin. Quedan como documentos. El MCP las ve con vforge_project_context.
+            </p>
+            {data.me.canWrite ? (
+              <button
+                type="button"
+                disabled={visorBusy}
+                onClick={() => {
+                  setVisorBusy(true);
+                  setError(null);
+                  void fetch(`/api/live/${encodedProjectId}/tools`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "photograph-viewports" }),
+                  })
+                    .then(async (response) => {
+                      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+                      if (!response.ok) throw new Error(payload?.error || "No se pudieron fotografiar.");
+                      setNotice("Visores guardados para el MCP.");
+                      await loadVisors();
+                    })
+                    .catch((caught) => {
+                      setError(caught instanceof Error ? caught.message : "No se pudieron fotografiar.");
+                    })
+                    .finally(() => setVisorBusy(false));
+                }}
+                className="btn-primary mt-3 disabled:opacity-40"
+              >
+                {visorBusy ? <IconLoader size={12} className="animate-spin" /> : <IconCamera size={12} />} Fotografiar visores
+              </button>
+            ) : null}
+            {visors.length ? (
+              <div className="mt-3 space-y-3">
+                {visors.map((visor) => (
+                  <figure key={`${visor.viewport}-${visor.createdAt}`} className="overflow-hidden rounded-md border border-[var(--border-1)]">
+                    {/* data: URLs from the sala — next/image cannot optimize them */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`data:${visor.mimeType};base64,${visor.data}`}
+                      alt={visor.note || visor.viewport || "visor"}
+                      className="w-full object-contain object-top"
+                    />
+                    <figcaption className="flex items-center justify-between gap-2 px-2 py-1.5 font-mono text-[8px] uppercase tracking-[0.08em]">
+                      <span>{visor.viewport || visor.note}</span>
+                      <span className="truncate text-[var(--fg-muted)]">{visor.url}</span>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-[10px] text-[var(--fg-muted)]">Aún no hay fotos de visor.</p>
+            )}
           </div>
         ) : (
           <div>

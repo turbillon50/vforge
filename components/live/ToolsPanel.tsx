@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
+  IconCamera,
   IconCheck,
   IconCopy,
   IconExtLink,
@@ -81,6 +82,13 @@ export function ToolsPanel({
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [mcpToken, setMcpToken] = useState<string | null>(null);
+  const [visors, setVisors] = useState<Array<{
+    viewport: string | null;
+    note: string | null;
+    mimeType: string;
+    data: string;
+    url: string | null;
+  }>>([]);
   const [secretName, setSecretName] = useState("");
   const [secretValue, setSecretValue] = useState("");
   const [domain, setDomain] = useState("");
@@ -95,11 +103,19 @@ export function ToolsPanel({
     setData((await response.json()) as ToolsPayload);
   }, [projectId]);
 
+  const loadVisors = useCallback(async () => {
+    const response = await fetch(`/api/live/${encodeURIComponent(projectId)}/eyes`, { cache: "no-store" });
+    if (!response.ok) return;
+    const payload = (await response.json()) as { visors?: typeof visors };
+    setVisors(payload.visors ?? []);
+  }, [projectId]);
+
   useEffect(() => {
     void load().catch((caught) =>
       setError(caught instanceof Error ? caught.message : "Sin herramientas."),
     );
-  }, [load]);
+    void loadVisors();
+  }, [load, loadVisors]);
 
   async function postAction(body: Record<string, unknown>, okMessage: string) {
     setBusy(true);
@@ -118,7 +134,8 @@ export function ToolsPanel({
       }
       if (payload?.token) setMcpToken(payload.token);
       setNotice(okMessage);
-      if (body.action !== "mcp-token") await load();
+      if (body.action === "photograph-viewports") await loadVisors();
+      else if (body.action !== "mcp-token") await load();
       return payload;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "No se pudo completar.");
@@ -264,10 +281,45 @@ export function ToolsPanel({
             <p className="mt-2 font-mono text-[10px] text-[var(--fg-muted)]">{data.mcp.url}</p>
             <ul className="mt-3 space-y-1 font-mono text-[10px] leading-4 text-[var(--fg-muted)]">
               <li>vforge_project_feedback — anotaciones y anclas</li>
-              <li>vforge_project_context — referencias y HTML leído</li>
-              <li>vforge_project_see — Navegador Pro fotografía Escritorio/Móvil</li>
+              <li>vforge_project_context — referencias, HTML y fotos de visores</li>
+              <li>vforge_project_see — fotografía cada visor y lo guarda en documentos</li>
               <li>vforge_navegador_see — pestaña abierta del Chrome en Hetzner</li>
             </ul>
+            {write ? (
+              <button
+                type="button"
+                onClick={() =>
+                  void postAction(
+                    { action: "photograph-viewports" },
+                    "Fotos de visor guardadas. El MCP las ve en documentos.",
+                  )
+                }
+                disabled={busy}
+                className="btn-primary mt-3 disabled:opacity-40"
+              >
+                {busy ? <IconLoader size={12} className="animate-spin" /> : <IconCamera size={12} />} Fotografiar visores
+              </button>
+            ) : null}
+            {visors.length ? (
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {visors.map((visor) => (
+                  <figure key={`${visor.viewport}-${visor.note}`} className="overflow-hidden rounded-md border border-[var(--border-1)]">
+                    {/* data: URLs from the sala — next/image cannot optimize them */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`data:${visor.mimeType};base64,${visor.data}`}
+                      alt={visor.note || visor.viewport || "visor"}
+                      className="h-20 w-full object-cover object-top"
+                    />
+                    <figcaption className="truncate px-1.5 py-1 font-mono text-[8px] uppercase tracking-[0.08em]">
+                      {visor.viewport || visor.note}
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-[10px] text-[var(--fg-muted)]">Aún no hay fotos de Escritorio, Móvil o Admin.</p>
+            )}
             <a
               href="/api/inspector/zip"
               className="btn-ghost mt-3 inline-flex"

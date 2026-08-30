@@ -122,7 +122,7 @@ export const MCP_TOOLS: McpToolDef[] = [
   {
     name: "vforge_project_see",
     description:
-      "OJOS (admin|client): fotografía Escritorio/Móvil vía Navegador Pro (Chrome de Hetzner) y devuelve las imágenes. También incluye fotos del plugin de Chrome. Usa project_id y viewport=desktop|mobile|admin|all.",
+      "OJOS (admin|client): fotografía Escritorio/Móvil/Admin, guarda cada foto como documento de la sala y las devuelve. También incluye fotos del plugin de Chrome. Usa project_id y viewport=desktop|mobile|admin|all.",
     inputSchema: {
       type: "object",
       properties: {
@@ -556,7 +556,7 @@ VForge es una fábrica de aplicaciones operada por un agente (V): construye, des
    • URL:  https://vforge.site/api/mcp
    • Auth: Bearer <tu-token>
 4. Llama \`help\` para ver las tools, o \`vforge_method\` para el método.
-5. Para ver una sala: \`vforge_project_see\` con el project_id. Fotografía con Navegador Pro. Si hay plugin de Chrome, también manda esas fotos.
+5. Para ver una sala: \`vforge_project_see\` con el project_id. Fotografía cada visor y lo guarda en documentos. \`vforge_project_context\` las vuelve a leer.
 
 ## Scopes
 • Tu token te aísla a TU forge: sólo ves tus propios proyectos, pagos y apps.
@@ -589,9 +589,9 @@ function helpText(principal: McpPrincipal): string {
   lines.push("## De datos (requieren token admin|client; aisladas por tenant)");
   lines.push("• vforge_project_status — estado de tus proyectos.");
   lines.push("• vforge_project_feedback — observaciones y anclas de una sala.");
-  lines.push("• vforge_project_context — código, referencias (con contenido leído), CONTENIDO.md y archivos.");
+  lines.push("• vforge_project_context — código, referencias, CONTENIDO.md, archivos y fotos de los visores.");
   lines.push("• vforge_project_file — texto extraído de un ZIP privado, leído por fragmentos.");
-  lines.push("• vforge_project_see — ojos: Navegador Pro fotografía Escritorio/Móvil/Admin. Incluye fotos del plugin de Chrome.");
+  lines.push("• vforge_project_see — fotografía cada visor, lo guarda en documentos y lo devuelve. Incluye plugin Chrome.");
   lines.push("• vforge_navegador_see — ojos admin: fotografía la pestaña abierta del Chrome en Hetzner.");
   lines.push("• vforge_payments — avance financiero (total/pagado/pendiente).");
   lines.push("• vforge_apps_health — salud de despliegue de tus apps.");
@@ -926,7 +926,7 @@ export async function runMcpTool(
       const allowed = await authorizeMcpProject(projectId, principal);
       if (!allowed) return err("Proyecto no encontrado o sin acceso para este token MCP.");
 
-      const [project, integrations, repositories, document, assets, references] = await Promise.all([
+      const [project, integrations, repositories, document, assets, references, visors] = await Promise.all([
         queryOne<{
           id: string; name: string; description: string | null; github_repo: string | null;
           github_default_branch: string | null; github_url: string | null; vercel_url: string | null;
@@ -965,6 +965,7 @@ export async function runMcpTool(
             LIMIT 20`,
           [projectId],
         ).catch(() => []),
+        import("@/lib/live/project-eyes").then((mod) => mod.listVisorEyes(projectId)).catch(() => []),
       ]);
       if (!project) return err("Proyecto no encontrado.");
       const { readPublicPages } = await import("@/lib/live/load-page-text");
@@ -990,6 +991,11 @@ export async function runMcpTool(
             })
             .join("\n")
         : "• Sin URLs de referencia.";
+      const visorsText = visors.length
+        ? visors
+            .map((item) => `• ${item.note || item.viewport} · ${item.url || "sin url"} · ${item.created_at}`)
+            .join("\n")
+        : "• Sin fotos de visor todavía. Usa vforge_project_see o el botón Fotografiar visores.";
       const pagesText = !references.length
         ? "• No hay URLs que leer."
         : pages.length
@@ -1001,17 +1007,29 @@ export async function runMcpTool(
               })
               .join("\n\n")
           : "• No se pudo leer el HTML público de las referencias.";
-      return text(
-        `# Contexto — ${project.name} (${project.id})\n\n` +
-        `## Código y publicación\nEstado: ${project.status}\nRepo principal: ${project.github_repo ?? "sin repo"}\nRama principal: ${project.github_default_branch ?? "sin rama"}\nGitHub: ${project.github_url ?? "sin URL"}\nVercel: ${project.vercel_url ?? "sin URL"}\nDominio: ${project.domain ?? "sin dominio"}\nAuditoría: ${project.last_audit_score ?? "sin score"} · ${project.last_audit_at ?? "sin fecha"}\n\n` +
-        `## Grupo de repositorios\n${repositoriesText}\n\n` +
-        `## Integraciones\n${integrationsText}\n\n` +
-        `## URLs de referencia\n${referencesText}\n\n` +
-        `## Contenido leído de las URLs\n${pagesText}\n\n` +
-        `## CONTENIDO.md\n${document?.content?.trim() || project.description || "Sin contenido documentado todavía."}\n\n` +
-        `## Archivos privados\n${assetsText}\n\n` +
-        `Usa vforge_project_file con project_id + asset_id para leer el texto extraído. Usa vforge_project_feedback para las anotaciones. Usa vforge_project_see para fotografiar Escritorio/Móvil con Navegador Pro.`,
-      );
+      return {
+        content: [
+          {
+            type: "text",
+            text:
+              `# Contexto — ${project.name} (${project.id})\n\n` +
+              `## Código y publicación\nEstado: ${project.status}\nRepo principal: ${project.github_repo ?? "sin repo"}\nRama principal: ${project.github_default_branch ?? "sin rama"}\nGitHub: ${project.github_url ?? "sin URL"}\nVercel: ${project.vercel_url ?? "sin URL"}\nDominio: ${project.domain ?? "sin dominio"}\nAuditoría: ${project.last_audit_score ?? "sin score"} · ${project.last_audit_at ?? "sin fecha"}\n\n` +
+              `## Grupo de repositorios\n${repositoriesText}\n\n` +
+              `## Integraciones\n${integrationsText}\n\n` +
+              `## URLs de referencia\n${referencesText}\n\n` +
+              `## Contenido leído de las URLs\n${pagesText}\n\n` +
+              `## CONTENIDO.md\n${document?.content?.trim() || project.description || "Sin contenido documentado todavía."}\n\n` +
+              `## Archivos privados\n${assetsText}\n\n` +
+              `## Visores (documentos)\n${visorsText}\n\n` +
+              `Usa vforge_project_file con project_id + asset_id para leer el texto extraído. Usa vforge_project_feedback para las anotaciones. Usa vforge_project_see para fotografiar los visores y guardarlos en documentos.`,
+          },
+          ...visors.map((item) => ({
+            type: "image",
+            data: item.data_b64,
+            mimeType: item.mime_type,
+          })),
+        ],
+      };
     }
 
     case "vforge_project_file": {
@@ -1046,14 +1064,15 @@ export async function runMcpTool(
       const allowed = await authorizeMcpProject(projectId, principal);
       if (!allowed) return err("Proyecto no encontrado o sin acceso para este token MCP.");
       const { getProjectViewports } = await import("@/lib/projects/live-portal");
-      const { captureSeeViewports, parseSeeViewports, mcpSeeResult } = await import(
+      const { captureSeeViewports, parseSeeViewports, mcpSeeResult, SEE_VIEWPORTS } = await import(
         "@/lib/live/see-page"
       );
-      const { listProjectEyes } = await import("@/lib/live/project-eyes");
+      const { listProjectEyes, listVisorEyes } = await import("@/lib/live/project-eyes");
+      const { persistVisorShots } = await import("@/lib/live/photograph-visors");
       const project = await getProjectViewports(projectId);
       if (!project) return err("Proyecto no encontrado.");
       const viewports = parseSeeViewports(args.viewport ?? args.viewports);
-      const [captured, pluginEyes] = await Promise.all([
+      const [captured, pluginEyes, storedVisors] = await Promise.all([
         captureSeeViewports({
           desktop_url: project.desktop_url,
           mobile_url: project.mobile_url,
@@ -1062,7 +1081,22 @@ export async function runMcpTool(
           preferCdp: isAdminScope,
         }),
         listProjectEyes(projectId, 4),
+        listVisorEyes(projectId),
       ]);
+      await persistVisorShots(projectId, captured.shots);
+      const seen = new Set(captured.shots.map((shot) => shot.viewport));
+      for (const eye of storedVisors) {
+        const viewport = eye.viewport === "mobile" || eye.viewport === "admin" ? eye.viewport : "desktop";
+        if (seen.has(viewport) || !viewports.includes(viewport)) continue;
+        captured.shots.push({
+          viewport,
+          label: SEE_VIEWPORTS[viewport].label,
+          url: eye.url || "",
+          mimeType: eye.mime_type,
+          data: eye.data_b64,
+        });
+        seen.add(viewport);
+      }
       for (const eye of pluginEyes) {
         captured.shots.push({
           viewport: "desktop",
