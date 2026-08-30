@@ -9,9 +9,9 @@ export interface ReadPageResult {
   text: string;
 }
 
-const MAX_PAGES = 5;
-const MAX_BYTES = 80_000;
-const TIMEOUT_MS = 4_000;
+const MAX_PAGES = 10;
+const MAX_BYTES = 100_000;
+const TIMEOUT_MS = 6_000;
 
 async function readOne(url: string): Promise<ReadPageResult | null> {
   const safe = normalizeReferenceUrl(url);
@@ -42,7 +42,7 @@ async function readOne(url: string): Promise<ReadPageResult | null> {
     const html = new TextDecoder("utf-8", { fatal: false }).decode(slice);
     const extracted = extractReadableText(html);
     if (!extracted.text) return null;
-    return { url: safe, title: extracted.title, text: extracted.text.slice(0, 1800) };
+    return { url: safe, title: extracted.title, text: extracted.text.slice(0, 2500) };
   } catch {
     return null;
   }

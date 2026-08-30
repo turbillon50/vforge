@@ -33,13 +33,21 @@ export async function loadRoomContextBrief(
   identity: VForgeIdentity,
   signal: AbortSignal,
 ): Promise<string> {
-  const [commentsRes, contextRes, references, decisions] = await Promise.all([
+  const [commentsRes, contextRes, dbComments, references, decisions] = await Promise.all([
     fetchVForgeApi(`${projectApiPath(projectId, "comments")}?limit=80`, identity, {
       signal,
     }).then(readJson).catch(() => null),
     fetchVForgeApi(projectApiPath(projectId, "context"), identity, {
       signal,
     }).then(readJson).catch(() => null),
+    queryAll<RoomComment>(
+      `SELECT id::text, author_email, author_name, body, anchor, created_at::text
+         FROM project_comments
+        WHERE project_id = $1
+        ORDER BY created_at DESC
+        LIMIT 80`,
+      [projectId],
+    ).catch(() => [] as RoomComment[]),
     (async () => {
       await ensureProjectReferencesTable();
       return queryAll<RoomReference>(
@@ -47,16 +55,17 @@ export async function loadRoomContextBrief(
            FROM project_references
           WHERE project_id = $1
           ORDER BY created_at DESC
-          LIMIT 20`,
+          LIMIT 30`,
         [projectId],
       );
     })().catch(() => [] as RoomReference[]),
     listProjectDecisionLog(projectId).catch(() => "DECISIONES: ninguna todavía."),
   ]);
 
-  const comments = Array.isArray(commentsRes?.comments)
+  const apiComments = Array.isArray(commentsRes?.comments)
     ? (commentsRes.comments as RoomComment[])
     : [];
+  const comments = dbComments.length ? dbComments : apiComments;
   const project = (contextRes?.project ?? null) as RoomProjectInfo | null;
   const document =
     contextRes?.document &&
