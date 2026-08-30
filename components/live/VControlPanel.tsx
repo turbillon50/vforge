@@ -238,8 +238,8 @@ export function VControlPanel({
   async function runAction(action: "approve" | "publish" | "cancel" | "apply") {
     if (!selected || busy) return;
     const message =
-      action === "publish" || action === "apply"
-        ? "Esto fusionará a main. ¿Aplicar ahora?"
+      action === "publish"
+        ? "Esto fusionará a main. ¿Publicar ahora?"
         : action === "cancel"
           ? "¿Cancelar este run? La rama se conservará para auditoría."
           : null;
@@ -486,8 +486,13 @@ export function VControlPanel({
               }),
             });
           }}
+          canApply={Boolean(
+            canWrite && selected && canApplyRun(selected.status),
+          )}
+          onApply={() => void runAction("apply")}
         />
       ) : (
+        <div className="flex min-h-0 flex-1 flex-col">
         <div className="grid min-h-0 flex-1 md:grid-cols-[300px_minmax(0,1fr)]">
           <aside className="min-h-0 overflow-y-auto border-b border-[var(--border-1)] md:border-b-0 md:border-r">
             {loading ? (
@@ -774,6 +779,24 @@ export function VControlPanel({
               </div>
             )}
           </div>
+        </div>
+        <VConversationPanel
+          compact
+          projectId={projectId}
+          mode="talk"
+          canWrite={canWrite}
+          repositories={repositories}
+          repository={repository}
+          onRepositoryChange={setRepository}
+          onDispatchGrok={(order) => {
+            void launchRun(order, "grok");
+          }}
+          onUseAsTask={(plan) => setInstruction(plan.slice(0, 12000))}
+          canApply={Boolean(
+            canWrite && selected && canApplyRun(selected.status),
+          )}
+          onApply={() => void runAction("apply")}
+        />
         </div>
       )}
     </section>

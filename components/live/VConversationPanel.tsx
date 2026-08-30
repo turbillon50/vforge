@@ -6,6 +6,7 @@ import { repositoryGroupLabel } from "@/lib/projects/repository-groups";
 import {
   IconArrowR,
   IconLoader,
+  IconRocket,
   IconSend,
   IconSparkles,
 } from "@/components/brand/VFIcons";
@@ -39,6 +40,9 @@ export function VConversationPanel({
   onUseAsTask,
   onPromoteToPlan,
   onDispatchGrok,
+  onApply,
+  canApply,
+  compact,
   seed,
 }: {
   projectId: string;
@@ -50,6 +54,9 @@ export function VConversationPanel({
   onUseAsTask: (plan: string) => void;
   onPromoteToPlan?: (talk: string) => void;
   onDispatchGrok?: (order: string) => void;
+  onApply?: () => void;
+  canApply?: boolean;
+  compact?: boolean;
   seed?: string;
 }) {
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
@@ -97,10 +104,10 @@ export function VConversationPanel({
     return () => window.clearInterval(timer);
   }, [load]);
 
-  const visibleMessages = useMemo(
-    () => messages.filter((item) => item.mode === mode),
-    [messages, mode],
-  );
+  const visibleMessages = useMemo(() => {
+    const rows = messages.filter((item) => item.mode === mode);
+    return compact ? rows.slice(-4) : rows;
+  }, [messages, mode, compact]);
   const latestPlan = useMemo(
     () =>
       mode === "plan"
@@ -179,34 +186,48 @@ export function VConversationPanel({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[var(--color-background)]">
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[var(--border-1)] bg-white px-3 py-2">
-        <div>
-          <p className="text-[11px] font-medium">
-            {mode === "talk" ? "Plática con V" : "Planeación con V"}
-          </p>
-          <p className="mt-0.5 text-[9px] text-[var(--fg-muted)]">
-            {mode === "talk"
-              ? "V traduce. Grok entra cuando le das la orden."
-              : "Define el trabajo o mándalo directo a Grok."}
-          </p>
+    <div
+      className={cn(
+        "flex min-h-0 flex-col bg-[var(--color-background)]",
+        compact ? "shrink-0" : "flex-1",
+      )}
+    >
+      {compact ? null : (
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[var(--border-1)] bg-white px-3 py-2">
+          <div>
+            <p className="text-[11px] font-medium">
+              {mode === "talk" ? "Plática con V" : "Planeación con V"}
+            </p>
+            <p className="mt-0.5 text-[9px] text-[var(--fg-muted)]">
+              {mode === "talk"
+                ? "V tiene manos. Háblale o mándala a Grok."
+                : "Define el trabajo o mándalo directo a Grok."}
+            </p>
+          </div>
+          <select
+            value={repository}
+            onChange={(event) => onRepositoryChange(event.target.value)}
+            className="min-h-8 max-w-[280px] rounded-md border border-[var(--border-1)] bg-white px-2 text-[10px] outline-none focus:border-black"
+            aria-label="Repositorio de contexto"
+          >
+            {repositories.map((repo) => (
+              <option key={repo.repo_full_name} value={repo.repo_full_name}>
+                {repositoryGroupLabel(
+                  repo.repo_full_name,
+                  repo.role,
+                  repo.is_primary,
+                )}
+              </option>
+            ))}
+          </select>
         </div>
-        <select
-          value={repository}
-          onChange={(event) => onRepositoryChange(event.target.value)}
-          className="min-h-8 max-w-[280px] rounded-md border border-[var(--border-1)] bg-white px-2 text-[10px] outline-none focus:border-black"
-          aria-label="Repositorio de contexto"
-        >
-          {repositories.map((repo) => (
-            <option key={repo.repo_full_name} value={repo.repo_full_name}>
-              {repositoryGroupLabel(repo.repo_full_name, repo.role, repo.is_primary)}
-            </option>
-          ))}
-        </select>
-      </div>
+      )}
 
       <div
-        className="min-h-0 flex-1 overflow-y-auto px-3 py-4"
+        className={cn(
+          "overflow-y-auto px-3 py-4",
+          compact ? "max-h-28 shrink-0" : "min-h-0 flex-1",
+        )}
         aria-live="polite"
       >
         {loading ? (
@@ -289,7 +310,8 @@ export function VConversationPanel({
         </p>
       ) : null}
 
-      {mode === "talk" && latestPlan === null && visibleMessages.length && onPromoteToPlan ? (
+      {compact ||
+      !(mode === "talk" && latestPlan === null && visibleMessages.length && onPromoteToPlan) ? null : (
         <div className="flex shrink-0 justify-end bg-white px-3 py-2">
           <button
             type="button"
@@ -305,9 +327,9 @@ export function VConversationPanel({
             Convertir a plan <IconArrowR size={11} />
           </button>
         </div>
-      ) : null}
+      )}
 
-      {mode === "plan" ? (
+      {compact || mode !== "plan" ? null : (
         <div className="flex shrink-0 flex-wrap justify-end gap-2 bg-white px-3 py-2">
           {canWrite ? (
             <button type="button" onClick={planFromRoom} className="btn-ghost" disabled={busy}>
@@ -329,7 +351,7 @@ export function VConversationPanel({
             </button>
           ) : null}
         </div>
-      ) : null}
+      )}
 
       {canWrite ? (
         <form onSubmit={send} className="shrink-0 bg-white px-3 pb-3 pt-1">
@@ -346,9 +368,11 @@ export function VConversationPanel({
               rows={2}
               maxLength={6000}
               placeholder={
-                mode === "talk"
-                  ? "Platícale a V…"
-                  : "¿Qué necesitamos planear antes de ejecutar?"
+                compact
+                  ? "Háblale a V. Grok tiene las manos."
+                  : mode === "talk"
+                    ? "Platícale a V…"
+                    : "¿Qué necesitamos planear antes de ejecutar?"
               }
               className="min-h-12 flex-1 resize-y border-0 bg-transparent px-2 py-1.5 text-[12px] leading-5 outline-none"
             />
@@ -360,10 +384,20 @@ export function VConversationPanel({
             >
               Grok, hazlo
             </button>
+            {canApply && onApply ? (
+              <button
+                type="button"
+                onClick={onApply}
+                disabled={busy}
+                className="btn-primary min-h-12 px-3 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <IconRocket size={11} /> Aplicar
+              </button>
+            ) : null}
             <button
               type="submit"
               disabled={busy || !message.trim()}
-              className="btn-primary min-h-12 px-4 disabled:cursor-not-allowed disabled:opacity-40"
+              className="btn-ghost min-h-12 px-4 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {busy ? (
                 <IconLoader size={12} className="animate-spin" />
@@ -374,7 +408,7 @@ export function VConversationPanel({
             </button>
           </div>
           <p className="mx-auto mt-2 max-w-4xl font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
-            Enter envía a V · Grok, hazlo toca el repo en sandbox
+            Enter envía a V · Grok, hazlo toca el repo · Aplicar fusiona a main
           </p>
         </form>
       ) : (
