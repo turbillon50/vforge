@@ -40,6 +40,7 @@ function OnboardingWithClerk() {
   const [connected, setConnected] = useState<Connection[]>([]);
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [finishing, setFinishing] = useState(false);
+  const [finishError, setFinishError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) router.replace("/sign-in");
@@ -68,8 +69,9 @@ function OnboardingWithClerk() {
   async function enterWorkspace() {
     if (finishing) return;
     setFinishing(true);
+    setFinishError(null);
     try {
-      await fetch("/api/user/complete-onboarding", {
+      const response = await fetch("/api/user/complete-onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -77,9 +79,16 @@ function OnboardingWithClerk() {
           services: connected.length,
         }),
       });
-    } finally {
-      router.push("/app/chat");
+      if (!response.ok) throw new Error("No pudimos guardar tu configuración.");
+      router.push("/workspace");
       router.refresh();
+    } catch (error) {
+      setFinishError(
+        error instanceof Error
+          ? error.message
+          : "No pudimos abrir tu espacio. Intenta otra vez.",
+      );
+      setFinishing(false);
     }
   }
 
@@ -102,14 +111,14 @@ function OnboardingWithClerk() {
       id: "github",
       title: "GitHub",
       body: "Repositorios y cambios que alimentan el proyecto.",
-      href: "/api/auth/github/start",
+      href: "/api/auth/github/start?return_to=%2Fonboarding",
       icon: IconGithub,
     },
     {
       id: "vercel",
       title: "Vercel",
       body: "Previews y URLs que se muestran dentro del visor.",
-      href: "/api/auth/vercel/start",
+      href: "/api/auth/vercel/start?return_to=%2Fonboarding",
       icon: IconRocket,
     },
   ];
@@ -192,6 +201,11 @@ function OnboardingWithClerk() {
                   </>
                 )}
               </button>
+              {finishError ? (
+                <p role="alert" className="mt-3 text-[12px] leading-5 text-black">
+                  {finishError}
+                </p>
+              ) : null}
             </div>
           </div>
         </section>
