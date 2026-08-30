@@ -102,6 +102,7 @@ export function ProjectContextPanel({
   const [progress, setProgress] = useState<number | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -154,10 +155,10 @@ export function ProjectContextPanel({
   async function uploadArchive(file: File) {
     if (!data?.me.canWrite || busy) return;
     if (!file.name.toLowerCase().endsWith(".zip") || file.size < 1 || file.size > 50 * 1024 * 1024) {
-      setError("Selecciona un ZIP de hasta 50 MB.");
+      setError("Selecciona un ZIP de WhatsApp de hasta 50 MB.");
       return;
     }
-    const contentType = file.type || "application/zip";
+    const contentType = "application/zip";
     setBusy(true);
     setProgress(0);
     setNotice(null);
@@ -169,16 +170,20 @@ export function ProjectContextPanel({
         body: JSON.stringify({ filename: file.name, contentType, size: file.size }),
       });
       const tokenPayload = (await tokenResponse.json().catch(() => null)) as
-        | { pathname?: string; clientToken?: string }
+        | { pathname?: string; clientToken?: string; error?: string }
         | null;
-      if (!tokenResponse.ok || !tokenPayload?.pathname || !tokenPayload.clientToken) {
-        throw new Error("token");
+      if (!tokenResponse.ok || !tokenPayload?.pathname || !tokenPayload?.clientToken) {
+        throw new Error(
+          tokenPayload?.error === "storage_unavailable"
+            ? "El almacén de archivos no está disponible."
+            : "Ese archivo no se aceptó como ZIP.",
+        );
       }
       const blob = await put(tokenPayload.pathname, file, {
         access: "private",
         token: tokenPayload.clientToken,
         contentType,
-        multipart: true,
+        multipart: file.size > 4 * 1024 * 1024,
         onUploadProgress: ({ percentage }) => setProgress(Math.round(percentage)),
       });
       const finalize = await fetch(`/api/live/${encodedProjectId}/assets`, {
@@ -191,16 +196,26 @@ export function ProjectContextPanel({
           size: file.size,
         }),
       });
-      if (!finalize.ok) throw new Error("finalize");
-      setNotice("Conversación cargada y disponible para las IA");
+      const done = (await finalize.json().catch(() => null)) as
+        | { notice?: string; error?: string }
+        | null;
+      if (!finalize.ok) {
+        throw new Error(done?.notice || "No se pudo procesar el ZIP.");
+      }
+      setNotice("Conversación cargada. V ya puede leer el texto del chat.");
       if (inputRef.current) inputRef.current.value = "";
       await load();
-    } catch {
-      setError("No se pudo cargar o procesar el ZIP.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "No se pudo cargar o procesar el ZIP.");
     } finally {
       setBusy(false);
       setProgress(null);
     }
+  }
+
+  function takeZip(files: FileList | File[] | null) {
+    const file = files && files[0] ? files[0] : null;
+    if (file) void uploadArchive(file);
   }
 
   return (
@@ -313,14 +328,36 @@ export function ProjectContextPanel({
           </div>
         ) : (
           <div>
-            <p className="text-[10px] leading-4 text-[var(--fg-muted)]">Sube la conversación completa de venta. VForge extrae texto seguro para las IA y conserva el ZIP privado para descarga.</p>
+            <p className="text-[10px] leading-4 text-[var(--fg-muted)]">
+              Exporta el chat de WhatsApp (sin incluir toda la galería si pesa más de 50 MB). VForge lee el texto y guarda el ZIP.
+            </p>
             {data.me.canWrite ? (
-              <button type="button" onClick={() => inputRef.current?.click()} disabled={busy} className="btn-primary mt-3 w-full disabled:opacity-40">
-                {busy ? <IconLoader size={12} className="animate-spin" /> : <IconUpload size={12} />}
-                {progress == null ? "Subir ZIP" : `Subiendo ${progress}%`}
-              </button>
+              <div
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setDragging(true);
+                }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setDragging(false);
+                  takeZip(event.dataTransfer.files);
+                }}
+                className={cn(
+                  "mt-3 rounded-md border border-dashed p-3",
+                  dragging ? "border-black bg-[#f7f7f5]" : "border-[var(--border-1)]",
+                )}
+              >
+                <button type="button" onClick={() => inputRef.current?.click()} disabled={busy} className="btn-primary w-full disabled:opacity-40">
+                  {busy ? <IconLoader size={12} className="animate-spin" /> : <IconUpload size={12} />}
+                  {progress == null ? "Subir ZIP de WhatsApp" : `Subiendo ${progress}%`}
+                </button>
+                <p className="mt-2 text-center font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
+                  o suéltalo aquí
+                </p>
+              </div>
             ) : null}
-            <input ref={inputRef} type="file" accept=".zip,application/zip,application/x-zip-compressed" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadArchive(file); }} />
+            <input ref={inputRef} type="file" accept=".zip,application/zip,application/x-zip-compressed" className="hidden" onChange={(event) => { takeZip(event.target.files); }} />
             <div className="mt-3 space-y-2">
               {data.assets.length ? data.assets.map((asset) => (
                 <div key={asset.id} className="flex items-center gap-2 rounded-md border border-[var(--border-1)] p-2.5">

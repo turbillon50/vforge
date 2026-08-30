@@ -26,11 +26,15 @@ export interface AnchoredComment {
 }
 
 const VIEWPORTS = new Set<ReviewViewport>(["desktop", "mobile", "admin"]);
-const ZIP_TYPES = new Set([
+export const ACCEPTED_ZIP_CONTENT_TYPES = [
   "application/zip",
+  "application/x-zip",
   "application/x-zip-compressed",
   "application/octet-stream",
-]);
+  "multipart/x-zip",
+] as const;
+
+const ZIP_TYPES = new Set<string>(ACCEPTED_ZIP_CONTENT_TYPES);
 
 function cleanUrl(value: unknown): string | null {
   if (typeof value !== "string" || value.length > 2048) return null;
@@ -185,9 +189,10 @@ export function anchorViewportPosition(
 }
 
 export function isAcceptedZip(filename: string, contentType: string, size: number): boolean {
+  const type = contentType.trim().toLowerCase();
   return (
     filename.trim().toLowerCase().endsWith(".zip") &&
-    ZIP_TYPES.has(contentType.trim().toLowerCase()) &&
+    (!type || ZIP_TYPES.has(type)) &&
     Number.isInteger(size) &&
     size > 0 &&
     size <= 50 * 1024 * 1024

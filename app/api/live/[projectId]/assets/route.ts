@@ -43,7 +43,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
       signal: req.signal,
     });
     return mirrorJsonResponse(upstream);
-  } catch {
-    return NextResponse.json({ error: "archive_processing_failed" }, { status: 422 });
+  } catch (caught) {
+    const message = caught instanceof Error ? caught.message : "";
+    if (message === "archive_entry_limit") {
+      return NextResponse.json(
+        {
+          error: "archive_too_large",
+          notice: "El ZIP tiene demasiados archivos. Exporta el chat de WhatsApp sin incluir la galería.",
+        },
+        { status: 422 },
+      );
+    }
+    return NextResponse.json(
+      {
+        error: "archive_processing_failed",
+        notice: "No se pudo leer el ZIP. Vuelve a exportar el chat desde WhatsApp.",
+      },
+      { status: 422 },
+    );
   }
 }
