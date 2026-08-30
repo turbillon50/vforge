@@ -12,6 +12,8 @@ import {
   type RoomProjectInfo,
   type RoomReference,
 } from "@/lib/live/room-context";
+import { parseReviewAnchor } from "@/lib/live/review-context";
+import { readPublicPages } from "@/lib/live/load-page-text";
 import { listProjectDecisionLog } from "@/lib/live/load-project-memory";
 import { ensureProjectReferencesTable } from "@/lib/live/project-references";
 
@@ -80,6 +82,21 @@ export async function loadRoomContextBrief(
         }))
     : [];
 
+  const pageUrls = [
+    ...references.map((item) => item.url),
+    ...comments.flatMap((comment) => {
+      const anchor = parseReviewAnchor(comment.anchor);
+      return anchor?.url ? [anchor.url] : [];
+    }),
+  ];
+  const pages = await readPublicPages(pageUrls).catch(() => []);
+  console.info("[room-context]", {
+    projectId,
+    comments: comments.length,
+    references: references.length,
+    pages: pages.length,
+  });
+
   return formatRoomContext({
     projectId,
     project,
@@ -89,5 +106,6 @@ export async function loadRoomContextBrief(
     assets,
     repositories,
     decisions,
+    pages,
   });
 }

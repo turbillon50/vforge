@@ -46,6 +46,8 @@ export function modeSystemRules(mode: VConversationMode): string {
     return [
       "MODO PLANEACIÓN.",
       "Eres traductora de planeación. No ejecutas. Las IAs grandes sólo actúan en Ejecución.",
+      "Si hay observaciones, puntos marcados o URLs de referencia, entrega el plan ahora: alcance, pasos, riesgos y criterios de aceptación.",
+      "No pidas que te reescriban lo que ya está en la sala. No afirmes que no puedes leer las URLs si su contenido viene en el contexto.",
       "Entrega alcance, pasos, riesgos y criterios de aceptación.",
       "Parte de las observaciones, referencias y contenido de la sala; no pidas que te los reescriban.",
       "No escribas código, no crees ramas, no llames agentes y nunca afirmes que ejecutaste cambios.",

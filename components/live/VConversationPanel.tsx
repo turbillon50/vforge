@@ -113,9 +113,8 @@ export function VConversationPanel({
     endRef.current?.scrollIntoView({ block: "end" });
   }, [visibleMessages.length, busy, mode]);
 
-  async function send(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const trimmed = message.trim();
+  async function sendMessage(raw: string) {
+    const trimmed = raw.trim();
     if (!trimmed || busy || !canWrite) return;
     setBusy(true);
     setError(null);
@@ -146,6 +145,17 @@ export function VConversationPanel({
     } finally {
       setBusy(false);
     }
+  }
+
+  async function send(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await sendMessage(message);
+  }
+
+  function planFromRoom() {
+    void sendMessage(
+      "Arma el plan de ejecución con las observaciones, puntos marcados y URLs de referencia de esta sala. Léelas. No me pidas que te las reescriba.",
+    );
   }
 
   return (
@@ -240,7 +250,7 @@ export function VConversationPanel({
               <p className="mt-2 text-[10px] leading-5 text-[var(--fg-muted)]">
                 {mode === "talk"
                   ? "Pregúntale, explícale el objetivo o revisen juntos qué sigue."
-                  : "Describe el resultado; V organizará alcance, pasos, riesgos y aceptación."}
+                  : "Usa «Armar plan con lo de la sala»: V lee comentarios y URLs."}
               </p>
             </div>
           </div>
@@ -277,15 +287,22 @@ export function VConversationPanel({
         </div>
       ) : null}
 
-      {mode === "plan" && latestPlan ? (
-        <div className="flex shrink-0 justify-end bg-white px-3 py-2">
-          <button
-            type="button"
-            onClick={() => onUseAsTask(latestPlan)}
-            className="btn-ghost"
-          >
-            Usar como tarea <IconArrowR size={11} />
-          </button>
+      {mode === "plan" ? (
+        <div className="flex shrink-0 flex-wrap justify-end gap-2 bg-white px-3 py-2">
+          {canWrite ? (
+            <button type="button" onClick={planFromRoom} className="btn-ghost" disabled={busy}>
+              Armar plan con lo de la sala
+            </button>
+          ) : null}
+          {latestPlan ? (
+            <button
+              type="button"
+              onClick={() => onUseAsTask(latestPlan)}
+              className="btn-ghost"
+            >
+              Usar como tarea <IconArrowR size={11} />
+            </button>
+          ) : null}
         </div>
       ) : null}
 
