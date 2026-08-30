@@ -18,6 +18,8 @@
     "lib/auth/owner.ts",
     "lib/projects/roles.ts",
     "lib/projects/invite-token.ts",
-    "lib/projects/viewport-url.ts"
+    "lib/projects/viewport-url.ts",
+    "lib/live/review-context.ts",
+    "lib/live/archive-text.ts"
   ]
 }
