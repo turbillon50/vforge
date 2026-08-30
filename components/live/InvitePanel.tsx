@@ -40,7 +40,13 @@ function invitationState(invitation: Invitation) {
   return "Pendiente";
 }
 
-export function InvitePanel({ projectId }: { projectId: string }) {
+export function InvitePanel({
+  projectId,
+  compact = false,
+}: {
+  projectId: string;
+  compact?: boolean;
+}) {
   const encodedProjectId = encodeURIComponent(projectId);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [email, setEmail] = useState("");
@@ -125,8 +131,8 @@ export function InvitePanel({ projectId }: { projectId: string }) {
   const selectedRole = ROLES.find((item) => item.value === role);
 
   return (
-    <section className="rounded-[8px] border border-black bg-white">
-      <header className="flex flex-col gap-3 border-b border-[var(--border-1)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <section className={compact ? "bg-white" : "rounded-[8px] border border-black bg-white"}>
+      <header className="flex items-center justify-between gap-3 border-b border-[var(--border-1)] px-4 py-3">
         <div className="flex items-center gap-2">
           <IconUsers size={14} />
           <div>
@@ -141,7 +147,7 @@ export function InvitePanel({ projectId }: { projectId: string }) {
         </span>
       </header>
 
-      <div className="grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_190px_auto] lg:items-start">
+      <div className={compact ? "grid gap-3 px-4 py-4" : "grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_190px_auto] lg:items-start"}>
         <label>
           <span className="mono-label">Correo del invitado</span>
           <input
@@ -175,7 +181,7 @@ export function InvitePanel({ projectId }: { projectId: string }) {
           type="button"
           onClick={() => void createInvitation()}
           disabled={busy || !email.trim()}
-          className="btn-primary mt-[26px] disabled:opacity-40"
+          className={compact ? "btn-primary w-full disabled:opacity-40" : "btn-primary mt-[26px] disabled:opacity-40"}
         >
           {busy ? <IconLoader size={13} className="animate-spin" /> : <IconPlus size={13} />}
           Crear invitación
@@ -183,7 +189,7 @@ export function InvitePanel({ projectId }: { projectId: string }) {
       </div>
 
       {lastLink ? (
-        <div className="mx-4 mb-4 flex flex-col gap-2 border border-black bg-[#f7f7f5] p-3 sm:flex-row sm:items-center">
+        <div className="mx-4 mb-4 flex flex-col gap-2 border border-black bg-[#f7f7f5] p-3">
           <code className="min-w-0 flex-1 break-all font-mono text-[9px]">
             {lastLink}
           </code>
@@ -201,7 +207,7 @@ export function InvitePanel({ projectId }: { projectId: string }) {
       ) : null}
 
       <div className="border-t border-[var(--border-1)]">
-        <div className="grid grid-cols-[minmax(0,1fr)_90px_90px] px-4 py-3 font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+        <div className={compact ? "grid grid-cols-[minmax(0,1fr)_70px_72px] px-4 py-3 font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]" : "grid grid-cols-[minmax(0,1fr)_90px_90px] px-4 py-3 font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]"}>
           <span>Invitado</span>
           <span>Rol</span>
           <span className="text-right">Estado</span>
@@ -219,7 +225,7 @@ export function InvitePanel({ projectId }: { projectId: string }) {
             {invitations.map((invitation) => (
               <div
                 key={invitation.id}
-                className="grid grid-cols-[minmax(0,1fr)_90px_90px] items-center px-4 py-3 text-[10px]"
+                className={compact ? "grid grid-cols-[minmax(0,1fr)_70px_72px] items-center px-4 py-3 text-[10px]" : "grid grid-cols-[minmax(0,1fr)_90px_90px] items-center px-4 py-3 text-[10px]"}
               >
                 <span className="truncate">{invitation.email}</span>
                 <span className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
