@@ -64,13 +64,15 @@ export function resolveProjectViewportUrls(project) {
     normalizePublishedUrl(project.domain);
 
   const explicitAdmin = normalizePublishedUrl(project.admin_url);
+  const institutional = resolveInstitutionalAdminUrl(
+    normalizePublishedUrl(project.desktop_url) ?? publishedFallback,
+  );
 
   return {
     desktop_url:
       normalizePublishedUrl(project.desktop_url) ?? publishedFallback,
     mobile_url:
       normalizePublishedUrl(project.mobile_url) ?? publishedFallback,
-    // La API no inventa paneles: /admin debe existir y quedar guardado.
-    admin_url: withAdminEmbed(distinctAdminUrl(explicitAdmin, publishedFallback)),
+    admin_url: withAdminEmbed(distinctAdminUrl(explicitAdmin ?? institutional, publishedFallback)),
   };
 }
