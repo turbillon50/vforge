@@ -253,7 +253,7 @@ export function LivePortal({
             onClick={() => setInviteOpen(false)}
             aria-label="Cerrar invitaciones"
           />
-          <aside className="absolute inset-y-0 right-0 w-[min(92vw,420px)] overflow-y-auto border-l border-black bg-white shadow-2xl">
+          <aside className="absolute inset-y-0 right-0 w-[min(88vw,360px)] overflow-y-auto border-l border-black bg-white shadow-2xl">
             <button
               type="button"
               onClick={() => setInviteOpen(false)}
