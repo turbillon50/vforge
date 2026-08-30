@@ -118,8 +118,8 @@ export function ConexionesView() {
       const data: OnboardingStatus = await resp.json();
       const list = Array.isArray(data.connected) ? data.connected : [];
       setConnected(list as Provider[]);
-    } catch (e: any) {
-      setError(e?.message ?? "Error inesperado");
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Error inesperado");
     } finally {
       setLoading(false);
     }
