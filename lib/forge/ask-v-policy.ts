@@ -4,6 +4,11 @@ export type VConversationMode = "talk" | "plan";
 export type VAskMode = VConversationMode | "execute";
 
 export const ROOM_CEREBRAS_MODEL = "gpt-oss-120b";
+export const ROOM_CEREBRAS_VISION_MODEL = "gemma-4-31b";
+
+export function cerebrasTalkModel(hasExpedientePhotos: boolean): string {
+  return hasExpedientePhotos ? ROOM_CEREBRAS_VISION_MODEL : ROOM_CEREBRAS_MODEL;
+}
 
 export interface ProviderTarget {
   provider: "cerebras";
@@ -16,6 +21,7 @@ export function cerebrasModelId(slug: string | undefined): string {
   if (s.startsWith("anthropic/") || /claude/i.test(s)) return ROOM_CEREBRAS_MODEL;
   if (!s.includes("/")) {
     if (/gpt-oss|gpt.oss/i.test(s)) return ROOM_CEREBRAS_MODEL;
+    if (/gemma.?4.?31/i.test(s)) return ROOM_CEREBRAS_VISION_MODEL;
     return s;
   }
   const last = s.split("/").pop() || s;
@@ -25,7 +31,8 @@ export function cerebrasModelId(slug: string | undefined): string {
 }
 
 /**
- * Plática y Planeación hablan sólo por Cerebras GPT OSS 120B.
+ * Plática y Planeación hablan por Cerebras. Texto: GPT OSS 120B.
+ * Si el expediente trae fotos, Gemma 4 31B (visión nativa).
  * Misma infra que /app/chat. Sin Mesh, Claude CLI ni OpenRouter.
  * Ejecución no habla por este router.
  */
@@ -47,7 +54,7 @@ export function modeSystemRules(mode: VConversationMode): string {
       "MODO PLANEACIÓN.",
       "Eres traductora de planeación. No ejecutas. Las IAs grandes sólo actúan en Ejecución.",
       "Si hay observaciones, puntos marcados o URLs de referencia, entrega el plan ahora: alcance, pasos, riesgos y criterios de aceptación.",
-      "No pidas que te reescriban lo que ya está en la sala. No afirmes que no puedes leer las URLs si su contenido viene en el contexto.",
+      "No pidas que te reescriban lo que ya está en la sala. Si hay fotos del expediente, ya las viste.",
       "Entrega alcance, pasos, riesgos y criterios de aceptación.",
       "Parte de las observaciones, referencias y contenido de la sala; no pidas que te los reescriban.",
       "No escribas código, no crees ramas, no llames agentes y nunca afirmes que ejecutaste cambios.",
@@ -59,7 +66,7 @@ export function modeSystemRules(mode: VConversationMode): string {
     "MODO PLÁTICA.",
     "Eres traductora de la sala, no ejecutas. Claude Code en Hetzner entra con «Claude, hazlo». Grok entra con «Grok, hazlo».",
     "Conversa naturalmente sobre el proyecto, haz preguntas cuando falte contexto y ayuda a pensar.",
-    "Lee observaciones, puntos marcados, marcas, referencias visuales, fotos de visor, URLs y CONTENIDO.md. El brief EXPERIENCIA V / BRAIN también cuenta.",
+    "Lee el expediente de la sala: observaciones, marcas, referencias, CONTENIDO.md, Brain y las fotos adjuntas. Si hay fotos del expediente, ya las viste. No pidas que te las reenvíen.",
     "Si el usuario habla de «puntos» o «lo que marqué», usa esas observaciones.",
     "No crees ramas, no llames agentes y nunca afirmes que ejecutaste cambios.",
     "Toda app debe tener su MCP. Sugiérelo. Los ojos son Navegador Pro + el plugin de Chrome (vforge_project_see). No propongas n8n.",
