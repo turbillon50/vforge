@@ -106,10 +106,11 @@ export function ScopedWorkspaceHome({
             >
               {[
                 ["01", "Inicio", "#workspace-top"],
-                ["02", "Crear app", "#create-app"],
-                ["03", "Proyectos", "#projects"],
-                ["04", "Conexiones", "#connections-title"],
-                ["05", "Cuenta", "#account-menu"],
+                ["02", "Construir", "/workspace/studio"],
+                ["03", "Apps", "/workspace/apps"],
+                ["04", "Actividad", "/workspace/actividad"],
+                ["05", "Conexiones", "/workspace/conexiones"],
+                ["06", "Perfil", "/workspace/perfil"],
               ].map(([number, label, href]) => (
                 <a
                   key={href}
