@@ -63,6 +63,7 @@ function gh(path: string, token: string, init: RequestInit = {}) {
       Authorization: `Bearer ${token}`,
       Accept: "application/vnd.github+json",
       "User-Agent": "vforge",
+      "X-GitHub-Api-Version": "2026-03-10",
       ...(init.headers || {}),
     },
   });
@@ -96,7 +97,33 @@ export async function POST(req: Request) {
       method: "POST",
       body: JSON.stringify({ name: slug, description: (description || name) + " — creada con VForge", private: isPrivate, auto_init: true }),
     });
-    if (!repoRes.ok) return Response.json({ ok: false, error: "repo_create", detail: await repoRes.text() }, { status: 400 });
+    if (!repoRes.ok) {
+      const detail = await repoRes.text();
+      const acceptedPermissions =
+        repoRes.headers.get("x-accepted-github-permissions") || "";
+      const permissionDenied =
+        repoRes.status === 403 &&
+        (detail.includes("Resource not accessible by integration") ||
+          acceptedPermissions.includes("administration=write"));
+
+      console.error("[forja/ship] repo_create_failed", {
+        status: repoRes.status,
+        acceptedPermissions,
+        detail: detail.slice(0, 500),
+      });
+
+      return Response.json(
+        {
+          ok: false,
+          error: permissionDenied
+            ? "github_repo_permission"
+            : "repo_create",
+          detail,
+          acceptedPermissions,
+        },
+        { status: 400 },
+      );
+    }
     const repo = await repoRes.json();
     out.repo = { url: repo.html_url, full: repo.full_name };
 
