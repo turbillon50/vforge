@@ -11,7 +11,17 @@ import {
   isRetryableCerebrasCause,
   usageFromCompletion,
 } from "../lib/forge/cerebras-usage";
-import { modeSystemRules, providersForMode } from "../lib/forge/ask-v-policy";
+import {
+  cerebrasTalkModel,
+  modeSystemRules,
+  providersForMode,
+  ROOM_CEREBRAS_MODEL,
+  ROOM_CEREBRAS_VISION_MODEL,
+} from "../lib/forge/ask-v-policy";
+import {
+  pickExpedienteFrames,
+  visionUserContent,
+} from "../lib/live/expediente-vision";
 import { repositoryGroupLabel } from "../lib/projects/repository-groups";
 import {
   canApplyRun,
@@ -24,6 +34,41 @@ test("V stays on Cerebras and names itself translator", () => {
   assert.equal(providersForMode("talk")[0].provider, "cerebras");
   assert.match(modeSystemRules("talk"), /traductora/);
   assert.match(modeSystemRules("plan"), /traductora/);
+  assert.equal(cerebrasTalkModel(false), ROOM_CEREBRAS_MODEL);
+  assert.equal(cerebrasTalkModel(true), ROOM_CEREBRAS_VISION_MODEL);
+});
+
+test("expediente frames prefer visors and attach as data URIs", () => {
+  const frames = pickExpedienteFrames(
+    [
+      {
+        source: "plugin",
+        mime_type: "image/jpeg",
+        data_b64: "ccc",
+        note: "tap",
+      },
+      {
+        source: "visor",
+        viewport: "mobile",
+        mime_type: "image/jpeg",
+        data_b64: "bbb",
+      },
+      {
+        source: "visor",
+        viewport: "desktop",
+        mime_type: "image/png",
+        data_b64: "aaa",
+      },
+    ],
+    2,
+  );
+  assert.equal(frames.length, 2);
+  assert.equal(frames[0].label.includes("desktop"), true);
+  assert.equal(frames[0].mimeType, "image/png");
+  const content = visionUserContent("mira la home", frames);
+  assert.equal(content[0].type, "text");
+  assert.match(String((content[0] as { text: string }).text), /EXPEDIENTE/);
+  assert.equal(content[1].type, "image_url");
 });
 
 test("Cerebras 429 is retryable and usage is parsed", () => {

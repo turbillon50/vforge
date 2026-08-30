@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { askV } from "@/lib/forge/ask-v";
-import { ROOM_CEREBRAS_MODEL } from "@/lib/forge/ask-v-policy";
+import {
+  ROOM_CEREBRAS_MODEL,
+  cerebrasTalkModel,
+} from "@/lib/forge/ask-v-policy";
 import { humanProviderLabel, ProviderUnavailable } from "@/lib/forge/provider-errors";
 import {
   authorizeAgentRunAccess,
   selectAgentRepository,
 } from "@/lib/live/agent-runs";
 import { loadRoomContextBrief } from "@/lib/live/load-room-context";
+import { listExpedienteEyes } from "@/lib/live/project-eyes";
+import { pickExpedienteFrames } from "@/lib/live/expediente-vision";
 import { recordCerebrasPulse, todayCerebrasUsage } from "@/lib/forge/cerebras-pulse";
 import {
   listProjectAssistantMessages,
@@ -84,15 +89,23 @@ export async function POST(
       projectId,
       access.identity,
       req.signal,
-    ).catch(() => null);
+    ).catch((error) => {
+      console.error("[project assistant] room brief failed", { projectId, error });
+      return null;
+    });
+    const images = pickExpedienteFrames(
+      await listExpedienteEyes(projectId).catch(() => []),
+      3,
+    );
     const result = await askV({
       mode,
       projectId,
       repository: repoContext,
       message,
       history,
-      preferredModel: ROOM_CEREBRAS_MODEL,
+      preferredModel: cerebrasTalkModel(images.length > 0),
       roomContext,
+      images,
     });
 
     await saveProjectAssistantTurn({
@@ -127,7 +140,7 @@ export async function POST(
       usage: result.usage,
       translator: {
         provider: "cerebras",
-        model: ROOM_CEREBRAS_MODEL,
+        model: result.model,
         today: usage,
       },
     });
