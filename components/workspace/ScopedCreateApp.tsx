@@ -213,13 +213,16 @@ export function ScopedCreateApp({
   const connectionsReady = githubConnected && vercelConnected;
   const githubState = error?.permission
     ? "error"
-    : result?.ok || githubConnected
-      ? "done"
-      : creating
-        ? "active"
+    : creating
+      ? "active"
+      : result?.ok || githubConnected
+        ? "done"
         : "idle";
-  const vercelState =
-    result?.ok || vercelConnected ? "done" : creating ? "waiting" : "idle";
+  const vercelState = creating
+    ? "waiting"
+    : result?.ok || vercelConnected
+      ? "done"
+      : "idle";
 
   return (
     <section className="mt-12 sm:mt-16" aria-labelledby="create-app-title">
