@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { saveUserSecret } from "@/lib/connect/user-vault";
-import { leerState } from "@/lib/connect/oauth-state";
+import { leerStateCompleto } from "@/lib/connect/oauth-state";
 import { registrarIntento } from "@/lib/connect/attempt-log";
 
 export const runtime = "nodejs";
@@ -26,8 +26,12 @@ export async function GET(req: Request) {
   const configurationId = url.searchParams.get("configurationId");
   const teamId = url.searchParams.get("teamId");
 
-  const back = (status: string) =>
-    Response.redirect(`${site}/app/integrations?vercel=${status}`, 302);
+  const stateData = leerStateCompleto(state);
+  const back = (status: string) => {
+    const destination = new URL(stateData?.returnPath ?? "/app/integrations", site);
+    destination.searchParams.set("vercel", status);
+    return Response.redirect(destination, 302);
+  };
 
   // 1) Sesion de Clerk si existe; 2) si no, el userId firmado en el state.
   let userId: string | null = null;
@@ -36,7 +40,7 @@ export async function GET(req: Request) {
   } catch {
     userId = null;
   }
-  const desdeState = leerState(state);
+  const desdeState = stateData?.userId ?? null;
   if (!userId) userId = desdeState;
 
   // Si hay sesion Y state, deben coincidir: evita que alguien pegue su code
