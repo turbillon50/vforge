@@ -82,6 +82,16 @@ export async function loadRoomContextBrief(
         }))
     : [];
 
+  const archives = await queryAll<{ filename: string; extracted_text: string }>(
+    `SELECT filename, extracted_text
+       FROM project_context_assets
+      WHERE project_id = $1
+        AND char_length(extracted_text) > 20
+      ORDER BY created_at DESC
+      LIMIT 3`,
+    [projectId],
+  ).catch(() => [] as Array<{ filename: string; extracted_text: string }>);
+
   const pageUrls = [
     ...references.map((item) => item.url),
     ...comments.flatMap((comment) => {
@@ -107,5 +117,9 @@ export async function loadRoomContextBrief(
     repositories,
     decisions,
     pages,
+    archives: archives.map((item) => ({
+      filename: item.filename,
+      text: item.extracted_text,
+    })),
   });
 }

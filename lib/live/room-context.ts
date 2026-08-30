@@ -47,6 +47,7 @@ export interface RoomContextInput {
   repositories?: RoomRepository[];
   decisions?: string | null;
   pages?: RoomPage[];
+  archives?: Array<{ filename: string; text: string }>;
 }
 
 export function isSystemComment(comment: RoomComment): boolean {
@@ -160,6 +161,16 @@ export function formatRoomContext(input: RoomContextInput): string {
       const title = page.title?.trim() ? ` — ${page.title.trim()}` : "";
       lines.push(`### ${page.url}${title}`);
       lines.push(clip(page.text, 1600));
+    }
+  }
+
+  const archives = (input.archives ?? []).filter((item) => item.text?.trim()).slice(0, 3);
+  if (archives.length) {
+    lines.push("");
+    lines.push(`CONVERSACIONES CARGADAS (${archives.length}):`);
+    for (const archive of archives) {
+      lines.push(`### ${archive.filename.trim() || "chat.zip"}`);
+      lines.push(clip(archive.text, 3500));
     }
   }
 
