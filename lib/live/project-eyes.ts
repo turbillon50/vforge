@@ -129,3 +129,11 @@ export async function listVisorEyes(projectId: string): Promise<ProjectEye[]> {
     (a, b) => order.indexOf(a.viewport || "") - order.indexOf(b.viewport || ""),
   );
 }
+
+export async function listExpedienteEyes(projectId: string): Promise<ProjectEye[]> {
+  const [visor, plugin] = await Promise.all([
+    listVisorEyes(projectId),
+    listProjectEyes(projectId, 4),
+  ]);
+  return [...visor, ...plugin];
+}
