@@ -215,7 +215,10 @@ export function CodeEditorPanel({ projectId, onClose }: { projectId: string; onC
           <div className="min-h-0 flex-1 overflow-y-auto py-1">
             {loading ? <div className="grid h-24 place-items-center"><IconLoader size={14} className="animate-spin" /></div> : visibleFiles.length ? visibleFiles.map((file) => (
               <button key={file.path} type="button" onClick={() => void openFile(file.path)} className={cn("block w-full truncate px-3 py-1.5 text-left font-mono text-[9px] hover:bg-white", active?.key === `${repository}:${file.path}` && "bg-white font-medium")} title={file.path}>{file.path}</button>
-            )) : <p className="p-3 text-[10px] text-[var(--fg-muted)]">{repositories.length ? "No hay archivos visibles." : "Este proyecto no tiene repositorios enlazados."}</p>}
+            )) : <div className="p-3 text-[10px] text-[var(--fg-muted)]">
+              <p>{error || (repositories.length ? "No hay archivos visibles." : "Este proyecto no tiene repositorios enlazados.")}</p>
+              {error ? <button type="button" onClick={() => void loadTree()} className="mt-3 rounded-md border border-black px-2 py-1 text-black">Reintentar</button> : null}
+            </div>}
           </div>
           {matchedFiles.length > visibleFiles.length ? <p className="shrink-0 border-t border-[var(--border-1)] p-2 font-mono text-[8px] text-[var(--fg-muted)]">Mostrando 1,000 de {matchedFiles.length}. Usa el buscador.</p> : null}
         </aside>
