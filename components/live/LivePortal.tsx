@@ -145,21 +145,23 @@ const PANEL_LABELS: Record<WorkspacePanelId, string> = {
 };
 
 
+const FEEDBACK_PANELS = ["activity", "comments", "context"] as const;
+
 const DOCK_LAYOUTS: Record<WorkspacePreset, { root: DockLayout; previews: DockLayout; feedback: DockLayout }> = {
   balanced: {
-    root: { previews: 68, feedback: 32 },
+    root: { previews: 62, feedback: 38 },
     previews: { desktop: 52, mobile: 20, admin: 28 },
-    feedback: { activity: 24, comments: 42, context: 34 },
+    feedback: { activity: 18, comments: 44, context: 38 },
   },
   previews: {
-    root: { previews: 78, feedback: 22 },
+    root: { previews: 76, feedback: 24 },
     previews: { desktop: 60, mobile: 18, admin: 22 },
-    feedback: { activity: 28, comments: 40, context: 32 },
+    feedback: { activity: 18, comments: 44, context: 38 },
   },
   review: {
-    root: { previews: 58, feedback: 42 },
+    root: { previews: 48, feedback: 52 },
     previews: { desktop: 58, mobile: 22, admin: 20 },
-    feedback: { activity: 20, comments: 48, context: 32 },
+    feedback: { activity: 16, comments: 50, context: 34 },
   },
 };
 
@@ -446,6 +448,32 @@ function LiveWorkspace({
 
   function togglePanel(panel: WorkspacePanelId, handle: PanelImperativeHandle | null) {
     setFocusedPanel(null);
+    const feedbackHandles: Record<"activity" | "comments" | "context", PanelImperativeHandle | null> = {
+      activity: activityRef.current,
+      comments: commentsRef.current,
+      context: contextRef.current,
+    };
+    if (panel === "activity" || panel === "comments" || panel === "context") {
+      const othersOpen = FEEDBACK_PANELS.filter((id) => id !== panel && !collapsed[id]);
+      if (handle?.isCollapsed()) {
+        handle.expand();
+        for (const id of FEEDBACK_PANELS) {
+          if (id !== panel) feedbackHandles[id]?.collapse();
+        }
+        return;
+      }
+      if (othersOpen.length > 0) {
+        for (const id of FEEDBACK_PANELS) {
+          if (id !== panel) feedbackHandles[id]?.collapse();
+        }
+        handle?.expand();
+        return;
+      }
+      activityRef.current?.expand();
+      commentsRef.current?.expand();
+      contextRef.current?.expand();
+      return;
+    }
     if (handle?.isCollapsed()) handle.expand();
     else handle?.collapse();
   }
@@ -527,7 +555,7 @@ function LiveWorkspace({
           })}
         </div>
         <p className="ml-auto hidden shrink-0 px-2 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)] lg:block">
-          Arrastra cualquier divisor · doble clic restaura
+          Clic en un módulo para expandirlo · doble clic restaura
         </p>
       </div>
 
@@ -572,7 +600,7 @@ function LiveWorkspace({
               </Group>
             </Panel>
             <DockSeparator horizontal={false} />
-            <Panel id="feedback" minSize={150}>
+            <Panel id="feedback" minSize={220}>
               <Group
                 id={`feedback-${project.id}`}
                 orientation={isMobile ? "vertical" : "horizontal"}

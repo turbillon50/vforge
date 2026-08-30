@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { generateClientTokenFromReadWriteToken } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
 import { loadVForgeLiveProject } from "@/lib/api/vforge-owned";
-import { isAcceptedZip, safeArchiveName } from "@/lib/live/review-context";
+import { ACCEPTED_ZIP_CONTENT_TYPES, isAcceptedZip, safeArchiveName } from "@/lib/live/review-context";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ project
   const clientToken = await generateClientTokenFromReadWriteToken({
     token: storeToken,
     pathname,
-    allowedContentTypes: [contentType],
+    allowedContentTypes: [...ACCEPTED_ZIP_CONTENT_TYPES],
     maximumSizeInBytes: 50 * 1024 * 1024,
     validUntil: Date.now() + 10 * 60 * 1000,
     addRandomSuffix: false,

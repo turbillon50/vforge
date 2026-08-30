@@ -315,7 +315,7 @@ export function CommentsPanel({
               void send();
             }
           }}
-          rows={3}
+          rows={workspace ? 2 : 3}
           maxLength={4000}
           placeholder="Deja una observación…"
           className="w-full resize-y rounded-md border border-[var(--border-1)] bg-white px-3 py-2.5 text-[12px] text-black placeholder:text-[var(--fg-muted)] focus:border-black"

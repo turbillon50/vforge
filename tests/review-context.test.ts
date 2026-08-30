@@ -79,6 +79,7 @@ test("scroll-aware anchors keep their document position", () => {
 
 test("ZIP validation rejects renamed or oversized files", () => {
   assert.equal(isAcceptedZip("chat.zip", "application/zip", 2048), true);
+  assert.equal(isAcceptedZip("chat.zip", "", 2048), true);
   assert.equal(isAcceptedZip("chat.pdf", "application/zip", 2048), false);
   assert.equal(isAcceptedZip("chat.zip", "application/zip", 51 * 1024 * 1024), false);
   assert.equal(safeArchiveName("Conversación cliente #1.zip"), "Conversaci_n_cliente_1.zip");
