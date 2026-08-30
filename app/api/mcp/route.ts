@@ -2,6 +2,7 @@ import { handleMcp } from "@/lib/mcp/handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 
 /** VForge MCP Server — Streamable HTTP. Auth Bearer opcional: sin token operas
  *  como público (tools públicas); con token admin|client desbloqueas datos. */

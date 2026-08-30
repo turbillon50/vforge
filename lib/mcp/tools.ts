@@ -120,6 +120,22 @@ export const MCP_TOOLS: McpToolDef[] = [
     },
   },
   {
+    name: "vforge_project_see",
+    description:
+      "OJOS (admin|client): fotografía Escritorio, Móvil y/o Admin de una sala y devuelve las imágenes. La IA ve el pixel, no sólo el texto. Usa project_id y viewport=desktop|mobile|admin|all.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: { type: "string", description: "ID exacto del proyecto (por ejemplo: netmas-distribuidores)" },
+        viewport: {
+          type: "string",
+          description: "desktop, mobile, admin o all. Default: desktop y mobile",
+        },
+      },
+      required: ["project_id"],
+    },
+  },
+  {
     name: "vforge_payments",
     description: "DATOS (admin|client): pagos y avance financiero (total/pagado/pendiente) de los proyectos. Admin ve todo; client ve SOLO su org_id. Aislado por tenant.",
     inputSchema: { type: "object", properties: {} },
@@ -534,6 +550,7 @@ VForge es una fábrica de aplicaciones operada por un agente (V): construye, des
    • URL:  https://vforge.site/api/mcp
    • Auth: Bearer <tu-token>
 4. Llama \`help\` para ver las tools, o \`vforge_method\` para el método.
+5. Para ver una sala: \`vforge_project_see\` con el project_id. Recibes fotos de Escritorio y Móvil.
 
 ## Scopes
 • Tu token te aísla a TU forge: sólo ves tus propios proyectos, pagos y apps.
@@ -568,6 +585,7 @@ function helpText(principal: McpPrincipal): string {
   lines.push("• vforge_project_feedback — observaciones y anclas de una sala.");
   lines.push("• vforge_project_context — código, referencias (con contenido leído), CONTENIDO.md y archivos.");
   lines.push("• vforge_project_file — texto extraído de un ZIP privado, leído por fragmentos.");
+  lines.push("• vforge_project_see — ojos: fotografía Escritorio/Móvil/Admin y se las manda a la IA.");
   lines.push("• vforge_payments — avance financiero (total/pagado/pendiente).");
   lines.push("• vforge_apps_health — salud de despliegue de tus apps.");
   lines.push("• vforge_brain_search — memoria y método de VForge.");
@@ -985,7 +1003,7 @@ export async function runMcpTool(
         `## Contenido leído de las URLs\n${pagesText}\n\n` +
         `## CONTENIDO.md\n${document?.content?.trim() || project.description || "Sin contenido documentado todavía."}\n\n` +
         `## Archivos privados\n${assetsText}\n\n` +
-        `Usa vforge_project_file con project_id + asset_id para leer el texto extraído. Usa vforge_project_feedback para las anotaciones de la sala.`,
+        `Usa vforge_project_file con project_id + asset_id para leer el texto extraído. Usa vforge_project_feedback para las anotaciones. Usa vforge_project_see para fotografiar Escritorio/Móvil.`,
       );
     }
 
@@ -1013,6 +1031,27 @@ export async function runMcpTool(
         `Fragmento: ${offset}-${offset + chunk.length} de ${total}\n` +
         `Siguiente offset: ${nextOffset ?? "fin"}\n\n${chunk || "[El ZIP no contenía texto legible compatible.]"}`,
       );
+    }
+
+    case "vforge_project_see": {
+      const projectId = String(args.project_id ?? "").trim().slice(0, 160);
+      if (!projectId) return err("Falta 'project_id'.");
+      const allowed = await authorizeMcpProject(projectId, principal);
+      if (!allowed) return err("Proyecto no encontrado o sin acceso para este token MCP.");
+      const { getProjectViewports } = await import("@/lib/projects/live-portal");
+      const { captureSeeViewports, parseSeeViewports, mcpSeeResult } = await import(
+        "@/lib/live/see-page"
+      );
+      const project = await getProjectViewports(projectId);
+      if (!project) return err("Proyecto no encontrado.");
+      const viewports = parseSeeViewports(args.viewport ?? args.viewports);
+      const captured = await captureSeeViewports({
+        desktop_url: project.desktop_url,
+        mobile_url: project.mobile_url,
+        admin_url: project.admin_url,
+        viewports,
+      });
+      return mcpSeeResult(allowed.name, projectId, captured);
     }
 
     case "vforge_payments": {
