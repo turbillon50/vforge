@@ -43,6 +43,7 @@ export function ScopedWorkspaceHome({
       body: "Tu código, repositorios y cambios.",
       connected: githubConnected,
       href: "/api/auth/github/start?return_to=%2Fworkspace",
+      signupHref: "https://github.com/signup",
       icon: IconGithub,
     },
     {
@@ -51,6 +52,7 @@ export function ScopedWorkspaceHome({
       body: "Tus deployments, previews y dominios.",
       connected: vercelConnected,
       href: "/api/auth/vercel/start?return_to=%2Fworkspace",
+      signupHref: "https://vercel.com/signup",
       icon: IconRocket,
     },
   ];
@@ -103,13 +105,13 @@ export function ScopedWorkspaceHome({
               </h2>
             </div>
             <p className="hidden max-w-sm text-right text-[12px] leading-5 text-[var(--fg-secondary)] sm:block">
-              Entra con tu cuenta o crea una nueva. La conexión queda sólo en tu
-              usuario.
+              Si necesitas una cuenta, créala en otra pestaña. Luego vuelve y
+              conecta sólo para tu usuario.
             </p>
           </div>
           <div className="grid md:grid-cols-2">
             {connectionItems.map(
-              ({ id, title, body, connected, href, icon: Icon }) => (
+              ({ id, title, body, connected, href, signupHref, icon: Icon }) => (
                 <article
                   key={id}
                   className="flex min-h-[170px] flex-col border-b border-x border-[var(--border-1)] bg-[var(--color-surface)] p-5 sm:p-6 md:first:border-r-0"
@@ -130,19 +132,29 @@ export function ScopedWorkspaceHome({
                   <h3 className="mt-5 text-[21px] font-medium tracking-[-0.04em]">
                     {title}
                   </h3>
-                  <div className="mt-auto flex items-end justify-between gap-4 pt-3">
+                  <div className="mt-auto flex flex-col items-start justify-between gap-4 pt-3 sm:flex-row sm:items-end">
                     <p className="text-[12px] leading-5 text-[var(--fg-secondary)]">
                       {body}
                     </p>
                     {connected ? (
                       <span className="text-[11px] font-medium">Listo</span>
                     ) : (
-                      <a
-                        href={href}
-                        className="btn-ghost !min-h-10 !px-3 text-center !leading-4"
-                      >
-                        Conectar o crear cuenta <IconArrowR size={12} />
-                      </a>
+                      <div className="flex w-full gap-2 sm:w-auto">
+                        <a
+                          href={href}
+                          className="btn-primary flex-1 !min-h-10 !px-3 text-center !leading-4 sm:flex-none"
+                        >
+                          Conectar <IconArrowR size={12} />
+                        </a>
+                        <a
+                          href={signupHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-ghost flex-1 !min-h-10 !px-3 text-center !leading-4 sm:flex-none"
+                        >
+                          Crear cuenta
+                        </a>
+                      </div>
                     )}
                   </div>
                 </article>
