@@ -96,3 +96,22 @@ export function leerStateCompleto(
 export function leerState(state: string | null | undefined): string | null {
   return leerStateCompleto(state)?.userId ?? null;
 }
+
+/**
+ * Destino después del callback de Vercel.
+ *
+ * Si el state firmado trae return_to (/onboarding, /workspace o
+ * /app/integrations) se respeta — el owner sigue volviendo a su consola.
+ * Si el state no viajó o no se pudo leer, NO caemos en /app/integrations:
+ * esa ruta es owner-only y manda al usuario nuevo a /sign-in con
+ * redirect_url del cockpit. /onboarding es seguro para cliente y el
+ * middleware del owner lo reenvía a /app/chat.
+ *
+ * No se usa el `next` de Vercel: es vercel.com y dejaría al usuario
+ * fuera de VForge en el flujo externo (same-tab desde onboarding).
+ */
+export function destinoCallbackVercel(
+  stateReturnPath: OAuthReturnPath | null | undefined,
+): OAuthReturnPath {
+  return stateReturnPath ?? "/onboarding";
+}

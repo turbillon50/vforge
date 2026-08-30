@@ -1,7 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { saveUserSecret } from "@/lib/connect/user-vault";
-import { leerStateCompleto } from "@/lib/connect/oauth-state";
+import {
+  destinoCallbackVercel,
+  leerStateCompleto,
+} from "@/lib/connect/oauth-state";
 import { registrarIntento } from "@/lib/connect/attempt-log";
 
 export const runtime = "nodejs";
@@ -28,7 +31,10 @@ export async function GET(req: Request) {
 
   const stateData = leerStateCompleto(state);
   const back = (status: string) => {
-    const destination = new URL(stateData?.returnPath ?? "/app/integrations", site);
+    const destination = new URL(
+      destinoCallbackVercel(stateData?.returnPath),
+      site,
+    );
     destination.searchParams.set("vercel", status);
     return Response.redirect(destination, 302);
   };
