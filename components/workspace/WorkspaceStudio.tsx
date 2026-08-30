@@ -373,7 +373,7 @@ export function WorkspaceStudio() {
                   <div className="flex h-full flex-col items-center justify-center text-center text-[var(--fg-muted)]">
                     <p>Aún no hay aplicación para previsualizar.</p>
                     <a
-                      href="/workspace#crear"
+                      href="/workspace#create-app"
                       className="mt-3 rounded px-4 py-2 bg-[var(--color-surface)] text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
                     >
                       Crear una app
