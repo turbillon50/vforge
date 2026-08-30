@@ -74,6 +74,25 @@ export const MCP_TOOLS: McpToolDef[] = [
     inputSchema: { type: "object", properties: {} },
   },
   {
+    name: "vforge_project_feedback",
+    description:
+      "DATOS (admin|client): lee las observaciones de una sala live y el estado de la tarea ligada a cada comentario. Exige project_id y valida que el token sea owner del tenant o miembro activo del proyecto.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: {
+          type: "string",
+          description: "ID exacto del proyecto cuya sala se quiere revisar (por ejemplo: apsus)",
+        },
+        limit: {
+          type: "number",
+          description: "Cantidad de observaciones recientes (1-100; default 40)",
+        },
+      },
+      required: ["project_id"],
+    },
+  },
+  {
     name: "vforge_payments",
     description: "DATOS (admin|client): pagos y avance financiero (total/pagado/pendiente) de los proyectos. Admin ve todo; client ve SOLO su org_id. Aislado por tenant.",
     inputSchema: { type: "object", properties: {} },
@@ -519,6 +538,7 @@ function helpText(principal: McpPrincipal): string {
   lines.push("• help — esta ayuda.\n");
   lines.push("## De datos (requieren token admin|client; aisladas por tenant)");
   lines.push("• vforge_project_status — estado de tus proyectos.");
+  lines.push("• vforge_project_feedback — observaciones de una sala y estado de sus tareas.");
   lines.push("• vforge_payments — avance financiero (total/pagado/pendiente).");
   lines.push("• vforge_apps_health — salud de despliegue de tus apps.");
   lines.push("• vforge_brain_search — memoria y método de VForge.");
@@ -748,6 +768,93 @@ export async function runMcpTool(
         );
       }
       return text(rows.map((r) => `• ${r.name} [${r.category}] ${r.status} ${r.vercel_url ?? ""}`.trim()).join("\n"));
+    }
+
+    case "vforge_project_feedback": {
+      const projectId = String(args.project_id ?? "").trim().slice(0, 160);
+      if (!projectId) return err("Falta 'project_id'.");
+      const requestedLimit = Number(args.limit ?? 40);
+      const limit = Number.isFinite(requestedLimit)
+        ? Math.min(100, Math.max(1, Math.floor(requestedLimit)))
+        : 40;
+
+      // El proyecto se autoriza ANTES de leer comentarios. Un client puede
+      // entrar por ser dueño de su tenant o por una membresía live activa.
+      // Nunca se acepta email/org desde args: la identidad sale del token MCP.
+      const project = isAdminScope
+        ? await queryOne<{ id: string; name: string }>(
+            "SELECT id, name FROM projects WHERE id = $1 LIMIT 1",
+            [projectId],
+          ).catch(() => null)
+        : await queryOne<{ id: string; name: string }>(
+            `SELECT p.id, p.name
+               FROM projects p
+              WHERE p.id = $1
+                AND (
+                  p.org_id = $2
+                  OR EXISTS (
+                    SELECT 1
+                      FROM project_live_members m
+                     WHERE m.project_id = p.id
+                       AND m.clerk_user_id = $3
+                       AND m.status = 'active'
+                       AND (m.expires_at IS NULL OR m.expires_at > now())
+                  )
+                )
+              LIMIT 1`,
+            [projectId, orgId, userId],
+          ).catch(() => null);
+
+      if (!project) {
+        return err("Proyecto no encontrado o sin acceso para este token MCP.");
+      }
+
+      const { ensureCommentTasksTable } = await import("@/lib/live/comment-tasks");
+      await ensureCommentTasksTable();
+      const rows = await queryAll<{
+        id: string;
+        author_email: string;
+        author_name: string | null;
+        body: string;
+        created_at: string;
+        task_id: string | null;
+        task_status: string | null;
+        task_result: string | null;
+      }>(
+        `SELECT c.id, c.author_email, c.author_name, c.body, c.created_at,
+                task.id AS task_id, task.status AS task_status,
+                task.result_summary AS task_result
+           FROM project_comments c
+           LEFT JOIN LATERAL (
+             SELECT t.id, t.status, t.result_summary
+               FROM project_comment_tasks t
+              WHERE t.project_id = c.project_id AND t.comment_id = c.id
+              ORDER BY t.created_at DESC
+              LIMIT 1
+           ) task ON true
+          WHERE c.project_id = $1
+          ORDER BY c.created_at DESC
+          LIMIT $2`,
+        [project.id, limit],
+      ).catch(() => []);
+
+      if (rows.length === 0) {
+        return text(`# Feedback — ${project.name}\n\nAún no hay observaciones en esta sala.`);
+      }
+
+      const items = rows.map((row, index) => {
+        const author = row.author_name?.trim() || row.author_email;
+        const task = row.task_status
+          ? `tarea ${row.task_status}${row.task_id ? ` (${row.task_id})` : ""}`
+          : "observación abierta";
+        const result = row.task_result ? `\nResultado: ${row.task_result}` : "";
+        return `${index + 1}. [${row.created_at}] ${author}\nEstado: ${task}\nID: ${row.id}\n${row.body}${result}`;
+      });
+      return text(
+        `# Feedback — ${project.name} (${project.id})\n\n` +
+          `${rows.length} observación(es), más recientes primero.\n\n` +
+          items.join("\n\n"),
+      );
     }
 
     case "vforge_payments": {

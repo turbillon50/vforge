@@ -57,6 +57,7 @@ export const TOOL_KIND: Record<string, ToolKind> = {
 
   // ---- DATA (tenant / private, admin|client only) ----
   vforge_project_status: "data",
+  vforge_project_feedback: "data",
   vforge_payments: "data",
   vforge_apps_health: "data",
   vforge_brain_search: "data",
