@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   IconChat,
+  IconCheck,
   IconExtLink,
   IconLayout,
   IconLoader,
@@ -12,6 +14,7 @@ import {
   IconShield,
   IconX,
 } from "@/components/brand/VFIcons";
+import { writePendingPrompt } from "@/lib/live/pending-prompt";
 
 type ViewId = "mobile" | "desktop" | "admin";
 
@@ -55,12 +58,23 @@ function timeAgo(iso: string) {
   return `hace ${Math.floor(hours / 24)} d`;
 }
 
+function isSystemComment(c: CommentRow) {
+  return (
+    (c.author_name || "").toLowerCase().includes("sistema") ||
+    c.body.startsWith("✓ Tarea") ||
+    c.body.startsWith("Resuelto sin tarea") ||
+    c.body.startsWith("Tarea ")
+  );
+}
+
 export function MobileLiveShell({
   project,
   canSeeAdmin,
+  canAccept = false,
 }: {
   project: MobileLiveProject;
   canSeeAdmin: boolean;
+  canAccept?: boolean;
 }) {
   const [expanded, setExpanded] = useState<ViewId | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
@@ -229,7 +243,12 @@ export function MobileLiveShell({
       </div>
 
       {chatOpen ? (
-        <ChatSheet projectId={project.id} onClose={() => setChatOpen(false)} />
+        <ChatSheet
+          projectId={project.id}
+          projectName={project.name}
+          canAccept={canAccept}
+          onClose={() => setChatOpen(false)}
+        />
       ) : null}
     </div>
   );
@@ -325,7 +344,14 @@ function DeviceCard({
         ) : null}
 
         {url ? (
-          <div className="absolute left-0 top-0 origin-top-left" style={{ width: designW, height: designH, transform: `scale(${scale})` }}>
+          <div
+            className="absolute left-0 top-0 origin-top-left"
+            style={{
+              width: designW,
+              height: designH,
+              transform: `scale(${scale})`,
+            }}
+          >
             <iframe
               key={`${label}-${refreshKey}`}
               src={url}
@@ -344,7 +370,9 @@ function DeviceCard({
               <IconLayout size={20} className="mx-auto text-[var(--fg-muted)]" />
             )}
             <p className="mt-2 text-[12px] text-[var(--fg-muted)]">Sin URL aún</p>
-            <p className="mt-1 text-[10px] text-[var(--fg-muted)]">Se genera cuando haya URL</p>
+            <p className="mt-1 text-[10px] text-[var(--fg-muted)]">
+              Se genera cuando haya URL
+            </p>
           </div>
         )}
 
@@ -370,21 +398,31 @@ function EmptyView({ label }: { label: string }) {
 
 function ChatSheet({
   projectId,
+  projectName,
+  canAccept,
   onClose,
 }: {
   projectId: string;
+  projectName: string;
+  canAccept: boolean;
   onClose: () => void;
 }) {
+  const router = useRouter();
   const encoded = encodeURIComponent(projectId);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [acceptedMap, setAcceptedMap] = useState<Record<string, string>>({});
+  const [lastAcceptAt, setLastAcceptAt] = useState(0);
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/live/${encoded}/comments`, { cache: "no-store" });
+      const res = await fetch(`/api/live/${encoded}/comments`, {
+        cache: "no-store",
+      });
       if (!res.ok) {
         setError("No se pudieron cargar los mensajes.");
         return;
@@ -428,12 +466,75 @@ function ChatSheet({
     }
   }
 
+  async function acceptOne(comment: CommentRow, openStudio: boolean) {
+    if (!canAccept || acceptingId) return;
+    if (Date.now() - lastAcceptAt < 3000) {
+      setError("Espera un momento antes de encolar otra tarea.");
+      return;
+    }
+    setAcceptingId(comment.id);
+    setError(null);
+    try {
+      const response = await fetch(
+        `/api/live/${encoded}/comments/${encodeURIComponent(comment.id)}/accept`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        },
+      );
+      const payload = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        task?: { id: string; prompt: string };
+        estudioPath?: string;
+      };
+      if (!response.ok || !payload.ok || !payload.task) {
+        setError(
+          payload.error === "forbidden"
+            ? "Solo el owner puede aceptar."
+            : "No se pudo encolar.",
+        );
+        return;
+      }
+      setLastAcceptAt(Date.now());
+      setAcceptedMap((m) => ({ ...m, [comment.id]: payload.task!.id }));
+      writePendingPrompt({
+        projectId,
+        taskId: payload.task.id,
+        prompt: payload.task.prompt,
+        at: Date.now(),
+      });
+      await load();
+      if (openStudio) {
+        onClose();
+        router.push(payload.estudioPath || `/app/chat?projectId=${encoded}`);
+      }
+    } catch {
+      setError("No se pudo encolar.");
+    } finally {
+      setAcceptingId(null);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
-      <button type="button" className="absolute inset-0 bg-black/40" onClick={onClose} aria-label="Cerrar chat" />
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+        aria-label="Cerrar chat"
+      />
       <div className="absolute inset-x-0 bottom-0 flex max-h-[88dvh] flex-col rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom,0px)] shadow-2xl">
         <div className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--border-1)] px-4">
-          <p className="text-[14px] font-medium">Mensajes</p>
+          <div>
+            <p className="text-[14px] font-medium">Mensajes</p>
+            {canAccept ? (
+              <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+                Owner · aceptar → cola
+              </p>
+            ) : null}
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -453,23 +554,61 @@ function ChatSheet({
               Aún no hay mensajes. Escribe el primero.
             </p>
           ) : (
-            comments.map((c) => (
-              <article key={c.id} className="rounded-xl border border-[var(--border-1)] bg-[#f7f7f5] p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-[12px] font-medium">
-                    {c.author_name ?? c.author_email}
+            comments.map((c) => {
+              const system = isSystemComment(c);
+              const taskId = acceptedMap[c.id];
+              return (
+                <article
+                  key={c.id}
+                  className={
+                    system
+                      ? "rounded-xl border border-black/20 bg-[#eef6ee] p-3"
+                      : "rounded-xl border border-[var(--border-1)] bg-[#f7f7f5] p-3"
+                  }
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-[12px] font-medium">
+                      {system
+                        ? "Sistema"
+                        : c.author_name ?? c.author_email}
+                    </p>
+                    <span className="shrink-0 font-mono text-[8px] text-[var(--fg-muted)]">
+                      {timeAgo(c.created_at)}
+                    </span>
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-[13px] leading-5 text-[var(--fg-secondary)]">
+                    {c.body}
                   </p>
-                  <span className="shrink-0 font-mono text-[8px] text-[var(--fg-muted)]">
-                    {timeAgo(c.created_at)}
-                  </span>
-                </div>
-                <p className="mt-1 whitespace-pre-wrap break-words text-[13px] leading-5 text-[var(--fg-secondary)]">
-                  {c.body}
-                </p>
-              </article>
-            ))
+                  {!system && canAccept ? (
+                    <div className="mt-3 flex flex-col gap-2">
+                      <button
+                        type="button"
+                        disabled={!!acceptingId || !!taskId}
+                        onClick={() => void acceptOne(c, false)}
+                        className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-black bg-white text-[13px] font-medium disabled:opacity-40"
+                      >
+                        {acceptingId === c.id ? (
+                          <IconLoader size={16} className="animate-spin" />
+                        ) : (
+                          <IconCheck size={16} />
+                        )}
+                        {taskId ? "En cola" : "Aceptar → cola"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!!acceptingId || !!taskId}
+                        onClick={() => void acceptOne(c, true)}
+                        className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-black text-[13px] font-medium text-white disabled:opacity-40"
+                      >
+                        Aceptar → Estudio
+                      </button>
+                    </div>
+                  ) : null}
+                </article>
+              );
+            })
           )}
-          {error ? <p className="text-[12px]">{error}</p> : null}
+          {error ? <p className="text-[12px] text-black">{error}</p> : null}
         </div>
 
         <div className="shrink-0 border-t border-[var(--border-1)] p-3">
@@ -489,7 +628,11 @@ function ChatSheet({
               className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-black text-white disabled:opacity-40"
               aria-label="Enviar"
             >
-              {busy ? <IconLoader size={16} className="animate-spin" /> : <IconSend size={16} />}
+              {busy ? (
+                <IconLoader size={16} className="animate-spin" />
+              ) : (
+                <IconSend size={16} />
+              )}
             </button>
           </div>
         </div>

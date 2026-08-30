@@ -123,6 +123,71 @@ export async function listTasksForComments(
   ).catch(() => []);
 }
 
+/** Lista tareas de un proyecto (cualquier status o filtrado). */
+export async function listProjectTasks(
+  projectId: string,
+  opts?: { status?: CommentTaskStatus | CommentTaskStatus[]; limit?: number },
+): Promise<CommentTaskRow[]> {
+  await ensureCommentTasksTable();
+  const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 200);
+  const statuses = opts?.status
+    ? Array.isArray(opts.status)
+      ? opts.status
+      : [opts.status]
+    : null;
+
+  if (statuses && statuses.length > 0) {
+    return queryAll<CommentTaskRow>(
+      `SELECT id, project_id, comment_id, status, prompt, source_body,
+              created_by, created_by_email, created_at, result_summary
+         FROM project_comment_tasks
+        WHERE project_id = $1 AND status = ANY($2::text[])
+        ORDER BY created_at DESC
+        LIMIT $3`,
+      [projectId, statuses, limit],
+    ).catch(() => []);
+  }
+
+  return queryAll<CommentTaskRow>(
+    `SELECT id, project_id, comment_id, status, prompt, source_body,
+            created_by, created_by_email, created_at, result_summary
+       FROM project_comment_tasks
+      WHERE project_id = $1
+      ORDER BY created_at DESC
+      LIMIT $2`,
+    [projectId, limit],
+  ).catch(() => []);
+}
+
+/** Cola global (owner): queued + running de todos los proyectos. */
+export async function listGlobalOpenTasks(limit = 100): Promise<
+  Array<
+    CommentTaskRow & {
+      project_name: string | null;
+      source_preview: string | null;
+    }
+  >
+> {
+  await ensureCommentTasksTable();
+  return queryAll<
+    CommentTaskRow & {
+      project_name: string | null;
+      source_preview: string | null;
+    }
+  >(
+    `SELECT t.id, t.project_id, t.comment_id, t.status, t.prompt, t.source_body,
+            t.created_by, t.created_by_email, t.created_at, t.result_summary,
+            p.name AS project_name,
+            left(t.source_body, 160) AS source_preview
+       FROM project_comment_tasks t
+       LEFT JOIN projects p ON p.id = t.project_id
+      WHERE t.status IN ('queued', 'running')
+      ORDER BY t.created_at ASC
+      LIMIT $1`,
+    [Math.min(Math.max(limit, 1), 200)],
+  ).catch(() => []);
+}
+
 export async function insertSystemComment(args: {
   projectId: string;
   body: string;
