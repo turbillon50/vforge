@@ -112,10 +112,36 @@ export async function POST(req: Request) {
       );
     }
     const readme = `# ${name}\n\n${description || "App creada con VForge."}\n\n**Plantilla:** ${template}\n\n**Módulos solicitados:**\n${modules.length ? modules.map((m) => "- " + m).join("\n") : "- (ninguno)"}\n\n---\nGenerada con VForge.`;
-    await gh(`/repos/${owner}/${slug}/contents/README.md`, ghToken, {
-      method: "PUT",
-      body: JSON.stringify({ message: "VForge: README/spec", content: Buffer.from(readme, "utf8").toString("base64") }),
-    }).catch(() => {});
+    const currentReadmeRes = await gh(
+      `/repos/${owner}/${slug}/contents/README.md`,
+      ghToken,
+    );
+    const currentReadme = currentReadmeRes.ok
+      ? ((await currentReadmeRes.json()) as { sha?: string })
+      : null;
+    const readmeRes = await gh(
+      `/repos/${owner}/${slug}/contents/README.md`,
+      ghToken,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          message: "VForge: README/spec",
+          content: Buffer.from(readme, "utf8").toString("base64"),
+          ...(currentReadme?.sha ? { sha: currentReadme.sha } : {}),
+        }),
+      },
+    );
+    if (!readmeRes.ok) {
+      return Response.json(
+        {
+          ok: false,
+          error: "repo_readme",
+          detail: await readmeRes.text(),
+          repo: out.repo,
+        },
+        { status: 400 },
+      );
+    }
 
 
     const q = vcTeam ? `?teamId=${encodeURIComponent(vcTeam)}&forceNew=1` : `?forceNew=1`;
