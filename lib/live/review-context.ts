@@ -6,6 +6,17 @@ export interface ReviewAnchor {
   y: number;
   url: string;
   label: string;
+  documentX?: number;
+  documentY?: number;
+}
+
+export interface ReviewBridgeViewport {
+  scrollX: number;
+  scrollY: number;
+  viewportWidth: number;
+  viewportHeight: number;
+  documentWidth: number;
+  documentHeight: number;
 }
 
 export interface AnchoredComment {
@@ -53,13 +64,84 @@ export function parseReviewAnchor(value: unknown): ReviewAnchor | null {
   const url = cleanUrl(raw.url);
   if (!url) return null;
   const label = typeof raw.label === "string" ? raw.label.trim().slice(0, 120) : "";
+  const documentX = finiteDocumentCoordinate(raw.documentX);
+  const documentY = finiteDocumentCoordinate(raw.documentY);
   return {
     viewport: raw.viewport as ReviewViewport,
     x: Math.round(raw.x * 10_000) / 10_000,
     y: Math.round(raw.y * 10_000) / 10_000,
     url,
     label: label || `${raw.viewport} · ${Math.round(raw.x * 100)}%, ${Math.round(raw.y * 100)}%`,
+    ...(documentX != null && documentY != null ? { documentX, documentY } : {}),
   };
+}
+
+function finiteDocumentCoordinate(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 10_000_000
+    ? Math.round(value * 100) / 100
+    : null;
+}
+
+function finitePositive(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 && value <= 10_000_000
+    ? value
+    : null;
+}
+
+export function parseReviewBridgeViewport(value: unknown): ReviewBridgeViewport | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  if (raw.source !== "vforge-review-bridge" || raw.type !== "viewport" || raw.version !== 1) {
+    return null;
+  }
+  const scrollX = finiteDocumentCoordinate(raw.scrollX);
+  const scrollY = finiteDocumentCoordinate(raw.scrollY);
+  const viewportWidth = finitePositive(raw.viewportWidth);
+  const viewportHeight = finitePositive(raw.viewportHeight);
+  const documentWidth = finitePositive(raw.documentWidth);
+  const documentHeight = finitePositive(raw.documentHeight);
+  if (
+    scrollX == null ||
+    scrollY == null ||
+    viewportWidth == null ||
+    viewportHeight == null ||
+    documentWidth == null ||
+    documentHeight == null
+  ) {
+    return null;
+  }
+  return {
+    scrollX,
+    scrollY,
+    viewportWidth,
+    viewportHeight,
+    documentWidth,
+    documentHeight,
+  };
+}
+
+export function documentPointForAnchor(
+  x: number,
+  y: number,
+  bridge: ReviewBridgeViewport | null,
+): Pick<ReviewAnchor, "documentX" | "documentY"> | Record<string, never> {
+  if (!bridge) return {};
+  return {
+    documentX: Math.round((bridge.scrollX + x * bridge.viewportWidth) * 100) / 100,
+    documentY: Math.round((bridge.scrollY + y * bridge.viewportHeight) * 100) / 100,
+  };
+}
+
+export function anchorViewportPosition(
+  anchor: ReviewAnchor,
+  bridge: ReviewBridgeViewport | null,
+): { x: number; y: number; visible: boolean } {
+  if (bridge && anchor.documentX != null && anchor.documentY != null) {
+    const x = (anchor.documentX - bridge.scrollX) / bridge.viewportWidth;
+    const y = (anchor.documentY - bridge.scrollY) / bridge.viewportHeight;
+    return { x, y, visible: x >= 0 && x <= 1 && y >= 0 && y <= 1 };
+  }
+  return { x: anchor.x, y: anchor.y, visible: true };
 }
 
 export function isAcceptedZip(filename: string, contentType: string, size: number): boolean {
