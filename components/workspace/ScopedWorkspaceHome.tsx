@@ -62,11 +62,11 @@ export function ScopedWorkspaceHome({
   return (
     <main className="min-h-svh bg-[var(--color-background)] text-[var(--color-ink)]">
       <header className="border-b border-[var(--border-1)] bg-[var(--color-surface)]">
-        <div className="mx-auto flex min-h-[64px] max-w-[1180px] items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="mx-auto flex min-h-[64px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/workspace" aria-label="VForge, tu espacio de trabajo">
             <VWordmark />
           </Link>
-          <div className="flex items-center gap-2">
+          <div id="account-menu" className="flex items-center gap-2">
             <div className="flex items-center gap-2 rounded-full border border-[var(--border-1)] bg-[var(--color-surface)] py-1 pl-1 pr-3">
               <UserButton
                 afterSignOutUrl="/"
@@ -94,200 +94,245 @@ export function ScopedWorkspaceHome({
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1180px] px-4 py-8 sm:px-6 sm:py-12">
-        <p className="mono-label">Tu workspace</p>
-        <h1 className="mt-3 max-w-4xl text-[clamp(2.6rem,6vw,5.4rem)] font-semibold leading-[0.9] tracking-[-0.065em]">
-          Construye con tus propias cuentas.
-        </h1>
-        <p className="mt-6 max-w-2xl break-words text-[15px] leading-7 text-[var(--fg-secondary)] sm:text-[17px]">
-          Esta cuenta pertenece a {email}. No necesitas una invitación: conecta
-          tus propias herramientas y VForge mantendrá tus accesos separados de
-          los de cualquier otra persona.
-        </p>
-
-        <div className="mt-7 grid border border-[var(--color-ink)] bg-[var(--color-surface)] sm:grid-cols-[180px_1fr_auto] sm:items-center">
-          <div className="border-b border-[var(--border-1)] p-4 sm:border-b-0 sm:border-r">
-            <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-[var(--fg-muted)]">
-              Preparación
+      <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[220px_minmax(0,1fr)]">
+        <aside className="hidden border-r border-[var(--border-1)] bg-[var(--color-surface)] lg:block">
+          <div className="sticky top-0 p-5 pt-10">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+              Tu espacio
             </p>
-            <p className="mt-1 text-[24px] font-medium tracking-[-0.04em]">
-              {connectedCount}/2 listas
-            </p>
-          </div>
-          <p className="border-b border-[var(--border-1)] p-4 text-[12px] leading-5 text-[var(--fg-secondary)] sm:border-b-0">
-            {connectedCount === 2
-              ? "GitHub y Vercel están listos. Ya puedes construir y publicar."
-              : "Completa las conexiones pendientes. Puedes reconectar cualquiera en todo momento."}
-          </p>
-          <a
-            href="#connections-title"
-            className="m-3 inline-flex min-h-10 items-center justify-center border border-[var(--color-ink)] px-4 text-[11px] font-medium"
-          >
-            Gestionar conexiones
-          </a>
-        </div>
-
-        <section className="mt-10 sm:mt-14" aria-labelledby="connections-title">
-          <div className="flex items-end justify-between gap-4 border-b border-[var(--color-ink)] pb-4">
-            <div>
-              <p className="mono-label">Paso 01</p>
-              <h2
-                id="connections-title"
-                className="mt-2 text-[28px] font-medium tracking-[-0.05em]"
-              >
-                Tus conexiones
-              </h2>
-            </div>
-            <p className="hidden max-w-sm text-right text-[12px] leading-5 text-[var(--fg-secondary)] sm:block">
-              Si necesitas una cuenta, créala en otra pestaña. Luego vuelve y
-              conecta sólo para tu usuario.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2">
-            {connectionItems.map(
-              ({
-                id,
-                title,
-                body,
-                connected,
-                href,
-                signupHref,
-                icon: Icon,
-              }) => (
-                <article
-                  key={id}
-                  className="flex min-h-[170px] flex-col border-b border-x border-[var(--border-1)] bg-[var(--color-surface)] p-5 sm:p-6 md:first:border-r-0"
+            <nav
+              className="mt-5 grid gap-1"
+              aria-label="Navegación del workspace"
+            >
+              {[
+                ["01", "Inicio", "#workspace-top"],
+                ["02", "Crear app", "#create-app"],
+                ["03", "Proyectos", "#projects"],
+                ["04", "Conexiones", "#connections-title"],
+                ["05", "Cuenta", "#account-menu"],
+              ].map(([number, label, href]) => (
+                <a
+                  key={href}
+                  href={href}
+                  className="group flex min-h-11 items-center gap-3 border-b border-[var(--border-1)] text-[12px] transition hover:pl-1"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="grid h-10 w-10 place-items-center border border-[var(--color-ink)]">
-                      <Icon size={17} />
+                  <span className="font-mono text-[8px] text-[var(--fg-muted)]">
+                    {number}
+                  </span>
+                  <span>{label}</span>
+                  <IconArrowR
+                    size={10}
+                    className="ml-auto opacity-0 transition group-hover:opacity-100"
+                  />
+                </a>
+              ))}
+            </nav>
+            <div className="mt-10 border border-[var(--border-1)] p-3">
+              <p className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+                Sesión privada
+              </p>
+              <p className="mt-2 truncate text-[10px]">{email}</p>
+            </div>
+          </div>
+        </aside>
+        <div
+          id="workspace-top"
+          className="min-w-0 px-4 py-8 sm:px-6 sm:py-12 lg:px-10"
+        >
+          <p className="mono-label">Tu workspace</p>
+          <h1 className="mt-3 max-w-4xl text-[clamp(2.6rem,6vw,5.4rem)] font-semibold leading-[0.9] tracking-[-0.065em]">
+            Construye con tus propias cuentas.
+          </h1>
+          <p className="mt-6 max-w-2xl break-words text-[15px] leading-7 text-[var(--fg-secondary)] sm:text-[17px]">
+            Esta cuenta pertenece a {email}. No necesitas una invitación:
+            conecta tus propias herramientas y VForge mantendrá tus accesos
+            separados de los de cualquier otra persona.
+          </p>
+
+          <div className="mt-7 grid border border-[var(--color-ink)] bg-[var(--color-surface)] sm:grid-cols-[180px_1fr_auto] sm:items-center">
+            <div className="border-b border-[var(--border-1)] p-4 sm:border-b-0 sm:border-r">
+              <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-[var(--fg-muted)]">
+                Preparación
+              </p>
+              <p className="mt-1 text-[24px] font-medium tracking-[-0.04em]">
+                {connectedCount}/2 listas
+              </p>
+            </div>
+            <p className="border-b border-[var(--border-1)] p-4 text-[12px] leading-5 text-[var(--fg-secondary)] sm:border-b-0">
+              {connectedCount === 2
+                ? "GitHub y Vercel están listos. Ya puedes construir y publicar."
+                : "Completa las conexiones pendientes. Puedes reconectar cualquiera en todo momento."}
+            </p>
+            <a
+              href={connectedCount === 2 ? "#create-app" : "#connections-title"}
+              className="m-3 inline-flex min-h-10 items-center justify-center border border-[var(--color-ink)] px-4 text-[11px] font-medium"
+            >
+              {connectedCount === 2 ? "Crear una app" : "Gestionar conexiones"}
+            </a>
+          </div>
+
+          <section
+            className="mt-10 sm:mt-14"
+            aria-labelledby="connections-title"
+          >
+            <div className="flex items-end justify-between gap-4 border-b border-[var(--color-ink)] pb-4">
+              <div>
+                <p className="mono-label">Paso 01</p>
+                <h2
+                  id="connections-title"
+                  className="mt-2 text-[28px] font-medium tracking-[-0.05em]"
+                >
+                  Tus conexiones
+                </h2>
+              </div>
+              <p className="hidden max-w-sm text-right text-[12px] leading-5 text-[var(--fg-secondary)] sm:block">
+                Si necesitas una cuenta, créala en otra pestaña. Luego vuelve y
+                conecta sólo para tu usuario.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2">
+              {connectionItems.map(
+                ({
+                  id,
+                  title,
+                  body,
+                  connected,
+                  href,
+                  signupHref,
+                  icon: Icon,
+                }) => (
+                  <article
+                    key={id}
+                    className="flex min-h-[170px] flex-col border-b border-x border-[var(--border-1)] bg-[var(--color-surface)] p-5 sm:p-6 md:first:border-r-0"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="grid h-10 w-10 place-items-center border border-[var(--color-ink)]">
+                        <Icon size={17} />
+                      </div>
+                      <span className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.13em]">
+                        {connected ? (
+                          <IconCheck size={12} />
+                        ) : (
+                          <span className="status-shape" />
+                        )}
+                        {connected ? "Conectado" : "Sin conectar"}
+                      </span>
                     </div>
-                    <span className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.13em]">
+                    <h3 className="mt-5 text-[21px] font-medium tracking-[-0.04em]">
+                      {title}
+                    </h3>
+                    <div className="mt-auto flex flex-col items-start justify-between gap-4 pt-3 sm:flex-row sm:items-end">
+                      <p className="text-[12px] leading-5 text-[var(--fg-secondary)]">
+                        {body}
+                      </p>
                       {connected ? (
-                        <IconCheck size={12} />
-                      ) : (
-                        <span className="status-shape" />
-                      )}
-                      {connected ? "Conectado" : "Sin conectar"}
-                    </span>
-                  </div>
-                  <h3 className="mt-5 text-[21px] font-medium tracking-[-0.04em]">
-                    {title}
-                  </h3>
-                  <div className="mt-auto flex flex-col items-start justify-between gap-4 pt-3 sm:flex-row sm:items-end">
-                    <p className="text-[12px] leading-5 text-[var(--fg-secondary)]">
-                      {body}
-                    </p>
-                    {connected ? (
-                      <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
                         <span className="inline-flex items-center gap-1 text-[11px] font-medium">
                           <IconCheck size={11} /> Listo
                         </span>
-                        <a
-                          href={href}
-                          className="btn-ghost !min-h-10 !px-3 text-center !leading-4"
-                        >
-                          Reconectar
-                        </a>
-                      </div>
-                    ) : (
-                      <div className="flex w-full gap-2 sm:w-auto">
-                        <a
-                          href={href}
-                          className="btn-primary flex-1 !min-h-10 !px-3 text-center !leading-4 sm:flex-none"
-                        >
-                          Conectar <IconArrowR size={12} />
-                        </a>
-                        <a
-                          href={signupHref}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-ghost flex-1 !min-h-10 !px-3 text-center !leading-4 sm:flex-none"
-                        >
-                          Crear cuenta
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </article>
-              ),
-            )}
-          </div>
-        </section>
+                      ) : (
+                        <div className="flex w-full gap-2 sm:w-auto">
+                          <a
+                            href={href}
+                            className="btn-primary flex-1 !min-h-10 !px-3 text-center !leading-4 sm:flex-none"
+                          >
+                            Conectar <IconArrowR size={12} />
+                          </a>
+                          <a
+                            href={signupHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-ghost flex-1 !min-h-10 !px-3 text-center !leading-4 sm:flex-none"
+                          >
+                            Crear cuenta
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                ),
+              )}
+            </div>
+          </section>
 
-        <ScopedCreateApp
-          githubConnected={githubConnected}
-          vercelConnected={vercelConnected}
-        />
+          <ScopedCreateApp
+            githubConnected={githubConnected}
+            vercelConnected={vercelConnected}
+          />
 
-        <section className="mt-12 sm:mt-16" aria-labelledby="projects-title">
-          <p className="mono-label">Paso 03</p>
-          <h2
-            id="projects-title"
-            className="mt-2 text-[28px] font-medium tracking-[-0.05em]"
+          <section
+            id="projects"
+            className="mt-12 scroll-mt-24 sm:mt-16"
+            aria-labelledby="projects-title"
           >
-            Tus proyectos
-          </h2>
-          {projects.length === 0 ? (
-            <div className="mt-5 border border-[var(--color-ink)] bg-[var(--color-surface)] p-6 sm:p-9">
-              <IconShield size={22} />
-              <h3 className="mt-5 text-[26px] font-medium tracking-[-0.045em]">
-                Aún no hay proyectos en este espacio.
-              </h3>
-              <p className="mt-3 max-w-xl text-[13px] leading-6 text-[var(--fg-secondary)]">
-                Puedes empezar desde cero con tus propias conexiones. Si alguien
-                comparte una sala con {email}, también aparecerá aquí sin
-                mezclar cuentas, repositorios ni secretos.
-              </p>
-            </div>
-          ) : (
-            <div className="mt-5 grid gap-3 md:grid-cols-2">
-              {projects.map((project) => {
-                const href =
-                  project.access_kind === "live"
-                    ? `/app/live/${encodeURIComponent(project.id)}`
-                    : `/workspace/proyecto/${encodeURIComponent(project.id)}`;
-                const destination = project.domain || project.vercel_url;
-                return (
-                  <Link
-                    key={project.id}
-                    href={href}
-                    className="group flex min-h-[210px] flex-col border border-[var(--border-1)] bg-[var(--color-surface)] p-5 transition-colors hover:border-[var(--color-ink)] sm:p-6"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.13em] text-[var(--fg-muted)]">
-                        <span className="status-shape" data-active="true" />
-                        {ROLE_LABEL[project.member_role] ?? project.member_role}
-                      </span>
-                      <IconLayout size={15} />
-                    </div>
-                    <h2 className="mt-8 text-[28px] font-medium tracking-[-0.05em]">
-                      {project.name}
-                    </h2>
-                    <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.11em] text-[var(--fg-muted)]">
-                      {project.status}
-                    </p>
-                    <div className="mt-auto flex items-end justify-between gap-4 pt-8">
-                      <span className="flex min-w-0 items-center gap-2 text-[10px] text-[var(--fg-secondary)]">
-                        <IconGlobe size={11} className="shrink-0" />
-                        <span className="truncate">
-                          {destination || "Sala privada"}
+            <p className="mono-label">Paso 03</p>
+            <h2
+              id="projects-title"
+              className="mt-2 text-[28px] font-medium tracking-[-0.05em]"
+            >
+              Tus proyectos
+            </h2>
+            {projects.length === 0 ? (
+              <div className="mt-5 border border-[var(--color-ink)] bg-[var(--color-surface)] p-6 sm:p-9">
+                <IconShield size={22} />
+                <h3 className="mt-5 text-[26px] font-medium tracking-[-0.045em]">
+                  Aún no hay proyectos en este espacio.
+                </h3>
+                <p className="mt-3 max-w-xl text-[13px] leading-6 text-[var(--fg-secondary)]">
+                  Puedes empezar desde cero con tus propias conexiones. Si
+                  alguien comparte una sala con {email}, también aparecerá aquí
+                  sin mezclar cuentas, repositorios ni secretos.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-5 grid gap-3 md:grid-cols-2">
+                {projects.map((project) => {
+                  const href =
+                    project.access_kind === "live"
+                      ? `/app/live/${encodeURIComponent(project.id)}`
+                      : `/workspace/proyecto/${encodeURIComponent(project.id)}`;
+                  const destination = project.domain || project.vercel_url;
+                  return (
+                    <Link
+                      key={project.id}
+                      href={href}
+                      className="group flex min-h-[210px] flex-col border border-[var(--border-1)] bg-[var(--color-surface)] p-5 transition-colors hover:border-[var(--color-ink)] sm:p-6"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <span className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.13em] text-[var(--fg-muted)]">
+                          <span className="status-shape" data-active="true" />
+                          {ROLE_LABEL[project.member_role] ??
+                            project.member_role}
                         </span>
-                      </span>
-                      <span className="inline-flex shrink-0 items-center gap-2 text-[11px] font-medium">
-                        Abrir{" "}
-                        <IconArrowR
-                          size={12}
-                          className="transition-transform group-hover:translate-x-1"
-                        />
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </section>
+                        <IconLayout size={15} />
+                      </div>
+                      <h2 className="mt-8 text-[28px] font-medium tracking-[-0.05em]">
+                        {project.name}
+                      </h2>
+                      <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.11em] text-[var(--fg-muted)]">
+                        {project.status}
+                      </p>
+                      <div className="mt-auto flex items-end justify-between gap-4 pt-8">
+                        <span className="flex min-w-0 items-center gap-2 text-[10px] text-[var(--fg-secondary)]">
+                          <IconGlobe size={11} className="shrink-0" />
+                          <span className="truncate">
+                            {destination || "Sala privada"}
+                          </span>
+                        </span>
+                        <span className="inline-flex shrink-0 items-center gap-2 text-[11px] font-medium">
+                          Abrir{" "}
+                          <IconArrowR
+                            size={12}
+                            className="transition-transform group-hover:translate-x-1"
+                          />
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
     </main>
   );

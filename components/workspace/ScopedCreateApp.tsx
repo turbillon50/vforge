@@ -225,7 +225,11 @@ export function ScopedCreateApp({
       : "idle";
 
   return (
-    <section className="mt-12 sm:mt-16" aria-labelledby="create-app-title">
+    <section
+      id="create-app"
+      className="mt-12 scroll-mt-24 sm:mt-16"
+      aria-labelledby="create-app-title"
+    >
       <div className="flex flex-col gap-4 border-b border-[var(--color-ink)] pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="mono-label">Paso 02 · Constructor</p>
