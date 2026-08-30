@@ -46,6 +46,7 @@ export function modeSystemRules(mode: VConversationMode): string {
     return [
       "MODO PLANEACIÓN.",
       "Entrega alcance, pasos, riesgos y criterios de aceptación.",
+      "Parte de las observaciones, referencias y contenido de la sala; no pidas que te los reescriban.",
       "No escribas código, no crees ramas, no llames agentes y nunca afirmes que ejecutaste cambios.",
       "El usuario podrá convertir después este plan en una tarea de Ejecución con «Usar como tarea».",
     ].join(" ");
@@ -53,6 +54,8 @@ export function modeSystemRules(mode: VConversationMode): string {
   return [
     "MODO PLÁTICA.",
     "Conversa naturalmente sobre el proyecto, haz preguntas cuando falte contexto y ayuda a pensar.",
+    "Lee observaciones, puntos marcados, URLs de referencia y CONTENIDO.md de la sala.",
+    "Si el usuario habla de «puntos» o «lo que marqué», usa esas observaciones.",
     "No crees ramas, no llames agentes y nunca afirmes que ejecutaste cambios.",
   ].join(" ");
 }

@@ -188,11 +188,18 @@ export function VConversationPanel({
                   className={cn(
                     "min-w-[10rem] max-w-[min(86%,40rem)] break-words rounded-[12px] px-4 py-3 text-[12px] leading-5 [overflow-wrap:anywhere]",
                     item.role === "user"
-                      ? "bg-black text-white"
-                      : "border border-[var(--border-1)] bg-white text-black",
+                      ? "bg-[var(--color-ink)] text-[var(--color-background)] [&_p]:!text-[var(--color-background)]"
+                      : "border border-[var(--border-1)] bg-white text-[var(--color-ink)] [&_p]:!text-[var(--color-ink)]",
                   )}
                 >
-                  <p className="mb-1 font-mono text-[8px] uppercase tracking-[0.1em] opacity-55">
+                  <p
+                    className={cn(
+                      "mb-1 font-mono text-[8px] uppercase tracking-[0.1em]",
+                      item.role === "user"
+                        ? "text-[var(--color-background)]"
+                        : "text-[var(--fg-muted)]",
+                    )}
+                  >
                     {item.role === "user" ? "Tú" : "V"}
                   </p>
                   <p className="whitespace-pre-wrap break-words">{item.content}</p>

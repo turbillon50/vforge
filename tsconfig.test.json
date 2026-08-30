@@ -22,6 +22,7 @@
     "lib/live/review-context.ts",
     "lib/live/archive-text.ts",
     "lib/forge/provider-errors.ts",
-    "lib/forge/ask-v-policy.ts"
+    "lib/forge/ask-v-policy.ts",
+    "lib/live/room-context.ts"
   ]
 }
