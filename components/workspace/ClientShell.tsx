@@ -16,9 +16,13 @@ import {
   IconMenu,
   IconX,
 } from "@/components/brand/VFIcons";
-import { AccountMenu } from "@/components/account/AccountMenu";
+import { UserButton, useUser } from "@clerk/nextjs";
+import { monochromeClerkAppearance } from "@/components/auth/ClerkShell";
 
-type IconComponent = (props: { size?: number; className?: string }) => React.ReactElement | null;
+type IconComponent = (props: {
+  size?: number;
+  className?: string;
+}) => React.ReactElement | null;
 
 type NavItem = {
   href: string;
@@ -28,13 +32,48 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
-  { href: "/workspace", label: "Inicio", description: "Panel principal", Icon: IconHome },
-  { href: "/workspace/studio", label: "Construir", description: "Editor de proyectos", Icon: IconCpu },
-  { href: "/workspace/apps", label: "Apps", description: "Tus aplicaciones", Icon: IconRocket },
-  { href: "/workspace/actividad", label: "Actividad", description: "Registro de actividades", Icon: IconActivity },
-  { href: "/workspace/conexiones", label: "Conexiones", description: "Gestión de conexiones", Icon: IconKey },
-  { href: "/workspace/cobros", label: "Cobros", description: "Historial de pagos", Icon: IconCreditCard },
-  { href: "/workspace/perfil", label: "Perfil", description: "Configuración de cuenta", Icon: IconUsers },
+  {
+    href: "/workspace",
+    label: "Inicio",
+    description: "Panel principal",
+    Icon: IconHome,
+  },
+  {
+    href: "/workspace/studio",
+    label: "Construir",
+    description: "Editor de proyectos",
+    Icon: IconCpu,
+  },
+  {
+    href: "/workspace/apps",
+    label: "Apps",
+    description: "Tus aplicaciones",
+    Icon: IconRocket,
+  },
+  {
+    href: "/workspace/actividad",
+    label: "Actividad",
+    description: "Registro de actividades",
+    Icon: IconActivity,
+  },
+  {
+    href: "/workspace/conexiones",
+    label: "Conexiones",
+    description: "Gestión de conexiones",
+    Icon: IconKey,
+  },
+  {
+    href: "/workspace/cobros",
+    label: "Cobros",
+    description: "Historial de pagos",
+    Icon: IconCreditCard,
+  },
+  {
+    href: "/workspace/perfil",
+    label: "Perfil",
+    description: "Configuración de cuenta",
+    Icon: IconUsers,
+  },
 ];
 
 function routeIsActive(pathname: string, href: string) {
@@ -51,12 +90,19 @@ function Sidebar({
   return (
     <div className="flex h-full flex-col bg-white text-black border-r border-[var(--border-1)]">
       <div className="border-b border-[var(--border-1)] px-5 py-5">
-        <Link href="/workspace" onClick={onNavigate} aria-label="VForge, inicio">
+        <Link
+          href="/workspace"
+          onClick={onNavigate}
+          aria-label="VForge, inicio"
+        >
           <VWordmark />
         </Link>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-5" aria-label="Navegación principal">
+      <nav
+        className="flex-1 overflow-y-auto px-3 py-5"
+        aria-label="Navegación principal"
+      >
         {NAV.map(({ href, label, description, Icon }) => {
           const active = routeIsActive(pathname, href);
           return (
@@ -69,13 +115,23 @@ function Sidebar({
                 "group flex items-center gap-3 rounded-md px-3 py-2 transition",
                 active
                   ? "border-l-4 border-black bg-black text-white"
-                  : "bg-transparent text-black hover:bg-gray-100"
+                  : "bg-transparent text-black hover:bg-gray-100",
               )}
             >
-              <Icon size={16} className={cn(active ? "text-white" : "text-black")} />
+              <Icon
+                size={16}
+                className={cn(active ? "text-white" : "text-black")}
+              />
               <div className="flex flex-col">
                 <span className="font-medium">{label}</span>
-                <span className="text-xs text-gray-600">{description}</span>
+                <span
+                  className={cn(
+                    "text-xs",
+                    active ? "text-white/55" : "text-[var(--fg-muted)]",
+                  )}
+                >
+                  {description}
+                </span>
               </div>
             </Link>
           );
@@ -113,8 +169,9 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     "/workspace/perfil": "Perfil",
   };
   const title =
-    Object.entries(TITLE_MAP).find(([path]) => routeIsActive(pathname, path))?.[1] ??
-    "VForge";
+    Object.entries(TITLE_MAP).find(([path]) =>
+      routeIsActive(pathname, path),
+    )?.[1] ?? "VForge";
 
   return (
     <div className="flex h-dvh overflow-hidden bg-[var(--color-background)] text-[var(--color-ink)] md:pl-[220px]">
@@ -145,18 +202,26 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
             >
               <IconX size={14} />
             </button>
-            <Sidebar pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
+            <Sidebar
+              pathname={pathname}
+              onNavigate={() => setDrawerOpen(false)}
+            />
           </aside>
         </div>
       )}
 
       {/* Main content area */}
-      <div className={cn("flex flex-col flex-1", isStudio ? "h-full overflow-hidden" : "min-h-svh")}>
+      <div
+        className={cn(
+          "flex flex-col flex-1",
+          isStudio ? "h-full overflow-hidden" : "min-h-svh",
+        )}
+      >
         <header
           className={cn(
             "flex h-[58px] items-center justify-between border-b border-[var(--border-1)]",
             isStudio ? "" : "sticky top-0",
-            "bg-white/95 px-4 md:px-6"
+            "bg-white/95 px-4 md:px-6",
           )}
         >
           <div className="flex items-center gap-3">
@@ -169,23 +234,46 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
               <IconMenu size={16} />
             </button>
             <div className="flex flex-col">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-gray-600">VForge</p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-gray-600">
+                VForge
+              </p>
               <h1 className="text-[15px] font-medium">{title}</h1>
             </div>
           </div>
-          <AccountMenu />
+          <ClientAccountMenu />
         </header>
 
         <main
           className={cn(
             isStudio
               ? "h-[calc(100svh-58px)] overflow-hidden"
-              : "flex-1 overflow-auto p-6 md:p-8"
+              : "flex-1 overflow-auto p-6 md:p-8",
           )}
         >
           {children}
         </main>
       </div>
+    </div>
+  );
+}
+
+function ClientAccountMenu() {
+  const { user } = useUser();
+  return (
+    <div className="flex items-center gap-2 rounded-full border border-[var(--border-1)] bg-white py-1 pl-1 pr-3">
+      <UserButton
+        afterSignOutUrl="/"
+        appearance={{
+          ...monochromeClerkAppearance,
+          elements: {
+            ...monochromeClerkAppearance.elements,
+            avatarBox: "h-7 w-7",
+          },
+        }}
+      />
+      <span className="hidden max-w-[110px] truncate text-[11px] font-medium sm:block">
+        {user?.firstName ?? user?.username ?? "Cuenta"}
+      </span>
     </div>
   );
 }

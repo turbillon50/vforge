@@ -61,7 +61,9 @@ export function PerfilView() {
               <p className="text-sm font-semibold text-[var(--color-ink)]">
                 {label}
               </p>
-              <p className={`mt-1 text-xs ${on ? "text-green-400" : "text-[var(--fg-secondary)]"}`}>
+              <p
+                className={`mt-1 text-xs ${on ? "text-green-400" : "text-[var(--fg-secondary)]"}`}
+              >
                 {on ? "Conectado" : "Sin conectar"}
               </p>
             </div>

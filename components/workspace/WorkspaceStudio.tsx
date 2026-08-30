@@ -38,14 +38,14 @@ export function WorkspaceStudio() {
   const [apps, setApps] = useState<App[]>([]);
   const [active, setActive] = useState<App | null>(null);
   const [tab, setTab] = useState<"preview" | "codigo" | "consola" | "detalles">(
-    "preview"
+    "preview",
   );
   const [conn, setConn] = useState<string[]>([]);
   const [files, setFiles] = useState<
     { name: string; path: string; type: string }[]
   >([]);
   const [code, setCode] = useState<{ path: string; content: string } | null>(
-    null
+    null,
   );
   const [saving, setSaving] = useState(false);
   const [split, setSplit] = useState(false);
@@ -99,7 +99,7 @@ export function WorkspaceStudio() {
       "/api/forja/app-files?app=" +
         active.id +
         "&path=" +
-        encodeURIComponent(path)
+        encodeURIComponent(path),
     )
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
@@ -141,7 +141,7 @@ export function WorkspaceStudio() {
       setDepMsg(
         d.ok
           ? "Publicado" + (d.url ? ": " + d.url : "")
-          : "Error: " + (d.error || "deploy")
+          : "Error: " + (d.error || "deploy"),
       );
     } catch {
       setDepMsg("Error de red");
@@ -158,7 +158,7 @@ export function WorkspaceStudio() {
     const t = input.trim();
     if (!t || busy) return;
     setInput("");
-    const next = [...msgs, { role: "user", content: t }];
+    const next: Msg[] = [...msgs, { role: "user", content: t }];
     setMsgs(next);
     setBusy(true);
     try {
@@ -292,7 +292,9 @@ export function WorkspaceStudio() {
               </div>
             ))}
             {busy && (
-              <p className="text-sm text-[var(--fg-muted)]">V está procesando…</p>
+              <p className="text-sm text-[var(--fg-muted)]">
+                V está procesando…
+              </p>
             )}
             <div ref={endRef} />
           </div>
@@ -415,9 +417,7 @@ export function WorkspaceStudio() {
                 <pre className="font-mono text-sm text-[var(--color-ink)]">
                   <code>
                     $ vforge dev{"\n"}
-                    {active
-                      ? `Build OK - ${active.name}`
-                      : "Sin app activa."}
+                    {active ? `Build OK - ${active.name}` : "Sin app activa."}
                     {"\n"}
                     {active?.deploy_url
                       ? `Sirviendo en ${active.deploy_url}`

@@ -21,7 +21,9 @@ const LLM_PROVIDERS = [
 ];
 
 function StepDots({ status }: { status: OnboardingStatus }) {
-  const done = STEPS.filter((s) => status[s.id as keyof OnboardingStatus]).length;
+  const done = STEPS.filter(
+    (s) => status[s.id as keyof OnboardingStatus],
+  ).length;
   return (
     <div className="flex items-center gap-3 mb-7">
       {STEPS.map((s, i) => {
@@ -45,13 +47,15 @@ function StepDots({ status }: { status: OnboardingStatus }) {
                 completed
                   ? "text-[var(--fg-secondary)]"
                   : active
-                  ? "text-[var(--color-ink)]"
-                  : "text-[var(--fg-secondary)]"
+                    ? "text-[var(--color-ink)]"
+                    : "text-[var(--fg-secondary)]"
               }`}
             >
               {s.label}
             </span>
-            {i < STEPS.length - 1 && <div className="h-px w-6 bg-[var(--border-1)]" />}
+            {i < STEPS.length - 1 && (
+              <div className="h-px w-6 bg-[var(--border-1)]" />
+            )}
           </div>
         );
       })}
@@ -69,7 +73,9 @@ function StatusBadge({ connected }: { connected: boolean }) {
             : "bg-white border-[var(--border-1)] text-[var(--fg-secondary)]"
         }`}
     >
-      <span className={`block h-1 w-1 rounded-full ${connected ? "bg-green-600" : "bg-[var(--fg-secondary)]"}`} />
+      <span
+        className={`block h-1 w-1 rounded-full ${connected ? "bg-green-600" : "bg-[var(--fg-secondary)]"}`}
+      />
       {connected ? "Conectado" : "Sin conectar"}
     </span>
   );
@@ -81,13 +87,20 @@ interface CardProps {
   connected: boolean;
   children?: React.ReactNode;
 }
-function ConnectionCard({ title, description, connected, children }: CardProps) {
+function ConnectionCard({
+  title,
+  description,
+  connected,
+  children,
+}: CardProps) {
   return (
     <div
       className={`rounded-lg p-4 mb-2 border ${connected ? "bg-white" : "bg-white"} border-[var(--border-1)]`}
     >
       <div className="flex items-start justify-between mb-1">
-        <span className="text-sm font-semibold text-[var(--color-ink)]">{title}</span>
+        <span className="text-sm font-semibold text-[var(--color-ink)]">
+          {title}
+        </span>
         <StatusBadge connected={connected} />
       </div>
       <p className="text-xs text-[var(--fg-secondary)] mb-3">{description}</p>
@@ -97,7 +110,11 @@ function ConnectionCard({ title, description, connected, children }: CardProps) 
 }
 
 export function ConexionesView() {
-  const [status, setStatus] = useState<OnboardingStatus>({ llm: false, vercel: false, github: false });
+  const [status, setStatus] = useState<OnboardingStatus>({
+    llm: false,
+    vercel: false,
+    github: false,
+  });
   const [loading, setLoading] = useState(true);
   const [vercelToken, setVercelToken] = useState("");
   const [vercelTeam, setVercelTeam] = useState("");
@@ -176,7 +193,8 @@ export function ConexionesView() {
   const btnGhost = (disabled: boolean) =>
     `px-3 py-2 rounded-md text-sm font-medium ${disabled ? "bg-white text-[var(--fg-secondary)] cursor-not-allowed border border-[var(--border-1)]" : "bg-white text-[var(--color-ink)] border border-[var(--border-1)] hover:bg-[var(--border-1)]"} `;
 
-  const btnConfig = "px-3 py-2 rounded-md text-sm font-medium bg-white text-[var(--color-ink)] border border-[var(--border-1)] hover:bg-[var(--border-1)]";
+  const btnConfig =
+    "px-3 py-2 rounded-md text-sm font-medium bg-white text-[var(--color-ink)] border border-[var(--border-1)] hover:bg-[var(--border-1)]";
 
   if (loading) {
     return (
@@ -189,9 +207,12 @@ export function ConexionesView() {
   return (
     <div className="mx-auto max-w-lg py-8 bg-white">
       <div className="mb-7">
-        <h1 className="text-lg font-semibold text-[var(--color-ink)]">Conexiones</h1>
+        <h1 className="text-lg font-semibold text-[var(--color-ink)]">
+          Conexiones
+        </h1>
         <p className="text-sm text-[var(--fg-secondary)]">
-          Vincula las herramientas que VForge necesita para construir y desplegar.
+          Vincula las herramientas que VForge necesita para construir y
+          desplegar.
         </p>
       </div>
 
@@ -217,7 +238,10 @@ export function ConexionesView() {
         {!status.llm && (
           <>
             {!llmExpanded ? (
-              <button className={btnConfig} onClick={() => setLlmExpanded(true)}>
+              <button
+                className={btnConfig}
+                onClick={() => setLlmExpanded(true)}
+              >
                 Configurar
               </button>
             ) : (
@@ -234,7 +258,9 @@ export function ConexionesView() {
                       }`}
                     >
                       <div className="font-medium">{p.name}</div>
-                      <div className="text-xs text-[var(--fg-secondary)]">{p.desc}</div>
+                      <div className="text-xs text-[var(--fg-secondary)]">
+                        {p.desc}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -278,7 +304,10 @@ export function ConexionesView() {
         {!status.vercel && (
           <>
             {!vercelExpanded ? (
-              <button className={btnConfig} onClick={() => setVercelExpanded(true)}>
+              <button
+                className={btnConfig}
+                onClick={() => setVercelExpanded(true)}
+              >
                 Configurar
               </button>
             ) : (
