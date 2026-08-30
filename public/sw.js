@@ -1,7 +1,9 @@
 // VForge minimal service worker — offline shell + network-first for documents
 // Bump VERSION on every deploy where you want forced cache invalidation
-const VERSION = "vforge-scoped-workspace-2026-08-30-1";
-const SHELL = ["/", "/app/chat", "/offline"];
+const VERSION = "vforge-project-repos-2026-08-30-2";
+// Nunca precachear pantallas autenticadas: su HTML debe corresponder siempre
+// al deployment actual y a la sesión activa.
+const SHELL = ["/", "/offline"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).catch(() => {}));
@@ -34,10 +36,26 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  const isAuthenticatedApp =
+    url.pathname.startsWith("/app") ||
+    url.pathname.startsWith("/workspace") ||
+    url.pathname.startsWith("/onboarding") ||
+    url.pathname.startsWith("/sign-in") ||
+    url.pathname.startsWith("/sign-up");
+
+  // Las consolas privadas no usan fallback cacheado. Un catálogo viejo es más
+  // peligroso que mostrar la pantalla offline correcta.
+  if (isAuthenticatedApp) {
+    event.respondWith(
+      fetch(new Request(req, { cache: "no-store" })).catch(() => caches.match("/offline"))
+    );
+    return;
+  }
+
   // Network-first para HTML/navigation — siempre intenta versión nueva.
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req)
+      fetch(new Request(req, { cache: "no-store" }))
         .then((res) => {
           const copy = res.clone();
           caches.open(VERSION).then((c) => c.put(req, copy));
