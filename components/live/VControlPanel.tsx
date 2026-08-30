@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { VConversationPanel } from "@/components/live/VConversationPanel";
+import { RunLiveConsole } from "@/components/live/RunLiveConsole";
 import { repositoryGroupLabel } from "@/lib/projects/repository-groups";
 import {
   IconBranch,
@@ -175,7 +176,7 @@ export function VControlPanel({
 
   useEffect(() => {
     void load();
-    const timer = window.setInterval(() => void load(), 3000);
+    const timer = window.setInterval(() => void load(), 1500);
     return () => window.clearInterval(timer);
   }, [load]);
 
@@ -271,6 +272,36 @@ export function VControlPanel({
     }
   }
 
+  async function nudgeRun(message: string) {
+    if (!selected || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `/api/live/${encodeURIComponent(projectId)}/runs/${encodeURIComponent(selected.id)}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "nudge", message }),
+        },
+      );
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      if (!response.ok)
+        throw new Error(payload?.error || "Grok no recibió el mensaje.");
+      await load();
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Grok no recibió el mensaje.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-[8px] border border-[var(--border-1)] bg-white">
       <header className="flex min-h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--border-1)] px-3">
@@ -289,7 +320,7 @@ export function VControlPanel({
         </div>
         <div className="flex items-center gap-2">
           <span className="hidden items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)] sm:flex">
-            <span className="status-shape" data-active /> sincronización 3 s
+            <span className="status-shape" data-active /> sincronización 1.5 s
           </span>
           <button
             type="button"
@@ -544,6 +575,16 @@ export function VControlPanel({
                       </p>
                     </div>
                   </section>
+
+                  <RunLiveConsole
+                    createdAt={selected.created_at}
+                    status={selected.status}
+                    jobs={jobMap}
+                    jobRefs={selected.queue_jobs}
+                    canWrite={canWrite}
+                    busy={busy}
+                    onNudge={nudgeRun}
+                  />
 
                   <section className="rounded-[8px] border border-[var(--border-1)] bg-white">
                     <header className="border-b border-[var(--border-1)] px-3 py-2">
