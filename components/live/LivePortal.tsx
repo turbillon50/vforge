@@ -16,18 +16,13 @@ import { VWordmark } from "@/components/brand/VMark";
 import {
   IconActivity,
   IconArrowL,
-  IconChat,
-  IconCheck,
-  IconCopy,
   IconExtLink,
   IconLayout,
   IconLoader,
   IconMaximize,
   IconMenu,
   IconRefresh,
-  IconSend,
   IconShield,
-  IconSparkles,
   IconUsers,
   IconX,
 } from "@/components/brand/VFIcons";
@@ -58,14 +53,6 @@ interface EventRow {
   ts: string;
 }
 
-interface CommentRow {
-  id: string;
-  author_email: string;
-  author_name: string | null;
-  body: string;
-  created_at: string;
-}
-
 const ROLE_LABEL: Record<LiveRole, string> = {
   owner: "Owner",
   reviewer: "Revisor",
@@ -79,6 +66,39 @@ type WorkspacePanelId =
   | "activity"
   | "comments";
 type WorkspacePreset = "balanced" | "previews" | "review";
+type PreviewKind = "desktop" | "mobile" | "admin";
+
+interface PreviewSpec {
+  width: number;
+  height: number;
+  frameWidth: number;
+  frameHeight: number;
+  label: string;
+}
+
+const PREVIEW_SPECS: Record<PreviewKind, PreviewSpec> = {
+  desktop: {
+    width: 1440,
+    height: 900,
+    frameWidth: 1440,
+    frameHeight: 900,
+    label: "1440 × 900",
+  },
+  mobile: {
+    width: 390,
+    height: 844,
+    frameWidth: 414,
+    frameHeight: 884,
+    label: "390 × 844",
+  },
+  admin: {
+    width: 1280,
+    height: 800,
+    frameWidth: 1280,
+    frameHeight: 800,
+    label: "1280 × 800",
+  },
+};
 
 const PANEL_LABELS: Record<WorkspacePanelId, string> = {
   desktop: "Escritorio",
@@ -293,6 +313,15 @@ function LiveWorkspace({
   }, []);
 
   useEffect(() => {
+    if (!focusedPanel) return;
+    const restoreWorkspace = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFocusedPanel(null);
+    };
+    window.addEventListener("keydown", restoreWorkspace);
+    return () => window.removeEventListener("keydown", restoreWorkspace);
+  }, [focusedPanel]);
+
+  useEffect(() => {
     try {
       const saved = window.localStorage.getItem(storageKey);
       if (!saved) return;
@@ -424,7 +453,7 @@ function LiveWorkspace({
       </div>
 
       {focusedContent ? (
-        <div className="h-[calc(100dvh-160px)] min-h-[520px] overflow-hidden rounded-[8px] bg-white">
+        <div className="h-[calc(100dvh-160px)] min-h-[520px] overflow-hidden rounded-[8px] bg-white" aria-label="Panel ampliado">
           {focusedContent}
         </div>
       ) : (
@@ -627,12 +656,53 @@ function Viewport({
 }) {
   const [refreshKey, setRefreshKey] = useState(0);
   const url = useMemo(() => normalizeUrl(rawUrl), [rawUrl]);
+  const spec = PREVIEW_SPECS[kind];
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const frameClass =
     fill
       ? "min-h-0 flex-1"
       : kind === "mobile"
       ? "min-h-[520px] aspect-[9/16] xl:min-h-[380px] 2xl:min-h-[520px]"
       : "min-h-[380px] aspect-[16/10]";
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage || typeof ResizeObserver === "undefined") return;
+
+    const updateSize = (width: number, height: number) => {
+      setStageSize((current) =>
+        Math.abs(current.width - width) < 0.5 &&
+        Math.abs(current.height - height) < 0.5
+          ? current
+          : { width, height },
+      );
+    };
+
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return;
+      updateSize(entry.contentRect.width, entry.contentRect.height);
+    });
+    observer.observe(stage);
+    updateSize(stage.clientWidth, stage.clientHeight);
+    return () => observer.disconnect();
+  }, [kind]);
+
+  const stagePadding = kind === "mobile" ? 20 : 12;
+  const previewScale =
+    stageSize.width > 0 && stageSize.height > 0
+      ? Math.min(
+          Math.max(1, stageSize.width - stagePadding * 2) / spec.frameWidth,
+          Math.max(1, stageSize.height - stagePadding * 2) / spec.frameHeight,
+          1,
+        )
+      : 1;
+  const scaledHeight = spec.frameHeight * previewScale;
+  const previewTop = Math.max(
+    stagePadding,
+    (stageSize.height - scaledHeight) / 2,
+  );
+  const scaleLabel = stageSize.width > 0 ? `${Math.round(previewScale * 100)}%` : "…";
 
   return (
     <section
@@ -642,11 +712,18 @@ function Viewport({
         className,
       )}
     >
-      <header className="flex h-10 shrink-0 items-center justify-between border-b border-[var(--border-1)] px-3">
+      <header
+        className="flex h-10 shrink-0 items-center justify-between border-b border-[var(--border-1)] px-3"
+        onDoubleClick={onFocus}
+        title={onFocus ? (focused ? "Doble clic para restaurar" : "Doble clic para ampliar") : undefined}
+      >
         <div className="flex items-center gap-2">
           {kind === "admin" ? <IconShield size={12} /> : <IconLayout size={12} />}
           <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
             {title}
+          </span>
+          <span className="hidden font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)] sm:inline">
+            {spec.label} · {scaleLabel}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -677,19 +754,56 @@ function Viewport({
       </header>
 
       {url ? (
-        <div className={cn("relative w-full overflow-hidden bg-white", frameClass)}>
-          <iframe
-            key={refreshKey}
-            src={url}
-            title={"Vista " + title + " de " + rawUrl}
+        <div
+          ref={stageRef}
+          className={cn("relative w-full overflow-hidden bg-[var(--color-surface)]", frameClass)}
+          onDoubleClick={(event) => {
+            if (event.target === event.currentTarget) onFocus?.();
+          }}
+        >
+          <div
             className={cn(
-              "absolute inset-0 h-full w-full border-0 bg-white",
-              kind === "mobile" && fill && "left-1/2 max-w-[430px] -translate-x-1/2 border-x border-[var(--border-1)]",
+              "absolute left-1/2 overflow-hidden bg-white opacity-0 transition-opacity duration-150",
+              stageSize.width > 0 && "opacity-100",
+              kind === "mobile"
+                ? "rounded-[30px] border-[6px] border-black shadow-lg"
+                : "border border-[var(--border-1)] shadow-lg",
             )}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-          />
+            style={{
+              top: previewTop,
+              width: spec.frameWidth,
+              height: spec.frameHeight,
+              transform: `translateX(-50%) scale(${previewScale})`,
+              transformOrigin: "top center",
+            }}
+          >
+            {kind === "mobile" ? (
+              <>
+                <div className="absolute left-1/2 top-[9px] z-10 h-[6px] w-[72px] -translate-x-1/2 rounded-full bg-black" aria-hidden="true" />
+                <iframe
+                  key={refreshKey}
+                  src={url}
+                  title={"Vista móvil real de " + title}
+                  className="absolute left-[6px] top-[28px] border-0 bg-white"
+                  style={{ width: spec.width, height: spec.height }}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                />
+              </>
+            ) : (
+              <iframe
+                key={refreshKey}
+                src={url}
+                title={`Vista ${kind === "admin" ? "administrativa" : "de escritorio"} de ${title}`}
+                className="absolute inset-0 border-0 bg-white"
+                style={{ width: spec.width, height: spec.height }}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+              />
+            )}
+          </div>
         </div>
       ) : (
         <div className={cn("grid w-full place-items-center bg-white p-6 text-center", frameClass)}>
@@ -698,7 +812,9 @@ function Viewport({
               Sin URL para {title.toLowerCase()}
             </p>
             <p className="mt-2 max-w-xs text-[10px] leading-4 text-[var(--fg-muted)]">
-              Esta vista aparecerá cuando el proyecto tenga una URL autorizada.
+              {kind === "admin"
+                ? "Configura la URL del panel administrativo del proyecto. La vista pública no se usará como sustituto."
+                : "Esta vista aparecerá cuando el proyecto tenga una URL autorizada."}
             </p>
           </div>
         </div>

@@ -43,6 +43,21 @@ function withAdminEmbed(admin) {
   }
 }
 
+function distinctAdminUrl(admin, publicUrl) {
+  if (!admin) return null;
+  if (!publicUrl) return admin;
+  try {
+    const candidate = new URL(admin);
+    const published = new URL(publicUrl);
+    const sameSurface =
+      candidate.origin === published.origin &&
+      candidate.pathname.replace(/\/+$/, "") === published.pathname.replace(/\/+$/, "");
+    return sameSurface ? null : admin;
+  } catch {
+    return null;
+  }
+}
+
 export function resolveProjectViewportUrls(project) {
   const publishedFallback =
     normalizePublishedUrl(project.vercel_url) ??
@@ -55,8 +70,7 @@ export function resolveProjectViewportUrls(project) {
       normalizePublishedUrl(project.desktop_url) ?? publishedFallback,
     mobile_url:
       normalizePublishedUrl(project.mobile_url) ?? publishedFallback,
-    admin_url: withAdminEmbed(
-      explicitAdmin ?? resolveInstitutionalAdminUrl(publishedFallback),
-    ),
+    // La API no inventa paneles: /admin debe existir y quedar guardado.
+    admin_url: withAdminEmbed(distinctAdminUrl(explicitAdmin, publishedFallback)),
   };
 }

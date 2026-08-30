@@ -60,6 +60,25 @@ function withAdminEmbed(admin: string | null): string | null {
   }
 }
 
+function distinctAdminUrl(
+  admin: string | null,
+  publicUrl: string | null,
+): string | null {
+  if (!admin) return null;
+  if (!publicUrl) return admin;
+  try {
+    const candidate = new URL(admin);
+    const published = new URL(publicUrl);
+    const sameSurface =
+      candidate.origin === published.origin &&
+      candidate.pathname.replace(/\/+$/, "") ===
+        published.pathname.replace(/\/+$/, "");
+    return sameSurface ? null : admin;
+  } catch {
+    return null;
+  }
+}
+
 export function resolveProjectViewportUrls(
   project: ProjectViewportFields,
 ): ResolvedProjectViewports {
@@ -74,8 +93,8 @@ export function resolveProjectViewportUrls(
       normalizePublishedUrl(project.desktop_url) ?? publishedFallback,
     mobile_url:
       normalizePublishedUrl(project.mobile_url) ?? publishedFallback,
-    admin_url: withAdminEmbed(
-      explicitAdmin ?? resolveInstitutionalAdminUrl(publishedFallback),
-    ),
+    // Administración sólo existe cuando el proyecto declara una superficie
+    // distinta. Inventar /admin produce 404 y usar la landing pública engaña.
+    admin_url: withAdminEmbed(distinctAdminUrl(explicitAdmin, publishedFallback)),
   };
 }

@@ -13,9 +13,12 @@ https://{dominio-o-vercel}/admin
 `resolveProjectViewportUrls`:
 
 1. Si `projects.admin_url` está definida → se usa tal cual.
-2. Si no → se deriva `{vercel_url|domain}/admin`.
+2. Si coincide con la landing pública → se rechaza como panel administrativo.
+3. Si no está definida → la sala muestra “Administración no configurada”.
 
-Así el viewport **Administración** deja de quedar vacío en proyectos que ya tienen deploy pero nunca guardaron `admin_url`.
+La ruta `/admin` debe existir y guardarse explícitamente después de verificarla.
+VForge no inventa la ruta porque una app puede responder 404 o reutilizar la
+landing, lo que hacía que la sala mostrara una administración falsa.
 
 ## Qué no es
 

@@ -27,20 +27,20 @@ describe("resolveInstitutionalAdminUrl", () => {
   it("añade /admin al origen del proyecto", () => {
     assert.equal(
       resolveInstitutionalAdminUrl("https://ssante.life"),
-      "https://ssante.life/admin",
+      "https://ssante.life/admin?embed=1",
     );
   });
 
   it("no duplica /admin", () => {
     assert.equal(
       resolveInstitutionalAdminUrl("https://ssante.life/admin"),
-      "https://ssante.life/admin",
+      "https://ssante.life/admin?embed=1",
     );
   });
 });
 
 describe("resolveProjectViewportUrls", () => {
-  it("infiere admin institucional cuando no hay admin_url", () => {
+  it("no inventa administración cuando no hay admin_url", () => {
     const resolved = resolveProjectViewportUrls({
       desktop_url: null,
       mobile_url: null,
@@ -50,7 +50,7 @@ describe("resolveProjectViewportUrls", () => {
     });
     assert.equal(resolved.desktop_url, "https://lu-spa.vercel.app/");
     assert.equal(resolved.mobile_url, "https://lu-spa.vercel.app/");
-    assert.equal(resolved.admin_url, "https://lu-spa.vercel.app/admin");
+    assert.equal(resolved.admin_url, null);
   });
 
   it("respeta admin_url explícita", () => {
@@ -61,18 +61,17 @@ describe("resolveProjectViewportUrls", () => {
       vercel_url: null,
       domain: null,
     });
-    assert.equal(resolved.admin_url, "https://app.example.com/dashboard");
+    assert.equal(resolved.admin_url, "https://app.example.com/dashboard?embed=1");
   });
 
-  it("prioriza domain para admin base", () => {
+  it("rechaza usar la misma landing como administración", () => {
     const resolved = resolveProjectViewportUrls({
       desktop_url: null,
       mobile_url: null,
-      admin_url: null,
+      admin_url: "https://x.vercel.app/",
       vercel_url: "https://x.vercel.app",
       domain: "ssante.life",
     });
-    // vercel_url gana como publishedFallback (mismo orden histórico)
-    assert.equal(resolved.admin_url, "https://x.vercel.app/admin");
+    assert.equal(resolved.admin_url, null);
   });
 });
