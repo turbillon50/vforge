@@ -21,6 +21,7 @@ import {
   persistRoomMemory,
 } from "@/lib/live/v-factory-hands";
 import { looksLikeWorkOrder } from "@/lib/live/work-order";
+import { startOwnerGrokRun } from "@/lib/live/start-owner-run";
 import { recordCerebrasPulse, todayCerebrasUsage } from "@/lib/forge/cerebras-pulse";
 import {
   extractMemoryBlocks,
@@ -151,29 +152,18 @@ export async function POST(
     let reply = extracted.cleaned.slice(0, 12000);
     let runId: string | null = null;
     if (looksLikeWorkOrder(spoken) && repository) {
-      const queued = await fetch(
-        new URL(`/api/live/${encodeURIComponent(projectId)}/runs`, req.url),
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            cookie: req.headers.get("cookie") ?? "",
-          },
-          body: JSON.stringify({
-            instruction: spoken,
-            executor: "grok",
-            repository: repository.repo_full_name,
-          }),
-        },
-      );
-      const body = (await queued.json().catch(() => null)) as {
-        run?: { id?: string };
-        error?: string;
-      } | null;
-      runId = body?.run?.id ?? null;
-      reply = runId
-        ? `${reply}\n\nLo mandé a Hetzner. Mira la terminal.`
-        : `${reply}\n\nNo pude encolar en Hetzner${body?.error ? `: ${body.error}` : "."}`;
+      const queued = await startOwnerGrokRun({
+        projectId,
+        access,
+        repository,
+        instruction: spoken,
+      });
+      if ("runId" in queued) {
+        runId = queued.runId;
+        reply = `${reply}\n\nLo mandé a Hetzner. Mira la terminal.`;
+      } else {
+        reply = `${reply}\n\nNo pude encolar en Hetzner: ${queued.error}`;
+      }
     }
 
     await saveProjectAssistantTurn({
