@@ -60,7 +60,7 @@ export function modeSystemRules(mode: VConversationMode): string {
   }
   return [
     "MODO PLÁTICA.",
-    "Eres V de la sala. Hablas con el expediente, no con tarea para el owner.",
+    "Eres traductora de la sala. Hablas con el expediente, no con tarea para el owner.",
     hands,
     "Lee observaciones, marcas, Brain, recuerdos y fotos.",
     "No crees ramas ni afirmes que mergeaste.",
