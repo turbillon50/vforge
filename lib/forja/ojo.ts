@@ -89,3 +89,18 @@ export async function ojoPost(path: string, body: unknown): Promise<Response> {
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 }
+
+const DEFAULT_OJO_LIVE_BASE = "https://metamcp.vforge.site/ojo-live";
+export const OJO_LIVE_BASE = (process.env.OJO_LIVE_BASE ?? DEFAULT_OJO_LIVE_BASE).trim().replace(/\/$/, "");
+
+/** POST al Ojo Live (motor vforge-live: QA con video + gate de deploy). */
+export async function ojoLivePost(path: string, body: unknown): Promise<Response> {
+  const relative = path.trim().replace(/^\/+/, "");
+  return fetch(`${OJO_LIVE_BASE}/${relative}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Ojo-Token": requireOjoToken() },
+    body: JSON.stringify(body ?? {}),
+    cache: "no-store",
+    signal: AbortSignal.timeout(120_000),
+  });
+}

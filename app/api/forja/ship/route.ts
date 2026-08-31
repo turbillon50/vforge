@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { getUserSecret } from "@/lib/connect/user-vault";
 import { saveUserApp } from "@/lib/connect/user-apps";
+import { ojoLivePost } from "@/lib/forja/ojo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -186,6 +187,17 @@ export async function POST(req: Request) {
     if (!depRes.ok) return Response.json({ ok: false, error: "deploy", detail: dep, repo: out.repo }, { status: 400 });
     out.deploy = { url: dep.url ? `https://${dep.url}` : null, id: dep.id, state: dep.readyState || dep.status };
     try { await saveUserApp(userId, { name, repo_url: (out.repo as { url?: string })?.url ?? null, deploy_url: (out.deploy as { url?: string | null })?.url ?? null, template }); } catch { /* best-effort */ }
+
+    // Gate de entrega: el Ojo Live revisa la app desplegada y graba video.
+    try {
+      const deployUrl = (out.deploy as { url?: string } | undefined)?.url;
+      if (deployUrl) {
+        const gate = await ojoLivePost("gate", { url: deployUrl });
+        if (gate.ok) out.gate = await gate.json();
+      }
+    } catch (e) {
+      out.gateError = String(e).slice(0, 160);
+    }
 
     return Response.json({ ok: true, ...out });
   } catch (e) {
