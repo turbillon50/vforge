@@ -835,10 +835,10 @@ export async function runMcpTool(
       // otro tenant para luego filtrarlas en memoria.
       const rows = isAdminScope
         ? await queryAll<{ name: string; category: string; status: string; vercel_url: string | null }>(
-            "SELECT name, category, status, vercel_url FROM projects ORDER BY name LIMIT 60",
+            "SELECT name, category, status, vercel_url FROM projects ORDER BY (category = 'produccion') DESC, delivery_priority DESC, name LIMIT 60",
           ).catch(() => [])
         : await queryAll<{ name: string; category: string; status: string; vercel_url: string | null }>(
-            "SELECT name, category, status, vercel_url FROM projects WHERE org_id = $1 ORDER BY name LIMIT 60",
+            "SELECT name, category, status, vercel_url FROM projects WHERE org_id = $1 ORDER BY (category = 'produccion') DESC, delivery_priority DESC, name LIMIT 60",
             [orgId],
           ).catch(() => []);
       if (rows.length === 0) {
@@ -1147,10 +1147,10 @@ export async function runMcpTool(
       // AISLAMIENTO: admin ve la salud de todas las apps; client SOLO su org_id.
       const rows = isAdminScope
         ? await queryAll<{ name: string; status: string; category: string; vercel_url: string | null; last_audit_score: number | null }>(
-            "SELECT name, status, category, vercel_url, last_audit_score FROM projects ORDER BY name LIMIT 100",
+            "SELECT name, status, category, vercel_url, last_audit_score FROM projects ORDER BY (category = 'produccion') DESC, delivery_priority DESC, name LIMIT 100",
           ).catch(() => [])
         : await queryAll<{ name: string; status: string; category: string; vercel_url: string | null; last_audit_score: number | null }>(
-            "SELECT name, status, category, vercel_url, last_audit_score FROM projects WHERE org_id = $1 ORDER BY name LIMIT 100",
+            "SELECT name, status, category, vercel_url, last_audit_score FROM projects WHERE org_id = $1 ORDER BY (category = 'produccion') DESC, delivery_priority DESC, name LIMIT 100",
             [orgId],
           ).catch(() => []);
       if (rows.length === 0) {
