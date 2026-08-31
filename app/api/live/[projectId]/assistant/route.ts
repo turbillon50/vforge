@@ -10,13 +10,20 @@ import {
   selectAgentRepository,
 } from "@/lib/live/agent-runs";
 import { loadRoomContextBrief } from "@/lib/live/load-room-context";
-import { listExpedienteEyes } from "@/lib/live/project-eyes";
+import { listExpedienteEyes, saveProjectEye } from "@/lib/live/project-eyes";
 import { pickExpedienteFrames } from "@/lib/live/expediente-vision";
+import { parseChatAttachments } from "@/lib/live/chat-attachments";
 import {
   factoryHandsBrief,
   persistRoomMemory,
 } from "@/lib/live/v-factory-hands";
 import { recordCerebrasPulse, todayCerebrasUsage } from "@/lib/forge/cerebras-pulse";
+import {
+  extractMemoryBlocks,
+  getUserMemories,
+  memoryPromptSection,
+  saveUserMemory,
+} from "@/lib/forge/user-memory";
 import {
   listProjectAssistantMessages,
   projectAssistantHistory,
@@ -76,16 +83,29 @@ export async function POST(
   > | null;
   const mode: ProjectAssistantMode | null =
     payload?.mode === "talk" || payload?.mode === "plan" ? payload.mode : null;
+  const attachments = parseChatAttachments(payload?.attachments);
   const message =
     typeof payload?.message === "string"
       ? payload.message.trim().slice(0, 6000)
       : "";
+  const spoken =
+    message || (attachments.length ? `Mira ${attachments.length} foto(s).` : "");
   const repository = selectAgentRepository(access, payload?.repository);
-  if (!mode || message.length < 1)
+  if (!mode || spoken.length < 1)
     return json({ error: "invalid_message" }, 400);
 
   try {
-    const history = await projectAssistantHistory(projectId, mode);
+    for (const file of attachments) {
+      await saveProjectEye({
+        projectId,
+        source: "attach",
+        note: file.name,
+        image: file.data,
+      }).catch((error) => {
+        console.error("[project assistant] attach failed", error);
+      });
+    }
+    const history = await projectAssistantHistory(projectId);
     const repoContext = repository
       ? `${repository.repo_full_name} (rama ${repository.default_branch || "main"})`
       : null;
@@ -97,30 +117,40 @@ export async function POST(
       console.error("[project assistant] room brief failed", { projectId, error });
       return null;
     });
-    const hands = await factoryHandsBrief(projectId, message).catch(() => "");
-    const brief = [roomContext, hands].filter(Boolean).join("\n\n");
+    const hands = await factoryHandsBrief(projectId, spoken).catch(() => "");
+    const memories = await getUserMemories(access.identity.userId).catch(() => []);
+    const brief = [roomContext, hands, memoryPromptSection(memories)]
+      .filter(Boolean)
+      .join("\n\n");
     const images = pickExpedienteFrames(
       await listExpedienteEyes(projectId).catch(() => []),
-      3,
+      4,
     );
     const result = await askV({
       mode,
       projectId,
       repository: repoContext,
-      message,
+      message: spoken,
       history,
       preferredModel: cerebrasTalkModel(images.length > 0),
       roomContext: brief || null,
       images,
     });
+    const extracted = extractMemoryBlocks(result.text);
+    for (const memory of extracted.memories) {
+      await saveUserMemory(access.identity.userId, memory.key, memory.value).catch(
+        () => null,
+      );
+    }
+    const reply = extracted.cleaned.slice(0, 12000);
 
     await saveProjectAssistantTurn({
       projectId,
       mode,
       userId: access.identity.userId,
       email: access.identity.email,
-      userText: message,
-      assistantText: result.text.slice(0, 12000),
+      userText: spoken,
+      assistantText: reply,
       provider: result.provider,
       model: result.model,
       status: result.status,
@@ -128,8 +158,8 @@ export async function POST(
     });
     await persistRoomMemory({
       projectId,
-      userText: message,
-      assistantText: result.text.slice(0, 2000),
+      userText: spoken,
+      assistantText: reply.slice(0, 2000),
     }).catch(() => null);
     await recordCerebrasPulse({
       projectId,
@@ -142,7 +172,7 @@ export async function POST(
     const messages = await listProjectAssistantMessages(projectId);
     return json({
       messages,
-      reply: result.text,
+      reply,
       provider: result.provider,
       model: result.model,
       status: result.status,

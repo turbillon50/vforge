@@ -19,6 +19,7 @@ export function pickExpedienteFrames(
   limit = 3,
 ): VisionFrame[] {
   const cap = Math.min(4, Math.max(1, Math.floor(limit)));
+  const attach = eyes.filter((eye) => eye.source === "attach" && eye.data_b64?.trim());
   const visor = eyes
     .filter((eye) => eye.source === "visor" && eye.data_b64?.trim())
     .sort(
@@ -26,10 +27,13 @@ export function pickExpedienteFrames(
         VISOR_ORDER.indexOf(a.viewport || "") -
         VISOR_ORDER.indexOf(b.viewport || ""),
     );
-  const plugin = eyes.filter(
-    (eye) => eye.source !== "visor" && eye.data_b64?.trim(),
+  const rest = eyes.filter(
+    (eye) =>
+      eye.source !== "visor" &&
+      eye.source !== "attach" &&
+      eye.data_b64?.trim(),
   );
-  return [...visor, ...plugin].slice(0, cap).map((eye) => {
+  return [...attach, ...visor, ...rest].slice(0, cap).map((eye) => {
     const view = eye.viewport?.trim() || eye.source;
     const note = eye.note?.trim();
     return {
@@ -54,7 +58,7 @@ export function visionUserContent(
   > = [
     {
       type: "text",
-      text: `${message.trim()}\n\nFOTOS DEL EXPEDIENTE (${frames.length}): ${labels}. Ya las tienes. No pidas que te las reenvíen.`,
+      text: `${message.trim()}\n\nFOTOS (${frames.length}): ${labels}. Ya las viste. No pidas que te las reenvíen.`,
     },
   ];
   for (const frame of frames) {
