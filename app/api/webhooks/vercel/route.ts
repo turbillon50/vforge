@@ -4,6 +4,18 @@ import { recordVercelDeploy, logWebhook, type DeployInfo } from "@/lib/projects/
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** Mapa explícito de tipo de evento → estado del deploy.
+ *  null = evento que NO cambia el estado (checks, alias, etc.).
+ *  OJO: deployment.promoted llega después de succeeded en producción; antes
+ *  caía al default 'building' y pisaba el 'ready' para siempre. */
+function stateForType(type: string): string | null {
+  if (type.endsWith(".succeeded") || type.endsWith(".ready") || type.endsWith(".promoted")) return "ready";
+  if (type.endsWith(".error")) return "error";
+  if (type.endsWith(".canceled")) return "canceled";
+  if (type.endsWith(".created")) return "building";
+  return null;
+}
+
 /**
  * POST /api/webhooks/vercel — eventos de Vercel (deployment.succeeded,
  * deployment.error, deployment.created…). Verifica x-vercel-signature
@@ -23,7 +35,9 @@ export async function POST(req: Request) {
     }
   }
 
-  let matched = false;
+  let projectId: string | null = null;
+  let type = "deployment";
+  let info: DeployInfo | null = null;
   try {
     const body = JSON.parse(raw) as {
       type?: string;
@@ -35,17 +49,9 @@ export async function POST(req: Request) {
         deploymentId?: string;
       };
     };
-    const type = body.type ?? "";
+    type = body.type || "deployment";
     const p = body.payload ?? {};
     const dep = p.deployment ?? {};
-    const state =
-      type.endsWith(".succeeded") || type.endsWith(".ready")
-        ? "ready"
-        : type.endsWith(".error")
-          ? "error"
-          : type.endsWith(".canceled")
-            ? "canceled"
-            : "building";
     const sha =
       (dep.meta?.githubCommitSha as string | undefined) ??
       (dep.meta?.gitCommitSha as string | undefined) ??
@@ -54,21 +60,34 @@ export async function POST(req: Request) {
       (dep.meta?.githubCommitRef as string | undefined) ??
       (dep.meta?.gitCommitRef as string | undefined) ??
       null;
-    const info: DeployInfo = {
+    info = {
       vercelProjectId: p.project?.id ?? null,
       name: dep.name ?? p.name ?? null,
       url: dep.url ?? p.url ?? null,
-      state,
+      state: stateForType(type),
       deploymentId: dep.id ?? p.deploymentId ?? null,
       commitSha: sha,
       branch,
     };
-    matched = await recordVercelDeploy(info);
+    projectId = await recordVercelDeploy(info);
   } catch {
     /* ignore */
   }
 
-  logWebhook("vercel", "deployment", null, { matched }).catch(() => null);
+  const matched = Boolean(projectId);
+  // Auditable: identidad del evento, no solo {matched} (antes se tiraba el
+  // payload y era imposible re-matchear ni depurar).
+  logWebhook("vercel", type, projectId, {
+    matched,
+    type,
+    vercelProjectId: info?.vercelProjectId ?? null,
+    deploymentId: info?.deploymentId ?? null,
+    name: info?.name ?? null,
+    state: info?.state ?? null,
+    url: info?.url ?? null,
+    commitSha: info?.commitSha ?? null,
+    branch: info?.branch ?? null,
+  }, matched).catch(() => null);
   return json({ ok: true, matched }, 200);
 }
 

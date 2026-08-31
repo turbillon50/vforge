@@ -29,11 +29,12 @@ export async function POST(req: Request) {
     }
   }
 
-  let matched = false;
-  let payload: Record<string, unknown> = {};
+  let projectId: string | null = null;
+  let repo: string | null = null;
+  let action: string | null = null;
   try {
-    payload = JSON.parse(raw) as Record<string, unknown>;
-    const repo = (payload.repository as { full_name?: string } | undefined)?.full_name ?? null;
+    const payload = JSON.parse(raw) as Record<string, unknown>;
+    repo = (payload.repository as { full_name?: string } | undefined)?.full_name ?? null;
 
     if (repo && event === "push") {
       const ref = String(payload.ref ?? "");
@@ -44,13 +45,13 @@ export async function POST(req: Request) {
         sha: (c as { id?: string }).id,
       }));
       const headSha = String((payload.after as string) ?? "") || null;
-      matched = await recordGithubPush(repo, branch, commits, headSha);
+      projectId = await recordGithubPush(repo, branch, commits, headSha);
     } else if (repo && event === "pull_request") {
-      const action = String(payload.action ?? "");
+      action = String(payload.action ?? "");
       const pr = (payload.pull_request as
         | { title?: string; number?: number; merged?: boolean }
         | undefined) ?? {};
-      matched = await recordGithubPR(
+      projectId = await recordGithubPR(
         repo,
         action,
         String(pr.title ?? ""),
@@ -62,7 +63,9 @@ export async function POST(req: Request) {
     /* ignore parse errors */
   }
 
-  logWebhook("github", event, null, { matched }).catch(() => null);
+  const matched = Boolean(projectId);
+  // Auditable: repo y acción, no solo {matched}.
+  logWebhook("github", event, projectId, { matched, repo, action }, matched).catch(() => null);
   return json({ ok: true, event, matched }, 200);
 }
 
