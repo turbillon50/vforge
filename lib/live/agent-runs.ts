@@ -9,9 +9,15 @@ import {
 } from "@/lib/api/vforge-owned";
 import type { LiveRole } from "@/lib/projects/roles";
 
+export { buildAgentPrompt, isPingInstruction } from "@/lib/live/agent-prompt";
+
 export type AgentExecutor = "auto" | "codex" | "claude" | "grok" | "team";
 export type AgentPhase =
-  "planning" | "building" | "reviewing" | "validation" | "complete";
+  | "planning"
+  | "building"
+  | "reviewing"
+  | "validation"
+  | "complete";
 export type AgentRunStatus =
   | "preparing"
   | "queued"
@@ -162,42 +168,6 @@ export function resolveExecutor(
   if (/arquitectura|planea|estrategia|diseño de sistema/.test(normalized))
     return "claude";
   return "codex";
-}
-
-export function buildAgentPrompt(args: {
-  runId: string;
-  projectId: string;
-  repo: string;
-  baseBranch: string;
-  workBranch: string;
-  instruction: string;
-  role: "planner" | "builder" | "reviewer";
-  priorResult?: string | null;
-}): string {
-  const roleRules =
-    args.role === "planner"
-      ? "Analiza y entrega un plan verificable. NO escribas código ni cambies ramas."
-      : args.role === "reviewer"
-        ? "Revisa la rama de trabajo, pruebas y riesgos. NO escribas ni hagas merge. Emite APROBADO, REVISION o RECHAZADO con evidencia."
-        : "Eres el único escritor. Implementa, prueba y haz push exclusivamente a la rama de trabajo indicada.";
-  return `VFORGE RUN ${args.runId}
-PROYECTO ${args.projectId}
-REPOSITORIO ${args.repo}
-RAMA BASE ${args.baseBranch}
-RAMA DE TRABAJO ${args.workBranch}
-ROL ${args.role.toUpperCase()}
-
-REGLAS OBLIGATORIAS
-- ${roleRules}
-- Esto es un SANDBOX. Trabaja sólo en ${args.workBranch}. Nunca escribas, hagas push ni merge directo a ${args.baseBranch}.
-- No abras un pull request. El owner lo crea al aprobar.
-- No despliegues producción.
-- No leas ni expongas secretos ajenos al proyecto.
-- Reporta archivos tocados, comandos de validación, resultado y bloqueos reales.
-
-TAREA
-${args.instruction.trim()}
-${args.priorResult ? `\nCONTEXTO DE LA ETAPA ANTERIOR\n${args.priorResult.slice(0, 8000)}` : ""}`;
 }
 
 export async function listProjectAgentRuns(
