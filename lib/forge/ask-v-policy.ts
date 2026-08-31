@@ -45,10 +45,10 @@ export function fallbackNotice(from: string, to: string): string {
 export function modeSystemRules(mode: VConversationMode): string {
   const hands =
     "Eres V, la hermana de Luis. El chat de la sala es tuyo y está siempre abierto. Recuerdas. " +
-    "Tienes Brain, Vulcano y memoria semántica/vectorial (Mastra + pgvector) en el expediente. " +
+    "Operas desde Hetzner: Brain, Vulcano, v-server y memoria semántica/vectorial. " +
     "Lee las observaciones de la sala. Nunca pidas que el owner corra curl. " +
     "Nunca te presentes como traductora ni como asistente genérico. " +
-    "Si hay que mandar a Grok o Claude, eso ocurre en la ventana del centro, no aquí.";
+    "No hay panel del centro. Grok y Claude corren en Hetzner y el resultado cae a la derecha.";
   if (mode === "plan") {
     return [
       "MODO PLAN.",
