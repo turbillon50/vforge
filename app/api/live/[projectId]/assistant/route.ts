@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { askV } from "@/lib/forge/ask-v";
+import { askV, type AskVResult } from "@/lib/forge/ask-v";
 import {
   ROOM_CEREBRAS_MODEL,
   cerebrasTalkModel,
@@ -179,19 +179,47 @@ export async function POST(
       }
     }
 
-    const result = await askV({
-      mode,
-      projectId,
-      repository: repoContext,
-      message: spoken,
-      history,
-      preferredModel: cerebrasTalkModel(images.length > 0),
-      roomContext: brief || null,
-      images,
-      runId,
-      runAgent,
-      dispatchError,
-    });
+    // Si la orden YA se encoló, este turno no puede terminar en 502: el
+    // cliente devuelve el mensaje al composer y el reintento crea otra rama
+    // y otro job pagado por la misma instrucción. Cuando hay runId, el fallo
+    // del motor de V se cuenta, no se lanza.
+    let result: AskVResult;
+    let providerFailure: ProviderUnavailable | null = null;
+    try {
+      result = await askV({
+        mode,
+        projectId,
+        repository: repoContext,
+        message: spoken,
+        history,
+        preferredModel: cerebrasTalkModel(images.length > 0),
+        roomContext: brief || null,
+        images,
+        runId,
+        runAgent,
+        dispatchError,
+      });
+    } catch (caught) {
+      if (!runId) throw caught;
+      providerFailure =
+        caught instanceof ProviderUnavailable ? caught : null;
+      console.warn("[project assistant] orden encolada sin respuesta de V", {
+        projectId,
+        runId,
+        cause: providerFailure?.cause ?? "unknown",
+      });
+      result = {
+        text: "",
+        provider: "cerebras",
+        model: cerebrasTalkModel(images.length > 0),
+        status: "fallback",
+        durationMs: providerFailure?.durationMs ?? 0,
+        notice: null,
+        attempts: [],
+        usage: null,
+        blind: false,
+      };
+    }
     const extracted = extractMemoryBlocks(result.text);
     for (const memory of extracted.memories) {
       await saveUserMemory(access.identity.userId, memory.key, memory.value).catch(
@@ -208,6 +236,10 @@ export async function POST(
     if (result.blind && attachments.length) {
       reply = `${reply}\n\nNo pude abrir ${attachments.length} foto(s) en este turno; quedaron guardadas en el expediente.`;
     }
+    if (providerFailure) {
+      reply = `${reply}\n\nNo te pude contestar en este turno: mi motor no alcanzó a responder. La orden ya salió, no la mandes otra vez.`;
+    }
+    reply = reply.trim();
 
     await saveProjectAssistantTurn({
       projectId,
@@ -228,8 +260,8 @@ export async function POST(
     }).catch(() => null);
     await recordCerebrasPulse({
       projectId,
-      ok: true,
-      cause: result.status,
+      ok: !providerFailure,
+      cause: providerFailure?.cause ?? result.status,
       durationMs: result.durationMs,
       usage: result.usage,
     }).catch(() => null);
@@ -242,11 +274,13 @@ export async function POST(
       runAgent,
       dispatchError,
       blind: result.blind,
+      notice: providerFailure
+        ? `${humanProviderLabel(providerFailure.provider)} no respondió; la orden ya está encolada`
+        : result.notice,
       provider: result.provider,
       model: result.model,
       status: result.status,
       durationMs: result.durationMs,
-      notice: result.notice,
       usage: result.usage,
       translator: {
         provider: "cerebras",
