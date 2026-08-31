@@ -44,6 +44,11 @@ test("el owner elige a quién le manda el trabajo", () => {
     dispatch: true,
     executor: "codex",
   });
+  // Grok se sigue leyendo para poder decirle a Luis que no tiene manos.
+  assert.deepEqual(parseWorkOrder("mándalo a grok"), {
+    dispatch: true,
+    executor: "grok",
+  });
   // Sin nombre de agente decide la política del repo, no el chat.
   assert.deepEqual(parseWorkOrder("mándalo a la fabrica"), {
     dispatch: true,

@@ -38,6 +38,9 @@ RAMA BASE ${args.baseBranch}
 RAMA DE TRABAJO ${args.workBranch}
 ROL ${args.role.toUpperCase()}
 
+WORKSPACE
+Ya estás dentro de un clon del repositorio, en la rama de trabajo. No clones nada.
+
 REGLAS OBLIGATORIAS
 - ${roleRules}
 - Esto es un SANDBOX. Trabaja sólo en ${args.workBranch}. Nunca escribas, hagas push ni merge directo a ${args.baseBranch}.

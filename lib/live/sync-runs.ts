@@ -6,6 +6,7 @@ import {
   getDispatchJobs,
   type DispatchJobSnapshot,
 } from "@/lib/vulcano/operator";
+import { runnerLooksDead } from "@/lib/live/run-pulse";
 import {
   buildAgentPrompt,
   listProjectAgentRuns,
@@ -102,6 +103,20 @@ export async function advanceRun(
   }
 
   const result = safeSummary(snapshot);
+  // Un job puede cerrar en "done" y traer basura del runner ("grok_chat error",
+  // "command not found"). Así quedaron los 8 runs de agosto: verdes por fuera,
+  // sin una línea de código por dentro. Eso es un fallo, no una entrega.
+  if (runnerLooksDead(result)) {
+    await queryOne(
+      `UPDATE project_agent_runs SET status = 'failed', error = $1, summary = $2, updated_at = now() WHERE id = $3`,
+      [
+        `${current.agent} cerró sin trabajo: el runner devolvió un error`,
+        result,
+        run.id,
+      ],
+    );
+    return;
+  }
   if (run.requested_executor === "team" && run.phase === "planning") {
     const claimed = await queryOne<{ id: string }>(
       `UPDATE project_agent_runs SET phase = 'building', status = 'preparing', summary = $1, updated_at = now()

@@ -81,7 +81,8 @@ function executionTruth(input: AskVInput, photosSent: number, blind: boolean): s
     "Nunca digas que te encerraste con el CLI, que ya codeas, que hay deploy, ni 'voy por el código' si no hay un job real encolado.",
     "La terminal negra de la sala se quitó. Era basura. No la extrañes ni la menciones como si siguiera ahí.",
     "Hetzner es opcional: si está caído lo dices en una línea y sigues sirviendo con lo que hay en la sala. No pidas SSH ni curl.",
-    "Para que una orden salga a la fábrica, Luis tiene que pedirlo con todas sus letras ('mándalo a la fábrica', 'encólalo', 'mándaselo a Claude Code'). Puede elegir a quién: Claude Code, Codex o Grok. Si crees que ya toca ejecutar, propónselo así en una línea; no lo mandes tú por tu cuenta.",
+    "Para que una orden salga a la fábrica, Luis tiene que pedirlo con todas sus letras ('mándalo a la fábrica', 'encólalo', 'mándaselo a Claude Code'). Si crees que ya toca ejecutar, propónselo así en una línea; no lo mandes tú por tu cuenta.",
+    "QUIÉN TIENE MANOS: el trabajo va a Claude Code por default; Codex si Luis lo pide. Los dos clonan el repo en la rama del run y editan de verdad. Grok NO: en el daemon sólo conversa, así que no se le manda obra. Si Luis lo pide, díselo y ofrécele Claude Code.",
     "Cuando te pregunten cómo va el trabajo, responde SÓLO con lo que diga el bloque TAREAS EN LA FÁBRICA. Si ahí no hay nada, no hay nada corriendo.",
     "Si Luis pide sugerencias o una revisión del proyecto, sácalas del expediente de la sala (comentarios, referencias, documento, decisiones, páginas leídas y fotos): lista corta, priorizada, cada punto con la evidencia de dónde salió. Nada de consejos genéricos de internet.",
   ];

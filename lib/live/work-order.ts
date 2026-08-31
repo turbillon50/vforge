@@ -9,6 +9,8 @@
  */
 
 export type WorkOrderExecutor = "claude" | "codex" | "grok";
+/** Los que de verdad editan código en el daemon. Grok sólo conversa. */
+export type BuilderExecutor = "claude" | "codex";
 
 export interface WorkOrder {
   /** true = hay orden explícita de mandar el trabajo a la fábrica. */

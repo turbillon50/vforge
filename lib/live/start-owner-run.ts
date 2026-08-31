@@ -5,18 +5,19 @@ import { parseRepoFullName, withUserGithub } from "@/lib/live/github-user";
 import {
   buildAgentPrompt,
   ensureProjectAgentRunsTable,
-  resolveExecutor,
   type AgentRunAccess,
   type AgentRunRepository,
 } from "@/lib/live/agent-runs";
-import type { WorkOrderExecutor } from "@/lib/live/work-order";
+import type { BuilderExecutor, WorkOrderExecutor } from "@/lib/live/work-order";
 
 /**
  * Manda trabajo real a la fábrica desde el chat de V.
  *
- * `executor` es a quién lo pidió el owner (Claude Code, Codex, Grok). Si no
- * nombró a nadie, decide la política del repo (`resolveExecutor`), la misma
- * que usa la pestaña de runs — el chat no inventa reglas propias.
+ * Default: Claude Code. En el daemon de Hetzner es el único, junto con Codex,
+ * que tiene manos de verdad: clona el repo en la rama del run y edita ahí.
+ * `agent = "grok"` corre run_grok_chat, que sólo conversa — por eso los 8 runs
+ * de agosto quedaron en "done" con Grok narrando trabajo que nunca hizo.
+ * Aquí no se acepta como constructor.
  */
 export async function startOwnerRun(args: {
   projectId: string;
@@ -24,14 +25,19 @@ export async function startOwnerRun(args: {
   repository: AgentRunRepository;
   instruction: string;
   executor?: WorkOrderExecutor | null;
-}): Promise<{ runId: string; agent: WorkOrderExecutor } | { error: string }> {
+}): Promise<{ runId: string; agent: BuilderExecutor } | { error: string }> {
   const instruction = args.instruction.trim().slice(0, 12000);
   if (instruction.length < 3) return { error: "instrucción vacía" };
   const parsed = parseRepoFullName(args.repository.repo_full_name);
   if (!parsed) return { error: "repo inválido" };
 
-  const agent: WorkOrderExecutor =
-    args.executor ?? resolveExecutor("auto", instruction);
+  if (args.executor === "grok") {
+    return {
+      error:
+        "Grok en la fábrica sólo conversa, no escribe código. Pídemelo con Claude Code y va con manos",
+    };
+  }
+  const agent: BuilderExecutor = args.executor ?? "claude";
 
   await ensureProjectAgentRunsTable();
   const runId = randomUUID();
