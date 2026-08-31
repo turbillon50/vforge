@@ -1,18 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
 import { VConversationPanel } from "@/components/live/VConversationPanel";
-import { RunLiveConsole } from "@/components/live/RunLiveConsole";
+import { HetznerTerminal } from "@/components/live/HetznerTerminal";
 import { canApplyRun } from "@/lib/live/run-console";
-import {
-  IconBranch,
-  IconCheck,
-  IconExtLink,
-  IconRocket,
-  IconStop,
-  IconX,
-} from "@/components/brand/VFIcons";
+import { IconRocket, IconStop, IconX } from "@/components/brand/VFIcons";
 
 type Executor = "auto" | "codex" | "claude" | "grok" | "team";
 type RunStatus =
@@ -65,19 +57,6 @@ interface AgentRun {
   error: string | null;
   created_at: string;
 }
-
-const STATUS_LABELS: Record<RunStatus, string> = {
-  preparing: "Preparando",
-  queued: "En cola",
-  running: "Trabajando",
-  awaiting_preview: "Esperando preview",
-  preview_ready: "Preview listo",
-  awaiting_approval: "Esperando aprobación",
-  approved: "Aprobado",
-  published: "Publicado",
-  failed: "Falló",
-  cancelled: "Cancelado",
-};
 
 const ACTIVE = new Set<RunStatus>(["preparing", "queued", "running", "awaiting_preview"]);
 
@@ -140,7 +119,7 @@ export function VControlPanel({
 
   useEffect(() => {
     void load();
-    const timer = window.setInterval(() => void load(), 1500);
+    const timer = window.setInterval(() => void load(), 1200);
     return () => window.clearInterval(timer);
   }, [load]);
 
@@ -177,7 +156,7 @@ export function VControlPanel({
     }
   }
 
-  async function runAction(action: "approve" | "publish" | "cancel" | "apply") {
+  async function runAction(action: "apply" | "cancel") {
     if (!selected || busy) return;
     setBusy(true);
     setError(null);
@@ -199,43 +178,21 @@ export function VControlPanel({
     }
   }
 
-  async function nudgeRun(message: string) {
-    if (!selected || busy) return;
-    setBusy(true);
-    try {
-      await fetch(
-        `/api/live/${encodeURIComponent(projectId)}/runs/${encodeURIComponent(selected.id)}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "nudge", message }),
-        },
-      );
-      await load();
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
     <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-[8px] border border-[var(--border-1)] bg-white">
       <header className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-[var(--border-1)] px-3">
-        <p className="truncate text-[11px] text-[var(--fg-muted)]">
-          V · habla aquí · Hetzner a la derecha
-        </p>
+        <p className="truncate text-[11px] text-[var(--fg-muted)]">V · terminal Hetzner</p>
         <button type="button" onClick={onClose} className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--color-background)]" aria-label="Cerrar V">
           <IconX size={11} />
         </button>
       </header>
 
       {error ? (
-        <p className="shrink-0 border-b border-[var(--border-1)] px-3 py-2 text-[12px] text-[var(--color-danger)]">
-          {error}
-        </p>
+        <p className="shrink-0 px-3 py-2 text-[12px] text-[var(--color-danger)]">{error}</p>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(440px,1.75fr)_minmax(240px,0.7fr)]">
-        <section className="flex h-full min-h-0 flex-col border-b border-[var(--border-1)] lg:border-b-0 lg:border-r">
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(420px,1.35fr)_minmax(320px,1fr)]">
+        <section className="flex h-full min-h-0 flex-col lg:border-r lg:border-[var(--border-1)]">
           <VConversationPanel
             projectId={projectId}
             canWrite={canWrite}
@@ -246,82 +203,24 @@ export function VControlPanel({
           />
         </section>
 
-        <section className="flex min-h-0 flex-col overflow-y-auto">
-          <header className="border-b border-[var(--border-1)] px-3 py-2">
-            <p className="text-[13px] font-medium">Hetzner</p>
-          </header>
-          {runs.length ? (
-            <div className="divide-y divide-[var(--border-1)]">
-              {runs.slice(0, 6).map((run) => (
-                <button
-                  key={run.id}
-                  type="button"
-                  onClick={() => setSelectedId(run.id)}
-                  className={cn(
-                    "w-full p-3 text-left text-[12px] hover:bg-[var(--color-background)]",
-                    selected?.id === run.id && "bg-[#1c1917] text-[#f6f3ec] hover:bg-[#1c1917]",
-                  )}
-                >
-                  <span className="line-clamp-2">{run.instruction}</span>
-                  <span className={cn("mt-1 block font-mono text-[8px] uppercase", selected?.id === run.id ? "text-[#f6f3ec]/70" : "text-[var(--fg-muted)]")}>
-                    {run.resolved_executor} · {STATUS_LABELS[run.status]}
-                  </span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="p-4 text-[12px] text-[var(--fg-muted)]">Sin trabajo en Hetzner.</p>
-          )}
+        <section className="flex min-h-0 flex-col bg-[#111110]">
           {selected ? (
-            <div className="space-y-3 border-t border-[var(--border-1)] p-3">
-              <RunLiveConsole
-                createdAt={selected.created_at}
-                status={selected.status}
-                jobs={jobMap}
-                jobRefs={selected.queue_jobs}
-                canWrite={canWrite}
-                busy={busy}
-                onNudge={nudgeRun}
-              />
-              {selected.preview_url ? (
-                <iframe
-                  src={selected.preview_url}
-                  title="Preview"
-                  className="h-[180px] w-full rounded-[8px] border border-[var(--border-1)] bg-white"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                />
+            <HetznerTerminal jobs={jobMap} jobRefs={selected.queue_jobs} />
+          ) : (
+            <pre className="flex-1 px-3 py-3 font-mono text-[12px] text-[#d7d3cb]">$ — sin job</pre>
+          )}
+          {selected && canWrite ? (
+            <div className="flex shrink-0 gap-2 border-t border-white/10 bg-[#111110] px-3 py-2">
+              {canApplyRun(selected.status) ? (
+                <button type="button" disabled={busy} onClick={() => void runAction("apply")} className="btn-primary">
+                  <IconRocket size={11} /> Aplicar
+                </button>
               ) : null}
-              {selected.summary ? (
-                <pre className="max-h-28 overflow-auto whitespace-pre-wrap text-[11px] leading-5">{selected.summary}</pre>
+              {ACTIVE.has(selected.status) ? (
+                <button type="button" disabled={busy} onClick={() => void runAction("cancel")} className="btn-ghost text-white">
+                  <IconStop size={11} /> Cancelar
+                </button>
               ) : null}
-              {selected.error ? (
-                <p className="text-[11px] text-[var(--color-danger)]">{selected.error}</p>
-              ) : null}
-              <div className="flex flex-wrap gap-2">
-                <a href={`https://github.com/${selected.repo_full_name}/tree/${selected.work_branch}`} target="_blank" rel="noreferrer" className="btn-ghost">
-                  <IconBranch size={11} /> Rama
-                </a>
-                {selected.pr_url ? (
-                  <a href={selected.pr_url} target="_blank" rel="noreferrer" className="btn-ghost">
-                    <IconExtLink size={11} /> PR
-                  </a>
-                ) : null}
-                {canWrite && canApplyRun(selected.status) ? (
-                  <button type="button" disabled={busy} onClick={() => void runAction("apply")} className="btn-primary">
-                    <IconRocket size={11} /> Aplicar
-                  </button>
-                ) : null}
-                {canWrite && selected.status === "preview_ready" ? (
-                  <button type="button" disabled={busy} onClick={() => void runAction("approve")} className="btn-ghost">
-                    <IconCheck size={11} /> Sólo PR
-                  </button>
-                ) : null}
-                {canWrite && ACTIVE.has(selected.status) ? (
-                  <button type="button" disabled={busy} onClick={() => void runAction("cancel")} className="btn-ghost">
-                    <IconStop size={11} /> Cancelar
-                  </button>
-                ) : null}
-              </div>
             </div>
           ) : null}
         </section>
