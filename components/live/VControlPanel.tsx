@@ -219,13 +219,10 @@ export function VControlPanel({
 
   return (
     <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-[8px] border border-[var(--border-1)] bg-white">
-      <header className="flex min-h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--border-1)] px-3">
-        <div className="min-w-0">
-          <p className="font-mono text-[9px] uppercase tracking-[0.13em]">V · tu hermana</p>
-          <p className="truncate text-[9px] text-[var(--fg-muted)]">
-            Habla aquí. Hetzner trabaja. El resultado cae a la derecha.
-          </p>
-        </div>
+      <header className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-[var(--border-1)] px-3">
+        <p className="truncate text-[11px] text-[var(--fg-muted)]">
+          V · habla aquí · Hetzner a la derecha
+        </p>
         <button type="button" onClick={onClose} className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--color-background)]" aria-label="Cerrar V">
           <IconX size={11} />
         </button>
@@ -237,8 +234,8 @@ export function VControlPanel({
         </p>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.9fr)]">
-        <section className="flex min-h-0 flex-col border-b border-[var(--border-1)] lg:border-b-0 lg:border-r">
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(440px,1.75fr)_minmax(240px,0.7fr)]">
+        <section className="flex h-full min-h-0 flex-col border-b border-[var(--border-1)] lg:border-b-0 lg:border-r">
           <VConversationPanel
             projectId={projectId}
             canWrite={canWrite}
@@ -252,9 +249,6 @@ export function VControlPanel({
         <section className="flex min-h-0 flex-col overflow-y-auto">
           <header className="border-b border-[var(--border-1)] px-3 py-2">
             <p className="text-[13px] font-medium">Hetzner</p>
-            <p className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
-              Grok y Claude corren allá. Aquí sólo el resultado.
-            </p>
           </header>
           {runs.length ? (
             <div className="divide-y divide-[var(--border-1)]">
@@ -265,20 +259,18 @@ export function VControlPanel({
                   onClick={() => setSelectedId(run.id)}
                   className={cn(
                     "w-full p-3 text-left text-[12px] hover:bg-[var(--color-background)]",
-                    selected?.id === run.id && "bg-black text-white hover:bg-black",
+                    selected?.id === run.id && "bg-[#1c1917] text-[#f6f3ec] hover:bg-[#1c1917]",
                   )}
                 >
                   <span className="line-clamp-2">{run.instruction}</span>
-                  <span className={cn("mt-1 block font-mono text-[8px] uppercase", selected?.id === run.id ? "text-white/65" : "text-[var(--fg-muted)]")}>
+                  <span className={cn("mt-1 block font-mono text-[8px] uppercase", selected?.id === run.id ? "text-[#f6f3ec]/70" : "text-[var(--fg-muted)]")}>
                     {run.resolved_executor} · {STATUS_LABELS[run.status]}
                   </span>
                 </button>
               ))}
             </div>
           ) : (
-            <p className="p-4 text-[12px] text-[var(--fg-muted)]">
-              Todavía no hay trabajo en Hetzner para esta sala.
-            </p>
+            <p className="p-4 text-[12px] text-[var(--fg-muted)]">Sin trabajo en Hetzner.</p>
           )}
           {selected ? (
             <div className="space-y-3 border-t border-[var(--border-1)] p-3">
@@ -295,12 +287,12 @@ export function VControlPanel({
                 <iframe
                   src={selected.preview_url}
                   title="Preview"
-                  className="h-[220px] w-full rounded-[8px] border border-[var(--border-1)] bg-white"
+                  className="h-[180px] w-full rounded-[8px] border border-[var(--border-1)] bg-white"
                   sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                 />
               ) : null}
               {selected.summary ? (
-                <pre className="max-h-36 overflow-auto whitespace-pre-wrap text-[11px] leading-5">{selected.summary}</pre>
+                <pre className="max-h-28 overflow-auto whitespace-pre-wrap text-[11px] leading-5">{selected.summary}</pre>
               ) : null}
               {selected.error ? (
                 <p className="text-[11px] text-[var(--color-danger)]">{selected.error}</p>
