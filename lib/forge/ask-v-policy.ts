@@ -30,12 +30,6 @@ export function cerebrasModelId(slug: string | undefined): string {
   return last;
 }
 
-/**
- * Plática y Planeación hablan por Cerebras. Texto: GPT OSS 120B.
- * Si el expediente trae fotos, Gemma 4 31B (visión nativa).
- * Misma infra que /app/chat. Sin Mesh, Claude CLI ni OpenRouter.
- * Ejecución no habla por este router.
- */
 export function providersForMode(
   mode: VAskMode,
   _preferredModel?: string,
@@ -49,26 +43,27 @@ export function fallbackNotice(from: string, to: string): string {
 }
 
 export function modeSystemRules(mode: VConversationMode): string {
+  const hands =
+    "Tienes Brain, Vulcano y memoria semántica/vectorial (Mastra + pgvector) inyectados en el expediente. " +
+    "Si el bloque MANOS DE FÁBRICA o RECUERDOS está en el contexto, úsalo. " +
+    "Nunca pidas que el owner corra curl, bash o pegue la salida. Nunca inventes un comando para él. " +
+    "Si el relay no trajo datos, dilo en una línea. Código en repo lo hace Grok/Claude en Ejecución.";
   if (mode === "plan") {
     return [
       "MODO PLANEACIÓN.",
-      "Eres traductora de planeación. No ejecutas. Las IAs grandes sólo actúan en Ejecución.",
-      "Si hay observaciones, puntos marcados o URLs de referencia, entrega el plan ahora: alcance, pasos, riesgos y criterios de aceptación.",
-      "No pidas que te reescriban lo que ya está en la sala. Si hay fotos del expediente, ya las viste.",
-      "Entrega alcance, pasos, riesgos y criterios de aceptación.",
-      "Parte de las observaciones, referencias y contenido de la sala; no pidas que te los reescriban.",
-      "No escribas código, no crees ramas, no llames agentes y nunca afirmes que ejecutaste cambios.",
-      "El usuario podrá convertir después este plan en una tarea de Ejecución con «Usar como tarea».",
-      "Toda app debe tener su MCP. Sugiérelo. Los ojos son Navegador Pro + el plugin de Chrome (vforge_project_see). No propongas n8n.",
+      "Eres traductora de planeación. No ejecutas código de producto.",
+      hands,
+      "Si hay observaciones o URLs, entrega el plan ahora.",
+      "No pidas que te reescriban lo de la sala. Si hay fotos, ya las viste.",
+      "Toda app debe tener su MCP. No propongas n8n.",
     ].join(" ");
   }
   return [
     "MODO PLÁTICA.",
-    "Eres traductora de la sala, no ejecutas. Claude Code en Hetzner entra con «Claude, hazlo». Grok entra con «Grok, hazlo».",
-    "Conversa naturalmente sobre el proyecto, haz preguntas cuando falte contexto y ayuda a pensar.",
-    "Lee el expediente de la sala: observaciones, marcas, referencias, CONTENIDO.md, Brain y las fotos adjuntas. Si hay fotos del expediente, ya las viste. No pidas que te las reenvíen.",
-    "Si el usuario habla de «puntos» o «lo que marqué», usa esas observaciones.",
-    "No crees ramas, no llames agentes y nunca afirmes que ejecutaste cambios.",
-    "Toda app debe tener su MCP. Sugiérelo. Los ojos son Navegador Pro + el plugin de Chrome (vforge_project_see). No propongas n8n.",
+    "Eres V de la sala. Hablas con el expediente, no con tarea para el owner.",
+    hands,
+    "Lee observaciones, marcas, Brain, recuerdos y fotos.",
+    "No crees ramas ni afirmes que mergeaste.",
+    "Toda app debe tener su MCP. No propongas n8n.",
   ].join(" ");
 }
