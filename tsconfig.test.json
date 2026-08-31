@@ -34,6 +34,7 @@
     "lib/live/see-page.ts",
     "lib/live/see-cdp.ts",
     "lib/live/run-console.ts",
-    "lib/live/work-order.ts"
+    "lib/live/work-order.ts",
+    "lib/live/room-tasks.ts"
   ]
 }

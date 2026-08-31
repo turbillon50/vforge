@@ -74,7 +74,12 @@ export interface AgentRunAccess {
   repositories: AgentRunRepository[];
 }
 
+let runsTableReady = false;
+
 export async function ensureProjectAgentRunsTable(): Promise<void> {
+  // El chat consulta las tareas cada 8 s: no hay por qué mandar el DDL
+  // completo en cada poll.
+  if (runsTableReady) return;
   await queryOne(
     `CREATE TABLE IF NOT EXISTS project_agent_runs (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -107,6 +112,7 @@ export async function ensureProjectAgentRunsTable(): Promise<void> {
   await queryOne(
     `CREATE INDEX IF NOT EXISTS idx_project_agent_runs_project ON project_agent_runs (project_id, created_at DESC)`,
   );
+  runsTableReady = true;
 }
 
 export async function authorizeAgentRunAccess(

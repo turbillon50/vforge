@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import type { RoomTask } from "@/lib/live/room-tasks";
 import {
   IconArrowL,
   IconCamera,
@@ -149,6 +150,7 @@ export function VConversationPanel({
 }) {
   const mobile = variant === "mobile";
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
+  const [tasks, setTasks] = useState<RoomTask[]>([]);
   const [pending, setPending] = useState<AssistantMessage | null>(null);
   const [pendingPhotos, setPendingPhotos] = useState<string[]>([]);
   const [album, setAlbum] = useState<Record<string, string[]>>({});
@@ -175,11 +177,13 @@ export function VConversationPanel({
       );
       const payload = (await response.json().catch(() => null)) as {
         messages?: AssistantMessage[];
+        tasks?: RoomTask[];
         canWrite?: boolean;
         repositories?: Array<{ repo_full_name: string; is_primary: boolean }>;
       } | null;
       if (!response.ok) throw new Error("No se pudo cargar el chat.");
       setMessages(Array.isArray(payload?.messages) ? payload.messages : []);
+      setTasks(Array.isArray(payload?.tasks) ? payload.tasks : []);
       // El permiso sale de aquí, no del endpoint de runs: si Hetzner se cae,
       // el composer sigue vivo.
       if (canWriteProp === undefined) setCanWrite(Boolean(payload?.canWrite));
@@ -318,6 +322,7 @@ export function VConversationPanel({
       }
       setPending(null);
       setPendingPhotos([]);
+      window.setTimeout(() => void load(), 600);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "V no pudo responder.");
       setMessage(trimmed);
@@ -329,6 +334,11 @@ export function VConversationPanel({
       busyRef.current = false;
     }
   }
+
+  const shownTasks = useMemo(() => {
+    const live = tasks.filter((task) => task.live);
+    return (live.length ? live : tasks.slice(0, 1)).slice(0, 3);
+  }, [tasks]);
 
   const bubble = mobile ? "max-w-[86%] text-[16px] leading-6" : "max-w-[78%] text-[15px] leading-6";
   const status = error
@@ -441,6 +451,62 @@ export function VConversationPanel({
           </div>
         )}
       </div>
+
+      {shownTasks.length ? (
+        <div
+          className={cn("shrink-0 border-t", mobile ? "px-3 py-2" : "px-4 py-2")}
+          style={{ borderColor: LINE, backgroundColor: CARD }}
+        >
+          <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {shownTasks.map((task) => {
+              const failed = task.status === "failed" || task.status === "cancelled";
+              const body = (
+                <>
+                  <span
+                    className={cn(
+                      "h-1.5 w-1.5 shrink-0 rounded-full",
+                      task.live && "animate-pulse",
+                    )}
+                    style={{
+                      backgroundColor: failed ? "var(--color-danger)" : INK,
+                    }}
+                  />
+                  <span className="truncate">
+                    {task.agentLabel} · {task.statusLabel}
+                  </span>
+                  <span className="shrink-0 font-mono text-[10px]" style={{ color: MUTED }}>
+                    {task.shortId}
+                  </span>
+                </>
+              );
+              const shell = cn(
+                "flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-[12px]",
+              );
+              return canWrite ? (
+                <button
+                  key={task.id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void sendMessage(`¿Cómo va el run ${task.shortId}?`)}
+                  className={cn(shell, "disabled:opacity-40")}
+                  style={{ borderColor: LINE, color: INK }}
+                  title="Preguntarle a V cómo va"
+                >
+                  {body}
+                </button>
+              ) : (
+                <span
+                  key={task.id}
+                  className={shell}
+                  style={{ borderColor: LINE, color: INK }}
+                >
+                  {body}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
 
       {error ? (
         <div

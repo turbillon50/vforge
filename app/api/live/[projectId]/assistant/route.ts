@@ -22,8 +22,9 @@ import {
   persistRoomMemory,
   wantsFactoryHands,
 } from "@/lib/live/v-factory-hands";
-import { looksLikeWorkOrder } from "@/lib/live/work-order";
-import { startOwnerGrokRun } from "@/lib/live/start-owner-run";
+import { parseWorkOrder } from "@/lib/live/work-order";
+import { startOwnerRun } from "@/lib/live/start-owner-run";
+import { agentLabel, factoryTasksBrief, listRoomTasks } from "@/lib/live/factory-tasks";
 import { recordCerebrasPulse, todayCerebrasUsage } from "@/lib/forge/cerebras-pulse";
 import {
   extractMemoryBlocks,
@@ -58,9 +59,13 @@ export async function GET(
 
   try {
     const messages = await listProjectAssistantMessages(projectId);
-    const usage = await todayCerebrasUsage().catch(() => null);
+    const [usage, tasks] = await Promise.all([
+      todayCerebrasUsage().catch(() => null),
+      listRoomTasks(projectId).catch(() => []),
+    ]);
     return json({
       messages,
+      tasks,
       canWrite: access.canWrite,
       repositories: access.repositories,
       translator: {
@@ -132,7 +137,10 @@ export async function POST(
         )
       : await loadRoomMemory(projectId, spoken).catch(() => "");
     const memories = await getUserMemories(access.identity.userId).catch(() => []);
-    const brief = [roomContext, hands, memoryPromptSection(memories)]
+    const factory = await factoryTasksBrief(projectId).catch(
+      () => "TAREAS EN LA FÁBRICA: no se pudo leer la cola en este turno.",
+    );
+    const brief = [roomContext, factory, hands, memoryPromptSection(memories)]
       .filter(Boolean)
       .join("\n\n");
     // Fotos de ESTE turno mandan. Sin adjuntos nuevos sólo van los visores,
@@ -143,23 +151,31 @@ export async function POST(
       : pickExpedienteFrames(await listVisorEyes(projectId).catch(() => []), 3);
 
     // La obra se encola ANTES de hablar, para que V hable con la verdad
-    // en la mano: o hay runId, o no hay ejecución y lo dice.
+    // en la mano: o hay runId, o no hay ejecución y lo dice. Si el owner
+    // nombró agente (Claude Code, Codex, Grok), va con ese.
+    const order = parseWorkOrder(spoken);
     let runId: string | null = null;
+    let runAgent: string | null = null;
     let dispatchError: string | null = null;
-    if (looksLikeWorkOrder(spoken)) {
+    if (order.dispatch) {
       if (!repository) {
         dispatchError = "esta sala no tiene repositorio conectado";
       } else {
-        const queued = await startOwnerGrokRun({
+        const queued = await startOwnerRun({
           projectId,
           access,
           repository,
           instruction: spoken,
-        }).catch((error) => ({
+          executor: order.executor,
+        }).catch((error: unknown) => ({
           error: error instanceof Error ? error.message.slice(0, 300) : "falló el encolado",
         }));
-        if ("runId" in queued) runId = queued.runId;
-        else dispatchError = queued.error;
+        if ("runId" in queued) {
+          runId = queued.runId;
+          runAgent = queued.agent;
+        } else {
+          dispatchError = queued.error;
+        }
       }
     }
 
@@ -173,6 +189,7 @@ export async function POST(
       roomContext: brief || null,
       images,
       runId,
+      runAgent,
       dispatchError,
     });
     const extracted = extractMemoryBlocks(result.text);
@@ -184,7 +201,7 @@ export async function POST(
     let reply = extracted.cleaned.slice(0, 12000);
     // Pie de página de máquina: sólo hechos. Ni terminal, ni promesas.
     if (runId) {
-      reply = `${reply}\n\nOrden encolada en la fábrica · run ${runId.slice(0, 8)}. Cuando haya resultado te lo digo aquí.`;
+      reply = `${reply}\n\nOrden encolada · ${agentLabel(runAgent || "")} · run ${runId.slice(0, 8)}. Pregúntame cómo va cuando quieras.`;
     } else if (dispatchError) {
       reply = `${reply}\n\nNo pude encolar la orden: ${dispatchError}. Seguimos aquí en el chat.`;
     }
@@ -222,6 +239,7 @@ export async function POST(
       messages,
       reply,
       runId,
+      runAgent,
       dispatchError,
       blind: result.blind,
       provider: result.provider,

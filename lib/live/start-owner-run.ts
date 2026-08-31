@@ -5,20 +5,33 @@ import { parseRepoFullName, withUserGithub } from "@/lib/live/github-user";
 import {
   buildAgentPrompt,
   ensureProjectAgentRunsTable,
+  resolveExecutor,
   type AgentRunAccess,
   type AgentRunRepository,
 } from "@/lib/live/agent-runs";
+import type { WorkOrderExecutor } from "@/lib/live/work-order";
 
-export async function startOwnerGrokRun(args: {
+/**
+ * Manda trabajo real a la fábrica desde el chat de V.
+ *
+ * `executor` es a quién lo pidió el owner (Claude Code, Codex, Grok). Si no
+ * nombró a nadie, decide la política del repo (`resolveExecutor`), la misma
+ * que usa la pestaña de runs — el chat no inventa reglas propias.
+ */
+export async function startOwnerRun(args: {
   projectId: string;
   access: AgentRunAccess;
   repository: AgentRunRepository;
   instruction: string;
-}): Promise<{ runId: string } | { error: string }> {
+  executor?: WorkOrderExecutor | null;
+}): Promise<{ runId: string; agent: WorkOrderExecutor } | { error: string }> {
   const instruction = args.instruction.trim().slice(0, 12000);
   if (instruction.length < 3) return { error: "instrucción vacía" };
   const parsed = parseRepoFullName(args.repository.repo_full_name);
   if (!parsed) return { error: "repo inválido" };
+
+  const agent: WorkOrderExecutor =
+    args.executor ?? resolveExecutor("auto", instruction);
 
   await ensureProjectAgentRunsTable();
   const runId = randomUUID();
@@ -29,11 +42,12 @@ export async function startOwnerGrokRun(args: {
     `INSERT INTO project_agent_runs
       (id, project_id, instruction, requested_executor, resolved_executor, phase, status,
        repo_full_name, base_branch, work_branch, created_by_user_id, created_by_email)
-     VALUES ($1,$2,$3,'grok','grok','building','preparing',$4,$5,$6,$7,$8)`,
+     VALUES ($1,$2,$3,$4,$4,'building','preparing',$5,$6,$7,$8,$9)`,
     [
       runId,
       args.projectId,
       instruction,
+      agent,
       args.repository.repo_full_name,
       baseBranch,
       workBranch,
@@ -70,7 +84,7 @@ export async function startOwnerGrokRun(args: {
       role: "builder",
     });
     const dispatched = await dispatchJob({
-      agent: "grok",
+      agent,
       prompt,
       priority: 3,
       source: `vforge:${args.projectId}:${runId}:${args.access.identity.userId}`,
@@ -78,9 +92,9 @@ export async function startOwnerGrokRun(args: {
     await queryOne(
       `UPDATE project_agent_runs SET queue_jobs = $1::jsonb, status = 'queued', updated_at = now()
         WHERE id = $2`,
-      [JSON.stringify([{ id: dispatched.id, agent: "grok", role: "builder" }]), runId],
+      [JSON.stringify([{ id: dispatched.id, agent, role: "builder" }]), runId],
     );
-    return { runId };
+    return { runId, agent };
   } catch (caught) {
     const message =
       caught instanceof Error ? caught.message.slice(0, 500) : "No se pudo iniciar el run";
