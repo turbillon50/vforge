@@ -40,6 +40,33 @@ export async function startOwnerRun(args: {
   const agent: BuilderExecutor = args.executor ?? "claude";
 
   await ensureProjectAgentRunsTable();
+
+  // Idempotencia: la misma instrucción, en la misma sala, con un run todavía
+  // vivo, devuelve ese run en vez de abrir otra rama y pagar otro job. Cubre
+  // el reintento manual y la respuesta que se pierde en la red después de
+  // que el servidor ya encoló.
+  const vivo = await queryOne<{ id: string; resolved_executor: string }>(
+    `SELECT id::text, resolved_executor
+       FROM project_agent_runs
+      WHERE project_id = $1
+        AND instruction = $2
+        AND status NOT IN ('failed', 'cancelled', 'published', 'approved')
+        AND created_at > now() - interval '10 minutes'
+      ORDER BY created_at DESC
+      LIMIT 1`,
+    [args.projectId, instruction],
+  ).catch(() => null);
+  if (vivo) {
+    console.info("[start-owner-run] orden repetida, reuso el run", {
+      projectId: args.projectId,
+      runId: vivo.id,
+    });
+    return {
+      runId: vivo.id,
+      agent: (vivo.resolved_executor === "codex" ? "codex" : "claude") as BuilderExecutor,
+    };
+  }
+
   const runId = randomUUID();
   const baseBranch = args.repository.default_branch || "main";
   const workBranch = `vforge/run-${runId.slice(0, 8)}`;

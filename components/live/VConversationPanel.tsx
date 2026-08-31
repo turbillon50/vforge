@@ -29,13 +29,15 @@ interface PendingPhoto {
   preview: string;
 }
 
-/** Paleta de la sala de V. Papel cálido, tinta casi negra. */
-const INK = "#1c1917";
-const PAPER = "#efeee8";
-const CARD = "#ffffff";
-const LINE = "#e4e1d8";
-/** 7.0:1 sobre el papel — el #6f6b64 anterior se perdía en móvil. */
-const MUTED = "#57534e";
+/** Paleta de la sala de V. Los valores viven en el token system
+ *  (app/globals.css, bloque --vchat-*), aquí sólo se consumen. */
+const INK = "var(--vchat-ink)";
+const ON_INK = "var(--vchat-on-ink)";
+const PAPER = "var(--vchat-paper)";
+const CARD = "var(--vchat-card)";
+const FIELD = "var(--vchat-field)";
+const LINE = "var(--vchat-line)";
+const MUTED = "var(--vchat-muted)";
 
 const THINKING = ["Pensando", "Leyendo la sala", "Revisando el expediente", "Escribiendo"];
 
@@ -101,8 +103,8 @@ function ThinkingLine({ hasPhotos }: { hasPhotos: boolean }) {
   return (
     <div className="flex items-center gap-2 pl-1 pt-1">
       <span className="relative grid h-3.5 w-3.5 place-items-center">
-        <span className="absolute inset-0 rounded-full bg-[#1c1917]/15 animate-ping" />
-        <span className="h-1.5 w-1.5 rounded-full bg-[#1c1917]" />
+        <span className="absolute inset-0 rounded-full bg-[var(--vchat-ink)]/15 animate-ping" />
+        <span className="h-1.5 w-1.5 rounded-full bg-[var(--vchat-ink)]" />
       </span>
       <p className="text-[13px] tracking-[-0.01em]" style={{ color: MUTED }}>
         {steps[index]}
@@ -372,7 +374,7 @@ export function VConversationPanel({
         ) : null}
         <span
           className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[12px] font-semibold"
-          style={{ backgroundColor: INK, color: "#f6f3ec" }}
+          style={{ backgroundColor: INK, color: ON_INK }}
         >
           V
         </span>
@@ -388,7 +390,7 @@ export function VConversationPanel({
           <button
             type="button"
             onClick={onClose}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full hover:bg-[#efeee8]"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full hover:bg-[var(--vchat-paper)]"
             style={{ color: INK }}
             aria-label="Cerrar V"
           >
@@ -423,7 +425,7 @@ export function VConversationPanel({
                     )}
                     style={{
                       backgroundColor: mine ? INK : CARD,
-                      color: mine ? "#f6f3ec" : INK,
+                      color: mine ? ON_INK : INK,
                     }}
                   >
                     {mine && thumbs.length ? (
@@ -560,7 +562,7 @@ export function VConversationPanel({
                   <img src={photo.preview} alt="" className="h-full w-full object-cover" />
                   <span
                     className="absolute right-0.5 top-0.5 grid h-5 w-5 place-items-center rounded-full"
-                    style={{ backgroundColor: INK, color: "#f6f3ec" }}
+                    style={{ backgroundColor: INK, color: ON_INK }}
                   >
                     <IconX size={10} />
                   </span>
@@ -612,7 +614,7 @@ export function VConversationPanel({
                   ? "min-h-12 max-h-[132px] py-3 text-[16px] leading-6"
                   : "min-h-10 max-h-28 py-2.5 text-[15px] leading-5",
               )}
-              style={{ borderColor: LINE, backgroundColor: "#f7f6f2", color: INK }}
+              style={{ borderColor: LINE, backgroundColor: FIELD, color: INK }}
             />
             <button
               type="submit"
@@ -621,7 +623,7 @@ export function VConversationPanel({
                 "grid shrink-0 place-items-center rounded-full disabled:opacity-30",
                 mobile ? "h-12 w-12" : "h-10 w-10",
               )}
-              style={{ backgroundColor: INK, color: "#f6f3ec" }}
+              style={{ backgroundColor: INK, color: ON_INK }}
               aria-label="Enviar"
             >
               {busy ? (
