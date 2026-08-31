@@ -41,29 +41,63 @@ export async function startOwnerRun(args: {
 
   await ensureProjectAgentRunsTable();
 
-  // Idempotencia: la misma instrucción, en la misma sala, con un run todavía
-  // vivo, devuelve ese run en vez de abrir otra rama y pagar otro job. Cubre
-  // el reintento manual y la respuesta que se pierde en la red después de
-  // que el servidor ya encoló.
-  const vivo = await queryOne<{ id: string; resolved_executor: string }>(
-    `SELECT id::text, resolved_executor
-       FROM project_agent_runs
-      WHERE project_id = $1
+  // Idempotencia. Dos reglas, porque un run pasa por dos momentos:
+  //
+  // 1. Ya despachado (queued en adelante): la orden existe de verdad en la
+  //    cola, así que se reutiliza. Decir "encolada" ahí es cierto.
+  // 2. Todavía naciendo ('preparing'): la fila existe pero la rama y el job
+  //    aún no. Ni se reutiliza (podría acabar en 'failed' y ya habríamos
+  //    dicho que salió) ni se duplica: se pide esperar unos segundos.
+  //
+  // La llave incluye repo y agente: el mismo texto mandado a otro repo o a
+  // otro constructor es OTRO trabajo, no un reintento.
+  const mismaOrden = `project_id = $1
         AND instruction = $2
-        AND status NOT IN ('failed', 'cancelled', 'published', 'approved')
+        AND lower(repo_full_name) = lower($3)
+        AND resolved_executor = $4`;
+  const llave = [
+    args.projectId,
+    instruction,
+    args.repository.repo_full_name,
+    agent,
+  ];
+
+  const despachado = await queryOne<{ id: string }>(
+    `SELECT id::text
+       FROM project_agent_runs
+      WHERE ${mismaOrden}
+        AND status IN ('queued', 'running', 'awaiting_preview', 'preview_ready', 'awaiting_approval')
         AND created_at > now() - interval '10 minutes'
       ORDER BY created_at DESC
       LIMIT 1`,
-    [args.projectId, instruction],
+    llave,
   ).catch(() => null);
-  if (vivo) {
-    console.info("[start-owner-run] orden repetida, reuso el run", {
+  if (despachado) {
+    console.info("[start-owner-run] orden repetida, reuso el run despachado", {
       projectId: args.projectId,
-      runId: vivo.id,
+      runId: despachado.id,
+      agent,
+    });
+    return { runId: despachado.id, agent };
+  }
+
+  const naciendo = await queryOne<{ id: string }>(
+    `SELECT id::text
+       FROM project_agent_runs
+      WHERE ${mismaOrden}
+        AND status = 'preparing'
+        AND created_at > now() - interval '2 minutes'
+      LIMIT 1`,
+    llave,
+  ).catch(() => null);
+  if (naciendo) {
+    console.info("[start-owner-run] orden idéntica todavía saliendo", {
+      projectId: args.projectId,
+      runId: naciendo.id,
     });
     return {
-      runId: vivo.id,
-      agent: (vivo.resolved_executor === "codex" ? "codex" : "claude") as BuilderExecutor,
+      error:
+        "ya hay una orden idéntica saliendo en este momento; dame unos segundos y te digo cómo quedó",
     };
   }
 
