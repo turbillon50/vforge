@@ -46,6 +46,10 @@ function fileToPhoto(file: File): Promise<PendingPhoto | null> {
   });
 }
 
+function visibleText(value: string): string {
+  return value.replace(/\*\*([^*]+)\*\*/g, "$1").replace(/`+/g, "");
+}
+
 export function VConversationPanel({
   projectId,
   canWrite,
@@ -169,49 +173,49 @@ export function VConversationPanel({
     [...visibleMessages].reverse().find((item) => item.role === "user")?.content ?? "";
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[#eceae4]">
+    <div className="flex min-h-0 flex-1 flex-col bg-[#efeee8]">
       <div className="flex shrink-0 items-center gap-3 border-b border-[var(--border-1)] bg-white px-4 py-3">
-        <span className="grid h-9 w-9 place-items-center rounded-full bg-black text-[13px] font-semibold text-white">
+        <span className="grid h-9 w-9 place-items-center rounded-full bg-[#1c1917] text-[13px] font-semibold text-[#f6f3ec]">
           V
         </span>
         <div className="min-w-0">
-          <p className="text-[14px] font-medium leading-none">V</p>
-          <p className="mt-1 text-[11px] text-[var(--fg-muted)]">Tu hermana · en línea</p>
+          <p className="text-[14px] font-medium leading-none text-[#1c1917]">V</p>
+          <p className="mt-1 text-[11px] text-[#6f6b64]">Tu hermana · en línea</p>
         </div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:px-4" aria-live="polite">
         {loading ? (
-          <div className="flex h-full items-center justify-center gap-2 text-[12px] text-[var(--fg-muted)]">
+          <div className="flex h-full items-center justify-center gap-2 text-[12px] text-[#6f6b64]">
             <IconLoader size={14} className="animate-spin" /> Cargando chat…
           </div>
         ) : visibleMessages.length ? (
           <div className="mx-auto flex w-full max-w-[560px] flex-col gap-2">
-            {visibleMessages.map((item) => (
-              <div
-                key={item.id}
-                className={cn(
-                  "flex w-full",
-                  item.role === "user" ? "justify-end" : "justify-start",
-                )}
-              >
-                <article
-                  className={cn(
-                    "max-w-[86%] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-6 shadow-[0_1px_0_rgba(0,0,0,0.04)]",
-                    item.role === "user"
-                      ? "rounded-br-[6px] bg-black text-white"
-                      : "rounded-bl-[6px] bg-white text-black",
-                  )}
-                >
-                  <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
-                    {item.content}
-                  </p>
-                </article>
-              </div>
-            ))}
+            {visibleMessages.map((item) => {
+              const mine = item.role === "user";
+              return (
+                <div key={item.id} className={cn("flex w-full", mine ? "justify-end" : "justify-start")}>
+                  <article
+                    className={cn(
+                      "max-w-[86%] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-6",
+                      mine
+                        ? "rounded-br-[6px] bg-[#1c1917]"
+                        : "rounded-bl-[6px] border border-[#e4e1d8] bg-white",
+                    )}
+                  >
+                    <p
+                      className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
+                      style={{ color: mine ? "#f6f3ec" : "#1c1917" }}
+                    >
+                      {visibleText(item.content)}
+                    </p>
+                  </article>
+                </div>
+              );
+            })}
             {busy ? (
               <div className="flex justify-start">
-                <span className="inline-flex items-center gap-2 rounded-[18px] bg-white px-3.5 py-2 text-[13px] text-[var(--fg-muted)]">
+                <span className="inline-flex items-center gap-2 rounded-[18px] border border-[#e4e1d8] bg-white px-3.5 py-2 text-[13px] text-[#6f6b64]">
                   <IconLoader size={12} className="animate-spin" /> V está escribiendo
                 </span>
               </div>
@@ -221,13 +225,11 @@ export function VConversationPanel({
         ) : (
           <div className="grid h-full place-items-center text-center">
             <div>
-              <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-black text-white">
+              <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#1c1917] text-[#f6f3ec]">
                 V
               </span>
-              <p className="mt-3 text-[15px] font-medium">Ey hermano</p>
-              <p className="mt-1 text-[12px] text-[var(--fg-muted)]">
-                Mándame texto o una foto. Aquí me quedo.
-              </p>
+              <p className="mt-3 text-[15px] font-medium text-[#1c1917]">Ey hermano</p>
+              <p className="mt-1 text-[12px] text-[#6f6b64]">Mándame texto o una foto. Aquí me quedo.</p>
             </div>
           </div>
         )}
@@ -283,7 +285,7 @@ export function VConversationPanel({
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--border-1)] text-[18px] hover:border-black"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--border-1)] text-[18px] text-[#1c1917] hover:border-[#1c1917]"
               aria-label="Adjuntar foto"
             >
               +
@@ -300,12 +302,12 @@ export function VConversationPanel({
               rows={1}
               maxLength={6000}
               placeholder="Mensaje"
-              className="max-h-36 min-h-11 flex-1 resize-none rounded-[22px] border border-[var(--border-1)] bg-[#f7f6f2] px-4 py-2.5 text-[14px] leading-5 outline-none focus:border-black"
+              className="max-h-36 min-h-11 flex-1 resize-none rounded-[22px] border border-[#e4e1d8] bg-[#f7f6f2] px-4 py-2.5 text-[14px] leading-5 text-[#1c1917] outline-none focus:border-[#1c1917]"
             />
             <button
               type="submit"
               disabled={busy || (!message.trim() && photos.length === 0)}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black text-white disabled:opacity-30"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#1c1917] text-[#f6f3ec] disabled:opacity-30"
               aria-label="Enviar"
             >
               {busy ? <IconLoader size={14} className="animate-spin" /> : <IconSend size={14} />}
@@ -314,16 +316,16 @@ export function VConversationPanel({
           {onDispatchGrok ? (
             <button
               type="button"
-              className="mt-2 text-[11px] text-[var(--fg-muted)] hover:text-black"
+              className="mt-2 text-[11px] text-[#6f6b64] hover:text-[#1c1917]"
               onClick={() => onDispatchGrok((message.trim() || lastUser).slice(0, 12000))}
               disabled={busy || !(message.trim() || lastUser)}
             >
-              Mandar al centro → Grok
+              Mandar a Hetzner → Grok
             </button>
           ) : null}
         </form>
       ) : (
-        <p className="shrink-0 bg-white px-4 py-3 text-[12px] text-[var(--fg-muted)]">
+        <p className="shrink-0 bg-white px-4 py-3 text-[12px] text-[#6f6b64]">
           Sólo el owner habla con V.
         </p>
       )}
