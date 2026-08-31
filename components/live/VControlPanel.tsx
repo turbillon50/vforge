@@ -13,13 +13,11 @@ import {
   IconLoader,
   IconRocket,
   IconSend,
-  IconSparkles,
   IconStop,
   IconX,
 } from "@/components/brand/VFIcons";
 
 type Executor = "auto" | "codex" | "claude" | "grok" | "team";
-type ControlMode = "talk" | "plan" | "execute";
 type RunStatus =
   | "preparing"
   | "queued"
@@ -60,7 +58,6 @@ interface AgentRun {
   instruction: string;
   requested_executor: Executor;
   resolved_executor: string;
-  phase: string;
   status: RunStatus;
   repo_full_name: string;
   base_branch: string;
@@ -73,20 +70,16 @@ interface AgentRun {
   created_at: string;
 }
 
-const EXECUTORS: Array<{ id: Executor; label: string; description: string }> = [
-  { id: "auto", label: "Auto", description: "V elige según la tarea" },
-  { id: "codex", label: "Codex", description: "Código y validación" },
-  {
-    id: "claude",
-    label: "Claude",
-    description: "Arquitectura y trabajo largo",
-  },
-  { id: "grok", label: "Grok", description: "Cambia código en sandbox" },
-  { id: "team", label: "Equipo", description: "Claude → Codex → Grok" },
+const EXECUTORS: Array<{ id: Executor; label: string }> = [
+  { id: "grok", label: "Grok" },
+  { id: "claude", label: "Claude" },
+  { id: "codex", label: "Codex" },
+  { id: "auto", label: "Auto" },
+  { id: "team", label: "Equipo" },
 ];
 
 const STATUS_LABELS: Record<RunStatus, string> = {
-  preparing: "Preparando sandbox",
+  preparing: "Preparando",
   queued: "En cola",
   running: "Trabajando",
   awaiting_preview: "Esperando preview",
@@ -98,12 +91,7 @@ const STATUS_LABELS: Record<RunStatus, string> = {
   cancelled: "Cancelado",
 };
 
-const ACTIVE = new Set<RunStatus>([
-  "preparing",
-  "queued",
-  "running",
-  "awaiting_preview",
-]);
+const ACTIVE = new Set<RunStatus>(["preparing", "queued", "running", "awaiting_preview"]);
 
 export function VControlPanel({
   projectId,
@@ -118,34 +106,28 @@ export function VControlPanel({
   const [canWrite, setCanWrite] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [instruction, setInstruction] = useState("");
-  const [executor, setExecutor] = useState<Executor>("auto");
+  const [executor, setExecutor] = useState<Executor>("grok");
   const [repository, setRepository] = useState("");
   const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [controlMode, setControlMode] = useState<ControlMode>("talk");
-  const [planSeed, setPlanSeed] = useState("");
   const pollingRef = useRef(false);
 
   const load = useCallback(async () => {
     if (pollingRef.current) return;
     pollingRef.current = true;
     try {
-      const response = await fetch(
-        `/api/live/${encodeURIComponent(projectId)}/runs`,
-        { cache: "no-store" },
-      );
+      const response = await fetch(`/api/live/${encodeURIComponent(projectId)}/runs`, {
+        cache: "no-store",
+      });
       const payload = (await response.json().catch(() => null)) as {
         runs?: AgentRun[];
         jobs?: QueueJob[];
         repositories?: Repository[];
         canWrite?: boolean;
       } | null;
-      if (!response.ok) throw new Error("No se pudo leer la cabina V.");
+      if (!response.ok) throw new Error("No se pudo leer la cabina.");
       const nextRuns = Array.isArray(payload?.runs) ? payload.runs : [];
-      const nextRepos = Array.isArray(payload?.repositories)
-        ? payload.repositories
-        : [];
+      const nextRepos = Array.isArray(payload?.repositories) ? payload.repositories : [];
       setRuns(nextRuns);
       setJobs(Array.isArray(payload?.jobs) ? payload.jobs : []);
       setRepositories(nextRepos);
@@ -164,14 +146,9 @@ export function VControlPanel({
       );
       setError(null);
     } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "No se pudo leer la cabina V.",
-      );
+      setError(caught instanceof Error ? caught.message : "No se pudo leer la cabina.");
     } finally {
       pollingRef.current = false;
-      setLoading(false);
     }
   }, [projectId]);
 
@@ -185,10 +162,7 @@ export function VControlPanel({
     () => runs.find((run) => run.id === selectedId) ?? runs[0] ?? null,
     [runs, selectedId],
   );
-  const jobMap = useMemo(
-    () => new Map(jobs.map((job) => [job.id, job])),
-    [jobs],
-  );
+  const jobMap = useMemo(() => new Map(jobs.map((job) => [job.id, job])), [jobs]);
 
   async function launchRun(nextInstruction: string, nextExecutor: Executor = executor) {
     const text = nextInstruction.trim().slice(0, 12000);
@@ -196,18 +170,11 @@ export function VControlPanel({
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch(
-        `/api/live/${encodeURIComponent(projectId)}/runs`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            instruction: text,
-            executor: nextExecutor,
-            repository,
-          }),
-        },
-      );
+      const response = await fetch(`/api/live/${encodeURIComponent(projectId)}/runs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instruction: text, executor: nextExecutor, repository }),
+      });
       const payload = (await response.json().catch(() => null)) as {
         run?: AgentRun;
         error?: string;
@@ -217,33 +184,16 @@ export function VControlPanel({
       setInstruction("");
       setRuns((current) => [payload.run!, ...current]);
       setSelectedId(payload.run.id);
-      setControlMode("execute");
       await load();
     } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "No se pudo iniciar el trabajo.",
-      );
+      setError(caught instanceof Error ? caught.message : "No se pudo iniciar el trabajo.");
     } finally {
       setBusy(false);
     }
   }
 
-  async function startRun(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    await launchRun(instruction);
-  }
-
   async function runAction(action: "approve" | "publish" | "cancel" | "apply") {
     if (!selected || busy) return;
-    const message =
-      action === "publish"
-        ? "Esto fusionará a main. ¿Publicar ahora?"
-        : action === "cancel"
-          ? "¿Cancelar este run? La rama se conservará para auditoría."
-          : null;
-    if (message && !window.confirm(message)) return;
     setBusy(true);
     setError(null);
     try {
@@ -255,19 +205,10 @@ export function VControlPanel({
           body: JSON.stringify({ action }),
         },
       );
-      const payload = (await response.json().catch(() => null)) as {
-        run?: AgentRun;
-        error?: string;
-      } | null;
-      if (!response.ok)
-        throw new Error(payload?.error || "La acción no pudo completarse.");
+      if (!response.ok) throw new Error("La acción no pudo completarse.");
       await load();
     } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "La acción no pudo completarse.",
-      );
+      setError(caught instanceof Error ? caught.message : "La acción no pudo completarse.");
     } finally {
       setBusy(false);
     }
@@ -276,9 +217,8 @@ export function VControlPanel({
   async function nudgeRun(message: string) {
     if (!selected || busy) return;
     setBusy(true);
-    setError(null);
     try {
-      const response = await fetch(
+      await fetch(
         `/api/live/${encodeURIComponent(projectId)}/runs/${encodeURIComponent(selected.id)}`,
         {
           method: "PATCH",
@@ -286,18 +226,7 @@ export function VControlPanel({
           body: JSON.stringify({ action: "nudge", message }),
         },
       );
-      const payload = (await response.json().catch(() => null)) as {
-        error?: string;
-      } | null;
-      if (!response.ok)
-        throw new Error(payload?.error || "Grok no recibió el mensaje.");
       await load();
-    } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "Grok no recibió el mensaje.",
-      );
     } finally {
       setBusy(false);
     }
@@ -306,130 +235,16 @@ export function VControlPanel({
   return (
     <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-[8px] border border-[var(--border-1)] bg-white">
       <header className="flex min-h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--border-1)] px-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-black text-[12px] font-semibold text-white">
-            V
-          </span>
-          <div className="min-w-0">
-            <p className="font-mono text-[9px] uppercase tracking-[0.13em]">
-              V · traductora de la sala
-            </p>
-            <p className="truncate text-[9px] text-[var(--fg-muted)]">
-              Cerebras habla · Grok entra cuando le das la orden
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="hidden items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)] sm:flex">
-            <span className="status-shape" data-active /> sincronización 1.5 s
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--color-background)]"
-            aria-label="Cerrar V"
-          >
-            <IconX size={11} />
-          </button>
-        </div>
-      </header>
-
-      <nav
-        className="flex shrink-0 gap-1 border-b border-[var(--border-1)] bg-white px-3 py-2"
-        aria-label="Modo de V"
-      >
-        {(
-          [
-            ["talk", "Plática"],
-            ["plan", "Planeación"],
-            ["execute", "Ejecución"],
-          ] as Array<[ControlMode, string]>
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setControlMode(id)}
-            className={cn(
-              "rounded-md border px-3 py-1.5 text-[10px] font-medium",
-              controlMode === id
-                ? "border-black bg-black text-white"
-                : "border-[var(--border-1)] bg-white hover:border-black",
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
-
-      {canWrite && controlMode === "execute" ? (
-        <form
-          onSubmit={startRun}
-          className="shrink-0 border-b border-[var(--border-1)] bg-[var(--color-background)] p-3"
-        >
-          <div className="grid gap-2 lg:grid-cols-[210px_minmax(0,1fr)_auto]">
-            <select
-              value={repository}
-              onChange={(event) => setRepository(event.target.value)}
-              className="min-h-10 rounded-md border border-[var(--border-1)] bg-white px-3 text-[11px] outline-none focus:border-black"
-              aria-label="Repositorio"
-            >
-              {repositories.map((repo) => (
-                <option key={repo.repo_full_name} value={repo.repo_full_name}>
-                  {repositoryGroupLabel(
-                    repo.repo_full_name,
-                    repo.role,
-                    repo.is_primary,
-                  )}
-                </option>
-              ))}
-            </select>
-            <textarea
-              value={instruction}
-              onChange={(event) => setInstruction(event.target.value)}
-              maxLength={12000}
-              rows={2}
-              placeholder="La IA grande trabajará en un sandbox aislado. Main no se toca hasta Publicar."
-              className="min-h-14 resize-y rounded-md border border-[var(--border-1)] bg-white px-3 py-2 text-[12px] leading-5 outline-none focus:border-black"
-            />
-            <button
-              type="submit"
-              disabled={busy || !instruction.trim() || !repository}
-              className="btn-primary min-h-10 self-stretch disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {busy ? (
-                <IconLoader size={12} className="animate-spin" />
-              ) : (
-                <IconSend size={12} />
-              )}{" "}
-              Ejecutar
-            </button>
-          </div>
-          <div
-            className="mt-2 flex gap-1 overflow-x-auto"
-            aria-label="Seleccionar ejecutor"
-          >
-            {EXECUTORS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setExecutor(item.id)}
-                title={item.description}
-                className={cn(
-                  "shrink-0 rounded-md border px-2.5 py-1.5 font-mono text-[8px] uppercase tracking-[0.08em]",
-                  executor === item.id
-                    ? "border-black bg-black text-white"
-                    : "border-[var(--border-1)] bg-white hover:border-black",
-                )}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-          <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
-            Sandbox en rama aislada · preview antes de aprobar · GitHub main sólo al publicar
+        <div className="min-w-0">
+          <p className="font-mono text-[9px] uppercase tracking-[0.13em]">V · tu hermana</p>
+          <p className="truncate text-[9px] text-[var(--fg-muted)]">
+            Chat a la izquierda · quien trabaja al centro · resultado a la derecha
           </p>
-        </form>
-      ) : null}
+        </div>
+        <button type="button" onClick={onClose} className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--color-background)]" aria-label="Cerrar V">
+          <IconX size={11} />
+        </button>
+      </header>
 
       {error ? (
         <p className="shrink-0 border-b border-[var(--border-1)] px-3 py-2 text-[10px] text-[var(--color-danger)]">
@@ -437,69 +252,73 @@ export function VControlPanel({
         </p>
       ) : null}
 
-      {controlMode !== "execute" ? (
-        <VConversationPanel
-          projectId={projectId}
-          mode={controlMode}
-          canWrite={canWrite}
-          repositories={repositories}
-          repository={repository}
-          onRepositoryChange={setRepository}
-          seed={controlMode === "plan" ? planSeed : ""}
-          onPromoteToPlan={(talk) => {
-            setPlanSeed(
-              `Convierte esta plática en un plan verificable.\n\n${talk}`.slice(
-                0,
-                6000,
-              ),
-            );
-            setControlMode("plan");
-            void fetch(`/api/live/${encodeURIComponent(projectId)}/memory`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                kind: "talk_to_plan",
-                summary: talk.slice(0, 400),
-              }),
-            });
-          }}
-          onDispatchGrok={(order) => {
-            void launchRun(order, "grok");
-            void fetch(`/api/live/${encodeURIComponent(projectId)}/memory`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                kind: "plan_to_task",
-                summary: `Grok: ${order.slice(0, 390)}`,
-              }),
-            });
-          }}
-          onUseAsTask={(plan) => {
-            setInstruction(plan.slice(0, 12000));
-            setControlMode("execute");
-            void fetch(`/api/live/${encodeURIComponent(projectId)}/memory`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                kind: "plan_to_task",
-                summary: plan.slice(0, 400),
-              }),
-            });
-          }}
-          canApply={Boolean(
-            canWrite && selected && canApplyRun(selected.status),
-          )}
-          onApply={() => void runAction("apply")}
-        />
-      ) : (
-        <div className="flex min-h-0 flex-1 flex-col">
-        <div className="grid min-h-0 flex-1 md:grid-cols-[300px_minmax(0,1fr)]">
-          <aside className="min-h-0 overflow-y-auto border-b border-[var(--border-1)] md:border-b-0 md:border-r">
-            {loading ? (
-              <div className="flex items-center gap-2 p-4 text-[11px] text-[var(--fg-muted)]">
-                <IconLoader size={12} className="animate-spin" /> Cargando runs…
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-3">
+        <section className="flex min-h-0 flex-col border-b border-[var(--border-1)] lg:border-b-0 lg:border-r">
+          <VConversationPanel
+            projectId={projectId}
+            canWrite={canWrite}
+            repository={repository}
+            onDispatchGrok={(order) => {
+              setInstruction(order);
+              void launchRun(order, executor);
+            }}
+          />
+        </section>
+
+        <section className="flex min-h-0 flex-col overflow-y-auto border-b border-[var(--border-1)] lg:border-b-0 lg:border-r">
+          <header className="border-b border-[var(--border-1)] px-3 py-2">
+            <p className="text-[11px] font-medium">Mandar a alguien</p>
+            <p className="mt-0.5 text-[9px] text-[var(--fg-muted)]">Otra ventana. V se queda a tu izquierda.</p>
+          </header>
+          {canWrite ? (
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void launchRun(instruction);
+              }}
+              className="shrink-0 space-y-2 border-b border-[var(--border-1)] p-3"
+            >
+              <select
+                value={repository}
+                onChange={(event) => setRepository(event.target.value)}
+                className="min-h-9 w-full rounded-md border border-[var(--border-1)] bg-white px-2 text-[11px]"
+              >
+                {repositories.map((repo) => (
+                  <option key={repo.repo_full_name} value={repo.repo_full_name}>
+                    {repositoryGroupLabel(repo.repo_full_name, repo.role, repo.is_primary)}
+                  </option>
+                ))}
+              </select>
+              <textarea
+                value={instruction}
+                onChange={(event) => setInstruction(event.target.value)}
+                rows={3}
+                placeholder="Qué tiene que hacer Grok o Claude…"
+                className="min-h-16 w-full resize-y rounded-md border border-[var(--border-1)] px-3 py-2 text-[12px] outline-none focus:border-black"
+              />
+              <div className="flex flex-wrap gap-1">
+                {EXECUTORS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setExecutor(item.id)}
+                    className={cn(
+                      "rounded-md border px-2 py-1 font-mono text-[8px] uppercase",
+                      executor === item.id ? "border-black bg-black text-white" : "border-[var(--border-1)]",
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
-            ) : runs.length ? (
+              <button type="submit" disabled={busy || !instruction.trim() || !repository} className="btn-primary w-full disabled:opacity-40">
+                {busy ? <IconLoader size={12} className="animate-spin" /> : <IconSend size={12} />}
+                Enviar al centro
+              </button>
+            </form>
+          ) : null}
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {runs.length ? (
               <div className="divide-y divide-[var(--border-1)]">
                 {runs.map((run) => (
                   <button
@@ -507,298 +326,96 @@ export function VControlPanel({
                     type="button"
                     onClick={() => setSelectedId(run.id)}
                     className={cn(
-                      "w-full p-3 text-left hover:bg-[var(--color-background)]",
-                      selected?.id === run.id &&
-                        "bg-black text-white hover:bg-black",
+                      "w-full p-3 text-left text-[11px] hover:bg-[var(--color-background)]",
+                      selected?.id === run.id && "bg-black text-white hover:bg-black",
                     )}
                   >
-                    <span className="flex items-center justify-between gap-2">
-                      <strong className="truncate text-[11px] font-medium">
-                        {run.instruction}
-                      </strong>
-                      <span
-                        className={cn(
-                          "status-shape shrink-0",
-                          ACTIVE.has(run.status) && "animate-pulse",
-                        )}
-                        data-active={
-                          run.status === "preview_ready" ||
-                          run.status === "approved" ||
-                          run.status === "published"
-                        }
-                      />
-                    </span>
-                    <span
-                      className={cn(
-                        "mt-2 flex items-center justify-between font-mono text-[8px] uppercase tracking-[0.08em]",
-                        selected?.id === run.id
-                          ? "text-white/65"
-                          : "text-[var(--fg-muted)]",
-                      )}
-                    >
-                      <span>
-                        {run.requested_executor === "team"
-                          ? "Equipo"
-                          : run.resolved_executor}
-                      </span>
-                      <span>{STATUS_LABELS[run.status]}</span>
+                    <span className="line-clamp-2">{run.instruction}</span>
+                    <span className={cn("mt-1 block font-mono text-[8px] uppercase", selected?.id === run.id ? "text-white/65" : "text-[var(--fg-muted)]")}>
+                      {run.resolved_executor} · {STATUS_LABELS[run.status]}
                     </span>
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="p-5 text-[11px] leading-5 text-[var(--fg-muted)]">
-                Todavía no hay ejecuciones. Dale una instrucción a V para crear
-                la primera rama aislada.
-              </div>
+              <p className="p-4 text-[11px] text-[var(--fg-muted)]">Nadie trabaja todavía. Manda a Grok desde aquí.</p>
             )}
-          </aside>
-
-          <div className="min-h-0 overflow-y-auto bg-[var(--color-background)]">
             {selected ? (
-              <div className="grid min-h-full gap-3 p-3 xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.8fr)]">
-                <div className="space-y-3">
-                  <section className="rounded-[8px] border border-[var(--border-1)] bg-white p-3">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className="mono-label">Instrucción</p>
-                        <p className="mt-2 whitespace-pre-wrap text-[12px] leading-5">
-                          {selected.instruction}
-                        </p>
-                      </div>
-                      <span className="rounded-full border border-black px-2 py-1 font-mono text-[8px] uppercase tracking-[0.08em]">
-                        {STATUS_LABELS[selected.status]}
-                      </span>
-                    </div>
-                    <div className="mt-3 grid gap-2 border-t border-[var(--border-1)] pt-3 text-[9px] sm:grid-cols-2">
-                      <p className="truncate">
-                        <span className="text-[var(--fg-muted)]">Repo </span>
-                        {selected.repo_full_name}
-                      </p>
-                      <p className="truncate">
-                        <span className="text-[var(--fg-muted)]">Rama </span>
-                        {selected.work_branch}
-                      </p>
-                    </div>
-                  </section>
-
-                  <RunLiveConsole
-                    createdAt={selected.created_at}
-                    status={selected.status}
-                    jobs={jobMap}
-                    jobRefs={selected.queue_jobs}
-                    canWrite={canWrite}
-                    busy={busy}
-                    onNudge={nudgeRun}
-                  />
-
-                  <section className="rounded-[8px] border border-[var(--border-1)] bg-white">
-                    <header className="border-b border-[var(--border-1)] px-3 py-2">
-                      <p className="mono-label">Circuito</p>
-                    </header>
-                    <div className="divide-y divide-[var(--border-1)]">
-                      {selected.queue_jobs.map((jobRef, index) => {
-                        const job = jobMap.get(jobRef.id);
-                        const done =
-                          job &&
-                          [
-                            "done",
-                            "completed",
-                            "success",
-                            "succeeded",
-                          ].includes(job.status.toLowerCase());
-                        return (
-                          <div
-                            key={jobRef.id}
-                            className="grid grid-cols-[26px_minmax(0,1fr)_auto] items-start gap-2 px-3 py-3"
-                          >
-                            <span
-                              className={cn(
-                                "grid h-6 w-6 place-items-center rounded-full border text-[9px]",
-                                done
-                                  ? "border-black bg-black text-white"
-                                  : "border-[var(--border-1)]",
-                              )}
-                            >
-                              {done ? <IconCheck size={10} /> : index + 1}
-                            </span>
-                            <div>
-                              <p className="text-[11px] font-medium capitalize">
-                                {jobRef.agent} · {jobRef.role}
-                              </p>
-                              <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-[9px] leading-4 text-[var(--fg-muted)]">
-                                {job?.logTail ||
-                                  job?.result ||
-                                  "Esperando al runner…"}
-                              </p>
-                            </div>
-                            <span className="font-mono text-[8px] uppercase text-[var(--fg-muted)]">
-                              {job?.status || "queued"}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </section>
-
-                  {selected.summary ? (
-                    <section className="rounded-[8px] border border-[var(--border-1)] bg-white p-3">
-                      <p className="mono-label">Resultado más reciente</p>
-                      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-[10px] leading-5">
-                        {selected.summary}
-                      </pre>
-                    </section>
-                  ) : null}
-                  {selected.error ? (
-                    <section className="rounded-[8px] border border-black bg-white p-3 text-[10px] leading-5">
-                      {selected.error}
-                    </section>
-                  ) : null}
-                </div>
-
-                <div className="space-y-3">
-                  <section className="overflow-hidden rounded-[8px] border border-[var(--border-1)] bg-white">
-                    <header className="flex items-center justify-between border-b border-[var(--border-1)] px-3 py-2">
-                      <p className="mono-label">Preview antes de publicar</p>
-                      {selected.preview_url ? (
-                        <a
-                          href={selected.preview_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="grid h-7 w-7 place-items-center rounded-md hover:bg-[var(--color-background)]"
-                          aria-label="Abrir preview"
-                        >
-                          <IconExtLink size={10} />
-                        </a>
-                      ) : null}
-                    </header>
-                    {selected.preview_url ? (
-                      <iframe
-                        src={selected.preview_url}
-                        title={`Preview ${selected.id}`}
-                        className="h-[380px] w-full border-0 bg-white"
-                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <div className="grid min-h-52 place-items-center p-6 text-center">
-                        <div>
-                          <IconSparkles size={20} className="mx-auto" />
-                          <p className="mt-3 text-[11px] font-medium">
-                            El preview no es obligatorio
-                          </p>
-                          <p className="mt-2 max-w-xs text-[9px] leading-4 text-[var(--fg-muted)]">
-                            Grok ya trabajó en la rama. Aplica a main sin esperar Vercel.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </section>
-
-                  <section className="rounded-[8px] border border-black bg-white p-3">
-                    <div className="flex flex-wrap gap-2">
-                      <a
-                        href={`https://github.com/${selected.repo_full_name}/tree/${selected.work_branch}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn-ghost"
-                      >
-                        <IconBranch size={11} /> Rama
-                      </a>
-                      {selected.pr_url ? (
-                        <a
-                          href={selected.pr_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn-ghost"
-                        >
-                          <IconExtLink size={11} /> PR
-                        </a>
-                      ) : null}
-                      {canWrite && canApplyRun(selected.status) ? (
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void runAction("apply")}
-                          className="btn-primary"
-                        >
-                          <IconRocket size={11} /> Aplicar
-                        </button>
-                      ) : null}
-                      {canWrite && selected.status === "preview_ready" ? (
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void runAction("approve")}
-                          className="btn-ghost"
-                        >
-                          <IconCheck size={11} /> Sólo PR
-                        </button>
-                      ) : null}
-                      {canWrite && selected.status === "approved" ? (
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void runAction("publish")}
-                          className="btn-primary"
-                        >
-                          <IconRocket size={11} /> Publicar
-                        </button>
-                      ) : null}
-                      {canWrite && ACTIVE.has(selected.status) ? (
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void runAction("cancel")}
-                          className="btn-ghost"
-                        >
-                          <IconStop size={11} /> Cancelar
-                        </button>
-                      ) : null}
-                    </div>
-                    <p className="mt-3 text-[9px] leading-4 text-[var(--fg-muted)]">
-                      Aprobar crea el PR. Publicar lo fusiona a{" "}
-                      {selected.base_branch} y entonces comienza producción.
-                    </p>
-                  </section>
-                </div>
+              <div className="border-t border-[var(--border-1)] p-3">
+                <RunLiveConsole
+                  createdAt={selected.created_at}
+                  status={selected.status}
+                  jobs={jobMap}
+                  jobRefs={selected.queue_jobs}
+                  canWrite={canWrite}
+                  busy={busy}
+                  onNudge={nudgeRun}
+                />
               </div>
-            ) : (
-              <div className="grid h-full place-items-center p-8 text-center">
-                <div>
-                  <span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-black font-semibold text-white">
-                    V
-                  </span>
-                  <p className="mt-3 text-[12px] font-medium">
-                    Tu cabina de ejecución
-                  </p>
-                  <p className="mt-2 text-[10px] text-[var(--fg-muted)]">
-                    Selecciona un run o inicia una tarea.
-                  </p>
-                </div>
-              </div>
-            )}
+            ) : null}
           </div>
-        </div>
-        <VConversationPanel
-          compact
-          projectId={projectId}
-          mode="talk"
-          canWrite={canWrite}
-          repositories={repositories}
-          repository={repository}
-          onRepositoryChange={setRepository}
-          onDispatchGrok={(order) => {
-            void launchRun(order, "grok");
-          }}
-          onUseAsTask={(plan) => setInstruction(plan.slice(0, 12000))}
-          canApply={Boolean(
-            canWrite && selected && canApplyRun(selected.status),
+        </section>
+
+        <section className="flex min-h-0 flex-col overflow-y-auto">
+          <header className="border-b border-[var(--border-1)] px-3 py-2">
+            <p className="text-[11px] font-medium">Resultado</p>
+            <p className="mt-0.5 text-[9px] text-[var(--fg-muted)]">Cae aquí cuando alguien termina.</p>
+          </header>
+          {selected ? (
+            <div className="space-y-3 p-3">
+              {selected.preview_url ? (
+                <iframe
+                  src={selected.preview_url}
+                  title="Preview"
+                  className="h-[280px] w-full rounded-[8px] border border-[var(--border-1)] bg-white"
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                />
+              ) : (
+                <div className="grid h-40 place-items-center rounded-[8px] border border-[var(--border-1)] text-center text-[11px] text-[var(--fg-muted)]">
+                  {STATUS_LABELS[selected.status]}. El preview llega si Vercel lo publica.
+                </div>
+              )}
+              {selected.summary ? (
+                <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-[8px] border border-[var(--border-1)] p-3 text-[10px] leading-5">
+                  {selected.summary}
+                </pre>
+              ) : null}
+              {selected.error ? (
+                <p className="text-[10px] text-[var(--color-danger)]">{selected.error}</p>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                <a href={`https://github.com/${selected.repo_full_name}/tree/${selected.work_branch}`} target="_blank" rel="noreferrer" className="btn-ghost">
+                  <IconBranch size={11} /> Rama
+                </a>
+                {selected.pr_url ? (
+                  <a href={selected.pr_url} target="_blank" rel="noreferrer" className="btn-ghost">
+                    <IconExtLink size={11} /> PR
+                  </a>
+                ) : null}
+                {canWrite && canApplyRun(selected.status) ? (
+                  <button type="button" disabled={busy} onClick={() => void runAction("apply")} className="btn-primary">
+                    <IconRocket size={11} /> Aplicar
+                  </button>
+                ) : null}
+                {canWrite && selected.status === "preview_ready" ? (
+                  <button type="button" disabled={busy} onClick={() => void runAction("approve")} className="btn-ghost">
+                    <IconCheck size={11} /> Sólo PR
+                  </button>
+                ) : null}
+                {canWrite && ACTIVE.has(selected.status) ? (
+                  <button type="button" disabled={busy} onClick={() => void runAction("cancel")} className="btn-ghost">
+                    <IconStop size={11} /> Cancelar
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : (
+            <div className="grid flex-1 place-items-center p-6 text-center text-[11px] text-[var(--fg-muted)]">
+              Cuando Grok o Claude terminen, el resultado aparece aquí.
+            </div>
           )}
-          onApply={() => void runAction("apply")}
-        />
-        </div>
-      )}
+        </section>
+      </div>
     </section>
   );
 }

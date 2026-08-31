@@ -30,10 +30,11 @@ import {
   runnerWaitCopy,
 } from "../lib/live/run-console";
 
-test("V stays on Cerebras and names itself translator", () => {
+test("V stays on Cerebras and names itself sister", () => {
   assert.equal(providersForMode("talk")[0].provider, "cerebras");
-  assert.match(modeSystemRules("talk"), /traductora/);
-  assert.match(modeSystemRules("plan"), /traductora/);
+  assert.match(modeSystemRules("talk"), /hermana/);
+  assert.match(modeSystemRules("plan"), /hermana/);
+  assert.doesNotMatch(modeSystemRules("talk"), /traductora de la sala/);
   assert.equal(cerebrasTalkModel(false), ROOM_CEREBRAS_MODEL);
   assert.equal(cerebrasTalkModel(true), ROOM_CEREBRAS_VISION_MODEL);
 });

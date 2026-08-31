@@ -12,6 +12,10 @@ import {
 import { loadRoomContextBrief } from "@/lib/live/load-room-context";
 import { listExpedienteEyes } from "@/lib/live/project-eyes";
 import { pickExpedienteFrames } from "@/lib/live/expediente-vision";
+import {
+  factoryHandsBrief,
+  persistRoomMemory,
+} from "@/lib/live/v-factory-hands";
 import { recordCerebrasPulse, todayCerebrasUsage } from "@/lib/forge/cerebras-pulse";
 import {
   listProjectAssistantMessages,
@@ -93,6 +97,8 @@ export async function POST(
       console.error("[project assistant] room brief failed", { projectId, error });
       return null;
     });
+    const hands = await factoryHandsBrief(projectId, message).catch(() => "");
+    const brief = [roomContext, hands].filter(Boolean).join("\n\n");
     const images = pickExpedienteFrames(
       await listExpedienteEyes(projectId).catch(() => []),
       3,
@@ -104,7 +110,7 @@ export async function POST(
       message,
       history,
       preferredModel: cerebrasTalkModel(images.length > 0),
-      roomContext,
+      roomContext: brief || null,
       images,
     });
 
@@ -120,6 +126,11 @@ export async function POST(
       status: result.status,
       durationMs: result.durationMs,
     });
+    await persistRoomMemory({
+      projectId,
+      userText: message,
+      assistantText: result.text.slice(0, 2000),
+    }).catch(() => null);
     await recordCerebrasPulse({
       projectId,
       ok: true,
