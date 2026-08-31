@@ -64,6 +64,17 @@
   --vf-fg: #090909;
   --vf-fg-1: #34363a;
   --vf-fg-2: #73767b;
+
+  /* Sala de V — papel cálido, a propósito distinto del gris del resto de la
+     app: es una conversación, no un panel. --vchat-muted está en 7:1 sobre
+     el papel. */
+  --vchat-paper: #efeee8;
+  --vchat-card: #ffffff;
+  --vchat-field: #f7f6f2;
+  --vchat-line: #e4e1d8;
+  --vchat-ink: #1c1917;
+  --vchat-on-ink: #f6f3ec;
+  --vchat-muted: #57534e;
 }
 
 *,

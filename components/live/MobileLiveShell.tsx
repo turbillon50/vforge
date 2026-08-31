@@ -234,7 +234,7 @@ export function MobileLiveShell({
             className="flex h-14 w-16 flex-col items-center justify-center gap-1 text-black"
             aria-label="Hablar con V"
           >
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-[#1c1917] text-[15px] font-semibold text-[#f6f3ec]">
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-[var(--vchat-ink)] text-[15px] font-semibold text-[var(--vchat-on-ink)]">
               V
             </span>
             <span className="font-mono text-[8px] uppercase tracking-[0.08em]">Hablar</span>
@@ -259,7 +259,7 @@ export function MobileLiveShell({
       </div>
 
       {vOpen ? (
-        <div className="fixed inset-0 z-50 bg-[#efeee8]" role="dialog" aria-modal="true" aria-label="Chat con V">
+        <div className="fixed inset-0 z-50 bg-[var(--vchat-paper)]" role="dialog" aria-modal="true" aria-label="Chat con V">
           <VConversationPanel
             projectId={project.id}
             variant="mobile"
