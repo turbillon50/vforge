@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { IconLoader, IconSend } from "@/components/brand/VFIcons";
 
 type ConversationMode = "talk" | "plan";
 
@@ -16,33 +15,50 @@ interface AssistantMessage {
 
 interface PendingPhoto {
   name: string;
-  mime: string;
+  mime: "image/jpeg";
   data: string;
   preview: string;
 }
 
-function fileToPhoto(file: File): Promise<PendingPhoto | null> {
+function compressPhoto(file: File): Promise<PendingPhoto | null> {
   return new Promise((resolve) => {
-    if (!/^image\/(png|jpeg|jpg)$/i.test(file.type)) {
+    if (!file.type.startsWith("image/")) {
       resolve(null);
       return;
     }
-    if (file.size > 1_600_000) {
-      resolve(null);
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const preview = String(reader.result || "");
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      const side = Math.max(image.width, image.height) || 1;
+      const scale = Math.min(1, 960 / side);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        resolve(null);
+        return;
+      }
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const data = canvas.toDataURL("image/jpeg", 0.72);
+      URL.revokeObjectURL(url);
+      if (data.length > 1_200_000) {
+        resolve(null);
+        return;
+      }
       resolve({
-        name: file.name.slice(0, 80),
-        mime: file.type === "image/png" ? "image/png" : "image/jpeg",
-        data: preview,
-        preview,
+        name: file.name.slice(0, 80) || "foto.jpg",
+        mime: "image/jpeg",
+        data,
+        preview: data,
       });
     };
-    reader.onerror = () => resolve(null);
-    reader.readAsDataURL(file);
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+    image.src = url;
   });
 }
 
@@ -112,17 +128,17 @@ export function VConversationPanel({
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
-  }, [visibleMessages.length, busy]);
+  }, [visibleMessages.length, busy, photos.length]);
 
   async function addFiles(list: FileList | null) {
     if (!list?.length) return;
     const next: PendingPhoto[] = [];
     for (const file of Array.from(list).slice(0, 4)) {
-      const photo = await fileToPhoto(file);
+      const photo = await compressPhoto(file);
       if (photo) next.push(photo);
     }
     if (!next.length) {
-      setError("Sólo PNG o JPG, máximo 1.5 MB.");
+      setError("No pude leer esa imagen. Prueba JPG o PNG.");
       return;
     }
     setPhotos((current) => [...current, ...next].slice(0, 4));
@@ -142,7 +158,7 @@ export function VConversationPanel({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             mode: "talk",
-            message: trimmed || (photos.length ? "Mira esta foto." : ""),
+            message: trimmed || `Mira ${photos.length} foto(s).`,
             repository,
             attachments: photos.map((photo) => ({
               name: photo.name,
@@ -173,34 +189,30 @@ export function VConversationPanel({
     [...visibleMessages].reverse().find((item) => item.role === "user")?.content ?? "";
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[#efeee8]">
-      <div className="flex shrink-0 items-center gap-3 border-b border-[var(--border-1)] bg-white px-4 py-3">
-        <span className="grid h-9 w-9 place-items-center rounded-full bg-[#1c1917] text-[13px] font-semibold text-[#f6f3ec]">
+    <div className="flex h-full min-h-0 flex-1 flex-col bg-[#efeee8]">
+      <div className="flex h-12 shrink-0 items-center gap-3 border-b border-[#e4e1d8] bg-white px-4">
+        <span className="grid h-7 w-7 place-items-center rounded-full bg-[#1c1917] text-[11px] font-semibold text-[#f6f3ec]">
           V
         </span>
         <div className="min-w-0">
-          <p className="text-[14px] font-medium leading-none text-[#1c1917]">V</p>
-          <p className="mt-1 text-[11px] text-[#6f6b64]">Tu hermana · en línea</p>
+          <p className="text-[13px] font-medium leading-none text-[#1c1917]">V</p>
+          <p className="mt-0.5 text-[10px] text-[#6f6b64]">Tu hermana · en línea</p>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:px-4" aria-live="polite">
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5" aria-live="polite">
         {loading ? (
-          <div className="flex h-full items-center justify-center gap-2 text-[12px] text-[#6f6b64]">
-            <IconLoader size={14} className="animate-spin" /> Cargando chat…
-          </div>
+          <p className="text-[13px] text-[#6f6b64]">Cargando chat…</p>
         ) : visibleMessages.length ? (
-          <div className="mx-auto flex w-full max-w-[560px] flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {visibleMessages.map((item) => {
               const mine = item.role === "user";
               return (
-                <div key={item.id} className={cn("flex w-full", mine ? "justify-end" : "justify-start")}>
+                <div key={item.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
                   <article
                     className={cn(
-                      "max-w-[86%] rounded-[18px] px-3.5 py-2.5 text-[14px] leading-6",
-                      mine
-                        ? "rounded-br-[6px] bg-[#1c1917]"
-                        : "rounded-bl-[6px] border border-[#e4e1d8] bg-white",
+                      "max-w-[78%] rounded-2xl px-4 py-3 text-[15px] leading-6",
+                      mine ? "rounded-br-md bg-[#1c1917]" : "rounded-bl-md bg-white",
                     )}
                   >
                     <p
@@ -214,31 +226,17 @@ export function VConversationPanel({
               );
             })}
             {busy ? (
-              <div className="flex justify-start">
-                <span className="inline-flex items-center gap-2 rounded-[18px] border border-[#e4e1d8] bg-white px-3.5 py-2 text-[13px] text-[#6f6b64]">
-                  <IconLoader size={12} className="animate-spin" /> V está escribiendo
-                </span>
-              </div>
+              <p className="text-[12px] text-[#6f6b64]">V está escribiendo…</p>
             ) : null}
             <div ref={endRef} />
           </div>
         ) : (
-          <div className="grid h-full place-items-center text-center">
-            <div>
-              <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#1c1917] text-[#f6f3ec]">
-                V
-              </span>
-              <p className="mt-3 text-[15px] font-medium text-[#1c1917]">Ey hermano</p>
-              <p className="mt-1 text-[12px] text-[#6f6b64]">Mándame texto o una foto. Aquí me quedo.</p>
-            </div>
-          </div>
+          <p className="text-[14px] text-[#6f6b64]">Mándame texto o una foto.</p>
         )}
       </div>
 
       {error ? (
-        <p className="shrink-0 bg-white px-4 py-2 text-center text-[12px] text-[var(--color-danger)]">
-          {error}
-        </p>
+        <p className="shrink-0 px-5 py-2 text-[12px] text-[var(--color-danger)]">{error}</p>
       ) : null}
 
       {canWrite ? (
@@ -247,7 +245,7 @@ export function VConversationPanel({
             event.preventDefault();
             void sendMessage(message);
           }}
-          className="shrink-0 border-t border-[var(--border-1)] bg-white px-3 py-3"
+          className="shrink-0 border-t border-[#e4e1d8] bg-white px-4 py-3"
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault();
@@ -255,13 +253,13 @@ export function VConversationPanel({
           }}
         >
           {photos.length ? (
-            <div className="mb-2 flex gap-2 overflow-x-auto">
+            <div className="mb-3 flex gap-2">
               {photos.map((photo, index) => (
                 <button
                   key={`${photo.name}-${index}`}
                   type="button"
-                  className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-[var(--border-1)]"
                   onClick={() => setPhotos((current) => current.filter((_, i) => i !== index))}
+                  className="h-16 w-16 overflow-hidden rounded-lg border border-[#e4e1d8]"
                   aria-label="Quitar foto"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -270,11 +268,11 @@ export function VConversationPanel({
               ))}
             </div>
           ) : null}
-          <div className="flex items-end gap-2">
+          <div className="flex items-center gap-2">
             <input
               ref={fileRef}
               type="file"
-              accept="image/png,image/jpeg"
+              accept="image/*"
               multiple
               className="hidden"
               onChange={(event) => {
@@ -285,7 +283,7 @@ export function VConversationPanel({
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--border-1)] text-[18px] text-[#1c1917] hover:border-[#1c1917]"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#e4e1d8] text-[16px] text-[#1c1917]"
               aria-label="Adjuntar foto"
             >
               +
@@ -299,18 +297,18 @@ export function VConversationPanel({
                   event.currentTarget.form?.requestSubmit();
                 }
               }}
-              rows={1}
+              rows={2}
               maxLength={6000}
               placeholder="Mensaje"
-              className="max-h-36 min-h-11 flex-1 resize-none rounded-[22px] border border-[#e4e1d8] bg-[#f7f6f2] px-4 py-2.5 text-[14px] leading-5 text-[#1c1917] outline-none focus:border-[#1c1917]"
+              className="max-h-28 min-h-10 flex-1 resize-none rounded-2xl border border-[#e4e1d8] bg-[#f7f6f2] px-4 py-2.5 text-[15px] leading-5 text-[#1c1917] outline-none focus:border-[#1c1917]"
             />
             <button
               type="submit"
               disabled={busy || (!message.trim() && photos.length === 0)}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#1c1917] text-[#f6f3ec] disabled:opacity-30"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#1c1917] text-[13px] text-[#f6f3ec] disabled:opacity-30"
               aria-label="Enviar"
             >
-              {busy ? <IconLoader size={14} className="animate-spin" /> : <IconSend size={14} />}
+              {busy ? "…" : "↑"}
             </button>
           </div>
           {onDispatchGrok ? (
@@ -325,9 +323,7 @@ export function VConversationPanel({
           ) : null}
         </form>
       ) : (
-        <p className="shrink-0 bg-white px-4 py-3 text-[12px] text-[#6f6b64]">
-          Sólo el owner habla con V.
-        </p>
+        <p className="shrink-0 px-4 py-3 text-[12px] text-[#6f6b64]">Sólo el owner habla con V.</p>
       )}
     </div>
   );
