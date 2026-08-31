@@ -12,7 +12,10 @@ import {
 import { loadRoomContextBrief } from "@/lib/live/load-room-context";
 import { listExpedienteEyes, saveProjectEye } from "@/lib/live/project-eyes";
 import { pickExpedienteFrames } from "@/lib/live/expediente-vision";
-import { parseChatAttachments } from "@/lib/live/chat-attachments";
+import {
+  framesFromAttachments,
+  parseChatAttachments,
+} from "@/lib/live/chat-attachments";
 import {
   factoryHandsBrief,
   persistRoomMemory,
@@ -122,10 +125,12 @@ export async function POST(
     const brief = [roomContext, hands, memoryPromptSection(memories)]
       .filter(Boolean)
       .join("\n\n");
-    const images = pickExpedienteFrames(
+    const attached = framesFromAttachments(attachments);
+    const archived = pickExpedienteFrames(
       await listExpedienteEyes(projectId).catch(() => []),
       4,
     );
+    const images = [...attached, ...archived].slice(0, 4);
     const result = await askV({
       mode,
       projectId,

@@ -44,6 +44,7 @@ interface QueueJob {
   id: number;
   agent: string | null;
   status: string;
+  progress: number | null;
   result: string | null;
   logTail: string | null;
 }
