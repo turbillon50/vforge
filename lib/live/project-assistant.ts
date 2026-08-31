@@ -18,7 +18,11 @@ export interface ProjectAssistantMessage {
   duration_ms: number | null;
 }
 
+let assistantTableReady = false;
+
 export async function ensureProjectAssistantTable(): Promise<void> {
+  // Idem: el hilo se relee cada 8 s desde el chat abierto.
+  if (assistantTableReady) return;
   await queryOne(
     `CREATE TABLE IF NOT EXISTS project_v_messages (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -42,6 +46,7 @@ export async function ensureProjectAssistantTable(): Promise<void> {
     `CREATE INDEX IF NOT EXISTS idx_project_v_messages_thread
        ON project_v_messages (project_id, mode, created_at DESC)`,
   );
+  assistantTableReady = true;
 }
 
 export async function listProjectAssistantMessages(

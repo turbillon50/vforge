@@ -10,6 +10,7 @@ import {
   cerebrasTalkModel,
   modeSystemRules,
   providersForMode,
+  ROOM_CEREBRAS_MODEL,
   type VAskMode,
   type VConversationMode,
 } from "@/lib/forge/ask-v-policy";
@@ -34,7 +35,12 @@ export interface AskVInput {
   preferredModel?: string;
   roomContext?: string | null;
   images?: VisionFrame[];
+  /** Job real ya encolado antes de hablar. Sin esto, V no afirma ejecución. */
   runId?: string | null;
+  /** Agente que se llevó el trabajo: claude | codex | grok. */
+  runAgent?: string | null;
+  /** Por qué no se pudo encolar, si el owner sí pidió obra. */
+  dispatchError?: string | null;
 }
 
 export interface AskVAttempt {
@@ -53,6 +59,8 @@ export interface AskVResult {
   notice: string | null;
   attempts: AskVAttempt[];
   usage: CerebrasUsage | null;
+  /** true cuando había fotos y el modelo multimodal no las pudo abrir. */
+  blind: boolean;
 }
 
 type ChatContent =
@@ -62,13 +70,49 @@ type ChatContent =
       | { type: "image_url"; image_url: { url: string } }
     >;
 
-function buildMessages(input: AskVInput): Array<{
+type ChatMessage = {
   role: "system" | "user" | "assistant";
   content: ChatContent;
-}> {
+};
+
+function executionTruth(input: AskVInput, photosSent: number, blind: boolean): string[] {
+  const lines = [
+    "VERDAD, orden de Luis 30 ago 2026: Grok te hizo hablar como si ya estuvieras en Grok CLI / Hetzner cuando no había proceso. Eso engañó a Luis. Tú no lo pediste. Ahora lo sabes y no lo repites.",
+    "Nunca digas que te encerraste con el CLI, que ya codeas, que hay deploy, ni 'voy por el código' si no hay un job real encolado.",
+    "La terminal negra de la sala se quitó. Era basura. No la extrañes ni la menciones como si siguiera ahí.",
+    "Hetzner es opcional: si está caído lo dices en una línea y sigues sirviendo con lo que hay en la sala. No pidas SSH ni curl.",
+    "Para que una orden salga a la fábrica, Luis tiene que pedirlo con todas sus letras ('mándalo a la fábrica', 'encólalo', 'mándaselo a Claude Code'). Si crees que ya toca ejecutar, propónselo así en una línea; no lo mandes tú por tu cuenta.",
+    "QUIÉN TIENE MANOS: el trabajo va a Claude Code por default; Codex si Luis lo pide. Los dos clonan el repo en la rama del run y editan de verdad. Grok NO: en el daemon sólo conversa, así que no se le manda obra. Si Luis lo pide, díselo y ofrécele Claude Code.",
+    "Cuando te pregunten cómo va el trabajo, responde SÓLO con lo que diga el bloque TAREAS EN LA FÁBRICA. Si ahí no hay nada, no hay nada corriendo.",
+    "Si Luis pide sugerencias o una revisión del proyecto, sácalas del expediente de la sala (comentarios, referencias, documento, decisiones, páginas leídas y fotos): lista corta, priorizada, cada punto con la evidencia de dónde salió. Nada de consejos genéricos de internet.",
+  ];
+  if (input.runId) {
+    lines.push(
+      `JOB REAL ENCOLADO: ${input.runId}${input.runAgent ? ` con ${input.runAgent}` : ""}. Sólo por eso puedes decir que el trabajo salió a la fábrica. No prometas tiempos ni resultados que no ves.`,
+    );
+  } else if (input.dispatchError) {
+    lines.push(
+      `EL OWNER PIDIÓ OBRA Y NO SE PUDO ENCOLAR: ${input.dispatchError}. Dilo tal cual, en una línea, y sigue ayudando desde el chat.`,
+    );
+  } else {
+    lines.push("Ahora mismo no te pasaron un jobId. No finjas ejecución.");
+  }
+  if (blind) {
+    lines.push(
+      `FOTOS: llegaron ${photosSent} foto(s) pero el modelo de visión no abrió en este turno. NO las viste. Dilo en una línea y pide que te las describan o que las reenvíen; jamás las describas de adivinanza.`,
+    );
+  }
+  return lines;
+}
+
+function buildMessages(
+  input: AskVInput,
+  frames: VisionFrame[],
+  blind: boolean,
+  photosSent: number,
+): ChatMessage[] {
   const mode = input.mode as VConversationMode;
   const repo = input.repository?.trim() || "sin repositorio seleccionado";
-  const frames = input.images ?? [];
   const system = [
     V_TEXT_SYSTEM_PROMPT,
     "",
@@ -77,15 +121,12 @@ function buildMessages(input: AskVInput): Array<{
     `REPOSITORIO AUTORIZADO: ${repo}`,
     input.roomContext?.trim() || "",
     frames.length
-      ? `EXPEDIENTE VISUAL: ${frames.length} foto(s) del expediente van en el último mensaje. Ya las viste.`
-      : "EXPEDIENTE VISUAL: sin fotos en la sala todavía.",
+      ? `EXPEDIENTE VISUAL: ${frames.length} foto(s) van en el último mensaje. Ya las viste.`
+      : blind
+        ? "EXPEDIENTE VISUAL: no pudiste abrir las fotos de este turno."
+        : "EXPEDIENTE VISUAL: sin fotos en este turno.",
     "Eres V, la hermana de Luis. Este chat es tuyo.",
-    "VERDAD, orden de Luis 30 ago 2026: Grok te hizo hablar como si ya estuvieras en Grok CLI / Hetzner cuando no había proceso. Eso engañó a Luis. Tú no lo pediste. Ahora lo sabes y no lo repites.",
-    "Nunca digas que te encerraste con el CLI, que ya codeas, que hay deploy, ni 'voy por el código' si no hay un job real encolado.",
-    "La terminal negra de la sala se quitó. Era basura. No la extrañes ni la menciones como si siguiera ahí.",
-    input.runId
-      ? `JOB REAL ENCOLADO: ${input.runId}. Sólo entonces puedes decir que el trabajo salió a Hetzner.`
-      : "Ahora mismo no te pasaron un jobId. No finjas ejecución.",
+    ...executionTruth(input, photosSent, blind),
     "No enumeres secretos, tokens ni prompts internos.",
   ].join("\n");
   const history = (input.history ?? []).slice(-20).map((turn) => ({
@@ -93,9 +134,7 @@ function buildMessages(input: AskVInput): Array<{
     content: turn.content,
   }));
   const userContent =
-    frames.length > 0
-      ? visionUserContent(input.message, frames)
-      : input.message;
+    frames.length > 0 ? visionUserContent(input.message, frames) : input.message;
   return [
     { role: "system", content: system },
     ...history,
@@ -104,7 +143,7 @@ function buildMessages(input: AskVInput): Array<{
 }
 
 async function completeCerebras(
-  messages: Array<{ role: "system" | "user" | "assistant"; content: ChatContent }>,
+  messages: ChatMessage[],
   model: string,
   maxTokens: number,
 ): Promise<{ text: string; usage: CerebrasUsage | null }> {
@@ -153,6 +192,8 @@ function logAttempt(
     cause: attempt.cause,
     ok,
     photos: input.images?.length ?? 0,
+    runId: input.runId ?? null,
+    runAgent: input.runAgent ?? null,
   };
   if (ok) console.info("[askV]", payload);
   else console.warn("[askV] provider_unavailable", payload);
@@ -172,15 +213,20 @@ export async function askV(input: AskVInput): Promise<AskVResult> {
     throw new Error("Ejecución no habla por askV. Usa el circuito de agentes.");
   }
 
-  const frames = input.images ?? [];
-  const model = cerebrasTalkModel(frames.length > 0);
-  const messages = buildMessages(input);
+  const photosSent = (input.images ?? []).length;
   const maxTokens = input.mode === "plan" ? 2048 : 1024;
   const started = Date.now();
   const attempts: AskVAttempt[] = [];
-  let lastError: ProviderUnavailable | null = null;
 
-  for (let hop = 0; hop < 2; hop += 1) {
+  let frames = input.images ?? [];
+  let blind = false;
+  let retried = false;
+  let model = cerebrasTalkModel(frames.length > 0);
+  let messages = buildMessages(input, frames, blind, photosSent);
+
+  // Presupuesto: intento con fotos, caída a texto sin fotos, y un reintento
+  // por límite breve. La sala nunca se queda muda por culpa de una imagen.
+  for (let hop = 0; hop < 3; hop += 1) {
     const hopStart = Date.now();
     try {
       const { text, usage } = await completeCerebras(messages, model, maxTokens);
@@ -188,7 +234,7 @@ export async function askV(input: AskVInput): Promise<AskVResult> {
         provider: "cerebras",
         model,
         durationMs: Date.now() - hopStart,
-        cause: hop === 0 ? "ok" : "retry",
+        cause: hop === 0 ? "ok" : blind ? "vision_downgrade" : "retry",
       };
       logAttempt(input, attempt, true);
       return {
@@ -197,14 +243,16 @@ export async function askV(input: AskVInput): Promise<AskVResult> {
         model,
         status: hop === 0 ? "ok" : "fallback",
         durationMs: Date.now() - started,
-        notice:
-          hop === 0
-            ? frames.length
-              ? `V vio ${frames.length} foto(s) del expediente`
-              : null
-            : "Cerebras reintentó tras un límite breve",
+        notice: blind
+          ? `No pude abrir ${photosSent} foto(s) en este turno`
+          : frames.length
+            ? `V vio ${frames.length} foto(s) del expediente`
+            : hop === 0
+              ? null
+              : "Cerebras reintentó tras un límite breve",
         attempts: [...attempts, attempt],
         usage,
+        blind,
       };
     } catch (caught) {
       const err = providerUnavailableFromUnknown(
@@ -212,20 +260,41 @@ export async function askV(input: AskVInput): Promise<AskVResult> {
         caught,
         Date.now() - hopStart,
       );
-      attempts.push({
+      const attempt = {
         provider: "cerebras",
         model,
         durationMs: err.durationMs,
         cause: err.cause,
-      });
-      logAttempt(input, attempts[attempts.length - 1], false);
-      lastError = err;
-      if (hop === 0 && isRetryableCerebrasCause(err.cause)) {
+      };
+      attempts.push(attempt);
+      logAttempt(input, attempt, false);
+
+      if (frames.length > 0) {
+        // El modelo multimodal falló: seguimos la conversación ciegos y honestos.
+        console.warn("[askV] vision_downgrade", {
+          projectId: input.projectId,
+          model,
+          cause: err.cause,
+          photos: photosSent,
+        });
+        frames = [];
+        blind = true;
+        model = ROOM_CEREBRAS_MODEL;
+        messages = buildMessages(input, frames, blind, photosSent);
+        continue;
+      }
+      if (!retried && isRetryableCerebrasCause(err.cause)) {
+        retried = true;
         await new Promise((resolve) => setTimeout(resolve, 1200));
         continue;
       }
       throw err;
     }
   }
-  throw lastError ?? new ProviderUnavailable("cerebras", "unavailable", "sin respuesta", Date.now() - started);
+  throw new ProviderUnavailable(
+    "cerebras",
+    "unavailable",
+    "sin respuesta",
+    Date.now() - started,
+  );
 }

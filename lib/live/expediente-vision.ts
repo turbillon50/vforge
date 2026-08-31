@@ -58,7 +58,7 @@ export function visionUserContent(
   > = [
     {
       type: "text",
-      text: `${message.trim()}\n\nFOTOS (${frames.length}): ${labels}. Ya las viste. No pidas que te las reenvíen.`,
+      text: `${message.trim()}\n\nFOTOS DEL EXPEDIENTE (${frames.length}): ${labels}. Ya las viste. No pidas que te las reenvíen.`,
     },
   ];
   for (const frame of frames) {
