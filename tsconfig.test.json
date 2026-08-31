@@ -11,7 +11,9 @@
     "noEmit": false,
     "outDir": ".test-dist",
     "rootDir": ".",
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": { "@/*": ["./*"] }
   },
   "include": [
     "tests/**/*.ts",
@@ -31,6 +33,7 @@
     "lib/live/project-tools.ts",
     "lib/live/see-page.ts",
     "lib/live/see-cdp.ts",
-    "lib/live/run-console.ts"
+    "lib/live/run-console.ts",
+    "lib/live/work-order.ts"
   ]
 }

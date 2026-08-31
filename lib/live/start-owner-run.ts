@@ -7,7 +7,6 @@ import {
   ensureProjectAgentRunsTable,
   type AgentRunAccess,
   type AgentRunRepository,
-  type AgentRunRow,
 } from "@/lib/live/agent-runs";
 
 export async function startOwnerGrokRun(args: {

@@ -30,7 +30,7 @@ export async function brainExec(cmd: string): Promise<string> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ secret: SECRET, cmd: trimmed }),
     cache: "no-store",
-    signal: AbortSignal.timeout(20_000),
+    signal: AbortSignal.timeout(8_000),
   });
   if (!res.ok) return `Hetzner /brain/exec HTTP ${res.status}`;
   const data = (await res.json().catch(() => null)) as {
@@ -42,9 +42,13 @@ export async function brainExec(cmd: string): Promise<string> {
   return out.slice(0, 6000) || "sin salida";
 }
 
+/**
+ * Pulso de Hetzner. Se llama SÓLO cuando el mensaje lo pide: la sala de V
+ * no se cuelga del servidor para sentirse viva.
+ */
 async function hetznerHealth(): Promise<string> {
   const checks = await Promise.all([
-    fetch(`${BRAIN}/health`, { cache: "no-store", signal: AbortSignal.timeout(6000) })
+    fetch(`${BRAIN}/health`, { cache: "no-store", signal: AbortSignal.timeout(5000) })
       .then((res) => `brain /health ${res.status}`)
       .catch((error) => `brain /health ${error instanceof Error ? error.message : "down"}`),
     callVServer("/health", {}).then((res) =>
@@ -52,8 +56,12 @@ async function hetznerHealth(): Promise<string> {
     ),
     brainExec("ls -1 /brain/file/skills-vault/ | head -40"),
   ]);
+  const down =
+    !checks[0].includes("/health 200") && !checks[1].startsWith("v-server ok");
   return [
-    "HETZNER VIVO. V opera aquí. No hay panel del centro.",
+    down
+      ? "HETZNER NO CONTESTÓ. Dilo en una línea y sigue con lo que hay en la sala."
+      : "HETZNER RESPONDE. Es opcional: la sala funciona sin él.",
     `relay: ${BRAIN}`,
     checks[0],
     checks[1],

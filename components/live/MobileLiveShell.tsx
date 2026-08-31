@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   IconChat,
   IconFile,
@@ -14,6 +15,14 @@ import {
   IconX,
 } from "@/components/brand/VFIcons";
 import { ProjectContextPanel } from "@/components/live/ProjectContextPanel";
+
+const VConversationPanel = dynamic(
+  () =>
+    import("@/components/live/VConversationPanel").then(
+      (module) => module.VConversationPanel,
+    ),
+  { ssr: false },
+);
 
 type ViewId = "mobile" | "desktop" | "admin";
 
@@ -66,6 +75,7 @@ export function MobileLiveShell({
 }) {
   const [expanded, setExpanded] = useState<ViewId | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [vOpen, setVOpen] = useState(false);
   const [contextOpen, setContextOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -181,7 +191,7 @@ export function MobileLiveShell({
 
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-[#f2f2f0]">
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-24 pt-3">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-28 pt-3">
         <p className="mb-3 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
           Vistas · desliza · toca para ampliar
         </p>
@@ -209,29 +219,38 @@ export function MobileLiveShell({
       </div>
 
       <div className="absolute inset-x-0 bottom-0 border-t border-[var(--border-1)] bg-white/95 backdrop-blur-md pb-[env(safe-area-inset-bottom,0px)]">
-        <div className="flex h-14 items-center justify-around px-2">
+        <div className="flex h-16 items-center justify-around px-2">
           <button
             type="button"
             onClick={() => setRefreshKey((k) => k + 1)}
-            className="flex flex-col items-center gap-0.5 text-[var(--fg-muted)]"
+            className="flex h-14 w-16 flex-col items-center justify-center gap-1 text-[var(--fg-secondary)]"
           >
             <IconRefresh size={18} />
             <span className="font-mono text-[8px] uppercase tracking-[0.08em]">Refresh</span>
           </button>
           <button
             type="button"
-            onClick={() => setChatOpen(true)}
-            className="flex flex-col items-center gap-0.5 text-black"
+            onClick={() => setVOpen(true)}
+            className="flex h-14 w-16 flex-col items-center justify-center gap-1 text-black"
+            aria-label="Hablar con V"
           >
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-black text-white">
-              <IconChat size={18} />
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-[#1c1917] text-[15px] font-semibold text-[#f6f3ec]">
+              V
             </span>
+            <span className="font-mono text-[8px] uppercase tracking-[0.08em]">Hablar</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setChatOpen(true)}
+            className="flex h-14 w-16 flex-col items-center justify-center gap-1 text-[var(--fg-secondary)]"
+          >
+            <IconChat size={18} />
             <span className="font-mono text-[8px] uppercase tracking-[0.08em]">Mensajes</span>
           </button>
           <button
             type="button"
             onClick={() => setExpanded("mobile")}
-            className="flex flex-col items-center gap-0.5 text-[var(--fg-muted)]"
+            className="flex h-14 w-16 flex-col items-center justify-center gap-1 text-[var(--fg-secondary)]"
           >
             <IconMaximize size={18} />
             <span className="font-mono text-[8px] uppercase tracking-[0.08em]">Ampliar</span>
@@ -239,6 +258,15 @@ export function MobileLiveShell({
         </div>
       </div>
 
+      {vOpen ? (
+        <div className="fixed inset-0 z-50 bg-[#efeee8]" role="dialog" aria-modal="true" aria-label="Chat con V">
+          <VConversationPanel
+            projectId={project.id}
+            variant="mobile"
+            onClose={() => setVOpen(false)}
+          />
+        </div>
+      ) : null}
       {chatOpen ? (
         <ChatSheet projectId={project.id} onClose={() => setChatOpen(false)} />
       ) : null}

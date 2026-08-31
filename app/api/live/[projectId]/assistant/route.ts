@@ -10,7 +10,7 @@ import {
   selectAgentRepository,
 } from "@/lib/live/agent-runs";
 import { loadRoomContextBrief } from "@/lib/live/load-room-context";
-import { listExpedienteEyes, saveProjectEye } from "@/lib/live/project-eyes";
+import { listVisorEyes, saveProjectEye } from "@/lib/live/project-eyes";
 import { pickExpedienteFrames } from "@/lib/live/expediente-vision";
 import {
   framesFromAttachments,
@@ -18,7 +18,9 @@ import {
 } from "@/lib/live/chat-attachments";
 import {
   factoryHandsBrief,
+  loadRoomMemory,
   persistRoomMemory,
+  wantsFactoryHands,
 } from "@/lib/live/v-factory-hands";
 import { looksLikeWorkOrder } from "@/lib/live/work-order";
 import { startOwnerGrokRun } from "@/lib/live/start-owner-run";
@@ -122,17 +124,45 @@ export async function POST(
       console.error("[project assistant] room brief failed", { projectId, error });
       return null;
     });
-    const hands = await factoryHandsBrief(projectId, spoken).catch(() => "");
+    // Hetzner sólo se consulta cuando el mensaje lo pide (skills, brain,
+    // salud del servidor). La memoria semántica sí va siempre: es de Neon.
+    const hands = wantsFactoryHands(spoken)
+      ? await factoryHandsBrief(projectId, spoken).catch(
+          () => "HETZNER: no contestó en este turno. La sala sigue trabajando sin él.",
+        )
+      : await loadRoomMemory(projectId, spoken).catch(() => "");
     const memories = await getUserMemories(access.identity.userId).catch(() => []);
     const brief = [roomContext, hands, memoryPromptSection(memories)]
       .filter(Boolean)
       .join("\n\n");
+    // Fotos de ESTE turno mandan. Sin adjuntos nuevos sólo van los visores,
+    // nunca los adjuntos viejos: antes V opinaba sobre fotos de otro día.
     const attached = framesFromAttachments(attachments);
-    const archived = pickExpedienteFrames(
-      await listExpedienteEyes(projectId).catch(() => []),
-      4,
-    );
-    const images = [...attached, ...archived].slice(0, 4);
+    const images = attached.length
+      ? attached.slice(0, 4)
+      : pickExpedienteFrames(await listVisorEyes(projectId).catch(() => []), 3);
+
+    // La obra se encola ANTES de hablar, para que V hable con la verdad
+    // en la mano: o hay runId, o no hay ejecución y lo dice.
+    let runId: string | null = null;
+    let dispatchError: string | null = null;
+    if (looksLikeWorkOrder(spoken)) {
+      if (!repository) {
+        dispatchError = "esta sala no tiene repositorio conectado";
+      } else {
+        const queued = await startOwnerGrokRun({
+          projectId,
+          access,
+          repository,
+          instruction: spoken,
+        }).catch((error) => ({
+          error: error instanceof Error ? error.message.slice(0, 300) : "falló el encolado",
+        }));
+        if ("runId" in queued) runId = queued.runId;
+        else dispatchError = queued.error;
+      }
+    }
+
     const result = await askV({
       mode,
       projectId,
@@ -142,6 +172,8 @@ export async function POST(
       preferredModel: cerebrasTalkModel(images.length > 0),
       roomContext: brief || null,
       images,
+      runId,
+      dispatchError,
     });
     const extracted = extractMemoryBlocks(result.text);
     for (const memory of extracted.memories) {
@@ -150,20 +182,14 @@ export async function POST(
       );
     }
     let reply = extracted.cleaned.slice(0, 12000);
-    let runId: string | null = null;
-    if (looksLikeWorkOrder(spoken) && repository) {
-      const queued = await startOwnerGrokRun({
-        projectId,
-        access,
-        repository,
-        instruction: spoken,
-      });
-      if ("runId" in queued) {
-        runId = queued.runId;
-        reply = `${reply}\n\nLo mandé a Hetzner. Mira la terminal.`;
-      } else {
-        reply = `${reply}\n\nNo pude encolar en Hetzner: ${queued.error}`;
-      }
+    // Pie de página de máquina: sólo hechos. Ni terminal, ni promesas.
+    if (runId) {
+      reply = `${reply}\n\nOrden encolada en la fábrica · run ${runId.slice(0, 8)}. Cuando haya resultado te lo digo aquí.`;
+    } else if (dispatchError) {
+      reply = `${reply}\n\nNo pude encolar la orden: ${dispatchError}. Seguimos aquí en el chat.`;
+    }
+    if (result.blind && attachments.length) {
+      reply = `${reply}\n\nNo pude abrir ${attachments.length} foto(s) en este turno; quedaron guardadas en el expediente.`;
     }
 
     await saveProjectAssistantTurn({
@@ -196,6 +222,8 @@ export async function POST(
       messages,
       reply,
       runId,
+      dispatchError,
+      blind: result.blind,
       provider: result.provider,
       model: result.model,
       status: result.status,
