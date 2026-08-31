@@ -8,7 +8,7 @@
         "start": "next start",
         "lint": "eslint .",
         "typecheck": "tsc --noEmit",
-        "test": "tsc -p tsconfig.test.json && node --test \".test-dist/tests/roles.test.js\" \".test-dist/tests/invite-token.test.js\" \".test-dist/tests/owner-auth.test.js\" \".test-dist/tests/viewport-url.test.js\" \".test-dist/tests/review-context.test.js\" \".test-dist/tests/archive-text.test.js\" \".test-dist/tests/provider-errors.test.js\" \".test-dist/tests/room-context.test.js\" \".test-dist/tests/factory-spine.test.js\" \".test-dist/tests/read-page.test.js\" \".test-dist/tests/project-tools.test.js\" \".test-dist/tests/see-page.test.js\" \".test-dist/tests/work-order.test.js\" \"tests/vforge-api-viewport.test.mjs\"",
+        "test": "tsc -p tsconfig.test.json && node --require \"./.test-dist/tests/alias-hook.js\" --test \".test-dist/tests/roles.test.js\" \".test-dist/tests/invite-token.test.js\" \".test-dist/tests/owner-auth.test.js\" \".test-dist/tests/viewport-url.test.js\" \".test-dist/tests/review-context.test.js\" \".test-dist/tests/archive-text.test.js\" \".test-dist/tests/provider-errors.test.js\" \".test-dist/tests/room-context.test.js\" \".test-dist/tests/factory-spine.test.js\" \".test-dist/tests/read-page.test.js\" \".test-dist/tests/project-tools.test.js\" \".test-dist/tests/see-page.test.js\" \".test-dist/tests/work-order.test.js\" \".test-dist/tests/v-factory-hands.test.js\" \".test-dist/tests/chat-attachments.test.js\" \"tests/vforge-api-viewport.test.mjs\"",
         "audit:contrast": "python3 scripts/contrast_audit.py"
     },
     "dependencies": {
