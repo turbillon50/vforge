@@ -787,7 +787,7 @@ export async function runMcpTool(
 
     case "vforge_skill_list": {
       const rows = await queryAll<{ name: string; description: string }>(
-        "SELECT name, description FROM skills WHERE active = true ORDER BY name LIMIT 80",
+        "SELECT name, description FROM skills WHERE active = true ORDER BY name LIMIT 200",
       ).catch(() => []);
       return text(rows.map((r) => `• ${r.name} — ${r.description ?? ""}`).join("\n") || "Sin skills.");
     }
