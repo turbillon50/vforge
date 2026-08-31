@@ -20,6 +20,13 @@ interface PendingPhoto {
   preview: string;
 }
 
+const THINKING = [
+  "Pensando",
+  "Leyendo la sala",
+  "Revisando el expediente",
+  "Escribiendo",
+];
+
 function compressPhoto(file: File): Promise<PendingPhoto | null> {
   return new Promise((resolve) => {
     if (!file.type.startsWith("image/")) {
@@ -66,6 +73,26 @@ function visibleText(value: string): string {
   return value.replace(/\*\*([^*]+)\*\*/g, "$1").replace(/`+/g, "");
 }
 
+function ThinkingLine({ hasPhotos }: { hasPhotos: boolean }) {
+  const steps = hasPhotos ? ["Viendo la foto", ...THINKING] : THINKING;
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setIndex((current) => (current + 1) % steps.length);
+    }, 1600);
+    return () => window.clearInterval(timer);
+  }, [steps.length]);
+  return (
+    <div className="flex items-center gap-2 pl-1 pt-1">
+      <span className="relative grid h-3.5 w-3.5 place-items-center">
+        <span className="absolute inset-0 rounded-full bg-[#1c1917]/15 animate-ping" />
+        <span className="h-1.5 w-1.5 rounded-full bg-[#1c1917]" />
+      </span>
+      <p className="text-[13px] tracking-[-0.01em] text-[#6f6b64]">{steps[index]}</p>
+    </div>
+  );
+}
+
 export function VConversationPanel({
   projectId,
   canWrite,
@@ -87,6 +114,8 @@ export function VConversationPanel({
   seed?: string;
 }) {
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
+  const [pending, setPending] = useState<AssistantMessage | null>(null);
+  const [pendingPhotos, setPendingPhotos] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [photos, setPhotos] = useState<PendingPhoto[]>([]);
   const [busy, setBusy] = useState(false);
@@ -97,7 +126,7 @@ export function VConversationPanel({
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
-    if (pollingRef.current) return;
+    if (pollingRef.current || busy) return;
     pollingRef.current = true;
     try {
       const response = await fetch(
@@ -116,7 +145,7 @@ export function VConversationPanel({
       pollingRef.current = false;
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, busy]);
 
   useEffect(() => {
     void load();
@@ -124,11 +153,18 @@ export function VConversationPanel({
     return () => window.clearInterval(timer);
   }, [load]);
 
-  const visibleMessages = useMemo(() => messages.slice(-120), [messages]);
+  const visibleMessages = useMemo(() => {
+    const list = messages.slice(-120);
+    if (!pending) return list;
+    if (list.some((item) => item.content === pending.content && item.role === "user")) {
+      return list;
+    }
+    return [...list, pending];
+  }, [messages, pending]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
-  }, [visibleMessages.length, busy, photos.length]);
+  }, [visibleMessages.length, busy, pendingPhotos.length]);
 
   async function addFiles(list: FileList | null) {
     if (!list?.length) return;
@@ -147,7 +183,19 @@ export function VConversationPanel({
 
   async function sendMessage(raw: string) {
     const trimmed = raw.trim();
-    if ((!trimmed && photos.length === 0) || busy || !canWrite) return;
+    const shot = photos.slice();
+    if ((!trimmed && shot.length === 0) || busy || !canWrite) return;
+    const spoken = trimmed || `Mira ${shot.length} foto(s).`;
+    setPending({
+      id: `local-${Date.now()}`,
+      mode: "talk",
+      role: "user",
+      content: spoken,
+      created_at: new Date().toISOString(),
+    });
+    setPendingPhotos(shot.map((photo) => photo.preview));
+    setMessage("");
+    setPhotos([]);
     setBusy(true);
     setError(null);
     try {
@@ -158,9 +206,9 @@ export function VConversationPanel({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             mode: "talk",
-            message: trimmed || `Mira ${photos.length} foto(s).`,
+            message: spoken,
             repository,
-            attachments: photos.map((photo) => ({
+            attachments: shot.map((photo) => ({
               name: photo.name,
               mime: photo.mime,
               data: photo.data,
@@ -176,8 +224,8 @@ export function VConversationPanel({
       if (!response.ok)
         throw new Error(payload?.notice || payload?.error || "V no pudo responder.");
       setMessages(Array.isArray(payload?.messages) ? payload.messages : []);
-      setMessage("");
-      setPhotos([]);
+      setPending(null);
+      setPendingPhotos([]);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "V no pudo responder.");
     } finally {
@@ -207,6 +255,7 @@ export function VConversationPanel({
           <div className="flex flex-col gap-3">
             {visibleMessages.map((item) => {
               const mine = item.role === "user";
+              const showThumbs = mine && pending?.id === item.id && pendingPhotos.length > 0;
               return (
                 <div key={item.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
                   <article
@@ -215,6 +264,14 @@ export function VConversationPanel({
                       mine ? "rounded-br-md bg-[#1c1917]" : "rounded-bl-md bg-white",
                     )}
                   >
+                    {showThumbs ? (
+                      <div className="mb-2 flex gap-1.5">
+                        {pendingPhotos.map((src) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={src.slice(-24)} src={src} alt="" className="h-12 w-12 rounded-md object-cover" />
+                        ))}
+                      </div>
+                    ) : null}
                     <p
                       className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
                       style={{ color: mine ? "#f6f3ec" : "#1c1917" }}
@@ -225,9 +282,7 @@ export function VConversationPanel({
                 </div>
               );
             })}
-            {busy ? (
-              <p className="text-[12px] text-[#6f6b64]">V está escribiendo…</p>
-            ) : null}
+            {busy ? <ThinkingLine hasPhotos={pendingPhotos.length > 0} /> : null}
             <div ref={endRef} />
           </div>
         ) : (
@@ -308,7 +363,7 @@ export function VConversationPanel({
               className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#1c1917] text-[13px] text-[#f6f3ec] disabled:opacity-30"
               aria-label="Enviar"
             >
-              {busy ? "…" : "↑"}
+              ↑
             </button>
           </div>
           {onDispatchGrok ? (
