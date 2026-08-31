@@ -6,6 +6,11 @@ import { VConversationPanel } from "@/components/live/VConversationPanel";
 import { RunLiveConsole } from "@/components/live/RunLiveConsole";
 import { canApplyRun } from "@/lib/live/run-console";
 import {
+  EXECUTOR_LABEL,
+  FACTORY_EXECUTORS,
+  type FactoryExecutor,
+} from "@/lib/live/executors";
+import {
   IconBranch,
   IconCheck,
   IconExtLink,
@@ -14,7 +19,6 @@ import {
   IconX,
 } from "@/components/brand/VFIcons";
 
-type Executor = "auto" | "codex" | "claude" | "grok" | "team";
 type RunStatus =
   | "preparing"
   | "queued"
@@ -51,11 +55,10 @@ interface QueueJob {
 interface AgentRun {
   id: string;
   instruction: string;
-  requested_executor: Executor;
+  requested_executor: string;
   resolved_executor: string;
   status: RunStatus;
   repo_full_name: string;
-  base_branch: string;
   work_branch: string;
   queue_jobs: QueueJobRef[];
   preview_url: string | null;
@@ -93,6 +96,7 @@ export function VControlPanel({
   const [canWrite, setCanWrite] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [repository, setRepository] = useState("");
+  const [picked, setPicked] = useState<FactoryExecutor[]>(["grok"]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pollingRef = useRef(false);
@@ -149,6 +153,17 @@ export function VControlPanel({
   );
   const jobMap = useMemo(() => new Map(jobs.map((job) => [job.id, job])), [jobs]);
 
+  function toggleExecutor(id: FactoryExecutor) {
+    setPicked((current) => {
+      if (current.includes(id)) {
+        const next = current.filter((item) => item !== id);
+        return next.length ? next : [id];
+      }
+      if (current.length >= 2) return [current[1], id];
+      return [...current, id];
+    });
+  }
+
   async function launchRun(nextInstruction: string) {
     const text = nextInstruction.trim().slice(0, 12000);
     if (text.length < 3 || !repository || busy) return;
@@ -158,7 +173,7 @@ export function VControlPanel({
       const response = await fetch(`/api/live/${encodeURIComponent(projectId)}/runs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ instruction: text, executor: "grok", repository }),
+        body: JSON.stringify({ instruction: text, executors: picked, repository }),
       });
       const payload = (await response.json().catch(() => null)) as {
         run?: AgentRun;
@@ -252,8 +267,25 @@ export function VControlPanel({
           <header className="border-b border-[var(--border-1)] px-3 py-2">
             <p className="text-[13px] font-medium">Hetzner</p>
             <p className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
-              Grok y Claude corren allá. Aquí sólo el resultado.
+              Elige uno o dos. Si no hay cuota, igual se encola.
             </p>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {FACTORY_EXECUTORS.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => toggleExecutor(id)}
+                  className={cn(
+                    "rounded-md border px-2 py-1 font-mono text-[8px] uppercase tracking-[0.08em]",
+                    picked.includes(id)
+                      ? "border-[#1c1917] bg-[#1c1917] text-[#f6f3ec]"
+                      : "border-[var(--border-1)] bg-white text-[#1c1917]",
+                  )}
+                >
+                  {EXECUTOR_LABEL[id]}
+                </button>
+              ))}
+            </div>
           </header>
           {runs.length ? (
             <div className="divide-y divide-[var(--border-1)]">
@@ -264,11 +296,11 @@ export function VControlPanel({
                   onClick={() => setSelectedId(run.id)}
                   className={cn(
                     "w-full p-3 text-left text-[12px] hover:bg-[var(--color-background)]",
-                    selected?.id === run.id && "bg-black text-white hover:bg-black",
+                    selected?.id === run.id && "bg-[#1c1917] text-[#f6f3ec] hover:bg-[#1c1917]",
                   )}
                 >
                   <span className="line-clamp-2">{run.instruction}</span>
-                  <span className={cn("mt-1 block font-mono text-[8px] uppercase", selected?.id === run.id ? "text-white/65" : "text-[var(--fg-muted)]")}>
+                  <span className={cn("mt-1 block font-mono text-[8px] uppercase", selected?.id === run.id ? "text-[#f6f3ec]/70" : "text-[var(--fg-muted)]")}>
                     {run.resolved_executor} · {STATUS_LABELS[run.status]}
                   </span>
                 </button>

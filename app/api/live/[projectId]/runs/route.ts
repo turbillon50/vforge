@@ -17,6 +17,8 @@ import {
   type AgentQueueJob,
   type AgentRunRow,
 } from "@/lib/live/agent-runs";
+import { parseRequestedExecutors } from "@/lib/live/executors";
+import { loosenExecutorConstraint } from "@/lib/live/loosen-executors";
 import { parseRepoFullName, withUserGithub } from "@/lib/live/github-user";
 
 export const runtime = "nodejs";
@@ -255,11 +257,11 @@ export async function POST(
     typeof payload?.instruction === "string"
       ? payload.instruction.trim().slice(0, 12000)
       : "";
-  const requested =
-    typeof payload?.executor === "string" &&
-    executors.has(payload.executor as AgentExecutor)
-      ? (payload.executor as AgentExecutor)
-      : "auto";
+  const team = payload?.executor === "team";
+  const picked = team
+    ? (["claude"] as const)
+    : parseRequestedExecutors(payload?.executors ?? payload?.executor);
+  const requested = team ? "team" : picked.join("+");
   const repository = selectAgentRepository(access, payload?.repository);
   if (instruction.length < 3 || !repository)
     return json({ error: "invalid_run" }, 400);
@@ -267,12 +269,12 @@ export async function POST(
   if (!parsed) return json({ error: "invalid_repository" }, 400);
 
   await ensureProjectAgentRunsTable();
+  await loosenExecutorConstraint();
   const runId = randomUUID();
   const baseBranch = repository.default_branch || "main";
   const workBranch = `vforge/run-${runId.slice(0, 8)}`;
-  const resolved =
-    requested === "team" ? "team" : resolveExecutor(requested, instruction);
-  const phase = requested === "team" ? "planning" : "building";
+  const resolved = team ? "team" : picked.join("+");
+  const phase = team ? "planning" : "building";
   await queryOne(
     `INSERT INTO project_agent_runs
       (id, project_id, instruction, requested_executor, resolved_executor, phase, status,
@@ -311,9 +313,8 @@ export async function POST(
       },
     );
     if (!branch) throw new Error("Conecta GitHub para crear la rama aislada.");
-    const firstAgent: "codex" | "claude" | "grok" =
-      requested === "team" ? "claude" : resolveExecutor(requested, instruction);
-    const role = requested === "team" ? "planner" : "builder";
+    const agents = team ? (["claude"] as const) : picked;
+    const role = team ? "planner" : "builder";
     const prompt = buildAgentPrompt({
       runId,
       projectId,
@@ -323,15 +324,20 @@ export async function POST(
       instruction,
       role,
     });
-    const dispatched = await dispatchJob({
-      agent: firstAgent,
-      prompt,
-      priority: 3,
-      source: `vforge:${projectId}:${runId}:${access.identity.userId}`,
-    });
-    const jobs: AgentQueueJob[] = [
-      { id: dispatched.id, agent: firstAgent, role },
-    ];
+    const jobs: AgentQueueJob[] = [];
+    for (const agent of agents) {
+      const dispatched = await dispatchJob({
+        agent,
+        prompt,
+        priority: 3,
+        source: `vforge:${projectId}:${runId}:${access.identity.userId}:${agent}`,
+      });
+      jobs.push({
+        id: dispatched.id,
+        agent: agent === "cursor" ? ("claude" as const) : (agent as "codex" | "claude" | "grok"),
+        role,
+      });
+    }
     const run = await queryOne<AgentRunRow>(
       `UPDATE project_agent_runs SET queue_jobs = $1::jsonb, status = 'queued', updated_at = now()
         WHERE id = $2 RETURNING *`,
