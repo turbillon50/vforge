@@ -20,6 +20,7 @@ import {
   factoryHandsBrief,
   persistRoomMemory,
 } from "@/lib/live/v-factory-hands";
+import { looksLikeWorkOrder } from "@/lib/live/work-order";
 import { recordCerebrasPulse, todayCerebrasUsage } from "@/lib/forge/cerebras-pulse";
 import {
   extractMemoryBlocks,
@@ -147,7 +148,33 @@ export async function POST(
         () => null,
       );
     }
-    const reply = extracted.cleaned.slice(0, 12000);
+    let reply = extracted.cleaned.slice(0, 12000);
+    let runId: string | null = null;
+    if (looksLikeWorkOrder(spoken) && repository) {
+      const queued = await fetch(
+        new URL(`/api/live/${encodeURIComponent(projectId)}/runs`, req.url),
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            cookie: req.headers.get("cookie") ?? "",
+          },
+          body: JSON.stringify({
+            instruction: spoken,
+            executor: "grok",
+            repository: repository.repo_full_name,
+          }),
+        },
+      );
+      const body = (await queued.json().catch(() => null)) as {
+        run?: { id?: string };
+        error?: string;
+      } | null;
+      runId = body?.run?.id ?? null;
+      reply = runId
+        ? `${reply}\n\nLo mandé a Hetzner. Mira la terminal.`
+        : `${reply}\n\nNo pude encolar en Hetzner${body?.error ? `: ${body.error}` : "."}`;
+    }
 
     await saveProjectAssistantTurn({
       projectId,
@@ -178,6 +205,7 @@ export async function POST(
     return json({
       messages,
       reply,
+      runId,
       provider: result.provider,
       model: result.model,
       status: result.status,
