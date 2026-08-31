@@ -6,7 +6,7 @@ import {
   isLiveRunStatus,
   runnerWaitCopy,
 } from "@/lib/live/run-console";
-import { IconLoader, IconSend } from "@/components/brand/VFIcons";
+import { runnerLooksDead } from "@/lib/live/run-pulse";
 
 interface QueueJobRef {
   id: number;
@@ -43,10 +43,6 @@ export function RunLiveConsole({
   const [now, setNow] = useState(() => Date.now());
   const [nudge, setNudge] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
-  const live = isLiveRunStatus(status);
-  const started = new Date(createdAt).getTime();
-  const elapsed = Number.isFinite(started) ? now - started : 0;
-
   const log = useMemo(() => {
     const chunks = jobRefs.flatMap((ref) => {
       const job = jobs.get(ref.id);
@@ -56,12 +52,11 @@ export function RunLiveConsole({
     });
     return chunks.join("\n\n");
   }, [jobRefs, jobs]);
-
-  const wait = runnerWaitCopy(elapsed, Boolean(log));
-  const progress = jobRefs.reduce((max, ref) => {
-    const value = jobs.get(ref.id)?.progress;
-    return value == null ? max : Math.max(max, value);
-  }, 0);
+  const dead = runnerLooksDead(log) || status === "failed";
+  const live = !dead && isLiveRunStatus(status);
+  const started = new Date(createdAt).getTime();
+  const age = Number.isFinite(started) ? now - started : 0;
+  const wait = runnerWaitCopy(age, Boolean(log));
 
   useEffect(() => {
     if (!live) return;
@@ -84,56 +79,42 @@ export function RunLiveConsole({
   return (
     <section className="overflow-hidden rounded-[8px] border border-black bg-black text-white">
       <header className="flex items-center justify-between gap-3 border-b border-white/15 px-3 py-2">
-        <div className="flex items-center gap-2">
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${live ? "animate-pulse bg-white" : "bg-white/40"}`}
-          />
-          <p className="font-mono text-[8px] uppercase tracking-[0.14em]">
-            Consola · {live ? "en vivo" : status}
-          </p>
-        </div>
+        <p className="font-mono text-[8px] uppercase tracking-[0.14em]">
+          {dead ? "Consola · falló" : live ? "Consola · en vivo" : `Consola · ${status}`}
+        </p>
         <p className="font-mono text-[8px] uppercase tracking-[0.12em] text-white/55">
-          {formatElapsed(elapsed)}
-          {progress > 0 ? ` · ${Math.round(progress)}%` : ""}
+          {live ? formatElapsed(age) : dead ? "muerto" : ""}
         </p>
       </header>
       <div
         ref={scroller}
-        className="max-h-[280px] min-h-[180px] overflow-auto px-3 py-3 font-mono text-[11px] leading-5"
+        className="max-h-[220px] min-h-[140px] overflow-auto px-3 py-3 font-mono text-[11px] leading-5"
       >
         {log ? (
           <pre className="whitespace-pre-wrap text-white/90">{log}</pre>
         ) : (
           <p className="text-white/55">{wait}</p>
         )}
-        {live ? (
-          <span className="mt-2 inline-block h-3 w-1.5 animate-pulse bg-white" />
-        ) : null}
+        {live ? <span className="mt-2 inline-block h-3 w-1.5 animate-pulse bg-white" /> : null}
       </div>
       {canWrite && live ? (
         <form
           onSubmit={(event) => void sendNudge(event)}
           className="flex items-center gap-2 border-t border-white/15 px-2 py-2"
         >
-          <span className="pl-1 font-mono text-[11px] text-white/40">›</span>
           <input
             value={nudge}
             onChange={(event) => setNudge(event.target.value)}
             maxLength={4000}
-            placeholder="Háblale a Grok mientras trabaja…"
+            placeholder="Nudge al runner"
             className="min-h-9 flex-1 bg-transparent text-[12px] text-white outline-none placeholder:text-white/35"
           />
           <button
             type="submit"
             disabled={busy || nudge.trim().length < 2}
-            className="grid h-8 w-8 place-items-center rounded-md border border-white/20 disabled:opacity-30"
-            aria-label="Enviar a Grok"
+            className="px-2 font-mono text-[10px] uppercase disabled:opacity-30"
           >
-            {busy ? (
-              <IconLoader size={12} className="animate-spin" />
-            ) : (
-              <IconSend size={12} />
-            )}
+            Enviar
           </button>
         </form>
       ) : null}
