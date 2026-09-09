@@ -129,6 +129,13 @@ export function MonochromeHome() {
         </div>
         <div className="fx-skip">Toca para saltar</div>
       </div>
+      {/* Corre antes de hidratar: el toque siempre salta el splash aunque React no llegue. */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html:
+            "(function(){var s=document.getElementById('fx-splash'),m=document.getElementById('fx-main');if(!s)return;s.addEventListener('click',function(){s.classList.add('gone');if(m)m.classList.add('live');},{once:true});})();",
+        }}
+      />
 
       {/* ===== HEADER ===== */}
       <header id="fx-hdr" className="fx-hdr">
