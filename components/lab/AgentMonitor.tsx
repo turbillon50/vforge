@@ -33,7 +33,8 @@ function timeAgo(iso: string): string {
   return `${Math.floor(diff / 3600)}h`;
 }
 
-const DRAIN_SSE = "http://178.105.135.26/drain/stream?target=vulcano";
+// https: desde vforge.site (HTTPS) el navegador bloquea http:// por contenido mixto.
+const DRAIN_SSE = "https://brain.vforge.site/drain/stream?target=vulcano";
 
 export default function AgentMonitor() {
   const [msgs, setMsgs]         = useState<DrainMsg[]>([]);

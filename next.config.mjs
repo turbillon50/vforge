@@ -10,6 +10,9 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // /pricing no existe todavia (nav, footer y CTA apuntan ahi -> 404). Mientras
+      // Luis decide si hay pagina de precios, cae en /mcp. 11-sep-2026.
+      { source: "/pricing", destination: "/mcp", permanent: false },
       {
         source: "/vulcano",
         destination: "/app/vulcano",
