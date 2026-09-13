@@ -62,7 +62,7 @@ export async function POST() {
     `;
 
     // Verify it works
-    const count = await sql`SELECT COUNT(*)::int AS n FROM skills`;
+    const _count = await sql`SELECT COUNT(*)::int AS n FROM skills`;
     results.skills_table = { ok: true };
   } catch (e) {
     results.skills_table = { ok: false, error: e instanceof Error ? e.message : String(e) };
@@ -149,7 +149,7 @@ export async function POST() {
     `;
     verification.skill_list_works = (skillTest as any[]).length > 0;
 
-    const vaultTest = await sql`
+    const _vaultTest = await sql`
       SELECT 1 FROM vault_operator_secrets LIMIT 1
     `;
     verification.vault_works = true;

@@ -190,7 +190,7 @@ export async function buildSystemPrompt(
     );
   } catch {
     // Table doesn't exist yet - that's ok, use empty array
-    console.log("[V] agent_directives table not found, using defaults");
+    console.debug("[V] agent_directives table not found, using defaults");
   }
 
   // ─── NEW: Load installed skills ───
@@ -205,7 +205,7 @@ export async function buildSystemPrompt(
     );
   } catch {
     // Table doesn't exist yet - that's ok, use empty array
-    console.log("[V] skills table not found, using defaults");
+    console.debug("[V] skills table not found, using defaults");
   }
 
   // Formatear la historia real del dúo

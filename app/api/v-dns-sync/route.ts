@@ -5,7 +5,7 @@ import { upsertRecord } from "@/lib/namecom/client";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
   const user = await currentUser();
   if (!isOwnerEmail(user?.emailAddresses?.[0]?.emailAddress)) {
     return Response.json({ error: "forbidden" }, { status: 403 });

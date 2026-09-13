@@ -855,7 +855,7 @@ export function ChatExperience() {
     } catch {
       // best-effort; el id local ya funciona
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [scope, t.chat.intro]);
 
   // ---- Multi-chat: lista de sesiones + cambio de sesion ----

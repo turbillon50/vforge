@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useT } from "@/i18n/AppProviders";
+import { useT as _useT } from "@/i18n/AppProviders";
 
 interface Repo {
   full_name: string;

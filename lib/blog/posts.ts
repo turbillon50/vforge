@@ -2481,7 +2481,7 @@ const sock = makeWASocket({
 
 // Autenticación via pairing code
 const code = await sock.requestPairingCode(phoneNumber);
-console.log("Código:", code); // → Ingresar en WhatsApp > Dispositivos
+console.debug("Código:", code); // → Ingresar en WhatsApp > Dispositivos
 \`\`\`
 
 ### El scheduler

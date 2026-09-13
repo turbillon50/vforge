@@ -402,8 +402,7 @@ export default function ForgePage() {
                 maxHeight: "180px",
               }}
             />
-            <button
-              onClick={send}
+            <button aria-label="Enviar"               onClick={send}
               disabled={loading || !input.trim()}
               style={{
                 flexShrink: 0,

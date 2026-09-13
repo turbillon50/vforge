@@ -17,11 +17,11 @@ export async function POST() {
   }
 
   try {
-    console.log("[skills-nuclear] Starting nuclear skills reset...");
+    console.debug("[skills-nuclear] Starting nuclear skills reset...");
 
     // Drop the table completely to remove any constraint issues
     await sql`DROP TABLE IF EXISTS skills CASCADE`;
-    console.log("[skills-nuclear] Dropped existing skills table");
+    console.debug("[skills-nuclear] Dropped existing skills table");
 
     // Recreate skills table with clean schema
     await sql`
@@ -41,12 +41,12 @@ export async function POST() {
         updated_at timestamptz NOT NULL DEFAULT now()
       )
     `;
-    console.log("[skills-nuclear] Recreated skills table");
+    console.debug("[skills-nuclear] Recreated skills table");
 
     // Create indexes
     await sql`CREATE INDEX idx_skills_source ON skills (source)`;
     await sql`CREATE INDEX idx_skills_tags ON skills USING gin (tags)`;
-    console.log("[skills-nuclear] Created indexes");
+    console.debug("[skills-nuclear] Created indexes");
 
     // Insert all 90 skills with explicit source='system'
     const skillsToInsert = [

@@ -1,5 +1,5 @@
 "use client";
-import type { ReactNode } from "react";
+import type { ReactNode as _ReactNode } from "react";
 import { IconLayers } from "@/components/brand/VFIcons";
 export function EmptyState({
   title, body, icon:Icon=IconLayers, compact=false, hint, cta

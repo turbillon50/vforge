@@ -11,7 +11,7 @@
  * vía lib/db/client (DATABASE_URL). No toca el relay http de Hetzner.
  */
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { queryAll, queryOne, sql } from "@/lib/db/client";
+import { queryAll as _queryAll, queryOne, sql } from "@/lib/db/client";
 
 /** Origin público del MCP. En prod: https://vforge.site */
 export const MCP_ORIGIN = (

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import _Link from "next/link";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
@@ -81,7 +81,7 @@ export default function BlogPage() {
         <div style={{ borderTop: "1px solid rgba(59,130,246,0.08)", marginBottom: 48 }}/>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          {POSTS.map((post, i) => (
+          {POSTS.map((post, _i) => (
             <article
               key={post.slug}
               style={{

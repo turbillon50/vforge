@@ -21,7 +21,7 @@ const PROBE_CMD =
   `function sh(c){try{return cp.execSync(c,{encoding:"utf8",timeout:8000}).trim()}catch(e){return ""}}` +
   `let svc=[];try{svc=JSON.parse(sh("pm2 jlist 2>/dev/null")||"[]").map(p=>({name:p.name,status:(p.pm2_env&&p.pm2_env.status)||"unknown"}))}catch(e){}` +
   `const online=svc.filter(s=>s.status==="online").length;` +
-  `console.log(JSON.stringify({services:svc,metrics:{servicesOnline:online,servicesTotal:svc.length}}))'`;
+  `console.debug(JSON.stringify({services:svc,metrics:{servicesOnline:online,servicesTotal:svc.length}}))'`;
 
 type ExecResult = { code?: number; stdout?: string; stderr?: string };
 

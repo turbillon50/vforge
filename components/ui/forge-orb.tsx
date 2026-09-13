@@ -35,8 +35,8 @@ export function ForgeOrb({
   ariaLabel = "Forge",
 }: ForgeOrbProps) {
   const reduce = useReducedMotion();
-  const ringControls = useAnimationControls();
-  const eyeControls = useAnimationControls();
+  const _ringControls = useAnimationControls();
+  const _eyeControls = useAnimationControls();
   
   // Eye position state
   const [eyePos, setEyePos] = useState({ x: 0, y: 0 });

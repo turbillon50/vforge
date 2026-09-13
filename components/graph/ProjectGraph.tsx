@@ -276,7 +276,7 @@ export function ProjectGraph() {
     canvas.addEventListener("wheel",     onWheel, { passive: false });
 
     // Touch support for mobile
-    const toMouse = (t: Touch, rect: DOMRect) => ({ clientX: t.clientX, clientY: t.clientY });
+    const _toMouse = (t: Touch, _rect: DOMRect) => ({ clientX: t.clientX, clientY: t.clientY });
     const onTouchStart = (e: TouchEvent) => {
       e.preventDefault();
       const t = e.touches[0]; if (!t) return;

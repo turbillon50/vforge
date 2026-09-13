@@ -9,7 +9,7 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@clerk/nextjs/server";
-import { getOperatorSecret } from "@/lib/vault/get-secret";
+import { getOperatorSecret as _getOperatorSecret } from "@/lib/vault/get-secret";
 import {
   appendMessages,
   getScope,
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     .slice(-MAX_CONTEXT_TURNS)
     .map((m) => ({ role: m.role, content: m.content }));
 
-  const conversation = [
+  const _conversation = [
     { role: "system", content: systemPrompt },
     ...history,
     { role: "user", content: userText },
@@ -156,7 +156,7 @@ export async function POST(req: Request) {
   });
 }
 
-function errorStatus(err: unknown): number | null {
+function _errorStatus(err: unknown): number | null {
   if (err && typeof err === "object" && "status" in err) {
     const s = (err as { status: unknown }).status;
     if (typeof s === "number") return s;

@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
     try {
       await upsertUserByClerkId(clerkId, primaryEmail, fullName, data.image_url);
-      console.log(`[clerk-webhook] usuario ${type} → ${clerkId} (${primaryEmail})`);
+      console.debug(`[clerk-webhook] usuario ${type} → ${clerkId} (${primaryEmail})`);
     } catch (err) {
       console.error("[clerk-webhook] error upsert usuario:", err);
       return new Response("DB error", { status: 500 });
