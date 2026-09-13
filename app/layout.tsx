@@ -7,6 +7,7 @@ import { RegisterSW } from "@/components/pwa/RegisterSW";
 import { OwnerPushBanner } from "@/components/pwa/OwnerPushBanner";
 import { AppProviders } from "@/i18n/AppProviders";
 import SplashScreen from "@/components/SplashScreen";
+import { LimiteDeError } from "@/components/system/LimiteDeError";
 
 export const metadata: Metadata = {
   title: "VForge — Sala de revisión de proyectos",
@@ -55,14 +56,20 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-svh bg-background font-sans text-ink">
-        <SplashScreen />
+        <LimiteDeError nombre="SplashScreen">
+          <SplashScreen />
+        </LimiteDeError>
         <AppProviders>
           <ClerkShell>
             {children}
-            <OwnerPushBanner />
+            <LimiteDeError nombre="OwnerPushBanner">
+              <OwnerPushBanner />
+            </LimiteDeError>
           </ClerkShell>
         </AppProviders>
-        <RegisterSW />
+        <LimiteDeError nombre="RegisterSW">
+          <RegisterSW />
+        </LimiteDeError>
       </body>
     </html>
   );
