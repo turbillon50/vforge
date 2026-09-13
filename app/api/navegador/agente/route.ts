@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 import { currentUser } from "@clerk/nextjs/server";
 import { isOwnerEmail } from "@/lib/auth/owner";
 import { NextResponse } from "next/server";
+import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 
 const RELAY = "http://178.105.135.26";
 const SECRET = process.env.BRAIN_SECRET ?? "";
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
       `cd /root/agents && ` +
       `nohup python3 nl_browser_agent.py "$(cat /tmp/goal.txt)" > /tmp/nl_last.txt 2>&1 &`;
 
-    const res = await fetch(`${RELAY}/brain/exec`, {
+    const res = await fetchConLimite(`${RELAY}/brain/exec`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ secret: SECRET, cmd }),

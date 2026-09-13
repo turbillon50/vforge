@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 import { currentUser } from "@clerk/nextjs/server";
 import { isOwnerUser } from "@/lib/auth/owner";
 import { NextResponse } from "next/server";
+import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 
 const RELAY = "http://178.105.135.26";
 const SECRET = process.env.BRAIN_SECRET ?? "";
@@ -18,7 +19,7 @@ type Action = "navigate" | "tabs" | "close" | "eval" | "click" | "type" | "read"
 
 /** Ejecuta un cmd en Hetzner vía el relay y devuelve el stdout (texto). */
 async function relayExec(cmd: string): Promise<string> {
-  const res = await fetch(`${RELAY}/brain/exec`, {
+  const res = await fetchConLimite(`${RELAY}/brain/exec`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ secret: SECRET, cmd }),

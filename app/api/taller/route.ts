@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 import { currentUser } from "@clerk/nextjs/server";
 import { isOwnerEmail } from "@/lib/auth/owner";
 import { NextResponse } from "next/server";
+import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 
 const RELAY = "http://178.105.135.26";
 const SECRET = process.env.BRAIN_SECRET ?? "";
@@ -26,7 +27,7 @@ const PROBE_CMD =
 type ExecResult = { code?: number; stdout?: string; stderr?: string };
 
 async function brainExec(cmd: string, signal: AbortSignal): Promise<ExecResult> {
-  const r = await fetch(`${RELAY}/brain/exec`, {
+  const r = await fetchConLimite(`${RELAY}/brain/exec`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ secret: SECRET, cmd }),

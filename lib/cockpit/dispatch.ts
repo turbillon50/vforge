@@ -9,6 +9,7 @@ import type {
   HealthState,
   ProjectRef,
 } from "@/components/cockpit/esferas-types";
+import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 
 /**
  * Fuente de verdad del TALLER: la tabla `dispatch_queue` de la DB del DAEMON
@@ -157,7 +158,7 @@ async function fetchJson(url: string, ms = 2500): Promise<unknown | null> {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), ms);
-    const r = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+    const r = await fetchConLimite(url, { cache: "no-store", signal: ctrl.signal });
     clearTimeout(t);
     if (!r.ok) return null;
     return await r.json();

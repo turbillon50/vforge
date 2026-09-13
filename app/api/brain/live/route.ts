@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ const BRAIN_SECRET = process.env.BRAIN_SECRET ?? "superclaude2025";
  */
 export async function GET() {
   try {
-    const r = await fetch(`${BRAIN_URL}/brain/tenant/stats`, {
+    const r = await fetchConLimite(`${BRAIN_URL}/brain/tenant/stats`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ secret: BRAIN_SECRET, tenant_id: "vulcano" }),

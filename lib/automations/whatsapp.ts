@@ -9,6 +9,7 @@
  * cuidamos los números. No hay reintentos agresivos ni envíos masivos aquí.
  */
 import type { BridgeId } from "./types";
+import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 
 const SECRET = process.env.WHATSAPP_BRIDGE_SECRET ?? "";
 
@@ -49,7 +50,7 @@ export interface BridgeHealth {
 export async function bridgeHealth(bridge: BridgeId): Promise<BridgeHealth> {
   const b = BRIDGES[bridge];
   try {
-    const res = await fetch(`${b.url}/health`, {
+    const res = await fetchConLimite(`${b.url}/health`, {
       cache: "no-store",
       signal: AbortSignal.timeout(6000),
     });
@@ -108,7 +109,7 @@ export async function sendWhatsApp(
   if (!message.trim()) return { ok: false, bridge, to: dest, error: "mensaje vacío" };
 
   try {
-    const res = await fetch(`${b.url}/send`, {
+    const res = await fetchConLimite(`${b.url}/send`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

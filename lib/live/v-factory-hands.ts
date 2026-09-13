@@ -8,6 +8,7 @@ import {
   recall,
   rememberTurn,
 } from "@/lib/forge/semantic-recall";
+import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 
 const BRAIN = (process.env.HETZNER_URL || "http://178.105.135.26").replace(/\/$/, "");
 const SECRET = process.env.BRAIN_SECRET || process.env.HETZNER_SECRET || "";
@@ -25,7 +26,7 @@ export async function brainExec(cmd: string): Promise<string> {
   const trimmed = cmd.trim().slice(0, 400);
   if (!SECRET) return "relay sin secreto";
   if (!SAFE_CMD.test(trimmed)) return `comando no permitido: ${trimmed.slice(0, 80)}`;
-  const res = await fetch(`${BRAIN}/brain/exec`, {
+  const res = await fetchConLimite(`${BRAIN}/brain/exec`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ secret: SECRET, cmd: trimmed }),
@@ -48,7 +49,7 @@ export async function brainExec(cmd: string): Promise<string> {
  */
 async function hetznerHealth(): Promise<string> {
   const checks = await Promise.all([
-    fetch(`${BRAIN}/health`, { cache: "no-store", signal: AbortSignal.timeout(5000) })
+    fetchConLimite(`${BRAIN}/health`, { cache: "no-store", signal: AbortSignal.timeout(5000) })
       .then((res) => `brain /health ${res.status}`)
       .catch((error) => `brain /health ${error instanceof Error ? error.message : "down"}`),
     callVServer("/health", {}).then((res) =>

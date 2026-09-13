@@ -6,6 +6,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { isOwnerUser } from "@/lib/auth/owner";
 import { neon } from "@neondatabase/serverless";
+import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 
 function getDb() {
   const url = process.env.DATABASE_URL;
@@ -109,7 +110,7 @@ export async function POST(_req: Request) {
       VALUES (${userId}, ${username}, ${"vulcano-browser-" + username}, 0, 'provisioning', 'provisioning', ${email})
     `;
 
-    fetch(`${RELAY}/brain/exec`, {
+    fetchConLimite(`${RELAY}/brain/exec`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

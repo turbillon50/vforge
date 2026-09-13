@@ -3,6 +3,7 @@
  * Si CDP falla, Chrome aislado. El plugin de Chrome sube fotos aparte.
  */
 import { buildCdpCurrentCommand, buildCdpNavigateCommand, CDP_CONTAINER } from "./see-cdp";
+import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 
 const RELAY = (process.env.VULCANO_RELAY_URL || "http://178.105.135.26").replace(
   /\/$/,
@@ -192,7 +193,7 @@ export function buildSeeHostCommand(input: {
 async function relayExec(cmd: string, timeoutMs = CAPTURE_TIMEOUT_MS): Promise<string> {
   const secret = process.env.BRAIN_SECRET ?? "";
   if (!secret) throw new Error("ojos no disponibles: falta el relay");
-  const res = await fetch(`${RELAY}/brain/exec`, {
+  const res = await fetchConLimite(`${RELAY}/brain/exec`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ secret, cmd }),

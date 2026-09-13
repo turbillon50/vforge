@@ -1,3 +1,4 @@
+import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 /**
  * Notificaciones WhatsApp — server-only.
  *
@@ -50,7 +51,7 @@ export async function sendWhatsapp(
   if (!BAILEYS_SECRET) return { ok: false, skipped: true, error: "no_secret" };
 
   try {
-    const res = await fetch(`${BAILEYS_URL}/send`, {
+    const res = await fetchConLimite(`${BAILEYS_URL}/send`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${BAILEYS_SECRET}`,
@@ -75,7 +76,7 @@ export async function sendWhatsapp(
  */
 export async function notifyOwner(message: string): Promise<WaResult> {
   try {
-    const res = await fetch(`${ENGINE_URL}/notify`, {
+    const res = await fetchConLimite(`${ENGINE_URL}/notify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       // El engine de V Momentum espera { para, mensaje, urgente }.
