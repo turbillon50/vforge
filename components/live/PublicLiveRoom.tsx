@@ -11,7 +11,7 @@ import {
   IconRefresh,
   IconSend,
   IconShield,
-  IconX as _IconX,
+  IconX,
 } from "@/components/brand/VFIcons";
 
 type Project = {

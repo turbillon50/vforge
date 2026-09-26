@@ -3,7 +3,7 @@ import type React from "react";
 
 import { motion } from "framer-motion";
 import {
-  IconActivity, IconBranch, IconCheck, IconCpu as _IconCpu, IconDatabase,
+  IconActivity, IconBranch, IconCheck, IconCpu, IconDatabase,
   IconGlobe, IconLayers, IconRocket, IconShield, IconSparkles,
 } from "@/components/brand/VFIcons";
 import { ObsidianLoader } from "@/components/ui/ObsidianLoader";

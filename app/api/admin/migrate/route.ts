@@ -176,7 +176,7 @@ function splitSql(input: string): string[] {
 }
 
 /** Remove lines that are pure SQL comments. Returns the remaining content. */
-function _stripCommentLines(s: string): string {
+function stripCommentLines(s: string): string {
   return s
     .split("\n")
     .filter((line) => {

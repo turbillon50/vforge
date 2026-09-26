@@ -46,7 +46,7 @@ export async function embedBatch(
   if (viaSelfHost) return viaSelfHost;
   return null;
   // (paths de pago conservados abajo por si algún día se vuelve a 1536)
-   
+  // eslint-disable-next-line no-unreachable
   const viaOpenAI = await embedBatchOpenAI(texts);
   if (viaOpenAI) return viaOpenAI;
   // Fallback: Gemini embedding-001 con outputDimensionality 1536 —

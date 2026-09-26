@@ -136,7 +136,7 @@ function Showcase() {
           const Icon = c.icon;
           return (
             <Link key={i} href={c.href} className="block overflow-hidden rounded-2xl" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
-              {/* IMG-SLOT: mañana cambiar este div por <img src={...} / alt="" aria-hidden="true"> de Higgsfield */}
+              {/* IMG-SLOT: mañana cambiar este div por <img src={...} /> de Higgsfield */}
               <div className="flex h-24 items-center justify-center" style={{ background: c.g }}>
                 <Icon size={24} style={{ color: "rgba(255,255,255,0.85)" }} />
               </div>

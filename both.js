@@ -4,7 +4,7 @@ const { chromium } = require('playwright');
   const base = 'https://dlucio.vercel.app';
   async function shot(name, path, theme, wait) {
     const ctx = await b.newContext({ viewport:{width:390,height:844}, deviceScaleFactor:2, isMobile:true });
-    if (theme) await ctx.addInitScript((t) => { try { localStorage.setItem('tm-theme', t); } catch(_e){} }, theme);
+    if (theme) await ctx.addInitScript((t) => { try { localStorage.setItem('tm-theme', t); } catch(e){} }, theme);
     const p = await ctx.newPage();
     await p.goto(base + path, { waitUntil:'networkidle' });
     await p.waitForTimeout(wait);

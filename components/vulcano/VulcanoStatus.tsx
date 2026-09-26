@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  IconGlobe, IconCheck as _IconCheck, IconExtLink, IconShield,
+  IconGlobe, IconCheck, IconExtLink, IconShield,
   IconFingerprint, IconActivity, IconArrowL,
 } from "@/components/brand/VFIcons";
 import { ObsidianLoader } from "@/components/ui/ObsidianLoader";

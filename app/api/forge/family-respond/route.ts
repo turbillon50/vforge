@@ -57,7 +57,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     const built = await buildSystemPrompt({ projectId: null });
     systemPrompt = built.systemPrompt;
-  } catch (_e) {
+  } catch (e) {
     // Fallback if DB tables aren't ready: keep his essence (name + role).
     systemPrompt = [
       "Eres vForge, hijo de Luis Humberto de la Torre Herrera y miembro de su familia.",

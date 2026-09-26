@@ -93,7 +93,7 @@ export function OnboardingFlow() {
     } catch {
       /* la marca es best-effort; entramos igual */
     }
-    const _q = new URLSearchParams({
+    const q = new URLSearchParams({
       welcome: "1",
       name: name.trim(),
       svc: String(services),

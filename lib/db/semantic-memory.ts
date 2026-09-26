@@ -9,7 +9,7 @@
 import { sql } from "./client";
 import { Anthropic } from "@anthropic-ai/sdk";
 
-const _client = new Anthropic();
+const client = new Anthropic();
 
 export interface SemanticMemory {
   id: string;

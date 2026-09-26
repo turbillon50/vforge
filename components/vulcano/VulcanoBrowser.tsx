@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   IconGlobe, IconActivity, IconCheck, IconFingerprint,
   IconRefresh, IconExtLink, IconShield, IconWarn, IconArrowL,
-  IconRocket, IconArrowR as _IconArrowR,
+  IconRocket, IconArrowR,
 } from "@/components/brand/VFIcons";
 import { ObsidianLoader } from "@/components/ui/ObsidianLoader";
 

@@ -63,10 +63,10 @@ export function MarketingHeader() {
             <GitHubIcon />
           </a>
           <Link href="/sign-in" style={{ color:"rgba(200, 215, 255, 0.8)", fontWeight:500, fontSize:"14px", textDecoration:"none", padding:"6px 14px", borderRadius:"8px" }}>
-            Entrar
+            Log in
           </Link>
           <Link href="/sign-up" style={{ display:"inline-flex", alignItems:"center", padding:"8px 18px", borderRadius:"9px", background:"linear-gradient(135deg, #3b82f6 0%, #6d28d9 100%)", color:"#fff", fontWeight:700, fontSize:"14px", textDecoration:"none" }}>
-            Empezar gratis
+            Get started
           </Link>
         </div>
       </div>

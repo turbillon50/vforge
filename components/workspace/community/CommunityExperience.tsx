@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  IconShare, IconActivity as _IconActivity, IconSparkles as _IconSparkles, IconCheck, IconX,
+  IconShare, IconActivity, IconSparkles, IconCheck, IconX,
   IconSend, IconLoader, IconPen,
 } from "@/components/brand/VFIcons";
 

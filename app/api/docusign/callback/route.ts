@@ -167,7 +167,7 @@ export async function POST(req: Request): Promise<Response> {
     });
   }
   const { envelopeId, status, contractId } = parseConnectPayload(body);
-  console.debug("[docusign/callback] POST", { envelopeId, status, contractId });
+  console.log("[docusign/callback] POST", { envelopeId, status, contractId });
 
   if (isCompleted(status)) {
     const contract = await markSigned({ contractId, envelopeId });
@@ -199,7 +199,7 @@ export async function GET(req: Request): Promise<Response> {
   }
 
   // Caso 3: OAuth consent (JWT) — comportamiento histórico.
-  console.debug("[docusign/callback] OAuth code:", code, "state:", state);
+  console.log("[docusign/callback] OAuth code:", code, "state:", state);
   return successHtml(
     "Autorización DocuSign recibida",
     "La autorización fue procesada correctamente. Ya puede cerrar esta ventana.",

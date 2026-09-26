@@ -7,7 +7,7 @@ import {
   IconCreditCard,
   IconKey,
   IconCheck,
-  IconCopy as _IconCopy,
+  IconCopy,
   IconLoader,
   IconArrowR,
 } from "@/components/brand/VFIcons";

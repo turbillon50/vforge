@@ -17,7 +17,7 @@ import { IconRefresh, IconWarn, IconCheck, IconX } from "@/components/brand/VFIc
 import { cn } from "@/lib/utils";
 import {
   type TokenHealth,
-  type TokenTone as _TokenTone,
+  type TokenTone,
   tokenTone,
   TONE_COLOR,
   hoursLabel,

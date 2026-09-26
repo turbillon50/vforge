@@ -15,7 +15,7 @@ export interface RoutingOptions {
   forceSlug?: string;
 }
 
-const _TIER_WEIGHT: Record<"cheap" | "balanced" | "premium", number> = {
+const TIER_WEIGHT: Record<"cheap" | "balanced" | "premium", number> = {
   cheap: 1,
   balanced: 2,
   premium: 3,

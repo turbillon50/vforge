@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     const put = await ghh({ method: "PUT", body: JSON.stringify({ message: "VForge: edit " + path, content: Buffer.from(content, "utf8").toString("base64"), sha }) });
     if (!put.ok) return Response.json({ error: "save", detail: await put.text() }, { status: 400 });
     return Response.json({ ok: true });
-  } catch (_e) {
+  } catch (e) {
     return Response.json({ error: "exception" }, { status: 500 });
   }
 }

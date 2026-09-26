@@ -41,7 +41,7 @@ function avoidCollision(p: { x: number; y: number }): { x: number; y: number } {
 export function VOrb() {
   const router = useRouter();
   const pathname = usePathname();
-  const [_isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
     const upd = () => setIsMobile(mq.matches);

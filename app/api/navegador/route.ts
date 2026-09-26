@@ -23,7 +23,7 @@ const OWNER_PROFILES = [
   { name: "luisdelator",  email: "luisdelator@vmomentums.info", color: "#059669", avatar: "L" },
 ];
 
-export async function GET(_req: Request) {
+export async function GET(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "no auth" }, { status: 401 });
 
@@ -90,7 +90,7 @@ export async function GET(_req: Request) {
   }
 }
 
-export async function POST(_req: Request) {
+export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "no auth" }, { status: 401 });
 

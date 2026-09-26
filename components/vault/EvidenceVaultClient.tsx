@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
 import {
   IconCamera,
   IconCheck,
-  IconClock as _IconClock,
+  IconClock,
   IconDatabase,
   IconFile,
   IconInfo,
@@ -23,7 +23,7 @@ import {
   IconRefresh,
   IconSend,
   IconStop,
-  IconUpload as _IconUpload,
+  IconUpload,
   IconWarn,
 } from "@/components/brand/VFIcons";
 import { cn } from "@/lib/utils";
