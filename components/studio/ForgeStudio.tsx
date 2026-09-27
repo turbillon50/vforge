@@ -758,14 +758,14 @@ export function ForgeStudio() {
         </MobilePaneButton>
       </div>
 
-      <div className="grid h-full min-h-0 flex-1 lg:grid-cols-[minmax(320px,0.92fr)_minmax(0,1.08fr)]">
+      <div className="grid h-full min-h-0 flex-1 lg:grid-cols-[minmax(460px,1.35fr)_minmax(280px,0.8fr)]">
         <section
           className={cn(
             "h-full min-h-0 flex-col overflow-hidden border-r border-[var(--vf-border)] bg-[var(--vf-bg-1)]",
             mobilePane === "build" ? "flex" : "hidden lg:flex",
           )}
         >
-          <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-[var(--vf-border)] px-page-sm md:px-page-md">
+          <header className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-[var(--vf-border)] px-4">
             <div className="min-w-0">
               <p className="font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
                 Conversación de trabajo
@@ -786,7 +786,7 @@ export function ForgeStudio() {
 
           <div
             ref={conversationViewportRef}
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-page-sm py-6 md:px-page-md md:py-8"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3"
           >
             {conversationLoading ? (
               <div className="grid h-full min-h-[260px] place-items-center">
@@ -811,7 +811,7 @@ export function ForgeStudio() {
             )}
           </div>
 
-          <div className="vf-studio-composer shrink-0 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-page-sm py-4 md:px-page-md md:py-5">
+          <div className="vf-studio-composer shrink-0 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-3 py-2">
             {attachment ? (
               <div className="mb-2 flex items-center justify-between gap-3 rounded-md border border-[var(--vf-border)] bg-[var(--vf-bg-2)] px-3 py-2">
                 <div className="min-w-0">
@@ -836,14 +836,14 @@ export function ForgeStudio() {
                     void sendPrompt();
                   }
                 }}
-                rows={3}
+                rows={2}
                 disabled={sending || !sessionId}
                 placeholder={
                   project
                     ? `Dile a V qué construir, revisar o desplegar en ${project.name}…`
                     : "Crea o selecciona un proyecto para trabajar con contexto…"
                 }
-                className="max-h-40 min-h-[70px] w-full resize-none bg-transparent px-1.5 py-1 text-[13px] leading-5 text-[var(--vf-fg)] placeholder:text-[var(--vf-fg-2)] disabled:opacity-55"
+                className="max-h-24 min-h-[36px] w-full resize-none bg-transparent px-1.5 py-1 text-[14px] leading-5 text-[var(--vf-fg)] placeholder:text-[var(--vf-fg-2)] disabled:opacity-55"
               />
               <div className="flex items-center justify-between gap-3 pt-1">
                 <div className="flex items-center gap-2">
@@ -996,7 +996,7 @@ function StudioToolbar({
   onDeploy: () => void;
 }) {
   return (
-    <div className="flex min-h-[68px] shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-page-sm py-3 md:px-page-md">
+    <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-4">
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <label className="relative min-w-0 flex-1 sm:max-w-[310px]">
           <span className="sr-only">Proyecto activo</span>
@@ -1478,7 +1478,7 @@ function SystemStrip({
   ];
 
   return (
-    <footer className="flex min-h-14 shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-page-sm py-3 md:px-page-md xl:px-page-lg">
+    <footer className="flex h-8 shrink-0 items-center gap-4 overflow-x-auto border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-4">
       {items.map(({ label, detail, active, Icon }) => (
         <Link
           key={label}
@@ -1596,7 +1596,7 @@ function CreateProjectDialog({
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              rows={3}
+              rows={2}
               placeholder="Qué debe resolver y para quién."
               className="input-base mt-2 resize-none"
             />
