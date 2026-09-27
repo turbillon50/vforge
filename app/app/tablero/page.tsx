@@ -98,12 +98,15 @@ function cadaHumano(cron: string): string {
   return cron;
 }
 
+// Colores fijos en hex: el tema de VForge aplana los tonos -500 de Tailwind a negro.
+const C = { verde: "#16a34a", rojo: "#dc2626", azul: "#38bdf8", violeta: "#7c3aed", ambar: "#d97706", cielo: "#0284c7", gris: "#a3a3a3", grisClaro: "#d4d4d4", vacio: "#e5e5e5" };
+
 const ESTADO_UI: Record<Frente["estado"], { label: string; dot: string; chip: string }> = {
-  trabajando: { label: "Trabajando", dot: "bg-emerald-500", chip: "border-emerald-600/30 bg-emerald-50 text-emerald-800" },
-  "en loop": { label: "En loop", dot: "bg-amber-500", chip: "border-amber-600/30 bg-amber-50 text-amber-900" },
-  reciente: { label: "Activo hoy", dot: "bg-sky-500", chip: "border-sky-600/30 bg-sky-50 text-sky-900" },
-  terminado: { label: "Terminado", dot: "bg-neutral-400", chip: "border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-tertiary)]" },
-  quieto: { label: "Quieto", dot: "bg-neutral-300", chip: "border-[var(--border-1)] bg-white text-[var(--fg-tertiary)]" },
+  trabajando: { label: "Trabajando", dot: C.verde, chip: "border-emerald-600/30 bg-emerald-50 text-emerald-800" },
+  "en loop": { label: "En loop", dot: C.ambar, chip: "border-amber-600/30 bg-amber-50 text-amber-900" },
+  reciente: { label: "Activo hoy", dot: C.cielo, chip: "border-sky-600/30 bg-sky-50 text-sky-900" },
+  terminado: { label: "Terminado", dot: C.gris, chip: "border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-tertiary)]" },
+  quieto: { label: "Quieto", dot: C.grisClaro, chip: "border-[var(--border-1)] bg-white text-[var(--fg-tertiary)]" },
 };
 
 /* ─────────────── página ─────────────── */
@@ -332,8 +335,8 @@ function Kpi({ label, valor, nota, vivo }: { label: string; valor: number; nota:
       <p className="flex items-center gap-2 text-[12px] text-[var(--fg-tertiary)]">
         {vivo && (
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ backgroundColor: C.verde }} />
+            <span className="relative inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: C.verde }} />
           </span>
         )}
         {label}
@@ -381,11 +384,11 @@ function TarjetaMust({ frente, ahora }: { frente: Frente; ahora: number }) {
   const r = m.resumen!;
   const pct = Math.round((r.ok / Math.max(1, r.total)) * 100);
   const segs = [
-    { k: "Bien", v: r.ok, c: "bg-emerald-500" },
-    { k: "Falla", v: r.mal, c: "bg-red-500" },
-    { k: "Revisión manual", v: r.manual, c: "bg-sky-400" },
-    { k: "Te toca a ti", v: r.luis, c: "bg-violet-500" },
-    { k: "Pendiente", v: r.pendiente, c: "bg-neutral-200" },
+    { k: "Bien", v: r.ok, c: C.verde },
+    { k: "Falla", v: r.mal, c: C.rojo },
+    { k: "Revisión manual", v: r.manual, c: C.azul },
+    { k: "Te toca a ti", v: r.luis, c: C.violeta },
+    { k: "Pendiente", v: r.pendiente, c: C.vacio },
   ];
   return (
     <section className="rounded-2xl border border-black bg-white p-4 md:p-6">
@@ -405,14 +408,14 @@ function TarjetaMust({ frente, ahora }: { frente: Frente; ahora: number }) {
       <div className="mt-5 flex h-3 w-full overflow-hidden rounded-full bg-neutral-100">
         {segs.map((s) =>
           s.v > 0 ? (
-            <div key={s.k} className={s.c} style={{ width: `${(s.v / r.total) * 100}%` }} title={`${s.k}: ${s.v}`} />
+            <div key={s.k} style={{ width: `${(s.v / r.total) * 100}%`, backgroundColor: s.c }} title={`${s.k}: ${s.v}`} />
           ) : null,
         )}
       </div>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
         {segs.map((s) => (
           <span key={s.k} className="flex items-center gap-1.5 text-[12px] text-[var(--fg-secondary)]">
-            <span className={cn("h-2 w-2 rounded-full", s.c)} />
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: s.c }} />
             {s.k} <b className="font-semibold tabular-nums text-black">{s.v}</b>
           </span>
         ))}
@@ -465,7 +468,7 @@ function TarjetaFrente({ f, ahora }: { f: Frente; ahora: number }) {
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[16px] font-semibold tracking-[-0.02em] text-black">{f.nombre}</span>
             <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[12px]", ui.chip)}>
-              <span className={cn("h-1.5 w-1.5 rounded-full", ui.dot)} />
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: ui.dot }} />
               {ui.label}
               {corriendo ? ` · ${corriendo.min} min` : ""}
             </span>
