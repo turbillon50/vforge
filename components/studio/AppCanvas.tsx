@@ -45,11 +45,12 @@ function elementPath(el: Element): string {
   const parts: string[] = [];
   let node: Element | null = el;
   while (node && node.tagName.toLowerCase() !== "html") {
-    const tag = node.tagName.toLowerCase();
-    const parent = node.parentElement;
+    const current: Element = node;
+    const tag = current.tagName.toLowerCase();
+    const parent: HTMLElement | null = current.parentElement;
     if (!parent) break;
     const index =
-      [...parent.children].filter((child) => child.tagName === node!.tagName).indexOf(node) + 1;
+      Array.from(parent.children).filter((child) => child.tagName === current.tagName).indexOf(current) + 1;
     parts.unshift(`${tag}:nth-of-type(${index})`);
     if (tag === "body") break;
     node = parent;
