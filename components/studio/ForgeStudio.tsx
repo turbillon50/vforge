@@ -758,10 +758,10 @@ export function ForgeStudio() {
         </MobilePaneButton>
       </div>
 
-      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(360px,0.88fr)_minmax(500px,1.12fr)]">
+      <div className="grid h-full min-h-0 flex-1 lg:grid-cols-[minmax(320px,0.92fr)_minmax(0,1.08fr)]">
         <section
           className={cn(
-            "min-h-0 flex-col border-r border-[var(--vf-border)] bg-[var(--vf-bg-1)]",
+            "h-full min-h-0 flex-col overflow-hidden border-r border-[var(--vf-border)] bg-[var(--vf-bg-1)]",
             mobilePane === "build" ? "flex" : "hidden lg:flex",
           )}
         >
@@ -889,7 +889,7 @@ export function ForgeStudio() {
 
         <section
           className={cn(
-            "min-h-0 flex-col bg-[var(--vf-bg)]",
+            "h-full min-h-0 flex-col overflow-hidden bg-[var(--vf-bg)]",
             mobilePane === "preview" ? "flex" : "hidden lg:flex",
           )}
         >

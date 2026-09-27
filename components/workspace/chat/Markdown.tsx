@@ -58,9 +58,9 @@ function CodeBlock({ inline, className, children }: {
   }
 
   return (
-    <div className="vf-md-codewrap group relative my-3 overflow-hidden rounded-lg border border-[var(--vf-fg)] bg-[var(--vf-fg)]">
-      <div className="flex items-center justify-between gap-2 border-b border-[var(--vf-bg-3)] bg-[var(--vf-fg)] px-3 py-1.5">
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--vf-bg-3)]">
+    <div className="vf-md-codewrap group relative my-3 overflow-hidden rounded-lg border border-[var(--vf-border)] bg-[var(--vf-bg-2)]">
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--vf-border)] px-3 py-1.5">
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--vf-fg-2)]">
           {lang || "code"}
         </span>
         <button
@@ -73,7 +73,7 @@ function CodeBlock({ inline, className, children }: {
           <span className="hidden sm:inline">{copied ? "Copiado" : "Copy"}</span>
         </button>
       </div>
-      <pre className="m-0 overflow-x-auto whitespace-pre-wrap break-words px-3 py-2.5 font-mono text-[13px] leading-relaxed text-[var(--vf-bg-1)] select-text">
+      <pre className="m-0 overflow-x-auto whitespace-pre-wrap break-words px-3 py-2.5 font-mono text-[13px] leading-relaxed text-[var(--vf-fg)] select-text">
         <code className={className}>{text}</code>
       </pre>
     </div>

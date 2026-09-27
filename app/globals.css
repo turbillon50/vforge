@@ -174,8 +174,8 @@ select {
 }
 
 ::selection {
-  background: #000000;
-  color: #ffffff;
+  background: #d9d9d6;
+  color: #090909;
 }
 
 ::-webkit-scrollbar {
