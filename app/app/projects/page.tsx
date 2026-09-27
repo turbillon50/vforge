@@ -657,7 +657,7 @@ export default function ProjectsPage() {
       </section>
 
       {/* ── barra de búsqueda y filtros ── */}
-      <section className="sticky top-0 z-20 border-b border-[var(--border-1)] bg-[#f7f7f5]/95 px-5 py-3 backdrop-blur md:px-8">
+      <section className="z-10 border-b border-[var(--border-1)] bg-[#f7f7f5]/95 px-5 py-3 backdrop-blur md:sticky md:top-[59px] md:px-8">
         <div className="flex flex-col gap-2 md:flex-row md:items-center">
           <label className="flex min-h-11 flex-1 items-center gap-2 rounded-md border border-[var(--border-1)] bg-white px-3">
             <IconSearch size={14} className="shrink-0 text-[var(--fg-muted)]" />
@@ -665,7 +665,7 @@ export default function ProjectsPage() {
             <input
               value={f.q}
               onChange={(e) => upd({ q: e.target.value })}
-              placeholder="Buscar nombre, cliente, dominio, repo, descripción o comentario"
+              placeholder="Buscar proyecto, cliente, repo, comentario…"
               className="min-w-0 flex-1 bg-transparent text-[14px] text-black placeholder:text-[var(--fg-muted)]"
             />
             {f.q ? (
@@ -941,7 +941,7 @@ function Stat({
     <>
       <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">{label}</p>
       <p
-        className="mt-1.5 text-[26px] font-semibold leading-none tracking-[-0.04em] tabular-nums text-black"
+        className="mt-1.5 text-[22px] font-semibold leading-none tracking-[-0.04em] tabular-nums text-black md:text-[26px]"
         style={color ? { color } : undefined}
       >
         {value}
@@ -949,7 +949,7 @@ function Stat({
       <p className="mt-1.5 text-[12px] text-[var(--fg-tertiary)]">{note}</p>
     </>
   );
-  const cls = `border-b border-r border-[var(--border-1)] px-5 py-4 text-left md:border-b-0 md:px-6 ${
+  const cls = `border-b border-r border-[var(--border-1)] px-4 py-3 text-left md:border-b-0 md:px-6 md:py-4 ${
     wide ? "col-span-2 md:col-span-1" : ""
   }`;
   return onClick ? (
