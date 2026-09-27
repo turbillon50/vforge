@@ -786,7 +786,7 @@ export function ForgeStudio() {
 
           <div
             ref={conversationViewportRef}
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 md:px-5"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-page-sm py-6 md:px-page-md md:py-8"
           >
             {conversationLoading ? (
               <div className="grid h-full min-h-[260px] place-items-center">
@@ -811,7 +811,7 @@ export function ForgeStudio() {
             )}
           </div>
 
-          <div className="vf-studio-composer shrink-0 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-4 py-4 md:px-5 md:py-5">
+          <div className="vf-studio-composer shrink-0 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-page-sm py-4 md:px-page-md md:py-5">
             {attachment ? (
               <div className="mb-2 flex items-center justify-between gap-3 rounded-md border border-[var(--vf-border)] bg-[var(--vf-bg-2)] px-3 py-2">
                 <div className="min-w-0">
@@ -903,7 +903,7 @@ export function ForgeStudio() {
             }}
           />
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 md:p-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-page-sm md:p-page-md">
             {previewMode === "canvas" ? (
               <AppCanvas
                 projectId={activeProjectId}
@@ -996,7 +996,7 @@ function StudioToolbar({
   onDeploy: () => void;
 }) {
   return (
-    <div className="flex min-h-[62px] shrink-0 items-center justify-between gap-3 border-b border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-3 py-2 md:px-4">
+    <div className="flex min-h-[68px] shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-page-sm py-3 md:px-page-md">
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <label className="relative min-w-0 flex-1 sm:max-w-[310px]">
           <span className="sr-only">Proyecto activo</span>
@@ -1115,7 +1115,7 @@ function EmptyConversation({
   return (
     <div className="flex min-h-full flex-col justify-center py-8">
       <VMark size={34} />
-      <h2 className="mt-6 max-w-md text-[clamp(2.1rem,5vw,4.2rem)] font-semibold leading-[0.91] tracking-[-0.065em]">
+      <h2 className="mt-6 max-w-md text-headline-md font-semibold tracking-[-0.03em] md:text-headline-lg">
         Construye en conversación.
       </h2>
       <p className="mt-5 max-w-md text-[12px] leading-5 text-[var(--vf-fg-1)]">
@@ -1478,7 +1478,7 @@ function SystemStrip({
   ];
 
   return (
-    <footer className="flex h-14 shrink-0 items-center gap-x-6 gap-y-1 overflow-x-auto border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-5 md:px-8">
+    <footer className="flex min-h-14 shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-page-sm py-3 md:px-page-md xl:px-page-lg">
       {items.map(({ label, detail, active, Icon }) => (
         <Link
           key={label}

@@ -245,7 +245,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
               isStudio ? "relative shrink-0" : "sticky top-0",
             )}
           >
-            <div className="flex h-[58px] items-center justify-between gap-4 px-4 md:px-6">
+            <div className="flex h-[58px] items-center justify-between gap-4 px-page-sm md:px-page-md xl:px-page-lg">
               <div className="flex min-w-0 items-center gap-3">
                 <button
                   type="button"
@@ -278,7 +278,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
             {children}
           </main>
           {isStudio ? null : (
-            <footer className="flex h-[72px] items-center justify-between border-t border-[var(--border-1)] bg-white px-5 md:px-8">
+            <footer className="flex h-[72px] items-center justify-between border-t border-[var(--border-1)] bg-white px-page-sm md:px-page-md xl:px-page-lg">
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
                 VForge
               </p>
@@ -319,7 +319,7 @@ function ClerkAccount() {
           },
         }}
       />
-      <span className="hidden max-w-[200px] truncate text-[11px] font-medium sm:block">
+      <span className="hidden max-w-[9rem] truncate text-[12px] font-medium sm:block lg:max-w-[16rem] xl:max-w-none xl:overflow-visible">
         {user?.fullName ?? user?.firstName ?? user?.username ?? user?.primaryEmailAddress?.emailAddress ?? "Cuenta"}
       </span>
     </div>

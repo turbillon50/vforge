@@ -114,6 +114,9 @@ const config: Config = {
         gutter: "24px",
         "margin-desktop": "64px",
         "margin-mobile": "20px",
+        "page-sm": "20px",
+        "page-md": "32px",
+        "page-lg": "48px",
       },
       maxWidth: {
         container: "1440px",

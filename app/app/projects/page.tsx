@@ -655,7 +655,7 @@ export default function ProjectsPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1440px]">
-      <header className="border-b border-[var(--border-1)] bg-white px-5 py-3.5 md:px-8">
+      <header className="border-b border-[var(--border-1)] bg-white px-page-sm md:px-page-md py-3.5">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="mono-label">Control room</p>
@@ -676,7 +676,7 @@ export default function ProjectsPage() {
       </header>
 
       {syncMessage ? (
-        <div className="border-b border-[var(--border-1)] bg-white px-5 py-3 font-mono text-[10px] uppercase tracking-[0.11em] text-[var(--fg-secondary)] md:px-8">
+        <div className="border-b border-[var(--border-1)] bg-white px-page-sm md:px-page-md py-3 font-mono text-[10px] uppercase tracking-[0.11em] text-[var(--fg-secondary)]">
           {syncMessage}
         </div>
       ) : null}
@@ -692,7 +692,7 @@ export default function ProjectsPage() {
       ) : null}
 
       {inviteProject ? (
-        <div className="border-b border-[var(--border-1)] bg-[#f7f7f5] px-5 py-6 md:px-8">
+        <div className="border-b border-[var(--border-1)] bg-[#f7f7f5] px-page-sm md:px-page-md py-6">
           <div className="mx-auto max-w-lg">
             <InviteShare
               projectId={inviteProject.id}
@@ -731,7 +731,7 @@ export default function ProjectsPage() {
       </section>
 
       {/* ── barra de búsqueda y filtros ── */}
-      <section className="z-10 border-b border-[var(--border-1)] bg-[#f7f7f5]/95 px-5 py-3 backdrop-blur md:sticky md:top-[59px] md:px-8">
+      <section className="z-10 border-b border-[var(--border-1)] bg-[#f7f7f5]/95 px-page-sm md:px-page-md py-3 backdrop-blur md:sticky md:top-[59px]">
         <div className="flex flex-col gap-2 md:flex-row md:items-center">
           <label className="flex min-h-11 flex-1 items-center gap-2 rounded-md border border-[var(--border-1)] bg-white px-3">
             <IconSearch size={14} className="shrink-0 text-[var(--fg-muted)]" />
@@ -923,7 +923,7 @@ export default function ProjectsPage() {
         {loading ? (
           <ProjectSkeleton />
         ) : filtered.length === 0 && !error ? (
-          <div className="px-5 py-20 text-center md:px-8">
+          <div className="px-page-sm md:px-page-md py-20 text-center">
             <IconLayout size={20} className="mx-auto" />
             <p className="mt-4 text-[14px] font-medium text-black">
               {projects.length === 0
@@ -1226,7 +1226,7 @@ function ProjectRow({
 
   return (
     <article className={open ? "bg-[#fafaf8]" : undefined}>
-      <div className="grid gap-4 px-5 py-5 transition hover:bg-[#fafaf8] lg:grid-cols-[minmax(0,1.4fr)_minmax(150px,.8fr)_140px_150px_auto] lg:items-start lg:px-8">
+      <div className="grid gap-4 px-page-sm md:px-page-md py-5 transition hover:bg-[#fafaf8] lg:grid-cols-[minmax(0,1.4fr)_minmax(150px,.8fr)_140px_150px_auto] lg:items-start xl:px-page-lg">
         {/* proyecto */}
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -1435,7 +1435,7 @@ function Detail({
   const label = "font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]";
 
   return (
-    <div className="grid gap-6 border-t border-[var(--border-1)] px-5 pb-6 pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:px-8">
+    <div className="grid gap-6 border-t border-[var(--border-1)] px-page-sm md:px-page-md pb-6 pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:px-page-lg">
       {/* datos editables */}
       <div className="grid content-start gap-3 sm:grid-cols-2">
         <label className="block">
@@ -1629,7 +1629,7 @@ function ProjectSkeleton() {
       {[0, 1, 2, 3].map((index) => (
         <div
           key={index}
-          className="grid animate-pulse gap-4 px-5 py-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(150px,.8fr)_140px_150px_auto] lg:px-8"
+          className="grid animate-pulse gap-4 px-page-sm md:px-page-md py-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(150px,.8fr)_140px_150px_auto] xl:px-page-lg"
         >
           <div className="h-4 w-1/2 rounded bg-black/10" />
           <div className="h-4 w-2/3 rounded bg-black/10" />
