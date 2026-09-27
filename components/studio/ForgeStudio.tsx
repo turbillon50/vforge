@@ -1,5 +1,6 @@
 "use client";
 
+import { AppCanvas } from "@/components/studio/AppCanvas";
 import Link from "next/link";
 import {
   useCallback,
@@ -31,7 +32,7 @@ import {
   IconX,
 } from "@/components/brand/VFIcons";
 
-type PreviewMode = "triple" | "desktop" | "mobile" | "admin";
+type PreviewMode = "triple" | "desktop" | "mobile" | "admin" | "canvas";
 type MobilePane = "build" | "preview";
 
 interface ProjectSummary {
@@ -903,7 +904,14 @@ export function ForgeStudio() {
           />
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 md:p-4">
-            {!activeProjectId ? (
+            {previewMode === "canvas" ? (
+              <AppCanvas
+                projectId={activeProjectId}
+                projectName={project?.name ?? "Proyecto"}
+                src={fallbackPreviewUrl}
+                frameKey={previewKey}
+              />
+            ) : !activeProjectId ? (
               <NoProject onCreate={() => setShowCreate(true)} />
             ) : projectLoading && !project ? (
               <div className="grid h-full min-h-[360px] place-items-center border border-[var(--vf-border)] bg-[var(--vf-bg-1)]">
@@ -1215,6 +1223,7 @@ function PreviewHeader({
     { id: "desktop", label: "Escritorio" },
     { id: "mobile", label: "Móvil" },
     { id: "admin", label: "Admin" },
+    { id: "canvas", label: "Canvas" },
   ];
   return (
     <header className="flex min-h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-3">
