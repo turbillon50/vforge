@@ -89,6 +89,7 @@ const config: Config = {
       },
       fontSize: {
         "label-caps": ["11px", { lineHeight: "16px", letterSpacing: "0.1em", fontWeight: "600" }],
+        caption: ["13px", { lineHeight: "18px", fontWeight: "400" }],
         "body-sm": ["14px", { lineHeight: "20px", fontWeight: "300" }],
         "body-md": ["16px", { lineHeight: "24px", fontWeight: "300" }],
         "code-block": ["14px", { lineHeight: "22px", fontWeight: "400" }],

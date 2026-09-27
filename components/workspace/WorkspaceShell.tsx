@@ -102,13 +102,13 @@ function Sidebar({
         <Link href="/app/chat" onClick={onNavigate} aria-label="VForge, estudio">
           <VWordmark />
         </Link>
-        <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.17em] text-[var(--fg-muted)]">
+        <p className="mt-2 font-mono text-label-caps uppercase text-[var(--fg-muted)]">
           Build control room
         </p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-5" aria-label="Navegación principal">
-        <p className="mb-3 px-2 font-mono text-[8px] uppercase tracking-[0.17em] text-[var(--fg-muted)]">
+        <p className="mb-3 px-2 font-mono text-label-caps uppercase text-[var(--fg-muted)]">
           Workspace
         </p>
         <div className="space-y-1">
@@ -132,10 +132,10 @@ function Sidebar({
                   className={cn("mt-0.5 shrink-0", active ? "text-white" : "text-black")}
                 />
                 <span className="min-w-0">
-                  <span className="block text-[12px] font-medium">{label}</span>
+                  <span className="text-body-sm font-medium">{label}</span>
                   <span
                     className={cn(
-                      "mt-0.5 block truncate text-[9px]",
+                      "mt-0.5 block truncate text-caption",
                       active ? "text-white/55" : "text-[var(--fg-muted)]",
                     )}
                   >
@@ -152,14 +152,14 @@ function Sidebar({
         <Link
           href="/app/settings"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-[11px] text-[var(--fg-secondary)] hover:bg-[#f2f2f0] hover:text-black"
+          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-body-sm text-[var(--fg-secondary)] hover:bg-[#f2f2f0] hover:text-black"
         >
           <IconSettings size={14} /> Configuración
         </Link>
         <Link
           href="/"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-[11px] text-[var(--fg-secondary)] hover:bg-[#f2f2f0] hover:text-black"
+          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-body-sm text-[var(--fg-secondary)] hover:bg-[#f2f2f0] hover:text-black"
         >
           <IconHome size={14} /> Volver al sitio
         </Link>
@@ -256,10 +256,10 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
                   <IconMenu size={16} />
                 </button>
                 <div className="min-w-0">
-                  <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+                  <p className="font-mono text-label-caps uppercase text-[var(--fg-muted)]">
                     VForge
                   </p>
-                  <h1 className="truncate text-[15px] font-medium tracking-[-0.025em]">
+                  <h1 className="truncate text-body-md font-medium tracking-[-0.02em]">
                     {title}
                   </h1>
                 </div>
@@ -279,10 +279,10 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           </main>
           {isStudio ? null : (
             <footer className="flex h-[72px] items-center justify-between border-t border-[var(--border-1)] bg-white px-page-sm md:px-page-md xl:px-page-lg">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+              <p className="font-mono text-label-caps uppercase text-[var(--fg-muted)]">
                 VForge
               </p>
-              <p className="text-[12px] text-[var(--fg-secondary)]">Control room</p>
+              <p className="text-body-sm text-[var(--fg-secondary)]">Control room</p>
             </footer>
           )}
         </div>
@@ -319,7 +319,7 @@ function ClerkAccount() {
           },
         }}
       />
-      <span className="hidden max-w-[9rem] truncate text-[12px] font-medium sm:block lg:max-w-[16rem] xl:max-w-none xl:overflow-visible">
+      <span className="hidden max-w-[9rem] truncate text-body-sm font-medium sm:block lg:max-w-[16rem] xl:max-w-none">
         {user?.fullName ?? user?.firstName ?? user?.username ?? user?.primaryEmailAddress?.emailAddress ?? "Cuenta"}
       </span>
     </div>

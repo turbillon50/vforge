@@ -765,12 +765,12 @@ export function ForgeStudio() {
             mobilePane === "build" ? "flex" : "hidden lg:flex",
           )}
         >
-          <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--vf-border)] px-4">
+          <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-[var(--vf-border)] px-page-sm md:px-page-md">
             <div className="min-w-0">
-              <p className="font-mono text-[8px] uppercase tracking-[0.15em] text-[var(--vf-fg-2)]">
+              <p className="font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
                 Conversación de trabajo
               </p>
-              <p className="mt-0.5 truncate text-[11px] text-[var(--vf-fg-1)]">
+              <p className="mt-0.5 truncate text-body-sm text-[var(--vf-fg-1)]">
                 {modelLabel(currentModel)}
               </p>
             </div>
@@ -778,7 +778,7 @@ export function ForgeStudio() {
               type="button"
               onClick={() => void newConversation()}
               disabled={sending || conversationLoading}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[10px] hover:border-[var(--vf-fg)] disabled:opacity-45"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-caption hover:border-[var(--vf-fg)] disabled:opacity-45"
             >
               <IconPlus size={11} /> Nueva
             </button>
@@ -792,7 +792,7 @@ export function ForgeStudio() {
               <div className="grid h-full min-h-[260px] place-items-center">
                 <div className="text-center">
                   <IconLoader size={17} className="mx-auto animate-spin" />
-                  <p className="mt-3 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--vf-fg-2)]">
+                  <p className="mt-3 font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
                     Recuperando contexto
                   </p>
                 </div>
@@ -816,7 +816,7 @@ export function ForgeStudio() {
               <div className="mb-2 flex items-center justify-between gap-3 rounded-md border border-[var(--vf-border)] bg-[var(--vf-bg-2)] px-3 py-2">
                 <div className="min-w-0">
                   <p className="truncate text-[10px] font-medium">{attachment.name}</p>
-                  <p className="font-mono text-[8px] uppercase tracking-[0.11em] text-[var(--vf-fg-2)]">
+                  <p className="font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
                     Imagen adjunta
                   </p>
                 </div>
@@ -866,7 +866,7 @@ export function ForgeStudio() {
                   >
                     <IconClip size={13} />
                   </button>
-                  <span className="hidden font-mono text-[8px] uppercase tracking-[0.11em] text-[var(--vf-fg-2)] sm:inline">
+                  <span className="hidden font-mono text-label-caps uppercase text-[var(--vf-fg-2)] sm:inline">
                     Enter envía · Shift + Enter separa
                   </span>
                 </div>
@@ -1147,7 +1147,7 @@ function Message({ message }: { message: StudioMessage }) {
     return (
       <article className="ml-auto max-w-[88%] rounded-lg bg-[var(--vf-fg)] px-4 py-3 text-[var(--vf-bg-1)]">
         {message.attachmentName ? (
-          <p className="mb-2 flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.11em] text-[var(--vf-bg-3)]">
+          <p className="mb-2 flex items-center gap-1.5 font-mono text-label-caps uppercase text-[var(--vf-bg-3)]">
             <IconClip size={10} /> {message.attachmentName}
           </p>
         ) : null}
@@ -1163,12 +1163,12 @@ function Message({ message }: { message: StudioMessage }) {
           <span className="grid h-6 w-6 place-items-center rounded-full border border-[var(--vf-fg)]">
             <VMark size={11} />
           </span>
-          <span className="font-mono text-[8px] uppercase tracking-[0.15em] text-[var(--vf-fg-2)]">
+          <span className="font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
             V · {modelLabel(message.model ?? null)}
           </span>
         </div>
         {message.streaming ? (
-          <span className="inline-flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.11em] text-[var(--vf-fg-2)]">
+          <span className="inline-flex items-center gap-1.5 font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
             <IconLoader size={10} className="animate-spin" /> Trabajando
           </span>
         ) : null}
@@ -1227,7 +1227,7 @@ function PreviewHeader({
     { id: "canvas", label: "Canvas" },
   ];
   return (
-    <header className="flex min-h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-3">
+    <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-page-sm md:px-page-md">
       <div className="flex min-w-0 gap-1 overflow-x-auto py-1">
         {modes.map((item) => (
           <button
@@ -1235,7 +1235,7 @@ function PreviewHeader({
             type="button"
             onClick={() => setMode(item.id)}
             className={cn(
-              "h-8 whitespace-nowrap rounded-md px-2.5 font-mono text-[8px] uppercase tracking-[0.1em]",
+              "h-8 whitespace-nowrap rounded-md px-2.5 font-mono text-label-caps uppercase",
               mode === item.id
                 ? "bg-[var(--vf-fg)] text-[var(--vf-bg-1)]"
                 : "text-[var(--vf-fg-2)] hover:bg-[var(--vf-bg-2)] hover:text-[var(--vf-fg)]",
@@ -1358,7 +1358,7 @@ function FrameCard({
       <header className="flex h-9 shrink-0 items-center justify-between border-b border-[var(--vf-border)] px-3">
         <div className="flex items-center gap-2">
           {kind === "admin" ? <IconShield size={11} /> : <IconLayout size={11} />}
-          <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--vf-fg-2)]">
+          <span className="font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
             {title}
           </span>
         </div>
@@ -1486,10 +1486,10 @@ function SystemStrip({
           className="flex shrink-0 items-center gap-2 text-[var(--vf-fg-1)] hover:text-[var(--vf-fg)]"
         >
           <Icon size={13} className="shrink-0" />
-          <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--vf-fg-2)]">
+          <span className="font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
             {label}
           </span>
-          <span className="max-w-[180px] truncate text-[12px]">{detail}</span>
+          <span className="max-w-[180px] truncate text-body-sm">{detail}</span>
           <span className="status-shape shrink-0" data-active={active} />
         </Link>
       ))}
