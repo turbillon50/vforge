@@ -734,7 +734,7 @@ export function ForgeStudio() {
   }
 
   return (
-    <div className="vf-mobile-stable flex h-full min-h-0 flex-col overflow-hidden overscroll-none bg-[var(--vf-bg)] text-[var(--vf-fg)]">
+    <div className="vf-mobile-stable flex min-h-full flex-col bg-[var(--vf-bg)] text-[var(--vf-fg)]">
       <StudioToolbar
         projects={projects}
         activeProjectId={activeProjectId}
@@ -1399,7 +1399,7 @@ function FrameCard({
 
 function NoProject({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="grid h-full min-h-[420px] place-items-center border border-dashed border-[var(--vf-border-1)] bg-[var(--vf-bg-1)] p-8 text-center">
+    <div className="grid min-h-[640px] place-items-center rounded-2xl border border-[var(--vf-border)] bg-white p-10 text-center shadow-[0_24px_60px_rgba(0,0,0,0.06)]">
       <div>
         <IconPlus size={20} className="mx-auto" />
         <p className="mt-4 text-[13px] font-medium">Todavía no hay un proyecto activo.</p>
@@ -1416,7 +1416,7 @@ function NoProject({ onCreate }: { onCreate: () => void }) {
 
 function NoPreview({ projectName }: { projectName: string }) {
   return (
-    <div className="grid h-full min-h-[420px] place-items-center border border-dashed border-[var(--vf-border-1)] bg-[var(--vf-bg-1)] p-8 text-center">
+    <div className="grid min-h-[640px] place-items-center rounded-2xl border border-[var(--vf-border)] bg-white p-10 text-center shadow-[0_24px_60px_rgba(0,0,0,0.06)]">
       <div>
         <IconLayout size={20} className="mx-auto" />
         <p className="mt-4 text-[13px] font-medium">{projectName} aún no publica una vista.</p>
@@ -1425,6 +1425,23 @@ function NoPreview({ projectName }: { projectName: string }) {
         </p>
       </div>
     </div>
+  );
+}
+
+
+function GithubMark() {
+  return (
+    <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">
+      <path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+    </svg>
+  );
+}
+
+function VercelMark() {
+  return (
+    <svg viewBox="0 0 76 65" width="16" height="14" aria-hidden="true">
+      <path fill="currentColor" d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
+    </svg>
   );
 }
 
@@ -1478,21 +1495,25 @@ function SystemStrip({
   ];
 
   return (
-    <footer className="flex min-h-14 shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-page-sm py-3 md:px-page-md xl:px-page-lg">
-      {items.map(({ label, detail, active, Icon }) => (
-        <Link
-          key={label}
-          href="/app/integrations"
-          className="flex shrink-0 items-center gap-2 text-[var(--vf-fg-1)] transition-colors duration-200 hover:text-[var(--vf-fg)]"
-        >
-          <Icon size={13} className="shrink-0" />
-          <span className="font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
-            {label}
-          </span>
-          <span className="max-w-[180px] truncate text-body-sm">{detail}</span>
-          <span className="status-shape shrink-0" data-active={active} />
-        </Link>
-      ))}
+    <footer className="border-t border-[var(--vf-border)] bg-white px-page-sm py-8 md:px-page-md xl:px-page-lg">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        {items.map(({ label, detail, active, Icon }) => (
+          <Link
+            key={label}
+            href="/app/integrations"
+            className="vf-press flex items-center gap-3 rounded-xl border border-[var(--vf-border)] bg-white px-4 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(0,0,0,0.07)]"
+          >
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#f4f4f2] text-black">
+              {label === "GitHub" ? <GithubMark /> : label === "Vercel" ? <VercelMark /> : <Icon size={18} />}
+            </span>
+            <span className="min-w-0">
+              <span className="block font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">{label}</span>
+              <span className="mt-0.5 block truncate text-body-sm text-black">{detail}</span>
+            </span>
+            <span className="status-shape ml-auto shrink-0" data-active={active} />
+          </Link>
+        ))}
+      </div>
     </footer>
   );
 }
