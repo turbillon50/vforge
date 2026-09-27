@@ -97,10 +97,10 @@ function Sidebar({
   onNavigate?: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col bg-white">
-      <div className="border-b border-[var(--border-1)] px-5 py-5">
+    <div className="flex h-full flex-col bg-[#121214] text-white">
+      <div className="border-b border-white/10 px-5 py-5">
         <Link href="/app/chat" onClick={onNavigate} aria-label="VForge, estudio">
-          <VWordmark />
+          <VWordmark inverse />
         </Link>
         <p className="mt-2 font-mono text-label-caps uppercase text-[var(--fg-muted)]">
           Build control room
@@ -123,13 +123,13 @@ function Sidebar({
                 className={cn(
                   "group flex items-start gap-3 rounded-md border px-3 py-3 transition duration-200 ease-out",
                   active
-                    ? "border-black bg-black text-white"
-                    : "border-transparent text-black hover:border-[var(--border-1)] hover:bg-[#f7f7f5]",
+                    ? "border-white bg-white text-black"
+                    : "border-transparent text-white/80 hover:border-white/10 hover:bg-white/5",
                 )}
               >
                 <Icon
                   size={15}
-                  className={cn("mt-0.5 shrink-0", active ? "text-white" : "text-black")}
+                  className={cn("mt-0.5 shrink-0", active ? "text-black" : "text-white/80")}
                 />
                 <span className="min-w-0">
                   <span className="text-[14px] font-medium leading-5">{label}</span>
@@ -140,18 +140,18 @@ function Sidebar({
         </div>
       </nav>
 
-      <div className="border-t border-[var(--border-1)] p-3">
+      <div className="border-t border-white/10 p-3">
         <Link
           href="/app/settings"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-body-sm text-[var(--fg-secondary)] transition duration-200 ease-out hover:bg-[#f2f2f0] hover:text-black"
+          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-[14px] text-white/70 transition duration-200 ease-out hover:bg-white/5 hover:text-white"
         >
           <IconSettings size={14} /> Configuración
         </Link>
         <Link
           href="/"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-body-sm text-[var(--fg-secondary)] transition duration-200 ease-out hover:bg-[#f2f2f0] hover:text-black"
+          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-[14px] text-white/70 transition duration-200 ease-out hover:bg-white/5 hover:text-white"
         >
           <IconHome size={14} /> Volver al sitio
         </Link>
@@ -193,13 +193,10 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
     <ConnectionGate>
       <div
         className={cn(
-          "bg-[var(--color-background)] text-[var(--color-ink)]",
-          isStudio
-            ? "h-svh overflow-hidden overscroll-none lg:h-dvh"
-            : "min-h-svh",
+          "h-svh overflow-hidden bg-[#0c0c0e] text-[var(--color-ink)]",
         )}
       >
-        <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] border-r border-[var(--border-1)] md:block">
+        <aside className="fixed bottom-9 left-0 top-14 z-30 hidden w-[248px] border-r border-white/10 md:block">
           <Sidebar pathname={pathname} />
         </aside>
 
@@ -227,31 +224,27 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
         <div
           className={cn(
-            "md:pl-[248px]",
-            isStudio ? "h-full overflow-hidden" : "min-h-svh",
+            "h-svh overflow-hidden pt-14 pb-9 md:pl-[248px]",
           )}
         >
           <header
-            className={cn(
-              "z-20 border-b border-[var(--border-1)] bg-white/95 backdrop-blur-md",
-              isStudio ? "relative shrink-0" : "sticky top-0",
-            )}
+            className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[#090909] text-white"
           >
-            <div className="flex h-[58px] items-center justify-between gap-4 px-page-sm md:px-page-md xl:px-page-lg">
+            <div className="flex h-14 items-center justify-between gap-4 px-4 md:px-6">
               <div className="flex min-w-0 items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setDrawerOpen(true)}
-                  className="grid h-9 w-9 place-items-center rounded-md border border-[var(--border-1)] md:hidden"
+                  className="grid h-9 w-9 place-items-center rounded-md border border-white/20 text-white md:hidden"
                   aria-label="Abrir menú"
                 >
                   <IconMenu size={16} />
                 </button>
                 <div className="min-w-0">
-                  <p className="font-mono text-label-caps uppercase text-[var(--fg-muted)]">
+                  <p className="font-mono text-label-caps uppercase text-white/45">
                     VForge
                   </p>
-                  <h1 className="truncate text-body-md font-medium tracking-[-0.02em]">
+                  <h1 className="truncate text-body-md font-medium tracking-[-0.02em] text-white">
                     {title}
                   </h1>
                 </div>
@@ -262,19 +255,16 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
           <main
             className={cn(
-              isStudio
-                ? "h-[calc(100svh-58px)] overflow-hidden lg:h-[calc(100dvh-58px)]"
-                : "min-h-[calc(100svh-58px-72px)]",
+              "h-full overflow-y-auto",
+              isStudio && "overflow-hidden",
             )}
           >
             {children}
           </main>
           {isStudio ? null : (
-            <footer className="flex h-[72px] items-center justify-between border-t border-[var(--border-1)] bg-white px-page-sm md:px-page-md xl:px-page-lg">
-              <p className="font-mono text-label-caps uppercase text-[var(--fg-muted)]">
-                VForge
-              </p>
-              <p className="text-body-sm text-[var(--fg-secondary)] transition-colors duration-200 hover:text-black">Control room</p>
+            <footer className="fixed inset-x-0 bottom-0 z-40 flex h-9 items-center justify-between border-t border-white/10 bg-[#090909] px-4 text-white/70">
+              <p className="font-mono text-[11px] uppercase tracking-[0.14em]">VForge</p>
+              <p className="text-[12px]">Control room</p>
             </footer>
           )}
         </div>
