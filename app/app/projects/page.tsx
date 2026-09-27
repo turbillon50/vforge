@@ -1238,11 +1238,18 @@ function ProjectRow({
             >
               {p.name}
             </button>
-            {p.delivery_priority ? (
-              <span className="rounded-full border border-black px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em]">
-                Prioridad
-              </span>
-            ) : null}
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => onPatch({ delivery_priority: !p.delivery_priority })}
+              className={
+                p.delivery_priority
+                  ? "rounded-full border border-black px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em]"
+                  : "rounded-full border border-dashed border-[var(--border-1)] px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--fg-muted)]"
+              }
+            >
+              {p.delivery_priority ? "Prioridad" : "Priorizar"}
+            </button>
             <span className="rounded-full border border-[var(--border-1)] px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--fg-secondary)]">
               {CATEGORY_LABELS[p.category] ?? p.category}
             </span>
@@ -1262,11 +1269,6 @@ function ProjectRow({
             <span className="font-mono"> · {p.id}</span>
             {relatedHint ? <span> · {relatedHint}</span> : null}
           </p>
-          {p.description ? (
-            <p className="mt-1 line-clamp-2 pl-[15px] text-[13px] leading-5 text-[var(--fg-secondary)]">
-              {p.description}
-            </p>
-          ) : null}
           {p.last_note ? (
             <button
               type="button"
