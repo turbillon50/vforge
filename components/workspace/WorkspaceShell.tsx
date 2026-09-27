@@ -9,6 +9,7 @@ import { VWordmark } from "@/components/brand/VMark";
 import {
   IconActivity,
   IconChat,
+  IconCpu,
   IconHome,
   IconLayers,
   IconMenu,
@@ -53,6 +54,12 @@ const PRIMARY_NAV: NavItem[] = [
     Icon: IconActivity,
   },
   {
+    href: "/app/tablero",
+    label: "Tablero",
+    description: "Agentes y avance en vivo",
+    Icon: IconCpu,
+  },
+  {
     href: "/app/integrations",
     label: "Conexiones",
     description: "GitHub, Vercel y servicios",
@@ -71,6 +78,7 @@ const TITLES: Record<string, string> = {
   "/app/home": "Estudio",
   "/app/projects": "Proyectos",
   "/app/activity": "Actividad",
+  "/app/tablero": "Tablero",
   "/app/integrations": "Conexiones",
   "/app/admin": "Administración",
   "/app/settings": "Configuración",
