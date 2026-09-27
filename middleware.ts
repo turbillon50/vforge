@@ -90,6 +90,7 @@ const isProtected = createRouteMatcher([
   "/api/v/voice(.*)",
   "/api/vulcano(.*)",
   "/api/live(.*)",
+  "/api/canvas-proxy(.*)",
 ]);
 
 // Rutas exclusivas del owner (Luis): V, su cockpit y sus productos.
@@ -108,6 +109,7 @@ const isOwnerOnly = createRouteMatcher([
   "/api/vulcano(.*)",
   "/api/admin(.*)",
   "/api/projects(.*)",
+  "/api/canvas-proxy(.*)",
   "/api/v/bridge(.*)",
 ]);
 
