@@ -112,7 +112,7 @@ function Sidebar({
           Workspace
         </p>
         <div className="space-y-1">
-          {PRIMARY_NAV.map(({ href, label, description, Icon }) => {
+          {PRIMARY_NAV.map(({ href, label, Icon }) => {
             const active = routeIsActive(pathname, href);
             return (
               <Link
@@ -132,15 +132,7 @@ function Sidebar({
                   className={cn("mt-0.5 shrink-0", active ? "text-white" : "text-black")}
                 />
                 <span className="min-w-0">
-                  <span className="text-body-sm font-medium">{label}</span>
-                  <span
-                    className={cn(
-                      "mt-0.5 block truncate text-caption",
-                      active ? "text-white/55" : "text-[var(--fg-muted)]",
-                    )}
-                  >
-                    {description}
-                  </span>
+                  <span className="text-[14px] font-medium leading-5">{label}</span>
                 </span>
               </Link>
             );
@@ -207,7 +199,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
             : "min-h-svh",
         )}
       >
-        <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] border-r border-[var(--border-1)] md:block">
+        <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] border-r border-[var(--border-1)] md:block">
           <Sidebar pathname={pathname} />
         </aside>
 
@@ -235,7 +227,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
         <div
           className={cn(
-            "md:pl-[220px]",
+            "md:pl-[248px]",
             isStudio ? "h-full overflow-hidden" : "min-h-svh",
           )}
         >
@@ -308,7 +300,7 @@ function AccountMenu() {
 function ClerkAccount() {
   const { user } = useUser();
   return (
-    <div className="flex items-center gap-2 rounded-full border border-[var(--border-1)] bg-white py-1 pl-1 pr-3">
+    <div className="flex shrink-0 items-center gap-2 rounded-full border border-[var(--border-1)] bg-white py-1 pl-1 pr-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <UserButton
         afterSignOutUrl="/"
         appearance={{
@@ -319,7 +311,7 @@ function ClerkAccount() {
           },
         }}
       />
-      <span className="hidden max-w-[9rem] truncate text-body-sm font-medium sm:block lg:max-w-[16rem] xl:max-w-none">
+      <span className="hidden whitespace-nowrap text-[14px] font-medium sm:block">
         {user?.fullName ?? user?.firstName ?? user?.username ?? user?.primaryEmailAddress?.emailAddress ?? "Cuenta"}
       </span>
     </div>
