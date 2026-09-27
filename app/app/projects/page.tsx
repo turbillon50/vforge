@@ -56,7 +56,21 @@ interface Note {
 type Activity = "all" | "7" | "30" | "90" | "dormant" | "never";
 type Due = "all" | "overdue" | "week" | "month" | "dated" | "undated";
 type Progress = "all" | "0" | "low" | "high" | "done";
-type Sort = "smart" | "activity" | "due" | "progress" | "name" | "created" | "money";
+type Sort =
+  | "smart"
+  | "activity"
+  | "due"
+  | "progress"
+  | "owed"
+  | "contract"
+  | "paid"
+  | "created"
+  | "updated"
+  | "notes"
+  | "repos"
+  | "priority"
+  | "name";
+type Dir = "desc" | "asc";
 type Flag =
   | "priority"
   | "domain"
@@ -78,6 +92,9 @@ interface Filters {
   client: string;
   lang: string;
   sort: Sort;
+  dir: Dir;
+  sort2: Sort | "";
+  dir2: Dir;
 }
 
 const EMPTY: Filters = {
@@ -90,6 +107,9 @@ const EMPTY: Filters = {
   client: "",
   lang: "",
   sort: "smart",
+  dir: "desc",
+  sort2: "",
+  dir2: "desc",
 };
 
 /* ───────────────────────── constantes ───────────────────────── */
@@ -144,15 +164,46 @@ const PROGRESS: { id: Progress; label: string }[] = [
   { id: "done", label: "100%" },
 ];
 
-const SORTS: { id: Sort; label: string }[] = [
-  { id: "smart", label: "Prioridad y estado" },
-  { id: "activity", label: "Actividad reciente" },
-  { id: "due", label: "Fecha de entrega" },
-  { id: "progress", label: "Avance" },
-  { id: "money", label: "Por cobrar" },
-  { id: "created", label: "Más nuevos" },
-  { id: "name", label: "Nombre A–Z" },
+/**
+ * Criterios de orden. `get` devuelve el valor a comparar (null = sin dato, siempre al final
+ * sin importar la dirección); `desc`/`asc` son las etiquetas de cada dirección.
+ */
+type SortDef = {
+  id: Sort;
+  label: string;
+  def: Dir;
+  desc: string;
+  asc: string;
+  get: (p: Project) => number | string | null;
+};
+const tsOf = (s: string | null | undefined) => (s ? new Date(s).getTime() : null);
+const SORTS: SortDef[] = [
+  { id: "smart", label: "Prioridad y estado", def: "desc", desc: "Lo urgente primero", asc: "Lo urgente al final", get: () => 0 },
+  {
+    id: "activity",
+    label: "Actividad (último movimiento)",
+    def: "desc",
+    desc: "Más reciente primero",
+    asc: "Más antiguo primero",
+    get: (p) => {
+      const a = tsOf(p.last_push);
+      const b = tsOf(p.updated_at);
+      return a === null && b === null ? null : Math.max(a ?? 0, b ?? 0);
+    },
+  },
+  { id: "due", label: "Fecha de entrega", def: "asc", desc: "Más lejana primero", asc: "Más próxima primero", get: (p) => dueMs(p) },
+  { id: "progress", label: "Avance %", def: "desc", desc: "Mayor a menor", asc: "Menor a mayor", get: (p) => p.progress_pct ?? 0 },
+  { id: "owed", label: "Por cobrar $", def: "desc", desc: "Mayor a menor", asc: "Menor a mayor", get: (p) => (p.contract_amount ? owed(p) : null) },
+  { id: "contract", label: "Monto del contrato $", def: "desc", desc: "Mayor a menor", asc: "Menor a mayor", get: (p) => p.contract_amount ?? null },
+  { id: "paid", label: "Cobrado $", def: "desc", desc: "Mayor a menor", asc: "Menor a mayor", get: (p) => p.paid_amount ?? null },
+  { id: "notes", label: "Comentarios", def: "desc", desc: "Más a menos", asc: "Menos a más", get: (p) => p.notes_count ?? 0 },
+  { id: "repos", label: "Repositorios", def: "desc", desc: "Más a menos", asc: "Menos a más", get: (p) => p.repository_count ?? 0 },
+  { id: "priority", label: "Prioridad", def: "desc", desc: "Prioritarios primero", asc: "Prioritarios al final", get: (p) => (p.delivery_priority ? 1 : 0) },
+  { id: "created", label: "Fecha de alta", def: "desc", desc: "Más nuevos primero", asc: "Más viejos primero", get: (p) => tsOf(p.created_at) },
+  { id: "updated", label: "Último cambio", def: "desc", desc: "Más reciente primero", asc: "Más antiguo primero", get: (p) => tsOf(p.updated_at) },
+  { id: "name", label: "Nombre", def: "asc", desc: "Z → A", asc: "A → Z", get: (p) => norm(p.name) },
 ];
+const SORT_BY_ID = Object.fromEntries(SORTS.map((x) => [x.id, x])) as Record<Sort, SortDef>;
 
 // El tema de VForge aplana los -500 de Tailwind: los colores de alerta van en hex.
 const C = { rojo: "#dc2626", ambar: "#b45309", verde: "#15803d" };
@@ -268,6 +319,9 @@ function readUrl(): Filters {
     client: u.get("cliente") ?? "",
     lang: u.get("lenguaje") ?? "",
     sort: pick("orden", SORTS.map((s) => s.id), "smart"),
+    dir: pick<Dir>("dir", ["desc", "asc"], "desc"),
+    sort2: pick<Sort | "">("orden2", ["", ...SORTS.map((s) => s.id)], ""),
+    dir2: pick<Dir>("dir2", ["desc", "asc"], "desc"),
   };
 }
 
@@ -282,6 +336,11 @@ function writeUrl(f: Filters) {
   if (f.client) u.set("cliente", f.client);
   if (f.lang) u.set("lenguaje", f.lang);
   if (f.sort !== "smart") u.set("orden", f.sort);
+  if (f.dir !== SORT_BY_ID[f.sort].def) u.set("dir", f.dir);
+  if (f.sort2) {
+    u.set("orden2", f.sort2);
+    if (f.dir2 !== SORT_BY_ID[f.sort2].def) u.set("dir2", f.dir2);
+  }
   const qs = u.toString();
   window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
 }
@@ -497,23 +556,42 @@ export default function ProjectsPage() {
       const i = CATEGORIES.findIndex((x) => x.id === c);
       return i < 0 ? 99 : i;
     };
-    const ts = (s: string | null | undefined) => (s ? new Date(s).getTime() : 0);
-    const cmp: Record<Sort, (a: Project, b: Project) => number> = {
-      smart: (a, b) =>
-        Number(!!b.delivery_priority) - Number(!!a.delivery_priority) ||
-        catRank(a.category) - catRank(b.category) ||
-        (b.progress_pct ?? 0) - (a.progress_pct ?? 0) ||
-        a.name.localeCompare(b.name, "es"),
-      activity: (a, b) =>
-        Math.max(ts(b.last_push), ts(b.updated_at)) - Math.max(ts(a.last_push), ts(a.updated_at)),
-      due: (a, b) => (dueMs(a) ?? Infinity) - (dueMs(b) ?? Infinity),
-      progress: (a, b) => (b.progress_pct ?? 0) - (a.progress_pct ?? 0),
-      money: (a, b) => owed(b) - owed(a) || (b.contract_amount ?? 0) - (a.contract_amount ?? 0),
-      created: (a, b) => ts(b.created_at) - ts(a.created_at),
-      name: (a, b) => a.name.localeCompare(b.name, "es"),
+    const smart = (a: Project, b: Project) =>
+      Number(!!b.delivery_priority) - Number(!!a.delivery_priority) ||
+      catRank(a.category) - catRank(b.category) ||
+      (b.progress_pct ?? 0) - (a.progress_pct ?? 0);
+    const by = (id: Sort, dir: Dir) => (a: Project, b: Project) => {
+      if (id === "smart") return dir === "desc" ? smart(a, b) : -smart(a, b);
+      const def = SORT_BY_ID[id];
+      const va = def.get(a);
+      const vb = def.get(b);
+      // sin dato siempre al final, en cualquier dirección
+      if (va === null && vb === null) return 0;
+      if (va === null) return 1;
+      if (vb === null) return -1;
+      const base =
+        typeof va === "string" || typeof vb === "string"
+          ? String(va).localeCompare(String(vb), "es")
+          : (va as number) - (vb as number);
+      return dir === "asc" ? base : -base;
     };
-    return list.sort(cmp[f.sort]);
-  }, [projects, passes, f.sort]);
+    const first = by(f.sort, f.dir);
+    const second = f.sort2 ? by(f.sort2, f.dir2) : null;
+    return list.sort(
+      (a, b) => first(a, b) || (second ? second(a, b) : 0) || a.name.localeCompare(b.name, "es"),
+    );
+  }, [projects, passes, f.sort, f.dir, f.sort2, f.dir2]);
+
+  /** Tocar un encabezado: mismo criterio invierte la dirección; otro criterio usa su dirección natural. */
+  const sortBy = useCallback(
+    (id: Sort) =>
+      setF((prev) =>
+        prev.sort === id
+          ? { ...prev, dir: prev.dir === "desc" ? "asc" : "desc" }
+          : { ...prev, sort: id, dir: SORT_BY_ID[id].def },
+      ),
+    [],
+  );
 
   const count = useCallback(
     (skip: keyof Filters | Flag, test: (p: Project) => boolean) =>
@@ -674,21 +752,14 @@ export default function ProjectsPage() {
               </button>
             ) : null}
           </label>
-          <div className="flex gap-2">
-            <label className="flex min-h-11 flex-1 items-center gap-2 rounded-md border border-[var(--border-1)] bg-white px-3 text-[13px] md:flex-none">
-              <span className="whitespace-nowrap text-[var(--fg-muted)]">Orden</span>
-              <select
-                value={f.sort}
-                onChange={(e) => upd({ sort: e.target.value as Sort })}
-                className="min-w-0 flex-1 bg-transparent text-black"
-              >
-                {SORTS.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="flex flex-wrap gap-2">
+            <SortControl
+              label="Ordenar por"
+              value={f.sort}
+              dir={f.dir}
+              onField={(v) => upd({ sort: v as Sort, dir: SORT_BY_ID[v as Sort].def })}
+              onDir={() => upd({ dir: f.dir === "desc" ? "asc" : "desc" })}
+            />
             <button
               type="button"
               onClick={() => setFiltersOpen((v) => !v)}
@@ -769,6 +840,22 @@ export default function ProjectsPage() {
               ))}
             </Group>
 
+            <div className="lg:col-span-2">
+              <p className="mb-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+                Si empatan, luego por
+              </p>
+              <SortControl
+                label="Luego por"
+                value={f.sort2}
+                dir={f.dir2}
+                allowNone
+                onField={(v) =>
+                  upd(v ? { sort2: v as Sort, dir2: SORT_BY_ID[v as Sort].def } : { sort2: "" })
+                }
+                onDir={() => upd({ dir2: f.dir2 === "desc" ? "asc" : "desc" })}
+              />
+            </div>
+
             <div className="grid gap-2 sm:grid-cols-2 lg:col-span-2">
               <SelectBox
                 label="Cliente"
@@ -803,7 +890,7 @@ export default function ProjectsPage() {
             ))}
             <button
               type="button"
-              onClick={() => setF({ ...EMPTY, sort: f.sort })}
+              onClick={() => setF({ ...EMPTY, sort: f.sort, dir: f.dir, sort2: f.sort2, dir2: f.dir2 })}
               className="px-2 py-1 text-[12px] underline underline-offset-4"
             >
               Limpiar todo
@@ -827,10 +914,13 @@ export default function ProjectsPage() {
 
       <section className="bg-white">
         <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(150px,.8fr)_140px_150px_auto] gap-4 border-b border-[var(--border-1)] px-8 py-3 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)] lg:grid">
-          <span>Proyecto</span>
-          <span>Origen</span>
-          <span>Actividad</span>
-          <span>Entrega y avance</span>
+          <HeadSort id="name" label="Proyecto" f={f} onSort={sortBy} />
+          <HeadSort id="repos" label="Origen" f={f} onSort={sortBy} />
+          <HeadSort id="activity" label="Actividad" f={f} onSort={sortBy} />
+          <span className="flex gap-3">
+            <HeadSort id="due" label="Entrega" f={f} onSort={sortBy} />
+            <HeadSort id="progress" label="Avance" f={f} onSort={sortBy} />
+          </span>
           <span className="text-right">Acciones</span>
         </div>
 
@@ -847,7 +937,7 @@ export default function ProjectsPage() {
             {nActive ? (
               <button
                 type="button"
-                onClick={() => setF({ ...EMPTY, sort: f.sort })}
+                onClick={() => setF({ ...EMPTY, sort: f.sort, dir: f.dir, sort2: f.sort2, dir2: f.dir2 })}
                 className="mt-3 text-[13px] underline underline-offset-4"
               >
                 Limpiar filtros
@@ -996,6 +1086,80 @@ function Chip({
       {n !== undefined ? (
         <span className={active ? "tabular-nums text-white/70" : "tabular-nums text-[var(--fg-muted)]"}>{n}</span>
       ) : null}
+    </button>
+  );
+}
+
+function SortControl({
+  label,
+  value,
+  dir,
+  onField,
+  onDir,
+  allowNone,
+}: {
+  label: string;
+  value: Sort | "";
+  dir: Dir;
+  onField: (v: string) => void;
+  onDir: () => void;
+  allowNone?: boolean;
+}) {
+  const def = value ? SORT_BY_ID[value] : null;
+  return (
+    <div className="flex min-h-11 flex-1 items-stretch overflow-hidden rounded-md border border-[var(--border-1)] bg-white text-[13px] md:flex-none">
+      <label className="flex min-w-0 flex-1 items-center gap-2 px-3">
+        <span className="whitespace-nowrap text-[var(--fg-muted)]">{label}</span>
+        <select
+          value={value}
+          onChange={(e) => onField(e.target.value)}
+          className="min-w-0 flex-1 bg-transparent text-black"
+        >
+          {allowNone ? <option value="">Nada</option> : null}
+          {SORTS.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      {def ? (
+        <button
+          type="button"
+          onClick={onDir}
+          title="Cambiar dirección"
+          aria-label={`Dirección: ${dir === "desc" ? def.desc : def.asc}. Tocar para invertir`}
+          className="flex items-center gap-1.5 whitespace-nowrap border-l border-[var(--border-1)] px-3 text-black hover:bg-[#f7f7f5]"
+        >
+          <span aria-hidden className="text-[15px] leading-none">{dir === "desc" ? "↓" : "↑"}</span>
+          {dir === "desc" ? def.desc : def.asc}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function HeadSort({
+  id,
+  label,
+  f,
+  onSort,
+}: {
+  id: Sort;
+  label: string;
+  f: Filters;
+  onSort: (id: Sort) => void;
+}) {
+  const on = f.sort === id;
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(id)}
+      className={`inline-flex items-center gap-1 text-left uppercase tracking-[0.16em] hover:text-black ${on ? "text-black" : ""}`}
+      title={`Ordenar por ${label.toLowerCase()}`}
+    >
+      {label}
+      <span aria-hidden>{on ? (f.dir === "desc" ? "↓" : "↑") : "↕"}</span>
     </button>
   );
 }
