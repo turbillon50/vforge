@@ -118,18 +118,6 @@ export function AppCanvas({
     return proxyUrl(url);
   }, [url]);
 
-  function applyEdits(doc: Document) {
-    for (const edit of edits) {
-      const el = doc.querySelector(edit.path);
-      if (!el || !(el instanceof HTMLElement)) continue;
-      if (edit.text != null && el.children.length === 0) el.textContent = edit.text;
-      if (edit.fontSize) el.style.fontSize = edit.fontSize;
-      if (edit.fontWeight) el.style.fontWeight = edit.fontWeight;
-      if (edit.letterSpacing) el.style.letterSpacing = edit.letterSpacing;
-      if (edit.color) el.style.color = edit.color;
-    }
-  }
-
   function onFrameLoad() {
     const doc = frameRef.current?.contentDocument;
     if (!doc) return;
