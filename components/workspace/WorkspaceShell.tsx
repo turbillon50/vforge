@@ -150,13 +150,6 @@ function Sidebar({
 
       <div className="border-t border-[var(--border-1)] p-3">
         <Link
-          href="/app/setup"
-          onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-[11px] text-[var(--fg-secondary)] hover:bg-[#f2f2f0] hover:text-black"
-        >
-          <IconZap size={14} /> Setup / conexiones
-        </Link>
-        <Link
           href="/app/settings"
           onClick={onNavigate}
           className="flex items-center gap-3 rounded-md px-3 py-2.5 text-[11px] text-[var(--fg-secondary)] hover:bg-[#f2f2f0] hover:text-black"
@@ -318,8 +311,8 @@ function ClerkAccount() {
           },
         }}
       />
-      <span className="hidden max-w-[110px] truncate text-[11px] font-medium sm:block">
-        {user?.firstName ?? user?.username ?? "Cuenta"}
+      <span className="hidden max-w-[200px] truncate text-[11px] font-medium sm:block">
+        {user?.fullName ?? user?.firstName ?? user?.username ?? user?.primaryEmailAddress?.emailAddress ?? "Cuenta"}
       </span>
     </div>
   );

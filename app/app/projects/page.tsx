@@ -1342,37 +1342,10 @@ function ProjectRow({
             type="button"
             onClick={onToggle}
             aria-expanded={open}
-            className={open ? "btn-primary !min-h-9 !px-3" : "btn-ghost !min-h-9 !px-3"}
+            className="btn-ghost !min-h-9 !px-3"
           >
             Detalle
             <IconChevD size={12} className={open ? "rotate-180 transition" : "transition"} />
-          </button>
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => onPatch({ delivery_priority: !p.delivery_priority })}
-            className="btn-ghost !min-h-9 !px-3"
-            title={p.delivery_priority ? "Quitar prioridad" : "Marcar como prioridad"}
-          >
-            {p.delivery_priority ? "★" : "☆"}
-          </button>
-          <button type="button" onClick={onRepositories} className="btn-ghost !min-h-9 !px-3" title="Agrupar repositorios">
-            <IconGithub size={12} />
-            <span className="hidden xl:inline">{p.repository_count ?? p.repositories?.length ?? 0}</span>
-          </button>
-          {externalUrl ? (
-            <a
-              href={externalUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="btn-ghost !min-h-9 !px-3"
-              aria-label={`Abrir ${p.name}`}
-            >
-              <IconExtLink size={12} />
-            </a>
-          ) : null}
-          <button type="button" onClick={onInvite} className="btn-ghost !min-h-9 !px-3" title="Invitar por WhatsApp">
-            <IconUsers size={12} />
           </button>
           <Link href={`/app/live/${encodeURIComponent(p.id)}`} className="btn-primary !min-h-9 !px-4">
             <IconLayout size={12} /> Sala
