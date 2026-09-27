@@ -936,14 +936,14 @@ export function ForgeStudio() {
                 urls={viewports}
                 frameKey={previewKey}
               />
-            ) : (
+            ) : previewMode === "desktop" || previewMode === "mobile" || previewMode === "admin" ? (
               <SinglePreview
                 projectName={project?.name ?? "Proyecto"}
                 mode={previewMode}
                 url={viewports[previewMode]}
                 frameKey={previewKey}
               />
-            )}
+            ) : null}
           </div>
 
         </section>
@@ -1316,7 +1316,7 @@ function SinglePreview({
   frameKey,
 }: {
   projectName: string;
-  mode: Exclude<PreviewMode, "triple">;
+  mode: "desktop" | "mobile" | "admin";
   url: string | null;
   frameKey: number;
 }) {
