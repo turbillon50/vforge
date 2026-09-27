@@ -121,7 +121,7 @@ function Sidebar({
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group flex items-start gap-3 rounded-md border px-3 py-3 transition",
+                  "group flex items-start gap-3 rounded-md border px-3 py-3 transition duration-200 ease-out",
                   active
                     ? "border-black bg-black text-white"
                     : "border-transparent text-black hover:border-[var(--border-1)] hover:bg-[#f7f7f5]",
@@ -152,14 +152,14 @@ function Sidebar({
         <Link
           href="/app/settings"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-body-sm text-[var(--fg-secondary)] hover:bg-[#f2f2f0] hover:text-black"
+          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-body-sm text-[var(--fg-secondary)] transition duration-200 ease-out hover:bg-[#f2f2f0] hover:text-black"
         >
           <IconSettings size={14} /> Configuración
         </Link>
         <Link
           href="/"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-body-sm text-[var(--fg-secondary)] hover:bg-[#f2f2f0] hover:text-black"
+          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-body-sm text-[var(--fg-secondary)] transition duration-200 ease-out hover:bg-[#f2f2f0] hover:text-black"
         >
           <IconHome size={14} /> Volver al sitio
         </Link>
@@ -282,7 +282,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
               <p className="font-mono text-label-caps uppercase text-[var(--fg-muted)]">
                 VForge
               </p>
-              <p className="text-body-sm text-[var(--fg-secondary)]">Control room</p>
+              <p className="text-body-sm text-[var(--fg-secondary)] transition-colors duration-200 hover:text-black">Control room</p>
             </footer>
           )}
         </div>

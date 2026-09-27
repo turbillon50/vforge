@@ -1235,7 +1235,7 @@ function PreviewHeader({
             type="button"
             onClick={() => setMode(item.id)}
             className={cn(
-              "h-8 whitespace-nowrap rounded-md px-2.5 font-mono text-label-caps uppercase",
+              "h-8 whitespace-nowrap rounded-md px-2.5 font-mono text-label-caps uppercase transition duration-200 ease-out",
               mode === item.id
                 ? "bg-[var(--vf-fg)] text-[var(--vf-bg-1)]"
                 : "text-[var(--vf-fg-2)] hover:bg-[var(--vf-bg-2)] hover:text-[var(--vf-fg)]",
@@ -1483,7 +1483,7 @@ function SystemStrip({
         <Link
           key={label}
           href="/app/integrations"
-          className="flex shrink-0 items-center gap-2 text-[var(--vf-fg-1)] hover:text-[var(--vf-fg)]"
+          className="flex shrink-0 items-center gap-2 text-[var(--vf-fg-1)] transition-colors duration-200 hover:text-[var(--vf-fg)]"
         >
           <Icon size={13} className="shrink-0" />
           <span className="font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
