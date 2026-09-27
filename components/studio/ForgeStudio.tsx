@@ -235,6 +235,12 @@ export function ForgeStudio() {
   const [currentModel, setCurrentModel] = useState<string | null>(null);
 
   const [previewMode, setPreviewMode] = useState<PreviewMode>("triple");
+  const [chatShare, setChatShare] = useState(() => {
+    if (typeof window === "undefined") return 58;
+    const n = Number(localStorage.getItem("vf-chat-share"));
+    return n >= 32 && n <= 70 ? n : 58;
+  });
+  const chatShareRef = useRef(chatShare);
   const [previewKey, setPreviewKey] = useState(0);
   const [dataRefresh, setDataRefresh] = useState(0);
   const [mobilePane, setMobilePane] = useState<MobilePane>("build");
@@ -758,7 +764,10 @@ export function ForgeStudio() {
         </MobilePaneButton>
       </div>
 
-      <div className="grid h-full min-h-0 flex-1 lg:grid-cols-[minmax(460px,1.35fr)_minmax(280px,0.8fr)]">
+      <div
+        className="grid h-full min-h-0 flex-1 grid-cols-1 lg:[grid-template-columns:var(--vf-split)]"
+        style={{ ["--vf-split" as string]: `minmax(0, ${chatShare}fr) 6px minmax(0, ${100 - chatShare}fr)` }}
+      >
         <section
           className={cn(
             "h-full min-h-0 flex-col overflow-hidden border-r border-[var(--vf-border)] bg-[var(--vf-bg-1)]",
@@ -887,6 +896,31 @@ export function ForgeStudio() {
           </div>
         </section>
 
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Ajustar paneles"
+          className="hidden w-1.5 cursor-col-resize bg-[var(--vf-border)] hover:bg-black lg:block"
+          onPointerDown={(event) => {
+            event.preventDefault();
+            const grid = event.currentTarget.parentElement;
+            if (!grid) return;
+            const rect = grid.getBoundingClientRect();
+            const move = (ev: PointerEvent) => {
+              const pct = ((ev.clientX - rect.left) / rect.width) * 100;
+              const next = Math.min(70, Math.max(32, pct));
+              chatShareRef.current = next;
+              setChatShare(next);
+            };
+            const up = () => {
+              window.removeEventListener("pointermove", move);
+              window.removeEventListener("pointerup", up);
+              localStorage.setItem("vf-chat-share", String(Math.round(chatShareRef.current)));
+            };
+            window.addEventListener("pointermove", move);
+            window.addEventListener("pointerup", up);
+          }}
+        />
         <section
           className={cn(
             "h-full min-h-0 flex-col overflow-hidden bg-[var(--vf-bg)]",
@@ -1113,12 +1147,8 @@ function EmptyConversation({
   onSuggestion: (text: string) => void;
 }) {
   return (
-    <div className="flex min-h-full flex-col justify-center py-8">
-      <VMark size={34} />
-      <h2 className="mt-6 max-w-md text-headline-md font-semibold tracking-[-0.03em] md:text-headline-lg">
-        Construye en conversación.
-      </h2>
-      <p className="mt-5 max-w-md text-[12px] leading-5 text-[var(--vf-fg-1)]">
+    <div className="flex flex-col py-1">
+      <p className="max-w-md text-[13px] leading-5 text-[var(--vf-fg-1)]">
         {hasProject
           ? "V recibe el proyecto activo, conserva su historia y puede usar las herramientas reales disponibles."
           : "Crea un proyecto para darle contexto, repositorio, despliegue y sala de revisión."}
@@ -1283,7 +1313,7 @@ function TriplePreview({
   if (!hasAny) return <NoPreview projectName={projectName} />;
 
   return (
-    <div className="grid min-h-full items-stretch gap-3 xl:grid-cols-[minmax(260px,1.18fr)_minmax(150px,.5fr)_minmax(240px,.92fr)]">
+    <div className="grid h-full min-h-0 grid-cols-3 items-stretch gap-2">
       <FrameCard
         title="Escritorio"
         kind="desktop"
@@ -1478,7 +1508,7 @@ function SystemStrip({
   ];
 
   return (
-    <footer className="flex h-8 shrink-0 items-center gap-4 overflow-x-auto border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-4">
+    <footer className="flex h-7 shrink-0 items-center gap-3 overflow-hidden border-t border-[var(--vf-border)] bg-[var(--vf-bg)] px-3 text-[11px]">
       {items.map(({ label, detail, active, Icon }) => (
         <Link
           key={label}
