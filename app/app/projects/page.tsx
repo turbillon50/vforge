@@ -655,23 +655,19 @@ export default function ProjectsPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1440px]">
-      <header className="border-b border-[var(--border-1)] bg-white px-5 py-7 md:px-8 md:py-9">
-        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div>
+      <header className="border-b border-[var(--border-1)] bg-white px-5 py-3.5 md:px-8">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
             <p className="mono-label">Control room</p>
-            <h1 className="mt-3 text-[clamp(2.2rem,5vw,4.8rem)] font-semibold leading-[0.92] tracking-[-0.065em]">
-              Tus proyectos.
+            <h1 className="mt-0.5 text-[20px] font-semibold tracking-[-0.03em] text-black md:text-[22px]">
+              Proyectos
             </h1>
-            <p className="mt-4 max-w-xl text-[14px] leading-6">
-              Filtra por estado, cliente, actividad, entrega, avance y dinero. Abre cualquier
-              proyecto para editar sus datos y dejarle comentarios con fecha.
-            </p>
           </div>
           <button
             type="button"
             onClick={() => void syncProjects()}
             disabled={refreshing}
-            className="btn-ghost self-start md:self-auto"
+            className="btn-ghost shrink-0"
           >
             <IconRefresh size={13} className={refreshing ? "animate-spin" : ""} />
             Sincronizar
