@@ -24,6 +24,16 @@ interface ProjectRow {
   family_code?: string | null;
   repositories: ProjectRepository[];
   repository_count: number;
+  description?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  client_name?: string | null;
+  due_date?: string | null;
+  contract_amount?: number | null;
+  paid_amount?: number | null;
+  last_push?: string | null;
+  notes_count?: number;
+  last_note?: { body: string; created_at: string } | null;
 }
 
 const VALID_CATEGORIES = new Set([
@@ -59,6 +69,16 @@ export async function GET() {
             COALESCE(p.delivery_priority, false) AS delivery_priority,
             COALESCE(p.progress_pct, 0) AS progress_pct,
             p.family_code,
+            p.description, p.created_at, p.updated_at, p.client_name,
+            to_char(p.due_date, 'YYYY-MM-DD') AS due_date,
+            p.contract_amount::float8 AS contract_amount,
+            p.paid_amount::float8 AS paid_amount,
+            (SELECT max(pr.pushed_at) FROM project_repositories pr WHERE pr.project_id = p.id)
+              AS last_push,
+            (SELECT count(*)::int FROM project_notes n WHERE n.project_id = p.id) AS notes_count,
+            (SELECT jsonb_build_object('body', n.body, 'created_at', n.created_at)
+               FROM project_notes n WHERE n.project_id = p.id
+              ORDER BY n.created_at DESC LIMIT 1) AS last_note,
             COALESCE((
               SELECT jsonb_agg(
                 jsonb_build_object(
