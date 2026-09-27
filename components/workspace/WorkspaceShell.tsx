@@ -135,7 +135,7 @@ function Sidebar({
                   <span className="text-body-sm font-medium">{label}</span>
                   <span
                     className={cn(
-                      "mt-0.5 block text-caption leading-[1.35]",
+                      "mt-0.5 block truncate text-caption",
                       active ? "text-white/55" : "text-[var(--fg-muted)]",
                     )}
                   >
@@ -202,10 +202,12 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       <div
         className={cn(
           "bg-[var(--color-background)] text-[var(--color-ink)]",
-          "min-h-svh",
+          isStudio
+            ? "h-svh overflow-hidden overscroll-none lg:h-dvh"
+            : "min-h-svh",
         )}
       >
-        <aside className="fixed inset-y-0 left-0 z-30 hidden w-[260px] border-r border-[var(--border-1)] md:block">
+        <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] border-r border-[var(--border-1)] md:block">
           <Sidebar pathname={pathname} />
         </aside>
 
@@ -233,8 +235,8 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
         <div
           className={cn(
-            "md:pl-[260px]",
-            "min-h-svh",
+            "md:pl-[220px]",
+            isStudio ? "h-full overflow-hidden" : "min-h-svh",
           )}
         >
           <header
@@ -269,7 +271,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           <main
             className={cn(
               isStudio
-                ? "min-h-[calc(100svh-58px)]"
+                ? "h-[calc(100svh-58px)] overflow-hidden lg:h-[calc(100dvh-58px)]"
                 : "min-h-[calc(100svh-58px-72px)]",
             )}
           >
@@ -317,7 +319,7 @@ function ClerkAccount() {
           },
         }}
       />
-      <span className="hidden text-body-sm font-medium sm:block">
+      <span className="hidden max-w-[9rem] truncate text-body-sm font-medium sm:block lg:max-w-[16rem] xl:max-w-none">
         {user?.fullName ?? user?.firstName ?? user?.username ?? user?.primaryEmailAddress?.emailAddress ?? "Cuenta"}
       </span>
     </div>
