@@ -811,7 +811,7 @@ export function ForgeStudio() {
             )}
           </div>
 
-          <div className="vf-studio-composer shrink-0 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] p-3 md:p-4">
+          <div className="vf-studio-composer shrink-0 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-4 py-4 md:px-5 md:py-5">
             {attachment ? (
               <div className="mb-2 flex items-center justify-between gap-3 rounded-md border border-[var(--vf-border)] bg-[var(--vf-bg-2)] px-3 py-2">
                 <div className="min-w-0">
@@ -946,13 +946,14 @@ export function ForgeStudio() {
             )}
           </div>
 
-          <SystemStrip
-            project={project}
-            system={system}
-            currentModel={currentModel}
-          />
         </section>
       </div>
+
+      <SystemStrip
+        project={project}
+        system={system}
+        currentModel={currentModel}
+      />
 
       {showCreate ? (
         <CreateProjectDialog
@@ -1477,24 +1478,22 @@ function SystemStrip({
   ];
 
   return (
-    <div className="grid shrink-0 grid-cols-2 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] sm:grid-cols-5">
+    <footer className="flex h-14 shrink-0 items-center gap-x-6 gap-y-1 overflow-x-auto border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-5 md:px-8">
       {items.map(({ label, detail, active, Icon }) => (
         <Link
           key={label}
           href="/app/integrations"
-          className="min-w-0 border-r border-[var(--vf-border)] px-3 py-2.5 last:border-r-0 hover:bg-[var(--vf-bg-2)]"
+          className="flex shrink-0 items-center gap-2 text-[var(--vf-fg-1)] hover:text-[var(--vf-fg)]"
         >
-          <div className="flex items-center gap-1.5">
-            <Icon size={10} className="shrink-0" />
-            <span className="font-mono text-[7px] uppercase tracking-[0.12em] text-[var(--vf-fg-2)]">
-              {label}
-            </span>
-            <span className="status-shape ml-auto shrink-0" data-active={active} />
-          </div>
-          <p className="mt-1 truncate text-[8px] text-[var(--vf-fg-1)]">{detail}</p>
+          <Icon size={13} className="shrink-0" />
+          <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--vf-fg-2)]">
+            {label}
+          </span>
+          <span className="max-w-[180px] truncate text-[12px]">{detail}</span>
+          <span className="status-shape shrink-0" data-active={active} />
         </Link>
       ))}
-    </div>
+    </footer>
   );
 }
 

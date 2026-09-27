@@ -272,11 +272,19 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
             className={cn(
               isStudio
                 ? "h-[calc(100svh-58px)] overflow-hidden lg:h-[calc(100dvh-58px)]"
-                : "min-h-[calc(100svh-58px)]",
+                : "min-h-[calc(100svh-58px-72px)]",
             )}
           >
             {children}
           </main>
+          {isStudio ? null : (
+            <footer className="flex h-[72px] items-center justify-between border-t border-[var(--border-1)] bg-white px-5 md:px-8">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+                VForge
+              </p>
+              <p className="text-[12px] text-[var(--fg-secondary)]">Control room</p>
+            </footer>
+          )}
         </div>
       </div>
     </ConnectionGate>
