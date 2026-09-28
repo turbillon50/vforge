@@ -882,3 +882,67 @@ Qué pasó con eso, dicho derecho:
   ramas `origin/centro-mando` y `origin/editor-vivo`.
 - Vulcano ya mergeó mis bloques **B7 (`87ddcae`), B8 (`3c025e0`) y B9 (`7e72151`)** a `main`.
   Lo que sigue sin mergear de esta rama es el bloque 10.
+
+---
+
+## Cierre · Re-medición de las 54 rutas contra la línea base
+
+**Dónde se midió y por qué.** La línea base (`medicion.json`) se tomó en **producción**
+(`vforge.site`), y esta rama no está en producción. Se midió entonces contra la **vista previa de
+Vercel de `barrido-1`** (`vforge-e1ptuzukp…`, commit `93ce4d9`), con la llave de *protection bypass*
+que el proyecto ya tenía —no se tocó la protección de despliegue de Luis—. Script: el mismo
+`medir_local.py`, con una línea nueva para mandar la cabecera de bypass.
+
+**Un problema que hay que decir: la mitad "con sesión" NO se pudo medir en la vista previa.**
+El patrón de `sign_in_tokens` de Clerk funciona contra `vforge.site` pero **no** contra un
+`*.vercel.app`: la instancia de producción de Clerk no acepta el ticket para ese origen, así que
+**74 de las 108 medidas con sesión acabaron en `/sign-in`** (151 caracteres de texto, que es la
+pantalla de acceso). Esas 74 no valen y no se usan. Para no quedarme sin el dato, las pantallas
+privadas se midieron **en local**, que es donde `/app/*` sí pinta completo (sin Clerk el shell
+renderiza igual). Se dice claramente qué salió de dónde.
+
+### Rutas públicas — vista previa contra la línea base de producción (108 medidas, 390 y 1440)
+
+| | línea base | después |
+|---|---|---|
+| **Desborde horizontal total** | **2,041 px** | **0 px** |
+| Medidas con desborde | **13** | **0** |
+| Medidas empeoradas (desborde nuevo o mayor) | — | **0** |
+| Rutas que se rompieron | — | **0** |
+| Medidas con error | 0 | **0** |
+
+Las 13 que desbordaban eran las del bloque 1, todas a 390 y todas con los mismos 157 px:
+`/billing /blog /developers /docs /labs /manifiesto /marketplace /mcp /privacidad /privacy
+/support /terminos /terms` → **0** en las 13.
+
+### Núcleo `/app` — línea base con sesión en producción contra la medición local de hoy
+
+| ruta | < 12 px antes (390 / 1440) | < 12 px hoy | desborde hoy |
+|---|---|---|---|
+| `/app/projects` | 2,416 / 2,416 | **0 / 0** | 0 |
+| `/app/activity` | 107 / 107 | **0 / 0** | 0 |
+| `/app/integrations` | 49 / 49 | **0 / 0** | 0 |
+| `/app/admin` | 24 / 24 | **0 / 0** | 0 |
+| `/app/settings` | 15 / 15 | **0 / 0** | 0 |
+| `/app/tablero` | 7 / 15 | **0 / 0** | 0 |
+| `/app/setup` | 4 / 4 | **0 / 0** | 0 |
+| `/app/chat` | 80 / 85 | **24 / 24** | 0 |
+| **total** | **5,417** | **48** | **0** |
+
+Los 48 que quedan son **todos de `/app/chat`**, que es del B3 y cuyo arreglo devolví (está en
+`b10-fuera-de-alcance`). Con ese parche aplicado el total del núcleo queda en **0**.
+
+**Títulos de pestaña en el núcleo: 1 distinto → 8 distintos.**
+Antes las 8 rutas decían `VForge — Sala de revisión de proyectos`. Hoy: `Estudio · VForge`,
+`Proyectos · VForge`, `Actividad · VForge`, `Tablero · VForge`, `Conexiones · VForge`,
+`Administración · VForge`, `Configuración · VForge`, `Setup · VForge`.
+
+### Limpieza
+
+- `next dev` de `:3150` matado.
+- `.env.local`, `.env.local.bak`, `.env.nocl` y `.env.withclerk` borrados del worktree
+  (tenían 69 claves reales bajadas de Vercel). `.gitignore` ya los cubría desde B4.9;
+  `git log -p --all -- .env.local .env.nocl .env.withclerk` → sin resultados: nunca se subieron.
+- Rutas espejo `zz-prueba-*`: `grep -rn "zz-prueba" app/ components/ lib/` → **0**.
+  Los 339 proyectos de prueba del bloque 7 se fabricaron en el script de medición e
+  **interceptando la red**, nunca se escribió en Neon ni en Clerk.
