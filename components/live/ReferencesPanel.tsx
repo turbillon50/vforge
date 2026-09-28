@@ -194,10 +194,10 @@ export function ReferencesPanel({
       <header className="flex min-h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--border-1)] px-3">
         <div className="flex min-w-0 items-center gap-2">
           <IconLayout size={12} />
-          <span className="font-mono text-[9px] uppercase tracking-[0.14em]">
+          <span className="font-mono text-[12px] uppercase tracking-[0.14em]">
             Referencias
           </span>
-          <span className="hidden truncate text-[10px] text-[var(--fg-muted)] sm:block">
+          <span className="hidden truncate text-[12px] text-[var(--fg-muted)] sm:block">
             Páginas, componentes y look &amp; feel del proyecto
           </span>
         </div>
@@ -207,7 +207,7 @@ export function ReferencesPanel({
               type="button"
               onClick={() => setShowForm((current) => !current)}
               className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 font-mono text-[8px] uppercase tracking-[0.08em]",
+                "inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 font-mono text-[12px] uppercase tracking-[0.08em]",
                 showForm
                   ? "border-black bg-black text-white"
                   : "border-[var(--border-1)] hover:border-black",
@@ -296,7 +296,7 @@ export function ReferencesPanel({
       ) : null}
 
       {error ? (
-        <div className="shrink-0 border-b border-[var(--border-1)] px-3 py-2 text-[11px] text-[var(--color-danger)]">
+        <div className="shrink-0 border-b border-[var(--border-1)] px-3 py-2 text-[12px] text-[var(--color-danger)]">
           {error}
         </div>
       ) : null}
@@ -304,7 +304,7 @@ export function ReferencesPanel({
       <div className="grid min-h-0 flex-1 md:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="min-h-0 overflow-y-auto border-b border-[var(--border-1)] bg-white md:border-b-0 md:border-r">
           {loading ? (
-            <div className="flex items-center gap-2 p-4 text-[11px] text-[var(--fg-muted)]">
+            <div className="flex items-center gap-2 p-4 text-[12px] text-[var(--fg-muted)]">
               <IconLoader size={12} className="animate-spin" /> Cargando
               referencias…
             </div>
@@ -327,7 +327,7 @@ export function ReferencesPanel({
                     </strong>
                     <span
                       className={cn(
-                        "shrink-0 font-mono text-[8px] uppercase tracking-[0.08em]",
+                        "shrink-0 font-mono text-[12px] uppercase tracking-[0.08em]",
                         selected?.id === reference.id
                           ? "text-white/60"
                           : "text-[var(--fg-muted)]",
@@ -338,7 +338,7 @@ export function ReferencesPanel({
                   </span>
                   <span
                     className={cn(
-                      "mt-1 block truncate text-[9px]",
+                      "mt-1 block truncate text-[12px]",
                       selected?.id === reference.id
                         ? "text-white/65"
                         : "text-[var(--fg-muted)]",
@@ -349,7 +349,7 @@ export function ReferencesPanel({
                   {reference.notes ? (
                     <span
                       className={cn(
-                        "mt-2 line-clamp-2 block text-[10px] leading-4",
+                        "mt-2 line-clamp-2 block text-[12px] leading-4",
                         selected?.id === reference.id
                           ? "text-white/75"
                           : "text-[var(--fg-muted)]",
@@ -362,7 +362,7 @@ export function ReferencesPanel({
               ))}
             </div>
           ) : (
-            <div className="p-5 text-[11px] leading-5 text-[var(--fg-muted)]">
+            <div className="p-5 text-[12px] leading-5 text-[var(--fg-muted)]">
               Aún no hay referencias. Guarda una URL de inspiración, una página
               o un componente para verla aquí.
             </div>
@@ -374,10 +374,10 @@ export function ReferencesPanel({
             <>
               <div className="flex min-h-11 shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[var(--border-1)] bg-white px-3">
                 <div className="min-w-0">
-                  <p className="truncate text-[11px] font-medium">
+                  <p className="truncate text-[12px] font-medium">
                     {selected.label}
                   </p>
-                  <p className="truncate font-mono text-[8px] text-[var(--fg-muted)]">
+                  <p className="truncate font-mono text-[12px] text-[var(--fg-muted)]">
                     {selected.url}
                   </p>
                 </div>
@@ -388,7 +388,7 @@ export function ReferencesPanel({
                       type="button"
                       onClick={() => setViewport(item)}
                       className={cn(
-                        "h-7 rounded-md border px-2 font-mono text-[8px] uppercase",
+                        "h-7 rounded-md border px-2 font-mono text-[12px] uppercase",
                         viewport === item
                           ? "border-black bg-black text-white"
                           : "border-[var(--border-1)] bg-white",
@@ -432,7 +432,7 @@ export function ReferencesPanel({
                 reference={selected}
                 viewport={viewport}
               />
-              <p className="shrink-0 border-t border-[var(--border-1)] bg-white px-3 py-2 text-[9px] text-[var(--fg-muted)]">
+              <p className="shrink-0 border-t border-[var(--border-1)] bg-white px-3 py-2 text-[12px] text-[var(--fg-muted)]">
                 {VIEWPORTS[viewport].label} · Si el sitio bloquea iframes,
                 ábrelo con el botón externo.
               </p>
@@ -444,7 +444,7 @@ export function ReferencesPanel({
                 <p className="mt-3 text-[12px] font-medium">
                   Selecciona o agrega una referencia
                 </p>
-                <p className="mt-2 text-[10px] text-[var(--fg-muted)]">
+                <p className="mt-2 text-[12px] text-[var(--fg-muted)]">
                   Aquí podrás compararla en escritorio y móvil sin salir de la
                   sala.
                 </p>

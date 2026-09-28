@@ -153,12 +153,12 @@ export function InvitePanel({
           <IconUsers size={14} />
           <div>
             <h2 className="text-[12px] font-medium">Invitar al proyecto</h2>
-            <p className="mt-0.5 text-[10px] text-[var(--fg-muted)]">
+            <p className="mt-0.5 text-[12px] text-[var(--fg-muted)]">
               Enlace para WhatsApp, sin correo. Al entrar se registran.
             </p>
           </div>
         </div>
-        <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+        <span className="font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
           Sólo owner
         </span>
       </header>
@@ -177,7 +177,7 @@ export function InvitePanel({
               </option>
             ))}
           </select>
-          <span className="mt-1 block text-[9px] leading-4 text-[var(--fg-muted)]">
+          <span className="mt-1 block text-[12px] leading-4 text-[var(--fg-muted)]">
             {selectedRole?.description}
           </span>
         </label>
@@ -215,7 +215,7 @@ export function InvitePanel({
 
       {lastLink ? (
         <div className="mx-4 mb-4 flex flex-col gap-2 border border-black bg-[#f7f7f5] p-3">
-          <code className="min-w-0 flex-1 break-all font-mono text-[9px]">
+          <code className="min-w-0 flex-1 break-all font-mono text-[12px]">
             {lastLink}
           </code>
           <div className="flex flex-wrap gap-2">
@@ -236,13 +236,13 @@ export function InvitePanel({
       ) : null}
 
       {error ? (
-        <p className="mx-4 mb-4 border-l border-black pl-3 text-[10px] leading-4">
+        <p className="mx-4 mb-4 border-l border-black pl-3 text-[12px] leading-4">
           {error}
         </p>
       ) : null}
 
       <div className="border-t border-[var(--border-1)]">
-        <div className={compact ? "grid grid-cols-[minmax(0,1fr)_70px_72px] px-4 py-3 font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]" : "grid grid-cols-[minmax(0,1fr)_90px_90px] px-4 py-3 font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]"}>
+        <div className={compact ? "grid grid-cols-[minmax(0,1fr)_70px_72px] px-4 py-3 font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]" : "grid grid-cols-[minmax(0,1fr)_90px_90px] px-4 py-3 font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]"}>
           <span>Invitado</span>
           <span>Rol</span>
           <span className="text-right">Estado</span>
@@ -252,7 +252,7 @@ export function InvitePanel({
             <IconLoader size={13} className="animate-spin" />
           </div>
         ) : invitations.length === 0 ? (
-          <p className="border-t border-[var(--border-1)] px-4 py-6 text-[11px] text-[var(--fg-muted)]">
+          <p className="border-t border-[var(--border-1)] px-4 py-6 text-[12px] text-[var(--fg-muted)]">
             Todavía no hay invitaciones para este proyecto.
           </p>
         ) : (
@@ -260,13 +260,13 @@ export function InvitePanel({
             {invitations.map((invitation) => (
               <div
                 key={invitation.id}
-                className={compact ? "grid grid-cols-[minmax(0,1fr)_70px_72px] items-center px-4 py-3 text-[10px]" : "grid grid-cols-[minmax(0,1fr)_90px_90px] items-center px-4 py-3 text-[10px]"}
+                className={compact ? "grid grid-cols-[minmax(0,1fr)_70px_72px] items-center px-4 py-3 text-[12px]" : "grid grid-cols-[minmax(0,1fr)_90px_90px] items-center px-4 py-3 text-[12px]"}
               >
                 <span className="truncate">{invitationLabel(invitation)}</span>
-                <span className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+                <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
                   {ROLE_LABEL(invitation.role)}
                 </span>
-                <span className="flex items-center justify-end gap-1.5 font-mono text-[8px] uppercase tracking-[0.08em]">
+                <span className="flex items-center justify-end gap-1.5 font-mono text-[12px] uppercase tracking-[0.08em]">
                   <span
                     className="status-shape"
                     data-active={invitationState(invitation) === "Aceptada" || invitationState(invitation) === "Activo"}

@@ -51,7 +51,7 @@ export function LivePortalMobileEntry({
             <p className="truncate text-[14px] font-medium tracking-[-0.02em]">
               {project.name}
             </p>
-            <p className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+            <p className="font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
               Live · {ROLE_LABEL[me.role]}
             </p>
           </div>

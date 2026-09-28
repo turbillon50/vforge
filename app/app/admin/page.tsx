@@ -95,19 +95,19 @@ export default async function AdminPage() {
             <table className="w-full min-w-[720px] text-left">
               <thead>
                 <tr className="border-b border-black bg-black text-white">
-                  <th className="px-4 py-3 font-mono text-[8px] font-normal uppercase tracking-[0.15em]">
+                  <th className="px-4 py-3 font-mono text-[12px] font-normal uppercase tracking-[0.15em]">
                     Usuario
                   </th>
-                  <th className="px-4 py-3 font-mono text-[8px] font-normal uppercase tracking-[0.15em]">
+                  <th className="px-4 py-3 font-mono text-[12px] font-normal uppercase tracking-[0.15em]">
                     Correo
                   </th>
-                  <th className="px-4 py-3 font-mono text-[8px] font-normal uppercase tracking-[0.15em]">
+                  <th className="px-4 py-3 font-mono text-[12px] font-normal uppercase tracking-[0.15em]">
                     Rol
                   </th>
-                  <th className="px-4 py-3 font-mono text-[8px] font-normal uppercase tracking-[0.15em]">
+                  <th className="px-4 py-3 font-mono text-[12px] font-normal uppercase tracking-[0.15em]">
                     Alta
                   </th>
-                  <th className="px-4 py-3 font-mono text-[8px] font-normal uppercase tracking-[0.15em]">
+                  <th className="px-4 py-3 font-mono text-[12px] font-normal uppercase tracking-[0.15em]">
                     Última actividad
                   </th>
                 </tr>
@@ -120,28 +120,28 @@ export default async function AdminPage() {
                   >
                     <td className="px-4 py-4">
                       <p className="text-[12px] font-medium">{user.name}</p>
-                      <p className="mt-1 font-mono text-[8px] text-[var(--fg-muted)]">
+                      <p className="mt-1 font-mono text-[12px] text-[var(--fg-muted)]">
                         {user.id}
                       </p>
                     </td>
-                    <td className="px-4 py-4 text-[11px] text-[var(--fg-secondary)]">
+                    <td className="px-4 py-4 text-[12px] text-[var(--fg-secondary)]">
                       {user.email}
                     </td>
                     <td className="px-4 py-4">
                       <span
                         className={
                           user.owner
-                            ? "inline-flex border border-black bg-black px-2 py-1 font-mono text-[8px] uppercase tracking-[0.12em] text-white"
-                            : "inline-flex border border-[var(--border-1)] px-2 py-1 font-mono text-[8px] uppercase tracking-[0.12em]"
+                            ? "inline-flex border border-black bg-black px-2 py-1 font-mono text-[12px] uppercase tracking-[0.12em] text-white"
+                            : "inline-flex border border-[var(--border-1)] px-2 py-1 font-mono text-[12px] uppercase tracking-[0.12em]"
                         }
                       >
                         {user.owner ? "Owner" : "Usuario"}
                       </span>
                     </td>
-                    <td className="px-4 py-4 font-mono text-[9px] text-[var(--fg-muted)]">
+                    <td className="px-4 py-4 font-mono text-[12px] text-[var(--fg-muted)]">
                       {user.created}
                     </td>
-                    <td className="px-4 py-4 font-mono text-[9px] text-[var(--fg-muted)]">
+                    <td className="px-4 py-4 font-mono text-[12px] text-[var(--fg-muted)]">
                       {user.lastActive}
                     </td>
                   </tr>

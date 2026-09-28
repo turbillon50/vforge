@@ -669,3 +669,161 @@ Criterio: se muestra el motor real o no se muestra nada.
 - [x] **B9.4 — Verificación.** `grep -rn "Motor por resolver" --include=*.tsx --include=*.ts`
   → sólo queda la línea del comentario que explica por qué se quitó.
   `npx tsc --noEmit -p .` → **0 errores**.
+
+---
+
+## Bloque 10 · Barrido MUST-500 + SANIDAD sobre el núcleo
+
+Rutas: `/app/chat` (Estudio) · `/app/projects` · `/app/activity` · `/app/tablero` ·
+`/app/integrations` · `/app/admin` · `/app/settings` · `/app/setup`.
+
+**Cómo se midió.** Un corredor propio, `barrido10.py`, recorre las 8 rutas en WebKit 390 y 1440 con
+`locale="es-MX"` y mide: desborde (§93), letra < 12 px (§144), área táctil < 44×44 (§274), `<title>`
+propio (§79), `<h1>`, textos encimados (§121 / R-011), controles sin nombre accesible (§282), cadenas
+basura en pantalla, errores de consola y respuestas ≥ 400. El contraste va aparte con `contraste.py`
+(§270). Antes: `med-b10-antes.json`. Después: `med-b10-despues.json` y `med-b10-contraste-despues.json`.
+
+### Resultado medido (390 / 1440)
+
+| | antes | después |
+|---|---|---|
+| Rutas con `<title>` propio | **0 de 8** (las 8 decían "VForge — Sala de revisión de proyectos") | **8 de 8** |
+| Textos < 12 px | **1,124** | **0** |
+| Controles < 44×44 | **119** | **9** |
+| Controles sin nombre accesible | **3** | **0** |
+| Textos bajo 4.5:1 de contraste | **34** | **0** |
+| Cadenas del sistema en pantalla | **2** ("did not match the expected pattern") | **0** |
+| Desborde horizontal a 390 | 0 | **0** |
+| Rutas donde la rueda no hace scroll (§122) | 0 | **0** |
+
+- [x] **B10.1 — Las 8 pantallas tenían el mismo título de pestaña** (MUST-500 §79).
+  Ninguna ruta del núcleo declaraba `metadata`: todas heredaban la del layout raíz, así que con
+  varias pestañas abiertas no se distinguía ninguna. Ahora el layout raíz define
+  `title.template = "%s · VForge"` y cada ruta tiene su `layout.tsx` con el mismo nombre que ya usa
+  la navegación (`TITLES` de `WorkspaceShell`): Estudio, Proyectos, Actividad, Tablero, Conexiones,
+  Administración, Configuración, Setup. Medido: 8 títulos distintos.
+
+- [x] **B10.2 — 1,124 textos por debajo de 12 px → 0** (§144). Por ruta a 390:
+  `/app/activity` **200**, `/app/chat` **80**, `/app/integrations` **37**, `/app/setup` **8**
+  (y 48/387 a 1440). Se subieron **465 clases** `text-[7..11px]` a `text-[12px]` en 53 archivos del
+  núcleo, el shell, el estudio, integraciones y onboarding. El más escondido: el código en línea del
+  chat usaba `text-[0.88em]` sobre 13 px = **11.4 px**, y eran 58 de los 80 de `/app/chat`.
+
+- [x] **B10.3 — 119 controles por debajo de 44×44 → 9** (§274). El arreglo de raíz fue subir
+  `min-height` de **40 → 44 px** en `.btn-primary` y `.btn-ghost` de `globals.css`, que son las
+  clases compartidas de casi todos los botones. Luego, uno por uno: el botón de menú (36→44), el de
+  cerrar el cajón (36→44), los enlaces del pie de la barra lateral (40→44), las pestañas móviles
+  Construir / Ver proyecto (36→44), "Nueva" (32→44), adjuntar (32→44) y enviar (36→44) del compositor,
+  el selector de proyecto (40→44), las 5 vistas del preview (32→44), los 5 chips de estado del pie
+  (19→44), los encabezados ordenables de la tabla (19→44) y los enlaces de acción de Conexiones (16→44).
+  Los botones que esconden su texto en pantallas chicas llevan además `min-w-11`, porque medían 34–38 px
+  de ancho con sólo el ícono.
+
+- [x] **B10.4 — 3 botones del Estudio se quedaban sin nombre accesible** (§282).
+  "Nuevo proyecto", "GitHub"/"Conectar" y "Desplegar" esconden su texto con `hidden sm:inline` y en
+  móvil quedaban en puro ícono. Llevan `aria-label` con el texto completo. Medido: **3 → 0**.
+
+- [x] **B10.5 — `/app/tablero` le mostraba al usuario el error crudo del navegador** (§236, §358).
+  Decía **"No pude leer el servidor — The string did not match the expected pattern"**, que es lo que
+  dice WebKit cuando la respuesta no es JSON: técnico, en inglés y sin salida. Ahora dice
+  "No pudimos mostrar el tablero / No pudimos leer el estado del servidor. Puede que la medición aún
+  esté corriendo." con un botón **Reintentar** de 44 px; el mensaje crudo va a la consola, para quien
+  depura. Medido: la cadena ya no aparece en pantalla en ninguna de las 2 vistas.
+
+- [x] **B10.6 — Contraste del núcleo: 34 textos bajo 4.5:1 → 0** (§270). Los 34 eran **la misma causa**:
+  el token `--fg-muted` valía `#73767b`, que sobre la superficie clara `#f7f7f5` da **4.25:1** —
+  por debajo del mínimo por poco, pero en todas las pantallas. Se oscureció el mínimo necesario:
+  **`#73767b` → `#6b6e73`**, el mismo gris neutro, un punto más oscuro.
+
+  | fondo | antes | después |
+  |---|---|---|
+  | `#f7f7f5` (superficie) | **4.25:1** | **4.77:1** |
+  | `#ffffff` (tarjetas) | 4.56:1 | **5.12:1** |
+  | `#f2f2f0` (superficie baja) | **4.07:1** | **4.57:1** |
+
+  Toca el valor de un gris de la paleta, así que queda anotado para Luis: **[LUIS]** es un
+  oscurecimiento de 8 puntos en un neutro, no un color nuevo; si prefieres el tono de antes, la
+  alternativa es subir el tamaño de esos textos, porque a 4.25:1 no cumplen.
+
+- [x] **B10.7 — El Estudio pintaba un log de consola inventado** (§5, sin datos inventados).
+  La pestaña "Consola" mostraba `$ vforge dev`, `Build OK - <app>` y `Sirviendo en <url>` escritos a
+  mano: se veía igual aunque la app nunca hubiera compilado. Fuera. Ahora dice la verdad —
+  "Todavía no hay registro de ejecución para esta app"— y, si hay despliegue, enlaza a Vercel, que
+  es donde sí viven los registros.
+
+- [x] **B10.8 — El estado de conexiones del Estudio no se leía y dependía sólo del color**
+  (§270, §268). `#86efac` sobre blanco = **1.6:1**, y el "no conectado" era un guion en
+  `rgba(0,0,0,.35)`. Ahora usa los tokens del tema y **dice la palabra**: "conectado" / "sin conectar".
+
+- [x] **B10.9 — El botón de copiar código era invisible y estaba en inglés.**
+  Iba en `text-[var(--vf-bg-2)]` sobre un bloque con `bg-[var(--vf-bg-2)]`: **el mismo color que su
+  fondo**. Además decía "Copy" y `aria-label="Copy code"` (§358) y medía 23×15 px (§274).
+  Ahora es `--vf-fg-2` sobre ese fondo, dice "Copiar"/"Copiado" y mide 44×44.
+
+- [x] **B10.10 — Los formularios "Partners" y "Asociados" del pie mentían** (SANIDAD §0.2).
+  `handleSubmit` sólo hacía `setSent(true)` y respondía "Mensaje recibido. Te contactamos pronto."
+  **sin una sola petición de red**: lo que escribía la persona se perdía. Como no hay endpoint
+  público de contacto, ahora el envío arma un correo a `luisdelator@vmomentums.info` —el mismo que ya
+  usan el aviso sin JavaScript y el resto del pie— con asunto y cuerpo llenos, y el acuse dice la
+  verdad ("Te abrimos tu app de correo…") y deja la dirección visible por si no abrió.
+  **[LUIS]**: si quieres un formulario con backend propio (guardar en base + avisarte), se construye;
+  es una decisión de producto, no un arreglo.
+
+- [x] **B10.11 — La aparición por scroll de la portada era de adorno.**
+  `.fx-reveal` tenía un respaldo en CSS (`fxRevealIn … 3s forwards`) que corría **siempre**, no sólo
+  sin JavaScript: a los 3 s se volvían visibles **todas** las secciones, también las que estaban
+  fuera de pantalla. Ahora el respaldo está acotado a `html:not([data-vf-reveal="js"])`, y ese
+  atributo lo pone `startReveal()`, que sólo corre cuando el `IntersectionObserver` quedó enganchado
+  de verdad. Si React no hidrata, el respaldo de 3 s sigue ahí intacto (era la lección de sep-2026).
+  El hero conserva su entrada inmediata en visitas repetidas (B6.3), ahora con la animación completa
+  y no sólo el retardo.
+
+- [x] **B10.12 — `/app/projects`: "Volver a intentar" no parecía tocable.** Era un botón con aspecto
+  de enlace y **19 px** de alto. Ahora es un `btn-ghost` de 44 px.
+
+- [x] **B10.13 — Verificación.** `npx tsc --noEmit -p .` → **0 errores**.
+  `npm test` → **90 pruebas, 0 fallos**. Desborde 0 a 390 en las 8 rutas.
+  La rueda del ratón hace scroll en las 8 (§122). `<h1>` presente en las 8.
+
+- [x] **B10.14 — Contraprueba del verde** (SANIDAD §0.5). Con el contraste en 0 se devolvió
+  `--fg-muted` a `#73767b` en caliente y el medidor volvió a marcar **4 textos a 4.25:1** en
+  `/app/setup`. La prueba sabe fallar.
+
+### Cuatro correcciones al propio medidor (todas encontradas mirando la captura)
+
+Se anotan porque un medidor que miente es peor que no medir:
+
+1. **El pie salía como blanco.** La primera versión deducía el fondo subiendo por los ancestros con
+   `backgroundColor`; el pie es transparente y su oscuro lo pinta un degradado. 25 rojos falsos.
+   Ahora el fondo se **mide**: se pintan los textos en transparente, se captura, y se lee el píxel.
+2. **El contenido detrás de un diálogo** está bajo un velo a propósito. Se mide acotado a la hoja.
+3. **`nextjs-portal`** (el indicador de `next dev`, que no existe en producción) colaba su insignia
+   roja como fondo. 2 rojos falsos.
+4. **Texto tapado por una barra pegajosa**: un globo negro del chat con texto blanco se medía como
+   blanco sobre blanco porque el píxel muestreado era el de la barra. Ahora se descarta lo que
+   `elementFromPoint` dice que está tapado. También se exceptúan los controles desactivados
+   (WCAG 1.4.3), las casillas dentro de una `<label>` grande (se toca la etiqueta) y los enlaces en
+   línea dentro de un párrafo (WCAG 2.5.8).
+
+### Lo que queda y por qué
+
+- [ ] **9 controles siguen por debajo de 44 px** y son aceptables o quedan fuera: 6 casillas de 12×12
+  del diálogo de crear proyecto (envueltas en una `<label>` de más de 44 px, se toca la etiqueta),
+  1 enlace en línea dentro de un mensaje del chat (WCAG 2.5.8 exceptúa los enlaces en prosa),
+  el wordmark de `/app/setup` (87×30) y el refrescar de Conexiones a 390 (22 de ancho).
+- [ ] **Los 8 "encimados" de `/app/chat` son del medidor, no de la pantalla.** Son contenido que se
+  fue debajo de la barra superior pegajosa, que es opaca y lo tapa limpio. Se comprobó **mirando**
+  `cap-b10/390_app_chat.png`: no hay un solo texto encimado.
+- [ ] **Los errores de consola y los 401/500 de la medición son del entorno local**, no de producción:
+  aquí Clerk corre sin llaves (`useAuth can only be used within <ClerkProvider>`) y las APIs con
+  sesión responden 401. **Pero sí hay algo real que revisar**: cuatro endpoints devuelven **500**
+  donde deberían devolver 401 cuando no hay sesión — `/api/onboarding/status`, `/api/forja/estado`,
+  `/api/tablero` y `/api/billing/me`. No se toca en este barrido porque hay que comprobarlo contra
+  producción con sesión válida. **[Vulcano]**
+- [ ] **[LUIS] Redes sociales del pie con `href="#"`** (TikTok, LinkedIn, X) — sigue igual que en B1.
+- [ ] **[LUIS] `/pricing`** redirige a `/mcp` y el enlace dice "Precios" — sigue igual que en B1.
+- [ ] **[LUIS] Las tarjetas de `/mcp`** salen blancas sobre la página negra. Se lee (el contraste ya
+  cumple), pero desentona: la página fija un fondo oscuro a mano y usa tokens claros. Es el mismo
+  desajuste que causó lo del marketplace, y está en 8 archivos más
+  (`ClientWorkspacePage`, `JoinClient`, `VPresence`, `AgentMonitor`, `ClientPortal`, `MyProjects`).
+  Decisión de marca: o esas pantallas son claras como el resto, o el tema gana un juego oscuro real.

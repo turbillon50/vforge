@@ -257,7 +257,7 @@ export function ProjectContextPanel({
             type="button"
             onClick={() => setTab(item)}
             className={cn(
-              "shrink-0 rounded-md border px-2 py-1 font-mono text-[8px] uppercase tracking-[0.08em]",
+              "shrink-0 rounded-md border px-2 py-1 font-mono text-[12px] uppercase tracking-[0.08em]",
               tab === item ? "border-black bg-black text-white" : "border-[var(--border-1)]",
             )}
           >
@@ -270,12 +270,12 @@ export function ProjectContextPanel({
         {!loaded ? (
           <div className="grid min-h-24 place-items-center"><IconLoader size={14} className="animate-spin" /></div>
         ) : !data ? (
-          <p className="text-[11px] text-[var(--fg-muted)]">Sin contexto disponible.</p>
+          <p className="text-[12px] text-[var(--fg-muted)]">Sin contexto disponible.</p>
         ) : tab === "status" ? (
           <div className="space-y-3">
             <div className="rounded-md border border-[var(--border-1)] p-3">
-              <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">Código y publicación</p>
-              <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[10px]">
+              <p className="font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">Código y publicación</p>
+              <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
                 <dt className="text-[var(--fg-muted)]">Estado</dt><dd className="truncate text-right">{data.project.status}</dd>
                 <dt className="text-[var(--fg-muted)]">Repositorio principal</dt><dd className="truncate text-right">{data.project.github_repo || "Sin enlazar"}</dd>
                 <dt className="text-[var(--fg-muted)]">Rama</dt><dd className="truncate text-right">{data.project.github_default_branch || "—"}</dd>
@@ -284,14 +284,14 @@ export function ProjectContextPanel({
               </dl>
               {data.repositories?.length ? (
                 <div className="mt-3 border-t border-[var(--border-1)] pt-2">
-                  <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+                  <p className="font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
                     Grupo · {data.repositories.length} repositorios
                   </p>
                   <div className="mt-2 space-y-1.5">
                     {data.repositories.map((repository) => (
-                      <div key={repository.repo_full_name} className="flex items-center justify-between gap-3 text-[9px]">
+                      <div key={repository.repo_full_name} className="flex items-center justify-between gap-3 text-[12px]">
                         <span className="truncate">{repository.repo_full_name}</span>
-                        <span className="shrink-0 font-mono text-[7px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
+                        <span className="shrink-0 font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
                           {repository.role}{repository.is_primary ? " · principal" : ""}
                         </span>
                       </div>
@@ -301,22 +301,22 @@ export function ProjectContextPanel({
               ) : null}
             </div>
             <div className="rounded-md border border-[var(--border-1)] p-3">
-              <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">Integraciones reales</p>
+              <p className="font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">Integraciones reales</p>
               <div className="mt-2 space-y-2">
                 {data.integrations.length ? data.integrations.map((integration) => (
-                  <div key={`${integration.kind}-${integration.label}`} className="flex items-center justify-between gap-3 text-[10px]">
+                  <div key={`${integration.kind}-${integration.label}`} className="flex items-center justify-between gap-3 text-[12px]">
                     <span className="truncate">{integration.label || integration.kind}</span>
-                    <span className="flex shrink-0 items-center gap-1 font-mono text-[8px] uppercase tracking-[0.08em]"><span className="status-shape" data-active={integration.status === "connected" || integration.status === "active"} />{integration.status}</span>
+                    <span className="flex shrink-0 items-center gap-1 font-mono text-[12px] uppercase tracking-[0.08em]"><span className="status-shape" data-active={integration.status === "connected" || integration.status === "active"} />{integration.status}</span>
                   </div>
-                )) : <p className="text-[10px] text-[var(--fg-muted)]">Sin integraciones registradas.</p>}
+                )) : <p className="text-[12px] text-[var(--fg-muted)]">Sin integraciones registradas.</p>}
               </div>
             </div>
           </div>
         ) : tab === "content" ? (
           <div>
             <div className="flex items-center justify-between gap-2">
-              <p className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]"><IconCode size={10} /> Contexto total de la app</p>
-              <span className="font-mono text-[8px] text-[var(--fg-muted)]">{content.length}/100000</span>
+              <p className="flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-muted)]"><IconCode size={10} /> Contexto total de la app</p>
+              <span className="font-mono text-[12px] text-[var(--fg-muted)]">{content.length}/100000</span>
             </div>
             <textarea
               value={content}
@@ -325,18 +325,18 @@ export function ProjectContextPanel({
               maxLength={100_000}
               rows={focused ? 22 : 9}
               placeholder="# Producto\n\nObjetivo, usuarios, reglas, flujos, tono, pendientes y decisiones…"
-              className="mt-2 w-full resize-y rounded-md border border-[var(--border-1)] bg-white px-3 py-2 font-mono text-[10px] leading-5 text-black focus:border-black read-only:bg-[var(--color-background)]"
+              className="mt-2 w-full resize-y rounded-md border border-[var(--border-1)] bg-white px-3 py-2 font-mono text-[12px] leading-5 text-black focus:border-black read-only:bg-[var(--color-background)]"
             />
             {data.me.canWrite ? (
               <button type="button" onClick={() => void saveContent()} disabled={busy} className="btn-primary mt-2 w-full disabled:opacity-40">
                 {busy ? <IconLoader size={12} className="animate-spin" /> : <IconCheck size={12} />} Guardar CONTENIDO.md
               </button>
-            ) : <p className="mt-2 text-[10px] text-[var(--fg-muted)]">Disponible en modo lectura para tu rol.</p>}
-            {data.document.updated_at ? <p className="mt-2 text-[9px] text-[var(--fg-muted)]">Última edición: {data.document.updated_by || "miembro del proyecto"}</p> : null}
+            ) : <p className="mt-2 text-[12px] text-[var(--fg-muted)]">Disponible en modo lectura para tu rol.</p>}
+            {data.document.updated_at ? <p className="mt-2 text-[12px] text-[var(--fg-muted)]">Última edición: {data.document.updated_by || "miembro del proyecto"}</p> : null}
           </div>
         ) : tab === "visors" ? (
           <div>
-            <p className="text-[10px] leading-4 text-[var(--fg-muted)]">
+            <p className="text-[12px] leading-4 text-[var(--fg-muted)]">
               Escritorio, Móvil y Admin. Quedan como documentos. El MCP las ve con vforge_project_context.
             </p>
             {data.me.canWrite ? (
@@ -378,7 +378,7 @@ export function ProjectContextPanel({
                       alt={visor.note || visor.viewport || "visor"}
                       className="w-full object-contain object-top"
                     />
-                    <figcaption className="flex items-center justify-between gap-2 px-2 py-1.5 font-mono text-[8px] uppercase tracking-[0.08em]">
+                    <figcaption className="flex items-center justify-between gap-2 px-2 py-1.5 font-mono text-[12px] uppercase tracking-[0.08em]">
                       <span>{visor.viewport || visor.note}</span>
                       <span className="truncate text-[var(--fg-muted)]">{visor.url}</span>
                     </figcaption>
@@ -386,12 +386,12 @@ export function ProjectContextPanel({
                 ))}
               </div>
             ) : (
-              <p className="mt-3 text-[10px] text-[var(--fg-muted)]">Aún no hay fotos de visor.</p>
+              <p className="mt-3 text-[12px] text-[var(--fg-muted)]">Aún no hay fotos de visor.</p>
             )}
           </div>
         ) : (
           <div>
-            <p className="text-[10px] leading-4 text-[var(--fg-muted)]">
+            <p className="text-[12px] leading-4 text-[var(--fg-muted)]">
               Exporta el chat de WhatsApp (sin incluir toda la galería si pesa más de 50 MB). VForge lee el texto y guarda el ZIP.
             </p>
             {data.me.canWrite ? (
@@ -415,7 +415,7 @@ export function ProjectContextPanel({
                   {busy ? <IconLoader size={12} className="animate-spin" /> : <IconUpload size={12} />}
                   {progress == null ? "Subir ZIP de WhatsApp" : `${progress}%`}
                 </button>
-                <p className="mt-2 text-center font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
+                <p className="mt-2 text-center font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">
                   o suéltalo aquí
                 </p>
               </div>
@@ -426,19 +426,19 @@ export function ProjectContextPanel({
                 <div key={asset.id} className="flex items-center gap-2 rounded-md border border-[var(--border-1)] p-2.5">
                   <IconFile size={12} className="shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[10px] font-medium">{asset.filename}</p>
-                    <p className="font-mono text-[8px] text-[var(--fg-muted)]">{humanBytes(asset.size_bytes)} · texto {humanBytes(asset.extracted_text_bytes)}</p>
+                    <p className="truncate text-[12px] font-medium">{asset.filename}</p>
+                    <p className="font-mono text-[12px] text-[var(--fg-muted)]">{humanBytes(asset.size_bytes)} · texto {humanBytes(asset.extracted_text_bytes)}</p>
                   </div>
                   <a href={`/api/live/${encodedProjectId}/assets/${encodeURIComponent(asset.id)}/download`} className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[var(--border-1)]" aria-label={`Descargar ${asset.filename}`} title="Descargar ZIP"><IconDownload size={12} /></a>
                 </div>
-              )) : <p className="rounded-md border border-dashed border-[var(--border-1)] p-3 text-[10px] text-[var(--fg-muted)]">Aún no hay conversaciones cargadas.</p>}
+              )) : <p className="rounded-md border border-dashed border-[var(--border-1)] p-3 text-[12px] text-[var(--fg-muted)]">Aún no hay conversaciones cargadas.</p>}
             </div>
           </div>
         )}
       </div>
 
-      {notice ? <p className="mt-2 text-[10px] text-black">{notice}</p> : null}
-      {error ? <p className="mt-2 text-[10px] text-black">{error}</p> : null}
+      {notice ? <p className="mt-2 text-[12px] text-black">{notice}</p> : null}
+      {error ? <p className="mt-2 text-[12px] text-black">{error}</p> : null}
     </section>
   );
 }

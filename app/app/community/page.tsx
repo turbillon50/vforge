@@ -81,21 +81,21 @@ export default function CommunityPage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] font-mono text-[10px] uppercase text-[var(--fg-secondary)]">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] font-mono text-[12px] uppercase text-[var(--fg-secondary)]">
                         {p.platform.slice(0, 2)}
                       </span>
                       <div className="min-w-0">
                         <p className="font-display text-[13px] font-semibold capitalize text-[var(--fg-primary)]">{p.platform}</p>
-                        {p.created_by && <p className="truncate font-mono text-[10px] text-[var(--fg-muted)]">{p.created_by}</p>}
+                        {p.created_by && <p className="truncate font-mono text-[12px] text-[var(--fg-muted)]">{p.created_by}</p>}
                       </div>
                     </div>
-                    <span className="flex shrink-0 items-center gap-1.5 font-mono text-[10px]" style={{ color: tone.color }}>
+                    <span className="flex shrink-0 items-center gap-1.5 font-mono text-[12px]" style={{ color: tone.color }}>
                       {p.status === "published" ? <IconCheck size={11} /> : <IconActivity size={11} />}
                       {tone.label}
                     </span>
                   </div>
                   <p className="mt-2.5 whitespace-pre-wrap text-[13px] leading-relaxed text-[var(--fg-secondary)]">{p.content}</p>
-                  <p className="mt-2 font-mono text-[10px] text-[var(--fg-muted)]">{timeAgo(p.scheduled_at)}</p>
+                  <p className="mt-2 font-mono text-[12px] text-[var(--fg-muted)]">{timeAgo(p.scheduled_at)}</p>
                 </li>
               );
             })}

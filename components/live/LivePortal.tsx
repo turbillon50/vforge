@@ -310,7 +310,7 @@ export function LivePortal({
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            <span className="hidden rounded-full border border-black px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.12em] sm:inline-flex">
+            <span className="hidden rounded-full border border-black px-3 py-1.5 font-mono text-[12px] uppercase tracking-[0.12em] sm:inline-flex">
               {ROLE_LABEL[me.role]}
             </span>
             {canInvite ? (
@@ -544,7 +544,7 @@ function LiveWorkspace({
               key={preset}
               type="button"
               onClick={() => applyPreset(preset)}
-              className="rounded-md border border-transparent px-2.5 py-2 font-mono text-[8px] uppercase tracking-[0.1em] hover:border-black"
+              className="rounded-md border border-transparent px-2.5 py-2 font-mono text-[12px] uppercase tracking-[0.1em] hover:border-black"
             >
               {preset === "balanced" ? "Balance" : preset === "previews" ? "Previews" : "Revisión"}
             </button>
@@ -560,7 +560,7 @@ function LiveWorkspace({
                 onClick={() => focusAction(panel)}
                 aria-pressed={visible}
                 className={cn(
-                  "rounded-md border px-2.5 py-2 font-mono text-[8px] uppercase tracking-[0.1em]",
+                  "rounded-md border px-2.5 py-2 font-mono text-[12px] uppercase tracking-[0.1em]",
                   visible ? "border-black bg-black text-white" : "border-[var(--border-1)] bg-white text-black",
                 )}
               >
@@ -579,7 +579,7 @@ function LiveWorkspace({
                 onClick={() => togglePanel(panel, panelHandles[panel])}
                 aria-pressed={visible}
                 className={cn(
-                  "rounded-md border px-2.5 py-2 font-mono text-[8px] uppercase tracking-[0.1em]",
+                  "rounded-md border px-2.5 py-2 font-mono text-[12px] uppercase tracking-[0.1em]",
                   visible ? "border-black bg-black text-white" : "border-[var(--border-1)] bg-white text-black",
                 )}
               >
@@ -588,7 +588,7 @@ function LiveWorkspace({
             );
           })}
         </div>
-        <p className="ml-auto hidden shrink-0 px-2 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)] lg:block">
+        <p className="ml-auto hidden shrink-0 px-2 font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-muted)] lg:block">
           Clic en un módulo para expandirlo · doble clic restaura
         </p>
       </div>
@@ -680,7 +680,7 @@ function DockSeparator({ horizontal }: { horizontal: boolean }) {
 
 function CollapsedDockPanel({ label, vertical, onRestore }: { label: string; vertical: boolean; onRestore: () => void }) {
   return (
-    <button type="button" onClick={onRestore} className="flex h-full w-full items-center justify-center gap-2 bg-white font-mono text-[8px] uppercase tracking-[0.12em] hover:bg-[#f7f7f5]" aria-label={`Restaurar ${label}`} title={`Restaurar ${label}`}>
+    <button type="button" onClick={onRestore} className="flex h-full w-full items-center justify-center gap-2 bg-white font-mono text-[12px] uppercase tracking-[0.12em] hover:bg-[#f7f7f5]" aria-label={`Restaurar ${label}`} title={`Restaurar ${label}`}>
       <IconLayout size={11} />
       <span className={cn(vertical && "[writing-mode:vertical-rl]")}>{label}</span>
     </button>
@@ -731,7 +731,7 @@ function LiveSidebar({
     <div className="flex h-full flex-col">
       <div className="border-b border-[var(--border-1)] px-5 py-5">
         <VWordmark />
-        <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.17em] text-[var(--fg-muted)]">
+        <p className="mt-2 font-mono text-[12px] uppercase tracking-[0.17em] text-[var(--fg-muted)]">
           Live control room
         </p>
       </div>
@@ -739,14 +739,14 @@ function LiveSidebar({
       <div className="px-4 py-5">
         <Link
           href={me.isPlatformOwner ? "/app/projects" : "/workspace"}
-          className="inline-flex items-center gap-2 text-[11px] text-[var(--fg-muted)] hover:text-black"
+          className="inline-flex items-center gap-2 text-[12px] text-[var(--fg-muted)] hover:text-black"
         >
           <IconArrowL size={12} /> Proyectos
         </Link>
 
         <div className="mt-7 border-l-2 border-black pl-3">
           <p className="text-[13px] font-medium leading-5 text-black">{project.name}</p>
-          <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.13em] text-[var(--fg-muted)]">
+          <p className="mt-1 font-mono text-[12px] uppercase tracking-[0.13em] text-[var(--fg-muted)]">
             {ROLE_LABEL[me.role]}
           </p>
         </div>
@@ -758,7 +758,7 @@ function LiveSidebar({
           {views.map((view) => (
             <div
               key={view.label}
-              className="flex items-center justify-between rounded-md px-2 py-2 text-[11px]"
+              className="flex items-center justify-between rounded-md px-2 py-2 text-[12px]"
             >
               <span>{view.label}</span>
               <span
@@ -773,8 +773,8 @@ function LiveSidebar({
 
       <div className="mt-auto border-t border-[var(--border-1)] px-5 py-5">
         <p className="mono-label">Estado del proyecto</p>
-        <p className="mt-2 break-words text-[11px] text-black">{project.status}</p>
-        <p className="mt-4 text-[9px] leading-4 text-[var(--fg-muted)]">
+        <p className="mt-2 break-words text-[12px] text-black">{project.status}</p>
+        <p className="mt-4 text-[12px] leading-4 text-[var(--fg-muted)]">
           La sala sólo muestra URLs y eventos autorizados para este proyecto.
         </p>
       </div>
@@ -950,10 +950,10 @@ function Viewport({
       >
         <div className="flex items-center gap-2">
           {kind === "admin" ? <IconShield size={12} /> : <IconLayout size={12} />}
-          <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+          <span className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
             {title}
           </span>
-          <span className="hidden font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)] sm:inline">
+          <span className="hidden font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--fg-muted)] sm:inline">
             {spec.label} · {scaleLabel}
           </span>
         </div>
@@ -964,7 +964,7 @@ function Viewport({
               type="button"
               onClick={() => setPinMode((value) => !value)}
               className={cn(
-                "inline-flex h-7 items-center gap-1 rounded-md border px-2 font-mono text-[8px] uppercase tracking-[0.08em]",
+                "inline-flex h-7 items-center gap-1 rounded-md border px-2 font-mono text-[12px] uppercase tracking-[0.08em]",
                 pinMode ? "border-black bg-black text-white" : "border-[var(--border-1)] hover:border-black",
               )}
               aria-pressed={pinMode}
@@ -1088,7 +1088,7 @@ function Viewport({
             <p className="text-[12px] font-medium text-black">
               Sin URL para {title.toLowerCase()}
             </p>
-            <p className="mt-2 max-w-xs text-[10px] leading-4 text-[var(--fg-muted)]">
+            <p className="mt-2 max-w-xs text-[12px] leading-4 text-[var(--fg-muted)]">
               {kind === "admin"
                 ? "Configura la URL del panel administrativo del proyecto. La vista pública no se usará como sustituto."
                 : "Esta vista aparecerá cuando el proyecto tenga una URL autorizada."}
@@ -1118,7 +1118,7 @@ function ReviewMarker({
   const position = anchorViewportPosition(anchor, bridge);
   if (!position.visible) return null;
   const className = cn(
-    "absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 font-mono text-[10px] shadow-lg",
+    "absolute grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 font-mono text-[12px] shadow-lg",
     saved
       ? "pointer-events-auto border-white bg-black text-white"
       : "border-black bg-white text-black",
@@ -1254,7 +1254,7 @@ function ActivityFeed({
           <h2 className="text-[12px] font-medium">Actividad en vivo</h2>
         </div>
         <div className="flex items-center gap-1">
-          <span className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+          <span className="flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
             <span
               className="status-shape"
               data-active={streamState === "live"}
@@ -1271,9 +1271,9 @@ function ActivityFeed({
           <IconLoader size={14} className="animate-spin" />
         </div>
       ) : error ? (
-        <p className="mt-5 border-l border-black pl-3 text-[11px] leading-5">{error}</p>
+        <p className="mt-5 border-l border-black pl-3 text-[12px] leading-5">{error}</p>
       ) : events.length === 0 ? (
-        <p className="mt-5 border-l border-[var(--border-1)] pl-3 text-[11px] leading-5 text-[var(--fg-muted)]">
+        <p className="mt-5 border-l border-[var(--border-1)] pl-3 text-[12px] leading-5 text-[var(--fg-muted)]">
           Aún no hay eventos registrados para este proyecto.
         </p>
       ) : (
@@ -1281,17 +1281,17 @@ function ActivityFeed({
           {events.map((event) => (
             <article key={event.id} className="border-l border-black/20 pl-3">
               <div className="flex items-start justify-between gap-2">
-                <p className="break-words text-[11px] font-medium text-black">
+                <p className="break-words text-[12px] font-medium text-black">
                   {event.event_type}
                 </p>
                 <span className="mt-1 status-shape shrink-0" data-active={event.severity === "critical"} />
               </div>
               {typeof event.details?.message === "string" ? (
-                <p className="mt-1 break-words text-[10px] leading-4 text-[var(--fg-muted)]">
+                <p className="mt-1 break-words text-[12px] leading-4 text-[var(--fg-muted)]">
                   {event.details.message}
                 </p>
               ) : null}
-              <p className="mt-1 font-mono text-[8px] text-[var(--fg-muted)]">
+              <p className="mt-1 font-mono text-[12px] text-[var(--fg-muted)]">
                 {timeAgo(event.ts)}
               </p>
             </article>

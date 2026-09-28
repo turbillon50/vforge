@@ -55,21 +55,50 @@ const ECOSYSTEM = [
   { name: "Goossip", url: "#", desc: "Agencia de marketing creativo 100% potenciada por IA. Campanas, branding y presencia digital." },
 ];
 
+/** El mismo correo que ya usan el aviso sin JavaScript y el resto del pie. */
+const CONTACTO = "luisdelator@vmomentums.info";
+
 function ContactForm({ type }: { type: "partners" | "asociados" }) {
   const [sent, setSent] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
 
+  const isPartner = type === "partners";
+
+  // Antes esto sólo hacía setSent(true) y decía "Mensaje recibido. Te contactamos
+  // pronto." sin una sola petición de red: el mensaje se perdía y la promesa era
+  // falsa (SANIDAD §0.2: toda acción tiene una consecuencia observable). No hay
+  // endpoint público de contacto, así que el envío se hace por correo, que sí
+  // llega. [LUIS]: si quieres un formulario con backend propio, se construye.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const asunto = isPartner
+      ? `VForge · Partner: ${name}`
+      : `VForge · Asociado: ${name}`;
+    const cuerpo = [
+      isPartner ? `Empresa o proyecto: ${name}` : `Nombre: ${name}`,
+      `Correo: ${email}`,
+      "",
+      message,
+    ].join("\n");
+    window.location.href =
+      `mailto:${CONTACTO}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
     setSent(true);
   };
 
-  const isPartner = type === "partners";
-
   if (sent) {
-    return <div style={{ padding:"24px", textAlign:"center", color:"#60a5fa", fontSize:14 }}>Mensaje recibido. Te contactamos pronto.</div>;
+    return (
+      <div style={{ padding: "24px", textAlign: "center", color: "#cbd5e1", fontSize: 14 }}>
+        <p>Te abrimos tu app de correo con el mensaje listo para enviar.</p>
+        <p style={{ marginTop: 8, color: "#94a3b8" }}>
+          Si no se abrió, escríbenos a{" "}
+          <a href={`mailto:${CONTACTO}`} style={{ color: "#e2e8f0", textDecoration: "underline" }}>
+            {CONTACTO}
+          </a>
+        </p>
+      </div>
+    );
   }
 
   const inputStyle = { background:"rgba(15,23,42,0.8)", border:"1px solid rgba(59, 130, 246, 0.12)", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#e2e8f0", outline:"none", width:"100%", boxSizing:"border-box" as const };

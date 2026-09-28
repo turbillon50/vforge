@@ -101,7 +101,7 @@ function Sidebar({
   return (
     <div className="flex h-full flex-col bg-white">
       <div className="border-b border-[var(--border-1)] px-5 py-5">
-        <Link href="/app/chat" onClick={onNavigate} aria-label="VForge, estudio">
+        <Link href="/app/chat" onClick={onNavigate} aria-label="VForge, estudio" className="inline-flex min-h-11 items-center">
           <VWordmark />
         </Link>
         <p className="mt-2 font-mono text-label-caps uppercase text-[var(--fg-muted)]">
@@ -146,14 +146,14 @@ function Sidebar({
         <Link
           href="/app/settings"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-body-sm text-[var(--fg-secondary)] transition duration-200 ease-out hover:bg-[#f2f2f0] hover:text-black"
+          className="flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-body-sm text-[var(--fg-secondary)] transition duration-200 ease-out hover:bg-[#f2f2f0] hover:text-black"
         >
           <IconSettings size={14} /> Configuración
         </Link>
         <Link
           href="/"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-body-sm text-[var(--fg-secondary)] transition duration-200 ease-out hover:bg-[#f2f2f0] hover:text-black"
+          className="flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-body-sm text-[var(--fg-secondary)] transition duration-200 ease-out hover:bg-[#f2f2f0] hover:text-black"
         >
           <IconHome size={14} /> Volver al sitio
         </Link>
@@ -217,7 +217,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
-                className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-md border border-[var(--border-1)] bg-white"
+                className="absolute right-3 top-3 z-10 grid h-11 w-11 place-items-center rounded-md border border-[var(--border-1)] bg-white"
                 aria-label="Cerrar menú"
               >
                 <IconX size={14} />
@@ -244,7 +244,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => setDrawerOpen(true)}
-                  className="grid h-9 w-9 place-items-center rounded-md border border-[var(--border-1)] md:hidden"
+                  className="grid h-11 w-11 place-items-center rounded-md border border-[var(--border-1)] md:hidden"
                   aria-label="Abrir menú"
                 >
                   <IconMenu size={16} />

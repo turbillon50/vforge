@@ -281,7 +281,7 @@ export function CommentsPanel({
           <h2 className="text-[12px] font-medium">Comentarios</h2>
         </div>
         <div className="flex items-center gap-1">
-          <button type="button" onClick={() => setPromptOpen((v) => !v)} disabled={comments.length === 0} className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 font-mono text-[8px] uppercase tracking-[0.08em] hover:bg-[#f2f2f0] disabled:opacity-35" aria-expanded={promptOpen}>
+          <button type="button" onClick={() => setPromptOpen((v) => !v)} disabled={comments.length === 0} className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 font-mono text-[12px] uppercase tracking-[0.08em] hover:bg-[#f2f2f0] disabled:opacity-35" aria-expanded={promptOpen}>
             <IconSparkles size={11} /> Prompt
           </button>
           {onMinimize ? <MinimizeButton onClick={onMinimize} label="comentarios" /> : null}
@@ -296,7 +296,7 @@ export function CommentsPanel({
             type="button"
             onClick={() => setFilter(f)}
             className={cn(
-              "rounded-md border px-2 py-1 font-mono text-[8px] uppercase tracking-[0.08em]",
+              "rounded-md border px-2 py-1 font-mono text-[12px] uppercase tracking-[0.08em]",
               filter === f ? "border-black bg-black text-white" : "border-[var(--border-1)]",
             )}
           >
@@ -326,18 +326,18 @@ export function CommentsPanel({
         </button>
       </div>
 
-      {error ? <p className="mt-3 text-[10px] leading-4 text-black">{error}</p> : null}
+      {error ? <p className="mt-3 text-[12px] leading-4 text-black">{error}</p> : null}
 
       {promptOpen && (draftPrompt || promptText) ? (
         <div className="mt-4 rounded-md border border-black bg-[#f7f7f5] p-3">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[11px] font-medium text-black">{draftPrompt ? "Prompt de este comentario" : "Prompt de mejora"}</p>
+            <p className="text-[12px] font-medium text-black">{draftPrompt ? "Prompt de este comentario" : "Prompt de mejora"}</p>
             <button type="button" onClick={() => void copyPrompt(draftPrompt ?? undefined)} className="btn-secondary !min-h-8 !px-2.5">
               {copied ? <IconCheck size={11} /> : <IconCopy size={11} />}
               {copied ? "Copiado" : "Copiar"}
             </button>
           </div>
-          <textarea readOnly value={draftPrompt ?? promptText} rows={8} className="mt-3 w-full resize-y rounded-md border border-[var(--border-1)] bg-white px-3 py-2 font-mono text-[9px] leading-4 text-black" />
+          <textarea readOnly value={draftPrompt ?? promptText} rows={8} className="mt-3 w-full resize-y rounded-md border border-[var(--border-1)] bg-white px-3 py-2 font-mono text-[12px] leading-4 text-black" />
         </div>
       ) : null}
 
@@ -345,7 +345,7 @@ export function CommentsPanel({
         {!loaded ? (
           <div className="grid min-h-20 place-items-center"><IconLoader size={13} className="animate-spin" /></div>
         ) : visible.length === 0 ? (
-          <p className="text-[11px] leading-5 text-[var(--fg-muted)]">No hay comentarios en este filtro.</p>
+          <p className="text-[12px] leading-5 text-[var(--fg-muted)]">No hay comentarios en este filtro.</p>
         ) : (
           visible.map((comment) => {
             const system = isSystem(comment);
@@ -362,32 +362,32 @@ export function CommentsPanel({
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+                    <p className="font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
                       {system ? "Sistema" : resolved ? "Resuelto" : taskId ? "En cola" : "Feedback"}
                     </p>
-                    <p className="truncate text-[10px] font-medium text-black">{comment.author_name ?? comment.author_email}</p>
+                    <p className="truncate text-[12px] font-medium text-black">{comment.author_name ?? comment.author_email}</p>
                   </div>
-                  <span className="shrink-0 font-mono text-[8px] text-[var(--fg-muted)]">{timeAgo(comment.created_at)}</span>
+                  <span className="shrink-0 font-mono text-[12px] text-[var(--fg-muted)]">{timeAgo(comment.created_at)}</span>
                 </div>
-                <p className="mt-2 whitespace-pre-wrap break-words text-[11px] leading-5 text-[var(--fg-secondary)]">{comment.body}</p>
+                <p className="mt-2 whitespace-pre-wrap break-words text-[12px] leading-5 text-[var(--fg-secondary)]">{comment.body}</p>
                 {comment.anchor ? (
-                  <a href={comment.anchor.url} target="_blank" rel="noreferrer" className="mt-2 inline-flex max-w-full items-center rounded-md border border-black px-2 py-1 font-mono text-[8px] uppercase tracking-[0.08em] hover:bg-black hover:text-white">
+                  <a href={comment.anchor.url} target="_blank" rel="noreferrer" className="mt-2 inline-flex max-w-full items-center rounded-md border border-black px-2 py-1 font-mono text-[12px] uppercase tracking-[0.08em] hover:bg-black hover:text-white">
                     <span className="truncate">{comment.anchor.label}</span>
                   </a>
                 ) : null}
                 {!system && canAccept ? (
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    <button type="button" onClick={() => proposeOne(comment)} className="inline-flex h-7 items-center gap-1 rounded-md border border-[var(--border-1)] bg-white px-2 font-mono text-[8px] uppercase tracking-[0.08em] hover:border-black">
+                    <button type="button" onClick={() => proposeOne(comment)} className="inline-flex h-7 items-center gap-1 rounded-md border border-[var(--border-1)] bg-white px-2 font-mono text-[12px] uppercase tracking-[0.08em] hover:border-black">
                       <IconSparkles size={10} /> Prompt
                     </button>
-                    <button type="button" disabled={!!acceptingId || !!taskId || resolved} onClick={() => void acceptOne(comment, false)} className="inline-flex h-7 items-center gap-1 rounded-md border border-black bg-white px-2 font-mono text-[8px] uppercase tracking-[0.08em] disabled:opacity-40">
+                    <button type="button" disabled={!!acceptingId || !!taskId || resolved} onClick={() => void acceptOne(comment, false)} className="inline-flex h-7 items-center gap-1 rounded-md border border-black bg-white px-2 font-mono text-[12px] uppercase tracking-[0.08em] disabled:opacity-40">
                       {acceptingId === comment.id ? <IconLoader size={10} className="animate-spin" /> : <IconCheck size={10} />}
                       {taskId ? "En cola" : "Aceptar"}
                     </button>
-                    <button type="button" disabled={!!acceptingId || resolved} onClick={() => void acceptOne(comment, true)} className="inline-flex h-7 items-center gap-1 rounded-md bg-black px-2 font-mono text-[8px] uppercase tracking-[0.08em] text-white disabled:opacity-40">
+                    <button type="button" disabled={!!acceptingId || resolved} onClick={() => void acceptOne(comment, true)} className="inline-flex h-7 items-center gap-1 rounded-md bg-black px-2 font-mono text-[12px] uppercase tracking-[0.08em] text-white disabled:opacity-40">
                       Aceptar → Estudio
                     </button>
-                    <button type="button" disabled={resolved || !!taskId} onClick={() => void resolveOne(comment)} className="inline-flex h-7 items-center gap-1 rounded-md border border-[var(--border-1)] px-2 font-mono text-[8px] uppercase tracking-[0.08em] disabled:opacity-40">
+                    <button type="button" disabled={resolved || !!taskId} onClick={() => void resolveOne(comment)} className="inline-flex h-7 items-center gap-1 rounded-md border border-[var(--border-1)] px-2 font-mono text-[12px] uppercase tracking-[0.08em] disabled:opacity-40">
                       Resuelto
                     </button>
                   </div>
@@ -398,7 +398,7 @@ export function CommentsPanel({
         )}
       </div>
 
-      <p className="mt-4 flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+      <p className="mt-4 flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
         <IconCheck size={10} /> {canAccept ? "Owner: aceptar → cola + Estudio" : "Sólo miembros del proyecto"}
       </p>
     </section>

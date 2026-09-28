@@ -79,7 +79,7 @@ export function AgentFabricPanel() {
       detail: fabric?.mcp?.configured ? fabric.mcp.endpoint || "/api/mcp" : "No disponible",
       active: fabric?.mcp?.configured === true,
       Icon: IconKey,
-      action: <Link href="/app/settings" className="text-[10px] underline underline-offset-4">Gestionar tokens</Link>,
+      action: <Link href="/app/settings" className="inline-flex min-h-11 items-center text-[12px] underline underline-offset-4">Gestionar tokens</Link>,
     },
     {
       id: "metamcp",
@@ -90,7 +90,7 @@ export function AgentFabricPanel() {
       detail: ojoLive === null ? "Comprobando" : ojoLive ? "En línea" : "Sin respuesta",
       active: ojoLive === true && fabric?.metamcp?.configured === true,
       Icon: IconWifi,
-      action: <Link href="/app/activity" className="text-[10px] underline underline-offset-4">Ver actividad</Link>,
+      action: <Link href="/app/activity" className="inline-flex min-h-11 items-center text-[12px] underline underline-offset-4">Ver actividad</Link>,
     },
     {
       id: "models",
@@ -101,7 +101,7 @@ export function AgentFabricPanel() {
       detail: modelCount > 0 ? `${modelCount} modelos registrados` : "Router configurado",
       active: fabric?.models?.configured === true,
       Icon: IconBrain,
-      action: <Link href="/app/chat" className="text-[10px] underline underline-offset-4">Abrir estudio</Link>,
+      action: <Link href="/app/chat" className="inline-flex min-h-11 items-center text-[12px] underline underline-offset-4">Abrir estudio</Link>,
     },
     {
       id: "composio",
@@ -115,7 +115,7 @@ export function AgentFabricPanel() {
       active: fabric?.composio?.configured === true,
       Icon: IconGlobe,
       action: (
-        <span className="text-[9px] leading-4 text-[var(--vf-fg-2)]">
+        <span className="text-[12px] leading-4 text-[var(--vf-fg-2)]">
           {fabric?.composio?.configured ? "Listo para crear sesiones" : "No se simula una conexión inexistente"}
         </span>
       ),
@@ -135,7 +135,7 @@ export function AgentFabricPanel() {
           type="button"
           onClick={() => void load()}
           disabled={loading}
-          className="grid h-9 w-9 place-items-center rounded-md border border-[var(--vf-border)]"
+          className="grid h-11 w-11 place-items-center rounded-md border border-[var(--vf-border)]"
           aria-label="Actualizar tela de agentes"
         >
           {loading ? <IconLoader size={12} className="animate-spin" /> : <IconRefresh size={12} />}
@@ -149,17 +149,17 @@ export function AgentFabricPanel() {
               <span className="grid h-9 w-9 place-items-center border border-[var(--vf-fg)]">
                 <Icon size={15} />
               </span>
-              <span className="inline-flex items-center gap-1.5 font-mono text-[7px] uppercase tracking-[0.12em]">
+              <span className="inline-flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.12em]">
                 {active ? <IconCheck size={10} /> : null}
                 <span className="status-shape" data-active={active} />
                 {active ? "Activo" : "Pendiente"}
               </span>
             </div>
-            <p className="mt-5 font-mono text-[7px] uppercase tracking-[0.14em] text-[var(--vf-fg-2)]">{eyebrow}</p>
+            <p className="mt-5 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--vf-fg-2)]">{eyebrow}</p>
             <h2 className="mt-2 text-[15px] font-medium">{name}</h2>
-            <p className="mt-2 text-[10px] leading-5 text-[var(--vf-fg-2)]">{description}</p>
+            <p className="mt-2 text-[12px] leading-5 text-[var(--vf-fg-2)]">{description}</p>
             <div className="mt-auto border-t border-[var(--vf-border)] pt-4">
-              <p className="mb-2 truncate font-mono text-[8px] uppercase tracking-[0.09em] text-[var(--vf-fg-1)]">{detail}</p>
+              <p className="mb-2 truncate font-mono text-[12px] uppercase tracking-[0.09em] text-[var(--vf-fg-1)]">{detail}</p>
               {action}
             </div>
           </article>

@@ -43,8 +43,8 @@ function Widget({ title, href, children }: { title: string; href: string; childr
       style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}
     >
       <div className="mb-4 flex items-center justify-between">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.46)" }}>{title}</p>
-        <Link href={href} className="text-[11px] transition-colors" style={{ color: "rgba(124,58,237,0.8)" }}
+        <p className="font-mono text-[12px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.46)" }}>{title}</p>
+        <Link href={href} className="text-[12px] transition-colors" style={{ color: "rgba(124,58,237,0.8)" }}
           onMouseEnter={e => (e.currentTarget.style.color = "rgba(167,139,250,1)")}
           onMouseLeave={e => (e.currentTarget.style.color = "rgba(124,58,237,0.8)")}>
           Ver todo →
@@ -94,7 +94,7 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
           <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Empieza aquí</p>
           <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.58)" }}>Tres pasos para tener tu primera app viva.</p>
         </div>
-        <span className="font-mono text-[11px]" style={{ color: "rgba(255,255,255,0.58)" }}>{doneCount}/3</span>
+        <span className="font-mono text-[12px]" style={{ color: "rgba(255,255,255,0.58)" }}>{doneCount}/3</span>
       </div>
       <div className="mb-5 h-1 w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
         <div className="h-full rounded-full" style={{ width: `${(doneCount / 3) * 100}%`, background: "linear-gradient(90deg,#7c3aed,#a78bfa)", transition: "width .6s ease" }} />
@@ -105,14 +105,14 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
             style={{ background: st.done ? "rgba(124,58,237,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${st.done ? "rgba(124,58,237,0.25)" : "rgba(255,255,255,0.08)"}` }}>
             <div className="mb-2 flex h-6 w-6 items-center justify-center rounded-full"
               style={{ background: st.done ? "rgba(124,58,237,0.9)" : "rgba(255,255,255,0.06)", color: "#fff" }}>
-              {st.done ? <IconCheck size={13} /> : <span className="text-[11px] font-semibold">{i + 1}</span>}
+              {st.done ? <IconCheck size={13} /> : <span className="text-[12px] font-semibold">{i + 1}</span>}
             </div>
             <p className="text-[13px] font-medium" style={{ color: "#fff" }}>{st.title}</p>
-            <p className="mt-0.5 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.58)" }}>{st.desc}</p>
+            <p className="mt-0.5 text-[12px] leading-snug" style={{ color: "rgba(255,255,255,0.58)" }}>{st.desc}</p>
             {!st.done
               ? <Link href={st.href} className="mt-3 inline-block rounded-full px-4 py-1.5 text-[12px] font-medium" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>{st.cta} →</Link>
-              : <p className="mt-3 flex items-center gap-1 text-[11px] font-medium" style={{ color: "#9aa0aa" }}><IconCheck size={12} /> Listo</p>}
-            <button onClick={() => window.dispatchEvent(new CustomEvent("vforge:open-v", { detail: { prompt: st.vq } }))} className="mt-2 text-[11px] transition-colors" style={{ color: "rgba(167,139,250,0.85)" }}>Pregúntale a V &rarr;</button>
+              : <p className="mt-3 flex items-center gap-1 text-[12px] font-medium" style={{ color: "#9aa0aa" }}><IconCheck size={12} /> Listo</p>}
+            <button onClick={() => window.dispatchEvent(new CustomEvent("vforge:open-v", { detail: { prompt: st.vq } }))} className="mt-2 text-[12px] transition-colors" style={{ color: "rgba(167,139,250,0.85)" }}>Pregúntale a V &rarr;</button>
           </div>
         ))}
       </div>
@@ -130,7 +130,7 @@ function Showcase() {
   ];
   return (
     <section className="mb-8">
-      <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.46)" }}>Qué puedes hacer</p>
+      <p className="mb-3 font-mono text-[12px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.46)" }}>Qué puedes hacer</p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c, i) => {
           const Icon = c.icon;
@@ -142,7 +142,7 @@ function Showcase() {
               </div>
               <div className="p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
                 <p className="text-[13px] font-semibold" style={{ color: "#fff" }}>{c.title}</p>
-                <p className="mt-1 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.58)" }}>{c.desc}</p>
+                <p className="mt-1 text-[12px] leading-snug" style={{ color: "rgba(255,255,255,0.58)" }}>{c.desc}</p>
               </div>
             </Link>
           );
@@ -194,18 +194,18 @@ function CreateApp() {
       </div>
       {open && (
         <div className="mt-4">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.58)" }}>Elige una plantilla</p>
+          <p className="mb-2 text-[12px] font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.58)" }}>Elige una plantilla</p>
           <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {[["landing","Landing","Cuenta qué haces","#7c3aed"],["tienda","Tienda","Vende con Stripe","#16a34a"],["portafolio","Portafolio","Muestra tu trabajo","#0ea5e9"],["blanco","En blanco","Lienzo libre","#a78bfa"]].map(([id,t,d,c]) => (
               <button key={id} type="button" onClick={() => setTpl(id)} className="rounded-xl p-3 text-left transition" style={{ background: tpl===id ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)", border: tpl===id ? `1px solid ${c}` : "1px solid rgba(255,255,255,0.09)", boxShadow: tpl===id ? `0 0 0 1px ${c}, inset 0 1px 0 rgba(255,255,255,0.06)` : "none" }}>
                 <span className="block h-7 w-7 rounded-lg" style={{ background: `radial-gradient(120% 120% at 30% 25%, ${c}, transparent 70%)`, border: `1px solid ${c}` }} />
                 <span className="mt-2 block text-[12.5px] font-semibold" style={{ color: "#fff" }}>{t}</span>
-                <span className="block text-[10.5px]" style={{ color: "rgba(255,255,255,0.58)" }}>{d}</span>
+                <span className="block text-[12px]" style={{ color: "rgba(255,255,255,0.58)" }}>{d}</span>
               </button>
             ))}
           </div>
           <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="¿Qué hace tu app? (objetivo, 1-2 líneas)" rows={2} className="mb-3 w-full rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", resize: "vertical" }} />
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.46)" }}>Capacidades</p>
+          <p className="mb-2 text-[12px] font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.46)" }}>Capacidades</p>
           <div className="mb-3 flex flex-wrap gap-2">
             {["Autenticación", "Pagos", "Base de datos", "IA / V", "Dominio", "Panel admin", "Notificaciones", "Multi-idioma"].map((m) => {
               const on = mods.includes(m);
@@ -436,7 +436,7 @@ export function HomeExperience({ name }: { name: string }) {
       {/* ── Header ── */}
       <div className="mb-16 mt-4">
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.46)", letterSpacing: "0.22em" }}>
+          className="font-mono text-[12px] uppercase" style={{ color: "rgba(255,255,255,0.46)", letterSpacing: "0.22em" }}>
           {greeting()}, {name}
         </motion.p>
         <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -470,7 +470,7 @@ export function HomeExperience({ name }: { name: string }) {
             style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
             <Icon size={14} style={{ color: "rgba(124,58,237,0.8)", marginBottom: 8 }} />
             <p className="text-[1.4rem] font-bold tabular-nums" style={{ color: "#fff" }}>{value}</p>
-            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.46)" }}>{label}</p>
+            <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.46)" }}>{label}</p>
           </div>
         ))}
       </motion.div>
@@ -499,7 +499,7 @@ export function HomeExperience({ name }: { name: string }) {
                       <span className="text-[13px]" style={{ color: "rgba(255,255,255,0.8)" }}>{p.name}</span>
                     </div>
                     {p.vercel_url && (
-                      <span className="font-mono text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>live</span>
+                      <span className="font-mono text-[12px]" style={{ color: "rgba(255,255,255,0.25)" }}>live</span>
                     )}
                   </Link>
                 ))}
@@ -520,7 +520,7 @@ export function HomeExperience({ name }: { name: string }) {
                       <span className="flex-1 truncate text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>
                         {ev.action}
                       </span>
-                      <span className="font-mono text-[10px] tabular-nums flex-shrink-0"
+                      <span className="font-mono text-[12px] tabular-nums flex-shrink-0"
                         style={{ color: "rgba(255,255,255,0.2)" }}>
                         {timeAgo(ev.created_at)}
                       </span>
@@ -533,7 +533,7 @@ export function HomeExperience({ name }: { name: string }) {
 
       {/* ── Quick actions ── */}
       <div className="mt-8">
-        <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.14em]"
+        <p className="mb-4 font-mono text-[12px] uppercase tracking-[0.14em]"
           style={{ color: "rgba(255,255,255,0.2)" }}>Acceso rápido</p>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
           {ACTIONS.map(({ href, label, icon: Icon }) => (
@@ -551,7 +551,7 @@ export function HomeExperience({ name }: { name: string }) {
                 el.style.borderColor = "rgba(255,255,255,0.07)";
               }}>
               <Icon size={18} style={{ color: "rgba(167,139,250,0.8)" }} />
-              <span className="text-[11px] leading-tight" style={{ color: "rgba(255,255,255,0.5)" }}>{label}</span>
+              <span className="text-[12px] leading-tight" style={{ color: "rgba(255,255,255,0.5)" }}>{label}</span>
             </Link>
           ))}
         </div>

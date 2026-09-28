@@ -127,7 +127,12 @@ export default function TableroPage() {
       setEstado(j.estado as Estado);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      // Al usuario se le habla en español y de lo que puede hacer. El mensaje
+      // crudo del sistema ("The string did not match the expected pattern", que
+      // es lo que WebKit dice cuando la respuesta no es JSON) queda en la
+      // consola para quien depura, no en la pantalla (MUST-500 §236 y §358).
+      console.error("[tablero] no se pudo leer /api/tablero:", e);
+      setError("No pudimos leer el estado del servidor. Puede que la medición aún esté corriendo.");
     } finally {
       setCargando(false);
       setRefrescando(false);
@@ -158,7 +163,7 @@ export default function TableroPage() {
             type="button"
             onClick={() => void cargar(true)}
             disabled={refrescando}
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-black bg-black px-4 text-[13px] font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60"
+            className="inline-flex h-11 items-center gap-2 rounded-full border border-black bg-black px-4 text-[13px] font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60"
           >
             <IconRefresh size={15} className={cn(refrescando && "animate-spin")} />
             {refrescando ? "Midiendo…" : "Medir ahora"}
@@ -177,8 +182,17 @@ export default function TableroPage() {
           <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-600/30 bg-red-50 px-4 py-3 text-[14px] text-red-900">
             <IconWarn size={18} className="mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium">No pude leer el servidor</p>
+              <p className="font-medium">No pudimos mostrar el tablero</p>
               <p className="mt-0.5 text-red-800/80">{error}</p>
+              <button
+                type="button"
+                onClick={() => void cargar()}
+                disabled={cargando || refrescando}
+                className="mt-2.5 inline-flex min-h-11 items-center gap-2 rounded-full border border-red-900/40 px-4 text-[13px] font-medium text-red-900 transition hover:bg-red-100 disabled:opacity-60"
+              >
+                <IconRefresh size={15} className={cn(cargando && "animate-spin")} />
+                Reintentar
+              </button>
             </div>
           </div>
         )}
@@ -369,7 +383,7 @@ function Barras({ dias }: { dias: { dia: string; sesiones: number }[] }) {
                 style={{ height: `${Math.max(h, d.sesiones ? 3 : 1)}%` }}
                 title={`${d.dia}: ${d.sesiones} sesiones`}
               />
-              <span className="truncate text-[11px] capitalize text-[var(--fg-tertiary)]">{diaCorto(d.dia)}</span>
+              <span className="truncate text-[12px] capitalize text-[var(--fg-tertiary)]">{diaCorto(d.dia)}</span>
             </div>
           );
         })}

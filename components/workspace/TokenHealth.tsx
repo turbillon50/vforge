@@ -218,7 +218,7 @@ function ReconnectButton({
       type="button"
       onClick={onClick}
       disabled={reconnecting}
-      className="inline-flex items-center gap-1 rounded-lg border border-amber-400/30 bg-amber-400/10 px-2 py-1 font-mono text-[10px] text-amber-200 transition hover:bg-amber-400/15 active:scale-95 disabled:opacity-50"
+      className="inline-flex items-center gap-1 rounded-lg border border-amber-400/30 bg-amber-400/10 px-2 py-1 font-mono text-[12px] text-amber-200 transition hover:bg-amber-400/15 active:scale-95 disabled:opacity-50"
     >
       <motion.span
         animate={reconnecting ? { rotate: 360 } : { rotate: 0 }}
@@ -246,16 +246,16 @@ export function TokenHealthIndicator({ className }: { className?: string }) {
   return (
     <div className={cn("group/th relative flex items-center gap-2", className)}>
       <PulseDot color={color} />
-      <span className="font-mono text-[10px] text-[var(--fg-tertiary)]">
+      <span className="font-mono text-[12px] text-[var(--fg-tertiary)]">
         Token <span style={{ color }}>{hoursLabel(health)}</span>
       </span>
       {showReconnect && <ReconnectButton reconnecting={reconnecting} onClick={reconnect} />}
 
       {/* Tooltip premium */}
       <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-[220px] rounded-lg border border-[var(--border-1)] bg-[#0b0b12]/95 px-2.5 py-1.5 opacity-0 shadow-xl backdrop-blur-xl transition-opacity duration-150 group-hover/th:opacity-100">
-        <p className="text-[11px] leading-snug text-[var(--fg-primary)]">{tooltipText(health)}</p>
+        <p className="text-[12px] leading-snug text-[var(--fg-primary)]">{tooltipText(health)}</p>
         {health?.checked_at && (
-          <p className="mt-0.5 font-mono text-[9px] text-[var(--fg-muted)]">
+          <p className="mt-0.5 font-mono text-[12px] text-[var(--fg-muted)]">
             Verificado {new Date(health.checked_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
           </p>
         )}
@@ -285,7 +285,7 @@ export function TokenReconnectCard() {
     <div className="mb-4 rounded-xl border border-app bg-tint-1/[0.05] p-5">
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-display text-sm font-semibold text-on-surface">Conexión Claude</h3>
-        <span className="flex items-center gap-1.5 font-mono text-[11px]" style={{ color }}>
+        <span className="flex items-center gap-1.5 font-mono text-[12px]" style={{ color }}>
           <PulseDot color={color} />
           {tone !== "unknown" ? hoursLabel(health) : "—"}
         </span>

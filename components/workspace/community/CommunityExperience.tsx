@@ -32,7 +32,7 @@ function timeLabel(iso: string) {
 
 function PlatformBadge({ platform }: { platform: Platform }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-widest"
+    <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[12px] font-semibold uppercase tracking-widest"
       style={{
         background: platform === "linkedin" ? "rgba(10,102,194,0.12)" : "rgba(255,255,255,0.06)",
         borderColor: platform === "linkedin" ? "rgba(10,102,194,0.3)" : "rgba(255,255,255,0.12)",
@@ -53,7 +53,7 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
   };
   const m = meta[status] ?? meta.pending_review;
   return (
-    <span className="rounded-full px-2 py-0.5 font-mono text-[10px]"
+    <span className="rounded-full px-2 py-0.5 font-mono text-[12px]"
       style={{ background: m.bg, color: m.color, border:`1px solid ${m.color}33` }}>
       {m.label}
     </span>
@@ -73,7 +73,7 @@ function PostCard({ post, onApprove, onReject, busy }:
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <PlatformBadge platform={post.platform} />
         <StatusBadge status={post.review_status} />
-        <span className="ml-auto font-mono text-[10px]" style={{ color:"rgba(255,255,255,0.25)" }}>
+        <span className="ml-auto font-mono text-[12px]" style={{ color:"rgba(255,255,255,0.25)" }}>
           {timeLabel(post.scheduled_at)}
         </span>
       </div>
@@ -83,13 +83,13 @@ function PostCard({ post, onApprove, onReject, busy }:
       </p>
       {post.content.length > 200 && (
         <button onClick={() => setExpanded(e => !e)}
-          className="mt-1 text-[11px] transition-colors"
+          className="mt-1 text-[12px] transition-colors"
           style={{ color:"rgba(124,58,237,0.7)" }}>
           {expanded ? "Ver menos" : "Ver más"}
         </button>
       )}
       {post.error && (
-        <p className="mt-2 rounded-lg px-3 py-2 text-[11px]"
+        <p className="mt-2 rounded-lg px-3 py-2 text-[12px]"
           style={{ background:"rgba(239,68,68,0.08)", color:"#f87171", border:"1px solid rgba(239,68,68,0.15)" }}>
           Error: {post.error}
         </p>
@@ -195,7 +195,7 @@ export function CommunityExperience() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em]"
+          <p className="font-mono text-[12px] uppercase tracking-[0.16em]"
             style={{ color:"rgba(124,58,237,0.7)" }}>Comunidad</p>
           <h1 className="font-display text-[1.4rem] font-bold" style={{ color:"#fff" }}>
             Social Queue
@@ -238,7 +238,7 @@ export function CommunityExperience() {
                 onFocus={e=>(e.currentTarget.style.borderColor="rgba(124,58,237,0.4)")}
                 onBlur={e=>(e.currentTarget.style.borderColor="rgba(255,255,255,0.08)")} />
               <div className="mt-3 flex items-center justify-between">
-                <span className="font-mono text-[10px]" style={{ color:"rgba(255,255,255,0.25)" }}>
+                <span className="font-mono text-[12px]" style={{ color:"rgba(255,255,255,0.25)" }}>
                   {newText.length} / 280 chars
                 </span>
                 <div className="flex gap-2">

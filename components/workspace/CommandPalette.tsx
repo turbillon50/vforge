@@ -176,7 +176,7 @@ export function CommandPalette() {
                 ? <IconDatabase size={18} className="shrink-0 text-[var(--color-violet-300)]"/>
                 : <IconSearch size={18} className="shrink-0 text-[var(--fg-tertiary)]"/>}
               {mode === "brain" && (
-                <span className="shrink-0 rounded-md bg-violet-500/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-[var(--color-violet-300)]">Brain</span>
+                <span className="shrink-0 rounded-md bg-violet-500/15 px-2 py-0.5 font-mono text-[12px] uppercase tracking-wider text-[var(--color-violet-300)]">Brain</span>
               )}
               <input
                 ref={inputRef}

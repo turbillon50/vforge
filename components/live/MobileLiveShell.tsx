@@ -143,9 +143,9 @@ export function MobileLiveShell({
             className="flex flex-col items-center gap-0.5 text-[var(--fg-muted)]"
           >
             <IconFile size={18} />
-            <span className="font-mono text-[8px] uppercase tracking-[0.08em]">Contexto</span>
+            <span className="font-mono text-[12px] uppercase tracking-[0.08em]">Contexto</span>
           </button>
-          <span className="font-mono text-[9px] uppercase tracking-[0.12em] opacity-70">
+          <span className="font-mono text-[12px] uppercase tracking-[0.12em] opacity-70">
             {card?.label}
           </span>
           <div className="flex items-center">
@@ -192,7 +192,7 @@ export function MobileLiveShell({
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-[#f2f2f0]">
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-28 pt-3">
-        <p className="mb-3 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+        <p className="mb-3 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
           Vistas · desliza · toca para ampliar
         </p>
 
@@ -213,7 +213,7 @@ export function MobileLiveShell({
           ))}
         </div>
 
-        <p className="mt-2 text-center text-[11px] leading-4 text-[var(--fg-muted)]">
+        <p className="mt-2 text-center text-[12px] leading-4 text-[var(--fg-muted)]">
           Ampliar = pantalla completa · Abrir = pestaña nueva sin marco VForge
         </p>
       </div>
@@ -226,7 +226,7 @@ export function MobileLiveShell({
             className="flex h-14 w-16 flex-col items-center justify-center gap-1 text-[var(--fg-secondary)]"
           >
             <IconRefresh size={18} />
-            <span className="font-mono text-[8px] uppercase tracking-[0.08em]">Refresh</span>
+            <span className="font-mono text-[12px] uppercase tracking-[0.08em]">Refresh</span>
           </button>
           <button
             type="button"
@@ -237,7 +237,7 @@ export function MobileLiveShell({
             <span className="grid h-11 w-11 place-items-center rounded-full bg-[var(--vchat-ink)] text-[15px] font-semibold text-[var(--vchat-on-ink)]">
               V
             </span>
-            <span className="font-mono text-[8px] uppercase tracking-[0.08em]">Hablar</span>
+            <span className="font-mono text-[12px] uppercase tracking-[0.08em]">Hablar</span>
           </button>
           <button
             type="button"
@@ -245,7 +245,7 @@ export function MobileLiveShell({
             className="flex h-14 w-16 flex-col items-center justify-center gap-1 text-[var(--fg-secondary)]"
           >
             <IconChat size={18} />
-            <span className="font-mono text-[8px] uppercase tracking-[0.08em]">Mensajes</span>
+            <span className="font-mono text-[12px] uppercase tracking-[0.08em]">Mensajes</span>
           </button>
           <button
             type="button"
@@ -253,7 +253,7 @@ export function MobileLiveShell({
             className="flex h-14 w-16 flex-col items-center justify-center gap-1 text-[var(--fg-secondary)]"
           >
             <IconMaximize size={18} />
-            <span className="font-mono text-[8px] uppercase tracking-[0.08em]">Ampliar</span>
+            <span className="font-mono text-[12px] uppercase tracking-[0.08em]">Ampliar</span>
           </button>
         </div>
       </div>
@@ -334,7 +334,7 @@ function DeviceCard({
       <div className="mb-2 flex items-center justify-between">
         <div>
           <p className="text-[13px] font-medium">{label}</p>
-          <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
+          <p className="font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
             {subtitle}
           </p>
         </div>
@@ -402,7 +402,7 @@ function DeviceCard({
               <IconLayout size={20} className="mx-auto text-[var(--fg-muted)]" />
             )}
             <p className="mt-2 text-[12px] text-[var(--fg-muted)]">Sin URL aún</p>
-            <p className="mt-1 text-[10px] text-[var(--fg-muted)]">Se genera cuando haya URL</p>
+            <p className="mt-1 text-[12px] text-[var(--fg-muted)]">Se genera cuando haya URL</p>
           </div>
         )}
 
@@ -517,7 +517,7 @@ function ChatSheet({
                   <p className="truncate text-[12px] font-medium">
                     {c.author_name ?? c.author_email}
                   </p>
-                  <span className="shrink-0 font-mono text-[8px] text-[var(--fg-muted)]">
+                  <span className="shrink-0 font-mono text-[12px] text-[var(--fg-muted)]">
                     {timeAgo(c.created_at)}
                   </span>
                 </div>

@@ -177,7 +177,7 @@ export function PublicLiveRoom({
                 ) : (
                   <IconLayout size={18} />
                 )}
-                <span className="font-mono text-[8px] uppercase tracking-[0.06em]">
+                <span className="font-mono text-[12px] uppercase tracking-[0.06em]">
                   {item.label}
                 </span>
               </button>
@@ -299,7 +299,7 @@ function ShareChat({
                 <p className="truncate text-[12px] font-medium">
                   {c.author_name ?? "Cliente"}
                 </p>
-                <span className="shrink-0 font-mono text-[8px] text-[var(--fg-muted)]">
+                <span className="shrink-0 font-mono text-[12px] text-[var(--fg-muted)]">
                   {timeAgo(c.created_at)}
                 </span>
               </div>

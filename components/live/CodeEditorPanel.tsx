@@ -196,12 +196,12 @@ export function CodeEditorPanel({ projectId, onClose }: { projectId: string; onC
       <header className="flex h-11 shrink-0 items-center gap-2 border-b border-[var(--border-1)] px-3">
         <IconCode size={13} />
         <h2 className="text-[12px] font-medium">Código</h2>
-        <select aria-label="Repositorio" value={repository} onChange={(event) => setRepository(event.target.value)} className="ml-2 max-w-[280px] rounded-md border border-[var(--border-1)] bg-white px-2 py-1 font-mono text-[9px]">
+        <select aria-label="Repositorio" value={repository} onChange={(event) => setRepository(event.target.value)} className="ml-2 max-w-[280px] rounded-md border border-[var(--border-1)] bg-white px-2 py-1 font-mono text-[12px]">
           {repositories.map((item) => <option key={item.repo_full_name} value={item.repo_full_name}>{item.repo_full_name}{item.is_primary ? " · principal" : ""}</option>)}
         </select>
-        <span className="hidden font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)] sm:inline">{branch || "—"}</span>
+        <span className="hidden font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--fg-muted)] sm:inline">{branch || "—"}</span>
         <button type="button" onClick={() => void loadTree()} className="ml-auto grid h-7 w-7 place-items-center rounded-md hover:bg-[var(--color-background)]" aria-label="Actualizar archivos" title="Actualizar archivos"><IconRefresh size={11} /></button>
-        <button type="button" onClick={() => void save()} disabled={!dirty || !canWrite || saving} className="inline-flex h-7 items-center gap-1 rounded-md bg-black px-2.5 font-mono text-[8px] uppercase tracking-[0.08em] text-white disabled:opacity-30">
+        <button type="button" onClick={() => void save()} disabled={!dirty || !canWrite || saving} className="inline-flex h-7 items-center gap-1 rounded-md bg-black px-2.5 font-mono text-[12px] uppercase tracking-[0.08em] text-white disabled:opacity-30">
           {saving ? <IconLoader size={10} className="animate-spin" /> : <IconCheck size={10} />} Guardar
         </button>
         <button type="button" onClick={closeEditor} className="grid h-7 w-7 place-items-center rounded-md hover:bg-[var(--color-background)]" aria-label="Cerrar editor" title="Cerrar editor"><IconX size={11} /></button>
@@ -210,24 +210,24 @@ export function CodeEditorPanel({ projectId, onClose }: { projectId: string; onC
       <div className="flex min-h-0 flex-1">
         <aside className="flex w-[250px] shrink-0 flex-col border-r border-[var(--border-1)] bg-[var(--color-background)]">
           <div className="border-b border-[var(--border-1)] p-2">
-            <input aria-label="Buscar archivo" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar archivo…" className="h-8 w-full rounded-md border border-[var(--border-1)] bg-white px-2 font-mono text-[9px] outline-none focus:border-black" />
+            <input aria-label="Buscar archivo" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar archivo…" className="h-8 w-full rounded-md border border-[var(--border-1)] bg-white px-2 font-mono text-[12px] outline-none focus:border-black" />
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto py-1">
             {loading ? <div className="grid h-24 place-items-center"><IconLoader size={14} className="animate-spin" /></div> : visibleFiles.length ? visibleFiles.map((file) => (
-              <button key={file.path} type="button" onClick={() => void openFile(file.path)} className={cn("block w-full truncate px-3 py-1.5 text-left font-mono text-[9px] hover:bg-white", active?.key === `${repository}:${file.path}` && "bg-white font-medium")} title={file.path}>{file.path}</button>
-            )) : <div className="p-3 text-[10px] text-[var(--fg-muted)]">
+              <button key={file.path} type="button" onClick={() => void openFile(file.path)} className={cn("block w-full truncate px-3 py-1.5 text-left font-mono text-[12px] hover:bg-white", active?.key === `${repository}:${file.path}` && "bg-white font-medium")} title={file.path}>{file.path}</button>
+            )) : <div className="p-3 text-[12px] text-[var(--fg-muted)]">
               <p>{error || (repositories.length ? "No hay archivos visibles." : "Este proyecto no tiene repositorios enlazados.")}</p>
               {error ? <button type="button" onClick={() => void loadTree()} className="mt-3 rounded-md border border-black px-2 py-1 text-black">Reintentar</button> : null}
             </div>}
           </div>
-          {matchedFiles.length > visibleFiles.length ? <p className="shrink-0 border-t border-[var(--border-1)] p-2 font-mono text-[8px] text-[var(--fg-muted)]">Mostrando 1,000 de {matchedFiles.length}. Usa el buscador.</p> : null}
+          {matchedFiles.length > visibleFiles.length ? <p className="shrink-0 border-t border-[var(--border-1)] p-2 font-mono text-[12px] text-[var(--fg-muted)]">Mostrando 1,000 de {matchedFiles.length}. Usa el buscador.</p> : null}
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex h-9 shrink-0 overflow-x-auto border-b border-[var(--border-1)] bg-[var(--color-background)]">
             {tabs.map((tab) => {
               const isDirty = tab.content !== tab.savedContent;
-              return <div key={tab.key} className={cn("flex min-w-[140px] max-w-[240px] border-r border-[var(--border-1)] font-mono text-[9px]", tab.key === activeKey && "bg-white")}><button type="button" onClick={() => setActiveKey(tab.key)} className="flex min-w-0 flex-1 items-center gap-2 px-3" title={`${tab.repository}/${tab.path}`}><span className="truncate">{tab.path.split("/").pop()}</span>{isDirty ? <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-black" /> : null}</button><button type="button" onClick={() => closeTab(tab.key)} className="grid w-7 shrink-0 place-items-center opacity-50 hover:opacity-100" aria-label={`Cerrar ${tab.path}`}><IconX size={9} /></button></div>;
+              return <div key={tab.key} className={cn("flex min-w-[140px] max-w-[240px] border-r border-[var(--border-1)] font-mono text-[12px]", tab.key === activeKey && "bg-white")}><button type="button" onClick={() => setActiveKey(tab.key)} className="flex min-w-0 flex-1 items-center gap-2 px-3" title={`${tab.repository}/${tab.path}`}><span className="truncate">{tab.path.split("/").pop()}</span>{isDirty ? <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-black" /> : null}</button><button type="button" onClick={() => closeTab(tab.key)} className="grid w-7 shrink-0 place-items-center opacity-50 hover:opacity-100" aria-label={`Cerrar ${tab.path}`}><IconX size={9} /></button></div>;
             })}
           </div>
           <div className="relative min-h-0 flex-1">
@@ -242,10 +242,10 @@ export function CodeEditorPanel({ projectId, onClose }: { projectId: string; onC
                 loading={<IconLoader size={16} className="animate-spin" />}
                 options={{ automaticLayout: true, fontFamily: "var(--font-geist-mono), monospace", fontSize: 13, lineHeight: 20, minimap: { enabled: false }, scrollBeyondLastLine: false, padding: { top: 12 }, wordWrap: "off", tabSize: 2, renderWhitespace: "selection" }}
               />
-            ) : <div className="grid h-full place-items-center text-center"><div><IconCode size={20} className="mx-auto mb-3" /><p className="text-[12px]">Selecciona un archivo</p><p className="mt-1 font-mono text-[8px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">Monaco · varias pestañas · Ctrl+S</p></div></div>}
+            ) : <div className="grid h-full place-items-center text-center"><div><IconCode size={20} className="mx-auto mb-3" /><p className="text-[12px]">Selecciona un archivo</p><p className="mt-1 font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--fg-muted)]">Monaco · varias pestañas · Ctrl+S</p></div></div>}
             {opening ? <div className="absolute inset-0 grid place-items-center bg-white/70"><IconLoader size={16} className="animate-spin" /></div> : null}
           </div>
-          {(notice || error || (active && !canWrite)) ? <div className="flex min-h-8 shrink-0 items-center border-t border-[var(--border-1)] px-3 font-mono text-[9px]"><span>{error || notice || "Modo lectura para tu rol"}</span>{error ? <button type="button" onClick={() => setError(null)} className="ml-auto"><IconX size={10} /></button> : null}</div> : null}
+          {(notice || error || (active && !canWrite)) ? <div className="flex min-h-8 shrink-0 items-center border-t border-[var(--border-1)] px-3 font-mono text-[12px]"><span>{error || notice || "Modo lectura para tu rol"}</span>{error ? <button type="button" onClick={() => setError(null)} className="ml-auto"><IconX size={10} /></button> : null}</div> : null}
         </div>
       </div>
     </section>

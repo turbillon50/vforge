@@ -89,6 +89,9 @@ export function MonochromeHome() {
     let io: IntersectionObserver | null = null;
 
     function startReveal() {
+      // Marca que el observador SÍ quedó enganchado. Mientras no esté esta marca,
+      // el CSS mantiene su red de seguridad de 3 s (ver monochrome-home.css).
+      document.documentElement.setAttribute("data-vf-reveal", "js");
       io = new IntersectionObserver(
         (entries) => {
           entries.forEach((e) => {

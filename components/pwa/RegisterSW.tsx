@@ -136,7 +136,7 @@ export function RegisterSW() {
           <p className="text-[13px] font-semibold text-black">
             Nueva versión disponible
           </p>
-          <p className="truncate text-[11px] text-[var(--fg-muted)]">
+          <p className="truncate text-[12px] text-[var(--fg-muted)]">
             Actualiza para ver lo último de VForge.
           </p>
         </div>

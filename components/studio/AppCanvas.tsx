@@ -203,7 +203,7 @@ export function AppCanvas({
             type="button"
             onClick={() => setTool("editar")}
             className={cn(
-              "h-8 rounded-md px-2.5 font-mono text-[8px] uppercase tracking-[0.1em]",
+              "h-8 rounded-md px-2.5 font-mono text-[12px] uppercase tracking-[0.1em]",
               tool === "editar" ? "bg-black text-white" : "border border-[var(--border-1)] bg-white",
             )}
           >
@@ -213,7 +213,7 @@ export function AppCanvas({
             type="button"
             onClick={() => setTool("marcar")}
             className={cn(
-              "h-8 rounded-md px-2.5 font-mono text-[8px] uppercase tracking-[0.1em]",
+              "h-8 rounded-md px-2.5 font-mono text-[12px] uppercase tracking-[0.1em]",
               tool === "marcar" ? "bg-black text-white" : "border border-[var(--border-1)] bg-white",
             )}
           >
@@ -226,7 +226,7 @@ export function AppCanvas({
                   type="button"
                   onClick={() => setKind(item.id)}
                   className={cn(
-                    "h-8 rounded-md px-2.5 font-mono text-[8px] uppercase tracking-[0.1em]",
+                    "h-8 rounded-md px-2.5 font-mono text-[12px] uppercase tracking-[0.1em]",
                     kind === item.id ? "bg-black text-white" : "text-[var(--fg-muted)]",
                   )}
                 >
@@ -234,7 +234,7 @@ export function AppCanvas({
                 </button>
               ))
             : null}
-          <div className="ml-auto flex items-center gap-2 font-mono text-[10px] text-[var(--fg-muted)]">
+          <div className="ml-auto flex items-center gap-2 font-mono text-[12px] text-[var(--fg-muted)]">
             {WIDTHS.map((w) => (
               <button
                 key={w}
@@ -270,7 +270,7 @@ export function AppCanvas({
             value={draftUrl}
             onChange={(e) => setDraftUrl(e.target.value)}
             placeholder="https://tu-app.vercel.app"
-            className="h-9 min-w-0 flex-1 rounded-md border border-[var(--border-1)] bg-white px-3 font-mono text-[11px]"
+            className="h-9 min-w-0 flex-1 rounded-md border border-[var(--border-1)] bg-white px-3 font-mono text-[12px]"
           />
           <button type="submit" className="btn-ghost !min-h-9 !px-3">
             Cargar
@@ -310,7 +310,7 @@ export function AppCanvas({
                       setActiveId(mark.id);
                     }}
                     style={{ left: `${mark.x}%`, top: `${mark.y}%` }}
-                    className="absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black text-[9px] font-medium text-white"
+                    className="absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black text-[12px] font-medium text-white"
                   >
                     {mark.kind[0]?.toUpperCase()}
                   </button>
@@ -324,7 +324,7 @@ export function AppCanvas({
       <aside className="w-full shrink-0 border border-[var(--border-1)] bg-white lg:w-[280px]">
         {selected ? (
           <div className="border-b border-[var(--border-1)] p-3">
-            <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+            <p className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
               {selected.tag}
             </p>
             {selected.editableText ? (
@@ -335,40 +335,40 @@ export function AppCanvas({
                 className="mt-2 w-full resize-none rounded-md border border-[var(--border-1)] p-2 text-[12px]"
               />
             ) : (
-              <p className="mt-2 text-[11px] text-[var(--fg-muted)]">
+              <p className="mt-2 text-[12px] text-[var(--fg-muted)]">
                 Este bloque tiene hijos. Se edita el estilo, no el texto entero.
               </p>
             )}
-            <label className="mt-2 block text-[11px]">
+            <label className="mt-2 block text-[12px]">
               Tamaño
               <input
                 value={selected.fontSize}
                 onChange={(e) => patchSelected({ fontSize: e.target.value })}
-                className="mt-1 h-8 w-full rounded-md border border-[var(--border-1)] px-2 font-mono text-[11px]"
+                className="mt-1 h-8 w-full rounded-md border border-[var(--border-1)] px-2 font-mono text-[12px]"
               />
             </label>
-            <label className="mt-2 block text-[11px]">
+            <label className="mt-2 block text-[12px]">
               Peso
               <input
                 value={selected.fontWeight}
                 onChange={(e) => patchSelected({ fontWeight: e.target.value })}
-                className="mt-1 h-8 w-full rounded-md border border-[var(--border-1)] px-2 font-mono text-[11px]"
+                className="mt-1 h-8 w-full rounded-md border border-[var(--border-1)] px-2 font-mono text-[12px]"
               />
             </label>
-            <label className="mt-2 block text-[11px]">
+            <label className="mt-2 block text-[12px]">
               Tracking
               <input
                 value={selected.letterSpacing}
                 onChange={(e) => patchSelected({ letterSpacing: e.target.value })}
-                className="mt-1 h-8 w-full rounded-md border border-[var(--border-1)] px-2 font-mono text-[11px]"
+                className="mt-1 h-8 w-full rounded-md border border-[var(--border-1)] px-2 font-mono text-[12px]"
               />
             </label>
-            <label className="mt-2 block text-[11px]">
+            <label className="mt-2 block text-[12px]">
               Color
               <input
                 value={selected.color}
                 onChange={(e) => patchSelected({ color: e.target.value })}
-                className="mt-1 h-8 w-full rounded-md border border-[var(--border-1)] px-2 font-mono text-[11px]"
+                className="mt-1 h-8 w-full rounded-md border border-[var(--border-1)] px-2 font-mono text-[12px]"
               />
             </label>
           </div>
@@ -377,13 +377,13 @@ export function AppCanvas({
             Clic en un texto de la app. El cambio se queda en este proyecto.
           </p>
         )}
-        <div className="border-b border-[var(--border-1)] px-3 py-2 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+        <div className="border-b border-[var(--border-1)] px-3 py-2 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
           Cambios · {edits.length} · marcas · {marks.length}
         </div>
         {active ? (
           <div className="border-b border-[var(--border-1)] p-3">
             <div className="mb-2 flex items-center justify-between">
-              <p className="font-mono text-[10px] uppercase">{active.kind}</p>
+              <p className="font-mono text-[12px] uppercase">{active.kind}</p>
               <button
                 type="button"
                 aria-label="Quitar marca"

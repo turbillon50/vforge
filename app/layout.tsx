@@ -9,7 +9,13 @@ import SplashScreen from "@/components/SplashScreen";
 import { LimiteDeError } from "@/components/system/LimiteDeError";
 
 export const metadata: Metadata = {
-  title: "VForge — Sala de revisión de proyectos",
+  // `template`: cada pantalla pone su nombre y hereda la marca. Antes las 8
+  // rutas del núcleo compartían este mismo título y todas las pestañas del
+  // navegador decían lo mismo (MUST-500 §79).
+  title: {
+    default: "VForge — Sala de revisión de proyectos",
+    template: "%s · VForge",
+  },
   description:
     "Escritorio, móvil y administración en una sola sala. Revisa avances, actividad y comentarios sin entrar a la infraestructura del proyecto.",
   applicationName: "VForge",

@@ -234,7 +234,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
               <IconMenu size={16} />
             </button>
             <div className="flex flex-col">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-gray-600">
+              <p className="text-[12px] uppercase tracking-[0.16em] text-gray-600">
                 VForge
               </p>
               <h1 className="text-[15px] font-medium">{title}</h1>
@@ -271,7 +271,7 @@ function ClientAccountMenu() {
           },
         }}
       />
-      <span className="hidden max-w-[110px] truncate text-[11px] font-medium sm:block">
+      <span className="hidden max-w-[110px] truncate text-[12px] font-medium sm:block">
         {user?.firstName ?? user?.username ?? "Cuenta"}
       </span>
     </div>

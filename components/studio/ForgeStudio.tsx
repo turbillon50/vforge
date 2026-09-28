@@ -789,7 +789,7 @@ export function ForgeStudio() {
               type="button"
               onClick={() => void newConversation()}
               disabled={sending || conversationLoading}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-caption hover:border-[var(--vf-fg)] disabled:opacity-45"
+              className="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-caption hover:border-[var(--vf-fg)] disabled:opacity-45"
             >
               <IconPlus size={11} /> Nueva
             </button>
@@ -826,7 +826,7 @@ export function ForgeStudio() {
             {attachment ? (
               <div className="mb-2 flex items-center justify-between gap-3 rounded-md border border-[var(--vf-border)] bg-[var(--vf-bg-2)] px-3 py-2">
                 <div className="min-w-0">
-                  <p className="truncate text-[10px] font-medium">{attachment.name}</p>
+                  <p className="truncate text-[12px] font-medium">{attachment.name}</p>
                   <p className="font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
                     Imagen adjunta
                   </p>
@@ -872,7 +872,7 @@ export function ForgeStudio() {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={sending}
-                    className="grid h-8 w-8 place-items-center rounded-md border border-transparent hover:border-[var(--vf-border)] hover:bg-[var(--vf-bg-2)]"
+                    className="grid h-11 w-11 place-items-center rounded-md border border-transparent hover:border-[var(--vf-border)] hover:bg-[var(--vf-bg-2)]"
                     aria-label="Adjuntar imagen"
                   >
                     <IconClip size={13} />
@@ -885,7 +885,7 @@ export function ForgeStudio() {
                   type="button"
                   onClick={() => void sendPrompt()}
                   disabled={!draft.trim() || sending || !sessionId}
-                  className="vf-press grid h-9 w-9 place-items-center rounded-md bg-[var(--vf-fg)] text-[var(--vf-bg-1)] disabled:cursor-not-allowed disabled:opacity-25"
+                  className="vf-press grid h-11 w-11 place-items-center rounded-md bg-[var(--vf-fg)] text-[var(--vf-bg-1)] disabled:cursor-not-allowed disabled:opacity-25"
                   aria-label="Enviar instrucción"
                 >
                   {sending ? <IconLoader size={13} className="animate-spin" /> : <IconSend size={13} />}
@@ -893,7 +893,7 @@ export function ForgeStudio() {
               </div>
             </div>
             {composerError ? (
-              <p className="mt-2 text-[10px] leading-4 text-[var(--vf-fg-1)]">{composerError}</p>
+              <p className="mt-2 text-[12px] leading-4 text-[var(--vf-fg-1)]">{composerError}</p>
             ) : null}
           </div>
         </section>
@@ -960,7 +960,7 @@ export function ForgeStudio() {
                   <button
                     type="button"
                     onClick={() => setDataRefresh((value) => value + 1)}
-                    className="mt-4 text-[11px] underline underline-offset-4"
+                    className="mt-4 text-[12px] underline underline-offset-4"
                   >
                     Volver a intentar
                   </button>
@@ -1040,7 +1040,7 @@ function StudioToolbar({
             value={activeProjectId}
             onChange={(event) => onProjectChange(event.target.value)}
             disabled={sending || loading}
-            className="h-10 w-full appearance-none rounded-md border border-[var(--vf-border-1)] bg-[var(--vf-bg-1)] pl-3 pr-8 text-[11px] font-medium text-[var(--vf-fg)] disabled:opacity-55"
+            className="h-11 w-full appearance-none rounded-md border border-[var(--vf-border-1)] bg-[var(--vf-bg-1)] pl-3 pr-8 text-[12px] font-medium text-[var(--vf-fg)] disabled:opacity-55"
           >
             <option value="">
               {projects.length === 0 ? "Sin proyectos" : "Selecciona un proyecto"}
@@ -1059,8 +1059,9 @@ function StudioToolbar({
         <button
           type="button"
           onClick={onCreate}
-          className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-3 text-[10px] hover:border-[var(--vf-fg)]"
-        >
+          className="inline-flex h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-3 text-[12px] hover:border-[var(--vf-fg)]"
+        
+          aria-label="Nuevo proyecto">
           <IconPlus size={12} /> <span className="hidden sm:inline">Nuevo proyecto</span>
         </button>
       </div>
@@ -1071,15 +1072,17 @@ function StudioToolbar({
             href={githubUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[10px] hover:border-[var(--vf-fg)]"
-          >
+            className="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[12px] hover:border-[var(--vf-fg)]"
+          
+          aria-label="Abrir el repositorio en GitHub">
             <IconGithub size={12} /> <span className="hidden xl:inline">GitHub</span>
           </a>
         ) : (
           <Link
             href="/app/integrations"
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[10px] hover:border-[var(--vf-fg)]"
-          >
+            className="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[12px] hover:border-[var(--vf-fg)]"
+          
+          aria-label="Conectar GitHub">
             <IconGithub size={12} /> <span className="hidden xl:inline">Conectar</span>
           </Link>
         )}
@@ -1087,7 +1090,8 @@ function StudioToolbar({
           type="button"
           onClick={onDeploy}
           disabled={!project || sending || !canPrompt}
-          className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--vf-fg)] px-3 text-[10px] font-medium text-[var(--vf-bg-1)] disabled:opacity-30"
+          aria-label="Desplegar"
+          className="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-md bg-[var(--vf-fg)] px-3 text-[12px] font-medium text-[var(--vf-bg-1)] disabled:opacity-30"
         >
           {sending ? <IconLoader size={12} className="animate-spin" /> : <IconRocket size={12} />}
           <span className="hidden sm:inline">Desplegar</span>
@@ -1095,8 +1099,9 @@ function StudioToolbar({
         {project ? (
           <Link
             href={`/app/live/${encodeURIComponent(project.id)}`}
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[10px] hover:border-[var(--vf-fg)]"
-          >
+            className="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[12px] hover:border-[var(--vf-fg)]"
+          
+          aria-label="Abrir la sala completa">
             <IconLayout size={12} /> <span className="hidden xl:inline">Sala completa</span>
           </Link>
         ) : null}
@@ -1130,7 +1135,7 @@ function MobilePaneButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "h-9 rounded-md font-mono text-[9px] uppercase tracking-[0.12em]",
+        "h-11 rounded-md font-mono text-[12px] uppercase tracking-[0.12em]",
         active
           ? "bg-[var(--vf-fg)] text-[var(--vf-bg-1)]"
           : "text-[var(--vf-fg-2)]",
@@ -1162,7 +1167,7 @@ function EmptyConversation({
               key={suggestion}
               type="button"
               onClick={() => onSuggestion(suggestion)}
-              className="flex w-full items-start justify-between gap-4 rounded-md border border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-3 py-3 text-left text-[11px] leading-5 hover:border-[var(--vf-fg)]"
+              className="flex w-full items-start justify-between gap-4 rounded-md border border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-3 py-3 text-left text-[12px] leading-5 hover:border-[var(--vf-fg)]"
             >
               <span>{suggestion}</span>
               <IconSend size={11} className="mt-1 shrink-0" />
@@ -1218,9 +1223,9 @@ function Message({ message }: { message: StudioMessage }) {
                 <IconX size={11} className="mt-0.5 shrink-0" />
               )}
               <div className="min-w-0">
-                <p className="text-[10px] font-medium capitalize">{toolLabel(tool.name)}</p>
+                <p className="text-[12px] font-medium capitalize">{toolLabel(tool.name)}</p>
                 {tool.summary ? (
-                  <p className="mt-0.5 break-words text-[9px] leading-4 text-[var(--vf-fg-2)]">
+                  <p className="mt-0.5 break-words text-[12px] leading-4 text-[var(--vf-fg-2)]">
                     {tool.summary}
                   </p>
                 ) : null}
@@ -1233,7 +1238,7 @@ function Message({ message }: { message: StudioMessage }) {
       {message.content ? <Markdown text={message.content} streaming={message.streaming} /> : null}
       {message.error ? (
         <div className="mt-2 border-l-2 border-[var(--vf-fg)] bg-[var(--vf-bg-2)] px-3 py-2">
-          <p className="text-[10px] leading-4 text-[var(--vf-fg-1)]">{message.error}</p>
+          <p className="text-[12px] leading-4 text-[var(--vf-fg-1)]">{message.error}</p>
         </div>
       ) : null}
     </article>
@@ -1267,7 +1272,7 @@ function PreviewHeader({
             type="button"
             onClick={() => setMode(item.id)}
             className={cn(
-              "h-8 whitespace-nowrap rounded-md px-3 text-[13px] font-medium transition duration-200 ease-out",
+              "h-11 whitespace-nowrap rounded-md px-3 text-[13px] font-medium transition duration-200 ease-out",
               mode === item.id
                 ? "bg-[var(--vf-fg)] text-[var(--vf-bg-1)]"
                 : "text-[var(--vf-fg-2)] hover:bg-[var(--vf-bg-2)] hover:text-[var(--vf-fg)]",
@@ -1281,7 +1286,7 @@ function PreviewHeader({
         <button
           type="button"
           onClick={onRefresh}
-          className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--vf-bg-2)]"
+          className="grid h-11 w-11 place-items-center rounded-md hover:bg-[var(--vf-bg-2)]"
           aria-label="Actualizar vistas"
         >
           <IconRefresh size={11} />
@@ -1291,7 +1296,7 @@ function PreviewHeader({
             href={previewUrl}
             target="_blank"
             rel="noreferrer"
-            className="grid h-8 w-8 place-items-center rounded-md hover:bg-[var(--vf-bg-2)]"
+            className="grid h-11 w-11 place-items-center rounded-md hover:bg-[var(--vf-bg-2)]"
             aria-label="Abrir preview"
           >
             <IconExtLink size={11} />
@@ -1415,8 +1420,8 @@ function FrameCard({
           <div className="grid h-full min-h-[300px] place-items-center p-6 text-center">
             <div>
               {kind === "admin" ? <IconShield size={17} className="mx-auto" /> : <IconLayout size={17} className="mx-auto" />}
-              <p className="mt-3 text-[11px] font-medium">Sin URL de {title.toLowerCase()}</p>
-              <p className="mx-auto mt-1 max-w-[220px] text-[9px] leading-4 text-[var(--vf-fg-2)]">
+              <p className="mt-3 text-[12px] font-medium">Sin URL de {title.toLowerCase()}</p>
+              <p className="mx-auto mt-1 max-w-[220px] text-[12px] leading-4 text-[var(--vf-fg-2)]">
                 {kind === "admin"
                   ? "La API sólo entrega esta vista a owner o revisor cuando el proyecto la publica."
                   : "Esta vista aparecerá cuando el proyecto publique una URL real."}
@@ -1435,7 +1440,7 @@ function NoProject({ onCreate }: { onCreate: () => void }) {
       <div>
         <IconPlus size={20} className="mx-auto" />
         <p className="mt-4 text-[13px] font-medium">Todavía no hay un proyecto activo.</p>
-        <p className="mx-auto mt-2 max-w-sm text-[11px] leading-5 text-[var(--vf-fg-2)]">
+        <p className="mx-auto mt-2 max-w-sm text-[12px] leading-5 text-[var(--vf-fg-2)]">
           Crea el proyecto y VForge abrirá una conversación, un catálogo y una sala con el mismo identificador.
         </p>
         <button type="button" onClick={onCreate} className="btn-primary mt-5">
@@ -1452,7 +1457,7 @@ function NoPreview({ projectName }: { projectName: string }) {
       <div>
         <IconLayout size={20} className="mx-auto" />
         <p className="mt-4 text-[13px] font-medium">{projectName} aún no publica una vista.</p>
-        <p className="mx-auto mt-2 max-w-md text-[11px] leading-5 text-[var(--vf-fg-2)]">
+        <p className="mx-auto mt-2 max-w-md text-[12px] leading-5 text-[var(--vf-fg-2)]">
           Pídele a V que construya o despliegue. Este espacio no inventa previews: se activa cuando existe una URL real.
         </p>
       </div>
@@ -1527,12 +1532,12 @@ function SystemStrip({
   ];
 
   return (
-    <footer className="flex h-7 shrink-0 items-center gap-3 overflow-hidden border-t border-[var(--vf-border)] bg-[var(--vf-bg)] px-3 text-[11px]">
+    <footer className="flex h-7 shrink-0 items-center gap-3 overflow-hidden border-t border-[var(--vf-border)] bg-[var(--vf-bg)] px-3 text-[12px]">
       {items.map(({ label, detail, active, Icon }) => (
         <Link
           key={label}
           href="/app/integrations"
-          className="flex shrink-0 items-center gap-2 text-[var(--vf-fg-1)] transition-colors duration-200 hover:text-[var(--vf-fg)]"
+          className="flex min-h-11 shrink-0 items-center gap-2 text-[var(--vf-fg-1)] transition-colors duration-200 hover:text-[var(--vf-fg)]"
         >
           {label === "GitHub" ? <GithubMark /> : label === "Vercel" ? <VercelMark /> : <Icon size={14} />}
           <span className="text-[12px] text-[var(--vf-fg-2)]">{label}</span>
@@ -1635,7 +1640,7 @@ function CreateProjectDialog({
                 setId(slugify(event.target.value));
               }}
               placeholder="mi-proyecto"
-              className="input-base mt-2 font-mono text-[11px]"
+              className="input-base mt-2 font-mono text-[12px]"
             />
           </label>
           <label className="block">
@@ -1656,8 +1661,8 @@ function CreateProjectDialog({
               className="mt-0.5 h-4 w-4 accent-[var(--vf-fg)]"
             />
             <span>
-              <span className="block text-[11px] font-medium">Crear repositorio privado en GitHub</span>
-              <span className="mt-1 block text-[9px] leading-4 text-[var(--vf-fg-2)]">
+              <span className="block text-[12px] font-medium">Crear repositorio privado en GitHub</span>
+              <span className="mt-1 block text-[12px] leading-4 text-[var(--vf-fg-2)]">
                 {githubConnected
                   ? "Usará la conexión autorizada de tu cuenta."
                   : "Si no existe una credencial válida, el proyecto se crea y reporta el fallo de GitHub sin fingir éxito."}
@@ -1666,7 +1671,7 @@ function CreateProjectDialog({
           </label>
         </div>
 
-        {error ? <p className="mb-4 text-[10px] leading-4 text-[var(--vf-fg-1)]">{error}</p> : null}
+        {error ? <p className="mb-4 text-[12px] leading-4 text-[var(--vf-fg-1)]">{error}</p> : null}
 
         <div className="flex justify-end gap-2 border-t border-[var(--vf-border)] pt-5">
           <button type="button" onClick={onClose} className="btn-ghost" disabled={saving}>

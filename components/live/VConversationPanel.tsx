@@ -382,7 +382,7 @@ export function VConversationPanel({
           <p className="text-[14px] font-medium leading-none" style={{ color: INK }}>
             V
           </p>
-          <p className="mt-1 truncate text-[11px] leading-none" style={{ color: MUTED }}>
+          <p className="mt-1 truncate text-[12px] leading-none" style={{ color: MUTED }}>
             {status}
           </p>
         </div>
@@ -476,7 +476,7 @@ export function VConversationPanel({
                   <span className="truncate">
                     {task.agentLabel} · {task.statusLabel}
                   </span>
-                  <span className="shrink-0 font-mono text-[10px]" style={{ color: MUTED }}>
+                  <span className="shrink-0 font-mono text-[12px]" style={{ color: MUTED }}>
                     {task.shortId}
                   </span>
                 </>
@@ -522,7 +522,7 @@ export function VConversationPanel({
           <button
             type="button"
             onClick={() => setError(null)}
-            className="shrink-0 rounded-full border px-3 py-1 text-[11px]"
+            className="shrink-0 rounded-full border px-3 py-1 text-[12px]"
             style={{ borderColor: LINE, color: INK }}
           >
             Entendido

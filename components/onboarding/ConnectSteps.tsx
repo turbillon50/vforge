@@ -71,7 +71,7 @@ export function ConnectSteps({ connections, onRefresh, onComplete }: Props) {
         <div className="mx-auto grid h-12 w-12 place-items-center border border-black bg-black text-white">
           <IconCheck size={20} />
         </div>
-        <p className="mt-6 text-center font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+        <p className="mt-6 text-center font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
           Base lista
         </p>
         <h2 className="mt-3 text-center text-[28px] font-semibold tracking-[-0.04em]">
@@ -110,7 +110,7 @@ export function ConnectSteps({ connections, onRefresh, onComplete }: Props) {
             >
               <Icon size={14} />
               <span className="text-[12px] font-medium">{label}</span>
-              <span className="ml-auto font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+              <span className="ml-auto font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
                 {ok ? "OK" : "—"}
               </span>
             </div>
@@ -124,7 +124,7 @@ export function ConnectSteps({ connections, onRefresh, onComplete }: Props) {
   if (current === "optional") {
     return (
       <div className="mx-auto w-full max-w-[560px] px-5 py-10">
-        <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+        <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
           Opcional
         </p>
         <h1 className="mt-2 text-[clamp(1.8rem,4vw,2.4rem)] font-semibold tracking-[-0.045em]">
@@ -143,12 +143,12 @@ export function ConnectSteps({ connections, onRefresh, onComplete }: Props) {
               <IconCreditCard size={16} />
               <span>
                 <span className="block text-[13px] font-medium">Stripe</span>
-                <span className="text-[11px] text-[var(--fg-muted)]">
+                <span className="text-[12px] text-[var(--fg-muted)]">
                   {hasStripe ? "Conectado" : "Conectar cuenta"}
                 </span>
               </span>
             </span>
-            <span className="font-mono text-[9px] uppercase tracking-[0.12em]">
+            <span className="font-mono text-[12px] uppercase tracking-[0.12em]">
               {hasStripe ? "OK" : "Conectar"}
             </span>
           </a>
@@ -159,7 +159,7 @@ export function ConnectSteps({ connections, onRefresh, onComplete }: Props) {
                 <IconKey size={16} />
                 <span>
                   <span className="block text-[13px] font-medium">Token MCP</span>
-                  <span className="text-[11px] text-[var(--fg-muted)]">
+                  <span className="text-[12px] text-[var(--fg-muted)]">
                     Control desde otros modelos
                   </span>
                 </span>
@@ -168,7 +168,7 @@ export function ConnectSteps({ connections, onRefresh, onComplete }: Props) {
                 type="button"
                 onClick={() => void generateMcp()}
                 disabled={loading}
-                className="btn-primary !min-h-9 !px-3 text-[11px] disabled:opacity-40"
+                className="btn-primary !min-h-9 !px-3 text-[12px] disabled:opacity-40"
               >
                 {loading ? <IconLoader size={12} className="animate-spin" /> : null}
                 Generar
@@ -179,7 +179,7 @@ export function ConnectSteps({ connections, onRefresh, onComplete }: Props) {
                 <input
                   readOnly
                   value={mcpToken}
-                  className="min-h-10 flex-1 border border-[var(--border-1)] bg-[#f7f7f5] px-3 font-mono text-[11px]"
+                  className="min-h-10 flex-1 border border-[var(--border-1)] bg-[#f7f7f5] px-3 font-mono text-[12px]"
                 />
                 <button
                   type="button"
@@ -191,7 +191,7 @@ export function ConnectSteps({ connections, onRefresh, onComplete }: Props) {
               </div>
             ) : null}
             {mcpUrl ? (
-              <p className="mt-2 font-mono text-[10px] text-[var(--fg-muted)]">{mcpUrl}</p>
+              <p className="mt-2 font-mono text-[12px] text-[var(--fg-muted)]">{mcpUrl}</p>
             ) : null}
           </div>
         </div>
@@ -238,7 +238,7 @@ export function ConnectSteps({ connections, onRefresh, onComplete }: Props) {
             <div key={n} className="flex flex-1 items-center gap-2">
               <div
                 className={
-                  "grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10px] font-medium " +
+                  "grid h-7 w-7 shrink-0 place-items-center rounded-full text-[12px] font-medium " +
                   (done || active
                     ? "bg-black text-white"
                     : "border border-[var(--border-1)] text-[var(--fg-muted)]")
@@ -254,7 +254,7 @@ export function ConnectSteps({ connections, onRefresh, onComplete }: Props) {
         })}
       </div>
 
-      <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+      <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
         Paso {step.n} de 02 · esencial
       </p>
       <h1 className="mt-2 text-[clamp(1.8rem,4vw,2.4rem)] font-semibold tracking-[-0.045em]">
@@ -292,7 +292,7 @@ export function ConnectSteps({ connections, onRefresh, onComplete }: Props) {
           >
             <Icon size={14} />
             <span className="text-[12px] font-medium">{label}</span>
-            <span className="ml-auto font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+            <span className="ml-auto font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
               {ok ? "OK" : "—"}
             </span>
           </div>
