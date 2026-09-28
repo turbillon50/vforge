@@ -116,19 +116,135 @@ ya no guarda código.
 
 ## Bloque 5 · Controles (solo Luis)
 
-- [ ] **B2.5.1 — `vl-control` con lista blanca, en el repo.**
-- [ ] **B2.5.2 — API server-side por el relay, nunca desde el navegador.**
-- [ ] **B2.5.3 — Bitácora de cada acción, visible en el tablero.**
-- [ ] **B2.5.4 — Probado contra `zz-prueba-b2`, jamás contra un frente real.**
+- [x] **B2.5.1 — `servidor/vl-control` con lista blanca, en el repo.**
+  Cuatro verbos y nada más. La lista blanca son los frentes que el colector ya
+  midió: el `tag` que llega de fuera **nunca** se pega a una ruta — la ruta del
+  worktree se saca del JSON. Instalador `servidor/instalar-control.sh`.
+  Probado: `vl-control pausar no-existe-este-frente` →
+  `"'no-existe-este-frente' no es un frente del tablero. No hago nada."`, sin ejecutar nada.
+
+- [x] **B2.5.2 — Guardia anti-suicidio.**
+  Si quien llama vive dentro del frente, rehúsa. Medido desde el propio B2:
+  `vl-control pausar B2` → `"'B2' es el frente desde el que me estás llamando:
+  no me voy a matar solo"` (y este agente siguió vivo para escribirlo).
+
+- [x] **B2.5.3 — Identificar procesos por argumento y cwd, no por "menciona la ruta".**
+  El primer intento marcaba como supervisor a todo proceso cuyo cmdline
+  contuviera el worktree. El brief que se le pasa a `claude -p` **trae la ruta
+  escrita**, así que ese filtro se llevaba de corbata hasta el shell desde el que
+  estabas mirando (medido: 5 PIDs ajenos marcados como supervisor de B2).
+  Ahora el supervisor se reconoce por su ARGUMENTO de worktree y el `claude` por
+  su `cwd`. Además se matan los descendientes: matar el supervisor no mata al
+  `timeout claude -p` que cuelga de él.
+
+- [x] **B2.5.4 — API server-side, el navegador nunca ve el secreto.**
+  `/api/tablero/control`: gate de dueño, los 4 verbos en lista blanca, regex del
+  tag, y `BRAIN_SECRET` solo en el servidor de Next. El shell real es
+  `vl-control`, que solo sabe hacer cuatro cosas.
+  El gate (`lib/auth/tablero-gate.ts`) acepta sesión de Clerk de dueño **o** el
+  `VFORGE_OPERATOR_TOKEN` que ya usan `/api/admin/*` — no inventé una llave nueva.
+  Medido: `/api/tablero` sin token → **401**; con token → **200** con datos reales.
+
+- [x] **B2.5.5 — Bitácora visible.**
+  Cada acción deja renglón JSON en `/root/tablero/control.log` (se poda sola a
+  300 renglones) y el tablero la pinta. Las 4 acciones de la prueba quedaron ahí.
+
+- [x] **B2.5.6 — Probado de punta a punta contra un frente de prueba propio.**
+  Creé `zz-prueba-b2` (worktree + brief corto + `LISTA-zz-prueba-b2.md` + cron con
+  `vl-supervisor … haiku`). **Nunca se tocó un frente de Luis.**
+  | acción | resultado medido |
+  |---|---|
+  | `pausar` | `PAUSA-zz-prueba-b2` + murieron **1 supervisor y 5 procesos** (PIDs 1431922/1435301/1435302 verificados muertos uno por uno) |
+  | con la marca puesta | el supervisor sale en **0 s** sin lanzar `claude` |
+  | `detener` | además `STALLED-zz-prueba-b2` con "detenido por Luis desde el tablero" |
+  | `reanudar` | quita `PAUSA` y avisa que sigue `STALLED` |
+  | `relanzar` | quita ambas y relanza: **corridas 1 → 2** |
+  Al terminar se borró todo: worktree, `sup-zz-prueba-b2.sh`, su línea de cron y
+  sus contadores. Verificado: 0 supervisores vivos, 0 líneas de cron.
+
+- [x] **B2.5.7 — Un STALLED de Luis no es un frente atorado.**
+  `detener` marcaba `STALLED` y el tablero lo leía como "Atorado", como si se
+  hubiera roto. Ahora, si la marca dice "detenido por Luis", el estado es
+  **"detenido por ti"**: una decisión no es un problema.
+
+- [x] **B2.5.8 — Las marcas de otro frente ya no se cuentan como propias.**
+  Un worktree arrastra marcas de los tags que pasaron por él: `momentum-b1` tiene
+  **9** marcas de otros frentes. Con el `startswith` original, M8 heredaba estado
+  ajeno y en `exci-onb-calidad-2` (que corre ahora) el botón **Relanzar** salía
+  habilitado por el `DONE-` de *otro* tag.
+  Antes: `M8 → terminado/atorado` según marca ajena · `exci-onb-calidad-2 → Relanzar activo`
+  Después: `M8 → en espera (marcas_mias=[])` · `exci-onb-calidad-2 → Relanzar apagado`
 
 ## Bloque 6 · Avisos al teléfono
 
-- [ ] **B2.6.1 — Aviso cuando un frente termina, se atora o topa el límite.**
-- [ ] **B2.6.2 — Aviso cuando el disco baja de 5 GB.**
-- [ ] **B2.6.3 — Sin repetir el mismo aviso cada 5 minutos.**
+- [x] **B2.6.1 — Aviso cuando un frente termina, se atora o topa el límite.**
+  `/api/tablero/avisos` sobre `sendPushToOwners` (lo que ya existía). El colector
+  marca qué es noticia con una `clave` estable; solo viajan al teléfono
+  `fin:`, `atorado:`, `limite`, `disco`.
+  Medido ahora: 6 alertas vivas, 5 de ellas para teléfono
+  (`fin:exci-carril-b`, `fin:exci-carril-a`, `fin:exci-front`, `fin:exci-carril-c`,
+  `caido:vtrading-paper-mtm.service`).
+
+- [x] **B2.6.2 — Aviso cuando el disco baja de 5 GB.**
+  Alerta real disparada durante este trabajo: **3.5 GB libres** en una medición
+  y 4.5 GB en otra, siempre por debajo del umbral.
+
+- [x] **B2.6.3 — Sin repetir el mismo aviso cada 15 minutos.**
+  Tabla `tablero_avisos` (clave = PK): una alerta suena la primera vez que
+  aparece y no se repite mientras siga viva. Cuando se resuelve se borra su
+  renglón, así que si el problema vuelve, vuelve a sonar. Cron de Vercel cada
+  15 min en `vercel.json` + el propio tablero al refrescar, para no depender de
+  una sola vía.
 
 ## Bloque 7 · Escritorio y móvil
 
-- [ ] **B2.7.1 — 390 px: sin desborde, nada por debajo de 12 px.**
-- [ ] **B2.7.2 — Controles de 44×44 px mínimo.**
-- [ ] **B2.7.3 — 1440 px sin romper lo que ya existía.**
+Cómo se midió: `next dev` **no hidrata en este sandbox** (0 llamadas a `/api`,
+ni en WebKit ni en Chromium — el cliente de dev no levanta). Comprobado que no es
+cosa del navegador. Así que la pantalla se midió como pieza: el **componente
+real** empacado con esbuild, alimentado con el **`estado.json` real del servidor**,
+servido estático y medido en **WebKit** a 390×844 y 1440×900.
+Script reutilizable: `scripts/medir-tablero.py`.
+
+- [x] **B2.7.1 — Sin desborde y nada por debajo de 12 px.**
+  Desborde horizontal **0 px** a 390 y a 1440.
+  Textos < 12 px: **7 → 0**. Los 7 eran `mono-label`, que la marca define a 10 px
+  (`0.625rem`). No se cambió el tamaño de marca: se sube a 12 px **solo dentro de
+  esta pantalla**, con `[&_.mono-label]:!text-[12px]` en el contenedor. Va con `!`
+  a propósito porque `.mono-label` vive en `globals.css` *después* de las
+  utilidades de Tailwind y sin eso gana ella. Así entra también el "OPERACIÓN"
+  que pinta `PageHeader`, sin tocar `PageHeader` — que es de toda la app y de otro frente.
+
+- [x] **B2.7.2 — Controles de 44 px.**
+  **0 controles por debajo de 44 px** de 57, en ambas vistas
+  (constante `BOTON` con `h-11 min-h-[44px]`).
+
+- [x] **B2.7.3 — 1440 px sin romper nada, y sin pantallas kilométricas.**
+  Un frente quieto o cerrado no admite ninguna de las cuatro acciones, pero se le
+  pintaban igual 4 botones muertos: con 17 frentes dormidos la página medía
+  **12,270 px** de alto. Ahora la fila de controles solo aparece si hay algo que
+  hacer: **116 → 57 controles**. Además, "Apagado" ahora se ve apagado: un
+  `Relanzar` negro al 50% de opacidad seguía leyéndose como el botón principal.
+  **0 errores de consola** en ambas vistas.
+
+- [x] **B2.7.4 — Capturas miradas, no solo tomadas.**
+  `/root/vulcano-audit/vforge-rescate/`: `tb-final-390.png`, `tb-final-1440.png`
+  (página completa), `tb-vista-*.png` y `tb-frentes-*.png` (lo que se ve al entrar
+  y las tarjetas). Miradas una por una; de ahí salieron B2.7.3 y B2.5.8.
+
+---
+
+## Lo que dejo anotado para Vulcano
+
+1. **`.gitignore`**: `vercel link` agregó `.env*` (antes solo `.env.*`). Se queda:
+   cubre también un `.env` pelón. Es la única línea que toqué de ese archivo.
+2. **`CRON_SECRET` en Vercel**: el cron de avisos manda
+   `Authorization: Bearer $CRON_SECRET`. Si no está puesto, el endpoint acepta
+   `BRAIN_SECRET` como respaldo, pero lo limpio es ponerlo.
+3. **Frentes sin `LISTA-<tag>.md`**: hoy **19 de 22** no se pueden medir, incluido
+   M8, que se come el **55.9%** de la semana. El tablero lo dice en vez de
+   inventar un número, pero el arreglo de fondo es que cada brief traiga su lista
+   con el nombre del tag.
+4. **No revisé la pantalla dentro del shell de Next con sesión de Clerk**: las
+   llaves de VForge son `pk_live`/`sk_live` (atadas a vforge.site) y en localhost
+   rebotan a `/sign-in`; el `next dev` local además no hidrata. Queda pendiente
+   una pasada en la vista previa de Vercel de esta rama.

@@ -12,8 +12,7 @@ export const dynamic = "force-dynamic";
 //     esto corre en el servidor de Next y el shell real es vl-control, que solo
 //     sabe hacer cuatro cosas.
 
-import { currentUser } from "@clerk/nextjs/server";
-import { isOwnerUser } from "@/lib/auth/owner";
+import { requireDueno } from "@/lib/auth/tablero-gate";
 import { NextResponse } from "next/server";
 
 const RELAY = (
@@ -30,8 +29,8 @@ type Verbo = (typeof VERBOS)[number];
 const TAG_OK = /^[A-Za-z0-9][A-Za-z0-9._-]{0,48}$/;
 
 export async function POST(req: Request) {
-  const user = await currentUser();
-  if (!isOwnerUser(user)) {
+  const dueno = await requireDueno(req);
+  if (!dueno.ok) {
     return NextResponse.json(
       { ok: false, error: "estos controles son solo tuyos" },
       { status: 401 },
@@ -66,9 +65,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const quien =
-    user?.emailAddresses?.[0]?.emailAddress?.replace(/[^\w@.+-]/g, "") ??
-    "dueño";
+  const quien = dueno.quien.replace(/[^\w@.+-]/g, "") || "dueno";
   // accion y tag ya pasaron por lista blanca y regex; quien va saneado.
   const cmd = `VL_QUIEN=${quien} /usr/local/sbin/vl-control ${accion} ${tag}`;
 
