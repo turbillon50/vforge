@@ -740,7 +740,7 @@ export function ForgeStudio() {
   }
 
   return (
-    <div className="vf-mobile-stable flex h-full min-h-0 flex-col overflow-hidden overscroll-none bg-[var(--vf-bg)] text-[var(--vf-fg)]">
+    <div className="vf-mobile-stable flex h-full min-h-0 flex-col overflow-hidden overscroll-none bg-[#0c0c0e] text-[var(--vf-fg)]">
       <StudioToolbar
         projects={projects}
         activeProjectId={activeProjectId}
@@ -1520,7 +1520,7 @@ function SystemStrip({
   ];
 
   return (
-    <footer className="vf-crystal fixed inset-x-0 bottom-0 z-40 flex h-9 items-center gap-3 overflow-hidden border-t border-white/10 px-4 text-[12px] text-white/80 md:left-[248px]">
+    <footer className="fixed inset-x-0 bottom-0 z-40 flex h-9 items-center gap-3 overflow-hidden border-t border-white/10 bg-[#090909] px-4 text-[12px] text-white/75">
       {items.map(({ label, detail, active, Icon }) => (
         <Link
           key={label}
