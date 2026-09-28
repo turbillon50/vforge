@@ -28,7 +28,7 @@ interface JobRow {
 }
 
 async function fetchBrain(path: string, body?: object) {
-  const BRAIN = process.env.RELAY_BASE_URL || "http://178.105.135.26";
+  const BRAIN = process.env.RELAY_BASE_URL || "https://brain.vforge.site";
   const SECRET = process.env.HETZNER_SECRET;
   if (!SECRET) return null;
   try {

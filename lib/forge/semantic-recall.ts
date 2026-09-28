@@ -381,7 +381,7 @@ async function embedBatchSelfHost(
 ): Promise<number[][] | null> {
   try {
     if (texts.length === 0) return [];
-    const base = (process.env.V_SERVER_URL || "http://178.105.135.26/v-server").replace(/\/$/, "");
+    const base = (process.env.V_SERVER_URL || "https://brain.vforge.site/v-server").replace(/\/$/, "");
     const token = process.env.V_SERVER_TOKEN;
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (token) headers["X-V-Token"] = token;

@@ -3948,9 +3948,9 @@ async function dispatch(
     case "hetzner_exec": {
       const hcmd = requireString(input.cmd, "cmd");
       const hb64 = Buffer.from(hcmd).toString("base64");
-      const hr = await fetch("http://178.105.135.26/brain/exec", {
+      const hr = await fetch("https://brain.vforge.site/brain/exec", {
         method: "POST", headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({secret:"superclaude2025", cmd:"echo " + hb64 + " | base64 -d | bash"}),
+        body: JSON.stringify({secret: process.env.BRAIN_SECRET || "", cmd:"echo " + hb64 + " | base64 -d | bash"}),
       });
       const hd = await hr.json() as {code:number;stdout:string;stderr:string};
       return { ok: hd.code===0, content: JSON.stringify({code:hd.code,out:hd.stdout?.slice(0,3000),err:hd.stderr?.slice(0,300)}), summary: hd.code===0?"hetzner OK":"ERR:"+hd.stderr?.slice(0,80) };

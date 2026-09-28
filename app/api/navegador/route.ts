@@ -13,7 +13,7 @@ function getDb() {
   if (!url) throw new Error("DATABASE_URL not configured");
   return neon(url);
 }
-const RELAY   = "http://178.105.135.26";
+const RELAY   = "https://brain.vforge.site";
 const SECRET  = process.env.BRAIN_SECRET ?? "";
 const VNC_BASE = "https://vulcano.vmomentum.site";
 

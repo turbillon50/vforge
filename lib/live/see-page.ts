@@ -5,7 +5,7 @@
 import { buildCdpCurrentCommand, buildCdpNavigateCommand, CDP_CONTAINER } from "./see-cdp";
 import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 
-const RELAY = (process.env.VULCANO_RELAY_URL || "http://178.105.135.26").replace(
+const RELAY = (process.env.VULCANO_RELAY_URL || "https://brain.vforge.site").replace(
   /\/$/,
   "",
 );

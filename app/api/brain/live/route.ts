@@ -4,8 +4,8 @@ import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const BRAIN_URL = process.env.HETZNER_URL ?? "http://178.105.135.26";
-const BRAIN_SECRET = process.env.BRAIN_SECRET ?? "superclaude2025";
+const BRAIN_URL = process.env.HETZNER_URL ?? "https://brain.vforge.site";
+const BRAIN_SECRET = process.env.BRAIN_SECRET ?? "";
 
 /**
  * GET /api/brain/live

@@ -10,7 +10,7 @@ import { isOwnerEmail } from "@/lib/auth/owner";
 import { NextResponse } from "next/server";
 import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 
-const RELAY = "http://178.105.135.26";
+const RELAY = "https://brain.vforge.site";
 const SECRET = process.env.BRAIN_SECRET ?? "";
 
 export async function POST(req: Request) {

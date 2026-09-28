@@ -152,7 +152,7 @@ function projectKeyOf(row: Row): string | null {
 }
 
 const RELAY_BASE =
-  process.env.HETZNER_URL?.replace(/\/$/, "") || "http://178.105.135.26";
+  process.env.HETZNER_URL?.replace(/\/$/, "") || "https://brain.vforge.site";
 
 async function fetchJson(url: string, ms = 2500): Promise<unknown | null> {
   try {

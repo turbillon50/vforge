@@ -34,7 +34,7 @@ function getDispatch(): NeonQueryFunction<false, false> {
 const RELAY_BASE = (
   process.env.HETZNER_URL ??
   process.env.RELAY_BASE_URL ??
-  "http://178.105.135.26"
+  "https://brain.vforge.site"
 ).replace(/\/$/, "");
 
 async function relayJson(path: string, ms = 3000): Promise<unknown | null> {

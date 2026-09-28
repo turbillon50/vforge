@@ -670,7 +670,7 @@ async function runViaHetznerRelay(args: {
 }): Promise<boolean> {
   const { turns, send, sessionId, userId, memoryUserId } = args;
   const HETZNER_URL =
-    process.env.HETZNER_V_URL || "http://178.105.135.26/v/chat";
+    process.env.HETZNER_V_URL || "https://brain.vforge.site/v/chat";
   const HETZNER_SECRET = process.env.HETZNER_SECRET || "";
   if (!HETZNER_SECRET) return false;
 

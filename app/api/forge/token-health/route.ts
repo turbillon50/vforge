@@ -14,7 +14,7 @@ import { NextResponse } from "next/server";
 const RELAY =
   process.env.HETZNER_URL?.replace(/\/$/, "") ||
   process.env.RELAY_BASE_URL?.replace(/\/$/, "") ||
-  "http://178.105.135.26";
+  "https://brain.vforge.site";
 
 const HEALTH_URL = `${RELAY}/brain/file/brain-files/token-health.json`;
 

@@ -64,7 +64,7 @@ async function viaGemini(key: string, message: string, history: Turn[]): Promise
 }
 
 async function viaHouseV(message: string, history: Turn[], userId: string): Promise<string | null> {
-  const base = process.env.HETZNER_V_URL || "http://178.105.135.26/v/chat";
+  const base = process.env.HETZNER_V_URL || "https://brain.vforge.site/v/chat";
   const secret = process.env.HETZNER_SECRET || "";
   if (!secret) return null;
   const url = base.endsWith("/v/chat-full") ? base : base.replace(/\/v\/chat.*/, "/v/chat-full");

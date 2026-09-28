@@ -14,7 +14,7 @@ import { V_TEXT_SYSTEM_PROMPT } from "@/lib/forge/v-text-persona";
 import { assertValidModelOutput } from "@/lib/forge/provider-errors";
 
 // URL del v-server en Hetzner (via nginx /v-server/ → localhost:5000)
-const HETZNER_BASE = (process.env.HETZNER_URL || "http://178.105.135.26").replace(/\/$/, "");
+const HETZNER_BASE = (process.env.HETZNER_URL || "https://brain.vforge.site").replace(/\/$/, "");
 const CLAUDE_ENDPOINT = `${HETZNER_BASE}/v-server/claude`;
 const V_SERVER_TOKEN = process.env.HETZNER_SECRET || "";
 

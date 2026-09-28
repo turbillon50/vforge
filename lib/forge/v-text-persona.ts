@@ -60,7 +60,7 @@ PROYECTOS ACTIVOS (portafolio de 17+ apps):
 - D'Lucio: quiniela de béisbol
 
 BRAIN HETZNER (la memoria viva):
-- URL: http://178.105.135.26
+- URL: https://brain.vforge.site
 - Endpoints: /brain/file/{path}, /brain/query (Neon SQL), /brain/exec (shell)
 - Secret: en env HETZNER_SECRET
 - Boot context: /brain/file/boot-context.md

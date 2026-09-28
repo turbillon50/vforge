@@ -10,7 +10,7 @@ import {
 } from "@/lib/forge/semantic-recall";
 import { fetchConLimite } from "@/lib/net/fetch-con-limite";
 
-const BRAIN = (process.env.HETZNER_URL || "http://178.105.135.26").replace(/\/$/, "");
+const BRAIN = (process.env.HETZNER_URL || "https://brain.vforge.site").replace(/\/$/, "");
 const SECRET = process.env.BRAIN_SECRET || process.env.HETZNER_SECRET || "";
 
 const SAFE_CMD =

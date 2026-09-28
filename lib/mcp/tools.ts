@@ -1385,8 +1385,8 @@ export async function runMcpTool(
       if (!message) return err("Falta 'message' (la instrucción para V).");
       if (message.length > 4000) return err("message demasiado largo (max 4000 chars).");
       const session_id = String((args as Record<string, unknown>).session_id || "claude-mcp").trim() || "claude-mcp";
-      const BRAIN = "http://178.105.135.26";
-      const SECRET = process.env.BRAIN_SECRET || process.env.HETZNER_SECRET || "superclaude2025";
+      const BRAIN = "https://brain.vforge.site";
+      const SECRET = process.env.BRAIN_SECRET || process.env.HETZNER_SECRET || "";
       try {
         const r = await fetch(`${BRAIN}/v/chat-full`, {
           method: "POST",
@@ -1456,8 +1456,8 @@ export async function runMcpTool(
   case "vulcano_boot": {
     // Carga contexto completo de identidad + proyectos activos + estado daemon
     // Es el PRIMER tool que llama cualquier agente al conectarse al MCP.
-    const BRAIN = "http://178.105.135.26";
-    const SECRET = process.env.BRAIN_SECRET || "superclaude2025";
+    const BRAIN = "https://brain.vforge.site";
+    const SECRET = process.env.BRAIN_SECRET || "";
 
     // 1. boot-context
     let bootCtx = "";
@@ -1572,8 +1572,8 @@ export async function runMcpTool(
     const BLOCKED = ["rm -rf /", "mkfs", "dd if=", ":(){:|:&};:", "shutdown", "reboot"];
     if (BLOCKED.some((b) => cmd.includes(b))) return err("Comando bloqueado por seguridad.");
 
-    const BRAIN = "http://178.105.135.26";
-    const SECRET = process.env.BRAIN_SECRET || "superclaude2025";
+    const BRAIN = "https://brain.vforge.site";
+    const SECRET = process.env.BRAIN_SECRET || "";
 
     try {
       const r = await fetch(`${BRAIN}/brain/exec`, {
@@ -1621,8 +1621,8 @@ export async function runMcpTool(
     const isAllowed = ALLOWED_OPS.some((op) => qUpper.startsWith(op));
     if (!isAllowed) return err("Solo SELECT / INSERT en lessons|patterns / UPDATE en projects|dispatch_queue permitidos desde MCP.");
 
-    const BRAIN = "http://178.105.135.26";
-    const SECRET = process.env.BRAIN_SECRET || "superclaude2025";
+    const BRAIN = "https://brain.vforge.site";
+    const SECRET = process.env.BRAIN_SECRET || "";
 
     try {
       const r = await fetch(`${BRAIN}/brain/query`, {
@@ -1657,8 +1657,8 @@ export async function runMcpTool(
     if (!id) return err("project_id requerido");
     if (!lastAction && !nextStep) return err("Al menos last_action o next_step requerido");
 
-    const BRAIN = "http://178.105.135.26";
-    const SECRET = process.env.BRAIN_SECRET || "superclaude2025";
+    const BRAIN = "https://brain.vforge.site";
+    const SECRET = process.env.BRAIN_SECRET || "";
 
     const setClauses: string[] = ["updated_at = now()"];
     const vals: unknown[] = [id];
@@ -1697,8 +1697,8 @@ export async function runMcpTool(
     if (!lesson) return err("lesson requerido");
     if (!["acierto", "error", "patron"].includes(type)) return err("type debe ser: acierto | error | patron");
 
-    const BRAIN = "http://178.105.135.26";
-    const SECRET = process.env.BRAIN_SECRET || "superclaude2025";
+    const BRAIN = "https://brain.vforge.site";
+    const SECRET = process.env.BRAIN_SECRET || "";
 
     try {
       const r = await fetch(`${BRAIN}/brain/query`, {
@@ -1724,8 +1724,8 @@ export async function runMcpTool(
     const limit = Number((args as Record<string, unknown>).limit || 5);
     if (!q) return err("q requerido");
 
-    const BRAIN = "http://178.105.135.26";
-    const SECRET = process.env.BRAIN_SECRET || "superclaude2025";
+    const BRAIN = "https://brain.vforge.site";
+    const SECRET = process.env.BRAIN_SECRET || "";
 
     try {
       const r = await fetch(`${BRAIN}/brain/search`, {

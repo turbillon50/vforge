@@ -15,7 +15,7 @@ import { NextResponse } from "next/server";
 const RELAY =
   process.env.HETZNER_URL?.replace(/\/$/, "") ||
   process.env.RELAY_BASE_URL?.replace(/\/$/, "") ||
-  "http://178.105.135.26";
+  "https://brain.vforge.site";
 
 const SECRET = process.env.HETZNER_SECRET ?? process.env.BRAIN_SECRET ?? "";
 const REFRESH_CMD = "bash /root/agents/refresh_token.sh 2>&1 | tail -n 25";
