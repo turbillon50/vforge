@@ -127,8 +127,8 @@ export function MarketingFooter() {
 
       <div style={{ padding:"64px 24px 40px" }}>
         <div style={{ maxWidth:1200, margin:"0 auto" }}>
-          <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:48, marginBottom:64 }}>
-            <div>
+          <div className="vf-mf-cols">
+            <div className="vf-mf-marca">
               <Link href="/" style={{ display:"flex", alignItems:"center", gap:10, textDecoration:"none", marginBottom:16 }}>
                 <VForgeLogo size={22} />
                 <span style={{ fontSize:15, fontWeight:600, letterSpacing:"-0.03em", color:"#FFFFFF" }}>VForge</span>
@@ -158,7 +158,7 @@ export function MarketingFooter() {
             <div>
               <h4 style={{ fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:"#8695aa", marginBottom:16 }}>Plataforma</h4>
               <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:10 }}>
-                {[{ label:"Integraciones", href:"/labs" }, { label:"API", href:"#" }, { label:"Blog", href:"/blog" }, { label:"Status", href:"#" }].map(item => (
+                {[{ label:"Integraciones", href:"/labs" }, { label:"API", href:"/developers" }, { label:"Blog", href:"/blog" }, { label:"Estado", href:"/status" }].map(item => (
                   <li key={item.label}><Link href={item.href} style={{ fontSize:13, color:"#94a3b8", textDecoration:"none" }}>{item.label}</Link></li>
                 ))}
               </ul>
@@ -167,7 +167,7 @@ export function MarketingFooter() {
             <div>
               <h4 style={{ fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", color:"#8695aa", marginBottom:16 }}>Legal</h4>
               <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:10 }}>
-                {[{ label:"Privacidad", href:"/privacy" }, { label:"Terminos", href:"/terms" }, { label:"Manifiesto", href:"/manifiesto" }, { label:"Contacto", href:"#" }].map(item => (
+                {[{ label:"Privacidad", href:"/privacy" }, { label:"Terminos", href:"/terms" }, { label:"Manifiesto", href:"/manifiesto" }, { label:"Contacto", href:"/support" }].map(item => (
                   <li key={item.label}><Link href={item.href} style={{ fontSize:13, color:"#94a3b8", textDecoration:"none" }}>{item.label}</Link></li>
                 ))}
               </ul>
@@ -175,14 +175,24 @@ export function MarketingFooter() {
           </div>
 
           <div style={{ borderTop:"1px solid rgba(59, 130, 246, 0.06)", paddingTop:24, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
-            <p style={{ fontSize:12, color:"#94a3b8" }}>2026 VForge. Todos los derechos reservados.</p>
-            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+            <p style={{ fontSize:12, color:"#94a3b8" }}>{new Date().getFullYear()} VForge. Todos los derechos reservados.</p>
+            {/* Antes decia "Todos los sistemas operativos" (mala traduccion de
+                "all systems operational") afirmando un estado que nadie medía.
+                Ahora es un enlace a la pagina que sí lo mide. */}
+            <Link href="/status" style={{ display:"flex", alignItems:"center", gap:6, textDecoration:"none" }}>
               <div style={{ width:6, height:6, background:"#3b82f6", borderRadius:"50%" }}/>
-              <span style={{ fontSize:12, color:"#94a3b8" }}>Todos los sistemas operativos</span>
-            </div>
+              <span style={{ fontSize:12, color:"#94a3b8" }}>Estado del sistema</span>
+            </Link>
           </div>
         </div>
       </div>
+      <style>{`
+        .vf-mf-cols { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:48px; margin-bottom:64px; }
+        @media (max-width: 899px) {
+          .vf-mf-cols { grid-template-columns:1fr 1fr; gap:32px; margin-bottom:40px; }
+          .vf-mf-marca { grid-column:1 / -1; }
+        }
+      `}</style>
     </footer>
   );
 }
