@@ -180,7 +180,7 @@ export default function SecretsPage() {
         <div className="rounded-xl border border-app">
           <div className="flex items-center justify-between border-b border-app px-4 py-3">
             <p className="label-caps text-muted">{t.secrets.list_label}</p>
-            <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-muted">
+            <div className="flex items-center gap-2 font-mono text-[12px] uppercase tracking-widest text-muted">
               <IconShield size={12} className="text-success-emerald" />{" "}
               {t.secrets.sealed}
             </div>
@@ -203,7 +203,7 @@ export default function SecretsPage() {
               >
                 <IconKey size={13} /> Unlock vault
               </button>
-              <p className="mt-4 text-[11px] text-muted">
+              <p className="mt-4 text-[12px] text-muted">
                 El token vive en la env var <span className="font-mono">VFORGE_OPERATOR_TOKEN</span>{" "}
                 de Vercel. Pégalo cuando se abra el prompt.
               </p>
@@ -211,7 +211,7 @@ export default function SecretsPage() {
           )}
 
           {hasToken && loading && (
-            <div className="p-8 text-center font-mono text-[11px] uppercase tracking-widest text-muted">
+            <div className="p-8 text-center font-mono text-[12px] uppercase tracking-widest text-muted">
               Cargando…
             </div>
           )}
@@ -250,7 +250,7 @@ export default function SecretsPage() {
                       {s.provider ?? s.scope ?? "—"}
                     </div>
                     <div className="col-span-12 md:col-span-3 flex items-center justify-end gap-2">
-                      <span className="font-mono text-[11px] uppercase tracking-widest text-muted">
+                      <span className="font-mono text-[12px] uppercase tracking-widest text-muted">
                         {s.rotated_at
                           ? `rotada ${timeAgo(s.rotated_at)}`
                           : `creada ${timeAgo(s.created_at)}`}
@@ -264,8 +264,8 @@ export default function SecretsPage() {
                         }
                         className={
                           isCopied
-                            ? "flex h-7 items-center gap-1 rounded-md border border-success-emerald/40 bg-success-emerald/10 px-2 font-mono text-[10px] uppercase tracking-widest text-success-emerald"
-                            : "flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1/[0.05] px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300 disabled:opacity-50"
+                            ? "flex h-7 items-center gap-1 rounded-md border border-success-emerald/40 bg-success-emerald/10 px-2 font-mono text-[12px] uppercase tracking-widest text-success-emerald"
+                            : "flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1/[0.05] px-2 font-mono text-[12px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300 disabled:opacity-50"
                         }
                       >
                         {isLoading ? (
@@ -279,7 +279,7 @@ export default function SecretsPage() {
                       </button>
                     </div>
                     {err && (
-                      <div className="col-span-12 -mt-1 text-right text-[11px] text-error-crimson">
+                      <div className="col-span-12 -mt-1 text-right text-[12px] text-error-crimson">
                         ⚠ {err}
                       </div>
                     )}
@@ -372,7 +372,7 @@ export function AddSecretModal({ onClose, onSaved, token }: {
           { label:"Descripción (opcional)", val:desc, set:setDesc, type:"text", mono:false },
         ].map(({ label, val, set, type, mono }) => (
           <div key={label} className="mb-3">
-            <label className="mb-1 block text-[11px]" style={{ color:"rgba(255,255,255,0.4)" }}>{label}</label>
+            <label className="mb-1 block text-[12px]" style={{ color:"rgba(255,255,255,0.4)" }}>{label}</label>
             <input type={type} value={val} onChange={e => set(e.target.value)}
               className="w-full rounded-lg px-3 py-2 text-[13px] outline-none transition-colors"
               style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)",
@@ -475,7 +475,7 @@ export function ImportEnvModal({ onClose, onSaved, token }: {
           onFocus={e => (e.currentTarget.style.borderColor = "rgba(124,58,237,0.4)")}
           onBlur={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")} />
         {preview.length > 0 && (
-          <p className="mt-2 text-[11px]" style={{ color:"rgba(255,255,255,0.3)" }}>
+          <p className="mt-2 text-[12px]" style={{ color:"rgba(255,255,255,0.3)" }}>
             {preview.length} variable{preview.length !== 1 ? "s" : ""} detectada{preview.length !== 1 ? "s" : ""}
           </p>
         )}

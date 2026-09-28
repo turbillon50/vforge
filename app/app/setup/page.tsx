@@ -54,14 +54,14 @@ export default function SetupPage() {
         <button
           type="button"
           onClick={() => goStudio(true)}
-          className="text-[12px] text-[var(--fg-muted)] underline underline-offset-4"
+          className="inline-flex min-h-11 items-center text-[12px] text-[var(--fg-tertiary)] underline underline-offset-4"
         >
           Saltar por ahora
         </button>
       </header>
 
       <div className="border-b border-[var(--border-1)] bg-white px-5 py-8 md:px-8">
-        <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+        <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
           Plan · Integrate · Execute
         </p>
         <h1 className="mt-2 max-w-xl text-[clamp(1.6rem,3vw,2rem)] font-semibold tracking-[-0.04em]">
@@ -74,7 +74,7 @@ export default function SetupPage() {
 
       <main className="flex flex-1 items-start justify-center pt-4 md:pt-6">
         {loading ? (
-          <p className="mt-20 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+          <p className="mt-20 font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
             Revisando conexiones…
           </p>
         ) : (

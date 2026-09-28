@@ -174,24 +174,24 @@ export default function ActivityPage() {
                   <div className="min-w-0">
                     <p className="truncate text-[13px] font-medium">{event.action}</p>
                     {event.resource_type || event.resource_id ? (
-                      <p className="mt-1 truncate font-mono text-[9px] text-[var(--fg-muted)]">
+                      <p className="mt-1 truncate font-mono text-[12px] text-[var(--fg-muted)]">
                         {[event.resource_type, event.resource_id]
                           .filter(Boolean)
                           .join(" · ")}
                       </p>
                     ) : (
-                      <p className="mt-1 font-mono text-[9px] text-[var(--fg-muted)]">
+                      <p className="mt-1 font-mono text-[12px] text-[var(--fg-muted)]">
                         Evento de plataforma
                       </p>
                     )}
                   </div>
                   <div className="flex items-center gap-3 sm:justify-end">
                     {event.ring !== null ? (
-                      <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+                      <span className="font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
                         ring {event.ring}
                       </span>
                     ) : null}
-                    <time className="font-mono text-[9px] text-[var(--fg-muted)]">
+                    <time className="font-mono text-[12px] text-[var(--fg-muted)]">
                       {timeAgo(event.created_at)}
                     </time>
                   </div>

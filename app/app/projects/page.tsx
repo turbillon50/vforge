@@ -757,10 +757,10 @@ export default function ProjectsPage() {
               value={f.q}
               onChange={(e) => upd({ q: e.target.value })}
               placeholder="Buscar proyecto, cliente, repo, comentario…"
-              className="min-w-0 flex-1 bg-transparent text-[14px] text-black placeholder:text-[var(--fg-muted)]"
+              className="min-h-11 min-w-0 flex-1 bg-transparent text-[14px] text-black placeholder:text-[var(--fg-muted)]"
             />
             {f.q ? (
-              <button type="button" onClick={() => upd({ q: "" })} aria-label="Borrar búsqueda">
+              <button type="button" onClick={() => upd({ q: "" })} aria-label="Borrar búsqueda" className="grid h-11 w-11 shrink-0 place-items-center">
                 <IconX size={14} />
               </button>
             ) : null}
@@ -915,11 +915,9 @@ export default function ProjectsPage() {
       {error ? (
         <div className="m-5 border border-black bg-white px-4 py-4 md:m-8">
           <p className="text-[13px] font-medium text-black">{error}</p>
-          <button
-            type="button"
-            onClick={() => void loadProjects()}
-            className="mt-3 text-[12px] underline underline-offset-4"
-          >
+          {/* Era un botón con aspecto de enlace y 19 px de alto: por debajo del
+              mínimo táctil de MUST-500 §274 y sin pinta de que se pueda tocar. */}
+          <button type="button" onClick={() => void loadProjects()} className="btn-ghost mt-3">
             Volver a intentar
           </button>
         </div>
@@ -1163,7 +1161,7 @@ function SortControl({
           onClick={onDir}
           title="Cambiar dirección"
           aria-label={`Dirección: ${dir === "desc" ? def.desc : def.asc}. Tocar para invertir`}
-          className="flex items-center gap-1.5 whitespace-nowrap border-l border-[var(--border-1)] px-3 text-black hover:bg-[#f7f7f5]"
+          className="flex min-h-11 items-center gap-1.5 whitespace-nowrap border-l border-[var(--border-1)] px-3 text-black hover:bg-[#f7f7f5]"
         >
           <span aria-hidden className="text-[15px] leading-none">{dir === "desc" ? "↓" : "↑"}</span>
           {dir === "desc" ? def.desc : def.asc}
@@ -1189,7 +1187,7 @@ function HeadSort({
     <button
       type="button"
       onClick={() => onSort(id)}
-      className={`inline-flex items-center gap-1 text-left uppercase tracking-[0.16em] hover:text-black ${on ? "text-black" : ""}`}
+      className={`inline-flex min-h-11 items-center gap-1 text-left uppercase tracking-[0.16em] hover:text-black ${on ? "text-black" : ""}`}
       title={`Ordenar por ${label.toLowerCase()}`}
     >
       {label}

@@ -71,7 +71,7 @@ function LiveMetric({ value, label, accent }: { value: number; label: string; ac
         className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-50 blur-2xl"
         style={{ background: accent }}
       />
-      <p className="label-caps text-[10px] text-muted">{label}</p>
+      <p className="label-caps text-[12px] text-muted">{label}</p>
       <div className="relative mt-1 h-9 overflow-hidden">
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
@@ -251,10 +251,10 @@ export default function TallerPage() {
         {/* Selector de proyecto — ESFERA = PROYECTO */}
         {projects.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="label-caps text-[10px] text-muted">Proyecto</span>
+            <span className="label-caps text-[12px] text-muted">Proyecto</span>
             <button
               onClick={() => setSelected(null)}
-              className="chip min-h-[44px] px-3.5 text-[11px] transition active:scale-95"
+              className="chip min-h-[44px] px-3.5 text-[12px] transition active:scale-95"
               style={{
                 borderColor: selected === null ? "#8b5cf666" : undefined,
                 color: selected === null ? "#8b5cf6" : undefined,
@@ -267,7 +267,7 @@ export default function TallerPage() {
               <button
                 key={p.key}
                 onClick={() => setSelected(p.key === selected ? null : p.key)}
-                className="chip min-h-[44px] px-3.5 text-[11px] transition active:scale-95"
+                className="chip min-h-[44px] px-3.5 text-[12px] transition active:scale-95"
                 style={{
                   borderColor: selected === p.key ? "#a78bfa66" : undefined,
                   color: selected === p.key ? "#a78bfa" : undefined,
@@ -324,7 +324,7 @@ export default function TallerPage() {
                 setFocusJob(null);
                 setView("constelacion");
               }}
-              className="chip inline-flex min-h-[40px] items-center gap-1.5 px-3 text-[11px] text-violet-400 transition active:scale-95"
+              className="chip inline-flex min-h-[40px] items-center gap-1.5 px-3 text-[12px] text-violet-400 transition active:scale-95"
             >
               <IconBoxes size={13} /> Volver a constelación
             </button>
@@ -436,14 +436,14 @@ export default function TallerPage() {
                           <span className="text-[13px] font-semibold text-on-surface">{j.agentName}</span>
                           {j.project && (
                             <span
-                              className="truncate rounded-full border px-2 py-0.5 text-[10px] font-medium"
+                              className="truncate rounded-full border px-2 py-0.5 text-[12px] font-medium"
                               style={{ borderColor: `${hue}40`, color: hue, background: `${hue}14` }}
                             >
                               {j.project}
                             </span>
                           )}
                           {typeof j.progress === "number" && (
-                            <span className="text-[10px] text-muted">{j.progress}%</span>
+                            <span className="text-[12px] text-muted">{j.progress}%</span>
                           )}
                         </div>
                         <p className="mt-0.5 truncate text-[12px] text-muted">
@@ -451,7 +451,7 @@ export default function TallerPage() {
                         </p>
                       </div>
 
-                      <span className="flex-none text-[11px] text-muted">{rel(j.since, now)}</span>
+                      <span className="flex-none text-[12px] text-muted">{rel(j.since, now)}</span>
                       <span
                         className="h-2 w-2 flex-none rounded-full"
                         style={{ background: hue, boxShadow: `0 0 8px ${hue}` }}
@@ -472,7 +472,7 @@ export default function TallerPage() {
             </p>
             <div className="mt-3 flex items-center gap-3">
               <span
-                className="flex flex-none items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                className="flex flex-none items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold"
                 style={{
                   color: VERDICT_HUE[data.lastVerdict.verdict],
                   background: `${VERDICT_HUE[data.lastVerdict.verdict]}1a`,
@@ -487,7 +487,7 @@ export default function TallerPage() {
                     Job #{data.lastVerdict.id}
                   </span>
                   {data.lastVerdict.project && (
-                    <span className="truncate text-[11px] text-violet-400">
+                    <span className="truncate text-[12px] text-violet-400">
                       {data.lastVerdict.project}
                     </span>
                   )}
@@ -498,7 +498,7 @@ export default function TallerPage() {
                   </p>
                 )}
               </div>
-              <span className="flex-none text-[11px] text-muted">{rel(data.lastVerdict.ts, now)}</span>
+              <span className="flex-none text-[12px] text-muted">{rel(data.lastVerdict.ts, now)}</span>
             </div>
           </section>
         )}
@@ -523,14 +523,14 @@ export default function TallerPage() {
                     />
                     <span className="flex-none font-medium text-on-surface">{f.agentName}</span>
                     {f.project && (
-                      <span className="hidden max-w-[90px] flex-none truncate text-[10px] text-violet-400 sm:inline">
+                      <span className="hidden max-w-[90px] flex-none truncate text-[12px] text-violet-400 sm:inline">
                         {f.project}
                       </span>
                     )}
                     <span className="min-w-0 flex-1 truncate text-muted">{truncate(f.task, 64)}</span>
                     {f.grokVerdict && (
                       <span
-                        className="hidden flex-none items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold sm:inline-flex"
+                        className="hidden flex-none items-center gap-1 rounded-full px-1.5 py-0.5 text-[12px] font-semibold sm:inline-flex"
                         style={{
                           color: VERDICT_HUE[f.grokVerdict],
                           background: `${VERDICT_HUE[f.grokVerdict]}1a`,
@@ -542,12 +542,12 @@ export default function TallerPage() {
                       </span>
                     )}
                     <span
-                      className="flex-none rounded-full px-1.5 py-0.5 text-[9px] font-medium"
+                      className="flex-none rounded-full px-1.5 py-0.5 text-[12px] font-medium"
                       style={{ color: hue, background: `${hue}14`, border: `1px solid ${hue}33` }}
                     >
                       {f.status}
                     </span>
-                    <span className="flex-none text-[11px] text-muted">{rel(f.ts, now)}</span>
+                    <span className="flex-none text-[12px] text-muted">{rel(f.ts, now)}</span>
                   </div>
                 );
               })}

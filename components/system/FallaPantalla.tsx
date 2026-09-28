@@ -66,12 +66,12 @@ export function FallaPantalla({
               type="button"
               onClick={() => setAbierto((v) => !v)}
               aria-expanded={abierto}
-              className="font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--fg-muted,#71717A)] underline underline-offset-4"
+              className="font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted,#71717A)] underline underline-offset-4"
             >
               {abierto ? "Ocultar detalle técnico" : "Ver detalle técnico"}
             </button>
             {abierto ? (
-              <pre className="mt-3 max-h-52 overflow-auto rounded-lg border border-[var(--line,#E8E8E8)] p-3 font-mono text-[11px] leading-relaxed">
+              <pre className="mt-3 max-h-52 overflow-auto rounded-lg border border-[var(--line,#E8E8E8)] p-3 font-mono text-[12px] leading-relaxed">
                 {detalle}
               </pre>
             ) : null}

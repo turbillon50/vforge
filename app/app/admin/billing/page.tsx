@@ -75,7 +75,7 @@ export default async function AdminBillingPage() {
   return (
     <main className="mx-auto w-full max-w-5xl px-5 pb-28 pt-10 md:px-8 md:pt-14">
       <header>
-        <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-violet-300">
+        <p className="font-mono text-[12px] uppercase tracking-[0.25em] text-violet-300">
           Administración · Billing
         </p>
         <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-on-surface md:text-5xl">
@@ -88,7 +88,7 @@ export default async function AdminBillingPage() {
 
       <div className="mt-8 grid grid-cols-2 gap-3 md:max-w-md">
         <div className="rounded-xl border border-app bg-tint-1/[0.05] p-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
+          <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-muted">
             Suscriptores activos
           </p>
           <p className="mt-1 font-display text-3xl font-semibold tabular-nums text-on-surface">
@@ -96,7 +96,7 @@ export default async function AdminBillingPage() {
           </p>
         </div>
         <div className="rounded-xl border border-app bg-tint-1/[0.05] p-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
+          <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-muted">
             MRR estimado
           </p>
           <p className="mt-1 font-display text-3xl font-semibold tabular-nums text-on-surface">
@@ -119,11 +119,11 @@ export default async function AdminBillingPage() {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-app text-muted">
-                <th className="px-4 py-3 font-mono text-[10px] uppercase tracking-[0.18em]">Usuario</th>
-                <th className="px-4 py-3 font-mono text-[10px] uppercase tracking-[0.18em]">Plan</th>
-                <th className="px-4 py-3 font-mono text-[10px] uppercase tracking-[0.18em]">Estado</th>
-                <th className="hidden px-4 py-3 font-mono text-[10px] uppercase tracking-[0.18em] md:table-cell">Próximo cobro</th>
-                <th className="hidden px-4 py-3 font-mono text-[10px] uppercase tracking-[0.18em] lg:table-cell">Customer</th>
+                <th className="px-4 py-3 font-mono text-[12px] uppercase tracking-[0.18em]">Usuario</th>
+                <th className="px-4 py-3 font-mono text-[12px] uppercase tracking-[0.18em]">Plan</th>
+                <th className="px-4 py-3 font-mono text-[12px] uppercase tracking-[0.18em]">Estado</th>
+                <th className="hidden px-4 py-3 font-mono text-[12px] uppercase tracking-[0.18em] md:table-cell">Próximo cobro</th>
+                <th className="hidden px-4 py-3 font-mono text-[12px] uppercase tracking-[0.18em] lg:table-cell">Customer</th>
               </tr>
             </thead>
             <tbody>
@@ -134,7 +134,7 @@ export default async function AdminBillingPage() {
                     <p className="text-[12px] text-muted">{r.email}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="rounded-full bg-violet-500/15 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-violet-300 ring-1 ring-violet-500/30">
+                    <span className="rounded-full bg-violet-500/15 px-2.5 py-0.5 font-mono text-[12px] uppercase tracking-[0.16em] text-violet-300 ring-1 ring-violet-500/30">
                       {r.plan}
                     </span>
                   </td>
@@ -142,7 +142,7 @@ export default async function AdminBillingPage() {
                   <td className="hidden px-4 py-3 tabular-nums text-on-surface-variant md:table-cell">
                     {fmtDate(r.current_period_end)}
                   </td>
-                  <td className="hidden px-4 py-3 font-mono text-[11px] text-muted lg:table-cell">
+                  <td className="hidden px-4 py-3 font-mono text-[12px] text-muted lg:table-cell">
                     {r.stripe_customer_id ?? "—"}
                   </td>
                 </tr>

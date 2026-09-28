@@ -14,7 +14,7 @@ export function ClerkPlaceholder({ mode }: { mode: "sign-in" | "sign-up" }) {
           ? "El formulario real aparece cuando Clerk está configurado. Esta vista local no simula una sesión ni permite saltarse la autenticación."
           : "El registro real aparece cuando Clerk está configurado. Esta vista local no crea cuentas de demostración."}
       </p>
-      <p className="mt-6 border-t border-[var(--border-1)] pt-4 font-mono text-[9px] uppercase tracking-[0.13em] text-[var(--fg-muted)]">
+      <p className="mt-6 border-t border-[var(--border-1)] pt-4 font-mono text-[12px] uppercase tracking-[0.13em] text-[var(--fg-muted)]">
         Autenticación real · sin formulario de muestra
       </p>
     </div>

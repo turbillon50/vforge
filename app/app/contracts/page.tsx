@@ -131,7 +131,7 @@ export default function ContractsPage() {
             >
               {s.value}
             </p>
-            <p className="mt-1 text-[11px] text-[var(--fg-tertiary)]">{s.label}</p>
+            <p className="mt-1 text-[12px] text-[var(--fg-tertiary)]">{s.label}</p>
           </motion.div>
         ))}
       </div>
@@ -159,7 +159,7 @@ export default function ContractsPage() {
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`shrink-0 rounded-full border px-4 py-1.5 font-mono text-[10px] transition ${
+            className={`shrink-0 rounded-full border px-4 py-1.5 font-mono text-[12px] transition ${
               filter === f.key
                 ? "border-violet-500/40 bg-violet-500/12 text-violet-300"
                 : "border-[var(--border-1)] text-[var(--fg-muted)] hover:text-[var(--fg-secondary)]"
@@ -208,9 +208,9 @@ export default function ContractsPage() {
                     <p className="text-[13px] font-semibold text-[var(--fg-primary)]">
                       {c.client_name}
                     </p>
-                    <p className="text-[11px] text-[var(--fg-tertiary)]">{c.product}</p>
+                    <p className="text-[12px] text-[var(--fg-tertiary)]">{c.product}</p>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className="font-mono text-[9px] text-[var(--fg-muted)]">
+                      <span className="font-mono text-[12px] text-[var(--fg-muted)]">
                         {c.project_id}
                       </span>
                     </div>
@@ -221,7 +221,7 @@ export default function ContractsPage() {
                     {money(c.amount)}
                   </span>
                   <span
-                    className="flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[9px] font-semibold"
+                    className="flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[12px] font-semibold"
                     style={{
                       background: `${meta.color}15`,
                       color: meta.color,
@@ -236,10 +236,10 @@ export default function ContractsPage() {
               {/* Progreso de los 3 pagos V-Momentum */}
               <div className="mt-3">
                 <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-wide text-[var(--fg-muted)]">
+                  <span className="text-[12px] uppercase tracking-wide text-[var(--fg-muted)]">
                     Pagos · {c.paid_count}/3
                   </span>
-                  <span className="font-mono text-[10px] text-[var(--fg-tertiary)]">
+                  <span className="font-mono text-[12px] text-[var(--fg-tertiary)]">
                     {money(c.paid_mxn)} / {money(c.amount)}
                   </span>
                 </div>
@@ -265,7 +265,7 @@ export default function ContractsPage() {
 
               {/* Acción contextual */}
               <div className="mt-3 flex items-center justify-between">
-                <span className="font-mono text-[9px] text-[var(--fg-muted)]">
+                <span className="font-mono text-[12px] text-[var(--fg-muted)]">
                   {c.docusign_envelope_id
                     ? `DocuSign · ${c.docusign_envelope_id.slice(0, 8)}`
                     : c.status === "signed"
@@ -276,7 +276,7 @@ export default function ContractsPage() {
                   <button
                     onClick={() => sendToSign(c)}
                     disabled={sending === c.id}
-                    className="flex items-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-[11px] font-semibold text-violet-200 transition active:scale-95 disabled:opacity-50"
+                    className="flex items-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-[12px] font-semibold text-violet-200 transition active:scale-95 disabled:opacity-50"
                   >
                     {sending === c.id ? (
                       <IconLoader size={11} className="animate-spin" />
@@ -297,7 +297,7 @@ export default function ContractsPage() {
         })}
       </div>
 
-      <p className="mt-6 flex items-center justify-center gap-2 text-[11px] text-[var(--fg-muted)]">
+      <p className="mt-6 flex items-center justify-center gap-2 text-[12px] text-[var(--fg-muted)]">
         <IconShield size={11} /> Firma con validez legal vía DocuSign
       </p>
 

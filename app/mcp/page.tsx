@@ -102,7 +102,7 @@ export default function MCPDocsPage() {
         <div className="mx-auto max-w-4xl px-5 text-center">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-400/25 bg-violet-500/8 px-4 py-1.5">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400 shadow-[0_0_8px_rgba(124,58,237,0.5)]" />
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-violet-300">
+            <span className="font-mono text-[12px] uppercase tracking-[0.2em] text-violet-300">
               Model Context Protocol · VForge
             </span>
           </div>
@@ -121,7 +121,7 @@ export default function MCPDocsPage() {
 
         {/* ── INSTALLATION STEPS ── */}
         <div className="mx-auto mt-20 max-w-2xl px-5">
-          <p className="mb-10 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">
+          <p className="mb-10 font-mono text-[12px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">
             Instalación
           </p>
           <div className="space-y-6">
@@ -163,12 +163,12 @@ export default function MCPDocsPage() {
         <div className="mx-auto mt-24 max-w-4xl px-5">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-2">
             <div className="min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)] mb-1">
+              <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-[var(--fg-muted)] mb-1">
                 Herramientas disponibles
               </p>
               <h2 className="text-2xl font-bold text-white">{TOTAL_TOOLS} herramientas</h2>
             </div>
-            <span className="font-mono text-[11px] text-[var(--fg-muted)]">
+            <span className="font-mono text-[12px] text-[var(--fg-muted)]">
               {TOOLS_PUBLICAS} sin token · {TOTAL_TOOLS - TOOLS_PUBLICAS} con token
             </span>
           </div>
@@ -178,7 +178,7 @@ export default function MCPDocsPage() {
                 key={tool.name}
                 className="group flex min-w-0 items-start gap-3 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-3 transition-all hover:border-violet-500/25 hover:bg-violet-500/4"
               >
-                <code className="mt-0.5 shrink-0 rounded-lg bg-violet-500/12 px-2 py-0.5 font-mono text-[11px] text-violet-400">
+                <code className="mt-0.5 shrink-0 rounded-lg bg-violet-500/12 px-2 py-0.5 font-mono text-[12px] text-violet-400">
                   {tool.name}
                 </code>
                 <p className="min-w-0 break-words text-[12px] text-[var(--fg-tertiary)] leading-relaxed">
@@ -191,7 +191,7 @@ export default function MCPDocsPage() {
 
         {/* ── QUÉ PEDIRLE ── */}
         <div className="mx-auto mt-24 max-w-2xl px-5">
-          <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">
+          <p className="mb-2 font-mono text-[12px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">
             Qué le puedes pedir con el MCP conectado
           </p>
           <p className="mb-6 text-[13px] leading-relaxed text-[var(--fg-muted)]">
@@ -203,7 +203,7 @@ export default function MCPDocsPage() {
               <div key={p.tool} className="flex justify-end">
                 <div className="max-w-[82%] rounded-xl bg-gradient-to-br from-violet-600 to-violet-500 px-4 py-2.5 text-[13px] leading-relaxed text-white">
                   {p.texto}
-                  <span className="mt-1 block font-mono text-[11px] text-white/70">{p.tool}</span>
+                  <span className="mt-1 block font-mono text-[12px] text-white/70">{p.tool}</span>
                 </div>
               </div>
             ))}
@@ -214,7 +214,7 @@ export default function MCPDocsPage() {
         <div className="mx-auto mt-24 max-w-xl px-5 text-center">
           <div className="relative overflow-hidden rounded-3xl border border-violet-500/20 bg-gradient-to-b from-violet-500/8 to-transparent p-10">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/40 to-transparent" />
-            <p className="font-mono text-[10px] uppercase tracking-widest text-violet-400/60 mb-3">
+            <p className="font-mono text-[12px] uppercase tracking-widest text-violet-400/60 mb-3">
               Empieza ahora
             </p>
             <h2 className="text-2xl font-bold text-white mb-2">

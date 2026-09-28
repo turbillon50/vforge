@@ -1,0 +1,122 @@
+# DONE-B1 — Barrido 1 de producción de VForge · 28-sep-2026
+
+Rama `barrido-1`, worktree `/root/worktrees/vforge-b1`. Detalle punto por punto, con la evidencia
+de cada uno, en `LISTA-B1.md`. Esto es el resumen.
+
+---
+
+## Lo que cambió, medido
+
+| | antes | después |
+|---|---|---|
+| Desborde horizontal en las 54 rutas públicas (390 y 1440) | **2,041 px** en 13 medidas | **0 px**, 0 medidas |
+| Textos con letra < 12 px en el núcleo `/app` | **5,417** | **48** (todos de `/app/chat`, devuelto a B3) |
+| Textos por debajo de 4.5:1 de contraste en el núcleo | **34** | **0** |
+| Textos bajo mínimo en `/marketplace` + `/app/marketplace` | **95** | **0** |
+| Controles con área táctil < 44×44 en el núcleo | **119** | **9** (justificados) |
+| Títulos de pestaña distintos en las 8 pantallas del núcleo | **1** | **8** |
+| Splash de la portada | **> 5.3 s**, siempre | **2.7 s** la 1.ª vez, **0 frames** en visitas repetidas |
+| `/app/projects`: filas pintadas de golpe | **339** (13,266 nodos) | **40** por tanda (1,775 nodos) |
+| Métricas inventadas en `/mcp` | 7 | **0** |
+| Pruebas | 90/90 | **90/90** |
+| `npx tsc --noEmit -p .` | 0 errores | **0 errores** |
+
+Rutas que se rompieron con el barrido: **0**. Medidas que empeoraron: **0**.
+
+## Los 10 bloques
+
+| # | Bloque | Estado |
+|---|---|---|
+| 1 | Header de marketing en móvil | **Hecho** · 157 px → 0 en las 13 rutas. La causa no era el header: era el pie, con 4 columnas fijas de 547 px |
+| 2 | `/forja` (312 px) y `/lab` (53 px) | **Hecho** · los dos a 0. Los "14 s" de `/lab` eran del medidor (un SSE que nunca deja la red en reposo); el usuario ve la pantalla en 192 ms |
+| 3 | `/mcp` sin inventos | **Hecho** · fuera 7 métricas no medidas; el número de tools se lee del registro real. **Encontré un token MCP real escrito en una página pública** |
+| 4 | Aviso "Avisos en el teléfono" | **Hecho** · de `fixed` a franja del shell: 2,752 px² tapados → 0; al cerrarlo ya no vuelve |
+| 5 | `/workspace/studio` en móvil | **Hecho** · una columna con pestañas; el panel central medía **0 px** de ancho a 390. Escritorio idéntico (300/828/300) |
+| 6 | Splash | **Hecho** · 5.3 s → 2.7 s, visitas repetidas sin un frame, `<noscript>` real y fallback sin JS dentro del límite |
+| 7 | `/app/projects` en móvil | **Hecho** · 4,588 textos chicos → 0; 339 filas → tandas de 40 |
+| 8 | Marketplace | **Hecho** antes de que llegara la orden de saltarlo; ya mergeado en `main` (`3c025e0`). Los títulos no eran "gris sobre blanco": eran **blanco sobre blanco, 1.07:1** |
+| 9 | Estudio: "Motor por resolver" | **Hecho** · era una nota interna y salía en cada respuesta de V |
+| 10 | Barrido MUST-500 + SANIDAD del núcleo | **Hecho en lo que me toca**; lo de B2/B3 devuelto (abajo) |
+
+## Cambio de prioridad a media corrida
+
+El BRIEF-B1 se revisó en `main` **después** de que salió esta rama (Luis, 28-sep 03:06) y mi
+worktree tenía la copia vieja; me enteré al ir a cerrar. Decía: saltar el bloque 8, ir directo al 10
+y al 9, y **en el bloque 10 no tocar `/app/tablero` (B2) ni el Estudio `/app/chat` /
+`components/workspace` / preview (B3)**.
+
+Mi barrido de tipografía y área táctil ya había entrado en **32 archivos de esas zonas**. Los
+devolví a su estado anterior en esta rama. **No se perdió nada**: el trabajo completo quedó en la
+rama **`b10-fuera-de-alcance`** (commit `93ce4d9`), con tsc en verde, para que B2, B3 o Vulcano lo
+aprovechen. Va con hallazgos que valen la pena:
+
+- `/app/tablero` le mostraba al usuario **"The string did not match the expected pattern"** (B2).
+- La pestaña "Consola" del Estudio pintaba un log **escrito a mano** (`$ vforge dev`, `Build OK`) que
+  se veía igual aunque la app nunca hubiera compilado (B3).
+- El botón de copiar código iba **del mismo color que su fondo** y decía "Copy" en inglés (B3).
+- El estado de conexiones del Estudio a **1.6:1**, distinguido sólo por color (B3).
+
+Sólo conservé los 8 `layout.tsx` de título de pestaña: archivos **nuevos** que sólo declaran el
+título y no tocan ningún `page.tsx`, así que no chocan con nadie.
+
+## Lo que hay que saber (más allá de lo cosmético)
+
+1. **Un token MCP real (`vfmcp_`, 28 caracteres) estaba escrito en `app/mcp/page.tsx`**, una página
+   pública, y ya está en el historial público de git. Lo saqué del código, pero
+   **hay que revocarlo en la tabla de tokens MCP**. No se puede deshacer desde aquí.
+2. **`.env.nocl` tenía 69 claves reales de Vercel y `.gitignore` no lo cubría** (sólo tenía
+   `.env*.local`). No llegó a subirse porque estaba sin rastrear. Corregido en B4.9.
+3. **La página del marketplace y otras 8 pantallas mezclan un fondo oscuro fijo con los tokens
+   claros del tema.** De ahí salió el blanco sobre blanco. Queda en `/mcp`,
+   `ClientWorkspacePage`, `JoinClient`, `VPresence`, `AgentMonitor`, `ClientPortal`, `MyProjects`.
+4. **Cuatro endpoints responden 500 donde deberían responder 401** sin sesión:
+   `/api/onboarding/status`, `/api/forja/estado`, `/api/tablero`, `/api/billing/me`.
+   Hay que comprobarlo contra producción con sesión válida.
+5. **La compuerta de contraste del repo es decorativa**: el hook `pre-commit` hace `cd /root/vforge`
+   fijo, así que audita otro checkout y no el que estás commiteando. En todo este barrido reportó
+   siempre "OK: 114 issues" sin mirar mi código.
+6. **El patrón de sesión de Clerk no sirve contra una vista previa de Vercel**: la instancia de
+   producción no acepta el ticket para un `*.vercel.app`. 74 de 108 medidas "con sesión" acabaron en
+   `/sign-in`. Las pantallas privadas se midieron en local. Vale la pena resolverlo para la próxima.
+
+## Lo que sólo puede decidir Luis
+
+- **Redes sociales del pie** (TikTok, LinkedIn, X) con `href="#"`: o hay cuentas reales, o se quitan.
+- **`/pricing`** no existe; el enlace dice "Precios" y aterriza en la documentación del MCP.
+- **Los formularios "Partners" y "Asociados"** ahora mandan un correo de verdad (antes decían
+  "Mensaje recibido" sin hacer una sola petición: lo escrito se perdía). Si los quieres con backend
+  propio —guardar en base y avisarte— se construye.
+- **El gris `--fg-muted` se oscureció de `#73767b` a `#6b6e73`** porque a 4.25:1 no cumplía sobre la
+  superficie clara. Es el mismo neutro, 8 puntos más oscuro. Si prefieres el tono de antes, la
+  alternativa es agrandar esos textos.
+- **Las pantallas de fondo oscuro sobre tema claro** (punto 3 de arriba): o se vuelven claras como el
+  resto, o el tema gana un juego oscuro de verdad.
+
+## Cómo se trabajó
+
+- WebKit (Playwright, python3) a 390×844 y 1440×900, con `locale="es-MX"`, **mirando** las capturas.
+- Herramientas de medición nuevas, reutilizables, en `/root/vulcano-audit/vforge-rescate/`:
+  `contraste.py` (lee el píxel del fondo en vez de deducirlo del CSS), `barrido10.py` (MUST-500
+  mecánico), `comparar.py` (final contra línea base), más los `verif_*.py` por bloque.
+- **Cuatro veces el medidor mintió y se corrigió al mirar la captura** (el pie que salía blanco, el
+  contenido tras un diálogo, el indicador de `next dev`, el texto bajo una barra pegajosa). Está
+  anotado en `LISTA-B1.md`: un medidor que miente es peor que no medir.
+- Contraprueba del verde en contraste, en el Estudio y en el medidor: se volvió a meter el bug y la
+  prueba lo vio. Ningún 0 se reporta sin eso.
+- Sin tocar datos reales: los 339 proyectos del bloque 7 se fabricaron interceptando la red, nunca
+  se escribió en Neon ni en Clerk. `grep -rn "zz-prueba" app/ components/ lib/` → 0.
+- `next dev` matado, `.env.local` y sus variantes borradas, sin secretos en el historial de la rama.
+
+## Commits de la rama
+
+```
+87ddcae  B7  /app/projects: letra >= 12px y tandas de 40        (ya en main)
+3c025e0  B8  marketplace legible y encabezado sin pegar al borde (ya en main)
+7e72151  B9  el Estudio ya no ensena "Motor por resolver"        (ya en main)
+93ce4d9  B10 barrido MUST-500 + SANIDAD del nucleo
+<este>   B10 devuelvo a B2 y B3 los archivos que son suyos
+```
+
+Rama aparte con lo devuelto: **`b10-fuera-de-alcance`** (= `93ce4d9`).
+En `main` hay trabajo ajeno ya mergeado (`2d1c509`, `667d8f2`, `622035d`, de `centro-mando`/B2).
+**No lo toqué ni lo revertí**, como pide el brief.

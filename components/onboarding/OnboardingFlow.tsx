@@ -164,12 +164,12 @@ export function OnboardingFlow() {
       <div className="mb-8 flex items-center justify-between">
         <Link href="/workspace"><VWordmark /></Link>
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+          <span className="font-mono text-[12px] uppercase tracking-[0.18em] text-muted">
             {interpolate(t.onboarding.step_progress, { current: stepIndex + 1, total: order.length })}
           </span>
           <LocaleToggle compact />
           <ThemeToggle compact />
-          <button onClick={finishOnboarding} className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted transition hover:text-[var(--fg-primary)]">Entrar &rarr;</button>
+          <button onClick={finishOnboarding} className="font-mono text-[12px] uppercase tracking-[0.16em] text-muted transition hover:text-[var(--fg-primary)]">Entrar &rarr;</button>
         </div>
       </div>
 

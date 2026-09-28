@@ -270,12 +270,12 @@ export default function IntegrationsPage() {
                       <h2 className="text-[14px] font-medium">
                         {service.name}
                       </h2>
-                      <p className="mt-1 text-[11px] leading-5 text-[var(--fg-muted)]">
+                      <p className="mt-1 text-[12px] leading-5 text-[var(--fg-muted)]">
                         {service.description}
                       </p>
                     </div>
                   </div>
-                  <span className="inline-flex shrink-0 items-center gap-2 font-mono text-[8px] uppercase tracking-[0.13em]">
+                  <span className="inline-flex shrink-0 items-center gap-2 font-mono text-[12px] uppercase tracking-[0.13em]">
                     <span className="status-shape" data-active={isConnected} />
                     {isConnected ? "Conectado" : "Pendiente"}
                   </span>
@@ -310,7 +310,7 @@ export default function IntegrationsPage() {
                               }))
                             }
                             placeholder={service.placeholder}
-                            className="min-h-11 w-full border border-[var(--border-1)] bg-white px-3 font-mono text-[11px] text-black placeholder:text-[var(--fg-muted)] focus:border-black focus:outline-none"
+                            className="min-h-11 w-full border border-[var(--border-1)] bg-white px-3 font-mono text-[12px] text-black placeholder:text-[var(--fg-muted)] focus:border-black focus:outline-none"
                           />
                         </label>
                         <button
@@ -332,7 +332,7 @@ export default function IntegrationsPage() {
                               [service.id]: false,
                             }))
                           }
-                          className="mt-2 text-[11px] underline underline-offset-4"
+                          className="mt-2 text-[12px] underline underline-offset-4"
                         >
                           Cancelar
                         </button>
@@ -353,7 +353,7 @@ export default function IntegrationsPage() {
                     </button>
                   )}
                   {error ? (
-                    <p className="mt-3 border-l-2 border-black pl-3 text-[11px] leading-5">
+                    <p className="mt-3 border-l-2 border-black pl-3 text-[12px] leading-5">
                       {error}
                     </p>
                   ) : null}
@@ -363,7 +363,7 @@ export default function IntegrationsPage() {
           })}
         </div>
 
-        <p className="mt-5 max-w-2xl text-[10px] leading-5 text-[var(--fg-muted)]">
+        <p className="mt-5 max-w-2xl text-[12px] leading-5 text-[var(--fg-muted)]">
           Las credenciales pegadas se validan contra el proveedor y se guardan
           cifradas en el vault del usuario. Esta pantalla nunca vuelve a leerlas
           ni las imprime.
@@ -392,7 +392,7 @@ function HealthCell({
           {state ?? "Sin lectura"}
         </span>
         {detail ? (
-          <span className="font-mono text-[9px] text-[var(--fg-muted)]">
+          <span className="font-mono text-[12px] text-[var(--fg-muted)]">
             {detail}
           </span>
         ) : null}

@@ -86,7 +86,7 @@ function ClerkAccountPanel() {
                 user?.username ||
                 "Cuenta VForge"}
             </p>
-            <p className="mt-1 truncate font-mono text-[9px] text-[var(--fg-muted)]">
+            <p className="mt-1 truncate font-mono text-[12px] text-[var(--fg-muted)]">
               {user?.emailAddresses?.[0]?.emailAddress ?? "Sin correo"}
             </p>
           </div>
@@ -156,7 +156,7 @@ function BillingPanel() {
             <p className="mt-3 text-[12px] font-medium">
               {billing?.status ?? "Sin suscripción"}
             </p>
-            <p className="mt-1 text-[9px] text-[var(--fg-muted)]">{periodEnd}</p>
+            <p className="mt-1 text-[12px] text-[var(--fg-muted)]">{periodEnd}</p>
           </div>
         </div>
       )}
@@ -243,7 +243,7 @@ function McpPanel() {
       {result?.token ? (
         <div className="mt-5">
           <p className="mono-label">Guárdalo ahora</p>
-          <code className="mt-2 block max-h-28 overflow-auto break-all border border-black bg-black p-3 font-mono text-[9px] leading-5 text-white">
+          <code className="mt-2 block max-h-28 overflow-auto break-all border border-black bg-black p-3 font-mono text-[12px] leading-5 text-white">
             {result.token}
           </code>
           <button type="button" onClick={() => void copyConfig()} className="btn-ghost mt-3 w-full">
@@ -268,7 +268,7 @@ function McpPanel() {
       )}
 
       {error ? (
-        <p className="mt-3 border-l-2 border-black pl-3 text-[11px] leading-5">
+        <p className="mt-3 border-l-2 border-black pl-3 text-[12px] leading-5">
           {error}
         </p>
       ) : null}

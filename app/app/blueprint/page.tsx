@@ -252,7 +252,7 @@ export default function BlueprintPage() {
           </button>
 
           <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-2">
-            <p className="px-1 pb-1 text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">Mis flujos</p>
+            <p className="px-1 pb-1 text-[12px] uppercase tracking-wider text-[var(--fg-tertiary)]">Mis flujos</p>
             {loading ? (
               <div className="flex justify-center py-4 text-[var(--fg-tertiary)]"><IconLoader size={18} /></div>
             ) : flows.length === 0 ? (
@@ -271,7 +271,7 @@ export default function BlueprintPage() {
                       <span className="truncate">{f.name}</span>
                       <span
                         className={
-                          "ml-2 shrink-0 rounded-full px-1.5 py-0.5 text-[9px] uppercase " +
+                          "ml-2 shrink-0 rounded-full px-1.5 py-0.5 text-[12px] uppercase " +
                           (f.status === "active" ? "bg-emerald-500/15 text-emerald-300" : "bg-[var(--surface-1)] text-[var(--fg-tertiary)]")
                         }
                       >
@@ -286,13 +286,13 @@ export default function BlueprintPage() {
 
           {(nodes.length > 0 || flowId) && (
             <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-2">
-              <p className="px-1 pb-1.5 text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">Agregar nodo</p>
+              <p className="px-1 pb-1.5 text-[12px] uppercase tracking-wider text-[var(--fg-tertiary)]">Agregar nodo</p>
               <div className="grid grid-cols-2 gap-1.5">
                 {PALETTE.map((t) => (
                   <button
                     key={t}
                     onClick={() => addNode(t)}
-                    className="flex items-center gap-1.5 rounded-lg border border-[var(--border-1)] px-2 py-1.5 text-[11px] text-[var(--fg-primary)] hover:border-[var(--border-2)]"
+                    className="flex items-center gap-1.5 rounded-lg border border-[var(--border-1)] px-2 py-1.5 text-[12px] text-[var(--fg-primary)] hover:border-[var(--border-2)]"
                   >
                     <span className="h-2.5 w-2.5 rounded-full" style={{ background: NODE_META[t].color }} />
                     {NODE_META[t].name}
@@ -364,15 +364,15 @@ export default function BlueprintPage() {
           )}
 
           {linkFrom && (
-            <p className="text-center text-[11px] text-violet-300">
+            <p className="text-center text-[12px] text-violet-300">
               Conectando ({linkMode === "alt" ? "rama falso" : "rama principal"})… haz clic en el nodo destino.{" "}
               <button onClick={() => setLinkFrom(null)} className="underline">cancelar</button>
             </p>
           )}
 
           {logOutput && (
-            <div className="rounded-xl border border-[var(--border-1)] bg-black/40 p-3 font-mono text-[11px] text-[var(--fg-secondary)]">
-              <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">Resultado de la corrida</p>
+            <div className="rounded-xl border border-[var(--border-1)] bg-black/40 p-3 font-mono text-[12px] text-[var(--fg-secondary)]">
+              <p className="mb-1 text-[12px] uppercase tracking-wider text-[var(--fg-tertiary)]">Resultado de la corrida</p>
               {logOutput.length === 0 ? <p>sin logs</p> : logOutput.map((l, i) => <div key={i}>{l}</div>)}
             </div>
           )}
@@ -381,7 +381,7 @@ export default function BlueprintPage() {
         {/* Derecha: inspector + corridas */}
         <div className="flex flex-col gap-3">
           <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3">
-            <p className="pb-2 text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">Inspector</p>
+            <p className="pb-2 text-[12px] uppercase tracking-wider text-[var(--fg-tertiary)]">Inspector</p>
             <AnimatePresence mode="wait">
               {!sel ? (
                 <motion.p key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-[var(--fg-muted)]">
@@ -429,10 +429,10 @@ export default function BlueprintPage() {
 
           {runs.length > 0 && (
             <div className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3">
-              <p className="pb-2 text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">Últimas corridas</p>
+              <p className="pb-2 text-[12px] uppercase tracking-wider text-[var(--fg-tertiary)]">Últimas corridas</p>
               <ul className="space-y-1.5">
                 {runs.slice(0, 10).map((r) => (
-                  <li key={r.id} className="flex items-center justify-between text-[11px]">
+                  <li key={r.id} className="flex items-center justify-between text-[12px]">
                     <span className="flex items-center gap-1.5 text-[var(--fg-secondary)]">
                       <IconActivity size={12} /> {r.trigger_type}
                     </span>
@@ -456,7 +456,7 @@ const inputCls =
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)]">{label}</span>
+      <span className="mb-1 block text-[12px] uppercase tracking-wider text-[var(--fg-tertiary)]">{label}</span>
       {children}
     </label>
   );
@@ -515,7 +515,7 @@ function WaSendFields({ node, patch }: { node: EditorNode; patch: (p: Record<str
       <Field label="Mensaje">
         <textarea value={String(node.config.message ?? "")} onChange={(e) => patch({ message: e.target.value })} rows={3} className={inputCls} />
       </Field>
-      <p className="text-[10px] text-[var(--fg-muted)]">Variables: {"{{from}}"}, {"{{body}}"}, {"{{pushName}}"}</p>
+      <p className="text-[12px] text-[var(--fg-muted)]">Variables: {"{{from}}"}, {"{{body}}"}, {"{{pushName}}"}</p>
     </>
   );
 }
@@ -544,7 +544,7 @@ function ConditionFields({
         </select>
       </Field>
       <Field label="Valor (derecha)"><input value={String(node.config.right ?? "")} onChange={(e) => patch({ right: e.target.value })} className={inputCls} /></Field>
-      <button onClick={onLinkAlt} className="rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-[11px] text-red-300 hover:bg-red-500/20">
+      <button onClick={onLinkAlt} className="rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-[12px] text-red-300 hover:bg-red-500/20">
         Conectar rama «falso» →
       </button>
     </>

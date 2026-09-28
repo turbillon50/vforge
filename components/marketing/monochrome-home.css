@@ -10,7 +10,13 @@
 @keyframes fxSplashOut{ to{ opacity:0; visibility:hidden; pointer-events:none; } }
 .fx-main{ animation:fxMainIn .8s var(--ease) 2.7s forwards; }
 @keyframes fxMainIn{ to{ opacity:1; } }
-.fx-reveal{ animation:fxRevealIn .9s var(--ease) 3s forwards; }
+/* Red de seguridad, NO el comportamiento normal: si React no hidrata, a los 3 s
+   CSS muestra todo igual. Antes esta regla corría siempre, también con JS vivo,
+   así que a los 3 s aparecían TODAS las secciones —incluidas las que están fuera
+   de pantalla— y la aparición por scroll quedaba de adorno.
+   `data-vf-reveal="js"` lo pone startReveal() en MonochromeHome.tsx, que sólo
+   corre cuando el IntersectionObserver ya quedó enganchado de verdad. */
+html:not([data-vf-reveal="js"]) .fx-reveal{ animation:fxRevealIn .9s var(--ease) 3s forwards; }
 @keyframes fxRevealIn{ to{ opacity:1; transform:translateY(0); } }
 @media (prefers-reduced-motion:reduce){ .fx-splash,.fx-main,.fx-reveal{ animation-delay:0s; animation-duration:.01s; } }
 
@@ -20,8 +26,10 @@ html[data-vf-splash="off"] .fx-splash{ display:none; }
 html[data-vf-splash="off"] .fx-main{ opacity:1; animation:none; }
 /* Sin splash que esperar, la portada no puede quedarse en blanco hasta que hidrate React:
    el hero (lo que se ve sin scroll) entra de inmediato. Las demás secciones conservan su
-   aparición por scroll, que la sigue manejando el IntersectionObserver. */
-html[data-vf-splash="off"] .fx-hero .fx-reveal{ animation-delay:.1s; }
+   aparición por scroll, que la sigue manejando el IntersectionObserver.
+   Lleva la animación completa (no sólo el retardo) porque la regla de arriba ya
+   no aplica cuando el JS está vivo, y el hero no puede esperar a que hidrate. */
+html[data-vf-splash="off"] .fx-hero .fx-reveal{ animation:fxRevealIn .9s var(--ease) .1s forwards; }
 
 .fx-seq{ position:relative; width:min(90vw,520px); height:120px; }
 .fx-cimientos{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:72px; }

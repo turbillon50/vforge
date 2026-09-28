@@ -176,7 +176,7 @@ export default function ConnectionsHealth({
                 </div>
 
                 <span
-                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${st.chip}`}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] font-medium ${st.chip}`}
                 >
                   <st.Icon size={12} />
                   {st.label}
@@ -226,7 +226,7 @@ export default function ConnectionsHealth({
                     </p>
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-full border border-vf-green/30 bg-vf-green/10 px-2 py-0.5 text-[11px] font-medium text-vf-green">
+                <span className="inline-flex items-center gap-1 rounded-full border border-vf-green/30 bg-vf-green/10 px-2 py-0.5 text-[12px] font-medium text-vf-green">
                   <IconCheck size={12} />
                   Activa
                 </span>

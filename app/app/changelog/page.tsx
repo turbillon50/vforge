@@ -121,7 +121,7 @@ export default function ChangelogPage() {
           <div className="space-y-8">
             {groups.map((group) => (
               <section key={group.label}>
-                <h2 className="sticky top-0 z-10 mb-3 bg-[var(--color-void)]/80 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-violet-400 backdrop-blur-sm">
+                <h2 className="sticky top-0 z-10 mb-3 bg-[var(--color-void)]/80 py-1 font-mono text-[12px] uppercase tracking-[0.2em] text-violet-400 backdrop-blur-sm">
                   {group.label}
                 </h2>
                 <ol className="relative space-y-2 border-l border-[var(--border-1)] pl-5">
@@ -136,14 +136,14 @@ export default function ChangelogPage() {
                         <div className="overflow-hidden rounded-xl border border-[var(--border-1)] bg-[#0a0a12] p-4 transition hover:border-violet-500/25">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 flex-wrap items-center gap-2">
-                              <span className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest ${cat.badge}`}>
+                              <span className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[12px] uppercase tracking-widest ${cat.badge}`}>
                                 {cat.label}
                               </span>
                               <p className="min-w-0 font-display text-[13.5px] font-semibold text-[var(--fg-primary)]">
                                 {ev.message}
                               </p>
                             </div>
-                            <span className="shrink-0 font-mono text-[10px] text-[var(--fg-muted)]">
+                            <span className="shrink-0 font-mono text-[12px] text-[var(--fg-muted)]">
                               {timeAgo(ev.date)}
                             </span>
                           </div>
@@ -152,13 +152,13 @@ export default function ChangelogPage() {
                               href={ev.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-mono text-[11px] text-[var(--fg-tertiary)] transition hover:text-violet-300"
+                              className="inline-flex items-center gap-1 font-mono text-[12px] text-[var(--fg-tertiary)] transition hover:text-violet-300"
                             >
                               {ev.sha}
                               <IconExtLink size={10} />
                             </a>
                             {ev.author && (
-                              <span className="truncate font-mono text-[11px]">· {ev.author}</span>
+                              <span className="truncate font-mono text-[12px]">· {ev.author}</span>
                             )}
                           </div>
                         </div>
