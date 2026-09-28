@@ -16,10 +16,12 @@ NODE_BIN=/root/.nvm/versions/node/v20.20.2/bin/node
 echo "==> 1. Código a ${DESTINO}"
 mkdir -p "$DESTINO/editor"
 install -m 0755 "$AQUI/vivo.mjs" "$DESTINO/vivo.mjs"
-install -m 0644 "$AQUI/editor/aplicar-edicion.mjs" "$DESTINO/editor/aplicar-edicion.mjs"
-install -m 0644 "$AQUI/editor/overlay.js" "$DESTINO/editor/overlay.js"
-install -m 0644 "$AQUI/editor/vf-src-loader.cjs" "$DESTINO/editor/vf-src-loader.cjs"
-install -m 0644 "$AQUI/editor/vf-vivo-next.cjs" "$DESTINO/editor/vf-vivo-next.cjs"
+# La carpeta completa, no archivo por archivo: así agregar un módulo nuevo no
+# vuelve a dejar el servicio sin arrancar por un import que no se copió.
+for f in "$AQUI"/editor/*; do
+  install -m 0644 "$f" "$DESTINO/editor/$(basename "$f")"
+done
+echo "    editor: $(ls -1 "$DESTINO/editor" | wc -l) archivos"
 # El registro no se sobreescribe si ya fue editado en el servidor.
 if [ ! -f "$DESTINO/proyectos.json" ]; then
   install -m 0644 "$AQUI/proyectos.json" "$DESTINO/proyectos.json"

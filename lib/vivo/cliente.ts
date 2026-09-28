@@ -39,6 +39,18 @@ export type ArranqueVivo = {
 
 export type ArchivoVivo = { path: string; content: string };
 
+export type OperacionVivo =
+  | { tipo: "texto"; valor: string }
+  | { tipo: "estilo"; props: Record<string, string | number> }
+  | { tipo: "clase"; valor: string };
+
+export type ResultadoEdicion = {
+  ok: true;
+  archivo: string;
+  linea?: number;
+  sinCambio?: boolean;
+};
+
 function base(): string {
   const bruto = (process.env.VIVO_API_BASE ?? BASE_POR_DEFECTO).trim();
   const url = new URL(bruto);
@@ -109,6 +121,43 @@ export function detenerVivo(proyecto: string): Promise<{ ok: true }> {
 /** Qué hay encendido ahora mismo. */
 export function estadoVivo(): Promise<EstadoVivo> {
   return pedir<EstadoVivo>("status");
+}
+
+export type CommitVivo = {
+  sha: string;
+  asunto: string;
+  fecha: string;
+  autor: string;
+  delEstudio: boolean;
+};
+
+export type AccionGit = "estado" | "historial" | "comparar" | "commit" | "deshacer" | "publicar";
+
+/**
+ * Control del preview vivo: historial, deshacer, comparar y publicar.
+ * `publicar` es el único que toca la rama de producción.
+ */
+export function gitVivo(
+  proyecto: string,
+  accion: AccionGit,
+  extra: Record<string, unknown> = {},
+): Promise<Record<string, unknown>> {
+  return pedir<Record<string, unknown>>("git", {
+    method: "POST",
+    body: JSON.stringify({ project: proyecto, accion, ...extra }),
+  });
+}
+
+/** Traduce una edición hecha sobre la vista previa a un cambio en el código. */
+export function editarVivo(
+  proyecto: string,
+  src: string,
+  operacion: OperacionVivo,
+): Promise<ResultadoEdicion> {
+  return pedir<ResultadoEdicion>("edit", {
+    method: "POST",
+    body: JSON.stringify({ project: proyecto, src, operacion }),
+  });
 }
 
 /** Escribe archivos reales en el worktree: es lo que hace que el cambio se vea. */

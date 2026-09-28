@@ -6,7 +6,7 @@
       "worktree": "/root/worktrees/vivo-mipipa",
       "dev": "npx next dev",
       "rama": "vivo/b3",
-      "produccion": "main",
+      "produccion": "master",
       "etiqueta": "MiPipa — pipas de agua CDMX (piloto B3)"
     }
   }

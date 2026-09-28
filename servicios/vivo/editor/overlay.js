@@ -23,6 +23,9 @@
   ];
 
   function origenPermitido(origen) {
+    // Mismo origen: si alguien ya corre código aquí dentro, no hay nada que
+    // proteger con esto. Además es como la prueba de WebKit maneja la capa.
+    if (origen === window.location.origin) return true;
     if (ORIGENES_PERMITIDOS.indexOf(origen) !== -1) return true;
     // Previews de Vercel del propio VForge.
     return /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origen) ||

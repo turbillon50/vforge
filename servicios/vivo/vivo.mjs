@@ -19,6 +19,15 @@ import { resolve, dirname, relative, isAbsolute } from "node:path";
 import { createConnection } from "node:net";
 import { fileURLToPath } from "node:url";
 import { aplicarEdicion } from "./editor/aplicar-edicion.mjs";
+import {
+  asegurarRama,
+  commitear,
+  comparar,
+  deshacer,
+  estadoGit,
+  historial,
+  publicar,
+} from "./editor/git.mjs";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 
@@ -105,6 +114,22 @@ const slots = Array.from({ length: MAX_SLOTS }, (_, i) => ({
   salida: [],
 }));
 
+/** Mensaje de commit que se entiende al leer el historial meses después. */
+function describirOperacion(operacion, resultado) {
+  const donde = `${resultado.archivo}:${resultado.linea ?? "?"}`;
+  const tipo = operacion?.tipo;
+  if (tipo === "texto") {
+    const valor = String(operacion.valor ?? "").slice(0, 60);
+    return `texto en ${donde}: "${valor}"`;
+  }
+  if (tipo === "estilo") {
+    const llaves = Object.keys(operacion.props || {}).join(", ");
+    return `estilo en ${donde}: ${llaves}`;
+  }
+  if (tipo === "clase") return `clase en ${donde}`;
+  return `cambio en ${donde}`;
+}
+
 function slotPorId(id) {
   return slots.find((s) => s.id === id) || null;
 }
@@ -173,6 +198,12 @@ async function arrancarProyecto(nombre) {
   if (yaVivo?.proc) {
     yaVivo.ultimoUso = Date.now();
     return { slot: yaVivo.id, url: urlDeSlot(yaVivo), reutilizado: true };
+  }
+
+  // Nunca se edita sobre la rama de producción: se entra a la de trabajo.
+  if (conf.rama) {
+    const rama = await asegurarRama(raiz, conf.rama);
+    if (!rama.ok) return { error: rama.error };
   }
 
   // Slot libre; si no hay, se recicla el menos usado (tope duro de MAX_SLOTS).
@@ -446,7 +477,58 @@ const servidor = createServer(async (req, res) => {
       const slot = slotDeProyecto(nombre);
       if (slot) slot.ultimoUso = Date.now();
       log(`edición en ${nombre}: ${resultado.archivo}:${resultado.linea ?? "?"}`);
-      return json(res, 200, resultado);
+
+      // Cada cambio es un commit en la rama de trabajo: así hay historial y
+      // deshacer de verdad, no un "ctrl+z" que vive sólo en la pantalla.
+      let commit = null;
+      if (!resultado.sinCambio) {
+        const descripcion = describirOperacion(cuerpo.operacion, resultado);
+        const hecho = await commitear(conf.worktree, descripcion);
+        if (hecho.ok && hecho.sha) commit = hecho.sha;
+        else if (!hecho.ok) log(`AVISO no pude commitear en ${nombre}: ${hecho.error}`);
+      }
+      return json(res, 200, { ...resultado, commit });
+    }
+
+    // ── Control: historial, deshacer, comparar, publicar ──────────────────
+    if (ruta === "/__vivo/api/git") {
+      const nombre = String(cuerpo.project || "");
+      const conf = leerRegistro()[nombre];
+      if (!conf) return json(res, 400, { error: "proyecto desconocido" });
+      const raiz = conf.worktree;
+      const accion = String(cuerpo.accion || "");
+
+      if (accion === "estado") {
+        const r = await estadoGit(raiz);
+        return json(res, r.ok ? 200 : 400, { ...r, ramaProduccion: conf.produccion ?? null });
+      }
+      if (accion === "historial") {
+        const r = await historial(raiz, cuerpo.limite);
+        return json(res, r.ok ? 200 : 400, r);
+      }
+      if (accion === "comparar") {
+        const r = await comparar(raiz, cuerpo.sha);
+        return json(res, r.ok ? 200 : 400, r);
+      }
+      if (accion === "commit") {
+        const r = await commitear(raiz, String(cuerpo.mensaje || "cambio a mano"));
+        return json(res, r.ok ? 200 : 400, r);
+      }
+      if (accion === "deshacer") {
+        const r = await deshacer(raiz);
+        if (r.ok) {
+          log(`deshecho en ${nombre}: ahora en ${r.ahoraEn}`);
+          const slot = slotDeProyecto(nombre);
+          if (slot) slot.ultimoUso = Date.now();
+        }
+        return json(res, r.ok ? 200 : 409, r);
+      }
+      if (accion === "publicar") {
+        const r = await publicar(raiz, conf.rama, conf.produccion);
+        if (r.ok) log(`PUBLICADO ${nombre}: ${r.publicado} → ${r.rama}`);
+        return json(res, r.ok ? 200 : 409, r);
+      }
+      return json(res, 400, { error: `acción desconocida: ${accion}` });
     }
 
     return json(res, 404, { error: "no existe" });

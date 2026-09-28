@@ -18,6 +18,11 @@ export function BarraVivo({
   disponible,
   onEncender,
   onApagar,
+  editando,
+  onEditando,
+  marcados,
+  verControl,
+  onVerControl,
 }: {
   encendido: boolean;
   fase: "apagado" | "arrancando" | "vivo" | "error";
@@ -28,6 +33,11 @@ export function BarraVivo({
   disponible: boolean | null;
   onEncender: (proyecto: string) => void;
   onApagar: () => void;
+  editando: boolean;
+  onEditando: (valor: boolean) => void;
+  marcados: number | null;
+  verControl: boolean;
+  onVerControl: (valor: boolean) => void;
 }) {
   if (disponible === false) {
     return (
@@ -102,9 +112,53 @@ export function BarraVivo({
         </button>
       )}
 
+      {/* Editar sobre la vista existe SÓLO con el motor vivo: nunca en producción. */}
+      <button
+        type="button"
+        onClick={() => onEditando(!editando)}
+        disabled={fase !== "vivo"}
+        aria-pressed={editando}
+        title={
+          fase === "vivo"
+            ? "Resalta el elemento al pasar el mouse y lo selecciona al hacer clic"
+            : "Enciende el motor vivo para editar sobre la vista"
+        }
+        className={cn(
+          "h-7 rounded-md border px-2.5 text-[11px] font-medium transition",
+          editando
+            ? "border-[#6d28d9] bg-[#6d28d9] text-white"
+            : "border-[var(--vf-border-1)] text-[var(--vf-fg-1)] hover:border-[var(--vf-fg)]",
+          fase !== "vivo" && "cursor-not-allowed opacity-30",
+        )}
+      >
+        {editando ? "Editando" : "Editar vista"}
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onVerControl(!verControl)}
+        disabled={fase !== "vivo"}
+        aria-pressed={verControl}
+        title="Historial, deshacer, comparar y publicar"
+        className={cn(
+          "h-7 rounded-md border px-2.5 text-[11px] font-medium transition",
+          verControl
+            ? "border-[var(--vf-fg)] bg-[var(--vf-fg)] text-[var(--vf-bg-1)]"
+            : "border-[var(--vf-border-1)] text-[var(--vf-fg-1)] hover:border-[var(--vf-fg)]",
+          fase !== "vivo" && "cursor-not-allowed opacity-30",
+        )}
+      >
+        Control
+      </button>
+
       <p className="min-w-0 flex-1 truncate text-[11px] leading-4 text-[var(--vf-fg-2)]">
         {fase === "error" && error ? (
           <span className="text-[var(--vf-fg-1)]">{error}</span>
+        ) : fase === "vivo" && editando ? (
+          <>
+            Pasa el mouse y haz clic en lo que quieras cambiar
+            {typeof marcados === "number" ? ` · ${marcados} elementos ubicados en el código` : ""}
+          </>
         ) : fase === "vivo" && mio ? (
           <>
             {mio.id} · sin deploy · se apaga tras {motor?.ocioMin ?? 20} min sin uso
