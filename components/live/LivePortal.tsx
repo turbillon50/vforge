@@ -34,6 +34,11 @@ import { CommentsPanel } from "@/components/live/CommentsPanel";
 import { ProjectContextPanel } from "@/components/live/ProjectContextPanel";
 import { ReviewContextProvider, useReviewContext } from "@/components/live/ReviewContext";
 import { ReviewNotesTray } from "@/components/live/ReviewNotesTray";
+import { BarraVivo } from "@/components/studio/vivo/BarraVivo";
+import { useMotorVivo } from "@/components/studio/vivo/useMotorVivo";
+import { useCapaEdicion } from "@/components/studio/vivo/useCapaEdicion";
+import { PanelInspector } from "@/components/studio/vivo/PanelInspector";
+import { PanelControl } from "@/components/studio/vivo/PanelControl";
 import {
   anchorViewportPosition,
   documentPointForAnchor,
@@ -379,6 +384,44 @@ function LiveWorkspace({
   });
   const savedLayoutsRef = useRef(DOCK_LAYOUTS.balanced);
 
+  // ── Motor vivo en la sala ────────────────────────────────────────────────
+  // Si el proyecto está en el motor vivo del Hetzner, las vistas dejan de
+  // depender de una URL de deploy: se enciende solo y se edita aquí mismo.
+  const esDueno = me.role === "owner" || me.isPlatformOwner;
+  const [nombreVivo, setNombreVivo] = useState<string | null>(null);
+  const vivo = useMotorVivo({ auto: esDueno ? nombreVivo : null });
+  useEffect(() => {
+    const lista = vivo.motor?.proyectos ?? [];
+    const norma = (v: string) => v.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const buscado = [project.name, project.id].map(norma);
+    setNombreVivo(lista.find((n) => buscado.includes(norma(n))) ?? null);
+  }, [vivo.motor, project.name, project.id]);
+  const [editando, setEditando] = useState(false);
+  const [verControl, setVerControl] = useState(false);
+  const [pulsoControl, setPulsoControl] = useState(0);
+  const [recarga, setRecarga] = useState(0);
+  const capa = useCapaEdicion({ proyecto: vivo.proyecto, activa: editando && vivo.fase === "vivo" });
+  useEffect(() => {
+    if (vivo.fase !== "vivo") {
+      if (editando) setEditando(false);
+      if (verControl) setVerControl(false);
+    }
+  }, [vivo.fase, editando, verControl]);
+  useEffect(() => {
+    if (capa.ultimoCambio) setPulsoControl((n) => n + 1);
+  }, [capa.ultimoCambio]);
+  const enVivo = vivo.fase === "vivo" && !!vivo.urlEntrada;
+  const urlVivo = (ruta: string) => {
+    if (!vivo.urlEntrada) return null;
+    const sep = vivo.urlEntrada.includes("?") ? "&" : "?";
+    return `${vivo.urlEntrada}${sep}to=${encodeURIComponent(ruta)}`;
+  };
+  const urls = {
+    desktop: enVivo ? urlVivo("/") : project.desktop_url,
+    mobile: enVivo ? urlVivo("/") : project.mobile_url,
+    admin: enVivo ? urlVivo("/admin") : project.admin_url,
+  };
+
   useEffect(() => {
     const media = window.matchMedia("(max-width: 649px)");
     const update = () => setIsMobile(media.matches);
@@ -509,11 +552,11 @@ function LiveWorkspace({
   };
 
   const focusedContent = focusedPanel === "desktop" ? (
-    <Viewport kind="desktop" title="Escritorio" url={project.desktop_url} fill onFocus={() => setFocusedPanel(null)} focused />
+    <Viewport kind="desktop" title="Escritorio" url={urls.desktop} recarga={recarga} fill onFocus={() => setFocusedPanel(null)} focused />
   ) : focusedPanel === "mobile" ? (
-    <Viewport kind="mobile" title="Móvil" url={project.mobile_url} fill onFocus={() => setFocusedPanel(null)} focused />
+    <Viewport kind="mobile" title="Móvil" url={urls.mobile} recarga={recarga} fill onFocus={() => setFocusedPanel(null)} focused />
   ) : focusedPanel === "admin" ? (
-    <Viewport kind="admin" title="Administración" url={project.admin_url} fill onFocus={() => setFocusedPanel(null)} focused />
+    <Viewport kind="admin" title="Administración" url={urls.admin} recarga={recarga} fill onFocus={() => setFocusedPanel(null)} focused />
   ) : focusedPanel === "activity" ? (
     <ActivityFeed projectId={project.id} workspace onFocus={() => setFocusedPanel(null)} focused />
   ) : focusedPanel === "comments" ? (
@@ -537,6 +580,62 @@ function LiveWorkspace({
   return (
     <ReviewContextProvider>
     <div className="min-w-0 px-2 py-2 md:px-3 md:py-3">
+      {esDueno ? (
+        <div className="mb-2 overflow-hidden rounded-[8px] border border-[var(--border-1)]">
+          <BarraVivo
+            encendido={vivo.encendido}
+            fase={vivo.fase}
+            proyecto={vivo.proyecto}
+            setProyecto={vivo.setProyecto}
+            motor={vivo.motor}
+            error={
+              vivo.error ??
+              (vivo.motor && !nombreVivo && vivo.fase === "apagado"
+                ? `"${project.name}" todavía no está en el motor vivo.`
+                : null)
+            }
+            disponible={vivo.disponible}
+            onEncender={(nombre) => void vivo.encender(nombre)}
+            onApagar={() => void vivo.apagar()}
+            editando={editando}
+            onEditando={setEditando}
+            marcados={capa.marcados}
+            verControl={verControl}
+            onVerControl={setVerControl}
+          />
+        </div>
+      ) : null}
+      {editando && capa.seleccion ? (
+        <div className="fixed bottom-3 right-3 top-3 z-[60] flex overflow-hidden rounded-[8px] border border-[var(--border-1)] bg-white shadow-[0_24px_60px_-20px_rgba(0,0,0,0.45)]">
+          <PanelInspector
+            elemento={capa.seleccion}
+            guardando={capa.guardando}
+            aviso={capa.aviso}
+            ultimoCambio={capa.ultimoCambio}
+            onEditar={(operacion) => void capa.editar(operacion)}
+            onCerrar={capa.limpiar}
+            onDileAV={(peticion) => {
+              const el = capa.seleccion;
+              if (!el) return;
+              const texto =
+                `En el proyecto ${vivo.proyecto}, sobre el elemento <${el.etiqueta}> que vive en ${el.src}` +
+                (el.texto ? ` y dice "${el.texto}"` : "") +
+                `: ${peticion}\n\nEscribe el cambio en ese archivo del worktree vivo. No hagas deploy.`;
+              window.location.href = `/app/chat?vivo=${encodeURIComponent(vivo.proyecto)}&pide=${encodeURIComponent(texto)}`;
+            }}
+          />
+        </div>
+      ) : null}
+      {verControl && vivo.fase === "vivo" ? (
+        <div className="fixed bottom-3 right-3 top-3 z-[59] flex overflow-hidden rounded-[8px] border border-[var(--border-1)] bg-white shadow-[0_24px_60px_-20px_rgba(0,0,0,0.45)]">
+          <PanelControl
+            proyecto={vivo.proyecto}
+            refrescar={pulsoControl}
+            onCerrar={() => setVerControl(false)}
+            onCambio={() => setRecarga((n) => n + 1)}
+          />
+        </div>
+      ) : null}
       <div className="sticky top-0 z-40 mb-2 flex min-w-0 items-center gap-2 overflow-x-auto rounded-[8px] border border-[var(--border-1)] bg-white p-2 shadow-[0_8px_20px_-18px_rgba(0,0,0,0.8)] no-scrollbar">
         <div className="flex shrink-0 items-center gap-1 border-r border-[var(--border-1)] pr-2">
           {(["balanced", "previews", "review"] as WorkspacePreset[]).map((preset) => (
@@ -619,16 +718,16 @@ function LiveWorkspace({
                 onLayoutChanged={(layout) => saveLayout("previews", layout)}
               >
                 <Panel id="desktop" panelRef={desktopRef} collapsible collapsedSize={42} minSize={isMobile ? 120 : 150} onResize={(size) => updateCollapsed("desktop", size.inPixels)}>
-                  {collapsed.desktop ? <CollapsedDockPanel label="Escritorio" vertical={!isMobile} onRestore={() => desktopRef.current?.expand()} /> : <Viewport kind="desktop" title="Escritorio" url={project.desktop_url} fill onFocus={() => focusAction("desktop")} onMinimize={() => desktopRef.current?.collapse()} />}
+                  {collapsed.desktop ? <CollapsedDockPanel label="Escritorio" vertical={!isMobile} onRestore={() => desktopRef.current?.expand()} /> : <Viewport kind="desktop" title="Escritorio" url={urls.desktop} recarga={recarga} fill onFocus={() => focusAction("desktop")} onMinimize={() => desktopRef.current?.collapse()} />}
                 </Panel>
                 <DockSeparator horizontal={!isMobile} />
                 <Panel id="mobile" panelRef={mobileRef} collapsible collapsedSize={42} minSize={isMobile ? 120 : 120} onResize={(size) => updateCollapsed("mobile", size.inPixels)}>
-                  {collapsed.mobile ? <CollapsedDockPanel label="Móvil" vertical={!isMobile} onRestore={() => mobileRef.current?.expand()} /> : <Viewport kind="mobile" title="Móvil" url={project.mobile_url} fill onFocus={() => focusAction("mobile")} onMinimize={() => mobileRef.current?.collapse()} />}
+                  {collapsed.mobile ? <CollapsedDockPanel label="Móvil" vertical={!isMobile} onRestore={() => mobileRef.current?.expand()} /> : <Viewport kind="mobile" title="Móvil" url={urls.mobile} recarga={recarga} fill onFocus={() => focusAction("mobile")} onMinimize={() => mobileRef.current?.collapse()} />}
                 </Panel>
                 {canSeeAdmin ? <DockSeparator horizontal={!isMobile} /> : null}
                 {canSeeAdmin ? (
                   <Panel id="admin" panelRef={adminRef} collapsible collapsedSize={42} minSize={isMobile ? 120 : 150} onResize={(size) => updateCollapsed("admin", size.inPixels)}>
-                    {collapsed.admin ? <CollapsedDockPanel label="Administración" vertical={!isMobile} onRestore={() => adminRef.current?.expand()} /> : <Viewport kind="admin" title="Administración" url={project.admin_url} fill onFocus={() => focusAction("admin")} onMinimize={() => adminRef.current?.collapse()} />}
+                    {collapsed.admin ? <CollapsedDockPanel label="Administración" vertical={!isMobile} onRestore={() => adminRef.current?.expand()} /> : <Viewport kind="admin" title="Administración" url={urls.admin} recarga={recarga} fill onFocus={() => focusAction("admin")} onMinimize={() => adminRef.current?.collapse()} />}
                   </Panel>
                 ) : null}
               </Group>
@@ -791,10 +890,12 @@ function Viewport({
   focused = false,
   onFocus,
   onMinimize,
+  recarga = 0,
 }: {
   kind: "desktop" | "mobile" | "admin";
   title: string;
   url: string | null;
+  recarga?: number;
   className?: string;
   fill?: boolean;
   focused?: boolean;
@@ -1026,7 +1127,8 @@ function Viewport({
                 <div className="absolute left-1/2 top-[9px] z-10 h-[6px] w-[72px] -translate-x-1/2 rounded-full bg-black" aria-hidden="true" />
                 <iframe
                   ref={iframeRef}
-                  key={refreshKey}
+                  data-vf-vista={kind}
+                  key={`${refreshKey}-${recarga}`}
                   src={url}
                   title={"Vista móvil real de " + title}
                   className="absolute left-[6px] top-[28px] border-0 bg-white"
@@ -1039,7 +1141,8 @@ function Viewport({
             ) : (
               <iframe
                 ref={iframeRef}
-                key={refreshKey}
+                data-vf-vista={kind}
+                key={`${refreshKey}-${recarga}`}
                 src={url}
                 title={`Vista ${kind === "admin" ? "administrativa" : "de escritorio"} de ${title}`}
                 className="absolute inset-0 border-0 bg-white"

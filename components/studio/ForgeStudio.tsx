@@ -493,6 +493,16 @@ export function ForgeStudio() {
   }, [messages, sending]);
 
   const vivo = useMotorVivo();
+
+  // Desde la sala del proyecto, "Dile a V" llega con ?pide= ya escrito.
+  useEffect(() => {
+    try {
+      const pide = new URLSearchParams(window.location.search).get("pide");
+      if (pide) setDraft(pide);
+    } catch {
+      /* sin parámetros */
+    }
+  }, []);
   const [editando, setEditando] = useState(false);
   const [verControl, setVerControl] = useState(false);
   // Cada edición commitea sola: esto le dice al panel de control que recargue.

@@ -33,7 +33,8 @@ type Fase = "apagado" | "arrancando" | "vivo" | "error";
 
 const LLAVE_PROYECTO = "vf-vivo-proyecto";
 
-export function useMotorVivo() {
+export function useMotorVivo(opciones?: { auto?: string | null }) {
+  const auto = opciones?.auto ?? null;
   const [encendido, setEncendido] = useState(false);
   const [fase, setFase] = useState<Fase>("apagado");
   const [proyecto, setProyecto] = useState("");
@@ -152,6 +153,24 @@ export function useMotorVivo() {
     }
     void leerEstado();
   }, [proyecto, leerEstado]);
+
+  // Si la pantalla sabe qué proyecto es (o viene ?vivo=), se enciende sola:
+  // Luis no debería tener que elegirlo en un combo para ver su app viva.
+  const autoIntentado = useRef(false);
+  useEffect(() => {
+    if (autoIntentado.current || !motor) return;
+    let pedido = auto;
+    if (!pedido) {
+      try {
+        pedido = new URLSearchParams(window.location.search).get("vivo");
+      } catch {
+        pedido = null;
+      }
+    }
+    if (!pedido || !motor.proyectos.includes(pedido)) return;
+    autoIntentado.current = true;
+    if (fase === "apagado") void encender(pedido);
+  }, [auto, motor, fase, encender]);
 
   return {
     encendido,
