@@ -1,40 +1,13 @@
-import { queryAll, sql } from "@/lib/db/client";
+import { sql } from "@/lib/db/client";
 import { resolveRequestOwner } from "@/lib/auth/request-owner";
 import { createRepo } from "@/lib/github/client";
 import { neon } from "@neondatabase/serverless";
 import { ensureDeliveryColumns } from "@/lib/projects/delivery-meta";
 import { ensureProjectRepositoriesSchema } from "@/lib/projects/repository-schema";
-import type { ProjectRepository } from "@/lib/projects/repository-groups";
+import { leerCatalogo } from "@/lib/projects/catalogo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-interface ProjectRow {
-  id: string;
-  name: string;
-  category: string;
-  status: string;
-  github_repo: string | null;
-  github_private?: boolean;
-  github_language?: string | null;
-  vercel_url: string | null;
-  domain?: string | null;
-  delivery_priority?: boolean;
-  progress_pct?: number;
-  family_code?: string | null;
-  repositories: ProjectRepository[];
-  repository_count: number;
-  description?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  client_name?: string | null;
-  due_date?: string | null;
-  contract_amount?: number | null;
-  paid_amount?: number | null;
-  last_push?: string | null;
-  notes_count?: number;
-  last_note?: { body: string; created_at: string } | null;
-}
 
 const VALID_CATEGORIES = new Set([
   "produccion",
@@ -59,60 +32,13 @@ export async function GET() {
     return jsonError("forbidden", 403);
   }
 
-  await ensureDeliveryColumns();
-  await ensureProjectRepositoriesSchema();
+  // El catálogo (incluido el estado real calculado) se arma en un solo lugar:
+  // lib/projects/catalogo.ts. El orden fino lo decide la pantalla.
+  const rows = await leerCatalogo();
+  const sinSondear = rows.filter((p) => p.sondeo_pendiente).length;
+  const sugerencias = rows.reduce((n, p) => n + p.sugerencias.length, 0);
 
-  const rows = await queryAll<ProjectRow>(
-    `SELECT p.id, p.name, p.category, p.status,
-            p.github_repo, p.github_private, p.github_language,
-            p.vercel_url, p.domain,
-            COALESCE(p.delivery_priority, false) AS delivery_priority,
-            COALESCE(p.progress_pct, 0) AS progress_pct,
-            p.family_code,
-            p.description, p.created_at, p.updated_at, p.client_name,
-            to_char(p.due_date, 'YYYY-MM-DD') AS due_date,
-            p.contract_amount::float8 AS contract_amount,
-            p.paid_amount::float8 AS paid_amount,
-            (SELECT max(pr.pushed_at) FROM project_repositories pr WHERE pr.project_id = p.id)
-              AS last_push,
-            (SELECT count(*)::int FROM project_notes n WHERE n.project_id = p.id) AS notes_count,
-            (SELECT jsonb_build_object('body', n.body, 'created_at', n.created_at)
-               FROM project_notes n WHERE n.project_id = p.id
-              ORDER BY n.created_at DESC LIMIT 1) AS last_note,
-            COALESCE((
-              SELECT jsonb_agg(
-                jsonb_build_object(
-                  'repo_full_name', pr.repo_full_name,
-                  'role', pr.role,
-                  'is_primary', pr.is_primary,
-                  'default_branch', pr.default_branch,
-                  'private', pr.private,
-                  'language', pr.language,
-                  'html_url', pr.html_url,
-                  'pushed_at', pr.pushed_at
-                ) ORDER BY pr.is_primary DESC, pr.role, pr.repo_full_name
-              )
-              FROM project_repositories pr
-              WHERE pr.project_id = p.id
-            ), '[]'::jsonb) AS repositories,
-            (SELECT count(*)::int FROM project_repositories pr WHERE pr.project_id = p.id)
-              AS repository_count
-       FROM projects p
-       ORDER BY
-         COALESCE(p.delivery_priority, false) DESC,
-         CASE p.category
-           WHEN 'produccion' THEN 1
-           WHEN 'activo' THEN 2
-           WHEN 'en_revision' THEN 3
-           WHEN 'en_pausa' THEN 4
-           WHEN 'archivo' THEN 5
-           WHEN 'pendiente_borrado' THEN 6
-           ELSE 99
-         END,
-         COALESCE(p.progress_pct, 0) DESC,
-         p.name`,
-  );
-  return new Response(JSON.stringify({ projects: rows }), {
+  return new Response(JSON.stringify({ projects: rows, sin_sondear: sinSondear, sugerencias }), {
     status: 200,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });

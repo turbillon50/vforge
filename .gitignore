@@ -52,3 +52,10 @@ bsd_*.py
 bsd-*.md
 __pycache__/
 *.pyc
+
+# QA de B4: catálogo real medido y capturas de la pantalla.
+# NO entran al repo: turbillon50/vforge es PÚBLICO y ese JSON trae nombres de
+# clientes, montos y comentarios. Se regeneran con:
+#   npx tsc -p tsconfig.test.json
+#   DATABASE_URL=... node --require ./.test-dist/tests/alias-hook.js .test-dist/scripts/qa/medir-b4.js
+/qa/

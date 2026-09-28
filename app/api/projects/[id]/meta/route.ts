@@ -14,6 +14,7 @@ import {
   cleanText,
   ensureDeliveryColumns,
 } from "@/lib/projects/delivery-meta";
+import { ensureEstadoRealSchema } from "@/lib/projects/estado-schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,6 +52,7 @@ export async function PATCH(
   }
 
   await ensureDeliveryColumns();
+  await ensureEstadoRealSchema();
 
   const sets: string[] = [];
   const vals: unknown[] = [];
@@ -76,6 +78,9 @@ export async function PATCH(
       return Response.json({ error: "invalid_category" }, { status: 400 });
     }
     set("category", body.category);
+    // Elegir el estado en pantalla ES clasificarlo a mano: se estampa la fecha
+    // y desde ese momento el estado calculado ya no manda para este proyecto.
+    sets.push("category_manual_at = now()");
   }
 
   if (sets.length === 0) {
@@ -86,7 +91,7 @@ export async function PATCH(
   const updated = await queryOne<Record<string, unknown>>(
     `UPDATE projects SET ${sets.join(", ")}, updated_at = now()
       WHERE id = $${i}
-      RETURNING id, category, description,
+      RETURNING id, category, category_manual_at, description,
                COALESCE(delivery_priority, false) AS delivery_priority,
                COALESCE(progress_pct, 0) AS progress_pct,
                family_code, client_name,
