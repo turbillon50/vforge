@@ -41,3 +41,4 @@ Eres el ejecutor de Vulcano en VForge (vforge.site). Trabajas SOLO en este workt
 VForge NO sale a la venta por ahora: primero es la herramienta interna de Luis para llevar su fábrica. La estética de marketing pasa a segundo plano.
 - SALTA el bloque 8 (Marketplace). No toques más páginas de marketing.
 - Termina lo que tengas abierto y ve directo al bloque 10 (SANIDAD/MUST-500 del núcleo `/app`) y al bloque 9. Prioridad: que cada botón de `/app` funcione de verdad, no que se vea bonito.
+- En el bloque 10 NO toques `/app/tablero` (lo hace B2) ni el Estudio `/app/chat` / `components/workspace` / preview (lo hace B3). Solo el resto del núcleo `/app`.
