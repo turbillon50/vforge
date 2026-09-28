@@ -58,17 +58,21 @@ export default function MarketplacePage() {
       <main className="min-h-screen bg-[#03020a] pb-24 pt-20">
 
         {/* Hero del shop */}
-        <div className="relative overflow-hidden border-b border-[var(--border-1)] bg-gradient-to-b from-violet-600/8 to-transparent py-16 text-center">
+        <div className="relative overflow-hidden border-b border-[var(--border-1)] bg-gradient-to-b from-violet-600/8 to-transparent px-5 py-16 text-center">
           <div className="pointer-events-none absolute inset-0">
             <img src={HF_SPHERE} alt="" className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full object-cover opacity-[0.06] blur-[60px]" />
           </div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ease: EASE }} className="relative z-10">
-            <p className="mb-3 text-[11px] font-semibold tracking-[0.25em] text-violet-400/60 uppercase">V-Shop</p>
+            <p className="mb-3 text-[12px] font-semibold tracking-[0.25em] text-[var(--fg-subtle)] uppercase">V-Shop</p>
             <h1 className="text-[clamp(2rem,6vw,3.5rem)] font-bold leading-tight tracking-tight text-white">
               Todo lo que necesita<br />
-              <span className="bg-gradient-to-r from-violet-400 to-violet-400 bg-clip-text text-transparent">tu próxima app.</span>
+              {/* Segundo tono del titular. Antes era un degradado de violet-400 a
+                  violet-400 (los dos extremos iguales) pintado con bg-clip-text:
+                  el tema monocromo deja violet-400 en #4f5257, asi que el titular
+                  salia gris oscuro sobre el fondo casi negro, a 1.6:1. */}
+              <span className="text-[var(--fg-subtle)]">tu próxima app.</span>
             </h1>
-            <p className="mx-auto mt-3 max-w-md text-sm font-light text-[var(--fg-muted)]">
+            <p className="mx-auto mt-3 max-w-md text-sm font-light text-[var(--fg-subtle)]">
               Apps listas, integraciones, LLMs y plantillas. V los conecta a tu proyecto en segundos.
             </p>
           </motion.div>
@@ -103,7 +107,10 @@ export default function MarketplacePage() {
                   className="group relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] p-4 text-left transition-all hover:border-violet-400/30 hover:bg-[var(--surface-1)]"
                 >
                   {item.img && (
-                    <div className="mb-3 h-24 w-full overflow-hidden rounded-xl">
+                    // `relative`: el velo de abajo es `absolute inset-0` y sin esto se
+                    // anclaba a la TARJETA entera (que si es `relative`), no a la foto.
+                    // Oscurecia el fondo completo y dejaba el titulo a 3.1:1.
+                    <div className="relative mb-3 h-24 w-full overflow-hidden rounded-xl">
                       <img src={item.img} alt={item.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 to-transparent" />
                     </div>
@@ -113,13 +120,17 @@ export default function MarketplacePage() {
                       {item.icon}
                     </div>
                   )}
-                  <p className="text-sm font-semibold text-white leading-tight">{item.name}</p>
-                  <p className="mt-0.5 text-[11px] text-[var(--fg-tertiary)] leading-tight">{item.sub}</p>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className={`text-[10px] font-semibold ${item.status === "live" ? "text-emerald-400" : "text-violet-300/60"}`}>
+                  {/* La tarjeta es clara (--surface-1 = #f7f7f5): el texto va oscuro.
+                      Antes el titulo era text-white sobre la tarjeta blanca: 1.07:1. */}
+                  <p className="text-sm font-semibold text-[var(--fg-primary)] leading-tight">{item.name}</p>
+                  <p className="mt-0.5 text-[12px] text-[var(--fg-tertiary)] leading-tight">{item.sub}</p>
+                  {/* En columna: a 390 la tarjeta mide ~155px y el estado y el precio
+                      juntos no caben en una fila sin partirse los dos a la vez. */}
+                  <div className="mt-2 flex flex-col gap-0.5">
+                    <span className={`text-[12px] font-semibold ${item.status === "live" ? "text-[var(--fg-primary)]" : "text-[var(--fg-tertiary)]"}`}>
                       {item.status === "live" ? "● Disponible" : "◌ Próximamente"}
                     </span>
-                    <span className="text-[10px] text-[var(--fg-muted)]">{item.price}</span>
+                    <span className="text-[12px] text-[var(--fg-tertiary)]">{item.price}</span>
                   </div>
                 </motion.button>
               ))}
@@ -150,15 +161,17 @@ export default function MarketplacePage() {
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] text-3xl">
                     {activeItem.icon}
                   </div>
+                  {/* Esta hoja SI es oscura (#0b0614): aqui el texto va claro.
+                      --fg-tertiary (#55585d) sobre este fondo daba 2.8:1. */}
                   <div className="flex-1">
                     <p className="text-lg font-bold text-white">{activeItem.name}</p>
-                    <p className="text-sm text-[var(--fg-tertiary)]">{activeItem.sub}</p>
-                    <span className={`mt-1 inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${activeItem.status === "live" ? "bg-emerald-500/15 text-emerald-400" : "bg-violet-500/15 text-violet-300"}`}>
+                    <p className="text-sm text-[var(--fg-subtle)]">{activeItem.sub}</p>
+                    <span className="mt-1 inline-block rounded-full border border-white/25 px-2.5 py-0.5 text-[12px] font-semibold text-white">
                       {activeItem.status === "live" ? "Disponible" : "Próximamente"}
                     </span>
                   </div>
                 </div>
-                <p className="mt-4 text-sm font-light leading-relaxed text-[var(--fg-tertiary)]">{activeItem.desc}</p>
+                <p className="mt-4 text-sm font-light leading-relaxed text-[var(--fg-subtle)]">{activeItem.desc}</p>
                 <div className="mt-4 flex items-center gap-3">
                   {activeItem.status === "live" ? (
                     <Link href="/sign-up" prefetch={false}
@@ -168,11 +181,11 @@ export default function MarketplacePage() {
                       Agregar a mi proyecto <IconArrowR size={13} />
                     </Link>
                   ) : (
-                    <button className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-violet-400/30 bg-violet-500/10 py-3.5 text-sm font-medium text-violet-300">
+                    <button className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/10 py-3.5 text-sm font-medium text-white">
                       <IconShield size={13} /> Notificarme cuando esté listo
                     </button>
                   )}
-                  <button onClick={() => setActive(null)} className="rounded-2xl border border-[var(--border-1)] px-4 py-3.5 text-sm text-[var(--fg-tertiary)] hover:text-[var(--fg-secondary)]">
+                  <button onClick={() => setActive(null)} className="rounded-2xl border border-white/25 px-4 py-3.5 text-sm text-white hover:bg-white/10">
                     Cerrar
                   </button>
                 </div>

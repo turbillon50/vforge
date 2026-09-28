@@ -536,3 +536,103 @@ Resultados: `med-b7-antes.json`, `med-b7-despues.json`, `med-b7-final.json`.
   | /app/integrations | **37** | **37** |
   | /app/setup | **8** | **8** |
   | /app/projects · /app/tablero · /app/settings · /app/admin | 0 | 0 |
+
+---
+
+## Bloque 8 · Marketplace
+
+Criterio: títulos de tarjetas con contraste ≥ 4.5:1; texto del encabezado sin cortarse en móvil.
+
+**Cómo se midió.** Se escribió un medidor de contraste que **lee el píxel del fondo** en vez de
+deducirlo del CSS: `contraste.py`. Pinta todos los textos en transparente, toma una captura, y el
+fondo de cada texto es el píxel de esa captura en el centro de su caja. Hizo falta porque la primera
+versión subía por los ancestros leyendo `backgroundColor` y **daba el pie de página por blanco**
+(el pie no tiene color de fondo: su oscuro lo pinta un degradado de un ancestro) — 25 rojos falsos
+que se vieron al mirar la captura. Mínimo WCAG AA de MUST-500 §270: 4.5:1, o 3:1 si el texto es
+≥ 24 px o ≥ 18.66 px en negrita. Resultados: `med-b8-antes.json`, `med-b8-despues.json`,
+`med-b8-appmk.json`, `med-b8-appmk-despues.json`.
+
+**Dos correcciones al propio medidor, las dos encontradas mirando:**
+1. El contenido detrás de un diálogo abierto está bajo un velo a propósito (`bg-black/60`): medirlo
+   daba rojos donde no se lee ni se toca nada. La hoja se mide acotada a su subárbol.
+2. `nextjs-portal` (el indicador de `next dev`, que **no existe en producción**) colaba su insignia
+   roja como "fondo" de los textos que caían debajo: 2 rojos falsos. Se oculta antes de medir.
+
+**Y una corrección al método.** Las primeras capturas salieron **en inglés**: la app cae a
+`navigator.language` (`i18n/AppProviders.tsx:41`) y el WebKit de pruebas pide `en-US`. No es un fallo
+del producto —el diccionario `es` está completo y es el `defaultLocale`— era el navegador de pruebas.
+Desde aquí todos los contextos se abren con `locale="es-MX"`, que es lo que ve Luis.
+
+- [x] **B8.1 — Los títulos no eran "gris sobre blanco": eran BLANCO sobre blanco.**
+  `text-white` (#ffffff) sobre la tarjeta `--surface-1` (#f7f7f5) = **1.07:1**. No es poco contraste,
+  es texto invisible. Se ve en `cap-b8-antes/390-marketplace.png`: donde debería decir "APSUS" no hay
+  nada. Causa: la página fija un fondo oscuro a mano (`bg-[#03020a]`) pero usa los tokens del tema,
+  que en VForge son **monocromos y claros** (`[data-theme="light"]` y `[data-theme="dark"]` comparten
+  el mismo bloque en `globals.css:6`). La página se escribió para un tema violeta que ya no existe.
+  Arreglo: el texto de la tarjeta clara va oscuro (`--fg-primary`, #090909 → **18.6:1**).
+
+- [x] **B8.2 — Un velo de imagen estaba oscureciendo la tarjeta entera.**
+  El degradado `absolute inset-0 bg-gradient-to-t from-black/60` debía cubrir la foto, pero el
+  contenedor de la foto no era `relative`: se anclaba a la **tarjeta** (que sí lo es). Por eso las
+  tarjetas con foto medían un fondo gris medio (rgb(146,146,145)) en vez de blanco, y el título
+  quedaba en 3.11:1. Arreglo: `relative` en el contenedor de la foto.
+
+- [x] **B8.3 — Contraste de `/marketplace`: 42 textos bajo mínimo → 0.**
+
+  | texto | antes | después |
+  |---|---|---|
+  | Título de tarjeta ("APSUS", "Clerk Auth"…) | **1.07:1** (blanco sobre blanco) | **18.6:1** |
+  | Título sobre tarjeta con foto | **2.56–3.11:1** | **18.6:1** |
+  | Subtítulo de tarjeta | **1.96–2.21:1** | **7.0:1** |
+  | "● Disponible" (`text-emerald-400`, que el tema aplana a gris) | **1.02:1** | **18.6:1** |
+  | Precio ("Incluido en Forge") | **1.02:1** | **7.0:1** |
+  | "◌ Próximamente" (`text-violet-300/60` → casi negro) | **4.26:1** | **7.0:1** |
+  | Antetítulo "V-Shop" (`text-violet-400/60` → #4f5257) | **1.61:1** | **5.7:1** |
+  | Bajada del hero | **4.29:1** | **5.7:1** |
+
+- [x] **B8.4 — El titular "tu próxima app." era un degradado de un solo color.**
+  `bg-gradient-to-r from-violet-400 to-violet-400` (los dos extremos iguales) pintado con
+  `bg-clip-text text-transparent`. Con el tema monocromo, `violet-400` es **#4f5257**: el titular
+  salía gris oscuro sobre fondo casi negro. Ahora es un color sólido del tema (`--fg-subtle`),
+  que mantiene los dos tonos del titular y se lee. Se ve en las dos capturas.
+
+- [x] **B8.5 — La hoja de detalle sí es oscura, y ahí el texto iba oscuro.**
+  Sobre `#0b0614`, `--fg-tertiary` (#55585d) daba **2.8:1**. Arreglo: en esa hoja el texto va claro.
+  Medido con la hoja abierta: **0 bajo mínimo** a 390 y 1440. Captura `cap-b8-despues/390-hoja.png`.
+
+- [x] **B8.6 — El encabezado en móvil: el texto iba pegado a los dos bordes.**
+  El hero no tenía padding horizontal, así que la bajada se pintaba de borde a borde a 390
+  (margen 0 px). Ahora **20 px** de margen a cada lado; `h1` y bajada sin recorte
+  (`scrollWidth ≤ clientWidth`), desborde 0.
+
+  | | antes | después |
+  |---|---|---|
+  | margen mínimo al borde (390) | **0 px** | **20 px** |
+  | `h1` recortado / bajada recortada | no / no | no / no |
+
+- [x] **B8.7 — El marketplace del workspace (`/app/marketplace`) tenía el mismo fallo, peor.**
+  `MarketplaceGrid` está escrito entero para tema oscuro (`text-white`, `text-white/60`,
+  `text-white/40`) y vive en el workspace **claro**: **53 textos bajo mínimo**, los nombres de módulo
+  a 1.07:1 y las descripciones a 1.04:1. Además traía acentos violeta escritos a mano
+  (`#c4b5fd`, `#a78bfa`, `rgba(139,92,246,…)`) que el tema monocromo no aplana porque no pasan por
+  los tokens. Todo pasó a tokens del tema. Medido: **53 → 0** a 390 y 1440.
+  `grep -c 'text-white\|rgba(139,92,246\|emerald' components/workspace/MarketplaceGrid.tsx` → **0**.
+
+- [x] **B8.8 — De paso, la letra de las dos pantallas.** `text-[10px]` y `text-[11px]` → **12 px**
+  (MUST-500 §144), igual que en el bloque 7. En las tarjetas, estado y precio pasaron a columna:
+  a 390 la tarjeta mide ~155 px y los dos juntos en una fila se partían a la vez.
+
+- [x] **B8.9 — Contraprueba del verde** (SANIDAD §0.5). Con todo en 0, se volvió a poner
+  `color:#fff` en los 17 títulos y el medidor los marcó otra vez: **1.07:1 'APSUS'**, 2 rojos a 390
+  y 8 a 1440. La prueba sabe fallar, así que el 0 vale.
+
+- [x] **B8.10 — Verificación.** `npx tsc --noEmit -p .` → **0 errores**.
+  `npm test` → **90 pruebas, 0 fallos**. Desborde `/marketplace`: 0 a 390.
+  Capturas miradas: `cap-b8-antes/` y `cap-b8-despues/` (390 y 1440, página y hoja).
+
+### Pendiente detectado en el bloque 8
+
+- [ ] El medidor de contraste del repo (`scripts/contrast_audit.py`, enganchado como `pre-commit`)
+  **audita `/root/vforge`, no el directorio que se está commiteando** (`cd /root/vforge` fijo en el
+  hook). Trabajando en un worktree, la compuerta pasa siempre sin mirar tu código: en este mismo
+  barrido reportó "OK: 114 issues" sobre otro checkout. Es una compuerta decorativa. **[Vulcano]**

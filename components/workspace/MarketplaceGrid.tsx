@@ -55,12 +55,12 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
     <div>
       <div className="flex flex-col gap-3 px-5 py-5 md:flex-row md:items-center md:px-8">
         <div className="relative flex-1">
-          <IconSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+          <IconSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-tertiary)]" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t.marketplace.search_placeholder}
-            className="w-full rounded-xl border border-[var(--border-1,#ffffff18)] bg-[var(--surface-1,#ffffff08)] px-3 py-2 pl-9 text-[13px] text-white placeholder:text-white/40 outline-none transition focus:border-white/20"
+            className="w-full rounded-xl border border-[var(--border-1,#ffffff18)] bg-[var(--surface-1,#ffffff08)] px-3 py-2 pl-9 text-[13px] text-[var(--fg-primary)] placeholder:text-[var(--fg-muted)] outline-none transition focus:border-[var(--border-2)]"
           />
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -68,11 +68,11 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
             <button
               key={c}
               onClick={() => setCat(c)}
-              className="rounded-full border px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest transition"
+              className="rounded-full border px-3 py-1.5 font-mono text-[12px] uppercase tracking-widest transition"
               style={
                 cat === c
-                  ? { borderColor: "rgba(139,92,246,0.5)", backgroundColor: "rgba(139,92,246,0.15)", color: "#c4b5fd" }
-                  : { borderColor: "rgba(255,255,255,0.12)", backgroundColor: "transparent", color: "rgba(255,255,255,0.55)" }
+                  ? { borderColor: "var(--fg-primary)", backgroundColor: "var(--fg-primary)", color: "var(--surface-1)" }
+                  : { borderColor: "var(--border-1)", backgroundColor: "transparent", color: "var(--fg-tertiary)" }
               }
             >
               {c}
@@ -84,22 +84,22 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
       {list.length === 0 && (
         <div className="px-5 pb-10 md:px-8">
           <div className="rounded-xl border border-[var(--border-1,#ffffff18)] bg-[var(--surface-1,#ffffff08)] p-8 text-center">
-            <p className="font-display text-lg font-semibold text-white">El marketplace abre pronto</p>
-            <p className="mt-2 text-sm text-white/60">Estos módulos están en camino. Te avisamos cuando puedas instalarlos.</p>
+            <p className="font-display text-lg font-semibold text-[var(--fg-primary)]">El marketplace abre pronto</p>
+            <p className="mt-2 text-sm text-[var(--fg-tertiary)]">Estos módulos están en camino. Te avisamos cuando puedas instalarlos.</p>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {UPCOMING.map((u) => (
               <article key={u.name} className="rounded-xl border border-[var(--border-1,#ffffff18)] bg-[var(--surface-1,#ffffff08)] p-5">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-display text-base font-semibold text-white">{u.name}</h3>
+                  <h3 className="font-display text-base font-semibold text-[var(--fg-primary)]">{u.name}</h3>
                   <span
-                    className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest"
-                    style={{ border: "1px solid rgba(139,92,246,0.3)", backgroundColor: "rgba(139,92,246,0.1)", color: "#c4b5fd" }}
+                    className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[12px] uppercase tracking-widest"
+                    style={{ border: "1px solid var(--border-1)", backgroundColor: "var(--surface-2)", color: "var(--fg-secondary)" }}
                   >
                     Próximamente
                   </span>
                 </div>
-                <p className="mt-3 text-sm text-white/60">{u.blurb}</p>
+                <p className="mt-3 text-sm text-[var(--fg-tertiary)]">{u.blurb}</p>
               </article>
             ))}
           </div>
@@ -111,49 +111,49 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
           <motion.article
             key={m.id}
             layout
-            className="group relative overflow-hidden rounded-xl border border-[var(--border-1,#ffffff18)] bg-[var(--surface-1,#ffffff08)] p-5 transition hover:border-white/20 hover:bg-[var(--surface-2,#ffffff10)]"
+            className="group relative overflow-hidden rounded-xl border border-[var(--border-1,#ffffff18)] bg-[var(--surface-1,#ffffff08)] p-5 transition hover:border-[var(--border-2)] hover:bg-[var(--surface-2,#ffffff10)]"
           >
             <div
               className="absolute -right-12 -top-12 h-32 w-32 rounded-full opacity-0 blur-3xl transition group-hover:opacity-15"
-              style={{ backgroundColor: "rgba(139,92,246,0.4)" }}
+              style={{ backgroundColor: "var(--fg-primary)" }}
             />
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div
                   className="flex h-10 w-10 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: "rgba(139,92,246,0.1)", boxShadow: "inset 0 0 0 1px rgba(139,92,246,0.2)" }}
+                  style={{ backgroundColor: "var(--surface-2)", boxShadow: "inset 0 0 0 1px var(--border-1)" }}
                 >
-                  <m.icon size={18} style={{ color: "#c4b5fd" }} />
+                  <m.icon size={18} style={{ color: "var(--fg-secondary)" }} />
                 </div>
                 <div>
-                  <h3 className="font-display text-base font-semibold text-white">{m.name}</h3>
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-white/40">{m.category}</p>
+                  <h3 className="font-display text-base font-semibold text-[var(--fg-primary)]">{m.name}</h3>
+                  <p className="font-mono text-[12px] uppercase tracking-widest text-[var(--fg-tertiary)]">{m.category}</p>
                 </div>
               </div>
               {m.recommended && (
                 <span
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest"
-                  style={{ border: "1px solid rgba(139,92,246,0.3)", backgroundColor: "rgba(139,92,246,0.1)", color: "#c4b5fd" }}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[12px] uppercase tracking-widest"
+                  style={{ border: "1px solid var(--border-1)", backgroundColor: "var(--surface-2)", color: "var(--fg-secondary)" }}
                 >
                   <IconSparkles size={10} /> {t.common.label_b_picks}
                 </span>
               )}
             </div>
-            <p className="mt-3 text-sm text-white/60">{m.blurb}</p>
+            <p className="mt-3 text-sm text-[var(--fg-tertiary)]">{m.blurb}</p>
             <div className="mt-5 flex items-center justify-between">
               {m.installed ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-emerald-400">
+                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border-2)] bg-[var(--surface-2)] px-2.5 py-0.5 font-mono text-[12px] uppercase tracking-widest text-[var(--fg-primary)]">
                   ● {t.common.status_installed}
                 </span>
               ) : (
                 <span
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-white/40"
-                  style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[12px] uppercase tracking-widest text-[var(--fg-tertiary)]"
+                  style={{ border: "1px solid var(--border-1)" }}
                 >
                   ● {t.common.status_available}
                 </span>
               )}
-              <button className={m.installed ? "btn-ghost !px-3 !py-1.5 text-[10px]" : "btn-primary !px-3 !py-1.5 text-[10px]"}>
+              <button className={m.installed ? "btn-ghost !px-3 !py-1.5 text-[12px]" : "btn-primary !px-3 !py-1.5 text-[12px]"}>
                 {m.installed ? t.common.cta_configure : t.common.cta_install}
               </button>
             </div>
@@ -163,15 +163,15 @@ export function MarketplaceGrid({ context }: { context?: "workspace" | "marketin
       {context === "workspace" && (
         <div
           className="mx-5 mb-10 rounded-xl p-5 md:mx-8"
-          style={{ border: "1px solid rgba(139,92,246,0.2)", backgroundColor: "rgba(139,92,246,0.04)" }}
+          style={{ border: "1px solid var(--border-1)", backgroundColor: "var(--surface-2)" }}
         >
           <p
-            className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em]"
-            style={{ color: "#a78bfa" }}
+            className="mb-2 font-mono text-[12px] uppercase tracking-[0.15em]"
+            style={{ color: "var(--fg-tertiary)" }}
           >
             {t.marketplace.ask_b_title}
           </p>
-          <p className="text-white/80">{t.marketplace.ask_b_body}</p>
+          <p className="text-[var(--fg-secondary)]">{t.marketplace.ask_b_body}</p>
         </div>
       )}
     </div>
