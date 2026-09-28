@@ -37,6 +37,28 @@ function aHex(valor: string): string {
   return `#${hex(m[1])}${hex(m[2])}${hex(m[3])}`;
 }
 
+/**
+ * Sin fondo no es fondo negro. El navegador contesta `rgba(0, 0, 0, 0)` para lo
+ * transparente, y pintarlo como #000000 es mentirle a quien mira: se vería una
+ * muestra negra sólida en algo que no tiene fondo.
+ */
+function esTransparente(valor: string): boolean {
+  const limpio = valor.trim();
+  if (limpio === "transparent" || limpio === "") return true;
+  const m = /^rgba\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*,\s*([\d.]+)\s*\)$/.exec(limpio);
+  return m ? Number(m[1]) === 0 : false;
+}
+
+/**
+ * `textAlign` calculado devuelve `start`/`end`, no `left`/`right`: sin esto
+ * ningún botón de alineación se prendía aunque el texto sí estuviera alineado.
+ */
+function alineacionReal(valor: string): string {
+  if (valor === "start") return "left";
+  if (valor === "end") return "right";
+  return valor;
+}
+
 export function PanelInspector({
   elemento,
   guardando,
@@ -146,7 +168,7 @@ export function PanelInspector({
             <Pista>El tamaño viene en otra unidad (clamp, em): usa &quot;dile a V&quot;.</Pista>
           ) : null}
 
-          <div className="mt-2 flex flex-wrap gap-1">
+          <div className="mt-2 flex flex-wrap items-center gap-1">
             {PESOS.map((peso) => (
               <Chip
                 key={peso}
@@ -156,6 +178,13 @@ export function PanelInspector({
                 {peso}
               </Chip>
             ))}
+            {/* Un peso fuera de la escala (850, por ejemplo) no prende ningún
+                botón: si no se dice, parece que el elemento no tiene peso. */}
+            {PESOS.includes(String(elemento.estilos.fontWeight)) ? null : (
+              <span className="font-mono text-[10px] text-[var(--vf-fg-2)]">
+                hoy: {elemento.estilos.fontWeight}
+              </span>
+            )}
           </div>
         </section>
 
@@ -171,6 +200,7 @@ export function PanelInspector({
             <FilaColor
               etiqueta="Fondo"
               valor={aHex(elemento.estilos.backgroundColor)}
+              vacio={esTransparente(elemento.estilos.backgroundColor)}
               onChange={(hex) => onEditar({ tipo: "estilo", props: { backgroundColor: hex } })}
             />
           </div>
@@ -183,7 +213,7 @@ export function PanelInspector({
             {ALINEACIONES.map((a) => (
               <Chip
                 key={a.id}
-                activo={elemento.estilos.textAlign === a.id}
+                activo={alineacionReal(elemento.estilos.textAlign) === a.id}
                 onClick={() => onEditar({ tipo: "estilo", props: { textAlign: a.id } })}
               >
                 {a.etiqueta}
@@ -315,23 +345,34 @@ function Chip({
 function FilaColor({
   etiqueta,
   valor,
+  vacio = false,
   onChange,
 }: {
   etiqueta: string;
   valor: string;
+  vacio?: boolean;
   onChange: (hex: string) => void;
 }) {
   return (
     <label className="flex items-center gap-2">
       <span className="w-14 shrink-0 text-[10px] text-[var(--vf-fg-2)]">{etiqueta}</span>
-      <input
-        type="color"
-        value={valor}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-7 w-10 shrink-0 cursor-pointer rounded border border-[var(--vf-border-1)] bg-transparent p-0.5"
-      />
+      <span
+        className={cn(
+          "relative h-7 w-10 shrink-0 overflow-hidden rounded border border-[var(--vf-border-1)] p-0.5",
+          // Damero: se ve que NO hay fondo, en vez de un negro que no existe.
+          vacio &&
+            "bg-[linear-gradient(45deg,#d4d4d4_25%,transparent_25%,transparent_75%,#d4d4d4_75%),linear-gradient(45deg,#d4d4d4_25%,transparent_25%,transparent_75%,#d4d4d4_75%)] bg-[length:8px_8px] bg-[position:0_0,4px_4px]",
+        )}
+      >
+        <input
+          type="color"
+          value={valor}
+          onChange={(e) => onChange(e.target.value)}
+          className={cn("h-full w-full cursor-pointer bg-transparent p-0", vacio && "opacity-0")}
+        />
+      </span>
       <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-[var(--vf-fg-2)]">
-        {valor}
+        {vacio ? "sin fondo" : valor}
       </span>
     </label>
   );

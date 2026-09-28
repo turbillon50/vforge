@@ -1,0 +1,35 @@
+B3 — Editor sobre preview en vivo. Las 3 fases cerradas. 28-sep-2026.
+
+Meta del brief: pedir un cambio y verlo en menos de 3 segundos, sin commit ni deploy.
+CUMPLE. Medido en WebKit con cronómetro, 10 cambios seguidos:
+  mediana 240 ms · mejor 188 ms · peor 570 ms · 10/10 sin timeout · 0 errores de consola.
+Por respuesta HTTP en la URL pública: mediana 583 ms, peor 1 433 ms.
+
+Fase 1 — Motor vivo:      servicio vf-vivo, 3 slots con certificado propio (sslip.io, sin tocar DNS),
+                          token HMAC de 60 s firmado por VForge, apagado a los 20 min sin uso,
+                          tope de 1536 MB. Sin token da 403; con token, 200.
+Fase 2 — Editar la vista: loader que marca el JSX con archivo:línea (sólo con VF_VIVO=1 y en dev),
+                          656 elementos marcados en la portada del piloto; el clic llega al Estudio
+                          como <span> en components/marketing.tsx:89:31; la edición escribe el código
+                          de verdad.
+Fase 3 — Control:         cada edición commitea sola con mensaje legible, historial, deshacer
+                          (comprobado leyendo el archivo), diff y Publicar con confirmación.
+
+Verificación final de los dos paneles del Estudio (lo que faltaba):
+  servicios/vivo/qa/banco/ — monta los MISMOS componentes contra el motor de verdad y los prueba en
+  WebKit: 31/31 en verde, 0 errores de consola, capturas miradas en capturas/vivo/banco-*.png.
+  Contraprueba: con el bug reintroducido a mano, la prueba falla con EXIT=1.
+  Salieron 5 fallas que tsc no podía ver (aviso que se borraba solo, fondo transparente pintado de
+  negro, peso 850 invisible, alineación que nunca se prendía, retrato viejo tras deshacer). Las 5,
+  corregidas. Detalle en LISTA-B3.md.
+
+Puertas: npx tsc --noEmit -p . en 0 · npm test 104/104 · sin next build local (RAM, instrucción del brief).
+Piloto: MiPipa, rama de trabajo vivo/b3. Su producción (master) sigue en 822150f, intacta.
+
+Lo que le toca a Luis: entrar a /app/chat en el deploy de esta rama con su cuenta, encender el motor
+con MiPipa y usarlo con el iframe enfrente. El banco prueba los paneles y el motor por separado; el
+Estudio entero con sesión de Clerk y el preview dentro del iframe no se puede medir headless.
+
+Límites escritos con su número en LISTA-B3.md: disco al 95 %, swap al 100 %, el loader es de webpack
+y no de turbopack (VForge mismo es Next 16), la concesión por IP es más gruesa que una galleta, y
+correr.sh completo se muere con EXIT=144 dentro de la sesión del agente.

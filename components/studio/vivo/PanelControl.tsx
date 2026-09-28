@@ -66,10 +66,13 @@ export function PanelControl({
   const [confirmando, setConfirmando] = useState(false);
   const [escrito, setEscrito] = useState("");
 
-  const leer = useCallback(async () => {
+  // `conservarAviso` existe porque deshacer y publicar dejan un mensaje y luego
+  // releen el repo: si releer borrara el aviso, el mensaje se iría antes de que
+  // alcance a leerse (pasó de verdad, se vio en la prueba en WebKit).
+  const leer = useCallback(async ({ conservarAviso = false } = {}) => {
     if (!proyecto) return;
     setCargando(true);
-    setAviso(null);
+    if (!conservarAviso) setAviso(null);
     try {
       const [e, h] = await Promise.all([
         pedirGit(proyecto, "estado"),
@@ -111,7 +114,7 @@ export function PanelControl({
       const r = await pedirGit(proyecto, "deshacer");
       setAviso(`Deshecho. El proyecto quedó en ${String(r.ahoraEn ?? "?")}.`);
       setDiff(null);
-      await leer();
+      await leer({ conservarAviso: true });
       onCambio();
     } catch (error) {
       setAviso(error instanceof Error ? error.message : "No pude deshacer.");
@@ -130,7 +133,7 @@ export function PanelControl({
       );
       setConfirmando(false);
       setEscrito("");
-      await leer();
+      await leer({ conservarAviso: true });
     } catch (error) {
       setAviso(error instanceof Error ? error.message : "No pude publicar.");
     } finally {

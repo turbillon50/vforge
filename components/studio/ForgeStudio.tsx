@@ -1097,6 +1097,11 @@ export function ForgeStudio() {
                 onCambio={() => {
                   // Deshacer cambió los archivos: la vista tiene que releer.
                   setPreviewKey((value) => value + 1);
+                  // Y el retrato del elemento seleccionado ya no corresponde al
+                  // código (se veía el texto viejo en el inspector después de
+                  // deshacer). Se suelta la selección: la capa vuelve a
+                  // anunciarse al recargar y se puede volver a hacer clic.
+                  capa.limpiar();
                 }}
               />
             ) : null}
