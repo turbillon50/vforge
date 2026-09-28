@@ -19,8 +19,10 @@ const RELAY = (
 ).replace(/\/$/, "");
 const SECRET = process.env.BRAIN_SECRET ?? "";
 
+// El colector vive en el repo (servidor/tablero/estado.py) y se instala como
+// /usr/local/sbin/vl-tablero. /root/tablero/ solo guarda su salida.
 const LEER = "cat /root/tablero/estado.json";
-const REGENERAR = "cd /root/tablero && python3 estado.py";
+const REGENERAR = "/usr/local/sbin/vl-tablero";
 
 export async function GET(req: Request) {
   const user = await currentUser();
