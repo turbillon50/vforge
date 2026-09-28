@@ -1,0 +1,281 @@
+#!/usr/bin/env python3
+"""vl-control <pausar|reanudar|detener|relanzar> <tag> — el único mando del tablero.
+
+Por qué existe: para que VForge pueda parar o revivir un frente SIN que nadie
+mande comandos libres al servidor. Aquí solo hay cuatro verbos y una lista blanca.
+
+La lista blanca no se escribe a mano: son los frentes que el colector ya midió
+(`/root/tablero/estado.json`). El `tag` que llega de fuera jamás se pega a una
+ruta — la ruta del worktree se saca del JSON. Un tag que no esté ahí se rechaza
+y no se ejecuta nada.
+
+Cada acción deja renglón en `/root/tablero/control.log`, que el tablero pinta.
+
+Fuente: repo turbillon50/vforge, `servidor/vl-control`.
+Se instala con `servidor/instalar-control.sh`. No editar la copia de
+/usr/local/sbin: el instalador la pisa.
+"""
+import datetime as dt
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+
+DATA = os.environ.get("VL_TABLERO_DATA", "/root/tablero")
+ESTADO = os.path.join(DATA, "estado.json")
+BITACORA = os.path.join(DATA, "control.log")
+COLECTOR = "/usr/local/sbin/vl-tablero"
+ACCIONES = ("pausar", "reanudar", "detener", "relanzar")
+RE_TAG = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,48}$")
+
+
+def ahora():
+    return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def salir(ok, mensaje, **extra):
+    """Respuesta única: JSON a stdout. La API no adivina, lee esto."""
+    r = {"ok": ok, "mensaje": mensaje, "cuando": ahora(), **extra}
+    print(json.dumps(r, ensure_ascii=False))
+    sys.exit(0 if ok else 1)
+
+
+def apuntar(registro):
+    try:
+        os.makedirs(DATA, exist_ok=True)
+        with open(BITACORA, "a") as fh:
+            fh.write(json.dumps(registro, ensure_ascii=False) + "\n")
+        # la bitácora es para leerse, no para crecer sin fin
+        lineas = open(BITACORA).readlines()
+        if len(lineas) > 500:
+            open(BITACORA, "w").writelines(lineas[-300:])
+    except Exception:
+        pass
+
+
+def sh(cmd, t=25):
+    try:
+        p = subprocess.run(cmd, shell=True, capture_output=True, text=True,
+                           timeout=t)
+        return p.returncode, (p.stdout + p.stderr).strip()
+    except Exception as e:
+        return 1, str(e)[:200]
+
+
+# ───────────────────── quién es quién en /proc ─────────────────────
+
+RE_SUP = re.compile(r"vl-supervisor\s+(\S+)\s+(\S+)")
+
+
+def procesos_de(worktree, tag):
+    """El supervisor de ESTE tag y los `claude -p` que corren en este worktree.
+
+    Ojo con el criterio: no vale "el cmdline menciona el worktree". El brief que
+    se le pasa a `claude -p` trae la ruta escrita, así que ese filtro se lleva de
+    corbata a cualquier proceso que solo la nombre — incluido el shell desde el
+    que estás mirando. El supervisor se reconoce porque su ARGUMENTO de worktree
+    es este, y el claude porque su cwd cuelga de aquí.
+    """
+    sup, claudes = [], []
+    for pid in os.listdir("/proc"):
+        if not pid.isdigit():
+            continue
+        try:
+            argv = open(f"/proc/{pid}/cmdline", "rb").read().split(b"\0")
+            linea = b" ".join(argv).decode("utf-8", "replace")
+            cwd = os.readlink(f"/proc/{pid}/cwd")
+        except Exception:
+            continue
+        m = RE_SUP.search(linea)
+        if m and m.group(1) == tag and m.group(2).rstrip("/") == worktree:
+            sup.append(int(pid))
+        elif (cwd == worktree or cwd.startswith(worktree + "/")) and argv \
+                and argv[0].endswith(b"claude") and b"-p" in argv:
+            claudes.append(int(pid))
+    return sup, claudes
+
+
+def hijos_de(pids):
+    """Descendientes vivos: matar el supervisor no mata al `timeout claude -p`."""
+    padres = {}
+    for pid in os.listdir("/proc"):
+        if not pid.isdigit():
+            continue
+        try:
+            ppid = int(re.search(r"PPid:\s*(\d+)",
+                                 open(f"/proc/{pid}/status").read()).group(1))
+        except Exception:
+            continue
+        padres.setdefault(ppid, []).append(int(pid))
+    out, cola = [], list(pids)
+    while cola:
+        p = cola.pop()
+        for h in padres.get(p, []):
+            if h not in out:
+                out.append(h)
+                cola.append(h)
+    return out
+
+
+def antepasados():
+    """Los PID de la cadena que me invocó: para no dejar que un frente se mate solo."""
+    out, pid = set(), os.getpid()
+    for _ in range(40):
+        out.add(pid)
+        try:
+            ppid = int(re.search(r"PPid:\s*(\d+)",
+                                 open(f"/proc/{pid}/status").read()).group(1))
+        except Exception:
+            break
+        if ppid <= 1:
+            break
+        pid = ppid
+    return out
+
+
+def matar(pids, etiqueta):
+    """SIGTERM, medio segundo de cortesía, y si sigue vivo SIGKILL."""
+    muertos = []
+    for pid in pids:
+        try:
+            os.kill(pid, 15)
+            muertos.append(pid)
+        except ProcessLookupError:
+            pass
+        except Exception:
+            pass
+    if muertos:
+        time.sleep(1.5)
+        for pid in muertos:
+            try:
+                os.kill(pid, 0)
+                os.kill(pid, 9)
+            except Exception:
+                pass
+    return {"tipo": etiqueta, "pids": muertos}
+
+
+# ───────────────────────────── entrada ─────────────────────────────
+if len(sys.argv) != 3:
+    salir(False, "uso: vl-control <pausar|reanudar|detener|relanzar> <tag>")
+
+accion, tag = sys.argv[1].strip().lower(), sys.argv[2].strip()
+quien = (os.environ.get("VL_QUIEN") or "desconocido")[:80]
+
+if accion not in ACCIONES:
+    salir(False, f"acción no permitida: {accion}. Solo {', '.join(ACCIONES)}.")
+if not RE_TAG.match(tag):
+    salir(False, "ese tag no tiene forma de tag")
+
+
+def cargar_frentes(regenerar=False):
+    if regenerar and os.path.exists(COLECTOR):
+        sh(f"{COLECTOR} >/dev/null 2>&1", t=120)
+    try:
+        return json.load(open(ESTADO)).get("frentes", [])
+    except Exception:
+        return []
+
+
+frentes = cargar_frentes()
+frente = next((f for f in frentes if f.get("tag") == tag), None)
+if not frente:
+    # puede ser un frente recién nacido: se remide una vez antes de rendirse
+    frente = next((f for f in cargar_frentes(True) if f.get("tag") == tag), None)
+if not frente:
+    salir(False, f"'{tag}' no es un frente del tablero. No hago nada.",
+          conocidos=[f.get("tag") for f in frentes][:20])
+
+worktree = frente.get("worktree") or ""
+if not worktree.startswith("/root/worktrees/") or not os.path.isdir(worktree):
+    salir(False, f"el worktree de '{tag}' no es una ruta que yo pueda tocar",
+          worktree=worktree)
+
+PAUSA = os.path.join(worktree, f"PAUSA-{tag}")
+STALLED = os.path.join(worktree, f"STALLED-{tag}")
+sup, claudes = procesos_de(worktree, tag)
+
+# Nadie se apaga a sí mismo: si quien llama vive dentro de este frente, no.
+if accion in ("pausar", "detener"):
+    mios = antepasados()
+    if mios & set(sup + claudes + hijos_de(sup)):
+        salir(False, f"'{tag}' es el frente desde el que me estás llamando: "
+                     "no me voy a matar solo")
+
+hecho = []
+try:
+    if accion in ("pausar", "detener"):
+        nota = ("detenido por Luis desde el tablero"
+                if accion == "detener" else "pausado por Luis desde el tablero")
+        # la marca va PRIMERO: así el supervisor no relanza en lo que matamos
+        with open(PAUSA, "w") as fh:
+            fh.write(f"{nota} · {ahora()} · {quien}\n")
+        hecho.append(f"PAUSA-{tag}")
+        if accion == "detener":
+            with open(STALLED, "w") as fh:
+                fh.write(f"detenido por Luis desde el tablero · {ahora()} · {quien}\n")
+            hecho.append(f"STALLED-{tag}")
+        unidad = f"agente-{tag}.service"
+        cod, _ = sh(f"systemctl is-active --quiet {unidad}")
+        if cod == 0:
+            sh(f"systemctl stop {unidad}")
+            hecho.append(f"systemctl stop {unidad}")
+        # primero las crías (el `timeout claude -p` cuelga del supervisor),
+        # luego el supervisor: al revés, el bucle alcanza a relanzar
+        muertos_c = matar(sorted(set(claudes + hijos_de(sup))), "claude -p")
+        muertos = matar(sup, "supervisor")
+        hecho.append(f"terminados: {len(muertos['pids'])} supervisor + "
+                     f"{len(muertos_c['pids'])} procesos de trabajo")
+
+    elif accion == "reanudar":
+        if os.path.exists(PAUSA):
+            os.remove(PAUSA)
+            hecho.append(f"quitada PAUSA-{tag}")
+        else:
+            hecho.append(f"no había PAUSA-{tag}")
+        if os.path.exists(STALLED):
+            hecho.append(f"OJO: sigue STALLED-{tag}; para revivirlo usa relanzar")
+
+    elif accion == "relanzar":
+        for marca, nombre in ((PAUSA, f"PAUSA-{tag}"), (STALLED, f"STALLED-{tag}")):
+            if os.path.exists(marca):
+                os.remove(marca)
+                hecho.append(f"quitada {nombre}")
+        unidad = f"agente-{tag}.service"
+        cod, _ = sh(f"systemctl cat {unidad} >/dev/null 2>&1")
+        if cod == 0:
+            sh(f"systemctl restart {unidad}")
+            hecho.append(f"systemctl restart {unidad}")
+        else:
+            script = f"/root/sup-{tag}.sh"
+            if os.path.exists(script):
+                sh(f"setsid {script} >/dev/null 2>&1 &", t=5)
+                hecho.append(f"lanzado {script}")
+            else:
+                hecho.append("sin servicio ni sup-*.sh: arrancará en su próximo cron")
+        # el tope diario no se toca: es el freno que cuida la cuenta
+        cnt = f"/root/.sup-{tag}.dia"
+        try:
+            d, n = open(cnt).read().split()
+            if d == dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d") \
+                    and int(n) >= int(os.environ.get("VL_MAX_DIA", "10")):
+                hecho.append(f"OJO: ya lleva {n} corridas hoy; el tope lo frena "
+                             "hasta mañana (el tope no se borra desde aquí)")
+        except Exception:
+            pass
+except Exception as e:
+    apuntar({"cuando": ahora(), "accion": accion, "tag": tag, "quien": quien,
+             "ok": False, "detalle": str(e)[:200]})
+    salir(False, f"no pude {accion} {tag}: {str(e)[:150]}")
+
+# se remide para que el tablero refresque con la verdad de después
+if os.path.exists(COLECTOR):
+    sh(f"{COLECTOR} >/dev/null 2>&1", t=120)
+
+registro = {"cuando": ahora(), "accion": accion, "tag": tag,
+            "nombre": frente.get("nombre"), "quien": quien, "ok": True,
+            "detalle": " · ".join(hecho)}
+apuntar(registro)
+salir(True, f"{tag}: {accion} hecho", detalle=hecho, worktree=worktree)

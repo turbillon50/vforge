@@ -6,5 +6,11 @@
     "app/api/v/chat/route.ts": {
       "maxDuration": 300
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/tablero/avisos",
+      "schedule": "*/15 * * * *"
+    }
+  ]
 }

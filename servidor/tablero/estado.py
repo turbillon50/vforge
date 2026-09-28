@@ -411,8 +411,11 @@ for path in sorted(rutas):
     elif f"DONE-{tag}" in marcas:
         estado = "terminado"
     elif any(m.startswith("STALLED-") for m in marcas):
-        estado = "atorado"
         nota = leer(os.path.join(path, f"STALLED-{tag}"), 200).strip() or None
+        # un STALLED que puso Luis desde el tablero no es lo mismo que un frente
+        # que se atoró solo: uno es una decisión, el otro es un problema
+        estado = "detenido por ti" if nota and "detenido por Luis" in nota \
+            else "atorado"
     elif any(m.startswith("PAUSA-") for m in marcas):
         estado = "pausado"
         nota = leer(os.path.join(path, f"PAUSA-{tag}"), 200).strip() or None
@@ -502,7 +505,7 @@ for path in sorted(rutas):
     })
 
 ORDEN = {"trabajando": 0, "atorado": 1, "pausado por límite": 2, "pausado": 3,
-         "en espera": 4, "terminado": 5, "quieto": 6}
+         "detenido por ti": 4, "en espera": 5, "terminado": 6, "quieto": 7}
 frentes.sort(key=lambda f: (ORDEN.get(f["estado"], 9),
                             -f["tokens_hoy"]["total"]))
 
@@ -607,6 +610,13 @@ for f in frentes:
         alertas.append({"nivel": "alto", "clave": f"atorado:{f['tag']}",
                         "titulo": f"{f['tag']} está atorado",
                         "detalle": f["nota"] or "3 corridas seguidas sin commit."})
+    if f["estado"] == "terminado":
+        av = f["avance"]
+        cierre = (f"Dejó su lista en {av['pct']}% ({av['hechos']}/{av['total']})"
+                  if av.get("pct") is not None else "No tiene lista que medir")
+        alertas.append({"nivel": "info", "clave": f"fin:{f['tag']}",
+                        "titulo": f"{f['tag']} terminó",
+                        "detalle": f"{cierre}. {f['brief'] or ''}".strip()[:200]})
     if f["sin_freno"]:
         refs = ", ".join(l["ref"] for l in f["lanzadores"] if not l["supervisado"])
         alertas.append({"nivel": "medio", "clave": f"sinfreno:{f['tag']}",
