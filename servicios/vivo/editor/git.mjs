@@ -71,7 +71,25 @@ export async function commitear(raiz, mensaje) {
   const add = await git(raiz, ["add", "-A"]);
   if (!add.ok) return { ok: false, error: add.error };
 
-  const commit = await git(raiz, [...AUTOR, "commit", "-m", `${MARCA} ${mensaje}`]);
+  // Arrastrar un control (tamaño, esquinas…) manda decenas de cambios por
+  // segundo: si el último commit es del Estudio, del mismo elemento y propiedad,
+  // de hace menos de 20 s y aún no se ha subido, se funde en él en vez de
+  // llenar el historial de basura (28-sep: 158 commits en 15 min).
+  const texto = `${MARCA} ${mensaje}`;
+  let fundir = false;
+  const ultimo = await git(raiz, ["log", "-1", "--format=%s%x1f%ct"]);
+  if (ultimo.ok && ultimo.salida) {
+    const [asunto, cuando] = ultimo.salida.split("\x1f");
+    const reciente = Date.now() / 1000 - Number(cuando) < 20;
+    if (asunto === texto && reciente) {
+      const subido = await git(raiz, ["branch", "-r", "--contains", "HEAD"]);
+      fundir = subido.ok && !subido.salida;
+    }
+  }
+  const commit = await git(
+    raiz,
+    fundir ? [...AUTOR, "commit", "--amend", "-m", texto] : [...AUTOR, "commit", "-m", texto],
+  );
   if (!commit.ok) return { ok: false, error: commit.error };
 
   const sha = await git(raiz, ["rev-parse", "--short", "HEAD"]);
