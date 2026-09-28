@@ -36,38 +36,80 @@ function timeAgo(iso: string): string {
 // https: desde vforge.site (HTTPS) el navegador bloquea http:// por contenido mixto.
 const DRAIN_SSE = "https://brain.vforge.site/drain/stream?target=vulcano";
 
+/** Segundos sin conectar antes de dejar de decir "esperando" y admitir que no
+ *  hay conexión (SANIDAD R-007: ningún indicador espera para siempre). */
+const TOPE_CONEXION_MS = 10000;
+
 export default function AgentMonitor() {
   const [msgs, setMsgs]         = useState<DrainMsg[]>([]);
   const [connected, setConnected] = useState(false);
+  const [sinConexion, setSinConexion] = useState(false);
+  const [intento, setIntento]   = useState(0);
   const [filter, setFilter]     = useState<string>("todos");
   const [expanded, setExpanded] = useState<string | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const feedRef   = useRef<HTMLDivElement>(null);
   const sseRef    = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    const es = new EventSource(DRAIN_SSE);
-    sseRef.current = es;
+    // La conexión viva solo existe mientras la pestaña está a la vista: un
+    // EventSource abierto en una pestaña de fondo mantiene ocupado al relay
+    // y a la red del teléfono sin que nadie lo esté mirando.
+    let es: EventSource | null = null;
+    let tope: ReturnType<typeof setTimeout> | null = null;
 
-    es.onopen = () => setConnected(true);
-    es.onerror = () => setConnected(false);
+    const abrir = () => {
+      if (es) return;
+      es = new EventSource(DRAIN_SSE);
+      sseRef.current = es;
+      tope = setTimeout(() => setSinConexion(true), TOPE_CONEXION_MS);
 
-    es.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.ok && data.msg === "conectado") return;
-        if (!data.id) return;
-        setMsgs(prev => {
-          if (prev.find(m => m.id === data.id)) return prev;
-          return [data, ...prev].slice(0, 200);
-        });
-      } catch { /* ignore */ }
+      es.onopen = () => {
+        setConnected(true);
+        setSinConexion(false);
+        if (tope) { clearTimeout(tope); tope = null; }
+      };
+      es.onerror = () => setConnected(false);
+      es.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.ok && data.msg === "conectado") return;
+          if (!data.id) return;
+          setMsgs((prev) => {
+            if (prev.find((m) => m.id === data.id)) return prev;
+            return [data, ...prev].slice(0, 200);
+          });
+        } catch { /* ignore */ }
+      };
     };
 
-    return () => es.close();
-  }, []);
+    const cerrar = () => {
+      if (tope) { clearTimeout(tope); tope = null; }
+      es?.close();
+      es = null;
+      sseRef.current = null;
+      setConnected(false);
+    };
+
+    const alCambiarVisibilidad = () => {
+      if (document.visibilityState === "visible") abrir();
+      else cerrar();
+    };
+
+    if (document.visibilityState === "visible") abrir();
+    document.addEventListener("visibilitychange", alCambiarVisibilidad);
+    return () => {
+      document.removeEventListener("visibilitychange", alCambiarVisibilidad);
+      cerrar();
+    };
+  }, [intento]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // El scroll va DENTRO del contenedor del feed. Con scrollIntoView la página
+    // entera se movía, también en horizontal (SANIDAD R-006).
+    const feed = feedRef.current;
+    if (!feed) return;
+    const pegadoAbajo = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 80;
+    if (pegadoAbajo) feed.scrollTo({ top: feed.scrollHeight, behavior: "smooth" });
   }, [msgs.length]);
 
   const agents = ["todos", "vulcano", "pedro", "pablo"];
@@ -77,7 +119,11 @@ export default function AgentMonitor() {
 
   return (
     <div style={{
-      display: "flex", flexDirection: "column", height: "100dvh",
+      display: "flex", flexDirection: "column",
+      // 100dvh dentro del shell (header 58 + pie 72) dejaba la página con dos
+      // barras de scroll y el pie fuera de la pantalla. Misma cuenta que usa
+      // <main> en WorkspaceShell.
+      height: "calc(100svh - 58px - 72px)",
       background: "#03020a", color: "rgba(255,255,255,0.9)",
       fontFamily: "system-ui, sans-serif",
     }}>
@@ -85,12 +131,13 @@ export default function AgentMonitor() {
       {/* Header */}
       <div style={{
         borderBottom: "1px solid rgba(255,255,255,0.06)",
-        padding: "14px 20px", display: "flex",
+        padding: "14px 16px", display: "flex",
         alignItems: "center", justifyContent: "space-between",
+        flexWrap: "wrap", rowGap: 10, columnGap: 12,
         background: "rgba(0,0,0,0.4)", backdropFilter: "blur(12px)",
         position: "sticky", top: 0, zIndex: 10, flexShrink: 0,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
           <div style={{
             width: 8, height: 8, borderRadius: "50%",
             background: connected ? "#22d3ee" : "#ef4444",
@@ -111,7 +158,7 @@ export default function AgentMonitor() {
         </div>
 
         {/* Filtros */}
-        <div style={{ display: "flex", gap: 4 }}>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", minWidth: 0 }}>
           {agents.map(a => {
             const c = agentColor(a);
             const active = filter === a;
@@ -134,7 +181,7 @@ export default function AgentMonitor() {
 
       {/* Status bar — agentes activos */}
       <div style={{
-        display: "flex", gap: 8, padding: "10px 20px",
+        display: "flex", gap: 8, padding: "10px 16px",
         borderBottom: "1px solid rgba(255,255,255,0.04)",
         flexShrink: 0,
       }}>
@@ -145,13 +192,16 @@ export default function AgentMonitor() {
             <div key={agent} style={{
               display: "flex", alignItems: "center", gap: 8,
               background: c.bg, border: `1px solid ${c.accent}22`,
-              borderRadius: 8, padding: "6px 12px", flex: 1,
+              borderRadius: 8, padding: "6px 10px", flex: "1 1 0", minWidth: 0,
             }}>
               <div style={{
-                width: 6, height: 6, borderRadius: "50%",
+                width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
                 background: last ? c.dot : "rgba(255,255,255,0.2)",
               }} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: c.accent, textTransform: "capitalize" }}>
+              <span style={{
+                fontSize: 12, fontWeight: 600, color: c.accent, textTransform: "capitalize",
+                minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>
                 {agent}
               </span>
               {last && (
@@ -165,11 +215,37 @@ export default function AgentMonitor() {
       </div>
 
       {/* Feed */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px" }}>
+      <div ref={feedRef} style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", padding: "12px 16px" }}>
         {visible.length === 0 ? (
-          <div style={{ textAlign: "center", color: "rgba(255,255,255,0.2)", paddingTop: 60 }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>⟳</div>
-            <p style={{ fontSize: 14 }}>Esperando mensajes{connected ? "..." : " (desconectado)"}</p>
+          <div style={{ textAlign: "center", color: "rgba(255,255,255,0.35)", paddingTop: 60, padding: "60px 16px 0" }}>
+            {connected ? (
+              <>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>⟳</div>
+                <p style={{ fontSize: 14 }}>Conectado. Aquí aparecerán los mensajes de los agentes.</p>
+              </>
+            ) : sinConexion ? (
+              <>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>⚠</div>
+                <p style={{ fontSize: 14, marginBottom: 14 }}>
+                  No se pudo conectar con el canal de agentes.
+                </p>
+                <button
+                  onClick={() => { setSinConexion(false); setIntento((n) => n + 1); }}
+                  style={{
+                    minHeight: 44, padding: "0 18px", borderRadius: 10, cursor: "pointer",
+                    border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.05)",
+                    color: "rgba(255,255,255,0.85)", fontSize: 14,
+                  }}
+                >
+                  Reintentar
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>⟳</div>
+                <p style={{ fontSize: 14 }}>Conectando con el canal de agentes…</p>
+              </>
+            )}
           </div>
         ) : [...visible].reverse().map(msg => {
           const c = agentColor(msg.agent);
@@ -225,7 +301,7 @@ export default function AgentMonitor() {
                 <span style={{
                   fontSize: 12, color: "rgba(255,255,255,0.5)",
                   overflow: "hidden", textOverflow: "ellipsis",
-                  whiteSpace: "nowrap", flex: 1,
+                  whiteSpace: "nowrap", flex: "1 1 0", minWidth: 0,
                 }}>
                   {msg.content?.slice(0, 120)}
                 </span>
@@ -260,7 +336,6 @@ export default function AgentMonitor() {
             </div>
           );
         })}
-        <div ref={bottomRef} />
       </div>
 
       <style>{`

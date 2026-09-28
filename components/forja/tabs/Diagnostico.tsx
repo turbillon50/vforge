@@ -151,7 +151,7 @@ export function Diagnostico() {
         })}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 12, marginTop: 12 }}>
+      <div className="forja-diag-2col">
         <div style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 16, padding: 16 }}>
           <div style={{ fontSize: 12.5, color: F.fg2, marginBottom: 12 }}>Cola de trabajos</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
@@ -176,7 +176,10 @@ export function Diagnostico() {
             {(data?.recent ?? []).map((j) => (
               <div key={j.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ width: 7, height: 7, borderRadius: 999, background: statusColor(j.status), flexShrink: 0 }} />
-                <span style={{ fontSize: 12, color: F.fg2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>
+                {/* flex:1 deja flex-basis en 0 pero min-width sigue en auto: con
+                    white-space:nowrap el min-content del título es el texto entero
+                    y estiraba la columna hasta desbordar la página en 390. */}
+                <span style={{ fontSize: 12, color: F.fg2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: "1 1 0", minWidth: 0 }}>
                   {j.titulo}
                 </span>
                 <span style={{ fontSize: 11, color: F.fg3, flexShrink: 0 }}>{j.agent}</span>
@@ -187,6 +190,16 @@ export function Diagnostico() {
           </div>
         </div>
       </div>
+
+      <style>{`
+        .forja-diag-2col {
+          display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1.4fr);
+          gap:12px; margin-top:12px;
+        }
+        @media (max-width: 760px) {
+          .forja-diag-2col { grid-template-columns: minmax(0,1fr); }
+        }
+      `}</style>
     </div>
   );
 }

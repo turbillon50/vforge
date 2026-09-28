@@ -50,7 +50,7 @@ export function ForjaWorkspace() {
         </div>
 
         {/* tabs con borde inferior animado */}
-        <div style={{ display: "flex", gap: 4, borderBottom: `1px solid ${F.border}`, margin: "24px 0 28px" }}>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", borderBottom: `1px solid ${F.border}`, margin: "24px 0 28px" }}>
           {TABS.map(({ id, label, Icon }) => {
             const active = tab === id;
             return (

@@ -117,3 +117,66 @@ Criterio: cero métricas no medidas; el número de herramientas sale del registr
   de marca → **[LUIS]**.
 - [ ] `/mcp` tiene 12 textos por debajo de 12 px (`text-[10px]`, `text-[11px]`). Se atiende con el
   resto del barrido de tipografía (bloque 7/10).
+
+---
+
+## Bloque 2 · `/forja` y `/lab`
+
+Criterio: desborde 0 en las dos; encontrar y bajar los 14 s de `/lab`.
+
+**Cómo se probaron rutas con sesión.** Clerk de VForge es una instancia de producción: el patrón de
+`sign_in_tokens` funciona contra `vforge.site` pero **no** contra `localhost:3150` (el ticket vuelve a
+`/sign-in`). Para poder medir en local se montaron dos rutas espejo desechables,
+`app/(dashboard)/zz-prueba-lab` y `app/(dashboard)/zz-prueba-forja`, que renderizan los mismos
+componentes dentro del mismo `WorkspaceShell` sin el guardia de sesión, y se **borraron antes de
+commitear** (`git status` limpio de `zz-prueba-*`). Los datos se inyectaron interceptando la red con
+Playwright (`page.route`), nunca escribiendo en la base ni en Clerk.
+
+- [x] **B2.1 — `/forja`: 312 px → 0.** Dos causas, las dos medidas:
+  1. La fila de pestañas (`Diagnóstico · Ensamblaje · Tester · Preview`) era un `flex` sin `wrap`:
+     a 390 px el botón "Preview" terminaba en `right=473` (83 px fuera). Ahora `flexWrap: "wrap"`.
+  2. En Diagnóstico, la rejilla `1fr 1.4fr` de "Cola de trabajos / Últimos jobs" no podía encoger:
+     el título de cada job usa `whiteSpace: nowrap` con `flex: 1`, y `flex:1` deja `flex-basis` en 0
+     pero **`min-width` sigue en `auto`**, así que el min-content de la pista era el texto completo
+     (`div right=702 w=584`, es decir 312 px fuera). Ahora `minWidth: 0` en el título y la rejilla es
+     `minmax(0,1fr) minmax(0,1.4fr)`, que además pasa a una sola columna por debajo de 760 px.
+  **Contraprueba** (con datos inyectados, código viejo vs nuevo, WebKit 390):
+  `ov=229` → `ov=0`. Escritorio 1440: `ov=0` antes y después. Captura: `forja-390.png`, `forja-1440.png`.
+
+- [x] **B2.2 — `/lab`: 53 px → 0.** El encabezado metía en una sola fila el título, el contador de
+  mensajes y los 4 filtros (`div right=443 w=268`). Ahora el encabezado y el grupo de filtros hacen
+  `wrap`, y las tres pastillas de agente llevan `flex: 1 1 0` + `minWidth: 0` con elipsis.
+  **Contraprueba**: código viejo `ov=53` → nuevo `ov=0` (WebKit 390). 1440: 0 en ambos.
+  Captura: `lab-390.png`, `lab-1440.png`.
+
+- [x] **B2.3 — Los 14 s de `/lab`: qué eran de verdad.**
+  No es que la página tarde en pintar. `/lab` abre un `EventSource` permanente contra
+  `https://brain.vforge.site/drain/stream` (el feed en vivo de los agentes), así que la red **nunca**
+  queda en reposo y el `wait_for_load_state("networkidle", 12 s)` del script de medición agota su
+  tiempo: 12 s de espera + 1.5 s fijos ≈ los 14 s del informe. Medido en WebKit, misma página:
+
+  | | networkidle | FCP |
+  |---|---|---|
+  | con el SSE vivo (como en producción) | **>12 s (timeout)** | **192 ms** |
+  | con `brain.vforge.site` bloqueado | **1.3 s** | 254 ms |
+
+  Es decir: el usuario ve la pantalla en ~0.2 s. El 14 era del medidor, no de la app.
+  Queda anotado para que la re-medición final no lo cuente como regresión.
+
+- [x] **B2.4 — Aun así `/lab` tenía tres cosas mal, y quedaron arregladas.**
+  - **Conexión eterna en segundo plano.** El `EventSource` se abría al montar y no se cerraba nunca.
+    Ahora se abre solo con la pestaña visible y se cierra en `visibilitychange`.
+  - **Espera infinita (SANIDAD R-007).** Si el canal no conectaba, la pantalla decía
+    "Esperando mensajes (desconectado)" para siempre, sin salida. Ahora hay tres estados honestos:
+    "Conectando…", "Conectado. Aquí aparecerán los mensajes" y, a los 10 s sin conexión,
+    "No se pudo conectar con el canal de agentes" con un botón **Reintentar** de 44 px que vuelve a abrir.
+  - **`scrollIntoView` fuera de su contenedor (SANIDAD R-006).** Cada mensaje nuevo llamaba
+    `bottomRef.scrollIntoView()`, que mueve la **página entera** (también en horizontal). Ahora el
+    scroll es `feed.scrollTo()` dentro del contenedor, y solo si el usuario ya estaba pegado abajo.
+
+- [x] **B2.5 — `/lab` tenía doble barra de scroll.** `AgentMonitor` medía `height: 100dvh` dentro del
+  shell, que ya pone un encabezado de 58 px y un pie de 72 px: la página quedaba en 975 px de alto con
+  844 de pantalla y el pie fuera de vista. Ahora mide `calc(100svh - 58px - 72px)`, la misma cuenta
+  que usa `<main>`. Medido: `scrollHeight` 975 → **845** con `innerHeight` 844.
+
+- [x] **B2.6 — Verificación.** `npx tsc --noEmit -p .` → 0 errores. `npm test` → **90 pruebas, 0 fallos**.
