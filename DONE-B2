@@ -1,0 +1,67 @@
+B2 — Centro de mando de la fábrica · 28-sep-2026
+Rama centro-mando · 4 commits · npx tsc --noEmit 0 · npm test 90/90
+
+LO QUE PEDISTE
+"Quiero tener control del proyecto de Hetzner, ver qué se está haciendo, avances,
+porcentajes de trabajo, qué existe. Quiero visibilidad de todo."
+Ya está en /app/tablero, con datos medidos del servidor. Cero inventos.
+
+LOS 7 BLOQUES, TODOS CERRADOS
+1. Colector a Git. Vivía suelto en /root/tablero (fuera de Git, lo que el barrido
+   se lleva). Ahora la fuente es servidor/tablero/estado.py y en el servidor solo
+   queda la copia instalada (/usr/local/sbin/vl-tablero), igual que vl-supervisor.
+   Cron repuntado y verificado corriendo solo. Caché incremental: 1,235 MB de
+   .jsonl, primera corrida 8.25 s, siguientes 0.55 s.
+2. Cada frente con avance real. Worktrees + crons sup-* + servicios agente-*:
+   nombre, proyecto, brief, modelo, estado, % de su LISTA-<tag>.md, bloque actual,
+   5 commits con hora, corridas hoy/tope, tiempo trabajando.
+3. Consumo de la cuenta. 8,840 M tokens en 7 días, sin duplicar por message.id.
+   El 98.7% es lectura de caché: sin separarla, "tokens" no quiere decir nada.
+4. Salud del Hetzner. Disco, RAM, swap, carga, servicios caídos, barrido.
+5. Controles con vl-control: pausar, reanudar, detener, relanzar. Lista blanca, el
+   tag nunca se pega a una ruta, bitácora de cada acción.
+6. Avisos al teléfono cuando un frente termina, se atora, topa el límite o el
+   disco baja de 5 GB. Sin repetirse mientras el problema siga vivo.
+7. 390 y 1440: desborde 0, textos < 12 px 0, controles < 44 px 0, consola 0.
+
+LO QUE TIENES QUE SABER (no es relleno)
+- M8 se come el 55.9% de la semana él solo: 4,943 M de 8,840 M tokens.
+- 19 de 22 frentes NO se pueden medir porque no tienen LISTA-<tag>.md. El tablero
+  lo dice con esas palabras en vez de inventar un porcentaje. Si quieres
+  porcentajes de verdad, cada brief tiene que traer su lista con el nombre del tag.
+- El disco anda entre 3.5 y 4.5 GB libres (93%). La alerta está encendida y es real.
+- vtrading-paper-mtm.service está caído.
+
+TRES ERRORES QUE ENCONTRÉ EN MI PROPIO TRABAJO Y CORREGÍ
+- El avance caía a la lista más reciente del worktree. Como los worktrees se
+  clonan entre sí, vforge-b2 y vforge-b3 leían LISTA-B1.md y reportaban 83% de un
+  trabajo ajeno: justo el número inventado que el brief prohíbe.
+- vl-control identificaba procesos por "el cmdline menciona el worktree". El brief
+  que se le pasa a claude -p TRAE la ruta escrita, así que ese filtro marcaba 5
+  procesos ajenos —incluido el shell desde el que miraba— como supervisores de B2.
+- Relanzar salía habilitado en frentes que estaban trabajando: las marcas se
+  buscaban por prefijo y un worktree arrastra las de otros tags (momentum-b1 tiene
+  9 ajenas). Esto solo se vio MIRANDO la captura.
+
+CÓMO SE PROBARON LOS CONTROLES
+Contra un frente de prueba mío (zz-prueba-b2), nunca contra uno tuyo:
+  pausar   -> PAUSA + murieron 1 supervisor y 5 procesos (PIDs verificados)
+  con la marca puesta, el supervisor sale en 0 s sin lanzar claude
+  detener  -> además STALLED "detenido por Luis"
+  reanudar -> quita PAUSA y avisa que sigue STALLED
+  relanzar -> quita ambas y relanza (corridas 1 -> 2)
+  guardia  -> "vl-control pausar B2" desde B2: "no me voy a matar solo"
+Al terminar se borró entero: worktree, sup script, cron y contadores.
+
+LO QUE FALTA Y NO ESCONDO
+- No pude ver la pantalla dentro del shell de Next con sesión de Clerk: las llaves
+  de VForge son pk_live/sk_live (atadas a vforge.site) y en localhost rebotan a
+  /sign-in; además el next dev local NO hidrata en este sandbox (0 llamadas a la
+  API, igual en WebKit que en Chromium). Medí el componente real con el estado
+  real del servidor, empacado aparte. Falta una pasada en la vista previa de
+  Vercel de esta rama.
+- CRON_SECRET no está puesto en Vercel. El endpoint de avisos acepta BRAIN_SECRET
+  como respaldo, pero lo limpio es ponerlo.
+
+No empujé a main. Rama centro-mando lista para que la revises.
+Detalle con evidencia punto por punto: LISTA-B2.md
