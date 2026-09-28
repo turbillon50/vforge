@@ -1,0 +1,13 @@
+{
+  "_lee": "Registro de proyectos que el Estudio puede abrir en vivo. worktree = carpeta en el Hetzner (desechable, se vuelve a clonar con instalar.sh). rama = la rama de trabajo; produccion = la rama que dispara Vercel al Publicar.",
+  "proyectos": {
+    "mipipa": {
+      "repo": "https://github.com/turbillon50/mipipa-srv.git",
+      "worktree": "/root/worktrees/vivo-mipipa",
+      "dev": "npx next dev",
+      "rama": "vivo/b3",
+      "produccion": "main",
+      "etiqueta": "MiPipa — pipas de agua CDMX (piloto B3)"
+    }
+  }
+}

@@ -1,6 +1,8 @@
 "use client";
 
 import { AppCanvas } from "@/components/studio/AppCanvas";
+import { BarraVivo } from "@/components/studio/vivo/BarraVivo";
+import { useMotorVivo } from "@/components/studio/vivo/useMotorVivo";
 import Link from "next/link";
 import {
   useCallback,
@@ -484,19 +486,42 @@ export function ForgeStudio() {
     return () => window.cancelAnimationFrame(frame);
   }, [messages, sending]);
 
+  const vivo = useMotorVivo();
+
   const fallbackPreviewUrl = useMemo(
     () => normalizeExternalUrl(project?.domain || project?.vercel_url),
     [project?.domain, project?.vercel_url],
   );
 
-  const viewports = useMemo(
-    () => ({
+  // Con el motor vivo encendido las vistas dejan de apuntar al deploy y apuntan
+  // al dev server del Hetzner. La URL de entrada cambia el token por la galleta
+  // de sesión y de ahí sigue a la ruta que pidamos.
+  const urlVivo = useCallback(
+    (ruta: string) => {
+      if (!vivo.urlEntrada) return null;
+      const separador = vivo.urlEntrada.includes("?") ? "&" : "?";
+      return `${vivo.urlEntrada}${separador}to=${encodeURIComponent(ruta)}`;
+    },
+    [vivo.urlEntrada],
+  );
+
+  const viewports = useMemo(() => {
+    if (vivo.fase === "vivo" && vivo.urlEntrada) {
+      return {
+        desktop: urlVivo("/"),
+        mobile: urlVivo("/"),
+        admin: urlVivo("/admin"),
+      };
+    }
+    return {
       desktop: normalizeExternalUrl(live?.project.desktop_url) || fallbackPreviewUrl,
       mobile: normalizeExternalUrl(live?.project.mobile_url) || fallbackPreviewUrl,
       admin: normalizeExternalUrl(live?.project.admin_url),
-    }),
-    [fallbackPreviewUrl, live],
-  );
+    };
+  }, [fallbackPreviewUrl, live, urlVivo, vivo.fase, vivo.urlEntrada]);
+
+  const previewUrlActual =
+    vivo.fase === "vivo" && vivo.urlBase ? vivo.urlBase : fallbackPreviewUrl;
 
   const githubUrl =
     normalizeExternalUrl(project?.github_url) ||
@@ -749,7 +774,7 @@ export function ForgeStudio() {
         sending={sending}
         canPrompt={Boolean(sessionId)}
         githubUrl={githubUrl}
-        previewUrl={fallbackPreviewUrl}
+        previewUrl={previewUrlActual}
         onProjectChange={setActiveProjectId}
         onCreate={() => setShowCreate(true)}
         onDeploy={requestDeploy}
@@ -925,11 +950,23 @@ export function ForgeStudio() {
           <PreviewHeader
             mode={previewMode}
             setMode={setPreviewMode}
-            previewUrl={fallbackPreviewUrl}
+            previewUrl={previewUrlActual}
             onRefresh={() => {
               setPreviewKey((value) => value + 1);
               setDataRefresh((value) => value + 1);
             }}
+          />
+
+          <BarraVivo
+            encendido={vivo.encendido}
+            fase={vivo.fase}
+            proyecto={vivo.proyecto}
+            setProyecto={vivo.setProyecto}
+            motor={vivo.motor}
+            error={vivo.error}
+            disponible={vivo.disponible}
+            onEncender={(nombre) => void vivo.encender(nombre)}
+            onApagar={() => void vivo.apagar()}
           />
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-page-sm md:p-page-md">
@@ -937,16 +974,18 @@ export function ForgeStudio() {
               <AppCanvas
                 projectId={activeProjectId}
                 projectName={project?.name ?? "Proyecto"}
-                src={fallbackPreviewUrl}
+                src={previewUrlActual}
                 frameKey={previewKey}
               />
-            ) : !activeProjectId ? (
+            ) : !activeProjectId && vivo.fase !== "vivo" ? (
+              // Con el motor vivo encendido el preview no depende de que haya un
+              // proyecto de VForge seleccionado: el proyecto lo manda el motor.
               <NoProject onCreate={() => setShowCreate(true)} />
-            ) : projectLoading && !project ? (
+            ) : activeProjectId && projectLoading && !project ? (
               <div className="grid h-full min-h-[360px] place-items-center border border-[var(--vf-border)] bg-[var(--vf-bg-1)]">
                 <IconLoader size={18} className="animate-spin" />
               </div>
-            ) : projectError && !project ? (
+            ) : activeProjectId && projectError && !project ? (
               <div className="grid h-full min-h-[360px] place-items-center border border-[var(--vf-fg)] bg-[var(--vf-bg-1)] p-8 text-center">
                 <div>
                   <p className="text-[13px] font-medium">{projectError}</p>
@@ -961,13 +1000,13 @@ export function ForgeStudio() {
               </div>
             ) : previewMode === "triple" ? (
               <TriplePreview
-                projectName={project?.name ?? "Proyecto"}
+                projectName={vivo.fase === "vivo" ? vivo.proyecto : (project?.name ?? "Proyecto")}
                 urls={viewports}
                 frameKey={previewKey}
               />
             ) : previewMode === "desktop" || previewMode === "mobile" || previewMode === "admin" ? (
               <SinglePreview
-                projectName={project?.name ?? "Proyecto"}
+                projectName={vivo.fase === "vivo" ? vivo.proyecto : (project?.name ?? "Proyecto")}
                 mode={previewMode}
                 url={viewports[previewMode]}
                 frameKey={previewKey}

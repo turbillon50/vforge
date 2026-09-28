@@ -1,0 +1,24 @@
+[Unit]
+Description=vf-vivo — motor de preview en vivo del Estudio de VForge
+After=network.target
+# Candado anti-bucle como el resto de los servicios: 5 fallos en 10 min y se rinde.
+StartLimitBurst=5
+StartLimitIntervalSec=600
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/vf-vivo
+EnvironmentFile=/etc/vl-secrets/vivo.env
+ExecStart=/root/.nvm/versions/node/v20.20.2/bin/node /opt/vf-vivo/vivo.mjs
+Restart=on-failure
+RestartSec=5
+# El servidor anda justo de RAM: 3 dev servers a 1536 MB + la pasarela.
+MemoryMax=6G
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=20
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
