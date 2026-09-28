@@ -9,6 +9,10 @@
 # testing
 /coverage
 /.test-dist
+# banco de paneles: salida de tsc y el paquete que arma empacar.mjs (se regeneran)
+/.banco-dist
+/servicios/vivo/qa/banco/publico/banco.js
+/servicios/vivo/qa/banco/publico/banco.css
 
 # next.js
 /.next/

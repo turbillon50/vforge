@@ -77,11 +77,14 @@ toca: todo el trabajo va en `vivo/b3`.
 - [x] **Escritorio y móvil (390) lado a lado**: vista nueva "Escritorio + móvil" en el Estudio
       (`ParPreview`), con el móvil a 390 de verdad y no una columna estrecha. La capa se enciende en las dos
       vistas a la vez (`data-vf-vista` en cada iframe).
-- [~] **Panel de inspección en el Estudio** (`components/studio/vivo/PanelInspector.tsx`): texto en vivo,
+- [x] **Panel de inspección en el Estudio** (`components/studio/vivo/PanelInspector.tsx`): texto en vivo,
       tamaño, peso, color de texto y fondo, alineación, relleno, margen, esquinas, y "dile a V" que manda el
-      archivo:línea del elemento como contexto. **Escrito, `tsc` en 0 y con el motor probado por debajo, pero
-      NO verificado en navegador**: para verlo hay que entrar al Estudio con sesión de owner (Clerk) en el
-      deploy. Ver "Lo que falta" abajo.
+      archivo:línea del elemento como contexto.
+      **Visto en WebKit y probado contra el motor de verdad** (banco de paneles, ver abajo): el retrato sale
+      como `<h1> 612×130 · marketing.tsx:87 · 62px`; escribir en la caja de texto **cambió el archivo en
+      disco en 75–97 ms** (se comprueba leyendo `components/marketing.tsx`, no el mensaje de la pantalla) sin
+      llevarse el `<br/>` ni el `<span>` de al lado; un elemento sin texto propio no ofrece editar a ciegas y
+      manda a "dile a V" con `components/marketing.tsx:89:31`. Captura **mirada**: `capturas/vivo/banco-paneles.png`.
 
 ## Fase 3 — Control
 
@@ -101,24 +104,59 @@ toca: todo el trabajo va en `vivo/b3`.
       Después se borró la rama y el remoto quedó sólo con `master` en `822150f`, **intacto**.
       Ahí salió un error real: el registro decía que la producción de MiPipa era `main`, y es `master`;
       publicar habría creado una rama nueva en vez de actualizar producción. Ya está corregido.
-- [~] **Panel de control en el Estudio** (`components/studio/vivo/PanelControl.tsx`): historial con los
-      commits del Estudio marcados, deshacer, ver el diff y Publicar con confirmación. **Escrito, `tsc` en 0
-      y con todas sus acciones probadas por API, pero NO verificado en navegador** (misma razón que el panel
-      de inspección).
+- [x] **Panel de control en el Estudio** (`components/studio/vivo/PanelControl.tsx`): historial con los
+      commits del Estudio marcados, deshacer, ver el diff y Publicar con confirmación.
+      **Visto en WebKit contra el repo de verdad**: pinta los 7 commits reales del piloto con los del Estudio
+      marcados en morado, la cabecera dice `vivo/b3 · 1 cambios del Estudio` (la rama de trabajo, no
+      producción), el diff sale con el `-` rojo y el `+` verde, **deshacer dejó el archivo idéntico al de
+      antes** (comparado carácter por carácter, no por el mensaje) y Publicar dice `Publicar a master`.
+      Capturas **miradas**: `capturas/vivo/banco-control.png`, `banco-diff.png`, `banco-publicar.png`.
 
 ---
 
-## Lo que falta (y por qué no lo di por bueno)
+## El banco de paneles (cómo se vieron sin poder entrar a Clerk)
 
-Los **dos paneles del Estudio** (`PanelInspector` y `PanelControl`) están escritos, pasan `tsc --noEmit` en 0
-y todo lo que hacen por debajo está probado (el motor de edición con 14 pruebas, y las acciones de git a mano
-contra GitHub). Lo que **no** hice fue verlos con mis ojos en un navegador, porque el Estudio vive detrás de
-sesión de owner de Clerk: hay que entrar a `/app/chat` en el deploy con la cuenta de Luis. Por eso van con
-`[~]` y no con `[x]`: la regla es que `[x]` lleva evidencia, y "compila" no es evidencia de que se vea bien.
+El Estudio vive detrás de sesión de owner de Clerk en `/app/chat`, así que headless no se entra. En vez de
+dejarlo en "compila", se montó un **banco**: `servicios/vivo/qa/banco/` arma los **mismos** componentes (no
+copias — importa `PanelInspector`, `PanelControl` y el hook `useCapaEdicion` tal cual) y los sirve en una
+página normal, y su servidor **reenvía `/api/vivo/*` al servicio `vf-vivo` de verdad**. O sea: el render, los
+controles, el fetch, el archivo que se escribe y los commits son los de producción. Lo único sustituido es el
+gate de Clerk y el iframe (el motor ya está medido aparte).
 
-**Lo que le toca a Luis [LUIS]:** entrar a `/app/chat` en el deploy de esta rama, encender el motor con
-MiPipa, apretar *Editar vista*, hacer clic en un texto y cambiarlo. Con eso se cierra el círculo. Si algo se
-ve mal ahí, es ajuste de pantalla, no del motor — el motor ya está medido.
+Sin esbuild en el servidor y sin `next build` (RAM), se arma con lo que ya hay: `tsc` a CommonJS, un
+empaquetador de 100 líneas (`empacar.mjs`, 23 módulos) y el Tailwind del propio proyecto, para que se vea con
+el CSS real. **Cero dependencias nuevas.**
+
+Correrlo: `bash servicios/vivo/qa/banco/correr.sh` (o los pasos sueltos, ver "Notas de operación").
+Resultado: **31 de 31 comprobaciones en verde**, 0 errores de consola, y el worktree del piloto queda
+limpio en `f3e339f` porque la propia prueba deshace lo que hizo.
+
+**Contraprueba (regla 6 de la doctrina, desconfiar del 100 %):** se volvió a meter a mano el bug del aviso y
+la prueba **falla con EXIT=1**. No es una prueba que aprueba todo.
+
+### Lo que salió de MIRAR, no de que compilara
+
+Cuatro cosas que `tsc` no podía ver, encontradas y corregidas:
+
+1. **El aviso de "Deshecho…" y "Publicado…" no se veía nunca.** `leer()` arranca con `setAviso(null)` y
+   deshacer/publicar releen el repo justo después de poner el mensaje: se borraba solo. La acción sí pasaba,
+   pero en pantalla no quedaba rastro. Ahora `leer({ conservarAviso: true })`.
+2. **Un fondo transparente se pintaba negro.** El navegador contesta `rgba(0, 0, 0, 0)` y la muestra salía
+   `#000000` sólido: parecía que el `<h1>` tenía fondo negro. Peor, invitaba a escribir un negro real en el
+   código. Ahora sale un damero y dice **"sin fondo"**.
+3. **Un peso fuera de la escala no se decía.** El hero pesa `850`, que no es ninguno de los botones
+   300–900: no se prendía ninguno y parecía que no tenía peso. Ahora dice **"hoy: 850"**.
+4. **Ningún botón de alineación se prendía.** El valor calculado es `start`, no `left`. Ahora se normaliza
+   (`start`→izquierda, `end`→derecha) y el botón correcto sale prendido.
+
+Y una quinta de comportamiento: **después de deshacer, el inspector seguía enseñando el texto viejo**, que ya
+no existía en el archivo. Ahora `onCambio` suelta la selección (en `ForgeStudio` y en el banco): la capa se
+vuelve a anunciar al recargar y se hace clic otra vez.
+
+**Lo que sigue tocándole a Luis [LUIS]:** entrar a `/app/chat` en el deploy de esta rama con su cuenta,
+encender el motor con MiPipa y hacerlo con el iframe de verdad enfrente. El banco prueba los paneles y el
+motor; lo que **no** puede probar es el Estudio completo con sesión de Clerk y el preview vivo dentro del
+iframe al mismo tiempo. Eso son dos piezas medidas por separado, no una medida entera.
 
 ## Lo que NO se puede hacer bien con lo que hay (con el número que lo demuestra)
 
@@ -142,6 +180,13 @@ ve mal ahí, es ajuste de pantalla, no del motor — el motor ya está medido.
 5. **`next build` de VForge no se corre aquí** (es la instrucción del brief por RAM). La verificación es
    `npx tsc --noEmit -p .` en 0 y `npm test`.
 
+6. **`correr.sh` completo se muere con EXIT=144 en la sesión del agente** (la trampa conocida de este
+   entorno con node/nvm encadenados; le pasa igual a `next`). Medido: el script en primer plano muere; los
+   mismos pasos sueltos corren en verde. Por eso el banco se corre así: el servidor por un lado
+   (`node servicios/vivo/qa/banco/servidor.mjs 9345`) y la prueba por otro
+   (`node servicios/vivo/qa/banco/prueba-paneles.mjs`). El script queda igual porque **fuera de la sesión del
+   agente sí corre de un jalón**, pero está escrito aquí para que nadie pierda media hora averiguándolo.
+
 ## Notas de operación
 
 - Todo el servicio se reinstala con `bash servicios/vivo/instalar.sh` (idempotente: respeta el secreto y el
@@ -149,3 +194,14 @@ ve mal ahí, es ajuste de pantalla, no del motor — el motor ya está medido.
 - El secreto vive en `/etc/vl-secrets/vivo.env` (600) y ya está en Vercel como `VF_VIVO_SECRET`
   (+ `VIVO_API_BASE`), en production, preview y development.
 - Registro de proyectos: `servicios/vivo/proyectos.json` → `/opt/vf-vivo/proyectos.json`.
+- **Banco de paneles** (`servicios/vivo/qa/banco/`), paso a paso si `correr.sh` se muere:
+  1. `./node_modules/.bin/tsc -p servicios/vivo/qa/banco/tsconfig.banco.json`
+  2. `node servicios/vivo/qa/banco/empacar.mjs`
+  3. `./node_modules/.bin/tailwindcss -c tailwind.config.ts -i app/globals.css -o servicios/vivo/qa/banco/publico/banco.css --content "./components/studio/vivo/*.tsx,./servicios/vivo/qa/banco/entrada.tsx"`
+  4. `node servicios/vivo/qa/banco/servidor.mjs 9345` (necesita `vf-vivo` encendido)
+  5. `node servicios/vivo/qa/banco/prueba-paneles.mjs`
+  Lo generado (`.banco-dist`, `publico/banco.js`, `publico/banco.css`) va en `.gitignore`: se rearma solo.
+- **Publicar, en el banco, NO empuja.** El servidor del banco contesta `publicar` con la forma real marcada
+  `simulado: true`, para ver el camino de la confirmación sin tocar la producción del piloto. El push de
+  verdad ya se probó aparte contra una rama desechable. Comprobado después de correr la prueba:
+  `git ls-remote origin master` del piloto sigue en `822150f`, intacto.

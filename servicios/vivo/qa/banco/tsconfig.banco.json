@@ -1,0 +1,21 @@
+{
+  "//": "Compila los paneles del Estudio (TSX de verdad, sin tocarlos) a CommonJS para poder verlos en un navegador sin Next ni Clerk. Sólo usa el tsc que ya es devDep: cero dependencias nuevas.",
+  "compilerOptions": {
+    "target": "ES2021",
+    "lib": ["dom", "dom.iterable", "ES2021"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": false,
+    "outDir": "../../../../.banco-dist",
+    "rootDir": "../../../..",
+    "baseUrl": "../../../..",
+    "paths": { "@/*": ["./*"] }
+  },
+  "include": ["entrada.tsx"]
+}
