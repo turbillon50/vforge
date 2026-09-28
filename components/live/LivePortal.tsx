@@ -906,6 +906,7 @@ function Viewport({
   const [pinMode, setPinMode] = useState(false);
   const { anchoredComments, draftNotes, addDraftAnchor } = useReviewContext();
   const url = useMemo(() => normalizeUrl(rawUrl), [rawUrl]);
+  const hasUrl = Boolean(url);
   const spec = PREVIEW_SPECS[kind];
   const stageRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -939,7 +940,9 @@ function Viewport({
     observer.observe(stage);
     updateSize(stage.clientWidth, stage.clientHeight);
     return () => observer.disconnect();
-  }, [kind]);
+    // El escenario sólo existe cuando hay URL: si la URL llega después (motor
+    // vivo), hay que volver a medir o la vista se queda invisible (opacidad 0).
+  }, [kind, hasUrl]);
 
   useEffect(() => {
     setBridgeViewport(null);
