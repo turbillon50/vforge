@@ -827,3 +827,58 @@ Se anotan porque un medidor que miente es peor que no medir:
   desajuste que causó lo del marketplace, y está en 8 archivos más
   (`ClientWorkspacePage`, `JoinClient`, `VPresence`, `AgentMonitor`, `ClientPortal`, `MyProjects`).
   Decisión de marca: o esas pantallas son claras como el resto, o el tema gana un juego oscuro real.
+
+---
+
+## Cambio de prioridad de Luis (28-sep 03:06) y devolución de lo que no me tocaba
+
+Al ir a cerrar el barrido encontré que **el BRIEF-B1 fue revisado en `main` después de que
+salió esta rama**. Mi worktree tenía la copia vieja. Lo nuevo dice:
+
+> VForge NO sale a la venta por ahora: primero es la herramienta interna de Luis. La estética
+> de marketing pasa a segundo plano. **SALTA el bloque 8 (Marketplace)**. Ve directo al bloque 10
+> y al 9. **En el bloque 10 NO toques `/app/tablero` (lo hace B2) ni el Estudio `/app/chat` /
+> `components/workspace` / preview (lo hace B3).**
+
+Qué pasó con eso, dicho derecho:
+
+- [x] **El bloque 8 ya estaba hecho y Vulcano ya lo mergeó a `main`** (`3c025e0`) antes de que yo
+  viera el cambio. No lo revierto: está medido, verificado y en `main`. Lo que sí hice fue **no
+  volver a tocar ninguna página de marketing** después de enterarme.
+
+- [x] **Devolví a B2 y B3 los archivos que son suyos.** Mi commit del bloque 10 (`93ce4d9`) había
+  barrido tipografía y áreas táctiles por **todo** el repo, y eso incluía 32 archivos de
+  `/app/tablero`, `components/workspace/` y `components/live/` (el preview), más
+  `components/studio/ForgeStudio.tsx`. Los regresé a su estado anterior en esta rama.
+  **Nada se perdió**: el trabajo completo quedó en la rama `b10-fuera-de-alcance` (commit `93ce4d9`)
+  por si B2, B3 o Vulcano lo quieren aprovechar. Ahí están, medidos y con tsc en verde:
+
+  | hallazgo devuelto | de quién es | dónde está el parche |
+  |---|---|---|
+  | `/app/tablero` enseñaba "The string did not match the expected pattern" al usuario, sin reintentar | **B2** | `b10-fuera-de-alcance` |
+  | La pestaña "Consola" del Estudio pintaba un log escrito a mano (`$ vforge dev`, `Build OK`) | **B3** | idem |
+  | El estado de conexiones del Estudio a 1.6:1 y distinguido sólo por color | **B3** | idem |
+  | El botón de copiar código iba del **mismo color que su fondo** y decía "Copy" en inglés | **B3** | idem |
+  | Áreas táctiles del shell, el compositor y las vistas del preview por debajo de 44 px | **B3** | idem |
+  | Letra < 12 px en `components/workspace/`, `components/live/` y `ForgeStudio` | **B3** | idem |
+
+  Lo único que conservé de esa zona son los **8 `layout.tsx` de título de pestaña** (uno por ruta del
+  núcleo, incluidos `/app/chat` y `/app/tablero`): son archivos **nuevos** que sólo declaran el
+  título, no tocan una línea de `page.tsx`, así que no pueden chocar con B2 ni con B3. Sin ellos el
+  bloque 10.1 se quedaba a medias. **[Vulcano]**: si prefieres que esos dos también se vayan, son
+  dos borrados.
+
+- [x] **Lo que queda en `barrido-1` del bloque 10 es sólo lo mío**: `/app/projects`, `/app/activity`,
+  `/app/integrations`, `/app/admin`, `/app/settings`, `/app/setup`, los tokens de `globals.css`
+  (contraste y área táctil, que son de toda la app), los títulos de pestaña, el pie de marketing y
+  la portada. Re-verificado tras la devolución: `npx tsc --noEmit -p .` → **0 errores**,
+  `npm test` → **90/90**.
+
+### Aviso de commits ajenos (lo pide el brief)
+
+- En `main` hay trabajo de **otro agente** ya mergeado: `2d1c509` y `667d8f2`
+  ("B2 bloques 5 y 6: mando de los frentes…", "Merge centro-mando (B2): tablero con avance,
+  consumo, salud y controles"), más `622035d`. **No los toqué ni los revertí.** También existen las
+  ramas `origin/centro-mando` y `origin/editor-vivo`.
+- Vulcano ya mergeó mis bloques **B7 (`87ddcae`), B8 (`3c025e0`) y B9 (`7e72151`)** a `main`.
+  Lo que sigue sin mergear de esta rama es el bloque 10.

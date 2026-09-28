@@ -56,7 +56,7 @@ export function ClientV() {
             </div>
             <div className="flex-1">
               <div className="text-[14px] font-semibold text-white">V</div>
-              <div className="flex items-center gap-1.5 text-[12px] text-emerald-400">
+              <div className="flex items-center gap-1.5 text-[11px] text-emerald-400">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" /> En línea · tu hermana IA
               </div>
             </div>

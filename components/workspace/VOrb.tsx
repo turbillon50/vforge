@@ -351,7 +351,7 @@ export function VOrb() {
               {/* Header del menú */}
               <div className="mb-1 flex items-center gap-2 px-2.5 py-1.5">
                 <div className="vorb-menu-dot" />
-                <span className="text-[12px] font-semibold tracking-widest text-violet-300/60 uppercase">V — Menú</span>
+                <span className="text-[11px] font-semibold tracking-widest text-violet-300/60 uppercase">V — Menú</span>
               </div>
               {ITEMS.map((it, i) => {
                 const active = isActive(it.href);
@@ -393,7 +393,7 @@ export function VOrb() {
                     </span>
                     <span className="flex-1 text-left">{it.label}</span>
                     {it.primary && (
-                      <span className="rounded-md bg-violet-400/15 px-1.5 py-0.5 text-[12px] font-bold uppercase tracking-wider text-violet-300">
+                      <span className="rounded-md bg-violet-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-violet-300">
                         Live
                       </span>
                     )}
@@ -447,7 +447,7 @@ export function VOrb() {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
-              className={"absolute bottom-[72px] whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-semibold tracking-wide " + (onLeft ? "left-0" : "right-0")}
+              className={"absolute bottom-[72px] whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold tracking-wide " + (onLeft ? "left-0" : "right-0")}
               style={{
                 background: "rgba(10,8,20,0.9)",
                 border: "1px solid rgba(255,255,255,0.10)",

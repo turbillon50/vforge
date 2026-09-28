@@ -37,7 +37,7 @@ function Row({ label, value, desc, children }: {
         )}
       </div>
       {children}
-      {desc && <p className="mt-1.5 text-[12px] text-on-surface-variant">{desc}</p>}
+      {desc && <p className="mt-1.5 text-[11px] text-on-surface-variant">{desc}</p>}
     </div>
   );
 }
@@ -106,7 +106,7 @@ export default function DesignCanvas() {
         <div className="flex items-center gap-2">
           <IconSparkles size={16} className="text-violet-300" />
           <span className="font-display text-sm font-semibold text-on-surface">Canvas de Diseno</span>
-          <span className="rounded-full border border-violet-500/30 bg-violet-500/15 px-2 py-0.5 text-[12px] font-semibold uppercase tracking-wide text-violet-300">
+          <span className="rounded-full border border-violet-500/30 bg-violet-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-300">
             Owner
           </span>
         </div>
@@ -218,7 +218,7 @@ export default function DesignCanvas() {
                 }
               >
                 <div className={"text-[12px] font-medium " + (active ? "text-violet-300" : "text-on-surface")}>{d.label}</div>
-                <div className="text-[12px] text-on-surface-variant">{d.desc}</div>
+                <div className="text-[10px] text-on-surface-variant">{d.desc}</div>
               </button>
             );
           })}
@@ -247,7 +247,7 @@ export default function DesignCanvas() {
                   <IconRocket size={16} fill={fill} />
                   <IconLayers size={16} fill={fill} />
                 </div>
-                <span className={"text-[12px] " + (active ? "text-violet-300" : "text-on-surface")}>
+                <span className={"text-[11px] " + (active ? "text-violet-300" : "text-on-surface")}>
                   {style === "filled" ? "Filled (actual)" : "Outline (minimal)"}
                 </span>
               </button>

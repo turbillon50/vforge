@@ -975,7 +975,7 @@ export function ChatExperience() {
                   <IconChevD size={11} className="shrink-0 text-muted" />
                 </span>
                 {modelLabel && (
-                  <span className="block truncate text-[12px] leading-tight text-muted">
+                  <span className="block truncate text-[10px] leading-tight text-muted">
                     {modelLabel}
                   </span>
                 )}
@@ -1008,7 +1008,7 @@ export function ChatExperience() {
                       <div className="min-w-0">
                         <p className="truncate font-medium">{opt.label}</p>
                         {opt.repo && (
-                          <p className="truncate font-mono text-[12px] uppercase tracking-widest text-muted">
+                          <p className="truncate font-mono text-[10px] uppercase tracking-widest text-muted">
                             {opt.repo}
                           </p>
                         )}
@@ -1299,7 +1299,7 @@ export function ChatExperience() {
             </div>
             <div className="mt-2 flex-1 overflow-y-auto px-3 pb-4">
               {sessionsLoading && (
-                <p className="px-2 py-3 font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--fg-tertiary)]">
+                <p className="px-2 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--fg-tertiary)]">
                   Cargando chats…
                 </p>
               )}
@@ -1318,7 +1318,7 @@ export function ChatExperience() {
                   }`}
                 >
                   <span className="truncate text-sm font-medium">{sess.title}</span>
-                  <span className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-tertiary)]">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--fg-tertiary)]">
                     {new Date(sess.last_at).toLocaleString("es-MX", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })} · {sess.count} msgs
                   </span>
                 </button>
@@ -1862,7 +1862,7 @@ function StreamingBubble({ text, image, audioOnly }: { text: string; image?: str
         </div>
         <div className="chat-bubble-forge flex min-w-0 items-center gap-2 rounded-2xl rounded-bl-md px-5 py-4">
           <IconSpeaker size={16} className="text-violet-300" />
-          <span className="font-mono text-[12px] uppercase tracking-[0.18em] text-on-surface-variant">
+          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">
             {text.length === 0 ? "V está pensando…" : "Preparando voz…"}
           </span>
         </div>
@@ -2086,7 +2086,7 @@ function SpeakButton({
         ) : (
           <IconSpeaker size={16} className={state === "playing" ? "animate-pulse text-violet-300" : "text-violet-300"} />
         )}
-        <span className="font-mono text-[12px] uppercase tracking-[0.18em]">
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em]">
           {state === "playing" ? "Hablando…" : state === "loading" ? "Cargando…" : "Mensaje de voz"}
         </span>
         {state === "playing" && (
@@ -2110,7 +2110,7 @@ function SpeakButton({
       onClick={() => void play()}
       aria-label={state === "playing" ? "Detener voz" : "Escuchar respuesta de V"}
       title="Escuchar con la voz de V"
-      className="flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1/[0.05] px-2 font-mono text-[12px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-400/40 hover:text-violet-300"
+      className="flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1/[0.05] px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-400/40 hover:text-violet-300"
     >
       {state === "loading" ? (
         <IconActivity size={11} className="animate-pulse" />
@@ -2155,7 +2155,7 @@ function AssistantActions({
   }
 
   const btn =
-    "flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1/[0.05] px-2 font-mono text-[12px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300";
+    "flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1/[0.05] px-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300";
 
   return (
     <div className="mt-2 hidden items-center gap-1 opacity-70 transition-opacity duration-200 sm:flex sm:hover:opacity-100">

@@ -89,11 +89,11 @@ export function TallerPanel({
               <span className="h-2 w-2 rounded-full bg-yellow-400/70 sm:h-2.5 sm:w-2.5" />
               <span className="h-2 w-2 rounded-full bg-success-emerald/70 sm:h-2.5 sm:w-2.5" />
             </div>
-            <div className="hidden truncate font-mono text-[12px] uppercase tracking-[0.14em] text-muted sm:block sm:text-[12px] sm:tracking-[0.18em]">
+            <div className="hidden truncate font-mono text-[10px] uppercase tracking-[0.14em] text-muted sm:block sm:text-[11px] sm:tracking-[0.18em]">
               vforge://workspace/taller
             </div>
             <div
-              className={`flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.14em] sm:text-[12px] sm:tracking-[0.18em] ${
+              className={`flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] sm:text-[11px] sm:tracking-[0.18em] ${
                 live ? "text-violet-400" : "text-amber-300/80"
               }`}
             >
@@ -252,7 +252,7 @@ export function TallerPanel({
                           />
                           <span className="truncate font-mono text-on-surface-variant">{s.name}</span>
                           <span
-                            className={`ml-auto font-mono text-[12px] uppercase ${
+                            className={`ml-auto font-mono text-[10px] uppercase ${
                               on ? "text-success-emerald" : "text-amber-300"
                             }`}
                           >
@@ -298,7 +298,7 @@ function Bubble({
       }`}
     >
       {isB && (
-        <p className="mb-1 font-mono text-[12px] uppercase tracking-[0.2em] text-violet-300">V</p>
+        <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.2em] text-violet-300">V</p>
       )}
       {children}
     </motion.div>
@@ -328,7 +328,7 @@ function Stat({
         <p className="label-caps text-muted">{label}</p>
         <p className="font-display text-lg font-semibold text-on-surface">{value}</p>
       </div>
-      <div className="flex items-center gap-2 text-[12px] text-on-surface-variant">
+      <div className="flex items-center gap-2 text-[11px] text-on-surface-variant">
         <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
         {hint}
       </div>

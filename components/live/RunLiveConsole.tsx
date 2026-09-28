@@ -79,16 +79,16 @@ export function RunLiveConsole({
   return (
     <section className="overflow-hidden rounded-[8px] border border-black bg-black text-white">
       <header className="flex items-center justify-between gap-3 border-b border-white/15 px-3 py-2">
-        <p className="font-mono text-[12px] uppercase tracking-[0.14em]">
+        <p className="font-mono text-[8px] uppercase tracking-[0.14em]">
           {dead ? "Consola · falló" : live ? "Consola · en vivo" : `Consola · ${status}`}
         </p>
-        <p className="font-mono text-[12px] uppercase tracking-[0.12em] text-white/55">
+        <p className="font-mono text-[8px] uppercase tracking-[0.12em] text-white/55">
           {live ? formatElapsed(age) : dead ? "muerto" : ""}
         </p>
       </header>
       <div
         ref={scroller}
-        className="max-h-[220px] min-h-[140px] overflow-auto px-3 py-3 font-mono text-[12px] leading-5"
+        className="max-h-[220px] min-h-[140px] overflow-auto px-3 py-3 font-mono text-[11px] leading-5"
       >
         {log ? (
           <pre className="whitespace-pre-wrap text-white/90">{log}</pre>
@@ -112,7 +112,7 @@ export function RunLiveConsole({
           <button
             type="submit"
             disabled={busy || nudge.trim().length < 2}
-            className="px-2 font-mono text-[12px] uppercase disabled:opacity-30"
+            className="px-2 font-mono text-[10px] uppercase disabled:opacity-30"
           >
             Enviar
           </button>

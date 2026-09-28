@@ -78,14 +78,14 @@ export function ScopedWorkspaceHome({
                   },
                 }}
               />
-              <span className="hidden max-w-[150px] truncate text-[12px] font-medium sm:block">
+              <span className="hidden max-w-[150px] truncate text-[11px] font-medium sm:block">
                 {name || email}
               </span>
             </div>
             <SignOutButton redirectUrl="/">
               <button
                 type="button"
-                className="min-h-9 border border-[var(--border-1)] px-3 text-[12px] font-medium transition hover:border-[var(--color-ink)]"
+                className="min-h-9 border border-[var(--border-1)] px-3 text-[10px] font-medium transition hover:border-[var(--color-ink)]"
               >
                 Cerrar sesión
               </button>
@@ -97,7 +97,7 @@ export function ScopedWorkspaceHome({
       <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="hidden border-r border-[var(--border-1)] bg-[var(--color-surface)] lg:block">
           <div className="sticky top-0 p-5 pt-10">
-            <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
               Tu espacio
             </p>
             <nav
@@ -117,7 +117,7 @@ export function ScopedWorkspaceHome({
                   href={href}
                   className="group flex min-h-11 items-center gap-3 border-b border-[var(--border-1)] text-[12px] transition hover:pl-1"
                 >
-                  <span className="font-mono text-[12px] text-[var(--fg-muted)]">
+                  <span className="font-mono text-[8px] text-[var(--fg-muted)]">
                     {number}
                   </span>
                   <span>{label}</span>
@@ -129,10 +129,10 @@ export function ScopedWorkspaceHome({
               ))}
             </nav>
             <div className="mt-10 border border-[var(--border-1)] p-3">
-              <p className="font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+              <p className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
                 Sesión privada
               </p>
-              <p className="mt-2 truncate text-[12px]">{email}</p>
+              <p className="mt-2 truncate text-[10px]">{email}</p>
             </div>
           </div>
         </aside>
@@ -152,7 +152,7 @@ export function ScopedWorkspaceHome({
 
           <div className="mt-7 grid border border-[var(--color-ink)] bg-[var(--color-surface)] sm:grid-cols-[180px_1fr_auto] sm:items-center">
             <div className="border-b border-[var(--border-1)] p-4 sm:border-b-0 sm:border-r">
-              <p className="font-mono text-[12px] uppercase tracking-[0.15em] text-[var(--fg-muted)]">
+              <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-[var(--fg-muted)]">
                 Preparación
               </p>
               <p className="mt-1 text-[24px] font-medium tracking-[-0.04em]">
@@ -166,7 +166,7 @@ export function ScopedWorkspaceHome({
             </p>
             <a
               href="#create-app"
-              className="m-3 inline-flex min-h-10 items-center justify-center border border-[var(--color-ink)] px-4 text-[12px] font-medium"
+              className="m-3 inline-flex min-h-10 items-center justify-center border border-[var(--color-ink)] px-4 text-[11px] font-medium"
             >
               Empezar a crear
             </a>
@@ -210,7 +210,7 @@ export function ScopedWorkspaceHome({
                       <div className="grid h-10 w-10 place-items-center border border-[var(--color-ink)]">
                         <Icon size={17} />
                       </div>
-                      <span className="inline-flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.13em]">
+                      <span className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.13em]">
                         {connected ? (
                           <IconCheck size={12} />
                         ) : (
@@ -227,7 +227,7 @@ export function ScopedWorkspaceHome({
                         {body}
                       </p>
                       {connected ? (
-                        <span className="inline-flex items-center gap-1 text-[12px] font-medium">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium">
                           <IconCheck size={11} /> Listo
                         </span>
                       ) : (
@@ -299,7 +299,7 @@ export function ScopedWorkspaceHome({
                       className="group flex min-h-[210px] flex-col border border-[var(--border-1)] bg-[var(--color-surface)] p-5 transition-colors hover:border-[var(--color-ink)] sm:p-6"
                     >
                       <div className="flex items-start justify-between gap-4">
-                        <span className="inline-flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.13em] text-[var(--fg-muted)]">
+                        <span className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.13em] text-[var(--fg-muted)]">
                           <span className="status-shape" data-active="true" />
                           {ROLE_LABEL[project.member_role] ??
                             project.member_role}
@@ -309,17 +309,17 @@ export function ScopedWorkspaceHome({
                       <h2 className="mt-8 text-[28px] font-medium tracking-[-0.05em]">
                         {project.name}
                       </h2>
-                      <p className="mt-2 font-mono text-[12px] uppercase tracking-[0.11em] text-[var(--fg-muted)]">
+                      <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.11em] text-[var(--fg-muted)]">
                         {project.status}
                       </p>
                       <div className="mt-auto flex items-end justify-between gap-4 pt-8">
-                        <span className="flex min-w-0 items-center gap-2 text-[12px] text-[var(--fg-secondary)]">
+                        <span className="flex min-w-0 items-center gap-2 text-[10px] text-[var(--fg-secondary)]">
                           <IconGlobe size={11} className="shrink-0" />
                           <span className="truncate">
                             {destination || "Sala privada"}
                           </span>
                         </span>
-                        <span className="inline-flex shrink-0 items-center gap-2 text-[12px] font-medium">
+                        <span className="inline-flex shrink-0 items-center gap-2 text-[11px] font-medium">
                           Abrir{" "}
                           <IconArrowR
                             size={12}

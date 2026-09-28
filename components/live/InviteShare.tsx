@@ -68,7 +68,7 @@ export function InviteShare({ projectId, projectName, onClose }: Props) {
     <div className="border border-black bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.08)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
             Link de revisión
           </p>
           <h3 className="mt-1 text-[16px] font-medium tracking-[-0.02em]">
@@ -83,7 +83,7 @@ export function InviteShare({ projectId, projectName, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="text-[12px] text-[var(--fg-muted)] underline underline-offset-4"
+            className="text-[11px] text-[var(--fg-muted)] underline underline-offset-4"
           >
             Cerrar
           </button>
@@ -93,7 +93,7 @@ export function InviteShare({ projectId, projectName, onClose }: Props) {
       {!shareUrl ? (
         <div className="mt-5 space-y-3">
           <label className="block">
-            <span className="font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+            <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
               WhatsApp opcional (código país)
             </span>
             <input
@@ -116,13 +116,13 @@ export function InviteShare({ projectId, projectName, onClose }: Props) {
         </div>
       ) : (
         <div className="mt-5 space-y-3">
-          <p className="font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
             Permanente · sin email · solo este proyecto
           </p>
           <input
             readOnly
             value={shareUrl}
-            className="min-h-10 w-full border border-[var(--border-1)] bg-[#f7f7f5] px-3 font-mono text-[12px]"
+            className="min-h-10 w-full border border-[var(--border-1)] bg-[#f7f7f5] px-3 font-mono text-[11px]"
           />
           <div className="flex flex-wrap gap-2">
             <button
@@ -141,7 +141,7 @@ export function InviteShare({ projectId, projectName, onClose }: Props) {
               Abrir WhatsApp
             </a>
           </div>
-          <p className="text-[12px] leading-5 text-[var(--fg-muted)]">
+          <p className="text-[11px] leading-5 text-[var(--fg-muted)]">
             Sin WhatsApp Business: solo abres WA con el mensaje listo y lo
             mandas. El cliente no necesita cuenta para ver la sala.
           </p>

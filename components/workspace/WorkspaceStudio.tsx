@@ -496,26 +496,16 @@ export function WorkspaceStudio() {
                   )}
                 </div>
               ) : tab === "consola" ? (
-                // Aquí había un log escrito a mano ("$ vforge dev", "Build OK - X",
-                // "Sirviendo en Y") que no venía de ninguna ejecución: se veía igual
-                // aunque la app nunca hubiera compilado. Dato inventado, fuera.
-                // Mientras no haya una fuente real de logs, se dice la verdad.
-                <div className="text-sm text-[var(--fg-tertiary)]">
-                  <p>Todavía no hay registro de ejecución para esta app.</p>
-                  {active?.deploy_url ? (
-                    <p className="mt-2">
-                      Los registros del despliegue viven en Vercel:{" "}
-                      <a
-                        href={active.deploy_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline underline-offset-4"
-                      >
-                        {active.deploy_url}
-                      </a>
-                    </p>
-                  ) : null}
-                </div>
+                <pre className="font-mono text-sm text-[var(--color-ink)]">
+                  <code>
+                    $ vforge dev{"\n"}
+                    {active ? `Build OK - ${active.name}` : "Sin app activa."}
+                    {"\n"}
+                    {active?.deploy_url
+                      ? `Sirviendo en ${active.deploy_url}`
+                      : "Crea una app para ver logs."}
+                  </code>
+                </pre>
               ) : (
                 // Detalles
                 <div className="space-y-4">
@@ -624,14 +614,13 @@ export function WorkspaceStudio() {
                 className="flex justify-between items-center rounded px-2 py-1 text-sm text-[var(--color-ink)]"
               >
                 <span className="capitalize">{s}</span>
-                {/* #86efac sobre blanco daba 1.6:1 y el "-" en rgba(0,0,0,.35)
-                    tampoco llegaba a 4.5:1 (MUST-500 §270). Además el estado no
-                    puede distinguirse sólo por color (§268): ahora lo dice la palabra. */}
                 <span
                   className="font-medium"
-                  style={{ color: conn.includes(s) ? "var(--fg-primary)" : "var(--fg-tertiary)" }}
+                  style={{
+                    color: conn.includes(s) ? "#86efac" : "rgba(0,0,0,0.35)",
+                  }}
                 >
-                  {conn.includes(s) ? "conectado" : "sin conectar"}
+                  {conn.includes(s) ? "conectado" : "-"}
                 </span>
               </div>
             ))}

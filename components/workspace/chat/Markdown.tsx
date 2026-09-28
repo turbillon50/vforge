@@ -39,7 +39,7 @@ function CodeBlock({ inline, className, children }: {
 
   if (looksInline) {
     return (
-      <code className="rounded-[5px] border border-[var(--vf-border)] bg-[var(--vf-bg-2)] px-1.5 py-px font-mono text-[12px] text-[var(--vf-fg)]">
+      <code className="rounded-[5px] border border-[var(--vf-border)] bg-[var(--vf-bg-2)] px-1.5 py-px font-mono text-[0.88em] text-[var(--vf-fg)]">
         {children}
       </code>
     );
@@ -60,20 +60,17 @@ function CodeBlock({ inline, className, children }: {
   return (
     <div className="vf-md-codewrap group relative my-3 overflow-hidden rounded-lg border border-[var(--vf-border)] bg-[var(--vf-bg-2)]">
       <div className="flex items-center justify-between gap-2 border-b border-[var(--vf-border)] px-3 py-1.5">
-        <span className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--vf-fg-2)]">
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--vf-fg-2)]">
           {lang || "code"}
         </span>
-        {/* Iba en text-[var(--vf-bg-2)] sobre un bloque con bg-[var(--vf-bg-2)]:
-            el mismo color de su fondo, o sea invisible. Y decía "Copy code" /
-            "Copy" en inglés (MUST-500 §358). Medía 23×15 px (§274). */}
         <button
           type="button"
           onClick={onCopy}
-          className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded px-2 font-mono text-[12px] uppercase tracking-widest text-[var(--vf-fg-2)] transition hover:text-[var(--vf-fg)]"
-          aria-label={copied ? "Código copiado" : "Copiar código"}
+          className="flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-[var(--vf-bg-2)] transition hover:text-[var(--vf-bg-1)]"
+          aria-label="Copy code"
         >
           {copied ? <IconCheck size={11} /> : <IconCopy size={11} />}
-          <span className="hidden sm:inline">{copied ? "Copiado" : "Copiar"}</span>
+          <span className="hidden sm:inline">{copied ? "Copiado" : "Copy"}</span>
         </button>
       </div>
       <pre className="m-0 overflow-x-auto whitespace-pre-wrap break-words px-3 py-2.5 font-mono text-[13px] leading-relaxed text-[var(--vf-fg)] select-text">
@@ -135,7 +132,7 @@ const components: Components = {
     </div>
   ),
   thead: ({ children }) => (
-    <thead className="bg-[var(--vf-bg-2)] font-mono text-[12px] uppercase tracking-widest text-[var(--vf-fg-2)]">
+    <thead className="bg-[var(--vf-bg-2)] font-mono text-[11px] uppercase tracking-widest text-[var(--vf-fg-2)]">
       {children}
     </thead>
   ),

@@ -320,10 +320,10 @@ export function ScopedCreateApp({
       <div className="grid border-x border-b border-[var(--color-ink)] bg-[var(--color-surface)] lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,.75fr)]">
         <div className="p-5 sm:p-8 lg:border-r lg:border-[var(--color-ink)]">
           <div className="flex items-center justify-between border-b border-[var(--border-1)] pb-3">
-            <p className="font-mono text-[12px] uppercase tracking-[0.16em]">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em]">
               01 / Dirección
             </p>
-            <p className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
               {selectedTemplate.eyebrow}
             </p>
           </div>
@@ -344,7 +344,7 @@ export function ScopedCreateApp({
                   }`}
                 >
                   <span
-                    className={`font-mono text-[12px] tracking-[0.16em] ${
+                    className={`font-mono text-[9px] tracking-[0.16em] ${
                       active ? "opacity-60" : "text-[var(--fg-muted)]"
                     }`}
                   >
@@ -354,7 +354,7 @@ export function ScopedCreateApp({
                     {item.label}
                   </span>
                   <span
-                    className={`mt-1 block text-[12px] leading-4 ${
+                    className={`mt-1 block text-[11px] leading-4 ${
                       active ? "opacity-65" : "text-[var(--fg-secondary)]"
                     }`}
                   >
@@ -366,16 +366,16 @@ export function ScopedCreateApp({
           </div>
 
           <div className="mt-8 flex items-center justify-between border-b border-[var(--border-1)] pb-3">
-            <p className="font-mono text-[12px] uppercase tracking-[0.16em]">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em]">
               02 / Brief
             </p>
-            <p className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
               Escribe como hablas
             </p>
           </div>
 
           <label className="mt-4 grid gap-2">
-            <span className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+            <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
               Nombre del proyecto
             </span>
             <input
@@ -388,7 +388,7 @@ export function ScopedCreateApp({
           </label>
 
           <label className="mt-4 grid gap-2">
-            <span className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+            <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
               ¿Qué quieres construir?
             </span>
             <textarea
@@ -399,16 +399,16 @@ export function ScopedCreateApp({
               rows={5}
               className="w-full resize-y border border-[var(--border-1)] bg-[var(--color-background)] px-4 py-4 text-[14px] leading-6 outline-none transition placeholder:text-[var(--fg-muted)] focus:border-[var(--color-ink)]"
             />
-            <span className="text-right font-mono text-[12px] text-[var(--fg-muted)]">
+            <span className="text-right font-mono text-[9px] text-[var(--fg-muted)]">
               {description.length}/600
             </span>
           </label>
 
           <div className="mt-8 flex items-center justify-between border-b border-[var(--border-1)] pb-3">
-            <p className="font-mono text-[12px] uppercase tracking-[0.16em]">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em]">
               03 / Necesidades
             </p>
-            <p className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
               Selección múltiple
             </p>
           </div>
@@ -422,7 +422,7 @@ export function ScopedCreateApp({
                   type="button"
                   aria-pressed={active}
                   onClick={() => toggleModule(item)}
-                  className={`min-h-10 border px-3 text-[12px] transition ${
+                  className={`min-h-10 border px-3 text-[11px] transition ${
                     active
                       ? "border-[var(--color-ink)] bg-[var(--color-ink)] text-[var(--color-background)]"
                       : "border-[var(--border-1)] bg-[var(--color-background)] hover:border-[var(--color-ink)]"
@@ -438,7 +438,7 @@ export function ScopedCreateApp({
 
         <aside className="flex flex-col bg-[var(--color-background)] p-5 sm:p-7">
           <div>
-            <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
               Plan de construcción
             </p>
             <p className="mt-3 text-[24px] font-medium leading-7 tracking-[-0.045em]">
@@ -466,7 +466,7 @@ export function ScopedCreateApp({
                 }`}
               />
               <span className="text-[12px]">Crear repositorio</span>
-              <span className="font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+              <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
                 GitHub
               </span>
             </div>
@@ -481,7 +481,7 @@ export function ScopedCreateApp({
                 }`}
               />
               <span className="text-[12px]">Publicar preview</span>
-              <span className="font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+              <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
                 Vercel
               </span>
             </div>
@@ -492,7 +492,7 @@ export function ScopedCreateApp({
               <p className="text-[13px] font-medium">
                 Conecta sólo cuando publiques
               </p>
-              <p className="mt-1 text-[12px] leading-5 text-[var(--fg-secondary)]">
+              <p className="mt-1 text-[11px] leading-5 text-[var(--fg-secondary)]">
                 Puedes preparar todo sin permisos. VForge conservará este brief
                 y pedirá cada conexión cuando pulses continuar.
               </p>
@@ -519,7 +519,7 @@ export function ScopedCreateApp({
             </div>
           ) : null}
 
-          <label className="inline-flex items-start gap-3 text-[12px] leading-4 text-[var(--fg-secondary)]">
+          <label className="inline-flex items-start gap-3 text-[11px] leading-4 text-[var(--fg-secondary)]">
             <input
               type="checkbox"
               checked={isPrivate}
@@ -559,7 +559,7 @@ export function ScopedCreateApp({
               </>
             )}
           </button>
-          <p className="mt-3 text-center font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
+          <p className="mt-3 text-center font-mono text-[8px] uppercase tracking-[0.12em] text-[var(--fg-muted)]">
             Tus cuentas · tus repos · tus deployments
           </p>
 
@@ -570,7 +570,7 @@ export function ScopedCreateApp({
                 className="border border-[var(--color-ink)] bg-[var(--color-surface)] p-4"
               >
                 <p className="text-[13px] font-medium">{error.title}</p>
-                <p className="mt-2 text-[12px] leading-5 text-[var(--fg-secondary)]">
+                <p className="mt-2 text-[11px] leading-5 text-[var(--fg-secondary)]">
                   {error.message}
                 </p>
                 {error.service ? (
@@ -593,7 +593,7 @@ export function ScopedCreateApp({
                 <p className="inline-flex items-center gap-2 text-[13px] font-medium">
                   <IconCheck size={13} /> Proyecto publicado
                 </p>
-                <p className="mt-2 text-[12px] leading-5 text-[var(--fg-secondary)]">
+                <p className="mt-2 text-[11px] leading-5 text-[var(--fg-secondary)]">
                   Ya vive en tus cuentas. Puedes abrir el código o revisar la
                   publicación.
                 </p>
@@ -633,7 +633,7 @@ export function ScopedCreateApp({
               Apps generadas
             </h3>
           </div>
-          <span className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+          <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
             {apps.length} proyectos
           </span>
         </div>
@@ -647,7 +647,7 @@ export function ScopedCreateApp({
             <p className="text-[13px]">
               Tu primera publicación aparecerá aquí.
             </p>
-            <p className="mt-1 text-[12px] text-[var(--fg-muted)]">
+            <p className="mt-1 text-[11px] text-[var(--fg-muted)]">
               Sin proyectos heredados ni cuentas mezcladas.
             </p>
           </div>
@@ -663,11 +663,11 @@ export function ScopedCreateApp({
                     <p className="text-[17px] font-medium tracking-[-0.03em]">
                       {app.name}
                     </p>
-                    <p className="mt-1 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+                    <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
                       {app.template || "base"}
                     </p>
                   </div>
-                  <span className="inline-flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.12em]">
+                  <span className="inline-flex items-center gap-2 font-mono text-[8px] uppercase tracking-[0.12em]">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                     En línea
                   </span>
