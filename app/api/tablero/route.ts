@@ -8,8 +8,7 @@ export const dynamic = "force-dynamic";
 // ?refrescar=1 regenera la foto en el momento. CERO MOCK: si el relay no
 // responde, se devuelve el error tal cual y la pantalla lo muestra.
 
-import { currentUser } from "@clerk/nextjs/server";
-import { isOwnerUser } from "@/lib/auth/owner";
+import { requireDueno } from "@/lib/auth/tablero-gate";
 import { NextResponse } from "next/server";
 
 const RELAY = (
@@ -25,8 +24,7 @@ const LEER = "cat /root/tablero/estado.json";
 const REGENERAR = "/usr/local/sbin/vl-tablero";
 
 export async function GET(req: Request) {
-  const user = await currentUser();
-  if (!isOwnerUser(user)) {
+  if (!(await requireDueno(req)).ok) {
     return NextResponse.json({ ok: false, error: "solo dueños" }, { status: 401 });
   }
   if (!SECRET) {

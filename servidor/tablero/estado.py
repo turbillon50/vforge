@@ -410,13 +410,13 @@ for path in sorted(rutas):
         estado = "trabajando"
     elif f"DONE-{tag}" in marcas:
         estado = "terminado"
-    elif any(m.startswith("STALLED-") for m in marcas):
+    elif f"STALLED-{tag}" in marcas:
         nota = leer(os.path.join(path, f"STALLED-{tag}"), 200).strip() or None
         # un STALLED que puso Luis desde el tablero no es lo mismo que un frente
         # que se atoró solo: uno es una decisión, el otro es un problema
         estado = "detenido por ti" if nota and "detenido por Luis" in nota \
             else "atorado"
-    elif any(m.startswith("PAUSA-") for m in marcas):
+    elif f"PAUSA-{tag}" in marcas:
         estado = "pausado"
         nota = leer(os.path.join(path, f"PAUSA-{tag}"), 200).strip() or None
     elif limite and activo_l:
@@ -499,6 +499,10 @@ for path in sorted(rutas):
                        for l in lanz],
         "ultimo_supervisor": ult_sup,
         "marcas": sorted(marcas),
+        # Las de ESTE tag. Un worktree puede arrastrar marcas de otros frentes
+        # que pasaron por él (momentum-b1 tiene 8 DONE-* de tags distintos):
+        # si no se separan, el tablero cree que este frente está pausado.
+        "marcas_mias": sorted(m for m in marcas if m.endswith(f"-{tag}")),
         "tokens_hoy": tk_hoy,
         "tokens_7d": tk_7,
         "tokens_por_dia": [{"dia": d, **tk.get(d, {})} for d in dias_semana],

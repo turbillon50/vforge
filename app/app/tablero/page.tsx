@@ -61,6 +61,7 @@ type Frente = {
   lanzadores: Lanzador[];
   ultimo_supervisor: string | null;
   marcas: string[];
+  marcas_mias: string[];
   tokens_hoy: Tokens;
   tokens_7d: Tokens;
 };
@@ -299,7 +300,10 @@ export default function TableroPage() {
   }, [cargar]);
 
   return (
-    <>
+    // El 12 px mínimo se aplica a TODO lo que cuelga de esta pantalla, incluido
+    // el `mono-label` de 10 px que trae PageHeader. Va como variante sobre el
+    // contenedor y no tocando PageHeader, que es de toda la app (y de otro frente).
+    <div className="[&_.mono-label]:!text-[12px]">
       <PageHeader
         eyebrow="OPERACIÓN"
         title="Centro de mando"
@@ -319,7 +323,7 @@ export default function TableroPage() {
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-6 md:px-8">
         {estado && (
-          <p className="mono-label mb-5 text-[var(--fg-tertiary)]">
+          <p className={cn(ETIQUETA, "mb-5 text-[var(--fg-tertiary)]")}>
             Foto del servidor {hace(estado.generado, ahora)} · {hora(estado.generado)}
           </p>
         )}
@@ -355,7 +359,7 @@ export default function TableroPage() {
         {cargando && !estado && <Esqueleto />}
         {estado && <Contenido estado={estado} ahora={ahora} mandar={mandar} />}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -489,8 +493,15 @@ function Contenido({
 
 /* ─────────────────────────────── piezas ─────────────────────────────── */
 
+// `mono-label` de la marca viene a 10 px. El tamaño de marca no se toca, pero en
+// esta pantalla Luis lee desde el teléfono: aquí se sube a 12 px, que es el
+// mínimo legible, sin cambiar familia, color ni espaciado.
+// `!` a propósito: `.mono-label` vive en globals.css después de las utilidades
+// de Tailwind, así que sin `!important` gana ella y el 12 px no se aplica.
+const ETIQUETA = "mono-label !text-[12px]";
+
 function Titulo({ children }: { children: React.ReactNode }) {
-  return <h2 className="mono-label mb-3 text-[var(--fg-secondary)]">{children}</h2>;
+  return <h2 className={cn(ETIQUETA, "mb-3 text-[var(--fg-secondary)]")}>{children}</h2>;
 }
 
 function Alerta({ a }: { a: Alerta }) {
@@ -633,8 +644,12 @@ function TarjetaFrente({
 
   const puede = (a: Accion) => {
     if (a === "pausar" || a === "detener") return f.estado === "trabajando" || f.estado === "en espera";
-    if (a === "reanudar") return f.marcas.some((m) => m.startsWith("PAUSA-"));
-    return f.marcas.some((m) => m.startsWith("PAUSA-") || m.startsWith("STALLED-"));
+    // solo cuentan las marcas de ESTE tag: un worktree arrastra las de otros
+    if (a === "reanudar") return f.marcas_mias.includes(`PAUSA-${f.tag}`);
+    return (
+      f.marcas_mias.includes(`PAUSA-${f.tag}`) ||
+      f.marcas_mias.includes(`STALLED-${f.tag}`)
+    );
   };
 
   const click = async (a: Accion) => {
@@ -722,28 +737,39 @@ function TarjetaFrente({
         </p>
       )}
 
+      {/* Un frente quieto o cerrado no admite ninguna de las cuatro: pintar
+          cuatro botones muertos solo alarga la pantalla en el teléfono. */}
+      {ACCIONES.some(puede) && (
       <div className="flex flex-wrap gap-2 border-t border-[var(--border-1)] px-4 py-3">
-        {ACCIONES.map((a) => (
+        {ACCIONES.map((a) => {
+          const activo = puede(a);
+          return (
           <button
             key={a}
             type="button"
-            disabled={!puede(a) || ocupado !== null}
+            disabled={!activo || ocupado !== null}
             onClick={() => void click(a)}
             className={cn(
               BOTON,
               "border",
-              a === "detener"
-                ? "border-red-600/40 bg-white text-red-800 hover:bg-red-50"
-                : a === "relanzar"
-                  ? "border-black bg-black text-white hover:bg-neutral-800"
-                  : "border-[var(--border-1)] bg-white text-[var(--fg-secondary)] hover:bg-[var(--surface-1)]",
+              // Apagado siempre se ve apagado. Un "Relanzar" negro al 50% sigue
+              // leyéndose como el botón principal aunque no se pueda tocar.
+              !activo
+                ? "border-[var(--border-1)] bg-white text-[var(--fg-tertiary)]"
+                : a === "detener"
+                  ? "border-red-600/40 bg-white text-red-800 hover:bg-red-50"
+                  : a === "relanzar"
+                    ? "border-black bg-black text-white hover:bg-neutral-800"
+                    : "border-[var(--border-1)] bg-white text-[var(--fg-secondary)] hover:bg-[var(--surface-1)]",
             )}
           >
             {ocupado === a && <IconRefresh size={14} className="animate-spin" />}
             {a[0].toUpperCase() + a.slice(1)}
           </button>
-        ))}
+          );
+        })}
       </div>
+      )}
 
       {abierto && (
         <div className="border-t border-[var(--border-1)] px-4 pb-4 pt-3">
@@ -808,7 +834,7 @@ function Consumo({ estado }: { estado: Estado }) {
   return (
     <section className="rounded-2xl border border-[var(--border-1)] bg-white p-4 md:p-5">
       <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="mono-label text-[var(--fg-secondary)]">La cuenta de Claude</h2>
+        <h2 className={cn(ETIQUETA, "text-[var(--fg-secondary)]")}>La cuenta de Claude</h2>
         <span className="text-[12px] text-[var(--fg-tertiary)]">últimos 7 días</span>
       </div>
       {lider && lider.tokens_7d > 0 && (
@@ -935,7 +961,7 @@ function Salud({ salud }: { salud: Estado["salud"] }) {
   return (
     <section className="rounded-2xl border border-[var(--border-1)] bg-white p-4 md:p-5">
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="mono-label text-[var(--fg-secondary)]">El Hetzner</h2>
+        <h2 className={cn(ETIQUETA, "text-[var(--fg-secondary)]")}>El Hetzner</h2>
         <span className="text-[12px] text-[var(--fg-tertiary)]">
           {salud.claude_vivos} {salud.claude_vivos === 1 ? "sesión viva" : "sesiones vivas"}
           {salud.carga ? ` · carga ${salud.carga[0].toFixed(1)}` : ""}
