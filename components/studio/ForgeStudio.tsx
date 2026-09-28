@@ -1,6 +1,11 @@
 "use client";
 
 import { AppCanvas } from "@/components/studio/AppCanvas";
+import { BarraVivo } from "@/components/studio/vivo/BarraVivo";
+import { useMotorVivo } from "@/components/studio/vivo/useMotorVivo";
+import { PanelInspector } from "@/components/studio/vivo/PanelInspector";
+import { PanelControl } from "@/components/studio/vivo/PanelControl";
+import { useCapaEdicion } from "@/components/studio/vivo/useCapaEdicion";
 import Link from "next/link";
 import {
   useCallback,
@@ -32,7 +37,7 @@ import {
   IconX,
 } from "@/components/brand/VFIcons";
 
-type PreviewMode = "triple" | "desktop" | "mobile" | "admin" | "canvas";
+type PreviewMode = "triple" | "par" | "desktop" | "mobile" | "admin" | "canvas";
 type MobilePane = "build" | "preview";
 
 interface ProjectSummary {
@@ -487,19 +492,63 @@ export function ForgeStudio() {
     return () => window.cancelAnimationFrame(frame);
   }, [messages, sending]);
 
+  const vivo = useMotorVivo();
+  const [editando, setEditando] = useState(false);
+  const [verControl, setVerControl] = useState(false);
+  // Cada edición commitea sola: esto le dice al panel de control que recargue.
+  const [pulsoControl, setPulsoControl] = useState(0);
+  const capa = useCapaEdicion({
+    proyecto: vivo.proyecto,
+    activa: editando && vivo.fase === "vivo",
+  });
+
+  // El modo edición y el control sólo existen sobre el preview vivo.
+  useEffect(() => {
+    if (vivo.fase !== "vivo") {
+      if (editando) setEditando(false);
+      if (verControl) setVerControl(false);
+    }
+  }, [vivo.fase, editando, verControl]);
+
+  // Cuando la capa escribe un cambio, el historial se entera.
+  useEffect(() => {
+    if (capa.ultimoCambio) setPulsoControl((n) => n + 1);
+  }, [capa.ultimoCambio]);
+
   const fallbackPreviewUrl = useMemo(
     () => normalizeExternalUrl(project?.domain || project?.vercel_url),
     [project?.domain, project?.vercel_url],
   );
 
-  const viewports = useMemo(
-    () => ({
+  // Con el motor vivo encendido las vistas dejan de apuntar al deploy y apuntan
+  // al dev server del Hetzner. La URL de entrada cambia el token por la galleta
+  // de sesión y de ahí sigue a la ruta que pidamos.
+  const urlVivo = useCallback(
+    (ruta: string) => {
+      if (!vivo.urlEntrada) return null;
+      const separador = vivo.urlEntrada.includes("?") ? "&" : "?";
+      return `${vivo.urlEntrada}${separador}to=${encodeURIComponent(ruta)}`;
+    },
+    [vivo.urlEntrada],
+  );
+
+  const viewports = useMemo(() => {
+    if (vivo.fase === "vivo" && vivo.urlEntrada) {
+      return {
+        desktop: urlVivo("/"),
+        mobile: urlVivo("/"),
+        admin: urlVivo("/admin"),
+      };
+    }
+    return {
       desktop: normalizeExternalUrl(live?.project.desktop_url) || fallbackPreviewUrl,
       mobile: normalizeExternalUrl(live?.project.mobile_url) || fallbackPreviewUrl,
       admin: normalizeExternalUrl(live?.project.admin_url),
-    }),
-    [fallbackPreviewUrl, live],
-  );
+    };
+  }, [fallbackPreviewUrl, live, urlVivo, vivo.fase, vivo.urlEntrada]);
+
+  const previewUrlActual =
+    vivo.fase === "vivo" && vivo.urlBase ? vivo.urlBase : fallbackPreviewUrl;
 
   const githubUrl =
     normalizeExternalUrl(project?.github_url) ||
@@ -752,7 +801,7 @@ export function ForgeStudio() {
         sending={sending}
         canPrompt={Boolean(sessionId)}
         githubUrl={githubUrl}
-        previewUrl={fallbackPreviewUrl}
+        previewUrl={previewUrlActual}
         onProjectChange={setActiveProjectId}
         onCreate={() => setShowCreate(true)}
         onDeploy={requestDeploy}
@@ -932,28 +981,48 @@ export function ForgeStudio() {
           <PreviewHeader
             mode={previewMode}
             setMode={setPreviewMode}
-            previewUrl={fallbackPreviewUrl}
+            previewUrl={previewUrlActual}
             onRefresh={() => {
               setPreviewKey((value) => value + 1);
               setDataRefresh((value) => value + 1);
             }}
           />
 
+          <BarraVivo
+            encendido={vivo.encendido}
+            fase={vivo.fase}
+            proyecto={vivo.proyecto}
+            setProyecto={vivo.setProyecto}
+            motor={vivo.motor}
+            error={vivo.error}
+            disponible={vivo.disponible}
+            onEncender={(nombre) => void vivo.encender(nombre)}
+            onApagar={() => void vivo.apagar()}
+            editando={editando}
+            onEditando={setEditando}
+            marcados={capa.marcados}
+            verControl={verControl}
+            onVerControl={setVerControl}
+          />
+
+          <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-page-sm md:p-page-md">
             {previewMode === "canvas" ? (
               <AppCanvas
                 projectId={activeProjectId}
                 projectName={project?.name ?? "Proyecto"}
-                src={fallbackPreviewUrl}
+                src={previewUrlActual}
                 frameKey={previewKey}
               />
-            ) : !activeProjectId ? (
+            ) : !activeProjectId && vivo.fase !== "vivo" ? (
+              // Con el motor vivo encendido el preview no depende de que haya un
+              // proyecto de VForge seleccionado: el proyecto lo manda el motor.
               <NoProject onCreate={() => setShowCreate(true)} />
-            ) : projectLoading && !project ? (
+            ) : activeProjectId && projectLoading && !project ? (
               <div className="grid h-full min-h-[360px] place-items-center border border-[var(--vf-border)] bg-[var(--vf-bg-1)]">
                 <IconLoader size={18} className="animate-spin" />
               </div>
-            ) : projectError && !project ? (
+            ) : activeProjectId && projectError && !project ? (
               <div className="grid h-full min-h-[360px] place-items-center border border-[var(--vf-fg)] bg-[var(--vf-bg-1)] p-8 text-center">
                 <div>
                   <p className="text-[13px] font-medium">{projectError}</p>
@@ -968,16 +1037,57 @@ export function ForgeStudio() {
               </div>
             ) : previewMode === "triple" ? (
               <TriplePreview
-                projectName={project?.name ?? "Proyecto"}
+                projectName={vivo.fase === "vivo" ? vivo.proyecto : (project?.name ?? "Proyecto")}
                 urls={viewports}
+                frameKey={previewKey}
+              />
+            ) : previewMode === "par" ? (
+              <ParPreview
+                projectName={vivo.fase === "vivo" ? vivo.proyecto : (project?.name ?? "Proyecto")}
+                urls={{ desktop: viewports.desktop, mobile: viewports.mobile }}
                 frameKey={previewKey}
               />
             ) : previewMode === "desktop" || previewMode === "mobile" || previewMode === "admin" ? (
               <SinglePreview
-                projectName={project?.name ?? "Proyecto"}
+                projectName={vivo.fase === "vivo" ? vivo.proyecto : (project?.name ?? "Proyecto")}
                 mode={previewMode}
                 url={viewports[previewMode]}
                 frameKey={previewKey}
+              />
+            ) : null}
+          </div>
+
+            {editando && capa.seleccion ? (
+              <PanelInspector
+                elemento={capa.seleccion}
+                guardando={capa.guardando}
+                aviso={capa.aviso}
+                ultimoCambio={capa.ultimoCambio}
+                onEditar={(operacion) => void capa.editar(operacion)}
+                onCerrar={capa.limpiar}
+                onDileAV={(peticion) => {
+                  const el = capa.seleccion;
+                  if (!el) return;
+                  // V recibe dónde vive el elemento, no sólo lo que se le pidió.
+                  void sendPrompt(
+                    `En el proyecto ${vivo.proyecto}, sobre el elemento <${el.etiqueta}> que vive en ${el.src}` +
+                      (el.texto ? ` y dice "${el.texto}"` : "") +
+                      `: ${peticion}\n\nEscribe el cambio en ese archivo del worktree vivo. No hagas deploy.`,
+                  );
+                  setMobilePane("build");
+                }}
+              />
+            ) : null}
+
+            {verControl && vivo.fase === "vivo" ? (
+              <PanelControl
+                proyecto={vivo.proyecto}
+                refrescar={pulsoControl}
+                onCerrar={() => setVerControl(false)}
+                onCambio={() => {
+                  // Deshacer cambió los archivos: la vista tiene que releer.
+                  setPreviewKey((value) => value + 1);
+                }}
               />
             ) : null}
           </div>
@@ -1253,6 +1363,7 @@ function PreviewHeader({
 }) {
   const modes: Array<{ id: PreviewMode; label: string }> = [
     { id: "triple", label: "Tres vistas" },
+    { id: "par", label: "Escritorio + móvil" },
     { id: "desktop", label: "Escritorio" },
     { id: "mobile", label: "Móvil" },
     { id: "admin", label: "Admin" },
@@ -1341,6 +1452,46 @@ function TriplePreview({
   );
 }
 
+/**
+ * Escritorio y móvil lado a lado, con el móvil a 390 de verdad (no una columna
+ * estrecha): es como Luis revisa que un cambio no rompa el teléfono.
+ */
+function ParPreview({
+  projectName,
+  urls,
+  frameKey,
+}: {
+  projectName: string;
+  urls: { desktop: string | null; mobile: string | null };
+  frameKey: number;
+}) {
+  if (!urls.desktop && !urls.mobile) return <NoPreview projectName={projectName} />;
+  return (
+    <div className="flex h-full min-h-0 flex-col items-stretch gap-2 lg:flex-row">
+      <div className="min-h-[320px] min-w-0 flex-1">
+        <FrameCard
+          title="Escritorio"
+          kind="desktop"
+          url={urls.desktop}
+          frameKey={frameKey}
+          projectName={projectName}
+          single
+        />
+      </div>
+      <div className="min-h-[420px] w-full shrink-0 lg:w-[390px]">
+        <FrameCard
+          title="Móvil 390"
+          kind="mobile"
+          url={urls.mobile}
+          frameKey={frameKey}
+          projectName={projectName}
+          single
+        />
+      </div>
+    </div>
+  );
+}
+
 function SinglePreview({
   projectName,
   mode,
@@ -1406,6 +1557,9 @@ function FrameCard({
             key={`${frameKey}-${kind}`}
             src={url}
             title={`${title} de ${projectName}`}
+            // data-vf-vista: por aquí la capa de edición encuentra las vistas
+            // para encender el resaltado en escritorio y móvil a la vez.
+            data-vf-vista={kind}
             className="absolute inset-0 h-full w-full border-0 bg-[var(--vf-bg-1)]"
             loading="lazy"
             referrerPolicy="no-referrer"
