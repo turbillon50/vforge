@@ -740,7 +740,7 @@ export function ForgeStudio() {
   }
 
   return (
-    <div className="vf-mobile-stable flex h-full min-h-0 flex-col overflow-hidden overscroll-none bg-[#0c0c0e] text-[var(--vf-fg)]">
+    <div className="vf-mobile-stable flex h-full min-h-0 flex-col overflow-hidden overscroll-none bg-[#efefec] text-[var(--vf-fg)]">
       <StudioToolbar
         projects={projects}
         activeProjectId={activeProjectId}
@@ -1520,16 +1520,16 @@ function SystemStrip({
   ];
 
   return (
-    <footer className="fixed inset-x-0 bottom-0 z-40 flex h-9 items-center gap-3 overflow-hidden border-t border-white/10 bg-[#090909] px-4 text-[12px] text-white/75">
+    <footer className="flex h-7 shrink-0 items-center gap-3 overflow-hidden border-t border-[var(--vf-border)] bg-[var(--vf-bg)] px-3 text-[11px]">
       {items.map(({ label, detail, active, Icon }) => (
         <Link
           key={label}
           href="/app/integrations"
-          className="flex shrink-0 items-center gap-2 text-white/70 transition-colors duration-200 hover:text-white"
+          className="flex shrink-0 items-center gap-2 text-[var(--vf-fg-1)] transition-colors duration-200 hover:text-[var(--vf-fg)]"
         >
           {label === "GitHub" ? <GithubMark /> : label === "Vercel" ? <VercelMark /> : <Icon size={14} />}
-          <span className="text-[12px] text-white/45">{label}</span>
-          <span className="max-w-[160px] truncate text-[12px] text-white">{detail}</span>
+          <span className="text-[12px] text-[var(--vf-fg-2)]">{label}</span>
+          <span className="max-w-[140px] truncate text-[12px] text-black">{detail}</span>
           <span className="status-shape shrink-0" data-active={active} />
         </Link>
       ))}
