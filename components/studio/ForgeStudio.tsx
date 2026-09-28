@@ -170,8 +170,11 @@ function slugify(value: string) {
     .slice(0, 48);
 }
 
-function modelLabel(value: string | null) {
-  if (!value) return "Motor por resolver";
+/** El nombre del motor, o `null` si todavía no se sabe cuál es.
+ *  Antes devolvía "Motor por resolver", que es una nota interna: al usuario se
+ *  le muestra el motor real o no se le muestra nada. */
+function modelLabel(value: string | null): string | null {
+  if (!value) return null;
   const compact = value.split("/").at(-1)?.replaceAll("-", " ") ?? value;
   return compact.replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
@@ -775,9 +778,13 @@ export function ForgeStudio() {
           )}
         >
           <header className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-[var(--vf-border)] px-4">
-            <p className="truncate text-[13px] text-[var(--vf-fg-1)]">
-              {modelLabel(currentModel)}
-            </p>
+            {modelLabel(currentModel) ? (
+              <p className="truncate text-[13px] text-[var(--vf-fg-1)]">
+                {modelLabel(currentModel)}
+              </p>
+            ) : (
+              <span aria-hidden />
+            )}
             <button
               type="button"
               onClick={() => void newConversation()}
@@ -1189,7 +1196,7 @@ function Message({ message }: { message: StudioMessage }) {
             <VMark size={11} />
           </span>
           <span className="font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
-            V · {modelLabel(message.model ?? null)}
+            {modelLabel(message.model ?? null) ? `V · ${modelLabel(message.model ?? null)}` : "V"}
           </span>
         </div>
         {message.streaming ? (

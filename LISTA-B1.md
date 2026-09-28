@@ -636,3 +636,36 @@ Desde aquí todos los contextos se abren con `locale="es-MX"`, que es lo que ve 
   **audita `/root/vforge`, no el directorio que se está commiteando** (`cd /root/vforge` fijo en el
   hook). Trabajando en un worktree, la compuerta pasa siempre sin mirar tu código: en este mismo
   barrido reportó "OK: 114 issues" sobre otro checkout. Es una compuerta decorativa. **[Vulcano]**
+
+---
+
+## Bloque 9 · Estudio: "Motor por resolver"
+
+Criterio: se muestra el motor real o no se muestra nada.
+
+- [x] **B9.1 — "Motor por resolver" era una nota interna en la cara del usuario.**
+  `modelLabel()` en `components/studio/ForgeStudio.tsx:173` devolvía esa cadena cuando no sabía qué
+  modelo estaba atendiendo. Salía en **dos** lugares visibles del Estudio (`/app/chat`):
+  el encabezado del panel Construir, y la firma de **cada** respuesta de V (`V · Motor por resolver`).
+  Ahora la función devuelve `null` cuando no hay dato, y cada lugar decide:
+  el encabezado no pinta nada (deja un hueco que conserva la alineación del botón "Nueva"),
+  y la firma del mensaje queda en **`V`** a secas.
+  El tercer uso (la tarjeta "Modelos" del panel de sistema) ya estaba bien resuelto y no cambió.
+
+- [x] **B9.2 — Medido en WebKit, `/app/chat` con datos reales.**
+
+  | | antes | después |
+  |---|---|---|
+  | "Motor por resolver" visible a 390 | **sí** | **no** |
+  | "Motor por resolver" visible a 1440 | **sí** | **no** |
+  | desborde horizontal | 0 | 0 |
+
+  Captura mirada: `cap-b9/390-chat.png` — la firma de la respuesta dice **"V"**.
+
+- [x] **B9.3 — Contraprueba del verde** (SANIDAD §0.5). Se devolvió `modelLabel` a
+  `return "Motor por resolver"`, se recargó y la prueba lo **volvió a ver** (`visible: True`).
+  La comprobación sabe fallar, así que el "no" de arriba vale. Revertido enseguida.
+
+- [x] **B9.4 — Verificación.** `grep -rn "Motor por resolver" --include=*.tsx --include=*.ts`
+  → sólo queda la línea del comentario que explica por qué se quitó.
+  `npx tsc --noEmit -p .` → **0 errores**.
