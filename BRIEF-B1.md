@@ -36,3 +36,8 @@ Eres el ejecutor de Vulcano en VForge (vforge.site). Trabajas SOLO en este workt
 - Pruebas visuales con Playwright **WebKit** (python3), a 390×844 y 1440×900, MIRANDO la captura. Sesión real sin pedirle nada a Luis: patrón en `/root/vulcano-audit/vforge-rescate/medir.py` (Clerk `sign_in_tokens` con `CLERK_SECRET_KEY_VFORGE` de /root/.env y `?__clerk_ticket=`). Para dev local usa el mismo patrón contra `http://localhost:3150` si Clerk dev lo permite; si no, prueba lo público en local y lo privado en la vista previa de Vercel de la rama.
 - Lista maestra `LISTA-B1.md` en la raíz: cada punto `[x]` solo con evidencia (antes → después, número o captura). `[LUIS]` lo que solo él puede decidir.
 - Al terminar TODO: re-mide las 54 rutas a 390 y 1440 (sin y con sesión) con el mismo script y compara contra la línea base; mata el `next dev`; borra `.env.local`; escribe `DONE-B1` con el resumen. Si te atoras de verdad, escribe por qué en `LISTA-B1.md` y sigue con el siguiente bloque.
+
+## CAMBIO DE PRIORIDAD (Luis, 28-sep 03:06)
+VForge NO sale a la venta por ahora: primero es la herramienta interna de Luis para llevar su fábrica. La estética de marketing pasa a segundo plano.
+- SALTA el bloque 8 (Marketplace). No toques más páginas de marketing.
+- Termina lo que tengas abierto y ve directo al bloque 10 (SANIDAD/MUST-500 del núcleo `/app`) y al bloque 9. Prioridad: que cada botón de `/app` funcione de verdad, no que se vea bonito.
