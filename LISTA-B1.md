@@ -354,3 +354,105 @@ Script: `/root/vulcano-audit/vforge-rescate/medir_studio.py`.
   Fuera de paleta (MUST-500 §162) y por debajo de 4.5:1 (§270).
 - [ ] La pestaña "Consola" pinta un log fijo escrito a mano (`$ vforge dev`, `Build OK`) que
   no viene de ninguna ejecución real. Es un dato inventado: o sale del servidor o se omite.
+
+---
+
+## Bloque 6 · Splash
+
+Criterio: visitas repetidas se lo saltan; primera visita corto; el fallback sin JavaScript sigue
+funcionando.
+
+**Cómo se midió.** `next dev` en `:3150` con el entorno sin llaves de Clerk (`.env.nocl`), que es
+lo que deja renderizar la portada pública (`app/page.tsx` sólo llama a `auth()` si hay
+`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`). WebKit, 390×844 y 1440×900. Dos scripts:
+`medir_splash.py` (línea base, `med-b6-antes.json`) y `verif_splash.py` (contraprueba fina, muestreo
+cada 16 ms = 1 frame, `med-b6-verif.json`).
+
+- [x] **B6.1 — La primera visita duraba más de 5 s. Ahora 2.7 s.**
+  Eran dos relojes en paralelo, los dos por encima del límite de 3 s (MUST-500 §2):
+  el de React (`DUR = 4200` en `MonochromeHome.tsx`) y el respaldo en CSS puro
+  (`animation:fxSplashOut .7s 4.6s` = 5.3 s). La secuencia interna también iba larga:
+  cimientos `2.4s` con retardos `.3s`/`.5s`, y "nace VForge" `1.5s` con retardo `2.5s`.
+  Se comprimió la misma animación (mismos fotogramas, mismo orden, misma marca), no se rediseñó:
+
+  | | antes | después |
+  |---|---|---|
+  | cimientos GitHub / Vercel | `2.4s` @ `.3s` / `.5s` | `1.3s` @ `.15s` / `.25s` |
+  | "nace" VForge | `1.5s` @ `2.5s` | `.85s` @ `1.35s` |
+  | reloj de React (`DUR`) | `4200 ms` | `2350 ms` |
+  | respaldo CSS sin JS | `4.6s` + `.7s` salida | `2.5s` + `.45s` salida |
+
+  **Medido con muestreo por frame (16 ms), la capa que tapa la pantalla:**
+
+  | vista | antes | después |
+  |---|---|---|
+  | 390 | nunca se quitó dentro de la muestra (>5.3 s) | **de 183 ms a 2,712 ms** |
+  | 1440 | nunca se quitó dentro de la muestra (>5.3 s) | **de 181 ms a 2,698 ms** |
+
+  Capturas miradas: `cap-b6-antes/390-visita1.png` (a los 3 s **sólo se ve el splash**) →
+  `cap-b6-despues/390-v1-1200ms.png` (splash) y `390-v1-3500ms.png` (portada completa).
+
+- [x] **B6.2 — Las visitas repetidas NO se lo saltaban. Ahora no pintan ni un frame.**
+  El splash de la portada no consultaba ningún almacenamiento: salía **siempre**, en cada recarga y
+  en cada pestaña nueva. Medido antes: `splash_v2_visto=true`, `splash_recarga_visto=true` en 390 y 1440.
+  Ahora un `<script>` en línea colocado **antes** del `div` del splash en el DOM marca
+  `<html data-vf-splash="off">` y el CSS lo esconde con `display:none`, así que el navegador nunca
+  llega a pintarlo. `localStorage`, no `sessionStorage`: "visita repetida" es por aparato, no por pestaña
+  (la misma lección de B4.2).
+
+  | | antes | después |
+  |---|---|---|
+  | pestaña nueva, mismo dispositivo | visible | **no visible** |
+  | recarga | visible | **no visible** |
+  | frames tapados en la visita repetida (muestreo 16 ms) | — | **0** en 390 y 1440 |
+
+  Si `localStorage` está bloqueado (Safari privado) el `try/catch` no marca nada y el splash sale:
+  degrada al comportamiento de hoy, nunca rompe la portada.
+
+- [x] **B6.3 — Al saltar el splash la portada se quedaba en blanco hasta que hidrataba React.**
+  Lo encontró la contraprueba, no el criterio: con el splash ya escondido, la captura a 150 ms
+  mostraba **sólo el encabezado** y el resto vacío. El hero es `.fx-reveal` (opacity 0) y dependía del
+  `IntersectionObserver`, que sólo corre al hidratar; el respaldo en CSS estaba a 3 s.
+  Arreglo acotado al hero: `html[data-vf-splash="off"] .fx-hero .fx-reveal{ animation-delay:.1s }`.
+  Las demás secciones conservan su aparición por scroll. Antes/después en
+  `cap-b6-despues/390-repetida-150ms.png` (hero legible) y `1440-repetida-150ms.png`.
+
+- [x] **B6.4 — El fallback sin JavaScript sigue funcionando, y ahora dentro del límite.**
+  Antes: a los 1.5 s la pantalla seguía tapada (`sinjs_tapado=true`) y no se despejaba hasta 5.3 s.
+  Después: **a los 2.9 s el splash ya no está** y se leen marca, "Entrar" y "Empezar gratis"; a los
+  3.1 s el hero está completo. Medido `sinjs_tapado=false` a 390 y 1440.
+  Texto servido sin JS: 2,339 caracteres (390) y 2,384 (1440) — el HTML inicial ya trae la portada
+  (MUST-500 §21). Capturas: `cap-b6-despues/390-sinjs-2900ms.png` y `390-sinjs-3100ms.png`.
+
+- [x] **B6.5 — No había `<noscript>` en ninguna ruta** (MUST-500 §4). Medido antes: `noscript: []`.
+  Ahora el layout raíz trae uno en español, con el contacto **real** que ya usan `/support`,
+  `/privacidad` y `/terminos` (`luisdelator@vmomentums.info`) — no un correo inventado.
+  Va anclado **abajo**: puesto arriba se encimaba con el encabezado `position:fixed` de la portada
+  (se vio en la primera captura de verificación). Lleva `env(safe-area-inset-bottom)`.
+
+- [x] **B6.6 — Había DOS splash montados sobre la misma visita.**
+  `app/layout.tsx` monta `<SplashScreen />` (blanco, `z-9999`, framer-motion) en **todas** las rutas,
+  y la portada además pinta el suyo (`#fx-splash`, negro, `z-9999`). En la portada el negro tapaba al
+  blanco por orden del DOM, así que no se notaba — pero al saltarse el negro en visitas repetidas
+  (B6.2) el blanco habría quedado al descubierto: un destello blanco de 560 ms
+  (MUST-500 §5 "sin destello blanco" y §17 "un aviso a la vez"). Ahora `SplashScreen` no se monta en
+  `/`, que tiene el suyo. La ruta se lee al montar (no con `usePathname`) porque el componente vive en
+  el layout raíz y no se vuelve a montar al navegar: con `usePathname` el splash habría aparecido a
+  media navegación.
+  De paso: dejaba de escribir `vf-monochrome-splash-v1` en `sessionStorage` desde la portada, que
+  suprimía el splash de `/app/*` en la misma sesión sin que nadie lo hubiera visto.
+
+- [x] **B6.7 — El "TOCA PARA SALTAR" no cumplía contraste ni tamaño.**
+  `11 px` en `#565656` sobre `#0A0A0A` = **2.6:1** (MUST-500 §144 y §270).
+  Ahora `12 px` en `#8A8A8A` = **5.7:1**. Sigue siendo el mismo gris discreto de la pieza.
+
+- [x] **B6.8 — Verificación.** `npx tsc --noEmit -p .` → 0 errores.
+  `npm test` → **90 pruebas, 0 fallos**. FCP de la portada: **171 ms** (390) y **147 ms** (1440).
+
+### Pendiente detectado en el bloque 6
+
+- [ ] `.fx-reveal` tiene un respaldo en CSS (`fxRevealIn … forwards`) que corre **siempre**, no sólo
+  sin JavaScript: a los 3 s del arranque vuelve visibles **todas** las secciones, también las que están
+  fuera de pantalla, así que la aparición por scroll queda en adorno. Es anterior a este barrido
+  (antes pasaba a los 5.4 s, misma distancia del final del splash) y no es criterio del bloque 6.
+  Se anota para el bloque 10.

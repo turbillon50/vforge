@@ -2,23 +2,33 @@
 .fx-root *{ box-sizing:border-box; }
 
 /* ===== SPLASH (CSS puro, sin flash: fill-mode both mantiene el estado 0% desde el frame 0) ===== */
-.fx-splash{ position:fixed; inset:0; z-index:9999; background:var(--black); display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .7s var(--ease),visibility .7s var(--ease); cursor:pointer; }
+.fx-splash{ position:fixed; inset:0; z-index:9999; background:var(--black); display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .45s var(--ease),visibility .45s var(--ease); cursor:pointer; }
 .fx-splash.gone{ opacity:0; visibility:hidden; pointer-events:none; }
-/* FALLBACK SIN JS (02-sep-2026, Luis se quedó en el splash): si React no hidrata, CSS quita el splash y muestra el home igual. */
-.fx-splash{ animation:fxSplashOut .7s var(--ease) 4.6s forwards; }
+/* FALLBACK SIN JS (02-sep-2026, Luis se quedó en el splash): si React no hidrata, CSS quita el splash y muestra el home igual.
+   MUST-500 §2: el splash nunca pasa de 3 s. 2.5s de retardo + .45s de salida = 2.95 s en el peor caso (sin JS). */
+.fx-splash{ animation:fxSplashOut .45s var(--ease) 2.5s forwards; }
 @keyframes fxSplashOut{ to{ opacity:0; visibility:hidden; pointer-events:none; } }
-.fx-main{ animation:fxMainIn .8s var(--ease) 4.8s forwards; }
+.fx-main{ animation:fxMainIn .8s var(--ease) 2.7s forwards; }
 @keyframes fxMainIn{ to{ opacity:1; } }
-.fx-reveal{ animation:fxRevealIn .9s var(--ease) 5.4s forwards; }
+.fx-reveal{ animation:fxRevealIn .9s var(--ease) 3s forwards; }
 @keyframes fxRevealIn{ to{ opacity:1; transform:translateY(0); } }
 @media (prefers-reduced-motion:reduce){ .fx-splash,.fx-main,.fx-reveal{ animation-delay:0s; animation-duration:.01s; } }
+
+/* VISITA REPETIDA: el script en línea de MonochromeHome marca <html> antes del primer pintado,
+   así que el splash no llega a verse ni un frame. Sin JS el atributo nunca se pone y manda el fallback de arriba. */
+html[data-vf-splash="off"] .fx-splash{ display:none; }
+html[data-vf-splash="off"] .fx-main{ opacity:1; animation:none; }
+/* Sin splash que esperar, la portada no puede quedarse en blanco hasta que hidrate React:
+   el hero (lo que se ve sin scroll) entra de inmediato. Las demás secciones conservan su
+   aparición por scroll, que la sigue manejando el IntersectionObserver. */
+html[data-vf-splash="off"] .fx-hero .fx-reveal{ animation-delay:.1s; }
 
 .fx-seq{ position:relative; width:min(90vw,520px); height:120px; }
 .fx-cimientos{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:72px; }
 .fx-b{ display:flex; align-items:center; justify-content:center; opacity:0; }
 .fx-b svg{ display:block; }
-.fx-b-gh{ animation:fxGH 2.4s var(--ease) .3s both; }
-.fx-b-vc{ animation:fxVC 2.4s var(--ease) .5s both; }
+.fx-b-gh{ animation:fxGH 1.3s var(--ease) .15s both; }
+.fx-b-vc{ animation:fxVC 1.3s var(--ease) .25s both; }
 @keyframes fxGH{
   0%{ opacity:0; transform:translateX(-30px) translateY(6px) scale(.92); }
   22%{ opacity:1; transform:translateX(0) translateY(0) scale(1); }
@@ -32,7 +42,7 @@
   100%{ opacity:0; transform:translateX(-46px) scale(.7); }
 }
 
-.fx-nace{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:20px; opacity:0; animation:fxNace 1.5s var(--ease) 2.5s both; }
+.fx-nace{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:20px; opacity:0; animation:fxNace .85s var(--ease) 1.35s both; }
 .fx-nace svg{ color:var(--white); }
 .fx-word{ font-weight:300; letter-spacing:.34em; font-size:clamp(28px,5vw,36px); color:var(--white); text-transform:uppercase; }
 @keyframes fxNace{
@@ -41,7 +51,7 @@
   100%{ opacity:1; transform:scale(1); }
 }
 
-.fx-skip{ position:absolute; bottom:38px; left:0; right:0; text-align:center; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:#565656; opacity:0; animation:fxSkip .6s var(--ease) 1.2s forwards; }
+.fx-skip{ position:absolute; bottom:38px; left:0; right:0; text-align:center; font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:#8A8A8A; opacity:0; animation:fxSkip .4s var(--ease) .5s forwards; }
 @keyframes fxSkip{ to{ opacity:1; } }
 
 /* ===== HEADER ===== */

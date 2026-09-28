@@ -61,12 +61,30 @@ const CHECK = (
   </svg>
 );
 
+/* Marca el dispositivo la primera vez que se ve el splash. localStorage, no sessionStorage:
+   "visitas repetidas" es por aparato, no por pestaña. */
+const SPLASH_KEY = "vf-portada-splash-v1";
+
+/* Corre ANTES de que el navegador pinte el splash (script en línea, antes del div en el DOM):
+   si ya se vio, marca <html> y el CSS lo esconde sin un solo frame negro. Si localStorage está
+   bloqueado (Safari privado), no marca nada y el splash sale: nunca rompe la portada. */
+const GATE_JS =
+  "(function(){try{if(localStorage.getItem('" +
+  SPLASH_KEY +
+  "')){document.documentElement.setAttribute('data-vf-splash','off');}else{localStorage.setItem('" +
+  SPLASH_KEY +
+  "','1');}}catch(e){}})();";
+
 export function MonochromeHome() {
   useEffect(() => {
     const splash = document.getElementById("fx-splash");
     const main = document.getElementById("fx-main");
     const hdr = document.getElementById("fx-hdr");
-    const DUR = 4200;
+    /* MUST-500 §2: el splash nunca pasa de 3 s. 2.35 s + .45 s de salida = 2.8 s.
+       La secuencia termina en 2.2 s (cimientos 1.55 s, "nace" 2.2 s), así que no se corta. */
+    const yaVisto =
+      document.documentElement.getAttribute("data-vf-splash") === "off";
+    const DUR = yaVisto ? 0 : 2350;
     let done = false;
     let io: IntersectionObserver | null = null;
 
@@ -113,6 +131,9 @@ export function MonochromeHome() {
 
   return (
     <div className="fx-root">
+      {/* Antes del splash en el DOM: decide si esta visita lo merece, sin que alcance a pintarse. */}
+      <script dangerouslySetInnerHTML={{ __html: GATE_JS }} />
+
       {/* ===== SPLASH ===== */}
       <div id="fx-splash" className="fx-splash">
         <div className="fx-seq">

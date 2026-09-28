@@ -55,6 +55,37 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-svh bg-background font-sans text-ink">
+        {/* MUST-500 §4: sin JavaScript el visitante no se queda adivinando.
+            Anclado abajo: la portada tiene un encabezado `position:fixed` y arriba se encimaban. */}
+        <noscript>
+          <div
+            style={{
+              position: "fixed",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 10000,
+              padding:
+                "14px 20px calc(14px + env(safe-area-inset-bottom)) 20px",
+              background: "#0A0A0A",
+              color: "#FFFFFF",
+              fontSize: 14,
+              lineHeight: 1.5,
+              textAlign: "center",
+              borderTop: "1px solid rgba(255,255,255,0.18)",
+            }}
+          >
+            VForge necesita JavaScript para funcionar. Actívalo en tu navegador y
+            vuelve a cargar la página. Si el problema sigue, escríbenos a{" "}
+            <a
+              href="mailto:luisdelator@vmomentums.info"
+              style={{ color: "#FFFFFF", textDecoration: "underline" }}
+            >
+              luisdelator@vmomentums.info
+            </a>
+            .
+          </div>
+        </noscript>
         <LimiteDeError nombre="SplashScreen">
           <SplashScreen />
         </LimiteDeError>
