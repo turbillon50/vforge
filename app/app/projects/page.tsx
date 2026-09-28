@@ -205,6 +205,9 @@ const SORTS: SortDef[] = [
 ];
 const SORT_BY_ID = Object.fromEntries(SORTS.map((x) => [x.id, x])) as Record<Sort, SortDef>;
 
+/** Proyectos por tanda. Cada fila es un componente pesado; el catálogo entero no se pinta de golpe. */
+const PAGINA = 40;
+
 // El tema de VForge aplana los -500 de Tailwind: los colores de alerta van en hex.
 const C = { rojo: "#dc2626", ambar: "#b45309", verde: "#15803d" };
 
@@ -373,6 +376,7 @@ export default function ProjectsPage() {
   const [repositoryProject, setRepositoryProject] = useState<Project | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [pagina, setPagina] = useState(1);
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -599,6 +603,12 @@ export default function ProjectsPage() {
     [projects, passes],
   );
 
+  // Al cambiar filtros u orden se vuelve a la primera tanda: si no, el usuario
+  // filtra a 3 resultados y sigue con la lista "expandida" de la búsqueda anterior.
+  useEffect(() => {
+    setPagina(1);
+  }, [f]);
+
   const stats = useMemo(() => {
     const today = todayStart();
     let moved = 0;
@@ -653,6 +663,13 @@ export default function ProjectsPage() {
   const nActive = activeCount(f);
   const toggle = <T,>(arr: T[], v: T) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
+  // Cada fila monta un ProjectRow completo (pastillas, barra de avance, acciones y,
+  // al abrirla, un Detail). Pintar el catálogo entero de golpe deja la lista pesada
+  // en celular. Se pinta por tandas; los filtros y el orden siguen actuando sobre
+  // TODO el catálogo, no sobre lo que se ve.
+  const visibles = Math.min(pagina * PAGINA, filtered.length);
+  const restantes = filtered.length - visibles;
+
   return (
     <div className="mx-auto w-full max-w-[1440px]">
       <header className="border-b border-[var(--border-1)] bg-white px-page-sm md:px-page-md py-3.5">
@@ -676,7 +693,7 @@ export default function ProjectsPage() {
       </header>
 
       {syncMessage ? (
-        <div className="border-b border-[var(--border-1)] bg-white px-page-sm md:px-page-md py-3 font-mono text-[10px] uppercase tracking-[0.11em] text-[var(--fg-secondary)]">
+        <div className="border-b border-[var(--border-1)] bg-white px-page-sm md:px-page-md py-3 font-mono text-[12px] uppercase tracking-[0.11em] text-[var(--fg-secondary)]">
           {syncMessage}
         </div>
       ) : null}
@@ -837,7 +854,7 @@ export default function ProjectsPage() {
             </Group>
 
             <div className="lg:col-span-2">
-              <p className="mb-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+              <p className="mb-1.5 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
                 Si empatan, luego por
               </p>
               <SortControl
@@ -909,7 +926,7 @@ export default function ProjectsPage() {
       ) : null}
 
       <section className="bg-white">
-        <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(150px,.8fr)_140px_150px_auto] gap-4 border-b border-[var(--border-1)] px-8 py-3 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--fg-muted)] lg:grid">
+        <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(150px,.8fr)_140px_150px_auto] gap-4 border-b border-[var(--border-1)] px-8 py-3 font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--fg-muted)] lg:grid">
           <HeadSort id="name" label="Proyecto" f={f} onSort={sortBy} />
           <HeadSort id="repos" label="Origen" f={f} onSort={sortBy} />
           <HeadSort id="activity" label="Actividad" f={f} onSort={sortBy} />
@@ -942,7 +959,7 @@ export default function ProjectsPage() {
           </div>
         ) : (
           <div className="divide-y divide-[var(--border-1)]">
-            {filtered.map((project) => (
+            {filtered.slice(0, visibles).map((project) => (
               <ProjectRow
                 key={project.id}
                 project={project}
@@ -961,6 +978,27 @@ export default function ProjectsPage() {
                 }}
               />
             ))}
+
+            {restantes > 0 ? (
+              <div className="px-page-sm md:px-page-md py-6 text-center">
+                <p className="text-[12px] text-[var(--fg-muted)]" aria-live="polite">
+                  {visibles} de {filtered.length} proyectos en pantalla
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setPagina((n) => n + 1)}
+                  className="btn-ghost mt-3 !min-h-11 !px-5"
+                >
+                  Ver {Math.min(PAGINA, restantes)} más
+                </button>
+              </div>
+            ) : filtered.length > PAGINA ? (
+              <div className="px-page-sm md:px-page-md py-6 text-center">
+                <p className="text-[12px] text-[var(--fg-muted)]">
+                  Se muestran los {filtered.length} proyectos.
+                </p>
+              </div>
+            ) : null}
           </div>
         )}
       </section>
@@ -1025,7 +1063,7 @@ function Stat({
 }) {
   const inner = (
     <>
-      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">{label}</p>
+      <p className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">{label}</p>
       <p
         className="mt-1.5 text-[22px] font-semibold leading-none tracking-[-0.04em] tabular-nums text-black md:text-[26px]"
         style={color ? { color } : undefined}
@@ -1050,7 +1088,7 @@ function Stat({
 function Group({ label, children, wide }: { label: string; children: React.ReactNode; wide?: boolean }) {
   return (
     <div className={wide ? "lg:col-span-2" : undefined}>
-      <p className="mb-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">{label}</p>
+      <p className="mb-1.5 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">{label}</p>
       <div className="flex flex-wrap gap-1.5">{children}</div>
     </div>
   );
@@ -1244,13 +1282,13 @@ function ProjectRow({
               onClick={() => onPatch({ delivery_priority: !p.delivery_priority })}
               className={
                 p.delivery_priority
-                  ? "rounded-full border border-black px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em]"
-                  : "rounded-full border border-dashed border-[var(--border-1)] px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--fg-muted)]"
+                  ? "rounded-full border border-black px-2 py-0.5 font-mono text-[12px] uppercase tracking-[0.1em]"
+                  : "rounded-full border border-dashed border-[var(--border-1)] px-2 py-0.5 font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-muted)]"
               }
             >
               {p.delivery_priority ? "Prioridad" : "Priorizar"}
             </button>
-            <span className="rounded-full border border-[var(--border-1)] px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--fg-secondary)]">
+            <span className="rounded-full border border-[var(--border-1)] px-2 py-0.5 font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-secondary)]">
               {CATEGORY_LABELS[p.category] ?? p.category}
             </span>
           </div>
@@ -1276,7 +1314,7 @@ function ProjectRow({
               className="mt-2 ml-[15px] block max-w-full rounded-md border-l-2 border-black bg-white px-2.5 py-1.5 text-left text-[12px] leading-5 text-[var(--fg-secondary)]"
             >
               <span className="line-clamp-2">“{p.last_note.body}”</span>
-              <span className="mt-0.5 block font-mono text-[10px] text-[var(--fg-muted)]">
+              <span className="mt-0.5 block font-mono text-[12px] text-[var(--fg-muted)]">
                 {hace(p.last_note.created_at, now)} · {p.notes_count} comentario
                 {p.notes_count === 1 ? "" : "s"}
               </span>
@@ -1287,17 +1325,17 @@ function ProjectRow({
         {/* origen */}
         <div className="min-w-0 text-[12px]">
           {p.github_repo ? (
-            <span className="inline-flex max-w-full items-center gap-1.5 font-mono text-[11px] text-[var(--fg-secondary)]">
+            <span className="inline-flex max-w-full items-center gap-1.5 font-mono text-[12px] text-[var(--fg-secondary)]">
               <IconGithub size={12} className="shrink-0" />
               <span className="truncate">{p.github_repo}</span>
             </span>
           ) : (
-            <span className="font-mono text-[11px] text-[var(--fg-muted)]">Sin repositorio</span>
+            <span className="font-mono text-[12px] text-[var(--fg-muted)]">Sin repositorio</span>
           )}
           {p.domain || p.vercel_url ? (
-            <p className="mt-1 truncate font-mono text-[11px] text-[var(--fg-muted)]">{p.domain ?? p.vercel_url}</p>
+            <p className="mt-1 truncate font-mono text-[12px] text-[var(--fg-muted)]">{p.domain ?? p.vercel_url}</p>
           ) : null}
-          <p className="mt-1 text-[11px] text-[var(--fg-muted)]">
+          <p className="mt-1 text-[12px] text-[var(--fg-muted)]">
             {[p.github_language, (p.repository_count ?? 0) > 1 ? `${p.repository_count} repos` : null]
               .filter(Boolean)
               .join(" · ") || "—"}
@@ -1307,8 +1345,8 @@ function ProjectRow({
         {/* actividad */}
         <div className="text-[12px]">
           <p className="font-medium text-black">{lastMove ? hace(lastMove, now) : "Sin push"}</p>
-          <p className="text-[11px] text-[var(--fg-muted)]">último push</p>
-          <p className="mt-1.5 text-[11px] text-[var(--fg-muted)]">Alta {fecha(p.created_at)}</p>
+          <p className="text-[12px] text-[var(--fg-muted)]">último push</p>
+          <p className="mt-1.5 text-[12px] text-[var(--fg-muted)]">Alta {fecha(p.created_at)}</p>
         </div>
 
         {/* entrega y avance */}
@@ -1324,10 +1362,10 @@ function ProjectRow({
             <div className="h-1.5 w-full max-w-[100px] overflow-hidden rounded-full bg-black/10">
               <div className="h-full bg-black" style={{ width: `${pct}%` }} />
             </div>
-            <span className="font-mono text-[11px] tabular-nums">{pct}%</span>
+            <span className="font-mono text-[12px] tabular-nums">{pct}%</span>
           </div>
           {p.contract_amount ? (
-            <p className="mt-1.5 text-[11px] text-[var(--fg-secondary)]">
+            <p className="mt-1.5 text-[12px] text-[var(--fg-secondary)]">
               {mxn.format(p.contract_amount)}
               {debe > 0 ? (
                 <span style={{ color: C.ambar }}> · debe {mxn.format(debe)}</span>
@@ -1432,7 +1470,7 @@ function Detail({
 
   const field =
     "mt-1 w-full rounded-md border border-[var(--border-1)] bg-white px-3 py-2 text-[14px] text-black disabled:opacity-60";
-  const label = "font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--fg-muted)]";
+  const label = "font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]";
 
   return (
     <div className="grid gap-6 border-t border-[var(--border-1)] px-page-sm md:px-page-md pb-6 pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:px-page-lg">
@@ -1579,7 +1617,7 @@ function Detail({
             className="min-h-[64px] w-full resize-y bg-transparent px-1 py-1 text-[14px] text-black placeholder:text-[var(--fg-muted)]"
           />
           <div className="flex items-center justify-between gap-2 px-1">
-            <span className="text-[11px] text-[var(--fg-muted)]">Ctrl + Enter para guardar</span>
+            <span className="text-[12px] text-[var(--fg-muted)]">Ctrl + Enter para guardar</span>
             <button
               type="button"
               onClick={() => void addNote()}
@@ -1602,7 +1640,7 @@ function Detail({
             <li key={n.id} className="group rounded-md border border-[var(--border-1)] bg-white px-3 py-2">
               <p className="whitespace-pre-wrap text-[13px] leading-5 text-black">{n.body}</p>
               <div className="mt-1 flex items-center justify-between gap-2">
-                <span className="text-[11px] text-[var(--fg-muted)]">
+                <span className="text-[12px] text-[var(--fg-muted)]">
                   {fecha(n.created_at, true)} · {hace(n.created_at, now)}
                   {n.author_email ? ` · ${n.author_email.split("@")[0]}` : ""}
                 </span>

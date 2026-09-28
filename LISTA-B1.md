@@ -456,3 +456,83 @@ cada 16 ms = 1 frame, `med-b6-verif.json`).
   fuera de pantalla, así que la aparición por scroll queda en adorno. Es anterior a este barrido
   (antes pasaba a los 5.4 s, misma distancia del final del splash) y no es criterio del bloque 6.
   Se anota para el bloque 10.
+
+---
+
+## Bloque 7 · `/app/projects` en móvil
+
+Criterio: letra mínima 12 px (MUST-500 §144) y la lista paginada o virtualizada.
+
+**Cómo se midió.** `next dev` en `:3150` con `.env.nocl`. El catálogo se inyectó interceptando
+`**/api/projects` con Playwright: **339 proyectos `zz-prueba-*` fabricados en el script**, nunca
+escritos en la base ni en Clerk, con la misma forma que devuelve la API (categorías, avance, montos,
+repos, fechas). Scripts: `medir_projects.py` (medición) y `verif_projects.py` (el botón y el núcleo).
+Resultados: `med-b7-antes.json`, `med-b7-despues.json`, `med-b7-final.json`.
+
+- [x] **B7.1 — 4,588 textos por debajo de 12 px → 0.**
+  El brief hablaba de "más de 2,400"; medido en WebKit con el catálogo completo son **4,588** nodos de
+  texto con `font-size < 12px` (se cuentan los de las 339 filas, por eso sube). Tres fuentes, las tres
+  arregladas en su origen y no fila por fila:
+
+  | origen | antes | después |
+  |---|---|---|
+  | `text-[9px]` / `[10px]` / `[11px]` escritos a mano en `app/app/projects/page.tsx` | 9 px, 10 px, 11 px | **12 px** |
+  | token `label-caps` de `tailwind.config.ts` (lo usa todo el shell) | 11 px | **12 px** |
+  | clase `.mono-label` de `app/globals.css` | 10 px (`0.625rem`) | **12 px** (`0.75rem`) |
+
+  Quedaba un último rezagado fuera de la página: la pastilla "Sesión local" de `WorkspaceShell`
+  con `text-[9px]` → 12 px. Medición por pasos: **4,588 → 6 → 0** en 390 y en 1440.
+  `grep -noE 'text-\[(9|10|11)px\]' app/app/projects/page.tsx` → **0 coincidencias**.
+
+- [x] **B7.2 — 339 proyectos pintados de golpe → tandas de 40.**
+  Cada fila monta un `ProjectRow` completo (pastillas, barra de avance, acciones y, al abrirla, un
+  `Detail`). Medido a 390 px:
+
+  | | antes | después |
+  |---|---|---|
+  | filas pintadas | **339** | **40** |
+  | nodos del DOM | **13,266** | **1,775** (−87 %) |
+  | alto de la página (390) | **132,631 px** | **17,799 px** |
+  | alto de la página (1440) | 39,512 px | **5,915 px** |
+
+  Los filtros y el orden siguen actuando sobre **todo** el catálogo, no sobre lo que se ve: se pagina
+  al pintar, no al filtrar. Se eligió paginar y no virtualizar porque las filas se expanden a alturas
+  distintas (el `Detail` abierto), y una lista virtualizada con alturas variables habría roto el
+  acordeón que ya funciona (Doctrina §6.3: lo que llega funcionando no se toca).
+
+- [x] **B7.3 — El botón hace lo que dice y deja su consecuencia** (SANIDAD §0.2).
+  Verificado con `verif_projects.py` en WebKit 390:
+  - filas **40 → 80** al tocar "Ver 40 más";
+  - el contador dice la verdad: **"40 de 339 proyectos en pantalla" → "80 de 339"**, con `aria-live="polite"`;
+  - el botón mide **112 × 44 px** (MUST-500 §274: ≥ 44);
+  - al agotarse el catálogo el botón desaparece y queda "Se muestran los N proyectos" (sin botón muerto).
+
+- [x] **B7.4 — Al filtrar se vuelve a la primera tanda.**
+  Sin esto el usuario expandía a 80, buscaba, y seguía viendo la lista "expandida" de la búsqueda
+  anterior. Verificado: tras expandir a 80 y escribir en el buscador, **80 → 14 filas**.
+
+- [x] **B7.5 — Verificación.** `npx tsc --noEmit -p .` → **0 errores**.
+  `npm test` → **90 pruebas, 0 fallos**. Desborde horizontal de `/app/projects`: **0** a 390
+  (a 1440 da −8, que es el ancho de la barra de scroll, no un desborde).
+
+### De paso en el bloque 7
+
+- [x] **B7.6 — El `SplashScreen` del layout raíz podía quedarse pintado para siempre**
+  (MUST-500 §8, SANIDAD R-007). El efecto hacía `return` a media función cuando ya había marca en
+  `sessionStorage`, **antes** de programar el temporizador que retira la capa. En el camino en que
+  `setVisible(true)` ya había corrido (montaje doble del modo estricto, o una segunda pasada del
+  efecto), nadie volvía a apagarlo. Ahora se lee y se escribe el almacenamiento primero, se decide
+  después, y la limpieza del efecto siempre apaga la capa.
+
+### Pendientes detectados en el bloque 7 (entran al bloque 10)
+
+- [ ] La letra chica no es sólo de `/app/projects`. Medido en el núcleo con el mismo contador
+  (`verif_projects.py`), nodos con `font-size < 12px`:
+
+  | ruta | 390 | 1440 |
+  |---|---|---|
+  | /app/chat | **80** | **387** |
+  | /app/activity | **200** | **200** |
+  | /app/integrations | **37** | **37** |
+  | /app/setup | **8** | **8** |
+  | /app/projects · /app/tablero · /app/settings · /app/admin | 0 | 0 |

@@ -18,16 +18,25 @@ export default function SplashScreen() {
     // Se lee al montar, no con usePathname: el splash solo tiene sentido en la carga
     // inicial, y este componente vive en el layout raíz (no se vuelve a montar al navegar).
     if (CON_SPLASH_PROPIO.has(window.location.pathname)) return;
+
+    // Se lee y se escribe ANTES de decidir, y nunca se sale sin haber programado el
+    // temporizador: si se salía en medio (como antes), el efecto podía dejar la capa
+    // pintada para siempre. Un indicador de carga jamás se queda atorado (MUST-500 §8).
+    let yaVisto = false;
     try {
-      if (sessionStorage.getItem(SPLASH_KEY)) return;
-      sessionStorage.setItem(SPLASH_KEY, "1");
+      yaVisto = Boolean(sessionStorage.getItem(SPLASH_KEY));
+      if (!yaVisto) sessionStorage.setItem(SPLASH_KEY, "1");
     } catch {
       // El splash no depende del almacenamiento para funcionar.
     }
+    if (yaVisto) return;
 
     setVisible(true);
     const timer = window.setTimeout(() => setVisible(false), 560);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      setVisible(false);
+    };
   }, []);
 
   return (

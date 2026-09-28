@@ -297,7 +297,7 @@ function AccountMenu() {
 
   if (!clerkEnabled) {
     return (
-      <span className="rounded-full border border-[var(--border-1)] px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.12em]">
+      <span className="rounded-full border border-[var(--border-1)] px-3 py-1.5 font-mono text-[12px] uppercase tracking-[0.12em]">
         Sesión local
       </span>
     );
