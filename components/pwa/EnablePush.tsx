@@ -87,7 +87,7 @@ export function EnablePush({ compact = false }: { compact?: boolean }) {
 
   if (status === "unsupported") {
     return compact ? null : (
-      <p className="text-[11px] text-[var(--fg-muted)]">Push no soportado en este dispositivo.</p>
+      <p className="text-[12px] text-[var(--fg-muted)]">Push no soportado en este dispositivo.</p>
     );
   }
 
@@ -96,7 +96,7 @@ export function EnablePush({ compact = false }: { compact?: boolean }) {
       <div className={compact ? "" : "rounded-xl border border-[var(--border-1)] bg-[#f7f7f5] px-3 py-2"}>
         <p className="text-[12px] font-medium">Notificaciones activas</p>
         {!compact && message ? (
-          <p className="mt-0.5 text-[11px] text-[var(--fg-muted)]">{message}</p>
+          <p className="mt-0.5 text-[12px] text-[var(--fg-muted)]">{message}</p>
         ) : null}
       </div>
     );
@@ -104,7 +104,7 @@ export function EnablePush({ compact = false }: { compact?: boolean }) {
 
   if (status === "denied") {
     return (
-      <p className="text-[11px] text-[var(--fg-muted)]">
+      <p className="text-[12px] text-[var(--fg-muted)]">
         Notificaciones bloqueadas en el navegador. Actívalas en Ajustes del sitio.
       </p>
     );
@@ -117,16 +117,18 @@ export function EnablePush({ compact = false }: { compact?: boolean }) {
         onClick={() => void subscribe()}
         disabled={status === "loading"}
         className={
+          // MUST-500 §144 (nada por debajo de 14 px) y §274 (área táctil ≥44 px):
+          // la variante compacta medía 32 px de alto con letra de 10 px.
           compact
-            ? "btn-primary !min-h-8 w-auto shrink-0 justify-center px-3 text-[10px] disabled:opacity-50"
-            : "btn-primary !min-h-10 w-full justify-center text-[13px] disabled:opacity-50"
+            ? "btn-primary !min-h-11 w-auto shrink-0 justify-center px-3 text-[14px] disabled:opacity-50"
+            : "btn-primary !min-h-11 w-full justify-center text-[14px] disabled:opacity-50"
         }
       >
         {status === "loading" ? "Activando…" : compact ? "Activar" : "Activar avisos push"}
       </button>
-      {message ? <p className="mt-1 text-[11px] text-[var(--fg-muted)]">{message}</p> : null}
+      {message ? <p className="mt-1 text-[12px] text-[var(--fg-muted)]">{message}</p> : null}
       {status === "no_vapid" ? (
-        <p className="mt-1 text-[11px] text-[var(--fg-muted)]">
+        <p className="mt-1 text-[12px] text-[var(--fg-muted)]">
           Configura NEXT_PUBLIC_VAPID_PUBLIC_KEY y VAPID_PRIVATE_KEY en Vercel.
         </p>
       ) : null}

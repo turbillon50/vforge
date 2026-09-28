@@ -4,76 +4,94 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { EnablePush } from "@/components/pwa/EnablePush";
-const STUDIO_ROUTE = "/app/chat";
+
+const CLAVE_DESCARTE = "vforge_push_dismiss";
+const CLAVE_VISITAS = "vforge_push_visitas";
+/** MUST-500 §18: el aviso no aparece en la primera carga, solo después de
+ *  varias pantallas dentro de la app. */
+const VISITAS_MINIMAS = 3;
 
 /**
- * Banner flotante para activar push cuando hay sesión.
- * Solo se muestra en rutas /app* y si aún no está suscrito.
+ * Aviso para activar los avisos push del teléfono.
+ *
+ * NO flota: se pinta como una franja dentro del shell, debajo del encabezado.
+ * Antes era `position: fixed` abajo a la derecha y tapaba el compositor del
+ * Estudio, las tarjetas de Proyectos y el Tablero (MUST-500 §114). Al vivir en
+ * el flujo ya no hay nada que compensar con safe-area: el pie del shell sigue
+ * siendo el único dueño de `env(safe-area-inset-bottom)`.
+ *
+ * Al cerrarlo no vuelve: el descarte se guarda en localStorage, no en
+ * sessionStorage (antes reaparecía en cada pestaña nueva).
  */
 export function OwnerPushBanner() {
   const { isSignedIn, isLoaded } = useAuth();
   const pathname = usePathname() ?? "";
-  const isStudioRoute =
-    pathname === STUDIO_ROUTE || pathname.startsWith(STUDIO_ROUTE + "/");
-  const [dismissed, setDismissed] = useState(true);
-  const [mounted, setMounted] = useState(false);
+  const enApp = pathname.startsWith("/app");
+
+  const [descartado, setDescartado] = useState(true);
+  const [suficientesVisitas, setSuficientesVisitas] = useState(false);
+  const [soportado, setSoportado] = useState(false);
+  const [montado, setMontado] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    setMontado(true);
+    // Sin soporte de push la franja no tendría botón: no se pinta (MUST-500 §269).
+    setSoportado("serviceWorker" in navigator && "PushManager" in window);
     try {
-      if (sessionStorage.getItem("vforge_push_dismiss") === "1") {
-        setDismissed(true);
-        return;
-      }
+      if (localStorage.getItem(CLAVE_DESCARTE) === "1") return;
+    } catch {
+      /* almacenamiento bloqueado: mejor no insistir */
+      return;
+    }
+    setDescartado(false);
+  }, []);
+
+  // Cuenta pantallas vistas dentro de /app para no saltar en la primera carga.
+  useEffect(() => {
+    if (!enApp) return;
+    try {
+      const n = Number(localStorage.getItem(CLAVE_VISITAS) ?? "0") + 1;
+      localStorage.setItem(CLAVE_VISITAS, String(n));
+      setSuficientesVisitas(n >= VISITAS_MINIMAS);
     } catch {
       /* ignore */
     }
-    setDismissed(false);
-  }, []);
+  }, [enApp, pathname]);
 
   useEffect(() => {
-    if (!mounted || !isLoaded || !isSignedIn) return;
-    if (typeof window === "undefined") return;
-    if (!window.location.pathname.startsWith("/app")) {
-      setDismissed(true);
-      return;
-    }
-    // Si ya hay suscripción, no molestar
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    if (!montado || !isLoaded || !isSignedIn || !soportado) return;
+    // Si ya hay suscripción, no molestar.
     navigator.serviceWorker.ready
       .then((reg) => reg.pushManager.getSubscription())
       .then((sub) => {
-        if (sub) setDismissed(true);
+        if (sub) setDescartado(true);
       })
       .catch(() => {});
-  }, [mounted, isLoaded, isSignedIn]);
+  }, [montado, isLoaded, isSignedIn, soportado]);
 
-  if (!mounted || !isLoaded || !isSignedIn || dismissed) return null;
+  if (!montado || !isLoaded || !isSignedIn) return null;
+  if (!enApp || !soportado || descartado || !suficientesVisitas) return null;
 
   return (
     <div
-      className={`fixed right-2 z-40 flex w-[calc(100%-1rem)] max-w-[360px] items-center gap-2 rounded-xl border border-black bg-white p-2 shadow-[0_12px_32px_rgba(0,0,0,0.12)] sm:right-4 sm:w-auto sm:min-w-[320px] ${
-        isStudioRoute
-          ? "bottom-[calc(8rem+env(safe-area-inset-bottom,0px))] md:bottom-14"
-          : "bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:bottom-4"
-      }`}
+      className="flex shrink-0 items-center gap-3 border-b border-[var(--border-1)] bg-[#f7f7f5] px-page-sm py-2 md:px-page-md xl:px-page-lg"
       role="status"
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[11px] font-medium">Avisos en el teléfono</p>
-        <p className="hidden text-[9px] leading-4 text-[var(--fg-muted)] sm:block">
+        <p className="truncate text-[13px] font-medium">Avisos en el teléfono</p>
+        <p className="truncate text-[12px] text-[var(--fg-muted)]">
           Mensajes de clientes y salas, al momento.
         </p>
       </div>
       <EnablePush compact />
       <button
         type="button"
-        className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[var(--border-1)] text-[12px]"
-        aria-label="Cerrar avisos"
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-md border border-[var(--border-1)] text-[16px] leading-none"
+        aria-label="Cerrar aviso de notificaciones"
         onClick={() => {
-          setDismissed(true);
+          setDescartado(true);
           try {
-            sessionStorage.setItem("vforge_push_dismiss", "1");
+            localStorage.setItem(CLAVE_DESCARTE, "1");
           } catch {
             /* ignore */
           }

@@ -180,3 +180,94 @@ Playwright (`page.route`), nunca escribiendo en la base ni en Clerk.
   que usa `<main>`. Medido: `scrollHeight` 975 → **845** con `innerHeight` 844.
 
 - [x] **B2.6 — Verificación.** `npx tsc --noEmit -p .` → 0 errores. `npm test` → **90 pruebas, 0 fallos**.
+
+---
+
+## Bloque 4 · El aviso "Avisos en el teléfono"
+
+Criterio: que no tape nada, que al cerrarlo no vuelva, safe-area en móvil.
+Capturas de `/app/chat`, `/app/projects` y `/app/tablero` a 390 y 1440.
+
+**Cómo se midió.** Con el `next dev` en `:3150` y el entorno sin llaves de Clerk
+(`.env.nocl`), que es lo que deja renderizar `/app/*` en local. Para que el aviso se
+pintara en WebKit headless se sustituyeron **solo dos capacidades del entorno** que ahí no
+existen —la sesión de Clerk y `PushManager`—; la lógica de descarte y el conteo de visitas
+se probaron **sin tocar**. El parche se revirtió antes de commitear
+(`grep -rn FORZADO components/ app/ lib/` → 0 coincidencias en código de la app).
+Scripts: `/root/vulcano-audit/vforge-rescate/medir_push.py` y `verif_push.py`.
+
+- [x] **B4.1 — Dejó de flotar: ahora es una franja del shell.**
+  Era un `position: fixed` abajo a la derecha, montado desde `app/layout.tsx` sobre TODA la
+  app. Ahora vive dentro de `WorkspaceShell`, entre el encabezado y `<main>`, en el flujo
+  normal. En el Estudio el contenedor pasó a `flex flex-col` y `<main>` a `min-h-0 flex-1`,
+  así que el Estudio **se encoge solo** en vez de quedar tapado.
+  Medición (rejilla de puntos dentro de la caja del aviso; `elementsFromPoint` dice qué
+  queda debajo):
+
+  | ruta | vista | antes: posición | antes: área tapada | después: posición | después: área tapada |
+  |---|---|---|---|---|---|
+  | /app/chat | 390 | `fixed` | **2,752 px²** (el compositor) | `static` | **0** |
+  | /app/projects | 390 | `fixed` | 0 | `static` | **0** |
+  | /app/tablero | 390 | `fixed` | 0 | `static` | **0** |
+  | /app/chat | 1440 | `fixed` | 0 | `static` | **0** |
+  | /app/projects | 1440 | `fixed` | **1,920 px²** (el pie) | `static` | **0** |
+  | /app/tablero | 1440 | `fixed` | **1,920 px²** (el pie) | `static` | **0** |
+
+  El solape contra `<main>` pasó de **50–51 px** a **0** en las 6 medidas.
+  En la captura de antes (`cap-b4-antes/390-app_chat.png`) se ve el aviso partiendo por la
+  mitad el texto del compositor ("Crea o selecciona un proyecto para trabajar con
+  contexto…"); en la de después (`cap-b4-despues/390-app_chat.png`) el compositor se lee
+  completo. Archivos: `cap-b4-antes/` y `cap-b4-despues/`, 6 capturas cada uno, miradas.
+
+- [x] **B4.2 — Al cerrarlo ya no vuelve.** Guardaba el descarte en `sessionStorage`, que es
+  **por pestaña**: abrir una pestaña nueva lo resucitaba. Ahora es `localStorage`.
+  Verificado (`verif_push.py`): desaparece al tocar Cerrar · sigue cerrado al recargar ·
+  sigue cerrado al navegar a las 3 rutas · **sigue cerrado en una pestaña nueva**.
+
+- [x] **B4.3 — Ya no salta en la primera carga** (MUST-500 §18). Antes aparecía en cuanto
+  había sesión. Ahora cuenta pantallas de `/app` y sale a partir de la **3.ª**.
+  Medido: visita 1 → oculto · visita 2 → oculto · visita 3 → visible.
+  **Contraprueba del verde** (SANIDAD §0.5): en un perfil limpio la prueba confirma que a la
+  3.ª visita **sí** aparece, así que no es un falso verde por estar siempre oculto.
+
+- [x] **B4.4 — Nunca pide el permiso de notificaciones solo** (MUST-500 §19).
+  Medido interceptando `Notification.requestPermission`: **0 llamadas** sin que el usuario
+  toque "Activar".
+
+- [x] **B4.5 — Si el dispositivo no soporta push, la franja ya no se pinta.**
+  Antes se mostraba el aviso y `EnablePush` devolvía `null` en su variante compacta: una
+  franja con título y una × y **ningún botón que hiciera algo** (MUST-500 §269, SANIDAD
+  "botón muerto"). Ahora el propio aviso comprueba `serviceWorker` + `PushManager`.
+  Se vio en la medición: WebKit headless no expone `PushManager` y la franja no apareció.
+
+- [x] **B4.6 — Letra y área táctil dentro de norma.** La franja tenía título de **11 px** y
+  subtítulo de **9 px** (este último escondido en móvil, así que en el celular el aviso no
+  explicaba nada). Ahora 13 px y 12 px, visibles en las dos vistas.
+  El botón de cerrar medía **32×32 px** → ahora **44×44** (MUST-500 §274), medido en las 6
+  corridas. El botón "Activar" de `EnablePush` compacto tenía letra de **10 px** y 32 px de
+  alto → **14 px** y 44 px (MUST-500 §144 y §274); los textos de 11 px del mismo componente
+  pasaron a 12 px.
+
+- [x] **B4.7 — Safe-area.** Al estar en el flujo y arriba, el aviso ya no compite por
+  `env(safe-area-inset-bottom)`: el único dueño vuelve a ser el pie del shell. Antes el
+  aviso lo sumaba por su cuenta (`bottom-[calc(8rem+env(...))]`) y aun así se encimaba.
+
+- [x] **B4.8 — Verificación.** `npx tsc --noEmit -p .` → 0 errores.
+  `npm test` → **90 pruebas, 0 fallos**. Desborde horizontal: 0 en las 6 medidas.
+
+### De paso en el bloque 4
+
+- [x] **B4.9 — `.env.nocl` traía secretos reales y NO estaba ignorado por git.**
+  `.gitignore` sólo tenía `.env*.local`, que no cubre `.env.nocl` (ni `.env.produccion`).
+  El archivo tiene 69 claves reales bajadas de Vercel (`STRIPE_SECRET_KEY`, `BRAIN_SECRET`,
+  `CLERK_*`, `GITHUB_TOKEN`…). Ahora la regla es `.env` + `.env.*` con `!.env.example`.
+  Doctrina §6.9. No llegó a subirse: estaba sin rastrear.
+
+### Pendiente detectado en el bloque 4 (se atiende en el bloque 10)
+
+- [ ] `/app/tablero` muestra el error crudo del sistema al usuario:
+  **"No pude leer el servidor — The string did not match the expected pattern."**
+  Mensaje técnico y en inglés (MUST-500 §236 y §358), sin botón de reintentar.
+  Visto en `cap-b4-despues/1440-app_tablero.png`.
+- [ ] `/app/projects` muestra "Tu sesión no está autorizada para ver el catálogo." con un
+  enlace "Volver a intentar" que no es un botón. Revisar en el bloque 10.

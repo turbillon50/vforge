@@ -4,7 +4,6 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { ClerkShell } from "@/components/auth/ClerkShell";
 import { RegisterSW } from "@/components/pwa/RegisterSW";
-import { OwnerPushBanner } from "@/components/pwa/OwnerPushBanner";
 import { AppProviders } from "@/i18n/AppProviders";
 import SplashScreen from "@/components/SplashScreen";
 import { LimiteDeError } from "@/components/system/LimiteDeError";
@@ -60,12 +59,7 @@ export default function RootLayout({
           <SplashScreen />
         </LimiteDeError>
         <AppProviders>
-          <ClerkShell>
-            {children}
-            <LimiteDeError nombre="OwnerPushBanner">
-              <OwnerPushBanner />
-            </LimiteDeError>
-          </ClerkShell>
+          <ClerkShell>{children}</ClerkShell>
         </AppProviders>
         <LimiteDeError nombre="RegisterSW">
           <RegisterSW />

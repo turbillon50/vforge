@@ -26,8 +26,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
+# local env files — cualquier .env con valores reales.
+# OJO: `.env*.local` NO cubre archivos de trabajo como `.env.nocl`, que sí
+# traen secretos reales bajados de Vercel. Se ignora todo salvo el ejemplo.
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel

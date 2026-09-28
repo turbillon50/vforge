@@ -21,6 +21,8 @@ import {
 import { monochromeClerkAppearance } from "@/components/auth/ClerkShell";
 import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
 import { ConnectionGate } from "@/components/workspace/ConnectionGate";
+import { OwnerPushBanner } from "@/components/pwa/OwnerPushBanner";
+import { LimiteDeError } from "@/components/system/LimiteDeError";
 
 type IconComponent = (props: {
   size?: number;
@@ -228,7 +230,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         <div
           className={cn(
             "md:pl-[248px]",
-            isStudio ? "h-full overflow-hidden" : "min-h-svh",
+            isStudio ? "flex h-full flex-col overflow-hidden" : "min-h-svh",
           )}
         >
           <header
@@ -260,10 +262,17 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
+          {/* El aviso de push vive AQUÍ, en el flujo, no flotando encima del
+              contenido. Al ser una franja del shell, el Estudio se encoge solo
+              (main es flex-1) y nunca queda nada tapado. */}
+          <LimiteDeError nombre="OwnerPushBanner">
+            <OwnerPushBanner />
+          </LimiteDeError>
+
           <main
             className={cn(
               isStudio
-                ? "h-[calc(100svh-58px)] overflow-hidden lg:h-[calc(100dvh-58px)]"
+                ? "min-h-0 flex-1 overflow-hidden"
                 : "min-h-[calc(100svh-58px-72px)]",
             )}
           >
