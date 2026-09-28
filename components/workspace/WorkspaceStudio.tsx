@@ -1,5 +1,16 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
+
+/** Paneles del Estudio. En escritorio (≥1024 px) se ven los tres a la vez, como
+ *  siempre. Por debajo de 1024 px solo cabe uno: se eligen con pestañas. */
+type PanelMovil = "chat" | "vista" | "archivos";
+
+const PANELES: [PanelMovil, string][] = [
+  ["chat", "Chat"],
+  ["vista", "Vista"],
+  ["archivos", "Archivos"],
+];
 
 type App = {
   id: string;
@@ -14,6 +25,7 @@ export function WorkspaceStudio() {
   // Layout state
   const [leftW, setLeftW] = useState(300);
   const [rightW, setRightW] = useState(300);
+  const [panelMovil, setPanelMovil] = useState<PanelMovil>("chat");
   const drag = useRef<null | "left" | "right">(null);
 
   useEffect(() => {
@@ -62,7 +74,7 @@ export function WorkspaceStudio() {
   ]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const endRef = useRef<HTMLDivElement>(null);
+  const feedRef = useRef<HTMLDivElement>(null);
 
   // Initial load
   useEffect(() => {
@@ -95,6 +107,9 @@ export function WorkspaceStudio() {
   const openFile = (path: string) => {
     if (!active?.id) return;
     setTab("codigo");
+    // En móvil el archivo se abre en el panel central: si no cambiamos de
+    // pestaña, tocar un archivo desde "Archivos" no haría nada visible.
+    setPanelMovil("vista");
     fetch(
       "/api/forja/app-files?app=" +
         active.id +
@@ -149,9 +164,12 @@ export function WorkspaceStudio() {
     setDeploying(false);
   };
 
-  // Chat helpers
+  // Chat helpers. SANIDAD R-006: el scroll programático va DENTRO de su
+  // contenedor. `scrollIntoView` movía la página entera (también en horizontal).
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    const feed = feedRef.current;
+    if (!feed) return;
+    feed.scrollTo({ top: feed.scrollHeight, behavior: "smooth" });
   }, [msgs, busy]);
 
   const send = async () => {
@@ -185,18 +203,55 @@ export function WorkspaceStudio() {
     }
   };
 
+  // El tirador de ancho es de ratón: por debajo de 1024 px no hay columnas que
+  // redimensionar, así que no se pinta (antes decía "Resize left pane", en
+  // inglés — MUST-500 §358).
   const Handle = ({ side }: { side: "left" | "right" }) => (
     <div
       onMouseDown={() => (drag.current = side)}
-      className="w-1.5 cursor-col-resize bg-[var(--border-1)] hover:bg-[var(--border-1)]/70 transition-colors"
-      aria-label={`Resize ${side} pane`}
+      className="hidden w-1.5 cursor-col-resize bg-[var(--border-1)] transition-colors hover:bg-[var(--border-1)]/70 lg:block"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={
+        side === "left" ? "Ancho del panel de chat" : "Ancho del panel de archivos"
+      }
     />
+  );
+
+  // Las 4 vistas del panel central. En escritorio viven en la barra superior,
+  // como siempre; en móvil se pintan dentro del propio panel "Vista", porque
+  // allá arriba no caben (se salían hasta x=683 en una pantalla de 390).
+  const NavVistas = ({ className }: { className?: string }) => (
+    <nav className={cn("flex gap-2", className)} aria-label="Vista del panel central">
+      {(
+        [
+          ["preview", "Preview"],
+          ["codigo", "Código"],
+          ["consola", "Consola"],
+          ["detalles", "Detalles"],
+        ] as const
+      ).map(([k, l]) => (
+        <button
+          key={k}
+          onClick={() => setTab(k)}
+          aria-pressed={tab === k}
+          className={`min-h-11 rounded border border-[var(--border-1)] px-3 text-sm ${
+            tab === k
+              ? "bg-black text-white"
+              : "bg-[var(--color-surface)] text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
+          }`}
+        >
+          {l}
+        </button>
+      ))}
+    </nav>
   );
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-[var(--color-background)] text-[var(--color-ink)]">
-      {/* Toolbar */}
-      <header className="flex h-14 items-center gap-4 border-b border-[var(--border-1)] px-4 bg-[var(--color-surface)]">
+      {/* Toolbar. En móvil envuelve en varias filas en vez de salirse de la
+          pantalla; en ≥1024 px sigue siendo la misma fila de 56 px de siempre. */}
+      <header className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--border-1)] bg-[var(--color-surface)] px-4 py-2 lg:h-14 lg:flex-nowrap lg:gap-4 lg:py-0">
         <h1 className="text-lg font-medium">Estudio VForge</h1>
         <select
           aria-label="Seleccionar aplicación"
@@ -204,7 +259,7 @@ export function WorkspaceStudio() {
           onChange={(e) =>
             setActive(apps.find((a) => a.id === e.target.value) || null)
           }
-          className="rounded border border-[var(--border-1)] bg-[var(--color-surface)] px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+          className="min-h-11 min-w-0 flex-1 rounded border border-[var(--border-1)] bg-[var(--color-surface)] px-2 text-base focus:outline-none focus:ring-2 focus:ring-black lg:flex-none lg:text-sm"
         >
           {apps.length === 0 && <option value="">Sin apps</option>}
           {apps.map((a) => (
@@ -214,33 +269,12 @@ export function WorkspaceStudio() {
           ))}
         </select>
 
-        <nav className="flex gap-2">
-          {(
-            [
-              ["preview", "Preview"],
-              ["codigo", "Código"],
-              ["consola", "Consola"],
-              ["detalles", "Detalles"],
-            ] as const
-          ).map(([k, l]) => (
-            <button
-              key={k}
-              onClick={() => setTab(k)}
-              className={`px-3 py-1 text-sm rounded border border-[var(--border-1)] ${
-                tab === k
-                  ? "bg-black text-white"
-                  : "bg-[var(--color-surface)] text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
-              }`}
-            >
-              {l}
-            </button>
-          ))}
-        </nav>
+        <NavVistas className="hidden lg:flex" />
 
         <button
           onClick={deploy}
           disabled={!active || deploying}
-          className={`ml-auto px-3 py-1 text-sm rounded ${
+          className={`ml-auto min-h-11 rounded px-3 text-sm ${
             deploying ? "bg-black opacity-55" : "bg-black"
           } text-white disabled:opacity-50`}
         >
@@ -249,7 +283,7 @@ export function WorkspaceStudio() {
 
         {depMsg && (
           <span
-            className="ml-2 text-sm"
+            className="ml-2 w-full text-sm lg:w-auto"
             style={{
               color: depMsg.startsWith("Error") ? "#fca5a5" : "#86efac",
             }}
@@ -259,12 +293,45 @@ export function WorkspaceStudio() {
         )}
       </header>
 
+      {/* Pestañas de móvil: Chat / Vista / Archivos. Solo por debajo de 1024 px,
+          donde no caben las tres columnas. */}
+      <div
+        role="tablist"
+        aria-label="Paneles del Estudio"
+        className="flex shrink-0 border-b border-[var(--border-1)] bg-[var(--color-surface)] lg:hidden"
+      >
+        {PANELES.map(([k, l]) => (
+          <button
+            key={k}
+            role="tab"
+            id={`zz-tab-${k}`}
+            aria-selected={panelMovil === k}
+            aria-controls={`panel-${k}`}
+            onClick={() => setPanelMovil(k)}
+            className={cn(
+              "min-h-11 flex-1 border-b-2 px-2 text-sm font-medium transition-colors",
+              panelMovil === k
+                ? "border-black text-[var(--color-ink)]"
+                : "border-transparent text-[var(--fg-muted)]",
+            )}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+
       {/* Main area */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Chat panel */}
+        {/* Chat panel. El ancho arrastrable se pasa como variable CSS y solo se
+            aplica en ≥1024 px; en móvil el panel ocupa el ancho completo. */}
         <aside
-          style={{ width: leftW }}
-          className="flex shrink-0 flex-col border-r border-[var(--border-1)] bg-[var(--color-surface)]"
+          id="panel-chat"
+          aria-labelledby="zz-tab-chat"
+          style={{ ["--pane-w" as string]: `${leftW}px` }}
+          className={cn(
+            "w-full shrink-0 flex-col border-r border-[var(--border-1)] bg-[var(--color-surface)] lg:flex lg:w-[var(--pane-w)]",
+            panelMovil === "chat" ? "flex" : "hidden",
+          )}
         >
           <div className="flex items-center gap-2 border-b border-[var(--border-1)] px-3 py-2">
             <span className="h-6 w-6 flex items-center justify-center rounded bg-black text-sm font-semibold text-white">
@@ -272,7 +339,10 @@ export function WorkspaceStudio() {
             </span>
             <span className="text-sm font-medium">Asistente V</span>
           </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          <div
+            ref={feedRef}
+            className="flex-1 space-y-3 overflow-y-auto overscroll-contain p-3"
+          >
             {msgs.map((m, i) => (
               <div
                 key={i}
@@ -296,23 +366,24 @@ export function WorkspaceStudio() {
                 V está procesando…
               </p>
             )}
-            <div ref={endRef} />
           </div>
           <div className="flex gap-2 border-t border-[var(--border-1)] p-3">
+            {/* 16 px en móvil: por debajo, iOS hace zoom al enfocar (MUST-500 §145). */}
             <input
               aria-label="Mensaje al asistente"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send()}
               placeholder="Escribe tu mensaje..."
-              className="flex-1 rounded border border-[var(--border-1)] bg-[var(--color-surface)] px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              className="min-h-11 min-w-0 flex-1 rounded border border-[var(--border-1)] bg-[var(--color-surface)] px-3 text-base focus:outline-none focus:ring-2 focus:ring-black lg:text-sm"
             />
             <button
               onClick={send}
               disabled={busy || !input.trim()}
-              className="px-3 py-1 rounded bg-black text-white disabled:opacity-50"
+              aria-label="Enviar mensaje"
+              className="min-h-11 shrink-0 rounded bg-black px-4 text-white disabled:opacity-50"
             >
-              ►
+              <span aria-hidden="true">►</span>
             </button>
           </div>
         </aside>
@@ -320,11 +391,22 @@ export function WorkspaceStudio() {
         <Handle side="left" />
 
         {/* Central content */}
-        <section className="flex flex-1 flex-col min-w-0 overflow-hidden">
-          <div className="flex items-center gap-2 border-b border-[var(--border-1)] px-3 py-2 bg-[var(--color-surface)]">
+        <section
+          id="panel-vista"
+          aria-labelledby="zz-tab-vista"
+          className={cn(
+            "w-full min-w-0 flex-1 flex-col overflow-hidden lg:flex",
+            panelMovil === "vista" ? "flex" : "hidden",
+          )}
+        >
+          <div className="flex flex-wrap items-center gap-2 border-b border-[var(--border-1)] bg-[var(--color-surface)] px-3 py-2">
+            {/* En móvil las 4 vistas viven aquí, dentro de su propio panel. */}
+            <NavVistas className="w-full flex-wrap lg:hidden" />
+            {/* Partir 390 px en dos mitades de 195 no sirve de nada: el botón
+                de dividir es de escritorio. */}
             <button
               onClick={() => setSplit((s) => !s)}
-              className="ml-auto px-3 py-1 text-sm rounded bg-[var(--color-surface)] border border-[var(--border-1)] text-[var(--color-ink)]"
+              className="ml-auto hidden min-h-11 rounded border border-[var(--border-1)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-ink)] lg:block"
             >
               {split ? "Unir" : "Dividir"}
             </button>
@@ -332,8 +414,8 @@ export function WorkspaceStudio() {
               <a
                 href={active.deploy_url}
                 target="_blank"
-                rel="noreferrer"
-                className="rounded px-3 py-1 text-sm border border-[var(--border-1)] text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
+                rel="noopener noreferrer"
+                className="grid min-h-11 place-items-center rounded border border-[var(--border-1)] px-3 text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
               >
                 Abrir preview
               </a>
@@ -342,7 +424,7 @@ export function WorkspaceStudio() {
 
           <div className="flex flex-1 min-h-0 overflow-hidden">
             {split && (
-              <div className="w-1/2 border-r border-[var(--border-1)] overflow-auto bg-white">
+              <div className="hidden w-1/2 overflow-auto border-r border-[var(--border-1)] bg-white lg:block">
                 {active?.deploy_url ? (
                   <iframe
                     title="preview-2"
@@ -374,7 +456,7 @@ export function WorkspaceStudio() {
                     <p>Aún no hay aplicación para previsualizar.</p>
                     <a
                       href="/workspace#create-app"
-                      className="mt-3 rounded px-4 py-2 bg-[var(--color-surface)] text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
+                      className="mt-3 grid min-h-11 place-items-center rounded border border-[var(--border-1)] bg-[var(--color-surface)] px-4 text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
                     >
                       Crear una app
                     </a>
@@ -391,7 +473,7 @@ export function WorkspaceStudio() {
                         <button
                           onClick={saveFile}
                           disabled={saving}
-                          className="px-3 py-1 rounded bg-black text-sm text-white disabled:opacity-50"
+                          className="min-h-11 shrink-0 rounded bg-black px-3 text-sm text-white disabled:opacity-50"
                         >
                           {saving ? "Guardando…" : "Guardar"}
                         </button>
@@ -435,8 +517,8 @@ export function WorkspaceStudio() {
                       <a
                         href={active.deploy_url}
                         target="_blank"
-                        rel="noreferrer"
-                        className="px-3 py-1 rounded bg-[var(--color-surface)] text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
+                        rel="noopener noreferrer"
+                        className="grid min-h-11 place-items-center rounded border border-[var(--border-1)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
                       >
                         En vivo
                       </a>
@@ -445,8 +527,8 @@ export function WorkspaceStudio() {
                       <a
                         href={active.repo_url}
                         target="_blank"
-                        rel="noreferrer"
-                        className="px-3 py-1 rounded border border-[var(--border-1)] text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
+                        rel="noopener noreferrer"
+                        className="grid min-h-11 place-items-center rounded border border-[var(--border-1)] px-3 text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
                       >
                         Repositorio
                       </a>
@@ -462,8 +544,15 @@ export function WorkspaceStudio() {
 
         {/* Files & apps side panel */}
         <aside
-          style={{ width: rightW }}
-          className="flex shrink-0 flex-col border-l border-[var(--border-1)] bg-[var(--color-surface)]"
+          id="panel-archivos"
+          aria-labelledby="zz-tab-archivos"
+          style={{ ["--pane-w" as string]: `${rightW}px` }}
+          className={cn(
+            // Sin overflow propio: las tres secciones de dentro ya son las que
+            // hacen scroll (evita la doble barra que tenía /lab, B2.5).
+            "w-full shrink-0 flex-col border-l border-[var(--border-1)] bg-[var(--color-surface)] lg:flex lg:w-[var(--pane-w)]",
+            panelMovil === "archivos" ? "flex" : "hidden",
+          )}
         >
           <div className="px-3 py-2 border-b border-[var(--border-1)] font-medium text-[var(--color-ink)]">
             Archivos
@@ -483,7 +572,7 @@ export function WorkspaceStudio() {
               <button
                 key={f.path}
                 onClick={() => f.type === "file" && openFile(f.path)}
-                className="block w-full text-left truncate rounded px-2 py-1 text-sm font-mono text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
+                className="block min-h-11 w-full truncate rounded px-2 text-left font-mono text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
               >
                 {f.type === "dir" ? "📁 " : ""}
                 {f.name}
@@ -504,7 +593,7 @@ export function WorkspaceStudio() {
               <button
                 key={a.id}
                 onClick={() => setActive(a)}
-                className={`block w-full text-left rounded px-2 py-1 text-sm ${
+                className={`block min-h-11 w-full rounded px-2 text-left text-sm ${
                   active?.id === a.id
                     ? "bg-black text-white"
                     : "text-[var(--color-ink)] hover:bg-[var(--color-surface)]/80"
@@ -537,7 +626,7 @@ export function WorkspaceStudio() {
             ))}
             <a
               href="/workspace/conexiones"
-              className="block mt-1 text-sm text-[var(--color-ink)] hover:underline"
+              className="mt-1 flex min-h-11 items-center px-2 text-sm text-[var(--color-ink)] hover:underline"
             >
               Gestionar conexiones
             </a>

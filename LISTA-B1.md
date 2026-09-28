@@ -271,3 +271,86 @@ Scripts: `/root/vulcano-audit/vforge-rescate/medir_push.py` y `verif_push.py`.
   Visto en `cap-b4-despues/1440-app_tablero.png`.
 - [ ] `/app/projects` muestra "Tu sesión no está autorizada para ver el catálogo." con un
   enlace "Volver a intentar" que no es un botón. Revisar en el bloque 10.
+
+---
+
+## Bloque 5 · `/workspace/studio` en móvil
+
+Criterio: en móvil una columna con pestañas (Chat / Vista / Archivos). Escritorio igual que hoy.
+
+**Cómo se probó.** `ClientShell` usa `useUser()` de Clerk y en local revienta ("Esta vista del
+workspace falló"), así que se montó una ruta espejo desechable `app/zz-prueba-studio` que
+renderiza `<WorkspaceStudio />` con la misma altura que le da el shell real. Los datos
+(`/api/forja/apps`, `/api/forja/app-files`, `/api/onboarding/status`) se inyectaron
+interceptando la red con Playwright, nunca escribiendo en la base ni en Clerk. La ruta se
+**borró antes de commitear** (`grep -rn zz-prueba app/ components/ lib/` → 0).
+Script: `/root/vulcano-audit/vforge-rescate/medir_studio.py`.
+
+- [x] **B5.1 — En móvil el panel central medía 0 px de ancho: la vista previa no existía.**
+  Las tres columnas son `300 px + centro + 300 px`; a 390 px las dos laterales se comían la
+  pantalla entera y el centro quedaba en **0**. Medido:
+
+  | | 390 antes | 390 después | 1440 antes | 1440 después |
+  |---|---|---|---|---|
+  | panel Chat | 300 | **390** | 300 | 300 |
+  | panel central | **0** | **390** (pestaña Vista) | 828 | 828 |
+  | panel Archivos | 300 | **390** (pestaña Archivos) | 300 | 300 |
+  | paneles visibles | 2 (uno vacío) | **1** | 3 | **3** |
+
+  **El escritorio quedó idéntico: 300 / 828 / 300 antes y después**, y la barra de pestañas
+  no se pinta (altura 0 a 1440). Capturas: `cap-b5-antes/390-studio.png`,
+  `cap-b5-despues/390-studio.png`, `cap-b5-despues/1440-studio-verif.png`.
+
+- [x] **B5.2 — 18 elementos cortados → 0.** El desborde no salía en `scrollWidth` porque los
+  contenedores lo recortaban con `overflow:hidden`: la página no se corría de lado, el
+  contenido simplemente **se cortaba**. Medido buscando cajas de texto que se salen de su
+  contenedor recortante. A 390 px: "Código" terminaba en x=426, "Consola" en 512,
+  "Detalles" en 598, "Deploy" en 683 y el panel "Archivos" en 600, todos contra un límite de
+  390. Ahora **0 cortados** a 390 y a 1440.
+
+- [x] **B5.3 — Pestañas Chat / Vista / Archivos por debajo de 1024 px.**
+  `role="tablist"` con `aria-selected` y `aria-controls` (MUST-500 §293). Verificado: arranca
+  en Chat con un solo panel visible; al tocar cada pestaña **solo** su panel mide > 0 px y su
+  `aria-selected` pasa a `true`; a 1440 la barra no se pinta y los 3 paneles siguen visibles.
+  El ancho arrastrable de escritorio pasó de `style={{width}}` a una variable CSS aplicada
+  solo en `lg:`, para que móvil use el ancho completo sin tocar el comportamiento de ratón.
+
+- [x] **B5.4 — Tocar un archivo en móvil no hacía nada visible.** "Archivos" abría el fichero
+  en el panel central… que en móvil estaba oculto (SANIDAD: `MUERTO`). Ahora `openFile`
+  también cambia a la pestaña **Vista**. Verificado: tras tocar `package.json` el panel Vista
+  mide > 0.
+
+- [x] **B5.5 — Las 4 vistas (Preview/Código/Consola/Detalles) se salían de la barra superior.**
+  En móvil se pintan dentro del propio panel "Vista", que es a lo que pertenecen; en
+  escritorio siguen en la barra de arriba, igual que hoy. La barra superior ahora envuelve en
+  varias filas en móvil y conserva su fila única de 56 px en `lg:`.
+
+- [x] **B5.6 — 15 controles por debajo de 44 px → 0** (MUST-500 §274). Eran de 28–38 px:
+  el selector de app (38), las 4 pestañas de vista (30), Deploy (28), el campo de mensaje (31)
+  y el botón de enviar (31), más los de archivos y apps. Medido a 390 y 1440: **0 controles
+  por debajo de 44 px** en las dos vistas.
+
+- [x] **B5.7 — Los campos hacían zoom en iOS.** El campo de mensaje y el selector median
+  **14 px**; por debajo de 16 px Safari hace zoom al enfocar (MUST-500 §145).
+  Medido: `inputFont` 14 → **16** en móvil (en escritorio se queda en 14, donde no aplica).
+
+- [x] **B5.8 — El chat corría la página entera** (SANIDAD R-006, el mismo bug que `/lab`).
+  `endRef.current.scrollIntoView()` mueve el documento completo. Ahora el scroll es
+  `feed.scrollTo()` dentro del contenedor, con `overscroll-contain`.
+
+- [x] **B5.9 — Botones sin nombre accesible y textos en inglés.** El botón de enviar era solo
+  "►" sin `aria-label` (MUST-500 §282); los tiradores de ancho decían "Resize left pane" en
+  inglés (§358) y eran `div` con `onMouseDown` sin rol (§281) → ahora `role="separator"` con
+  etiqueta en español, y ocultos en móvil, donde no hay columnas que redimensionar.
+  Los `target="_blank"` pasaron de `rel="noreferrer"` a `rel="noopener noreferrer"` (§91).
+
+- [x] **B5.10 — Verificación.** `npx tsc --noEmit -p .` → 0 errores.
+  `npm test` → **90 pruebas, 0 fallos**. Desborde 0 a 390 y 1440.
+
+### Pendiente detectado en el bloque 5 (se atiende en el bloque 8/10)
+
+- [ ] El estado de las conexiones se pinta con un verde genérico `#86efac` sobre blanco
+  (≈1.6:1 de contraste, ilegible) y el "-" de no conectado con `rgba(0,0,0,0.35)`.
+  Fuera de paleta (MUST-500 §162) y por debajo de 4.5:1 (§270).
+- [ ] La pestaña "Consola" pinta un log fijo escrito a mano (`$ vforge dev`, `Build OK`) que
+  no viene de ninguna ejecución real. Es un dato inventado: o sale del servidor o se omite.
