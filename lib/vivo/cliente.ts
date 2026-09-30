@@ -22,11 +22,19 @@ export type SlotVivo = {
   ociosoSeg: number | null;
 };
 
+export type PreparacionVivo = {
+  fase: "clonando" | "rama" | "instalando" | "capa" | "registro" | "listo" | "error";
+  error: string | null;
+  inicio: number;
+  fin: number | null;
+};
+
 export type EstadoVivo = {
   maxSlots: number;
   ocioMin: number;
   memMb: number;
   proyectos: string[];
+  preparando?: Record<string, PreparacionVivo>;
   slots: SlotVivo[];
 };
 
@@ -168,5 +176,20 @@ export function escribirVivo(
   return pedir<{ ok: true; escritos: string[] }>("write", {
     method: "POST",
     body: JSON.stringify({ project: proyecto, files: archivos }),
+  });
+}
+
+/**
+ * Registra un proyecto en el motor vivo: el Hetzner clona el repo, instala y deja
+ * la capa de edición lista. Es asíncrono: el avance se lee en `estadoVivo().preparando`.
+ */
+export function registrarVivo(
+  proyecto: string,
+  repo: string,
+  rama?: string | null,
+): Promise<{ ok: true; project: string; fase: string; error: string | null }> {
+  return pedir("register", {
+    method: "POST",
+    body: JSON.stringify({ project: proyecto, repo, branch: rama ?? undefined }),
   });
 }

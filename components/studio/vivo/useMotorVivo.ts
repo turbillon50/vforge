@@ -21,12 +21,30 @@ export type SlotVivo = {
   ociosoSeg: number | null;
 };
 
+export type PreparacionMotor = {
+  fase: "clonando" | "rama" | "instalando" | "capa" | "registro" | "listo" | "error";
+  error: string | null;
+  inicio: number;
+  fin: number | null;
+};
+
 export type EstadoMotor = {
   maxSlots: number;
   ocioMin: number;
   memMb: number;
   proyectos: string[];
+  preparando?: Record<string, PreparacionMotor>;
   slots: SlotVivo[];
+};
+
+export const TEXTO_FASE: Record<PreparacionMotor["fase"], string> = {
+  clonando: "Clonando el repo en el servidor…",
+  rama: "Creando la rama de trabajo…",
+  instalando: "Instalando dependencias (la primera vez tarda 1–3 min)…",
+  capa: "Instalando la capa de edición…",
+  registro: "Registrando el proyecto…",
+  listo: "Listo.",
+  error: "No se pudo preparar.",
 };
 
 type Fase = "apagado" | "arrancando" | "vivo" | "error";
@@ -43,6 +61,8 @@ export function useMotorVivo(opciones?: { auto?: string | null }) {
   const [urlBase, setUrlBase] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [disponible, setDisponible] = useState<boolean | null>(null);
+  const [preparandoId, setPreparandoId] = useState<string | null>(null);
+  const [errorPreparar, setErrorPreparar] = useState<string | null>(null);
   const montado = useRef(true);
 
   useEffect(() => {
@@ -154,6 +174,49 @@ export function useMotorVivo(opciones?: { auto?: string | null }) {
     void leerEstado();
   }, [proyecto, leerEstado]);
 
+  /**
+   * Prepara un proyecto que todavía no está en el motor: el servidor clona su repo,
+   * instala y deja la capa de edición. Al terminar, se enciende solo.
+   */
+  const preparar = useCallback(
+    async (projectId: string) => {
+      if (!projectId) return;
+      setErrorPreparar(null);
+      setPreparandoId(projectId);
+      try {
+        const respuesta = await fetch("/api/vivo/register", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ projectId }),
+        });
+        const datos = (await respuesta.json()) as { nombre?: string; error?: string };
+        if (!respuesta.ok || !datos.nombre) {
+          throw new Error(datos.error ?? `No se pudo preparar (HTTP ${respuesta.status}).`);
+        }
+        const nombre = datos.nombre;
+        // Sondeo del avance: el primer clon + instalación puede tardar unos minutos.
+        for (let i = 0; i < 90 && montado.current; i += 1) {
+          await new Promise((ok) => setTimeout(ok, 4000));
+          const estado = await leerEstado();
+          const p = estado?.preparando?.[nombre];
+          if (p?.fase === "error") throw new Error(p.error ?? "No se pudo preparar el proyecto.");
+          if (p?.fase === "listo" || estado?.proyectos.includes(nombre)) {
+            if (!montado.current) return;
+            setPreparandoId(null);
+            await encender(nombre);
+            return;
+          }
+        }
+        throw new Error("La preparación está tardando demasiado. Vuelve a intentar en un momento.");
+      } catch (caught) {
+        if (!montado.current) return;
+        setPreparandoId(null);
+        setErrorPreparar(caught instanceof Error ? caught.message : "No se pudo preparar el proyecto.");
+      }
+    },
+    [leerEstado, encender],
+  );
+
   // Si la pantalla sabe qué proyecto es (o viene ?vivo=), se enciende sola:
   // Luis no debería tener que elegirlo en un combo para ver su app viva.
   const autoIntentado = useRef(false);
@@ -184,6 +247,9 @@ export function useMotorVivo(opciones?: { auto?: string | null }) {
     disponible,
     encender,
     apagar,
+    preparar,
+    preparandoId,
+    errorPreparar,
     refrescarEstado: leerEstado,
   };
 }
