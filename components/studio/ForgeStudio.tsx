@@ -6,6 +6,7 @@ import { useMotorVivo } from "@/components/studio/vivo/useMotorVivo";
 import { PanelInspector } from "@/components/studio/vivo/PanelInspector";
 import { PanelControl } from "@/components/studio/vivo/PanelControl";
 import { useCapaEdicion } from "@/components/studio/vivo/useCapaEdicion";
+import { useEncargos } from "@/components/studio/vivo/useEncargos";
 import Link from "next/link";
 import {
   useCallback,
@@ -503,7 +504,7 @@ export function ForgeStudio() {
 
   const vivo = useMotorVivo();
 
-  // Desde la sala del proyecto, "Dile a V" llega con ?pide= ya escrito.
+  // Enlaces viejos de la Sala llegan con ?pide= ya escrito.
   useEffect(() => {
     try {
       const pide = new URLSearchParams(window.location.search).get("pide");
@@ -520,6 +521,10 @@ export function ForgeStudio() {
     proyecto: vivo.proyecto,
     activa: editando && vivo.fase === "vivo",
   });
+  // Encargos de V: al cerrar uno con commit, el preview recarga solo (HMR) y el control se refresca.
+  const encargos = useEncargos(vivo.fase === "vivo" ? vivo.proyecto : null, () =>
+    setPulsoControl((n) => n + 1),
+  );
 
   // El modo edición y el control sólo existen sobre el preview vivo.
   useEffect(() => {
@@ -1084,17 +1089,13 @@ export function ForgeStudio() {
                 ultimoCambio={capa.ultimoCambio}
                 onEditar={(operacion) => void capa.editar(operacion)}
                 onCerrar={capa.limpiar}
-                onDileAV={(peticion) => {
-                  const el = capa.seleccion;
-                  if (!el) return;
-                  // V recibe dónde vive el elemento, no sólo lo que se le pidió.
-                  void sendPrompt(
-                    `En el proyecto ${vivo.proyecto}, sobre el elemento <${el.etiqueta}> que vive en ${el.src}` +
-                      (el.texto ? ` y dice "${el.texto}"` : "") +
-                      `: ${peticion}\n\nEscribe el cambio en ese archivo del worktree vivo. No hagas deploy.`,
-                  );
-                  setMobilePane("build");
-                }}
+                onEncargar={(peticion) =>
+                  capa.seleccion
+                    ? encargos.encargar(peticion, capa.seleccion)
+                    : Promise.resolve("Selecciona un elemento.")
+                }
+                encargos={encargos.encargos}
+                enviando={encargos.enviando}
               />
             ) : null}
 

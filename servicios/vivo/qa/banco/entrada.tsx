@@ -164,7 +164,12 @@ function Banco() {
               });
             }}
             onCerrar={() => capa.limpiar()}
-            onDileAV={(peticion) => apuntar(`dile-a-v ${capa.seleccion?.src} :: ${peticion}`)}
+            onEncargar={async (peticion) => {
+              apuntar(`encargo ${capa.seleccion?.src} :: ${peticion}`);
+              return null;
+            }}
+            encargos={[]}
+            enviando={false}
           />
         ) : null}
 
