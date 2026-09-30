@@ -41,6 +41,7 @@ const REGISTRO = process.env.VIVO_REGISTRY || "/opt/vf-vivo/proyectos.json";
 const BITACORA = process.env.VIVO_LOG || "/var/log/vf-vivo.log";
 const DOMINIO_BASE = process.env.VIVO_BASE_HOST || "178.105.135.26.sslip.io";
 const NVM_NODE = process.env.VIVO_NODE_BIN || "/root/.nvm/versions/node/v20.20.2/bin";
+const JAULA = process.env.VIVO_JAULA || resolve(dirname(fileURLToPath(import.meta.url)), "jaula.sh");
 
 if (!SECRETO || SECRETO.length < 32) {
   console.error("VIVO_SECRET falta o es muy corto (mínimo 32 caracteres).");
@@ -215,20 +216,24 @@ async function arrancarProyecto(nombre) {
   }
 
   const comando = conf.dev || "npx next dev";
-  const args = ["-lc", `${comando} -p ${slot.puerto}`];
-  const proc = spawn("/bin/bash", args, {
+  // El dev server corre el código del proyecto: va ENCERRADO (jaula.sh) y con
+  // un entorno limpio. Antes heredaba el entorno del servicio (token de GitHub,
+  // secreto del motor) y veía todo el disco como root.
+  const proc = spawn(JAULA, [raiz, "/bin/bash", "-c", `${comando} -p ${slot.puerto}`], {
     cwd: raiz,
     detached: true,
     stdio: ["ignore", "pipe", "pipe"],
     env: {
-      ...process.env,
-      PATH: `${NVM_NODE}:${process.env.PATH}`,
+      PATH: `${NVM_NODE}:/usr/local/bin:/usr/bin:/bin`,
+      VIVO_NODE_BIN: NVM_NODE,
+      JAULA_VARS: "NODE_OPTIONS PORT VF_VIVO VF_VIVO_PROJECT BROWSER NEXT_TELEMETRY_DISABLED",
       NODE_OPTIONS: `--max-old-space-size=${MEM_MB}`,
       PORT: String(slot.puerto),
       // Marca que el proyecto puede leer para encender la capa de edición.
       VF_VIVO: "1",
       VF_VIVO_PROJECT: nombre,
       BROWSER: "none",
+      NEXT_TELEMETRY_DISABLED: "1",
     },
   });
 
@@ -349,6 +354,31 @@ function concesionValida(req, slot) {
   return true;
 }
 
+/** Corre editor/encargo.py con JSON por stdin y devuelve su JSON. */
+function correrEncargo(accion, entrada) {
+  return new Promise((ok) => {
+    const p = spawn("python3", [resolve(AQUI, "editor/encargo.py"), accion], {
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    let salida = "";
+    let errores = "";
+    const reloj = setTimeout(() => p.kill("SIGKILL"), 30_000);
+    p.stdout.on("data", (b) => (salida += b.toString()));
+    p.stderr.on("data", (b) => (errores += b.toString()));
+    p.on("error", () => ok({ error: "no pude correr el despachador de V" }));
+    p.on("close", () => {
+      clearTimeout(reloj);
+      try {
+        ok(JSON.parse(salida.trim().split("\n").pop() || "{}"));
+      } catch {
+        log(`ERROR encargo.py ${accion}: ${errores.slice(-300)}`);
+        ok({ error: "el despachador de V no respondió bien" });
+      }
+    });
+    p.stdin.end(JSON.stringify(entrada));
+  });
+}
+
 function esAdmin(req) {
   const llave = req.headers["x-vivo-key"];
   if (typeof llave !== "string" || llave.length !== SECRETO.length) return false;
@@ -443,6 +473,27 @@ const servidor = createServer(async (req, res) => {
         log,
       });
       return json(res, 202, { ok: true, project: nombre, fase: t.fase, error: t.error });
+    }
+
+    // Encargos de V: V redacta el encargo con el elemento señalado y lo mete a
+    // la cola del daemon; un agente lo ejecuta en el worktree vivo y V anota
+    // qué estuvo mal y cómo se corrigió (editor/encargo.py).
+    if (ruta === "/__vivo/api/encargo" || ruta === "/__vivo/api/encargos") {
+      const nombre = String(cuerpo.project || "");
+      const conf = leerRegistro()[nombre];
+      if (!conf) return json(res, 400, { error: "proyecto desconocido" });
+      const crear = ruta === "/__vivo/api/encargo";
+      const entrada = crear
+        ? {
+            proyecto: nombre,
+            etiquetaProyecto: conf.etiqueta || nombre,
+            pedido: cuerpo.pedido,
+            elemento: cuerpo.elemento,
+            agente: cuerpo.agente,
+          }
+        : { proyecto: nombre, limite: cuerpo.limite };
+      const r = await correrEncargo(crear ? "crear" : "lista", entrada);
+      return json(res, r.error ? 400 : crear ? 202 : 200, r);
     }
 
     if (ruta === "/__vivo/api/stop") {
