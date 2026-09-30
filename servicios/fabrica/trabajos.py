@@ -169,11 +169,17 @@ def procesos():
         # claude/codex lanzan hijos con la misma línea: nos quedamos con el más viejo
         if clave not in vistos or (ini and ini < (vistos[clave]["desde"] or 1e12)):
             proy, job = proyecto_de_carpeta(cwd)
+            prompt = None
+            if "-p" in arg:
+                i = arg.index("-p")
+                if i + 1 < len(arg) and not arg[i + 1].startswith("-"):
+                    prompt = arg[i + 1]
             try:
                 encerrado = os.readlink(f"{d}/ns/mnt") != MI_NS
             except OSError:
                 encerrado = None
             vistos[clave] = {"motor": motor, "proyecto": proy, "job": job, "encerrado": encerrado,
+                             "titulo": limpio(titulo_de(prompt), 110) if prompt else None,
                              "desde": int(ini) if ini else None}
     return sorted(vistos.values(), key=lambda x: x["desde"] or 0)
 

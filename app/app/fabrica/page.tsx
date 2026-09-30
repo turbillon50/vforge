@@ -13,6 +13,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { IconBrain, IconCode, IconCpu } from "@/components/brand/VFIcons";
 
 const REFRESH_TODO_MS = 30_000;
 const REFRESH_AHORA_MS = 5_000;
@@ -41,7 +42,7 @@ type Terminado = {
   duracion: number | null;
   error: string | null;
 };
-type Proceso = { motor: string; proyecto: string; job: number | null; encerrado: boolean | null; desde: number | null };
+type Proceso = { motor: string; proyecto: string; job: number | null; encerrado: boolean | null; titulo?: string | null; desde: number | null };
 type Motor = { entrada: number; cache: number; salida: number; horas: number[] };
 type Tokens = { dia: string; claude: Motor | null; codex: Motor | null; cerebras: Motor | null; cerebras_llamadas: number };
 type Ahora = {
@@ -103,6 +104,11 @@ function hace(v: string | number | null | undefined, ahoraMs: number): string {
   if (s < 3600) return `hace ${Math.floor(s / 60)} min`;
   if (s < 86400) return `hace ${Math.floor(s / 3600)} h ${Math.floor((s % 3600) / 60)} min`;
   return `hace ${Math.floor(s / 86400)} d`;
+}
+
+/** Hora (0-23) en Cancún: las cubetas de tokens las arma el colector con ese día. */
+function horaCancun(ms: number): number {
+  return Number(new Date(ms).toLocaleString("en-US", { timeZone: "America/Cancun", hour: "2-digit", hour12: false })) % 24;
 }
 
 /** El reloj de la computadora, cada segundo. */
@@ -207,7 +213,7 @@ function BarrasHora({ tokens, horaActual }: { tokens: Tokens | null; horaActual:
   );
 }
 
-const ETIQUETA_TIPO: Record<string, string> = { brain: "BRAIN", "v-trading": "V-TRADING", codex: "CODEX", claude: "CLAUDE", cerebras: "CEREBRAS" };
+const ETIQUETA_TIPO: Record<string, string> = { brain: "BRAIN", "v-trading": "V-TRADING", codex: "CODEX", claude: "CLAUDE", cerebras: "CEREBRAS", v: "V", cola: "COLA" };
 
 export default function FabricaPage() {
   const reloj = useReloj();
@@ -282,7 +288,7 @@ export default function FabricaPage() {
         id: -(p.desde ?? Math.random()),
         agente: p.motor,
         proyecto: p.proyecto,
-        titulo: `Sesión de ${NOMBRE_AGENTE[p.motor] ?? p.motor} lanzada fuera de la cola`,
+        titulo: p.titulo ?? `Sesión de ${NOMBRE_AGENTE[p.motor] ?? p.motor} lanzada fuera de la cola`,
         estado: "trabajando",
         avance: null,
         rastro: null,
@@ -316,6 +322,7 @@ export default function FabricaPage() {
   const alianza = [
     {
       n: "Claude",
+      Icono: IconBrain,
       rol: "director: arquitectura y criterio",
       activo: quehace("claude"),
       reposo: `en reposo · ${fmtTok(totalMotor(tk?.claude))} tokens hoy`,
@@ -323,6 +330,7 @@ export default function FabricaPage() {
     },
     {
       n: "Codex",
+      Icono: IconCode,
       rol: `manos · ${str(codex.sesion) ?? "sesión desconocida"}`,
       activo: quehace("codex"),
       reposo: `en reposo · ${codexLim ? `${fmtN(codexLim.usado_pct)}% de la semana usado` : "sin lectura del límite"}`,
@@ -330,6 +338,7 @@ export default function FabricaPage() {
     },
     {
       n: "Cerebras",
+      Icono: IconCpu,
       rol: "obrero: gpt-oss-120b · qwen-3.8-27b",
       activo: null,
       reposo: `${fmtN(tk?.cerebras_llamadas ?? null)} llamadas hoy · ${fmtN(num(mesh.texto_ms))} ms`,
@@ -513,8 +522,8 @@ export default function FabricaPage() {
                 ))}
               </dl>
               <div className="mt-5">
-                <p className="mb-2 text-[12px] text-[var(--fg-secondary)]">Tokens por hora (hora de tu computadora)</p>
-                <BarrasHora tokens={tk} horaActual={new Date(reloj).getHours()} />
+                <p className="mb-2 text-[12px] text-[var(--fg-secondary)]">Tokens por hora, hoy (hora de Cancún)</p>
+                <BarrasHora tokens={tk} horaActual={horaCancun(reloj)} />
               </div>
             </Card>
 
@@ -524,12 +533,12 @@ export default function FabricaPage() {
               <ul className="px-5">
                 {alianza.map((a) => (
                   <li key={a.n} className="flex items-center gap-3 border-b border-[var(--border-1)] py-3.5 last:border-b-0">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[var(--border-1)] bg-[#f7f7f5] text-[14px] font-medium">
-                      {a.n[0]}
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[var(--border-1)] bg-[#f7f7f5] text-black">
+                      <a.Icono size={18} />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[15px] font-medium text-black">{a.n}</span>
-                      <span className="block truncate text-[13px] text-[var(--fg-secondary)]">{a.activo ?? a.reposo}</span>
+                      <span className="block text-[13px] leading-5 text-[var(--fg-secondary)]">{a.activo ?? a.reposo}</span>
                       <span className="block truncate text-[11px] text-[var(--fg-muted)]">{a.rol}</span>
                     </span>
                     <span className="flex shrink-0 items-center gap-1.5 text-[12px] text-[var(--fg-secondary)]">
