@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { PanelInspector } from "@/components/studio/vivo/PanelInspector";
 import { PanelControl } from "@/components/studio/vivo/PanelControl";
+import { useEncargos } from "@/components/studio/vivo/useEncargos";
 import {
   useCapaEdicion,
   type ElementoSeleccionado,
@@ -71,6 +72,7 @@ function Banco() {
   const capa = useCapaEdicion({ proyecto: PROYECTO, activa: true });
   const [verControl, setVerControl] = useState(true);
   const [refrescar, setRefrescar] = useState(0);
+  const encargos = useEncargos(PROYECTO, () => setRefrescar((n) => n + 1));
   const [registro, setRegistro] = useState<string[]>([]);
 
   const apuntar = (linea: string) =>
@@ -166,10 +168,10 @@ function Banco() {
             onCerrar={() => capa.limpiar()}
             onEncargar={async (peticion) => {
               apuntar(`encargo ${capa.seleccion?.src} :: ${peticion}`);
-              return null;
+              return capa.seleccion ? encargos.encargar(peticion, capa.seleccion) : "sin selección";
             }}
-            encargos={[]}
-            enviando={false}
+            encargos={encargos.encargos}
+            enviando={encargos.enviando}
           />
         ) : null}
 
