@@ -1,136 +1,90 @@
 "use client";
 
 /**
- * /app/fabrica — La fábrica en vivo (Unicorn 1.0).
- * Refleja en tiempo real lo que pasa en la casa: la alianza (Claude dirige,
- * Codex construye, Cerebras carga), V-Trading en papel, servicios y Brain.
- * Fuente: /api/fabrica/estado (owner-only), que lee el colector del Hetzner.
+ * /app/fabrica — La fábrica en vivo (Unicorn 1.0). Maqueta C aprobada por Luis (30-sep-2026):
+ * feed de actividad al centro + panel derecho (métricas, alianza, V-Trading, servicios).
+ * Fuente: /api/fabrica/estado (owner-only) → colector del Hetzner. Todo dato es real; lo que falta se muestra "—".
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PageHeader } from "@/components/workspace/PageHeader";
 import { cn } from "@/lib/utils";
 
 const REFRESH_MS = 20_000;
 const TZ = "America/Cancun";
 
 type Json = Record<string, unknown>;
-type Muestra = { t: string; cerebras_ms: number | null; sanos: number; total: number };
+type Evento = { t: string; tipo: string; titulo: string; detalle: string };
 
-function obj(v: unknown): Json {
-  return v && typeof v === "object" && !Array.isArray(v) ? (v as Json) : {};
+const obj = (v: unknown): Json => (v && typeof v === "object" && !Array.isArray(v) ? (v as Json) : {});
+const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
+const str = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v : null);
+const fmtN = (v: number | null, dec = 0) =>
+  v === null ? "—" : v.toLocaleString("es-MX", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+const fmtUsd = (v: number | null) =>
+  v === null ? "—" : `${v < 0 ? "−" : ""}$${Math.abs(v).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+function fecha(s: string | null): Date | null {
+  if (!s) return null;
+  const norm = s.includes(" UTC") ? s.replace(/^\w{3} /, "").replace(" UTC", "Z").replace(" ", "T") : s;
+  const d = new Date(norm);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
-function num(v: unknown): number | null {
-  return typeof v === "number" && Number.isFinite(v) ? v : null;
-}
-function str(v: unknown): string | null {
-  return typeof v === "string" && v.trim() ? v : null;
-}
-function fmtN(v: number | null, dec = 0): string {
-  return v === null ? "—" : v.toLocaleString("es-MX", { minimumFractionDigits: dec, maximumFractionDigits: dec });
-}
-function fmtUsd(v: number | null): string {
-  if (v === null) return "—";
-  const s = Math.abs(v).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return (v < 0 ? "−$" : "$") + s;
-}
-function horaCancun(iso: string | null, conFecha = false): string {
-  if (!iso) return "—";
-  const d = new Date(iso.includes(" UTC") ? iso.replace(/^\w{3} /, "").replace(" UTC", "Z").replace(" ", "T") : iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString("es-MX", {
-    timeZone: TZ,
-    hour: "2-digit",
-    minute: "2-digit",
-    ...(conFecha ? { day: "numeric", month: "short" } : {}),
-  });
+function hora(s: string | null, seg = false): string {
+  const d = fecha(s);
+  return d
+    ? d.toLocaleTimeString("es-MX", { timeZone: TZ, hour: "2-digit", minute: "2-digit", ...(seg ? { second: "2-digit" } : {}), hour12: false })
+    : "—";
 }
 
-function Etiqueta({ children }: { children: React.ReactNode }) {
-  return <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">{children}</p>;
+function Card({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <section className={cn("min-w-0 rounded-2xl border border-[var(--border-1)] bg-white", className)}>{children}</section>;
 }
-
-function Tarjeta({ children, className }: { children: React.ReactNode; className?: string }) {
+function CardHead({ title, right }: { title: string; right?: React.ReactNode }) {
   return (
-    <section className={cn("min-w-0 rounded-2xl border border-[var(--border-1)] bg-white p-5 md:p-6", className)}>
+    <div className="flex items-center justify-between gap-3 border-b border-[var(--border-1)] px-5 py-4">
+      <h2 className="text-[15px] font-medium tracking-[-0.01em] text-black">{title}</h2>
+      {right}
+    </div>
+  );
+}
+function Dot({ ok }: { ok: boolean }) {
+  return <span aria-hidden className={cn("inline-block h-2 w-2 shrink-0 rounded-full", ok ? "bg-[#1fb95a]" : "bg-[#e5484d]")} />;
+}
+function Chip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="shrink-0 rounded-full border border-[var(--border-1)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
       {children}
-    </section>
+    </span>
   );
 }
 
-function Pulso({ muestras }: { muestras: Muestra[] }) {
-  const puntos = muestras.map((m) => m.cerebras_ms).filter((v): v is number => v !== null);
-  const W = 1000;
-  const H = 160;
-  let d = `M0 ${H / 2} L${W * 0.42} ${H / 2} L${W * 0.46} ${H * 0.2} L${W * 0.5} ${H * 0.85} L${W * 0.54} ${H / 2} L${W} ${H / 2}`;
-  let ultimo = { x: W, y: H / 2 };
-  if (puntos.length >= 2) {
-    const min = Math.min(...puntos);
-    const max = Math.max(...puntos);
-    const rango = Math.max(max - min, 1);
-    const pts = puntos.map((v, i) => ({
-      x: (i / (puntos.length - 1)) * W,
-      y: H - 16 - ((v - min) / rango) * (H - 32),
-    }));
-    d = pts.map((p, i) => `${i ? "L" : "M"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
-    ultimo = pts[pts.length - 1];
+function Sparkline({ valores }: { valores: number[] }) {
+  const W = 320;
+  const H = 44;
+  if (valores.length < 2) {
+    return <p className="font-mono text-[11px] text-[var(--fg-muted)]">reuniendo muestras…</p>;
   }
+  const min = Math.min(...valores);
+  const max = Math.max(...valores);
+  const r = Math.max(max - min, 1);
+  const pts = valores.map((v, i) => [(i / (valores.length - 1)) * W, H - 4 - ((v - min) / r) * (H - 8)] as const);
+  const d = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const [lx, ly] = pts[pts.length - 1];
   return (
-    <svg
-      viewBox={`0 0 ${W} ${H}`}
-      preserveAspectRatio="none"
-      className="h-32 w-full md:h-40"
-      role="img"
-      aria-label={
-        puntos.length >= 2
-          ? `Latencia de Cerebras en las últimas ${puntos.length} muestras`
-          : "Reuniendo muestras de latencia"
-      }
-    >
-      <defs>
-        <linearGradient id="fundido" x1="0" x2="1">
-          <stop offset="0" stopColor="#ff3d00" />
-          <stop offset=".6" stopColor="#ff8a00" />
-          <stop offset="1" stopColor="#ffd166" />
-        </linearGradient>
-      </defs>
-      <path d={d} fill="none" stroke="url(#fundido)" strokeWidth="3" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
-      <circle cx={ultimo.x} cy={ultimo.y} r="5" fill="#ffd166" className="motion-safe:animate-pulse" />
+    <svg viewBox={`0 0 ${W} ${H}`} className="h-11 w-full" preserveAspectRatio="none" role="img" aria-label={`Latencia de Cerebras, ${valores.length} muestras`}>
+      <line x1="0" x2={W} y1={H - 2} y2={H - 2} stroke="#d9d9d6" strokeDasharray="2 4" vectorEffect="non-scaling-stroke" />
+      <path d={d} fill="none" stroke="#0a0a0a" strokeWidth="1.5" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+      <circle cx={lx} cy={ly} r="3" fill="#0a0a0a" />
     </svg>
   );
 }
 
-function Nodo({ rol, nombre, lineas, vivo }: { rol: string; nombre: string; lineas: string[]; vivo: boolean }) {
-  return (
-    <div
-      className={cn(
-        "relative min-w-0 rounded-2xl border p-5",
-        vivo ? "border-black/10 bg-[#0b0b0c] text-white" : "border-red-300 bg-red-50 text-red-900",
-      )}
-    >
-      <span
-        aria-hidden
-        className={cn(
-          "absolute right-4 top-4 h-2.5 w-2.5 rounded-full",
-          vivo ? "bg-[#3ddc97] motion-safe:animate-pulse" : "bg-red-500",
-        )}
-      />
-      <p className="font-mono text-[11px] uppercase tracking-[0.16em] opacity-60">{rol}</p>
-      <p className="mt-1 text-[22px] font-semibold tracking-[-0.03em]">{nombre}</p>
-      <ul className="mt-3 space-y-1 text-[13px] opacity-80">
-        {lineas.map((l) => (
-          <li key={l} className="break-words">
-            {l}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+const ETIQUETA_TIPO: Record<string, string> = { brain: "BRAIN", "v-trading": "V-TRADING", codex: "CODEX", claude: "CLAUDE", cerebras: "CEREBRAS" };
 
 export default function FabricaPage() {
   const [estado, setEstado] = useState<Json | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [ahora, setAhora] = useState(() => Date.now());
+  const [filtro, setFiltro] = useState<string>("todos");
+  const [todos, setTodos] = useState(false);
   const vivo = useRef(true);
 
   const cargar = useCallback(async () => {
@@ -150,12 +104,10 @@ export default function FabricaPage() {
   useEffect(() => {
     vivo.current = true;
     void cargar();
-    const a = setInterval(() => void cargar(), REFRESH_MS);
-    const b = setInterval(() => setAhora(Date.now()), 1000);
+    const id = setInterval(() => void cargar(), REFRESH_MS);
     return () => {
       vivo.current = false;
-      clearInterval(a);
-      clearInterval(b);
+      clearInterval(id);
     };
   }, [cargar]);
 
@@ -166,202 +118,215 @@ export default function FabricaPage() {
   const v60 = obj(vt["v6.0"]);
   const v59 = obj(vt["v5.9"]);
   const brain = obj(e.brain);
-  const carta = obj(e.carta);
-  const mensaje = obj(e.mensaje);
   const servicios = Object.entries(obj(e.servicios)).map(([k, v]) => [k, String(v)] as const);
-  const historia = useMemo<Muestra[]>(
-    () =>
-      (Array.isArray(e.historia) ? e.historia : []).map((m) => {
-        const o = obj(m);
-        return { t: str(o.t) ?? "", cerebras_ms: num(o.cerebras_ms), sanos: num(o.sanos) ?? 0, total: num(o.total) ?? 0 };
-      }),
+  const sanos = servicios.filter(([, v]) => v === "active").length;
+  const latencias = useMemo(
+    () => (Array.isArray(e.historia) ? e.historia : []).map((m) => num(obj(m).cerebras_ms)).filter((v): v is number => v !== null),
     [e.historia],
   );
-  const sanos = servicios.filter(([, v]) => v === "active").length;
-  const recientes = (Array.isArray(brain.recientes) ? brain.recientes : []).map((r) => obj(r));
-  const cerebrasVivo = str(mesh.cerebras) === "up";
-  const codexVivo = str(codex.sesion) === "ChatGPT Pro" && str(codex.plugin) === "activo";
+  const eventos = useMemo<Evento[]>(
+    () =>
+      (Array.isArray(e.eventos) ? e.eventos : []).map((x) => {
+        const o = obj(x);
+        return { t: str(o.t) ?? "", tipo: str(o.tipo) ?? "", titulo: str(o.titulo) ?? "—", detalle: str(o.detalle) ?? "" };
+      }),
+    [e.eventos],
+  );
+  const tipos = useMemo(() => Array.from(new Set(eventos.map((x) => x.tipo))).filter(Boolean), [eventos]);
+  const filtrados = filtro === "todos" ? eventos : eventos.filter((x) => x.tipo === filtro);
+  const visibles = todos ? filtrados : filtrados.slice(0, 7);
 
-  const sig = str(vt.siguiente_revision_v6);
-  const sigMs = sig ? new Date(sig.replace(/^\w{3} /, "").replace(" UTC", "Z").replace(" ", "T")).getTime() : NaN;
-  const faltan = Number.isFinite(sigMs) ? Math.max(0, Math.floor((sigMs - ahora) / 1000)) : null;
-  const cuenta =
-    faltan === null ? "—" : faltan === 0 ? "revisando…" : `${String(Math.floor(faltan / 60)).padStart(2, "0")}:${String(faltan % 60).padStart(2, "0")}`;
-
+  const cerebrasOk = str(mesh.cerebras) === "up";
+  const codexOk = str(codex.sesion) === "ChatGPT Pro" && str(codex.plugin) === "activo";
   const v60Abiertas = num(v60.abiertas) ?? 0;
-  const v60Cerradas = num(v60.cerradas) ?? 0;
   const v59Net = num(v59.net_total);
+  const winRate = num(v59.win_rate);
+
+  const alianza = [
+    { n: "Claude", d: "director: arquitectura y criterio", ok: true },
+    { n: "Codex", d: `manos: ${str(codex.sesion) ?? "—"}, ${str(codex.plugin) ?? "—"}`, ok: codexOk },
+    { n: "Cerebras", d: `obrero: ${fmtN(num(mesh.texto_ms))} ms, gpt-oss-120b / qwen-3.8-27b`, ok: cerebrasOk },
+  ];
 
   return (
-    <>
-      <PageHeader
-        eyebrow="UNICORN 1.0 · LA FÁBRICA"
-        title="La fábrica en vivo"
-        description="Lo que pasa en la casa, en tiempo real: quién dirige, quién construye, quién carga, y cómo va cada frente."
-        actions={
-          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border-1)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em]">
-            <span className={cn("h-2 w-2 rounded-full", error ? "bg-red-500" : "bg-[#3ddc97] motion-safe:animate-pulse")} />
-            {error ? "sin señal" : `en vivo · ${horaCancun(str(e.generado))}`}
+    <div className="min-h-full bg-[#f7f7f5]">
+      <div className="mx-auto w-full max-w-[1320px] px-5 pb-16 pt-8 md:px-8 md:pt-12">
+        {/* Encabezado */}
+        <header className="mb-8 md:mb-10">
+          <span className="inline-flex rounded-full border border-[var(--border-1)] bg-white px-3 py-1 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+            Unicorn 1.0 · Fábrica
           </span>
-        }
-      />
+          <h1 className="mt-5 text-[clamp(2.4rem,6vw,4.6rem)] font-light leading-[0.95] tracking-[-0.045em] text-black">
+            La fábrica, <span className="font-semibold">en vivo</span>
+          </h1>
+          <span className="mt-5 inline-flex items-center gap-2 rounded-full border border-[var(--border-1)] bg-white px-3.5 py-1.5 text-[13px]">
+            <Dot ok={!error} />
+            <span className={error ? "text-[#e5484d]" : "text-[#138a43]"}>{error ? "Sin señal" : "En vivo"}</span>
+            <span className="text-[var(--fg-muted)]">·</span>
+            <span className="tabular-nums text-black">{hora(str(e.generado))}</span>
+          </span>
+        </header>
 
-      <div className="grid grid-cols-1 gap-4 px-5 py-6 md:grid-cols-12 md:px-8 md:py-8">
         {error && !estado && (
-          <Tarjeta className="md:col-span-12">
-            <p className="text-[14px] text-[var(--fg-secondary)]">
-              No llegó el estado de la fábrica ({error}). Se reintenta solo cada 20 segundos.
-            </p>
-          </Tarjeta>
+          <Card className="mb-6 px-5 py-4">
+            <p className="text-[14px] text-[var(--fg-secondary)]">No llegó el estado de la fábrica ({error}). Se reintenta solo cada 20 segundos.</p>
+          </Card>
         )}
 
-        <section className="relative overflow-hidden rounded-2xl bg-[#050505] p-6 text-[#f3efe9] md:col-span-12 md:p-8">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(255,110,0,.28),transparent_65%)]"
-          />
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[#8d877f]">Pulso de Cerebras · latencia real por minuto</p>
-          <div className="mt-2 flex items-end gap-2">
-            <span className="text-[44px] font-semibold leading-none tracking-[-0.04em] md:text-[64px]">{fmtN(num(mesh.texto_ms))}</span>
-            <span className="mb-1 font-mono text-[12px] text-[#8d877f]">ms</span>
-          </div>
-          <div className="mt-4">
-            <Pulso muestras={historia} />
-          </div>
-          {historia.length < 2 && <p className="font-mono text-[11px] text-[#8d877f]">reuniendo muestras…</p>}
-        </section>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+          {/* Actividad en vivo */}
+          <Card className="order-2 self-start lg:order-1">
+            <CardHead
+              title="Actividad en vivo"
+              right={
+                <label className="flex items-center gap-2 text-[13px] text-[var(--fg-secondary)]">
+                  <span className="sr-only">Filtrar eventos</span>
+                  <select
+                    value={filtro}
+                    onChange={(ev) => setFiltro(ev.target.value)}
+                    className="cursor-pointer rounded-md border border-transparent bg-transparent py-1 pr-1 text-[13px] outline-none hover:border-[var(--border-1)] focus-visible:border-black"
+                  >
+                    <option value="todos">Todos los eventos</option>
+                    {tipos.map((t) => (
+                      <option key={t} value={t}>
+                        {ETIQUETA_TIPO[t] ?? t}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              }
+            />
+            <ol className="relative px-5 py-2">
+              {visibles.length === 0 && <li className="py-6 text-[14px] text-[var(--fg-muted)]">Todavía no hay eventos.</li>}
+              {visibles.map((ev, i) => (
+                <li key={`${ev.t}-${i}`} className="grid grid-cols-[64px_16px_minmax(0,1fr)] gap-3 border-b border-[var(--border-1)] py-5 last:border-b-0 md:grid-cols-[72px_16px_minmax(0,1fr)_auto]">
+                  <time className="pt-0.5 font-mono text-[12px] tabular-nums text-[var(--fg-muted)]">{hora(ev.t, true)}</time>
+                  <span className="relative flex justify-center pt-1.5">
+                    {i < visibles.length - 1 && <span aria-hidden className="absolute left-1/2 top-4 h-[calc(100%+2.5rem)] w-px -translate-x-1/2 bg-[var(--border-1)]" />}
+                    <span className={cn("relative h-2 w-2 rounded-full", i === 0 ? "bg-[#1fb95a] ring-4 ring-[#1fb95a]/15" : "bg-[#c4c4c0]")} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[15px] font-medium leading-6 text-black">{ev.titulo}</p>
+                    {ev.detalle && <p className="mt-0.5 break-words text-[13px] leading-5 text-[var(--fg-secondary)]">{ev.detalle}</p>}
+                  </div>
+                  <span className="col-start-3 md:col-start-auto">
+                    <Chip>{ETIQUETA_TIPO[ev.tipo] ?? ev.tipo}</Chip>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            {filtrados.length > 7 && (
+              <div className="border-t border-[var(--border-1)] px-5 py-4">
+                <button
+                  type="button"
+                  onClick={() => setTodos((v) => !v)}
+                  className="inline-flex h-10 items-center justify-center rounded-full bg-[#ff5a1f] px-5 text-[14px] font-medium text-white transition hover:bg-[#e84d14] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff5a1f]"
+                >
+                  {todos ? "Ver menos" : `Ver toda la actividad (${filtrados.length})`}
+                </button>
+              </div>
+            )}
+          </Card>
 
-        {str(carta.texto) && (
-          <Tarjeta className="md:col-span-8">
-            <Etiqueta>Carta de Vulcano</Etiqueta>
-            <blockquote className="mt-3 border-l-2 border-[#ff6a00] pl-4 font-serif text-[20px] italic leading-8 text-black md:text-[24px] md:leading-9">
-              {str(carta.texto)}
-            </blockquote>
-            <p className="mt-3 font-mono text-[11px] text-[var(--fg-muted)]">{str(carta.autor) ?? "—"}</p>
-          </Tarjeta>
-        )}
+          <div className="order-1 flex min-w-0 flex-col gap-5 lg:order-2">
+          {/* Métricas */}
+          <Card className="p-5">
+            <h2 className="text-[15px] font-medium tracking-[-0.01em] text-black">Métricas en tiempo real</h2>
+            <dl className="mt-4 grid grid-cols-2 gap-y-4 sm:grid-cols-4 sm:divide-x sm:divide-[var(--border-1)]">
+              {[
+                ["Servicios", `${sanos}/${servicios.length || "—"}`, servicios.length > 0 && sanos === servicios.length],
+                ["Memorias", fmtN(num(Number(brain.memorias))), null],
+                ["v6.0 en mercado", fmtN(v60Abiertas), null],
+                ["Latencia", `${fmtN(num(mesh.texto_ms))} ms`, null],
+              ].map(([k, v, ok], i) => (
+                <div key={String(k)} className={cn("min-w-0", i > 0 && "sm:pl-4")}>
+                  <dt className="text-[12px] text-[var(--fg-secondary)]">{k}</dt>
+                  <dd className="mt-1 flex items-center gap-2 text-[26px] font-medium tabular-nums tracking-[-0.03em] text-black">
+                    {v}
+                    {ok !== null && <Dot ok={Boolean(ok)} />}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <div className="mt-4">
+              <Sparkline valores={latencias} />
+            </div>
+          </Card>
 
-        <Tarjeta className={str(carta.texto) ? "md:col-span-4" : "md:col-span-12"}>
-          <Etiqueta>Mensaje del día · Cerebras</Etiqueta>
-          <p className="mt-3 text-[16px] leading-7 text-black">{str(mensaje.texto) ?? "—"}</p>
-          <p className="mt-3 font-mono text-[11px] text-[var(--fg-muted)]">
-            {str(mensaje.autor) ?? "—"} · {fmtN(num(mensaje.ms))} ms
-          </p>
-        </Tarjeta>
+          {/* Alianza */}
+          <Card>
+            <CardHead title="La alianza" />
+            <ul className="px-5">
+              {alianza.map((a) => (
+                <li key={a.n} className="flex items-center gap-3 border-b border-[var(--border-1)] py-3.5 last:border-b-0">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[var(--border-1)] bg-[#f7f7f5] text-[14px] font-medium">
+                    {a.n[0]}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px] font-medium text-black">{a.n}</span>
+                    <span className="block truncate text-[13px] text-[var(--fg-secondary)]">{a.d}</span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1.5 text-[12px] text-[var(--fg-secondary)]">
+                    <Dot ok={a.ok} /> {a.ok ? "En vivo" : "Caído"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Card>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:col-span-12">
-          <Nodo rol="Director" nombre="Claude" lineas={["arquitectura · criterio", "Brain y decisiones"]} vivo />
-          <Nodo
-            rol="Manos"
-            nombre="Codex"
-            lineas={[`sesión: ${str(codex.sesion) ?? "—"}`, `plugin: ${str(codex.plugin) ?? "—"}`]}
-            vivo={codexVivo}
-          />
-          <Nodo
-            rol="Obrero"
-            nombre="Cerebras"
-            lineas={[`${fmtN(num(mesh.texto_ms))} ms · ${str(mesh.cerebras) ?? "—"}`, "gpt-oss-120b", "qwen-3.8-27b (visión)"]}
-            vivo={cerebrasVivo}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 md:col-span-12 md:grid-cols-4">
-          {[
-            ["Servicios sanos", `${sanos}/${servicios.length || "—"}`],
-            ["Memorias del Brain", fmtN(num(Number(brain.memorias)))],
-            ["v6.0 en mercado", fmtN(v60Abiertas)],
-            ["v5.9 cerradas", fmtN(num(v59.cerradas))],
-          ].map(([k, v]) => (
-            <Tarjeta key={k}>
-              <Etiqueta>{k}</Etiqueta>
-              <p className="mt-2 font-mono text-[28px] font-medium tabular-nums tracking-[-0.03em] text-black md:text-[34px]">{v}</p>
-            </Tarjeta>
-          ))}
-        </div>
-
-        <Tarjeta className="md:col-span-7">
-          <div className="flex items-center justify-between gap-3">
-            <Etiqueta>V-Trading · modo papel</Etiqueta>
-            <span className="font-mono text-[11px] text-[var(--fg-muted)]">próxima revisión {cuenta}</span>
-          </div>
-          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-[22px] font-semibold tracking-[-0.03em]">v6.0</p>
+          {/* V-Trading */}
+          <Card>
+            <CardHead
+              title="V-Trading"
+              right={<span className="text-[13px] text-[var(--fg-muted)]">modo papel</span>}
+            />
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 py-5">
+              <div className="min-w-0">
+                <p className="text-[13px] text-[var(--fg-secondary)]">v6.0</p>
+                <p className="mt-1 text-[30px] font-medium tabular-nums tracking-[-0.03em] text-black">{fmtN(v60Abiertas)}</p>
+                <p className="text-[13px] text-[var(--fg-secondary)]">abiertas</p>
                 {v60Abiertas > 0 && (
-                  <span className="rounded-full bg-[#ff6a00] px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-white motion-safe:animate-pulse">
-                    en mercado
+                  <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#e9f8ef] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[#138a43]">
+                    <Dot ok /> En mercado
                   </span>
                 )}
               </div>
-              <dl className="mt-3 space-y-2 font-mono text-[13px]">
-                <div className="flex justify-between"><dt className="text-[var(--fg-muted)]">Abiertas</dt><dd>{fmtN(v60Abiertas)}</dd></div>
-                <div className="flex justify-between"><dt className="text-[var(--fg-muted)]">Cerradas</dt><dd>{fmtN(v60Cerradas)}</dd></div>
-                <div className="flex justify-between">
-                  <dt className="text-[var(--fg-muted)]">Neto</dt>
-                  <dd>{v60Cerradas ? fmtUsd(num(v60.net_total)) : "—"}</dd>
-                </div>
-              </dl>
+              <span className="h-full w-px bg-[var(--border-1)]" aria-hidden />
+              <div className="min-w-0">
+                <p className="text-[13px] text-[var(--fg-secondary)]">v5.9</p>
+                <p className="mt-1 text-[30px] font-medium tabular-nums tracking-[-0.03em] text-black">{fmtN(num(v59.cerradas))}</p>
+                <p className="text-[13px] text-[var(--fg-secondary)]">cerradas</p>
+                <p className={cn("mt-2 text-[15px] tabular-nums", v59Net !== null && v59Net < 0 ? "text-[#e5484d]" : "text-[#138a43]")}>{fmtUsd(v59Net)}</p>
+                <p className="text-[13px] text-[var(--fg-secondary)]">{winRate === null ? "—" : `${fmtN(winRate * 100, 1)}% ganadoras`}</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-[22px] font-semibold tracking-[-0.03em]">v5.9</p>
-              <dl className="mt-3 space-y-2 font-mono text-[13px]">
-                <div className="flex justify-between"><dt className="text-[var(--fg-muted)]">Cerradas</dt><dd>{fmtN(num(v59.cerradas))}</dd></div>
-                <div className="flex justify-between">
-                  <dt className="text-[var(--fg-muted)]">Neto</dt>
-                  <dd className={cn(v59Net !== null && (v59Net < 0 ? "text-red-600" : "text-emerald-600"))}>{fmtUsd(v59Net)}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-[var(--fg-muted)]">Ganadoras</dt>
-                  <dd>{num(v59.win_rate) === null ? "—" : `${fmtN((num(v59.win_rate) ?? 0) * 100, 1)}%`}</dd>
-                </div>
-              </dl>
-              {num(v59.fee_bite_ratio) !== null && (
-                <p className="mt-3 text-[12px] leading-5 text-[var(--fg-secondary)]">
-                  Las comisiones se comen {fmtN(num(v59.fee_bite_ratio), 2)}× el bruto. Por eso nació la v6.0.
-                </p>
-              )}
-            </div>
+          </Card>
+
+          {/* Servicios */}
+          <Card>
+            <CardHead title="Servicios" right={<span className="text-[13px] tabular-nums text-[var(--fg-muted)]">{sanos}/{servicios.length}</span>} />
+            <ul className="grid grid-cols-1 gap-x-6 px-5 py-2 sm:grid-cols-2">
+              {servicios.length === 0 && <li className="py-3 text-[13px] text-[var(--fg-muted)]">—</li>}
+              {servicios.map(([n, v]) => (
+                <li key={n} className="flex items-center justify-between gap-3 border-b border-[var(--border-1)] py-2.5 text-[14px]">
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <Dot ok={v === "active"} />
+                    <span className="truncate text-black">{n}</span>
+                  </span>
+                  <span className={cn("shrink-0 text-[12px]", v === "active" ? "text-[var(--fg-secondary)]" : "text-[#e5484d]")}>
+                    {v === "active" ? "En vivo" : "Caído"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Card>
           </div>
-        </Tarjeta>
+        </div>
 
-        <Tarjeta className="md:col-span-5">
-          <Etiqueta>Servicios de la casa</Etiqueta>
-          <ul className="mt-3 divide-y divide-[var(--border-1)]">
-            {servicios.length === 0 && <li className="py-2 text-[13px] text-[var(--fg-muted)]">—</li>}
-            {servicios.map(([n, v]) => (
-              <li key={n} className="flex items-center justify-between gap-3 py-2 font-mono text-[13px]">
-                <span className="min-w-0 truncate">{n}</span>
-                <span className={cn("inline-flex items-center gap-2", v === "active" ? "text-emerald-700" : "text-red-600")}>
-                  <span className={cn("h-2 w-2 rounded-full", v === "active" ? "bg-emerald-500" : "bg-red-500")} />
-                  {v === "active" ? "activo" : "caído"}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Tarjeta>
-
-        <Tarjeta className="md:col-span-12">
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <Etiqueta>Brain · últimas memorias</Etiqueta>
-            <span className="font-mono text-[12px] text-[var(--fg-muted)]">
-              {fmtN(num(Number(brain.memorias)))} memorias · última #{str(String(brain.ultima ?? "")) ?? "—"}
-            </span>
-          </div>
-          <ol className="mt-3 grid grid-cols-1 gap-x-8 md:grid-cols-2">
-            {recientes.map((r) => (
-              <li key={String(r.id)} className="flex gap-3 border-b border-[var(--border-1)] py-2 text-[13px]">
-                <span className="font-mono text-[#e25500]">{String(r.id ?? "—")}</span>
-                <span className="min-w-0 break-words">{str(r.tema) ?? "—"}</span>
-              </li>
-            ))}
-          </ol>
-        </Tarjeta>
-
-        <p className="px-1 font-mono text-[11px] text-[var(--fg-muted)] md:col-span-12">
+        <p className="mt-8 font-mono text-[11px] text-[var(--fg-muted)]">
           Colector en {fmtN(num(e.colector_ms))} ms · se actualiza cada 20 s · Claude dirige · Codex construye · Cerebras carga
         </p>
       </div>
-    </>
+    </div>
   );
 }
