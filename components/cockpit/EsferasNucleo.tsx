@@ -534,7 +534,7 @@ export function EsferasNucleo({
       />
 
       <div className="relative mb-1 flex items-center justify-between">
-        <p className="label-caps flex items-center gap-1.5 text-violet-400">
+        <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
           <IconActivity size={13} /> Núcleo de operaciones
         </p>
         <span className="chip text-[10px] text-emerald-600 dark:text-emerald-300">

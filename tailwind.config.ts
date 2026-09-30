@@ -25,6 +25,9 @@ const config: Config = {
         "on-surface-variant": "var(--color-on-surface-variant)",
         muted: "var(--color-muted)",
         "off-white": "var(--color-off-white)",
+        accent: "var(--accent)",
+        "accent-hover": "var(--accent-hover)",
+        "accent-soft": "var(--accent-soft)",
 
         // Accents — currentColor friendly via vars
         "violet-300": "var(--color-violet-300)",

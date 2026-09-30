@@ -310,7 +310,7 @@ export function Constelacion({
   return (
     <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-4 sm:p-5">
       <div className="relative mb-1 flex items-center justify-between">
-        <p className="label-caps flex items-center gap-1.5 text-violet-400">
+        <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
           <IconActivity size={13} /> Constelación · supervisión total
         </p>
         {live ? (
@@ -318,7 +318,7 @@ export function Constelacion({
             {jobs.length} {jobs.length === 1 ? "job vivo" : "jobs vivos"}
           </span>
         ) : lastAgo ? (
-          <span className="chip text-[10px] text-cyan-600 dark:text-violet-300">
+          <span className="chip text-[10px] text-[var(--fg-secondary)]">
             Último job {lastAgo === "ahora" ? "ahora" : lastAgo.startsWith("hace") ? lastAgo : `hace ${lastAgo}`}
           </span>
         ) : (

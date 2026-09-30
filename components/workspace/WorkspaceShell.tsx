@@ -173,6 +173,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isStudio = pathname === "/app/chat";
+  const isFixedWorkspace = isStudio || pathname === "/forge" || pathname === "/v";
   const isSetup = pathname.startsWith("/app/setup");
   const isLive = pathname.startsWith("/app/live/");
 
@@ -203,7 +204,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       <div
         className={cn(
           "bg-[var(--color-background)] text-[var(--color-ink)]",
-          isStudio
+          isFixedWorkspace
             ? "h-svh overflow-hidden overscroll-none lg:h-dvh"
             : "min-h-svh",
         )}
@@ -237,13 +238,13 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         <div
           className={cn(
             "md:pl-[248px]",
-            isStudio ? "flex h-full flex-col overflow-hidden" : "min-h-svh",
+            isFixedWorkspace ? "flex h-full flex-col overflow-hidden" : "min-h-svh",
           )}
         >
           <header
             className={cn(
               "z-20 border-b border-[var(--border-1)] bg-white/95 backdrop-blur-md",
-              isStudio ? "relative shrink-0" : "sticky top-0",
+              isFixedWorkspace ? "relative shrink-0" : "sticky top-0",
             )}
           >
             <div className="flex h-[58px] items-center justify-between gap-4 px-page-sm md:px-page-md xl:px-page-lg">
@@ -278,14 +279,14 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
           <main
             className={cn(
-              isStudio
-                ? "min-h-0 flex-1 overflow-hidden"
+              isFixedWorkspace
+                ? "flex min-h-0 flex-1 overflow-hidden"
                 : "min-h-[calc(100svh-58px-72px)]",
             )}
           >
             {children}
           </main>
-          {isStudio ? null : (
+          {isFixedWorkspace ? null : (
             <footer className="flex h-[72px] items-center justify-between border-t border-[var(--border-1)] bg-white px-page-sm md:px-page-md xl:px-page-lg">
               <p className="font-mono text-label-caps uppercase text-[var(--fg-muted)]">
                 VForge

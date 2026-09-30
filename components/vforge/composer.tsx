@@ -304,10 +304,10 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
           />
         </div>
 
-        {/* Textarea — borde sutil que se ilumina en azul acento al focus */}
+        {/* Textarea — borde sutil que se ilumina con el acento al focus */}
         <div
           className="flex-1 rounded-md transition-shadow duration-150"
-          style={{ boxShadow: focused ? "0 0 0 1px #2f6bff" : "none" }}
+          style={{ boxShadow: focused ? "0 0 0 1px var(--accent)" : "none" }}
         >
           <textarea
             ref={textareaRef}
@@ -362,8 +362,8 @@ export function Composer({ onSend, disabled = false }: ComposerProps) {
               "disabled:opacity-40 disabled:cursor-not-allowed",
             )}
             style={{
-              background: "#2f6bff",
-              boxShadow: "0 0 16px rgba(47,107,255,0.45)",
+              background: "var(--accent)",
+              boxShadow: "0 0 16px rgba(255,90,31,0.28)",
             }}
             aria-label="Enviar mensaje"
             title="Enviar (⌘/Ctrl + Enter)"

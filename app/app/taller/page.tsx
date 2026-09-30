@@ -205,7 +205,7 @@ export default function TallerPage() {
                   ? "text-amber-600 dark:text-amber-300"
                   : live
                     ? "text-emerald-600 dark:text-emerald-300"
-                    : "text-violet-400 dark:text-violet-300"
+                    : "text-[var(--fg-muted)]"
               }`}
             >
               {error ? "Sin señal" : live ? "En vivo" : "En reposo"}
@@ -237,7 +237,7 @@ export default function TallerPage() {
             }}
           />
           <div className="relative flex h-full flex-col justify-end p-5 md:p-6">
-            <p className="label-caps flex items-center gap-1.5 text-violet-400">
+            <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
               <IconActivity size={13} /> Cabina del operador
             </p>
             <h2 className="mt-1 font-display text-lg font-bold text-[var(--fg-primary)] md:text-xl">
@@ -256,9 +256,9 @@ export default function TallerPage() {
               onClick={() => setSelected(null)}
               className="chip min-h-[44px] px-3.5 text-[12px] transition active:scale-95"
               style={{
-                borderColor: selected === null ? "#8b5cf666" : undefined,
-                color: selected === null ? "#8b5cf6" : undefined,
-                background: selected === null ? "#22d3ce14" : undefined,
+                borderColor: selected === null ? "#0a0a0a" : undefined,
+                color: selected === null ? "#0a0a0a" : undefined,
+                background: selected === null ? "#ffffff" : undefined,
               }}
             >
               Todos
@@ -269,9 +269,9 @@ export default function TallerPage() {
                 onClick={() => setSelected(p.key === selected ? null : p.key)}
                 className="chip min-h-[44px] px-3.5 text-[12px] transition active:scale-95"
                 style={{
-                  borderColor: selected === p.key ? "#a78bfa66" : undefined,
-                  color: selected === p.key ? "#a78bfa" : undefined,
-                  background: selected === p.key ? "#a78bfa14" : undefined,
+                  borderColor: selected === p.key ? "#0a0a0a" : undefined,
+                  color: selected === p.key ? "#0a0a0a" : undefined,
+                  background: selected === p.key ? "#ffffff" : undefined,
                 }}
                 title={`${p.active} esfera(s) activa(s)`}
               >
@@ -285,8 +285,8 @@ export default function TallerPage() {
         {/* Métricas vivas */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <LiveMetric value={jobs.length} label="Esferas activas" accent="#34d399" />
-          <LiveMetric value={proyectosActivos} label="Proyectos activos" accent="#a78bfa" />
-          <LiveMetric value={data?.queue?.running ?? 0} label="Jobs corriendo" accent="#8b5cf6" />
+          <LiveMetric value={proyectosActivos} label="Proyectos activos" accent="#0a0a0a" />
+          <LiveMetric value={data?.queue?.running ?? 0} label="Jobs corriendo" accent="#34363a" />
           <LiveMetric value={pendingCount} label="En cola" accent="#fbbf24" />
         </div>
 
@@ -308,8 +308,8 @@ export default function TallerPage() {
                   }}
                   className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition active:scale-95"
                   style={{
-                    background: on ? "#8b5cf618" : "transparent",
-                    color: on ? "#8b5cf6" : "var(--fg-tertiary)",
+                    background: on ? "#0a0a0a" : "transparent",
+                    color: on ? "#ffffff" : "var(--fg-tertiary)",
                   }}
                   aria-pressed={on}
                 >
@@ -324,7 +324,7 @@ export default function TallerPage() {
                 setFocusJob(null);
                 setView("constelacion");
               }}
-              className="chip inline-flex min-h-[40px] items-center gap-1.5 px-3 text-[12px] text-violet-400 transition active:scale-95"
+              className="chip inline-flex min-h-[40px] items-center gap-1.5 px-3 text-[12px] text-black transition active:scale-95"
             >
               <IconBoxes size={13} /> Volver a constelación
             </button>
@@ -381,7 +381,7 @@ export default function TallerPage() {
 
         {/* Tablero: quién trabaja en qué */}
         <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
-          <p className="label-caps flex items-center gap-1.5 text-violet-400">
+          <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
             <IconActivity size={13} /> Quién trabaja en qué
           </p>
 
@@ -467,7 +467,7 @@ export default function TallerPage() {
         {/* Último veredicto del auditor Grok */}
         {data?.lastVerdict && (
           <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
-            <p className="label-caps flex items-center gap-1.5 text-violet-400">
+            <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
               <LogoGrok size={13} style={{ color: "#f472b6" }} /> Auditor Grok
             </p>
             <div className="mt-3 flex items-center gap-3">
@@ -487,7 +487,7 @@ export default function TallerPage() {
                     Job #{data.lastVerdict.id}
                   </span>
                   {data.lastVerdict.project && (
-                    <span className="truncate text-[12px] text-violet-400">
+                    <span className="truncate text-[12px] text-[var(--fg-muted)]">
                       {data.lastVerdict.project}
                     </span>
                   )}
@@ -506,7 +506,7 @@ export default function TallerPage() {
         {/* Feed de actividad reciente con timestamps relativos */}
         {feed.length > 0 && (
           <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
-            <p className="label-caps flex items-center gap-1.5 text-violet-400">
+            <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
               <IconActivity size={13} /> Actividad reciente
             </p>
             <div className="mt-3 space-y-1.5">
@@ -523,7 +523,7 @@ export default function TallerPage() {
                     />
                     <span className="flex-none font-medium text-on-surface">{f.agentName}</span>
                     {f.project && (
-                      <span className="hidden max-w-[90px] flex-none truncate text-[12px] text-violet-400 sm:inline">
+                      <span className="hidden max-w-[90px] flex-none truncate text-[12px] text-[var(--fg-muted)] sm:inline">
                         {f.project}
                       </span>
                     )}

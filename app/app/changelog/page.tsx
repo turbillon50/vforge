@@ -16,11 +16,11 @@ interface Entry {
 const REPO_URL = "https://github.com/turbillon50/vforge";
 
 const CAT_STYLE: Record<Category, { dot: string; badge: string; label: string }> = {
-  feat:     { dot: "#8b5cf6", badge: "bg-violet-500/10 text-violet-400 border-cyan-500/20",     label: "NUEVO" },
+  feat:     { dot: "#0a0a0a", badge: "bg-black text-white border-black",     label: "NUEVO" },
   fix:      { dot: "#22c55e", badge: "bg-green-500/10 text-green-400 border-green-500/20",   label: "FIX" },
   perf:     { dot: "#fbbf24", badge: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20", label: "PERF" },
-  refactor: { dot: "#a78bfa", badge: "bg-violet-500/10 text-violet-300 border-violet-500/20", label: "REFACTOR" },
-  other:    { dot: "#a78bfa", badge: "bg-violet-500/10 text-violet-300 border-violet-500/20", label: "OTRO" },
+  refactor: { dot: "#73767b", badge: "bg-white text-[var(--fg-secondary)] border-[var(--border-1)]", label: "REFACTOR" },
+  other:    { dot: "#73767b", badge: "bg-white text-[var(--fg-secondary)] border-[var(--border-1)]", label: "OTRO" },
 };
 
 function startOfDay(d: Date): number {
@@ -85,7 +85,7 @@ export default function ChangelogPage() {
             href={REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] px-3.5 py-2 text-[13px] font-medium text-[var(--fg-secondary)] transition hover:border-violet-500/30 hover:text-[var(--fg-primary)]"
+            className="btn-primary"
           >
             <IconGithub size={14} /> Ver en GitHub
           </a>
@@ -121,7 +121,7 @@ export default function ChangelogPage() {
           <div className="space-y-8">
             {groups.map((group) => (
               <section key={group.label}>
-                <h2 className="sticky top-0 z-10 mb-3 bg-[var(--color-void)]/80 py-1 font-mono text-[12px] uppercase tracking-[0.2em] text-violet-400 backdrop-blur-sm">
+            <h2 className="sticky top-0 z-10 mb-3 bg-[var(--color-background)]/90 py-1 font-mono text-[12px] uppercase tracking-[0.2em] text-[var(--fg-muted)] backdrop-blur-sm">
                   {group.label}
                 </h2>
                 <ol className="relative space-y-2 border-l border-[var(--border-1)] pl-5">
@@ -133,7 +133,7 @@ export default function ChangelogPage() {
                           className="absolute -left-[22px] top-2 h-2.5 w-2.5 rounded-full ring-2 ring-[var(--color-void)]"
                           style={{ background: cat.dot, boxShadow: `0 0 7px ${cat.dot}` }}
                         />
-                        <div className="overflow-hidden rounded-xl border border-[var(--border-1)] bg-[#0a0a12] p-4 transition hover:border-violet-500/25">
+                        <div className="overflow-hidden rounded-2xl border border-[var(--border-1)] bg-white p-4 transition hover:border-black/30">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 flex-wrap items-center gap-2">
                               <span className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[12px] uppercase tracking-widest ${cat.badge}`}>
@@ -152,7 +152,7 @@ export default function ChangelogPage() {
                               href={ev.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-mono text-[12px] text-[var(--fg-tertiary)] transition hover:text-violet-300"
+                              className="inline-flex items-center gap-1 font-mono text-[12px] text-[var(--fg-tertiary)] transition hover:text-black"
                             >
                               {ev.sha}
                               <IconExtLink size={10} />

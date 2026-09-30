@@ -220,7 +220,7 @@ export default function FabricaPage() {
                 <button
                   type="button"
                   onClick={() => setTodos((v) => !v)}
-                  className="inline-flex h-10 items-center justify-center rounded-full bg-[#ff5a1f] px-5 text-[14px] font-medium text-white transition hover:bg-[#e84d14] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff5a1f]"
+                  className="inline-flex h-10 items-center justify-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-white transition hover:bg-[var(--accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                 >
                   {todos ? "Ver menos" : `Ver toda la actividad (${filtrados.length})`}
                 </button>

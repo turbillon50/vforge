@@ -684,7 +684,7 @@ export default function ProjectsPage() {
             type="button"
             onClick={() => void syncProjects()}
             disabled={refreshing}
-            className="btn-ghost shrink-0"
+            className="btn-primary shrink-0 disabled:opacity-50"
           >
             <IconRefresh size={13} className={refreshing ? "animate-spin" : ""} />
             Sincronizar
@@ -1385,7 +1385,7 @@ function ProjectRow({
             Detalle
             <IconChevD size={12} className={open ? "rotate-180 transition" : "transition"} />
           </button>
-          <Link href={`/app/live/${encodeURIComponent(p.id)}`} className="btn-primary !min-h-9 !px-4">
+          <Link href={`/app/live/${encodeURIComponent(p.id)}`} className="btn-ghost !min-h-9 !px-4">
             <IconLayout size={12} /> Sala
           </Link>
         </div>
@@ -1620,7 +1620,7 @@ function Detail({
               type="button"
               onClick={() => void addNote()}
               disabled={!draft.trim() || busy}
-              className="btn-primary !min-h-9 !px-4 disabled:opacity-50"
+              className="btn-ghost !min-h-9 !px-4 disabled:opacity-50"
             >
               {busy ? "Guardando…" : "Agregar"}
             </button>

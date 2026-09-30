@@ -1,19 +1,19 @@
 // Paleta obsidian de la Forja — nivel Prada/Linear. Un solo lugar de verdad.
 export const F = {
-  void: "#03020a",
-  bg: "#0a0814",
-  surface: "#100d1e",
-  surfaceHi: "#171331",
-  violet: "#7c3aed",
-  cyan: "#22d3ee",
-  silver: "#e7ebf6",
+  void: "#f7f7f5",
+  bg: "#f7f7f5",
+  surface: "#ffffff",
+  surfaceHi: "#f2f2f0",
+  violet: "#0a0a0a",
+  cyan: "#34363a",
+  silver: "#0a0a0a",
   red: "#f2506e",
   amber: "#fbbf24",
-  fg: "#e7ebf6",
-  fg2: "rgba(231,235,246,0.62)",
-  fg3: "rgba(231,235,246,0.40)",
-  border: "rgba(231,235,246,0.08)",
-  border2: "rgba(231,235,246,0.14)",
+  fg: "#0a0a0a",
+  fg2: "#34363a",
+  fg3: "#6b6e73",
+  border: "#dedfdf",
+  border2: "#bfc1c3",
 } as const;
 
 // Color por status de job — fuente única para orbe/barra/badges.

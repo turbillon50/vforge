@@ -62,7 +62,7 @@ export function UtilizacionPanel() {
   return (
     <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
       <div className="flex items-center justify-between gap-2">
-        <p className="label-caps flex items-center gap-1.5 text-violet-400">
+        <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
           <IconActivity size={13} /> Utilización · últimas 24h
         </p>
         <div className="flex items-center gap-2">

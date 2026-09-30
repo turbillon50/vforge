@@ -313,7 +313,7 @@ export default function TableroPage() {
             type="button"
             onClick={() => void cargar(true)}
             disabled={refrescando}
-            className={cn(BOTON, "border border-black bg-black text-white hover:bg-neutral-800")}
+            className={cn(BOTON, "border border-[var(--accent)] bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]")}
           >
             <IconRefresh size={15} className={cn(refrescando && "animate-spin")} />
             {refrescando ? "Midiendo…" : "Medir ahora"}

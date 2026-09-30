@@ -11,6 +11,9 @@
   --color-accent-dark: #000000;
   --color-accent-bg: rgba(0, 0, 0, 0.045);
   --color-accent-glow: rgba(0, 0, 0, 0.08);
+  --accent: #FF5A1F;
+  --accent-hover: #E84D14;
+  --accent-soft: rgba(255, 90, 31, 0.12);
 
   --color-violet-100: #f2f2f0;
   --color-violet-200: #dededb;
@@ -214,16 +217,16 @@ select {
     justify-content: center;
     gap: 0.5rem;
     overflow: hidden;
-    border: 1px solid #000000;
+    border: 1px solid var(--accent);
     border-radius: 8px;
-    background: #000000;
+    background: var(--accent);
     padding: 0.625rem 1rem;
     color: #ffffff;
     font-size: 0.8125rem;
     font-weight: 550;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.16),
-      0 8px 18px rgba(0, 0, 0, 0.12);
+      0 8px 18px rgba(255, 90, 31, 0.18);
   }
 
   .btn-primary::after {
@@ -241,11 +244,11 @@ select {
   }
 
   .btn-primary:hover {
-    background: #222222;
+    background: var(--accent-hover);
     transform: translateY(-1px);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      0 14px 28px rgba(0, 0, 0, 0.16);
+      0 14px 28px rgba(255, 90, 31, 0.22);
   }
 
   .btn-primary:hover::after {
@@ -263,7 +266,7 @@ select {
   .btn-primary:focus-visible,
   .btn-ghost:focus-visible,
   .vf-press:focus-visible {
-    outline: 2px solid #090909;
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
 

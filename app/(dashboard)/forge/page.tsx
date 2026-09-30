@@ -29,9 +29,9 @@ function ToolBadge({ name }: { name: string }) {
         padding: "2px 8px",
         fontSize: "11px",
         fontFamily: "monospace",
-        background: "rgba(124,58,237,0.1)",
-        color: "#8b5cf6",
-        border: "1px solid rgba(124,58,237,0.2)",
+        background: "var(--accent-soft)",
+        color: "var(--accent-hover)",
+        border: "1px solid var(--accent)",
         borderRadius: "4px",
         marginBottom: "6px",
       }}
@@ -49,12 +49,12 @@ function Message({ msg }: { msg: Msg }) {
       <div style={{ display: "flex", justifyContent: "flex-end", padding: "0 0 0 80px" }}>
         <div
           style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: "#ffffff",
+            border: "1px solid var(--border-1)",
             borderRadius: "10px",
             padding: "10px 14px",
             fontSize: "14px",
-            color: "#e5e5e5",
+            color: "#0a0a0a",
             lineHeight: "1.5",
             maxWidth: "640px",
           }}
@@ -72,7 +72,7 @@ function Message({ msg }: { msg: Msg }) {
         <p
           style={{
             fontSize: "14px",
-            color: "#ccc",
+            color: "#34363a",
             lineHeight: "1.65",
             margin: 0,
             whiteSpace: "pre-wrap",
@@ -115,8 +115,8 @@ function EmptyState() {
           width: "36px",
           height: "36px",
           borderRadius: "8px",
-          background: "rgba(124,58,237,0.15)",
-          border: "1px solid rgba(124,58,237,0.25)",
+          background: "#ffffff",
+          border: "1px solid var(--border-1)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -124,21 +124,21 @@ function EmptyState() {
         }}
       >
         <svg width="16" height="16" viewBox="0 0 15 15" fill="none">
-          <path d="M7.5 1L9.5 5.5H14L10.5 8.5L12 13L7.5 10L3 13L4.5 8.5L1 5.5H5.5L7.5 1Z" stroke="#8b5cf6" strokeWidth="1.2" strokeLinejoin="round"/>
+          <path d="M7.5 1L9.5 5.5H14L10.5 8.5L12 13L7.5 10L3 13L4.5 8.5L1 5.5H5.5L7.5 1Z" stroke="#0a0a0a" strokeWidth="1.2" strokeLinejoin="round"/>
         </svg>
       </div>
       <h2
         style={{
           fontSize: "20px",
           fontWeight: 600,
-          color: "#e5e5e5",
+          color: "#0a0a0a",
           margin: "0 0 8px",
           letterSpacing: "-0.02em",
         }}
       >
         Forge / V
       </h2>
-      <p style={{ fontSize: "13px", color: "#444", margin: "0 0 32px", maxWidth: "320px" }}>
+      <p style={{ fontSize: "13px", color: "var(--fg-secondary)", margin: "0 0 32px", maxWidth: "320px" }}>
         AI copilot con acceso a proyectos, GitHub, Vercel, Vault y DNS. Pregunta lo que necesites.
       </p>
       <div
@@ -154,23 +154,23 @@ function EmptyState() {
           <button
             key={i}
             style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.07)",
+              background: "#fff",
+              border: "1px solid var(--border-1)",
               borderRadius: "8px",
               padding: "10px 14px",
               fontSize: "12px",
-              color: "#555",
+              color: "var(--fg-secondary)",
               textAlign: "left",
               cursor: "pointer",
               transition: "all 100ms",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.12)";
-              (e.currentTarget as HTMLElement).style.color = "#888";
+              (e.currentTarget as HTMLElement).style.borderColor = "#0a0a0a";
+              (e.currentTarget as HTMLElement).style.color = "#0a0a0a";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)";
-              (e.currentTarget as HTMLElement).style.color = "#555";
+              (e.currentTarget as HTMLElement).style.borderColor = "var(--border-1)";
+              (e.currentTarget as HTMLElement).style.color = "var(--fg-secondary)";
             }}
           >
             {s}
@@ -301,7 +301,7 @@ export default function ForgePage() {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: "#0a0a0f",
+        background: "#f7f7f5",
       }}
     >
       {/* Messages area */}
@@ -353,9 +353,9 @@ export default function ForgePage() {
       {/* Composer */}
       <div
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderTop: "1px solid var(--border-1)",
           padding: "16px 24px 20px",
-          background: "#0a0a0f",
+          background: "#f7f7f5",
         }}
       >
         <div style={{ maxWidth: "760px", margin: "0 auto" }}>
@@ -364,19 +364,19 @@ export default function ForgePage() {
               display: "flex",
               alignItems: "flex-end",
               gap: "12px",
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: "#ffffff",
+              border: "1px solid var(--border-1)",
               borderRadius: "12px",
               padding: "12px 16px",
               transition: "border-color 150ms",
             }}
             onFocus={(e) => {
               (e.currentTarget as HTMLElement).style.borderColor =
-                "rgba(255,255,255,0.16)";
+                "#0a0a0a";
             }}
             onBlur={(e) => {
               (e.currentTarget as HTMLElement).style.borderColor =
-                "rgba(255,255,255,0.08)";
+                "var(--border-1)";
             }}
           >
             <textarea
@@ -394,7 +394,7 @@ export default function ForgePage() {
                 border: "none",
                 outline: "none",
                 fontSize: "14px",
-                color: "#e5e5e5",
+                color: "#0a0a0a",
                 resize: "none",
                 fontFamily: "inherit",
                 lineHeight: "1.5",
@@ -409,13 +409,13 @@ export default function ForgePage() {
                 width: "30px",
                 height: "30px",
                 borderRadius: "8px",
-                background: input.trim() && !loading ? "#7c3aed" : "rgba(255,255,255,0.05)",
+                background: input.trim() && !loading ? "var(--accent)" : "rgba(0,0,0,0.05)",
                 border: "none",
                 cursor: input.trim() && !loading ? "pointer" : "default",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: input.trim() && !loading ? "#fff" : "#333",
+                color: input.trim() && !loading ? "#fff" : "#8d9094",
                 transition: "all 150ms",
               }}
             >
@@ -425,7 +425,7 @@ export default function ForgePage() {
           <p
             style={{
               fontSize: "11px",
-              color: "#2a2a2a",
+              color: "#6b6e73",
               marginTop: "8px",
               textAlign: "center",
               fontFamily: "monospace",
