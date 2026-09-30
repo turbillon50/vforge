@@ -243,6 +243,15 @@ select {
     pointer-events: none;
   }
 
+  /* Botón secundario fuerte (negro). La acción principal de cada página es .btn-primary (naranja); todo lo demás usa .btn-ink o .btn-ghost. */
+  .btn-ink {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    border: 1px solid #000; border-radius: 8px; background: #000; padding: 0.625rem 1rem;
+    color: #fff; font-size: 0.8125rem; font-weight: 550; transition: background .2s, transform .2s;
+  }
+  .btn-ink:hover { background: #222; transform: translateY(-1px); }
+  .btn-ink:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
   .btn-primary:hover {
     background: var(--accent-hover);
     transform: translateY(-1px);

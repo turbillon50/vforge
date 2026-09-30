@@ -250,7 +250,9 @@ export default function IntegrationsPage() {
         </div>
 
         <div className="grid border-l border-t border-[var(--border-1)] lg:grid-cols-2">
-          {SERVICES.map((service) => {
+          {SERVICES.map((service, _i, todos) => {
+            // Acción principal (naranja): solo el primer servicio OAuth pendiente.
+            const primerPendienteId = todos.find((x) => x.mode === "oauth" && !connectedSet.has(x.id))?.id;
             const isConnected = connectedSet.has(service.id);
             const isEditing = editing[service.id] || !isConnected;
             const saving = states[service.id] === "saving";
@@ -286,7 +288,7 @@ export default function IntegrationsPage() {
                     <a
                       href={service.endpoint}
                       className={
-                        isConnected ? "btn-ghost w-full" : "btn-primary w-full"
+                        isConnected ? "btn-ghost w-full" : service.id === primerPendienteId ? "btn-primary w-full" : "btn-ink w-full"
                       }
                     >
                       <IconLink size={12} />
@@ -317,7 +319,7 @@ export default function IntegrationsPage() {
                           type="button"
                           onClick={() => void saveKey(service)}
                           disabled={saving || !values[service.id]?.trim()}
-                          className="btn-primary disabled:cursor-not-allowed disabled:opacity-35"
+                          className="btn-ink disabled:cursor-not-allowed disabled:opacity-35"
                         >
                           <IconKey size={12} />
                           {saving ? "Validando…" : "Validar y guardar"}

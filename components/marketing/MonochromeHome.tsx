@@ -346,7 +346,7 @@ export function MonochromeHome() {
                     <li key={f}>{CHECK}{f}</li>
                   ))}
                 </ul>
-                <Link className="fx-pill solid" href="/sign-up">Elegir Starter</Link>
+                <Link className="fx-pill solid ink" href="/sign-up">Elegir Starter</Link>
               </div>
             </div>
           </div>

@@ -75,6 +75,8 @@ html[data-vf-splash="off"] .fx-hero .fx-reveal{ animation:fxRevealIn .9s var(--e
 .fx-pill{ display:inline-flex; align-items:center; justify-content:center; gap:8px; border-radius:999px; font-size:14px; font-weight:500; line-height:1; padding:12px 24px; transition:all .25s var(--ease); cursor:pointer; border:1px solid transparent; white-space:nowrap; text-decoration:none; }
 .fx-pill.solid{ background:var(--accent); color:var(--white); }
 .fx-pill.solid:hover{ background:var(--accent-hover); transform:translateY(-1px); }
+.fx-pill.solid.ink{ background:var(--ink); }
+.fx-pill.solid.ink:hover{ background:#2A2A2A; }
 .fx-navcta .fx-pill.solid{ background:var(--ink); color:var(--white); }
 .fx-navcta .fx-pill.solid:hover{ background:#2A2A2A; }
 .fx-pill.ghost{ background:transparent; color:var(--ink); border-color:var(--line2); }
