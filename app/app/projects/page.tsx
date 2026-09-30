@@ -4,47 +4,34 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   IconChevD,
-  IconExtLink,
   IconGithub,
   IconLayout,
   IconRefresh,
   IconSearch,
   IconTrash,
-  IconUsers,
   IconX,
 } from "@/components/brand/VFIcons";
 import { InviteShare } from "@/components/live/InviteShare";
 import { RepositoryGroupManager } from "@/components/projects/RepositoryGroupManager";
-import type { ProjectRepository } from "@/lib/projects/repository-groups";
+import { BulkBar, type CambioLote } from "@/components/projects/BulkBar";
+import { FamilyRow } from "@/components/projects/FamilyRow";
+import { SuggestionsPanel, type SugerenciaLista } from "@/components/projects/SuggestionsPanel";
+import { agruparFamilias, mapaFamilias, type Familia } from "@/lib/projects/familias";
+import { estadoReal } from "@/lib/projects/estado-real";
+import {
+  CATEGORIAS_UI,
+  ETIQUETA_CATEGORIA,
+  MXN,
+  fecha,
+  hace,
+  porCobrar,
+  valorSugerido,
+  type ProyectoVista,
+} from "@/lib/projects/vista";
 
 /* ───────────────────────── tipos ───────────────────────── */
 
-interface Project {
-  id: string;
-  name: string;
-  category: string;
-  status: string;
-  github_repo: string | null;
-  github_private?: boolean;
-  github_language?: string | null;
-  vercel_url: string | null;
-  domain?: string | null;
-  delivery_priority?: boolean;
-  progress_pct?: number;
-  family_code?: string | null;
-  repositories: ProjectRepository[];
-  repository_count: number;
-  description?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  client_name?: string | null;
-  due_date?: string | null;
-  contract_amount?: number | null;
-  paid_amount?: number | null;
-  last_push?: string | null;
-  notes_count?: number;
-  last_note?: { body: string; created_at: string } | null;
-}
+type Project = ProyectoVista;
 
 interface Note {
   id: string;
@@ -56,6 +43,8 @@ interface Note {
 type Activity = "all" | "7" | "30" | "90" | "dormant" | "never";
 type Due = "all" | "overdue" | "week" | "month" | "dated" | "undated";
 type Progress = "all" | "0" | "low" | "high" | "done";
+/** De dónde viene el estado: lo puso Luis o lo calculó la máquina. */
+type Fuente = "all" | "manual" | "calculado";
 type Sort =
   | "smart"
   | "activity"
@@ -80,6 +69,7 @@ type Flag =
   | "vercel"
   | "notes"
   | "family"
+  | "sugerencias"
   | "owed";
 
 interface Filters {
@@ -88,6 +78,7 @@ interface Filters {
   activity: Activity;
   due: Due;
   progress: Progress;
+  fuente: Fuente;
   flags: Flag[];
   client: string;
   lang: string;
@@ -95,6 +86,8 @@ interface Filters {
   dir: Dir;
   sort2: Sort | "";
   dir2: Dir;
+  /** Vista: una fila por familia (así no se ve la misma app 14 veces). */
+  agrupar: boolean;
 }
 
 const EMPTY: Filters = {
@@ -103,6 +96,7 @@ const EMPTY: Filters = {
   activity: "all",
   due: "all",
   progress: "all",
+  fuente: "all",
   flags: [],
   client: "",
   lang: "",
@@ -110,26 +104,19 @@ const EMPTY: Filters = {
   dir: "desc",
   sort2: "",
   dir2: "desc",
+  agrupar: true,
 };
 
 /* ───────────────────────── constantes ───────────────────────── */
 
-const CATEGORIES: { id: string; label: string }[] = [
-  { id: "produccion", label: "Producción" },
-  { id: "activo", label: "Activo" },
-  { id: "en_revision", label: "En revisión" },
-  { id: "en_pausa", label: "En pausa" },
-  { id: "archivo", label: "Archivado" },
-  { id: "pendiente_borrado", label: "Por borrar" },
-];
-const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
-  CATEGORIES.map((c) => [c.id, c.label]),
-);
+const CATEGORIES = CATEGORIAS_UI;
+const CATEGORY_LABELS = ETIQUETA_CATEGORIA;
 
 const FLAGS: { id: Flag; label: string }[] = [
   { id: "priority", label: "Prioridad" },
   { id: "owed", label: "Por cobrar" },
   { id: "notes", label: "Con comentarios" },
+  { id: "sugerencias", label: "Con sugerencias" },
   { id: "domain", label: "Con dominio" },
   { id: "nodomain", label: "Sin dominio" },
   { id: "repo", label: "Con repo" },
@@ -162,6 +149,12 @@ const PROGRESS: { id: Progress; label: string }[] = [
   { id: "low", label: "1–49%" },
   { id: "high", label: "50–99%" },
   { id: "done", label: "100%" },
+];
+
+const FUENTES: { id: Fuente; label: string }[] = [
+  { id: "all", label: "Todos" },
+  { id: "manual", label: "Puesto a mano" },
+  { id: "calculado", label: "Calculado" },
 ];
 
 /**
@@ -205,16 +198,18 @@ const SORTS: SortDef[] = [
 ];
 const SORT_BY_ID = Object.fromEntries(SORTS.map((x) => [x.id, x])) as Record<Sort, SortDef>;
 
-/** Proyectos por tanda. Cada fila es un componente pesado; el catálogo entero no se pinta de golpe. */
+/** Filas por tanda (familias o proyectos). Cada fila es un componente pesado. */
 const PAGINA = 40;
 
 // El tema de VForge aplana los -500 de Tailwind: los colores de alerta van en hex.
 const C = { rojo: "#dc2626", ambar: "#b45309", verde: "#15803d" };
 
 const DAY = 86_400_000;
-const TZ = "America/Cancun";
 
 /* ───────────────────────── utilidades ───────────────────────── */
+
+const mxn = MXN;
+const owed = porCobrar;
 
 function hasDomain(p: Project) {
   return Boolean(p.domain?.trim());
@@ -225,15 +220,6 @@ function normalizeExternalUrl(value: string | null | undefined) {
   if (!trimmed) return null;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return `https://${trimmed}`;
-}
-
-/** Raíz para detectar posibles duplicados (vliving-demo → vliving). */
-function nameRoot(name: string) {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/-(demo|v\d+|app|site|admin|preview|front|backend|api|new|old|copy|test)$/g, "")
-    .replace(/^-+|-+$/g, "");
 }
 
 function norm(s: string | null | undefined) {
@@ -253,48 +239,36 @@ function dueMs(p: Project) {
   return p.due_date ? new Date(`${p.due_date}T12:00:00`).getTime() : null;
 }
 
-function owed(p: Project) {
-  const total = p.contract_amount ?? 0;
-  const paid = p.paid_amount ?? 0;
-  return Math.max(0, total - paid);
+/** Recalcula el estado real con el MISMO módulo del servidor tras guardar. */
+function conEstado(p: Project): Project {
+  const e = estadoReal({
+    category: p.category,
+    category_manual_at: p.category_manual_at,
+    domain: p.domain,
+    vercel_url: p.vercel_url,
+    vercel_project_id: p.vercel_project_id,
+    deploys_ready: p.deploys_ready,
+    health_status: p.health_status,
+    health_ok: p.health_ok,
+    health_checked_at: p.health_checked_at,
+    last_push: p.last_push,
+    github_repo: p.github_repo,
+    repository_count: p.repository_count,
+  });
+  return {
+    ...p,
+    estado_real: e.estado,
+    estado_fuente: e.fuente,
+    estado_motivo: e.motivo,
+    sondeo_pendiente: e.sondeo_pendiente,
+  };
 }
-
-function hace(iso: string | null | undefined, now: number) {
-  if (!iso) return null;
-  const s = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000));
-  if (s < 3600) return `hace ${Math.max(1, Math.round(s / 60))} min`;
-  const h = Math.round(s / 3600);
-  if (h < 48) return `hace ${h} h`;
-  const d = Math.round(h / 24);
-  if (d < 60) return `hace ${d} días`;
-  const m = Math.round(d / 30);
-  if (m < 24) return `hace ${m} meses`;
-  return `hace ${Math.round(m / 12)} años`;
-}
-
-function fecha(iso: string | null | undefined, conHora = false) {
-  if (!iso) return "—";
-  const d = iso.length === 10 ? new Date(`${iso}T12:00:00`) : new Date(iso);
-  return new Intl.DateTimeFormat("es-MX", {
-    timeZone: TZ,
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    ...(conHora ? { hour: "2-digit", minute: "2-digit" } : {}),
-  }).format(d);
-}
-
-const mxn = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "MXN",
-  maximumFractionDigits: 0,
-});
 
 function dueInfo(p: Project, today: number) {
   const ms = dueMs(p);
   if (ms === null) return null;
   const days = Math.round((ms - today) / DAY);
-  const done = (p.progress_pct ?? 0) >= 100 || p.category === "produccion";
+  const done = (p.progress_pct ?? 0) >= 100 || p.estado_real === "produccion";
   if (done) return { text: `Entrega ${fecha(p.due_date)}`, color: C.verde, days };
   if (days < 0) return { text: `Vencida hace ${-days} d`, color: C.rojo, days };
   if (days === 0) return { text: "Entrega hoy", color: C.rojo, days };
@@ -318,6 +292,7 @@ function readUrl(): Filters {
     activity: pick("actividad", ACTIVITY.map((a) => a.id), "all"),
     due: pick("entrega", DUE.map((d) => d.id), "all"),
     progress: pick("avance", PROGRESS.map((p) => p.id), "all"),
+    fuente: pick("fuente", FUENTES.map((x) => x.id), "all"),
     flags: list("marcas").filter((f): f is Flag => FLAGS.some((x) => x.id === f)),
     client: u.get("cliente") ?? "",
     lang: u.get("lenguaje") ?? "",
@@ -325,6 +300,7 @@ function readUrl(): Filters {
     dir: pick<Dir>("dir", ["desc", "asc"], "desc"),
     sort2: pick<Sort | "">("orden2", ["", ...SORTS.map((s) => s.id)], ""),
     dir2: pick<Dir>("dir2", ["desc", "asc"], "desc"),
+    agrupar: u.get("agrupar") !== "0",
   };
 }
 
@@ -335,6 +311,7 @@ function writeUrl(f: Filters) {
   if (f.activity !== "all") u.set("actividad", f.activity);
   if (f.due !== "all") u.set("entrega", f.due);
   if (f.progress !== "all") u.set("avance", f.progress);
+  if (f.fuente !== "all") u.set("fuente", f.fuente);
   if (f.flags.length) u.set("marcas", f.flags.join(","));
   if (f.client) u.set("cliente", f.client);
   if (f.lang) u.set("lenguaje", f.lang);
@@ -344,6 +321,7 @@ function writeUrl(f: Filters) {
     u.set("orden2", f.sort2);
     if (f.dir2 !== SORT_BY_ID[f.sort2].def) u.set("dir2", f.dir2);
   }
+  if (!f.agrupar) u.set("agrupar", "0");
   const qs = u.toString();
   window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
 }
@@ -355,6 +333,7 @@ function activeCount(f: Filters) {
     (f.activity !== "all" ? 1 : 0) +
     (f.due !== "all" ? 1 : 0) +
     (f.progress !== "all" ? 1 : 0) +
+    (f.fuente !== "all" ? 1 : 0) +
     f.flags.length +
     (f.client ? 1 : 0) +
     (f.lang ? 1 : 0)
@@ -371,12 +350,25 @@ export default function ProjectsPage() {
   const [f, setF] = useState<Filters>(EMPTY);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [openFamilies, setOpenFamilies] = useState<Set<string>>(new Set());
   const [inviteProject, setInviteProject] = useState<Project | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [repositoryProject, setRepositoryProject] = useState<Project | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [pagina, setPagina] = useState(1);
+  // Estado real: cuántos dominios faltan por sondear y el sondeo en curso.
+  const [sinSondear, setSinSondear] = useState(0);
+  const [sondeando, setSondeando] = useState(false);
+  // Sugerencias con fuente.
+  const [sugerencias, setSugerencias] = useState<SugerenciaLista[]>([]);
+  const [panelSugerencias, setPanelSugerencias] = useState(false);
+  const [sugOcupado, setSugOcupado] = useState(false);
+  const [sugAviso, setSugAviso] = useState<string | null>(null);
+  // Edición masiva.
+  const [seleccion, setSeleccion] = useState<Set<string>>(new Set());
+  const [loteOcupado, setLoteOcupado] = useState(false);
+  const [loteAviso, setLoteAviso] = useState<string | null>(null);
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -404,12 +396,27 @@ export default function ProjectsPage() {
             : `No se pudo cargar el catálogo (HTTP ${response.status}).`,
         );
       }
-      const payload = (await response.json()) as { projects?: Project[] };
+      const payload = (await response.json()) as {
+        projects?: Project[];
+        sin_sondear?: number;
+      };
       setProjects(Array.isArray(payload.projects) ? payload.projects : []);
+      setSinSondear(payload.sin_sondear ?? 0);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "No se pudo cargar el catálogo.");
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const loadSugerencias = useCallback(async () => {
+    try {
+      const r = await fetch("/api/projects/suggestions", { cache: "no-store" });
+      if (!r.ok) return;
+      const d = (await r.json()) as { sugerencias?: SugerenciaLista[] };
+      setSugerencias(d.sugerencias ?? []);
+    } catch {
+      // Las sugerencias son ayuda, no el catálogo: si fallan, la lista sigue.
     }
   }, []);
 
@@ -445,31 +452,63 @@ export default function ProjectsPage() {
     }
   }, [loadProjects]);
 
-  useEffect(() => {
-    void loadProjects();
+  /** Sondea los dominios por tandas hasta que no queden pendientes. */
+  const sondearDominios = useCallback(async () => {
+    setSondeando(true);
+    setError(null);
+    let vivos = 0;
+    let medidos = 0;
+    try {
+      for (let vuelta = 0; vuelta < 20; vuelta++) {
+        const r = await fetch("/api/projects/health", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ limite: 30 }),
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const d = (await r.json()) as { sondeados: number; vivos: number; restantes: number };
+        medidos += d.sondeados;
+        vivos += d.vivos;
+        setSinSondear(d.restantes);
+        setSyncMessage(
+          `Sondeando dominios: ${medidos} medidos · ${vivos} responden · ${d.restantes} por medir`,
+        );
+        if (d.restantes === 0 || d.sondeados === 0) break;
+      }
+      await loadProjects();
+      setSyncMessage(`Sondeo listo: ${medidos} dominios medidos, ${vivos} responden`);
+    } catch (caught) {
+      setSyncMessage(null);
+      setError(
+        `No se pudo sondear los dominios: ${caught instanceof Error ? caught.message : "error"}`,
+      );
+    } finally {
+      setSondeando(false);
+    }
   }, [loadProjects]);
 
-  const familyCounts = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const p of projects) {
-      const code = p.family_code?.trim().toLowerCase();
-      if (code) map.set(code, (map.get(code) ?? 0) + 1);
-      const root = nameRoot(p.name || p.id);
-      if (root) map.set(`~${root}`, (map.get(`~${root}`) ?? 0) + 1);
-    }
-    return map;
-  }, [projects]);
+  useEffect(() => {
+    void loadProjects();
+    void loadSugerencias();
+  }, [loadProjects, loadSugerencias]);
+
+  /** Familias de TODO el catálogo: sirven para la pastilla y para el filtro. */
+  const familiasCatalogo = useMemo(() => mapaFamilias(projects), [projects]);
 
   const relatedHint = useCallback(
     (p: Project) => {
-      const code = p.family_code?.trim().toLowerCase();
-      if (code && (familyCounts.get(code) ?? 0) > 1) return `Familia ${code} · ${familyCounts.get(code)}`;
-      const root = nameRoot(p.name || p.id);
-      if (root && (familyCounts.get(`~${root}`) ?? 0) > 1) return `Posible grupo · ${root}`;
-      return null;
+      const fam = familiasCatalogo.get(p.id);
+      if (!fam?.agrupada) return null;
+      return `Familia ${fam.etiqueta} · ${fam.miembros.length}`;
     },
-    [familyCounts],
+    [familiasCatalogo],
   );
+
+  const sugerenciasPorProyecto = useMemo(() => {
+    const m = new Map<string, SugerenciaLista[]>();
+    for (const s of sugerencias) m.set(s.project_id, [...(m.get(s.project_id) ?? []), s]);
+    return m;
+  }, [sugerencias]);
 
   const clients = useMemo(
     () =>
@@ -506,7 +545,9 @@ export default function ProjectsPage() {
           .join(" ");
         if (!needle.split(/\s+/).every((w) => hay.includes(w))) return false;
       }
-      if (skip !== "cats" && f.cats.length && !f.cats.includes(p.category)) return false;
+      // El filtro de estado usa el estado REAL: manual si existe, calculado si no.
+      if (skip !== "cats" && f.cats.length && !f.cats.includes(p.estado_real)) return false;
+      if (skip !== "fuente" && f.fuente !== "all" && p.estado_fuente !== f.fuente) return false;
       if (skip !== "client" && f.client && (p.client_name ?? "") !== f.client) return false;
       if (skip !== "lang" && f.lang && (p.github_language ?? "") !== f.lang) return false;
 
@@ -547,11 +588,12 @@ export default function ProjectsPage() {
         if (flag === "vercel" && !p.vercel_url) return false;
         if (flag === "notes" && !(p.notes_count && p.notes_count > 0)) return false;
         if (flag === "owed" && owed(p) <= 0) return false;
-        if (flag === "family" && !relatedHint(p)) return false;
+        if (flag === "sugerencias" && !sugerenciasPorProyecto.has(p.id)) return false;
+        if (flag === "family" && !familiasCatalogo.get(p.id)?.agrupada) return false;
       }
       return true;
     },
-    [f, now, relatedHint],
+    [f, now, familiasCatalogo, sugerenciasPorProyecto],
   );
 
   const filtered = useMemo(() => {
@@ -562,7 +604,7 @@ export default function ProjectsPage() {
     };
     const smart = (a: Project, b: Project) =>
       Number(!!b.delivery_priority) - Number(!!a.delivery_priority) ||
-      catRank(a.category) - catRank(b.category) ||
+      catRank(a.estado_real) - catRank(b.estado_real) ||
       (b.progress_pct ?? 0) - (a.progress_pct ?? 0);
     const by = (id: Sort, dir: Dir) => (a: Project, b: Project) => {
       if (id === "smart") return dir === "desc" ? smart(a, b) : -smart(a, b);
@@ -585,6 +627,13 @@ export default function ProjectsPage() {
       (a, b) => first(a, b) || (second ? second(a, b) : 0) || a.name.localeCompare(b.name, "es"),
     );
   }, [projects, passes, f.sort, f.dir, f.sort2, f.dir2]);
+
+  /** Vista agrupada: una fila por familia, en el orden que quedó la lista. */
+  const familias = useMemo<Familia<Project>[] | null>(
+    () => (f.agrupar ? agruparFamilias(filtered) : null),
+    [f.agrupar, filtered],
+  );
+  const agrupadas = familias?.filter((x) => x.agrupada).length ?? 0;
 
   /** Tocar un encabezado: mismo criterio invierte la dirección; otro criterio usa su dirección natural. */
   const sortBy = useCallback(
@@ -626,6 +675,11 @@ export default function ProjectsPage() {
     return { moved, overdue, soon, money };
   }, [filtered, now]);
 
+  const calculados = useMemo(
+    () => filtered.filter((p) => p.estado_fuente === "calculado").length,
+    [filtered],
+  );
+
   async function patchMeta(projectId: string, patch: Record<string, unknown>) {
     setSavingId(projectId);
     try {
@@ -637,12 +691,127 @@ export default function ProjectsPage() {
       if (!res.ok) throw new Error("save_failed");
       const data = (await res.json()) as { project: Partial<Project> };
       setProjects((prev) =>
-        prev.map((p) => (p.id === projectId ? { ...p, ...data.project } : p)),
+        prev.map((p) => (p.id === projectId ? conEstado({ ...p, ...data.project }) : p)),
       );
     } catch {
       setError("No se pudo guardar el cambio. Reintenta.");
     } finally {
       setSavingId(null);
+    }
+  }
+
+  /* ── sugerencias ── */
+
+  async function escanearSugerencias() {
+    setSugOcupado(true);
+    setSugAviso(null);
+    try {
+      const r = await fetch("/api/projects/suggestions", { method: "POST" });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const d = (await r.json()) as {
+        encontradas: number;
+        pendientes: number;
+        sin_emparejar: Array<{ fuente: string; referencia: string }>;
+        sugerencias: SugerenciaLista[];
+      };
+      setSugerencias(d.sugerencias ?? []);
+      setPanelSugerencias(true);
+      setSugAviso(
+        `${d.encontradas} con fuente · ${d.pendientes} por confirmar${
+          d.sin_emparejar.length
+            ? ` · ${d.sin_emparejar.length} fila(s) de la fuente sin proyecto que les corresponda (${d.sin_emparejar
+                .map((x) => x.referencia)
+                .join(", ")})`
+            : ""
+        }`,
+      );
+    } catch (caught) {
+      setSugAviso(
+        `No se pudo buscar en las fuentes: ${caught instanceof Error ? caught.message : "error"}`,
+      );
+    } finally {
+      setSugOcupado(false);
+    }
+  }
+
+  async function resolverSugerencias(accion: "confirmar" | "rechazar", ids: string[] | "todas") {
+    setSugOcupado(true);
+    setSugAviso(null);
+    try {
+      const r = await fetch("/api/projects/suggestions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          ids === "todas" ? { accion, todas: true } : { accion, ids },
+        ),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const d = (await r.json()) as {
+        aplicadas: number;
+        omitidas: Array<{ id: string; motivo: string }>;
+        sugerencias: SugerenciaLista[];
+      };
+      setSugerencias(d.sugerencias ?? []);
+      setSugAviso(
+        accion === "confirmar"
+          ? `${d.aplicadas} dato(s) capturado(s) desde su fuente${
+              d.omitidas.length ? ` · ${d.omitidas.length} omitida(s) porque ya tenían dato` : ""
+            }`
+          : `${d.aplicadas} sugerencia(s) descartada(s)`,
+      );
+      await loadProjects();
+    } catch (caught) {
+      setSugAviso(
+        `No se pudo aplicar: ${caught instanceof Error ? caught.message : "error"}`,
+      );
+    } finally {
+      setSugOcupado(false);
+    }
+  }
+
+  /* ── edición masiva ── */
+
+  const seleccionar = useCallback((ids: string[], valor: boolean) => {
+    setSeleccion((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) {
+        if (valor) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+    setLoteAviso(null);
+  }, []);
+
+  async function aplicarLote(cambio: CambioLote) {
+    const ids = [...seleccion];
+    if (!ids.length) return;
+    setLoteOcupado(true);
+    setLoteAviso(null);
+    try {
+      const r = await fetch("/api/projects/bulk", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, patch: cambio }),
+      });
+      const d = (await r.json()) as {
+        actualizados?: number;
+        pedidos?: number;
+        error?: string;
+      };
+      if (!r.ok) throw new Error(d.error ?? `HTTP ${r.status}`);
+      await loadProjects();
+      setSeleccion(new Set());
+      // El aviso vive FUERA de la barra: al aplicarse se limpia la selección y
+      // la barra desaparece, así que ahí el mensaje se perdía justo cuando hacía
+      // falta leerlo.
+      setLoteAviso(`Se cambiaron ${d.actualizados ?? 0} de ${d.pedidos ?? ids.length} proyectos.`);
+    } catch (caught) {
+      setLoteAviso(
+        `No se pudo aplicar el lote: ${caught instanceof Error ? caught.message : "error"}`,
+      );
+    } finally {
+      setLoteOcupado(false);
     }
   }
 
@@ -662,13 +831,41 @@ export default function ProjectsPage() {
 
   const nActive = activeCount(f);
   const toggle = <T,>(arr: T[], v: T) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+  const limpiarFiltros = () =>
+    setF({ ...EMPTY, sort: f.sort, dir: f.dir, sort2: f.sort2, dir2: f.dir2, agrupar: f.agrupar });
 
-  // Cada fila monta un ProjectRow completo (pastillas, barra de avance, acciones y,
+  // Cada fila monta un componente completo (pastillas, barra de avance, acciones y,
   // al abrirla, un Detail). Pintar el catálogo entero de golpe deja la lista pesada
   // en celular. Se pinta por tandas; los filtros y el orden siguen actuando sobre
   // TODO el catálogo, no sobre lo que se ve.
-  const visibles = Math.min(pagina * PAGINA, filtered.length);
-  const restantes = filtered.length - visibles;
+  const unidades: Array<Familia<Project> | Project> = familias ?? filtered;
+  const visibles = Math.min(pagina * PAGINA, unidades.length);
+  const restantes = unidades.length - visibles;
+
+  const filaProyecto = (project: Project) => (
+    <ProjectRow
+      key={project.id}
+      project={project}
+      now={now}
+      open={openId === project.id}
+      saving={savingId === project.id}
+      relatedHint={relatedHint(project)}
+      sugerencias={sugerenciasPorProyecto.get(project.id) ?? []}
+      seleccionado={seleccion.has(project.id)}
+      onSeleccionar={(v) => seleccionar([project.id], v)}
+      onToggle={() => setOpenId((v) => (v === project.id ? null : project.id))}
+      onInvite={() => setInviteProject(project)}
+      onRepositories={() => setRepositoryProject(project)}
+      onPatch={(patch) => void patchMeta(project.id, patch)}
+      onNotesChanged={(notes) => onNotesChanged(project.id, notes)}
+      onConfirmarSugerencia={(id) => void resolverSugerencias("confirmar", [id])}
+      onRechazarSugerencia={(id) => void resolverSugerencias("rechazar", [id])}
+      onClient={(c) => {
+        upd({ client: c });
+        setFiltersOpen(true);
+      }}
+    />
+  );
 
   return (
     <div className="mx-auto w-full max-w-[1440px]">
@@ -680,15 +877,29 @@ export default function ProjectsPage() {
               Proyectos
             </h1>
           </div>
-          <button
-            type="button"
-            onClick={() => void syncProjects()}
-            disabled={refreshing}
-            className="btn-ghost shrink-0"
-          >
-            <IconRefresh size={13} className={refreshing ? "animate-spin" : ""} />
-            Sincronizar
-          </button>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {sinSondear > 0 ? (
+              <button
+                type="button"
+                onClick={() => void sondearDominios()}
+                disabled={sondeando}
+                className="btn-ghost shrink-0"
+                title="Mide qué dominios responden para calcular el estado real"
+              >
+                <IconRefresh size={13} className={sondeando ? "animate-spin" : ""} />
+                Sondear {sinSondear} dominios
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => void syncProjects()}
+              disabled={refreshing}
+              className="btn-ghost shrink-0"
+            >
+              <IconRefresh size={13} className={refreshing ? "animate-spin" : ""} />
+              Sincronizar
+            </button>
+          </div>
         </div>
       </header>
 
@@ -697,6 +908,32 @@ export default function ProjectsPage() {
           {syncMessage}
         </div>
       ) : null}
+
+      {loteAviso ? (
+        <div className="flex flex-wrap items-center gap-3 border-b border-[var(--border-1)] bg-white px-page-sm md:px-page-md py-3">
+          <p className="text-[13px] text-black" aria-live="polite">
+            {loteAviso}
+          </p>
+          <button
+            type="button"
+            onClick={() => setLoteAviso(null)}
+            className="text-[12px] underline underline-offset-4"
+          >
+            Entendido
+          </button>
+        </div>
+      ) : null}
+
+      <SuggestionsPanel
+        sugerencias={sugerencias}
+        abierto={panelSugerencias}
+        ocupado={sugOcupado}
+        aviso={sugAviso}
+        onAbrir={() => setPanelSugerencias((v) => !v)}
+        onEscanear={() => void escanearSugerencias()}
+        onConfirmar={(ids) => void resolverSugerencias("confirmar", ids)}
+        onRechazar={(ids) => void resolverSugerencias("rechazar", ids)}
+      />
 
       {repositoryProject ? (
         <RepositoryGroupManager
@@ -722,7 +959,15 @@ export default function ProjectsPage() {
 
       {/* ── números del filtro actual ── */}
       <section className="grid grid-cols-2 border-b border-[var(--border-1)] bg-white md:grid-cols-5">
-        <Stat label="Mostrando" value={`${filtered.length}`} note={`de ${projects.length} proyectos`} />
+        <Stat
+          label="Mostrando"
+          value={`${filtered.length}`}
+          note={
+            familias
+              ? `de ${projects.length} · ${agrupadas} familia${agrupadas === 1 ? "" : "s"}`
+              : `de ${projects.length} proyectos`
+          }
+        />
         <Stat label="Movidos 7 días" value={`${stats.moved}`} note="con push reciente" />
         <Stat
           label="Vencidos"
@@ -732,11 +977,10 @@ export default function ProjectsPage() {
           onClick={() => upd({ due: f.due === "overdue" ? "all" : "overdue" })}
         />
         <Stat
-          label="Entregan en 7 días"
-          value={`${stats.soon}`}
-          note="por vencer"
-          color={stats.soon ? C.ambar : undefined}
-          onClick={() => upd({ due: f.due === "week" ? "all" : "week" })}
+          label="Estado calculado"
+          value={`${calculados}`}
+          note="sin clasificar a mano"
+          onClick={() => upd({ fuente: f.fuente === "calculado" ? "all" : "calculado" })}
         />
         <Stat
           label="Por cobrar"
@@ -766,6 +1010,19 @@ export default function ProjectsPage() {
             ) : null}
           </label>
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => upd({ agrupar: !f.agrupar })}
+              aria-pressed={f.agrupar}
+              title="Junta en una fila los proyectos que son la misma app"
+              className={
+                f.agrupar
+                  ? "inline-flex min-h-11 items-center gap-2 rounded-md border border-black bg-black px-4 text-[13px] text-white"
+                  : "inline-flex min-h-11 items-center gap-2 rounded-md border border-[var(--border-1)] bg-white px-4 text-[13px] text-black"
+              }
+            >
+              Agrupar familias{f.agrupar && agrupadas ? ` · ${agrupadas}` : ""}
+            </button>
             <SortControl
               label="Ordenar por"
               value={f.sort}
@@ -791,14 +1048,30 @@ export default function ProjectsPage() {
 
         {filtersOpen ? (
           <div className="mt-3 grid gap-4 border-t border-[var(--border-1)] pt-4 lg:grid-cols-2">
-            <Group label="Estado">
+            <Group label="Estado (real)">
               {CATEGORIES.map((c) => (
                 <Chip
                   key={c.id}
                   active={f.cats.includes(c.id)}
                   label={c.label}
-                  n={count("cats", (p) => p.category === c.id)}
+                  n={count("cats", (p) => p.estado_real === c.id)}
                   onClick={() => upd({ cats: toggle(f.cats, c.id) })}
+                />
+              ))}
+            </Group>
+
+            <Group label="De dónde sale el estado">
+              {FUENTES.map((x) => (
+                <Chip
+                  key={x.id}
+                  active={f.fuente === x.id}
+                  label={x.label}
+                  n={
+                    x.id === "all"
+                      ? undefined
+                      : count("fuente", (p) => p.estado_fuente === x.id)
+                  }
+                  onClick={() => upd({ fuente: x.id })}
                 />
               ))}
             </Group>
@@ -846,7 +1119,8 @@ export default function ProjectsPage() {
                     if (fl.id === "vercel") return !!p.vercel_url;
                     if (fl.id === "notes") return (p.notes_count ?? 0) > 0;
                     if (fl.id === "owed") return owed(p) > 0;
-                    return !!relatedHint(p);
+                    if (fl.id === "sugerencias") return sugerenciasPorProyecto.has(p.id);
+                    return !!familiasCatalogo.get(p.id)?.agrupada;
                   })}
                   onClick={() => upd({ flags: toggle(f.flags, fl.id) })}
                 />
@@ -903,11 +1177,31 @@ export default function ProjectsPage() {
             ))}
             <button
               type="button"
-              onClick={() => setF({ ...EMPTY, sort: f.sort, dir: f.dir, sort2: f.sort2, dir2: f.dir2 })}
+              onClick={limpiarFiltros}
               className="px-2 py-1 text-[12px] underline underline-offset-4"
             >
               Limpiar todo
             </button>
+          </div>
+        ) : null}
+
+        {filtered.length > 0 ? (
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-[12px] text-[var(--fg-secondary)]">
+            <button
+              type="button"
+              onClick={() =>
+                seleccionar(
+                  filtered.map((p) => p.id),
+                  !filtered.every((p) => seleccion.has(p.id)),
+                )
+              }
+              className="underline underline-offset-4"
+            >
+              {filtered.every((p) => seleccion.has(p.id))
+                ? `Quitar la selección (${filtered.length})`
+                : `Seleccionar los ${filtered.length} del filtro`}
+            </button>
+            {seleccion.size > 0 ? <span>{seleccion.size} seleccionados</span> : null}
           </div>
         ) : null}
       </section>
@@ -950,7 +1244,7 @@ export default function ProjectsPage() {
             {nActive ? (
               <button
                 type="button"
-                onClick={() => setF({ ...EMPTY, sort: f.sort, dir: f.dir, sort2: f.sort2, dir2: f.dir2 })}
+                onClick={limpiarFiltros}
                 className="mt-3 text-[13px] underline underline-offset-4"
               >
                 Limpiar filtros
@@ -959,30 +1253,42 @@ export default function ProjectsPage() {
           </div>
         ) : (
           <div className="divide-y divide-[var(--border-1)]">
-            {filtered.slice(0, visibles).map((project) => (
-              <ProjectRow
-                key={project.id}
-                project={project}
-                now={now}
-                open={openId === project.id}
-                saving={savingId === project.id}
-                relatedHint={relatedHint(project)}
-                onToggle={() => setOpenId((v) => (v === project.id ? null : project.id))}
-                onInvite={() => setInviteProject(project)}
-                onRepositories={() => setRepositoryProject(project)}
-                onPatch={(patch) => void patchMeta(project.id, patch)}
-                onNotesChanged={(notes) => onNotesChanged(project.id, notes)}
-                onClient={(c) => {
-                  upd({ client: c });
-                  setFiltersOpen(true);
-                }}
-              />
-            ))}
+            {unidades.slice(0, visibles).map((u) =>
+              esFamilia(u) ? (
+                u.agrupada ? (
+                  <FamilyRow
+                    key={u.clave}
+                    familia={u}
+                    total={familiasCatalogo.get(u.miembros[0].id)?.miembros.length ?? u.miembros.length}
+                    abierta={openFamilies.has(u.clave)}
+                    seleccionada={u.miembros.every((m) => seleccion.has(m.id))}
+                    now={now}
+                    onAbrir={() =>
+                      setOpenFamilies((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(u.clave)) next.delete(u.clave);
+                        else next.add(u.clave);
+                        return next;
+                      })
+                    }
+                    onSeleccionar={(v) => seleccionar(u.miembros.map((m) => m.id), v)}
+                  >
+                    <div className="divide-y divide-[var(--border-1)]">
+                      {u.miembros.map((m) => filaProyecto(m))}
+                    </div>
+                  </FamilyRow>
+                ) : (
+                  filaProyecto(u.miembros[0])
+                )
+              ) : (
+                filaProyecto(u)
+              ),
+            )}
 
             {restantes > 0 ? (
               <div className="px-page-sm md:px-page-md py-6 text-center">
                 <p className="text-[12px] text-[var(--fg-muted)]" aria-live="polite">
-                  {visibles} de {filtered.length} proyectos en pantalla
+                  {visibles} de {unidades.length} {familias ? "filas" : "proyectos"} en pantalla
                 </p>
                 <button
                   type="button"
@@ -992,18 +1298,33 @@ export default function ProjectsPage() {
                   Ver {Math.min(PAGINA, restantes)} más
                 </button>
               </div>
-            ) : filtered.length > PAGINA ? (
+            ) : unidades.length > PAGINA ? (
               <div className="px-page-sm md:px-page-md py-6 text-center">
                 <p className="text-[12px] text-[var(--fg-muted)]">
-                  Se muestran los {filtered.length} proyectos.
+                  Se muestran los {filtered.length} proyectos
+                  {familias ? ` en ${unidades.length} filas` : ""}.
                 </p>
               </div>
             ) : null}
           </div>
         )}
       </section>
+
+      <BulkBar
+        seleccionados={seleccion.size}
+        ocupado={loteOcupado}
+        onAplicar={(cambio) => void aplicarLote(cambio)}
+        onLimpiar={() => {
+          setSeleccion(new Set());
+          setLoteAviso(null);
+        }}
+      />
     </div>
   );
+}
+
+function esFamilia(u: Familia<Project> | Project): u is Familia<Project> {
+  return "miembros" in u;
 }
 
 function activePills(
@@ -1032,6 +1353,12 @@ function activePills(
       key: "p",
       label: `Avance: ${PROGRESS.find((p) => p.id === f.progress)?.label}`,
       clear: () => upd({ progress: "all" }),
+    });
+  if (f.fuente !== "all")
+    out.push({
+      key: "fu",
+      label: `Estado: ${FUENTES.find((x) => x.id === f.fuente)?.label}`,
+      clear: () => upd({ fuente: "all" }),
     });
   for (const fl of f.flags)
     out.push({
@@ -1236,11 +1563,16 @@ function ProjectRow({
   open,
   saving,
   relatedHint,
+  sugerencias,
+  seleccionado,
+  onSeleccionar,
   onToggle,
   onInvite,
   onRepositories,
   onPatch,
   onNotesChanged,
+  onConfirmarSugerencia,
+  onRechazarSugerencia,
   onClient,
 }: {
   project: Project;
@@ -1248,19 +1580,27 @@ function ProjectRow({
   open: boolean;
   saving: boolean;
   relatedHint: string | null;
+  sugerencias: SugerenciaLista[];
+  seleccionado: boolean;
+  onSeleccionar: (v: boolean) => void;
   onToggle: () => void;
   onInvite: () => void;
   onRepositories: () => void;
   onPatch: (patch: Record<string, unknown>) => void;
   onNotesChanged: (notes: Note[]) => void;
+  onConfirmarSugerencia: (id: string) => void;
+  onRechazarSugerencia: (id: string) => void;
   onClient: (c: string) => void;
 }) {
   const externalUrl = normalizeExternalUrl(p.domain || p.vercel_url);
-  const active = p.category === "produccion" || p.category === "activo" || p.category === "en_revision";
+  const active =
+    p.estado_real === "produccion" || p.estado_real === "activo" || p.estado_real === "en_revision";
   const pct = Math.max(0, Math.min(100, p.progress_pct ?? 0));
   const due = dueInfo(p, todayStart());
   const debe = owed(p);
   const lastMove = p.last_push ?? null;
+  const calculado = p.estado_fuente === "calculado";
+  const clienteSugerido = sugerencias.find((s) => s.campo === "client_name");
 
   return (
     <article className={open ? "bg-[#fafaf8]" : undefined}>
@@ -1268,6 +1608,13 @@ function ProjectRow({
         {/* proyecto */}
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="checkbox"
+              checked={seleccionado}
+              onChange={(e) => onSeleccionar(e.target.checked)}
+              aria-label={`Seleccionar ${p.name}`}
+              className="h-4 w-4 shrink-0 accent-black"
+            />
             <span className="status-shape shrink-0" data-active={active} />
             <button
               type="button"
@@ -1288,9 +1635,20 @@ function ProjectRow({
             >
               {p.delivery_priority ? "Prioridad" : "Priorizar"}
             </button>
-            <span className="rounded-full border border-[var(--border-1)] px-2 py-0.5 font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-secondary)]">
-              {CATEGORY_LABELS[p.category] ?? p.category}
+            <span
+              title={p.estado_motivo}
+              className="rounded-full border border-[var(--border-1)] px-2 py-0.5 font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-secondary)]"
+            >
+              {CATEGORY_LABELS[p.estado_real] ?? p.estado_real}
             </span>
+            {calculado ? (
+              <span
+                title={`Estado calculado: ${p.estado_motivo}. Elige un estado en el detalle para fijarlo a mano.`}
+                className="rounded-full border border-dashed border-[var(--border-1)] px-2 py-0.5 font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--fg-muted)]"
+              >
+                estado calculado
+              </span>
+            ) : null}
           </div>
           <p className="mt-1 truncate pl-[15px] text-[12px] text-[var(--fg-tertiary)]">
             {p.client_name ? (
@@ -1301,11 +1659,25 @@ function ProjectRow({
               >
                 {p.client_name}
               </button>
+            ) : clienteSugerido ? (
+              <span title={`fuente: ${clienteSugerido.fuente}`}>
+                <span className="italic">Sin cliente</span> · sugerido{" "}
+                <button
+                  type="button"
+                  onClick={() => onConfirmarSugerencia(clienteSugerido.id)}
+                  className="font-medium text-black underline underline-offset-2"
+                >
+                  {clienteSugerido.valor}
+                </button>
+              </span>
             ) : (
               <span className="italic">Sin cliente</span>
             )}
             <span className="font-mono"> · {p.id}</span>
             {relatedHint ? <span> · {relatedHint}</span> : null}
+          </p>
+          <p className="mt-0.5 truncate pl-[15px] text-[12px] text-[var(--fg-muted)]">
+            {calculado ? `Estado calculado: ${p.estado_motivo}` : p.estado_motivo}
           </p>
           {p.last_note ? (
             <button
@@ -1336,7 +1708,13 @@ function ProjectRow({
             <p className="mt-1 truncate font-mono text-[12px] text-[var(--fg-muted)]">{p.domain ?? p.vercel_url}</p>
           ) : null}
           <p className="mt-1 text-[12px] text-[var(--fg-muted)]">
-            {[p.github_language, (p.repository_count ?? 0) > 1 ? `${p.repository_count} repos` : null]
+            {[
+              p.github_language,
+              (p.repository_count ?? 0) > 1 ? `${p.repository_count} repos` : null,
+              p.health_checked_at
+                ? `dominio ${p.health_ok ? `${p.health_status} OK` : p.health_status ?? "sin respuesta"}`
+                : null,
+            ]
               .filter(Boolean)
               .join(" · ") || "—"}
           </p>
@@ -1394,7 +1772,19 @@ function ProjectRow({
       </div>
 
       {open ? (
-        <Detail project={p} now={now} saving={saving} onPatch={onPatch} onNotesChanged={onNotesChanged} />
+        <Detail
+          project={p}
+          now={now}
+          saving={saving}
+          externalUrl={externalUrl}
+          sugerencias={sugerencias}
+          onPatch={onPatch}
+          onNotesChanged={onNotesChanged}
+          onInvite={onInvite}
+          onRepositories={onRepositories}
+          onConfirmarSugerencia={onConfirmarSugerencia}
+          onRechazarSugerencia={onRechazarSugerencia}
+        />
       ) : null}
     </article>
   );
@@ -1404,14 +1794,26 @@ function Detail({
   project: p,
   now,
   saving,
+  externalUrl,
+  sugerencias,
   onPatch,
   onNotesChanged,
+  onInvite,
+  onRepositories,
+  onConfirmarSugerencia,
+  onRechazarSugerencia,
 }: {
   project: Project;
   now: number;
   saving: boolean;
+  externalUrl: string | null;
+  sugerencias: SugerenciaLista[];
   onPatch: (patch: Record<string, unknown>) => void;
   onNotesChanged: (notes: Note[]) => void;
+  onInvite: () => void;
+  onRepositories: () => void;
+  onConfirmarSugerencia: (id: string) => void;
+  onRechazarSugerencia: (id: string) => void;
 }) {
   const [notes, setNotes] = useState<Note[] | null>(null);
   const [draft, setDraft] = useState("");
@@ -1471,12 +1873,39 @@ function Detail({
   const field =
     "mt-1 w-full rounded-md border border-[var(--border-1)] bg-white px-3 py-2 text-[14px] text-black disabled:opacity-60";
   const label = "font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]";
+  const sugerencia = (campo: string) => sugerencias.find((s) => s.campo === campo);
+
+  const pista = (campo: string) => {
+    const s = sugerencia(campo);
+    if (!s) return null;
+    return (
+      <span className="mt-1 block text-[12px] text-[var(--fg-tertiary)]">
+        Sugerido: <strong className="font-medium text-black">{valorSugerido(s.campo, s.valor)}</strong> ·
+        fuente: {s.fuente}
+        {s.detalle ? ` · ${s.detalle}` : ""}
+        <button
+          type="button"
+          onClick={() => onConfirmarSugerencia(s.id)}
+          className="ml-2 underline underline-offset-4"
+        >
+          Confirmar
+        </button>
+        <button
+          type="button"
+          onClick={() => onRechazarSugerencia(s.id)}
+          className="ml-2 underline underline-offset-4"
+        >
+          Descartar
+        </button>
+      </span>
+    );
+  };
 
   return (
     <div className="grid gap-6 border-t border-[var(--border-1)] px-page-sm md:px-page-md pb-6 pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:px-page-lg">
       {/* datos editables */}
       <div className="grid content-start gap-3 sm:grid-cols-2">
-        <label className="block">
+        <label className="block sm:col-span-2">
           <span className={label}>Estado</span>
           <select
             className={field}
@@ -1490,6 +1919,19 @@ function Detail({
               </option>
             ))}
           </select>
+          <span className="mt-1 block text-[12px] text-[var(--fg-tertiary)]">
+            {p.estado_fuente === "calculado" ? (
+              <>
+                Hoy se muestra como{" "}
+                <strong className="font-medium text-black">
+                  {CATEGORY_LABELS[p.estado_real] ?? p.estado_real}
+                </strong>{" "}
+                (calculado: {p.estado_motivo}). Si eliges un estado aquí, manda el tuyo.
+              </>
+            ) : (
+              <>Lo pusiste a mano: {p.estado_motivo}.</>
+            )}
+          </span>
         </label>
         <label className="block">
           <span className={label}>Cliente</span>
@@ -1504,6 +1946,7 @@ function Detail({
             }}
             onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
           />
+          {pista("client_name")}
         </label>
         <label className="block">
           <span className={label}>Fecha de entrega</span>
@@ -1550,6 +1993,7 @@ function Detail({
             }}
             onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
           />
+          {pista("contract_amount")}
         </label>
         <label className="block">
           <span className={label}>Cobrado (MXN)</span>
@@ -1566,6 +2010,7 @@ function Detail({
             }}
             onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
           />
+          {pista("paid_amount")}
         </label>
         <label className="block">
           <span className={label}>Código de familia</span>
@@ -1586,6 +2031,17 @@ function Detail({
           <p className="mt-2">Alta: {fecha(p.created_at)}</p>
           <p>Último cambio: {fecha(p.updated_at, true)}</p>
           <p>Último push: {p.last_push ? fecha(p.last_push, true) : "—"}</p>
+          <p>
+            Dominio:{" "}
+            {p.health_checked_at
+              ? `${p.health_ok ? "responde" : "no responde"} ${p.health_status ?? ""} · ${fecha(
+                  p.health_checked_at,
+                  true,
+                )}`
+              : hasDomain(p)
+                ? "sin sondear"
+                : "sin dominio"}
+          </p>
         </div>
         <label className="block sm:col-span-2">
           <span className={label}>Descripción</span>
@@ -1600,6 +2056,24 @@ function Detail({
             }}
           />
         </label>
+        <div className="flex flex-wrap gap-2 sm:col-span-2">
+          <button type="button" onClick={onRepositories} className="btn-ghost !min-h-9 !px-3">
+            Repositorios ({p.repository_count ?? 0})
+          </button>
+          <button type="button" onClick={onInvite} className="btn-ghost !min-h-9 !px-3">
+            Invitar al cliente
+          </button>
+          {externalUrl ? (
+            <a
+              href={externalUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-ghost !min-h-9 !px-3"
+            >
+              Abrir sitio
+            </a>
+          ) : null}
+        </div>
         {saving ? <p className="text-[12px] text-[var(--fg-muted)] sm:col-span-2">Guardando…</p> : null}
       </div>
 
@@ -1634,7 +2108,12 @@ function Detail({
             <li className="h-12 animate-pulse rounded-md bg-black/5" />
           ) : null}
           {notes?.length === 0 ? (
-            <li className="text-[13px] text-[var(--fg-muted)]">Todavía no hay comentarios.</li>
+            <li className="text-[13px] text-[var(--fg-muted)]">
+              Todavía no hay comentarios en esta pantalla.
+              {(p.notes_count ?? 0) > 0
+                ? " Los que ves en el contador vienen de la sala con el cliente."
+                : ""}
+            </li>
           ) : null}
           {notes?.map((n) => (
             <li key={n.id} className="group rounded-md border border-[var(--border-1)] bg-white px-3 py-2">
