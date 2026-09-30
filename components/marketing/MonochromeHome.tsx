@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./monochrome-home.css";
 
 /* Logo aprobado VForge: triángulo invertido relleno */
@@ -76,6 +76,8 @@ const GATE_JS =
   "','1');}}catch(e){}})();";
 
 export function MonochromeHome() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   useEffect(() => {
     const splash = document.getElementById("fx-splash");
     const main = document.getElementById("fx-main");
@@ -132,6 +134,29 @@ export function MonochromeHome() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    const onResize = () => {
+      if (window.innerWidth > 820) setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", onResize);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [menuOpen]);
+
+  const navLinks = [
+    { href: "#como", label: "Cómo funciona" },
+    { href: "#que", label: "Qué hace" },
+    { href: "#integraciones", label: "Integraciones" },
+    { href: "#precios", label: "Precios" },
+  ];
+
   return (
     <div className="fx-root">
       {/* Antes del splash en el DOM: decide si esta visita lo merece, sin que alcance a pintarse. */}
@@ -162,17 +187,41 @@ export function MonochromeHome() {
       />
 
       {/* ===== HEADER ===== */}
-      <header id="fx-hdr" className="fx-hdr">
+      <header id="fx-hdr" className={`fx-hdr${menuOpen ? " open" : ""}`}>
         <div className="fx-brand"><ForgeMark size={22} /><span className="name">Forge</span></div>
         <nav className="fx-links">
-          <Link href="#como">Cómo funciona</Link>
-          <Link href="#que">Qué hace</Link>
-          <Link href="#integraciones">Integraciones</Link>
-          <Link href="#precios">Precios</Link>
+          {navLinks.map((link) => (
+            <Link key={link.href} href={link.href}>{link.label}</Link>
+          ))}
         </nav>
         <div className="fx-navcta">
           <Link className="fx-pill ghost" href="/sign-in">Entrar</Link>
           <Link className="fx-pill solid" href="/sign-up">Empezar gratis</Link>
+        </div>
+        <button
+          type="button"
+          className="fx-menu-btn"
+          aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={menuOpen}
+          aria-controls="fx-mobile-menu"
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        <div id="fx-mobile-menu" className="fx-mobile-panel" hidden={!menuOpen}>
+          <nav aria-label="Navegación móvil">
+            {navLinks.map((link) => (
+              <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="fx-mobile-actions">
+            <Link className="fx-pill ghost" href="/sign-in" onClick={() => setMenuOpen(false)}>Entrar</Link>
+            <Link className="fx-pill solid" href="/sign-up" onClick={() => setMenuOpen(false)}>Empezar gratis</Link>
+          </div>
         </div>
       </header>
 

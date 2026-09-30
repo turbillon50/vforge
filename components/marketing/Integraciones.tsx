@@ -141,7 +141,7 @@ export function Integraciones() {
           Conecta con las herramientas que ya usas
         </h2>
         <p style={{ fontSize:16, color:"rgba(200, 215, 255, 0.45)", lineHeight:1.65, maxWidth:420, marginTop:12 }}>
-          Cada integracion nativa. Sin webhooks manuales. Sin configuracion extra.
+          Cada integración nativa. Sin webhooks manuales. Sin configuración extra.
         </p>
       </div>
 

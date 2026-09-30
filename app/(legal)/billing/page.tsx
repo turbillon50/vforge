@@ -1,4 +1,4 @@
-export const metadata = { title: "Política de Facturación — VForge" };
+export const metadata = { title: "Política de Facturación" };
 
 export default function BillingPage() {
   return (

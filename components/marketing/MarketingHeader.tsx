@@ -48,7 +48,7 @@ function MenuIcon({ abierto }: { abierto: boolean }) {
 
 const NAV_LINKS = [
   { href: "/labs", label: "Labs" },
-  { href: "/pricing", label: "Precios" },
+  { href: "/#precios", label: "Precios" },
   { href: "/blog", label: "Blog" },
   { href: "/manifiesto", label: "Manifiesto" },
 ];

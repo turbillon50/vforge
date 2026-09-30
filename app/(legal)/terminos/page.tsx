@@ -1,4 +1,4 @@
-export const metadata = { title: "Términos y Condiciones — VForge" };
+export const metadata = { title: "Términos y Condiciones" };
 
 export default function TerminosPage() {
   return (

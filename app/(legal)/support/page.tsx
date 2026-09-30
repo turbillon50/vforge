@@ -1,4 +1,4 @@
-export const metadata = { title: "Soporte — VForge" };
+export const metadata = { title: "Soporte" };
 
 export default function SupportPage() {
   return (

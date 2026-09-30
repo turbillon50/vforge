@@ -2,7 +2,7 @@ import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 export const metadata = {
-  title: "Manifiesto — VForge",
+  title: "Manifiesto",
   description: "Lo que creemos sobre el futuro del software, los agentes y la forma de construir productos.",
 };
 
@@ -10,37 +10,37 @@ const PRINCIPLES = [
   {
     number: "01",
     title: "El software se conversa, no se teclea",
-    body: "La interfaz natural con las maquinas siempre fue el lenguaje. Tardamos decadas en llegar, pero llegamos. El codigo ya no es el fin — es el medio. El fin es el producto. Y el producto nace en una conversacion.",
+    body: "La interfaz natural con las máquinas siempre fue el lenguaje. Tardamos décadas en llegar, pero llegamos. El código ya no es el fin — es el medio. El fin es el producto. Y el producto nace en una conversación.",
   },
   {
     number: "02",
-    title: "El contexto es el activo mas valioso",
-    body: "Un agente sin contexto es una maquina sin memoria. El verdadero valor no esta en el modelo de lenguaje — esta en quien tiene el mejor contexto: arquitectura del proyecto, historial de decisiones, integraciones vivas, estado actual del sistema. VForge existe para construir y preservar ese contexto.",
+    title: "El contexto es el activo más valioso",
+    body: "Un agente sin contexto es una máquina sin memoria. El verdadero valor no está en el modelo de lenguaje — está en quien tiene el mejor contexto: arquitectura del proyecto, historial de decisiones, integraciones vivas, estado actual del sistema. VForge existe para construir y preservar ese contexto.",
   },
   {
     number: "03",
-    title: "Infraestructura sin friccion es libertad creativa",
+    title: "Infraestructura sin fricción es libertad creativa",
     body: "Cada hora que un equipo pasa configurando entornos, resolviendo deploys o sincronizando herramientas es una hora que no pasan construyendo. La infraestructura debe ser invisible. El flujo debe ser continuo. Git, Vercel y VForge forman el ciclo que hace eso posible.",
   },
   {
     number: "04",
     title: "Los agentes son colaboradores, no ejecutores ciegos",
-    body: "La autonomia de un agente vale segun la calidad de sus instrucciones y la claridad de su contexto. Confiamos en los agentes cuando entendemos lo que hacen. Por eso VForge no oculta — muestra. Cada accion, cada decision, cada herramienta usada es visible para quien la necesite.",
+    body: "La autonomía de un agente vale según la calidad de sus instrucciones y la claridad de su contexto. Confiamos en los agentes cuando entendemos lo que hacen. Por eso VForge no oculta — muestra. Cada acción, cada decisión, cada herramienta usada es visible para quien la necesite.",
   },
   {
     number: "05",
-    title: "Construir en LATAM con estandares globales",
-    body: "No hay razon para que un equipo en Guadalajara, Buenos Aires o Bogota trabaje con herramientas de segunda. VForge nace en LATAM, piensa en LATAM y construye para competir en cualquier parte del mundo. La geografia no define el techo.",
+    title: "Construir en LATAM con estándares globales",
+    body: "No hay razón para que un equipo en Guadalajara, Buenos Aires o Bogotá trabaje con herramientas de segunda. VForge nace en LATAM, piensa en LATAM y construye para competir en cualquier parte del mundo. La geografía no define el techo.",
   },
   {
     number: "06",
     title: "Abierto por defecto, privado cuando importa",
-    body: "El codigo abierto acelera el progreso colectivo. Creemos en compartir lo que construimos cuando hacerlo no compromete la confianza de quienes dependen de nosotros. El puente MCP es publico. La memoria de tus proyectos es tuya.",
+    body: "El código abierto acelera el progreso colectivo. Creemos en compartir lo que construimos cuando hacerlo no compromete la confianza de quienes dependen de nosotros. El puente MCP es público. La memoria de tus proyectos es tuya.",
   },
   {
     number: "07",
     title: "El operador reemplaza al artesano",
-    body: "El rol del desarrollador esta evolucionando. Menos escritura de lineas, mas diseno de sistemas. Menos ejecucion, mas direccion. El operador define la intencion, establece los limites y supervisa el flujo. Los agentes ejecutan. La inteligencia sigue siendo humana.",
+    body: "El rol del desarrollador está evolucionando. Menos escritura de líneas, más diseño de sistemas. Menos ejecución, más dirección. El operador define la intención, establece los límites y supervisa el flujo. Los agentes ejecutan. La inteligencia sigue siendo humana.",
   },
 ];
 
@@ -74,7 +74,7 @@ export default function ManifiestoPage() {
             </span>
           </h1>
           <p style={{ fontSize: 17, color: "#475569", lineHeight: 1.7, maxWidth: 560 }}>
-            VForge no es solo una herramienta. Es una postura sobre como se construyen los productos digitales en la era de la inteligencia artificial.
+            VForge no es solo una herramienta. Es una postura sobre cómo se construyen los productos digitales en la era de la inteligencia artificial.
             Esto es lo que nos mueve.
           </p>
         </div>
