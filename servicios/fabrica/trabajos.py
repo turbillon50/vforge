@@ -262,7 +262,7 @@ def tokens(est):
     # Codex (sesiones de ChatGPT Pro): cada token_count trae el uso de esa vuelta
     lim = None
     for dia in {hoy_local(ahora - 86400 * k).astimezone(dt.timezone.utc).strftime("%Y/%m/%d") for k in (0, 1)} | {
-            dt.datetime.utcnow().strftime("%Y/%m/%d")}:
+            dt.datetime.now(dt.timezone.utc).strftime("%Y/%m/%d")}:
         for ruta in glob.glob(f"/root/.codex/sessions/{dia}/*.jsonl"):
             for linea in leer_nuevo(est, ruta):
                 if '"token_count"' not in linea:
@@ -275,7 +275,7 @@ def tokens(est):
                 except Exception:
                     continue
                 ts = iso_a_ts(ev.get("timestamp")) or ahora
-                if rl.get("used_percent") is not None:
+                if rl.get("used_percent") is not None and ts >= (est.get("codex_limite") or {}).get("t", 0):
                     est["codex_limite"] = {"usado_pct": rl.get("used_percent"), "ventana_min": rl.get("window_minutes"),
                                            "reinicia": rl.get("resets_at"), "t": int(ts)}
                 if not u:
