@@ -19,6 +19,7 @@ import { resolve, dirname, relative, isAbsolute } from "node:path";
 import { createConnection } from "node:net";
 import { fileURLToPath } from "node:url";
 import { aplicarEdicion } from "./editor/aplicar-edicion.mjs";
+import { prepararProyecto, trabajos, nombreValido, repoValido } from "./editor/preparar.mjs";
 import {
   asegurarRama,
   commitear,
@@ -392,6 +393,9 @@ const servidor = createServer(async (req, res) => {
         ocioMin: Math.round(OCIO_MS / 60000),
         memMb: MEM_MB,
         proyectos: Object.keys(leerRegistro()),
+        preparando: Object.fromEntries(
+          [...trabajos.entries()].map(([n, t]) => [n, { fase: t.fase, error: t.error, inicio: t.inicio, fin: t.fin }]),
+        ),
         slots: slots.map((s) => ({
           id: s.id,
           host: s.host,
@@ -421,6 +425,24 @@ const servidor = createServer(async (req, res) => {
       // Token corto de entrada: sólo sirve para cruzar la puerta.
       const token = firmar({ p: nombre, s: r.slot, exp: Date.now() + 60_000, jti: randomUUID() });
       return json(res, 200, { ...r, entrada: `${r.url}/__vivo/enter?t=${encodeURIComponent(token)}` });
+    }
+
+    // Registro automático: clona el repo del proyecto, instala y lo deja editable.
+    if (ruta === "/__vivo/api/register") {
+      const nombre = String(cuerpo.project || "").toLowerCase();
+      const repo = String(cuerpo.repo || "");
+      if (!nombreValido(nombre)) return json(res, 400, { error: "nombre de proyecto inválido" });
+      if (!repoValido(repo)) return json(res, 400, { error: "repo inválido (usa owner/repo)" });
+      const t = prepararProyecto({
+        nombre,
+        repo,
+        ramaBase: typeof cuerpo.branch === "string" && /^[A-Za-z0-9._\/-]{1,100}$/.test(cuerpo.branch) ? cuerpo.branch : null,
+        token: process.env.VIVO_GIT_TOKEN || "",
+        registro: REGISTRO,
+        nodeBin: NVM_NODE,
+        log,
+      });
+      return json(res, 202, { ok: true, project: nombre, fase: t.fase, error: t.error });
     }
 
     if (ruta === "/__vivo/api/stop") {

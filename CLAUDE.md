@@ -30,7 +30,7 @@
 ## ESTADO ACTUAL (junio 2026)
 - Landing: hero rediseñado (neon.tech pattern), scroll desktop fixeado
 - /forge + /v: WorkspaceShell aplicado, tokens vf-* definidos
-- brain-relay: online en Hetzner 178.105.135.26:9000
+- brain-relay: online en el servidor Hetzner (dirección en el Brain / env, no en el repo)
 - Pendiente: secciones de landing (ProductCarousel, Metodo, Integraciones) — mismo patrón neon
 
 ## ARQUITECTURA
@@ -55,7 +55,7 @@ components/
 - `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
 - `OPENROUTER_API_KEY`
 - `RESEND_API_KEY`
-- `HETZNER_URL=http://178.105.135.26`
+- `HETZNER_URL` (valor en Vercel env)
 
 ## TOKENS TAILWIND CUSTOM (todos definidos en tailwind.config.ts)
 vf-bg, vf-bg-1, vf-bg-2, vf-bg-3 → surfaces
@@ -84,10 +84,8 @@ pb-safe → env(safe-area-inset-bottom)
 # Dev local
 npm run dev
 
-# Push con token
-git remote set-url origin "https://TOKEN@github.com/turbillon50/vforge.git"
-git push origin main
+# Push: usar la credencial configurada del entorno (nunca escribir tokens en el remote ni en este archivo)
+git push origin <rama>
 
-# Ver brain-relay
-curl http://178.105.135.26/brain/file/boot-context.md
+# Ver brain-relay: pídele a Vulcano / consulta el Brain (la URL no vive en el repo)
 ```

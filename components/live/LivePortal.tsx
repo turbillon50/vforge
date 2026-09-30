@@ -35,7 +35,7 @@ import { ProjectContextPanel } from "@/components/live/ProjectContextPanel";
 import { ReviewContextProvider, useReviewContext } from "@/components/live/ReviewContext";
 import { ReviewNotesTray } from "@/components/live/ReviewNotesTray";
 import { BarraVivo } from "@/components/studio/vivo/BarraVivo";
-import { useMotorVivo } from "@/components/studio/vivo/useMotorVivo";
+import { TEXTO_FASE, useMotorVivo } from "@/components/studio/vivo/useMotorVivo";
 import { useCapaEdicion } from "@/components/studio/vivo/useCapaEdicion";
 import { PanelInspector } from "@/components/studio/vivo/PanelInspector";
 import { PanelControl } from "@/components/studio/vivo/PanelControl";
@@ -390,12 +390,33 @@ function LiveWorkspace({
   const esDueno = me.role === "owner" || me.isPlatformOwner;
   const [nombreVivo, setNombreVivo] = useState<string | null>(null);
   const vivo = useMotorVivo({ auto: esDueno ? nombreVivo : null });
+  // Nombre del proyecto en el motor: el id de VForge (normalizado igual que el servidor).
+  const idVivo = project.id.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/^-+|-+$/g, "").slice(0, 63);
   useEffect(() => {
     const lista = vivo.motor?.proyectos ?? [];
+    if (lista.includes(idVivo)) {
+      setNombreVivo(idVivo);
+      return;
+    }
+    // Compatibilidad con proyectos registrados a mano antes (p. ej. el piloto).
     const norma = (v: string) => v.toLowerCase().replace(/[^a-z0-9]/g, "");
     const buscado = [project.name, project.id].map(norma);
     setNombreVivo(lista.find((n) => buscado.includes(norma(n))) ?? null);
-  }, [vivo.motor, project.name, project.id]);
+  }, [vivo.motor, project.name, project.id, idVivo]);
+  // Si el proyecto aún no está en el motor, se prepara solo (una vez) para el dueño.
+  const preparacionPedida = useRef(false);
+  const preparacion = vivo.motor?.preparando?.[idVivo];
+  useEffect(() => {
+    if (!esDueno || !vivo.motor || nombreVivo || preparacionPedida.current) return;
+    if (preparacion?.fase === "error") return;
+    preparacionPedida.current = true;
+    void vivo.preparar(project.id);
+  }, [esDueno, vivo.motor, nombreVivo, preparacion?.fase, project.id, vivo]);
+  const avisoPreparacion =
+    vivo.errorPreparar ??
+    (vivo.preparandoId
+      ? `Preparando "${project.name}" en el motor vivo · ${TEXTO_FASE[preparacion?.fase ?? "clonando"]}`
+      : null);
   const [editando, setEditando] = useState(false);
   const [verControl, setVerControl] = useState(false);
   const [pulsoControl, setPulsoControl] = useState(0);
@@ -590,6 +611,7 @@ function LiveWorkspace({
             motor={vivo.motor}
             error={
               vivo.error ??
+              avisoPreparacion ??
               (vivo.motor && !nombreVivo && vivo.fase === "apagado"
                 ? `"${project.name}" todavía no está en el motor vivo.`
                 : null)
@@ -632,11 +654,53 @@ function LiveWorkspace({
             proyecto={vivo.proyecto}
             refrescar={pulsoControl}
             onCerrar={() => setVerControl(false)}
-            onCambio={() => setRecarga((n) => n + 1)}
+            onCambio={() => {
+              setRecarga((n) => n + 1);
+              // Las ventanas abiertas de esta Sala también se recargan.
+              try {
+                const c = new BroadcastChannel(`vf-sala-${project.id}`);
+                c.postMessage({ tipo: "recargar" });
+                c.close();
+              } catch {
+                /* navegador sin BroadcastChannel */
+              }
+            }}
           />
         </div>
       ) : null}
       <div className="sticky top-0 z-40 mb-2 flex min-w-0 items-center gap-2 overflow-x-auto rounded-[8px] border border-[var(--border-1)] bg-white p-2 shadow-[0_8px_20px_-18px_rgba(0,0,0,0.8)] no-scrollbar">
+        {esDueno ? (
+          <div className="flex shrink-0 items-center gap-1 border-r border-[var(--border-1)] pr-2" aria-label="Abrir en ventana">
+            <a
+              href={`/app/chat?project=${encodeURIComponent(project.id)}`}
+              className="rounded-md border border-black bg-black px-2.5 py-2 font-mono text-[8px] uppercase tracking-[0.1em] text-white"
+              title="Volver a Construir con este proyecto"
+            >
+              ← Construir
+            </a>
+            {([
+              ["iphone", "Celular ↗"],
+              ["ipad", "Tablet ↗"],
+              ["escritorio", "Escritorio ↗"],
+            ] as const).map(([device, etiqueta]) => (
+              <button
+                key={device}
+                type="button"
+                onClick={() =>
+                  window.open(
+                    `/ventana/${encodeURIComponent(project.id)}?device=${device}`,
+                    `vf-${project.id}-${device}-${Date.now()}`,
+                    device === "escritorio" ? "popup,width=1480,height=980" : "popup,width=520,height=980",
+                  )
+                }
+                className="rounded-md border border-[var(--border-1)] bg-white px-2.5 py-2 font-mono text-[8px] uppercase tracking-[0.1em] hover:border-black"
+                title="Abre este dispositivo en una ventana aparte; puedes abrir varias y se sincronizan"
+              >
+                {etiqueta}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <div className="flex shrink-0 items-center gap-1 border-r border-[var(--border-1)] pr-2">
           {(["balanced", "previews", "review"] as WorkspacePreset[]).map((preset) => (
             <button

@@ -274,10 +274,19 @@ export function ForgeStudio() {
         return isObject(item) && typeof item.id === "string" && typeof item.name === "string";
       });
       setProjects(next);
-      // No seleccionar proyecto por defecto: el usuario elige o crea uno.
-      // preferredId solo aplica tras "Crear proyecto".
+      // Se recuerda el proyecto con el que Luis estaba trabajando (o el que llega
+      // por ?project=), para que Construir y la Sala hablen del mismo.
+      let recordado = "";
+      try {
+        recordado =
+          new URLSearchParams(window.location.search).get("project") ??
+          window.localStorage.getItem("vforge.activeProject") ??
+          "";
+      } catch {
+        recordado = "";
+      }
       setActiveProjectId((current) => {
-        const candidate = preferredId || current;
+        const candidate = preferredId || current || recordado;
         if (candidate && next.some((item) => item.id === candidate)) return candidate;
         return "";
       });
@@ -1222,8 +1231,24 @@ function StudioToolbar({
             href={`/app/live/${encodeURIComponent(project.id)}`}
             className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[10px] hover:border-[var(--vf-fg)]"
           >
-            <IconLayout size={12} /> <span className="hidden xl:inline">Sala completa</span>
+            <IconLayout size={12} /> <span>Sala</span>
           </Link>
+        ) : null}
+        {project ? (
+          <button
+            type="button"
+            onClick={() =>
+              window.open(
+                `/ventana/${encodeURIComponent(project.id)}?device=iphone`,
+                `vf-${project.id}-iphone-${Date.now()}`,
+                "popup,width=520,height=980",
+              )
+            }
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[10px] hover:border-[var(--vf-fg)]"
+            title="Abre el celular en una ventana aparte"
+          >
+            Celular ↗
+          </button>
         ) : null}
         {previewUrl ? (
           <a
