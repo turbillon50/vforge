@@ -165,10 +165,12 @@ def crear(d):
         num = cur.fetchone()["id"]
         prompt = redactar(num, proyecto, etiqueta_proyecto, pedido, el, lecciones(cur, proyecto))
         meta = {"tipo": "encargo_v", "encargo": num, "proyecto": proyecto, "timeout_secs": 1500}
+        # agent "<agente>-encargo": ningún consumidor viejo de agent='claude'
+        # (claude_loop.py) lo toma; solo el daemon con la jaula.
         cur.execute(
             """INSERT INTO dispatch_queue (agent, prompt, priority, source, status, metadata, gajo, project_id)
                VALUES (%s,%s,%s,%s,'pending',%s::jsonb,%s,%s) RETURNING id""",
-            (agente, prompt, 1, f"encargo-v:{proyecto}", json.dumps(meta), f"vivo-{proyecto}"[:60], proyecto),
+            (f"{agente}-encargo", prompt, 1, f"encargo-v:{proyecto}", json.dumps(meta), f"vivo-{proyecto}"[:60], proyecto),
         )
         did = cur.fetchone()["id"]
         cur.execute("UPDATE v_encargos SET dispatch_id=%s WHERE id=%s", (did, num))

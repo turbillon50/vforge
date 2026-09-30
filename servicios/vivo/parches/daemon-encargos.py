@@ -207,6 +207,7 @@ def _ejecutar(executor, prompt, task_id, final_si_falla, agente="claude"):
     nombre = _vivo_nombre(prompt)
     if not nombre:
         return executor(prompt)
+    agente = (agente or "claude").replace("-encargo", "")
     with _vivo_lock(nombre):
         try:
             resultado = run_encargo(prompt, agente)
@@ -229,6 +230,11 @@ src = src.replace(ancla, HELPERS + "\n" + ancla, 1)
 c = "        result = executor(prompt)\n    except subprocess.TimeoutExpired as te:"
 assert src.count(c) == 1
 src = src.replace(c, "        result = _ejecutar(executor, prompt, task_id, retries >= MAX_RETRY, task_type)\n    except subprocess.TimeoutExpired as te:", 1)
+
+# Los encargos entran como agent "claude-encargo" (claude_loop.py sólo toma agent='claude').
+e = "\nVALID_AGENTS = set(EXECUTORS.keys())"
+assert src.count(e) == 1
+src = src.replace(e, '\nEXECUTORS["claude-encargo"] = lambda p: run_encargo(p, "claude")' + e, 1)
 
 open(RUTA, "w").write(src)
 print("ok")
