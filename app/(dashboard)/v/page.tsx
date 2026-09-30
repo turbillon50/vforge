@@ -195,7 +195,7 @@ export default function VChatPage() {
   }
 
   return (
-    <div className="relative flex flex-col flex-1 min-h-0 max-w-3xl mx-auto w-full px-4 py-6">
+    <div className="relative mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col px-4 py-6">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold">V — Agente Central</h1>
@@ -211,7 +211,7 @@ export default function VChatPage() {
               setDrawerOpen(true);
             }}
             aria-label="Conversaciones guardadas"
-            className="flex items-center gap-1.5 rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:text-white active:scale-95"
+            className="flex min-h-11 items-center gap-1.5 rounded-full border border-[var(--border-1)] bg-white px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:text-black active:scale-95"
           >
             <IconHistory size={14} /> <span className="hidden sm:inline">Hilos</span>
           </button>
@@ -220,7 +220,7 @@ export default function VChatPage() {
             <button
               onClick={() => setMode("text")}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-medium transition ${
-                mode === "text" ? "bg-violet-600/40 text-white" : "text-[var(--fg-tertiary)] hover:text-[var(--fg-primary)]"
+                mode === "text" ? "bg-black text-white" : "text-[var(--fg-tertiary)] hover:text-[var(--fg-primary)]"
               }`}
             >
               <IconChat size={14} /> Texto
@@ -228,7 +228,7 @@ export default function VChatPage() {
             <button
               onClick={() => setMode("voice")}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-medium transition ${
-                mode === "voice" ? "bg-violet-600/40 text-white" : "text-[var(--fg-tertiary)] hover:text-[var(--fg-primary)]"
+                mode === "voice" ? "bg-black text-white" : "text-[var(--fg-tertiary)] hover:text-[var(--fg-primary)]"
               }`}
             >
               <IconMic size={14} /> Voz
@@ -258,7 +258,7 @@ export default function VChatPage() {
                   <div
                     className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
                       msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
+                        ? "bg-black text-white"
                         : "bg-muted text-foreground"
                     }`}
                   >
@@ -280,7 +280,7 @@ export default function VChatPage() {
           {/* Input */}
           <div className="mt-4 flex gap-2">
             <textarea
-              className="flex-1 resize-none rounded-xl border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 resize-none rounded-xl border bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               rows={2}
               placeholder="Escribe un mensaje… (Enter para enviar)"
               value={input}
@@ -291,7 +291,7 @@ export default function VChatPage() {
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              className="self-end rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground disabled:opacity-50 hover:bg-primary/90 transition"
+              className="self-end rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-medium text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
             >
               Enviar
             </button>
@@ -321,16 +321,16 @@ export default function VChatPage() {
               animate={{ x: 0 }}
               exit={{ x: -360 }}
               transition={{ type: "spring", stiffness: 320, damping: 34 }}
-              className="glass relative z-10 flex h-full w-[86%] max-w-[340px] flex-col border-r border-[var(--border-1)] bg-[#0a0a0f]/95 pb-[max(env(safe-area-inset-bottom),1rem)]"
+              className="glass relative z-10 flex h-full w-[86%] max-w-[340px] flex-col border-r border-[var(--border-1)] bg-white pb-[max(env(safe-area-inset-bottom),1rem)]"
             >
               <div className="flex items-center justify-between px-4 pb-3 pt-5">
-                <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-                  <IconHistory size={16} className="text-violet-300" /> Conversaciones
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-black">
+                  <IconHistory size={16} className="text-black" /> Conversaciones
                 </h2>
                 <button
                   onClick={() => setDrawerOpen(false)}
                   aria-label="Cerrar"
-                  className="grid h-8 w-8 place-items-center rounded-lg border border-[var(--border-1)] text-[var(--fg-secondary)] transition hover:text-white active:scale-95"
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-[var(--border-1)] text-[var(--fg-secondary)] transition hover:text-black active:scale-95"
                 >
                   <IconX size={15} />
                 </button>
@@ -339,7 +339,7 @@ export default function VChatPage() {
               <div className="px-4 pb-3">
                 <button
                   onClick={newSession}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/40 bg-violet-600/20 px-3 py-2.5 text-sm font-medium text-violet-100 transition hover:bg-violet-600/30 active:scale-[0.98]"
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] bg-white px-3 py-2.5 text-sm font-medium text-black transition hover:border-black active:scale-[0.98]"
                 >
                   <IconPlus size={15} /> Nueva conversación
                 </button>
@@ -361,7 +361,7 @@ export default function VChatPage() {
                             onClick={() => switchSession(s.id)}
                             className={`w-full rounded-xl border px-3 py-2.5 text-left transition active:scale-[0.99] ${
                               active
-                                ? "border-violet-500/50 bg-violet-600/15"
+                                ? "border-black bg-white"
                                 : "border-transparent hover:border-[var(--border-1)] hover:bg-[var(--surface-1)]"
                             }`}
                           >

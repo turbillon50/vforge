@@ -241,12 +241,12 @@ export default function BlueprintPage() {
         description="Diseña cómo trabaja la empresa · nodos, automatizaciones, CRM · WhatsApp"
       />
 
-      <div className="grid flex-1 grid-cols-1 gap-3 p-3 lg:grid-cols-[220px_1fr_300px]">
+      <div className="grid flex-1 grid-cols-1 gap-3 px-5 py-6 md:px-8 lg:grid-cols-[220px_1fr_300px]">
         {/* Columna izquierda: lista + paleta */}
         <div className="flex flex-col gap-3">
           <button
             onClick={newFlow}
-            className="flex items-center justify-center gap-2 rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-sm font-semibold text-violet-200 hover:bg-violet-500/20"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           >
             <IconPlus size={16} /> Nuevo flujo
           </button>
@@ -265,7 +265,7 @@ export default function BlueprintPage() {
                       onClick={() => openFlow(f.id)}
                       className={
                         "flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs " +
-                        (flowId === f.id ? "bg-violet-500/15 text-white" : "text-[var(--fg-secondary)] hover:bg-[var(--surface-1)]")
+                        (flowId === f.id ? "bg-black text-white" : "text-[var(--fg-secondary)] hover:bg-white")
                       }
                     >
                       <span className="truncate">{f.name}</span>
@@ -310,7 +310,7 @@ export default function BlueprintPage() {
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="min-w-0 flex-1 rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-1.5 text-sm text-white outline-none focus:border-violet-400/50"
+                className="min-w-0 flex-1 rounded-lg border border-[var(--border-1)] bg-white px-3 py-1.5 text-sm text-black outline-none focus:border-black"
               />
               <button
                 onClick={save}
@@ -322,7 +322,7 @@ export default function BlueprintPage() {
               <button
                 onClick={run}
                 disabled={running}
-                className="flex items-center gap-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 py-1.5 text-xs font-semibold text-sky-200 hover:bg-sky-500/20 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-lg border border-[var(--border-1)] bg-white px-3 py-1.5 text-xs font-semibold text-black hover:border-black disabled:opacity-50"
               >
                 {running ? <IconLoader size={14} /> : <IconPlay size={14} />} Probar
               </button>
@@ -344,7 +344,7 @@ export default function BlueprintPage() {
 
           {nodes.length === 0 && !flowId ? (
             <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border-1)] py-20 text-center">
-              <span className="mb-3 text-violet-400"><IconZap size={34} /></span>
+              <span className="mb-3 text-black"><IconZap size={34} /></span>
               <p className="text-sm text-[var(--fg-secondary)]">Selecciona un flujo o crea uno nuevo.</p>
               <p className="mt-1 text-xs text-[var(--fg-muted)]">Conecta nodos esféricos para automatizar WhatsApp + CRM.</p>
             </div>
@@ -364,14 +364,14 @@ export default function BlueprintPage() {
           )}
 
           {linkFrom && (
-            <p className="text-center text-[12px] text-violet-300">
+            <p className="text-center text-[12px] text-[var(--fg-muted)]">
               Conectando ({linkMode === "alt" ? "rama falso" : "rama principal"})… haz clic en el nodo destino.{" "}
               <button onClick={() => setLinkFrom(null)} className="underline">cancelar</button>
             </p>
           )}
 
           {logOutput && (
-            <div className="rounded-xl border border-[var(--border-1)] bg-black/40 p-3 font-mono text-[12px] text-[var(--fg-secondary)]">
+            <div className="rounded-xl border border-[var(--border-1)] bg-white p-3 font-mono text-[12px] text-[var(--fg-secondary)]">
               <p className="mb-1 text-[12px] uppercase tracking-wider text-[var(--fg-tertiary)]">Resultado de la corrida</p>
               {logOutput.length === 0 ? <p>sin logs</p> : logOutput.map((l, i) => <div key={i}>{l}</div>)}
             </div>
@@ -451,7 +451,7 @@ export default function BlueprintPage() {
 }
 
 const inputCls =
-  "w-full rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] px-2.5 py-1.5 text-xs text-white outline-none focus:border-violet-400/50";
+  "w-full rounded-lg border border-[var(--border-1)] bg-white px-2.5 py-1.5 text-xs text-black outline-none focus:border-black";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

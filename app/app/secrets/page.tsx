@@ -138,12 +138,12 @@ export default function SecretsPage() {
               <>
                 <button onClick={() => setShowEnv(true)}
                   className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] transition-all"
-                  style={{ border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.03)", color:"rgba(255,255,255,0.5)" }}>
+                  style={{ border:"1px solid var(--border-1)", background:"#fff", color:"var(--fg-secondary)" }}>
                   ↑ Import .env
                 </button>
                 <button onClick={() => setShowAdd(true)}
                   className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold transition-all"
-                  style={{ background:"#fff", color:"#000" }}>
+                  style={{ background:"var(--accent)", color:"#fff" }}>
                   + Nuevo secret
                 </button>
               </>
@@ -153,7 +153,7 @@ export default function SecretsPage() {
                 <IconShield size={13} /> Bloquear
               </button>
             ) : (
-              <button onClick={unlock} className="btn-primary">
+              <button onClick={unlock} className="btn-ghost">
                 <IconKey size={13} /> Unlock vault
               </button>
             )}
@@ -162,11 +162,11 @@ export default function SecretsPage() {
       />
 
       <div className="grid grid-cols-1 gap-3 px-5 pt-6 md:grid-cols-4 md:px-8">
-        <Stat label={t.secrets.stats.encrypted} value="AES-256-GCM" tone="violet" />
+        <Stat label={t.secrets.stats.encrypted} value="AES-256-GCM" tone="neutral" />
         <Stat
           label={t.secrets.stats.rotations}
           value={String(secrets.filter((s) => s.rotated_at).length)}
-          tone="cyan"
+          tone="neutral"
         />
         <Stat label="Total" value={String(secrets.length)} tone="emerald" />
         <Stat
@@ -188,12 +188,12 @@ export default function SecretsPage() {
 
           {!hasToken && (
             <div className="p-8 text-center text-on-surface-variant">
-              <IconShield className="mx-auto mb-3 text-violet-300" size={28} />
+              <IconShield className="mx-auto mb-3 text-black" size={28} />
               <p className="font-display text-lg text-on-surface">Vault bloqueada</p>
               <p className="mt-2 text-sm max-w-md mx-auto leading-relaxed">
                 Tus secretos viven encriptados (AES-256-GCM) en Neon. Para
                 verlos en este navegador necesitas el operator token —
-                el mismo que <span className="font-mono text-violet-400">V</span> usa
+                el mismo que <span className="font-mono text-black">V</span> usa
                 para Ring 1+ writes.
               </p>
               <button
@@ -238,7 +238,7 @@ export default function SecretsPage() {
                     className="grid grid-cols-12 items-center gap-3 border-b border-app px-4 py-3 last:border-0 hover:bg-tint-1/[0.05]"
                   >
                     <div className="col-span-12 md:col-span-5 flex items-center gap-3 min-w-0">
-                      <IconShield size={14} className="text-violet-300 shrink-0" />
+                      <IconShield size={14} className="shrink-0 text-black" />
                       <span className="font-mono text-[13px] text-on-surface truncate">
                         {s.name}
                       </span>
@@ -265,7 +265,7 @@ export default function SecretsPage() {
                         className={
                           isCopied
                             ? "flex h-7 items-center gap-1 rounded-md border border-success-emerald/40 bg-success-emerald/10 px-2 font-mono text-[12px] uppercase tracking-widest text-success-emerald"
-                            : "flex h-7 items-center gap-1 rounded-md border border-app bg-tint-1/[0.05] px-2 font-mono text-[12px] uppercase tracking-widest text-on-surface-variant transition hover:border-violet-500/30 hover:text-violet-300 disabled:opacity-50"
+                            : "flex h-7 items-center gap-1 rounded-md border border-app bg-white px-2 font-mono text-[12px] uppercase tracking-widest text-on-surface-variant transition hover:border-black hover:text-black disabled:opacity-50"
                         }
                       >
                         {isLoading ? (
@@ -313,11 +313,10 @@ function Stat({
 }: {
   label: string;
   value: string;
-  tone: "violet" | "cyan" | "emerald" | "crimson";
+  tone: "neutral" | "emerald" | "crimson";
 }) {
   const m = {
-    violet: "text-violet-300",
-    cyan: "text-violet-400",
+    neutral: "text-black",
     emerald: "text-success-emerald",
     crimson: "text-error-crimson",
   };
@@ -361,9 +360,9 @@ export function AddSecretModal({ onClose, onSaved, token }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
       onClick={onClose}>
       <div className="w-full max-w-md rounded-2xl p-6"
-        style={{ background:"#0f0f14", border:"1px solid rgba(255,255,255,0.1)" }}
+        style={{ background:"#fff", border:"1px solid var(--border-1)" }}
         onClick={e => e.stopPropagation()}>
-        <h3 className="mb-5 text-[15px] font-bold" style={{ color:"#fff" }}>Nuevo secret</h3>
+        <h3 className="mb-5 text-[15px] font-bold" style={{ color:"#0a0a0a" }}>Nuevo secret</h3>
         {err && <p className="mb-3 rounded-lg px-3 py-2 text-[12px]"
           style={{ background:"rgba(239,68,68,0.1)", color:"#f87171", border:"1px solid rgba(239,68,68,0.2)" }}>{err}</p>}
         {[
@@ -372,24 +371,24 @@ export function AddSecretModal({ onClose, onSaved, token }: {
           { label:"Descripción (opcional)", val:desc, set:setDesc, type:"text", mono:false },
         ].map(({ label, val, set, type, mono }) => (
           <div key={label} className="mb-3">
-            <label className="mb-1 block text-[12px]" style={{ color:"rgba(255,255,255,0.4)" }}>{label}</label>
+            <label className="mb-1 block text-[12px]" style={{ color:"var(--fg-muted)" }}>{label}</label>
             <input type={type} value={val} onChange={e => set(e.target.value)}
               className="w-full rounded-lg px-3 py-2 text-[13px] outline-none transition-colors"
-              style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)",
-                color:"#e5e5e5", fontFamily: mono ? "monospace" : "inherit" }}
-              onFocus={e => (e.currentTarget.style.borderColor = "rgba(124,58,237,0.5)")}
-              onBlur={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")} />
+              style={{ background:"#fff", border:"1px solid var(--border-1)",
+                color:"#0a0a0a", fontFamily: mono ? "monospace" : "inherit" }}
+              onFocus={e => (e.currentTarget.style.borderColor = "#0a0a0a")}
+              onBlur={e => (e.currentTarget.style.borderColor = "var(--border-1)")} />
           </div>
         ))}
         <div className="mt-5 flex gap-2">
           <button onClick={save} disabled={saving}
             className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold transition-all"
-            style={{ background: saving ? "rgba(255,255,255,0.1)" : "#fff", color: saving ? "rgba(255,255,255,0.3)" : "#000" }}>
+            style={{ background: saving ? "var(--accent-soft)" : "var(--accent)", color: saving ? "var(--accent-hover)" : "#fff" }}>
             {saving ? "Guardando…" : "Guardar secret"}
           </button>
           <button onClick={onClose}
             className="rounded-xl px-4 py-2.5 text-[13px] transition-all"
-            style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.5)" }}>
+            style={{ background:"#fff", border:"1px solid var(--border-1)", color:"var(--fg-secondary)" }}>
             Cancelar
           </button>
         </div>
@@ -453,10 +452,10 @@ export function ImportEnvModal({ onClose, onSaved, token }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
       onClick={onClose}>
       <div className="w-full max-w-lg rounded-2xl p-6"
-        style={{ background:"#0f0f14", border:"1px solid rgba(255,255,255,0.1)" }}
+        style={{ background:"#fff", border:"1px solid var(--border-1)" }}
         onClick={e => e.stopPropagation()}>
-        <h3 className="mb-1 text-[15px] font-bold" style={{ color:"#fff" }}>Importar .env</h3>
-        <p className="mb-4 text-[12px]" style={{ color:"rgba(255,255,255,0.35)" }}>
+        <h3 className="mb-1 text-[15px] font-bold" style={{ color:"#0a0a0a" }}>Importar .env</h3>
+        <p className="mb-4 text-[12px]" style={{ color:"var(--fg-muted)" }}>
           Pega el contenido de tu archivo .env — cada KEY=VALUE se guarda como secret cifrado.
         </p>
         {err && <p className="mb-3 rounded-lg px-3 py-2 text-[12px]"
@@ -470,25 +469,25 @@ export function ImportEnvModal({ onClose, onSaved, token }: {
         <textarea value={text} onChange={e => setText(e.target.value)} rows={10}
           placeholder={"OPENAI_API_KEY=sk-...\nNEON_DB_URL=postgresql://...\n# comentarios ignorados"}
           className="w-full rounded-lg px-3 py-2.5 text-[12px] outline-none transition-colors"
-          style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)",
-            color:"#e5e5e5", fontFamily:"monospace", resize:"vertical" }}
-          onFocus={e => (e.currentTarget.style.borderColor = "rgba(124,58,237,0.4)")}
-          onBlur={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")} />
+          style={{ background:"#fff", border:"1px solid var(--border-1)",
+            color:"#0a0a0a", fontFamily:"monospace", resize:"vertical" }}
+          onFocus={e => (e.currentTarget.style.borderColor = "#0a0a0a")}
+          onBlur={e => (e.currentTarget.style.borderColor = "var(--border-1)")} />
         {preview.length > 0 && (
-          <p className="mt-2 text-[12px]" style={{ color:"rgba(255,255,255,0.3)" }}>
+          <p className="mt-2 text-[12px]" style={{ color:"var(--fg-muted)" }}>
             {preview.length} variable{preview.length !== 1 ? "s" : ""} detectada{preview.length !== 1 ? "s" : ""}
           </p>
         )}
         <div className="mt-4 flex gap-2">
           <button onClick={importAll} disabled={saving || !text.trim()}
             className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold"
-            style={{ background: saving || !text.trim() ? "rgba(255,255,255,0.08)" : "#fff",
-              color: saving || !text.trim() ? "rgba(255,255,255,0.3)" : "#000" }}>
+            style={{ background: saving || !text.trim() ? "var(--accent-soft)" : "var(--accent)",
+              color: saving || !text.trim() ? "var(--accent-hover)" : "#fff" }}>
             {saving ? "Importando…" : `Importar ${preview.length > 0 ? preview.length + " secrets" : ""}`}
           </button>
           <button onClick={onClose}
             className="rounded-xl px-4 py-2.5 text-[13px]"
-            style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.5)" }}>
+            style={{ background:"#fff", border:"1px solid var(--border-1)", color:"var(--fg-secondary)" }}>
             Cancelar
           </button>
         </div>

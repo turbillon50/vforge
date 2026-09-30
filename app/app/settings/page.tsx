@@ -178,7 +178,7 @@ function ConnectionsPanel() {
         GitHub, Vercel, Stripe, Neon, Clerk y el resto se conectan por usuario.
         VForge no sustituye la propiedad de esas cuentas.
       </p>
-      <Link href="/app/integrations" className="btn-primary mt-5 w-full">
+      <Link href="/app/integrations" className="btn-ghost mt-5 w-full">
         <IconKey size={12} /> Abrir conexiones
       </Link>
     </SettingsCard>

@@ -16,9 +16,9 @@ interface SocialPost {
 const STATUS_TONE: Record<string, { color: string; label: string }> = {
   published: { color: "#34d399", label: "Publicado" },
   publishing: { color: "#fbbf24", label: "Publicando" },
-  scheduled: { color: "#8b5cf6", label: "Programado" },
+  scheduled: { color: "#6b6e73", label: "Programado" },
   failed: { color: "#ef4444", label: "Falló" },
-  pending: { color: "#a78bfa", label: "Pendiente" },
+  pending: { color: "#6b6e73", label: "Pendiente" },
 };
 
 function timeAgo(iso: string): string {
@@ -77,7 +77,7 @@ export default function CommunityPage() {
               return (
                 <li
                   key={p.id}
-                  className="overflow-hidden rounded-xl border border-[var(--border-1)] bg-[#0a0a12] p-4 transition hover:border-[var(--border-1)]"
+                  className="overflow-hidden rounded-2xl border border-[var(--border-1)] bg-white p-4 transition hover:border-black/30"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2.5">

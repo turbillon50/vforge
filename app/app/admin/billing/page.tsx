@@ -75,7 +75,7 @@ export default async function AdminBillingPage() {
   return (
     <main className="mx-auto w-full max-w-5xl px-5 pb-28 pt-10 md:px-8 md:pt-14">
       <header>
-        <p className="font-mono text-[12px] uppercase tracking-[0.25em] text-violet-300">
+        <p className="font-mono text-[12px] uppercase tracking-[0.25em] text-[var(--fg-muted)]">
           Administración · Billing
         </p>
         <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-on-surface md:text-5xl">
@@ -134,7 +134,7 @@ export default async function AdminBillingPage() {
                     <p className="text-[12px] text-muted">{r.email}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="rounded-full bg-violet-500/15 px-2.5 py-0.5 font-mono text-[12px] uppercase tracking-[0.16em] text-violet-300 ring-1 ring-violet-500/30">
+                    <span className="rounded-full border border-[var(--border-1)] bg-white px-2.5 py-0.5 font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--fg-secondary)]">
                       {r.plan}
                     </span>
                   </td>
@@ -153,7 +153,7 @@ export default async function AdminBillingPage() {
       )}
 
       <p className="mt-8">
-        <Link href="/app/admin" className="text-sm text-violet-400 hover:underline">
+        <Link href="/app/admin" className="text-sm text-black underline-offset-4 hover:underline">
           ← Volver a usuarios
         </Link>
       </p>

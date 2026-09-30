@@ -944,7 +944,7 @@ export function ForgeStudio() {
                   type="button"
                   onClick={() => void sendPrompt()}
                   disabled={!draft.trim() || sending || !sessionId}
-                  className="vf-press grid h-9 w-9 place-items-center rounded-md bg-[var(--vf-fg)] text-[var(--vf-bg-1)] disabled:cursor-not-allowed disabled:opacity-25"
+                  className="vf-press grid h-9 w-9 place-items-center rounded-md bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-25"
                   aria-label="Enviar instrucción"
                 >
                   {sending ? <IconLoader size={13} className="animate-spin" /> : <IconSend size={13} />}

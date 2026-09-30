@@ -244,7 +244,7 @@ export function EsferaDetail({
                   />
                 )}
                 {source && <Row label="Origen" value={<span className="text-muted">{source}</span>} />}
-                {gajo && <Row label="Gajo" value={<span className="font-mono text-[12px] text-violet-400">{gajo}</span>} />}
+                {gajo && <Row label="Gajo" value={<span className="font-mono text-[12px] text-[var(--fg-muted)]">{gajo}</span>} />}
                 <Row
                   label="Corriendo"
                   value={

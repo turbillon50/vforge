@@ -84,12 +84,12 @@ const KIND_META: Record<
   screenshot: {
     label: "Screenshot",
     Icon: IconCamera,
-    tone: "text-violet-400 border-violet-400",
+    tone: "text-black border-black",
   },
   text: {
     label: "Texto",
     Icon: IconFile,
-    tone: "text-violet-400 border-violet-400",
+    tone: "text-black border-black",
   },
   voice: {
     label: "Voz",
@@ -111,13 +111,13 @@ const STATE_META: Record<
   falta: {
     label: "Falta",
     Icon: IconWarn,
-    tone: "text-[var(--color-gold-arc)] border-[color:var(--color-gold-arc)]",
+    tone: "text-amber-700 border-amber-700",
     action: "Marcar falta",
   },
   sugerencia: {
     label: "Sugerencia",
     Icon: IconInfo,
-    tone: "text-electric-blue border-electric-blue",
+    tone: "text-black border-black",
     action: "Marcar sugerencia",
   },
 };
@@ -501,7 +501,7 @@ export function EvidenceVaultClient({
       <header className="border-b border-app px-5 py-5 md:px-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-violet-400">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">
               ESFERA
             </p>
             <h1 className="mt-1 font-display text-2xl font-semibold text-on-surface md:text-3xl">
@@ -558,12 +558,12 @@ export function EvidenceVaultClient({
             onDrop={handleDrop}
             className={cn(
               "rounded-2xl border border-dashed bg-surface p-4 shadow-elev transition md:p-5",
-              dragOver ? "border-violet-400 bg-tint-2/[0.08]" : "border-app-strong",
+              dragOver ? "border-black bg-[var(--accent-soft)]" : "border-app-strong",
             )}
           >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
-                <p className="label-caps text-violet-400">Zona para soltar</p>
+                <p className="label-caps text-[var(--fg-muted)]">Zona para soltar</p>
                 <h2 className="mt-1 font-display text-lg font-semibold text-on-surface">
                   Un gesto: suelta, pega o toca una accion
                 </h2>
@@ -653,7 +653,7 @@ export function EvidenceVaultClient({
                     type="button"
                     onClick={() => void uploadText()}
                     disabled={saving || !textDraft.trim()}
-                    className="btn-primary min-h-11 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="btn-ghost min-h-11 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {saving ? <IconLoader size={14} className="animate-spin" /> : <IconSend size={14} />}
                     Guardar texto
@@ -685,7 +685,7 @@ export function EvidenceVaultClient({
           >
             <div className="flex items-center justify-between gap-3 border-b border-app px-4 py-4 md:px-5">
               <div>
-                <p className="label-caps text-violet-400">Linea de evidencia</p>
+                <p className="label-caps text-[var(--fg-muted)]">Linea de evidencia</p>
                 <h2 className="mt-1 font-display text-lg font-semibold">
                   {selectedProjectName || "Selecciona proyecto"}
                 </h2>
@@ -732,7 +732,7 @@ export function EvidenceVaultClient({
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="label-caps text-violet-400">Tablero de estado</p>
+                <p className="label-caps text-[var(--fg-muted)]">Tablero de estado</p>
                 <h2 className="mt-1 font-display text-lg font-semibold">
                   Procesos
                 </h2>
@@ -762,7 +762,7 @@ export function EvidenceVaultClient({
             transition={{ duration: 0.35, ease: EASE, delay: 0.12 }}
             className="rounded-2xl border border-app bg-surface p-4 shadow-elev md:p-5"
           >
-            <p className="label-caps text-violet-400">Actualizar proceso</p>
+            <p className="label-caps text-[var(--fg-muted)]">Actualizar proceso</p>
             <div className="mt-4 space-y-3">
               <label className="block">
                 <span className="mb-1 block text-sm text-on-surface-variant">
@@ -853,10 +853,10 @@ function CaptureButton({
       disabled={disabled}
       className={cn(
         "min-h-[104px] rounded-xl border bg-surface-low p-4 text-left transition",
-        "focus:outline-none focus:ring-2 focus:ring-violet-400",
+        "focus:outline-none focus:ring-2 focus:ring-black/20",
         active
-          ? "border-violet-400 bg-tint-2/[0.08] text-on-surface"
-          : "border-app text-on-surface hover:border-violet-400 hover:bg-tint-2/[0.08]",
+          ? "border-black bg-[var(--accent-soft)] text-on-surface"
+          : "border-app text-on-surface hover:border-black hover:bg-[#f7f7f5]",
         disabled && "cursor-not-allowed opacity-50",
       )}
     >
@@ -916,7 +916,7 @@ function EvidenceRow({ item, index }: { item: EvidenceItem; index: number }) {
             href={item.raw_url}
             target="_blank"
             rel="noreferrer"
-            className="mt-2 inline-flex font-mono text-[11px] uppercase tracking-[0.14em] text-violet-400 hover:text-violet-400"
+            className="mt-2 inline-flex font-mono text-[11px] uppercase tracking-[0.14em] text-black underline-offset-4 hover:underline"
           >
             Abrir archivo
           </a>
@@ -976,7 +976,7 @@ function SyncBadge({
         state === "error"
           ? "border-error-crimson text-error-crimson"
           : state === "syncing"
-            ? "border-violet-400 text-violet-400"
+            ? "border-black text-black"
             : "border-success-emerald text-success-emerald",
       )}
     >
@@ -1009,7 +1009,7 @@ function EmptyState({
 }) {
   return (
     <div className={cn("px-5 text-center", compact ? "py-6" : "py-12")}>
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-app bg-tint-1/[0.05] text-violet-400">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-app bg-tint-1/[0.05] text-black">
         <Icon size={20} />
       </div>
       <p className="mt-3 font-display text-sm font-semibold text-on-surface">

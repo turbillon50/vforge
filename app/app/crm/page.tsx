@@ -98,7 +98,7 @@ export default function CrmPage() {
             onClick={() => setTab(t)}
             className={
               "rounded-lg px-3 py-1.5 text-xs font-semibold capitalize " +
-              (tab === t ? "bg-violet-500/15 text-violet-200" : "text-[var(--fg-tertiary)] hover:bg-[var(--surface-1)]")
+              (tab === t ? "bg-black text-white" : "text-[var(--fg-tertiary)] hover:bg-white")
             }
           >
             {t}
@@ -139,7 +139,7 @@ export default function CrmPage() {
                         <select
                           value={s.id}
                           onChange={(e) => moveLead(l.id, e.target.value)}
-                          className="mt-2 w-full rounded-md border border-[var(--border-1)] bg-black/30 px-1.5 py-1 text-[12px] text-[var(--fg-secondary)] outline-none"
+                          className="mt-2 w-full rounded-md border border-[var(--border-1)] bg-white px-1.5 py-1 text-[12px] text-[var(--fg-secondary)] outline-none focus:border-black"
                         >
                           {stages.map((st) => (
                             <option key={st.id} value={st.id}>{st.name}</option>
@@ -204,14 +204,14 @@ export default function CrmPage() {
               exit={{ x: 360 }}
               transition={{ type: "spring", stiffness: 280, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="flex h-full w-[360px] flex-col border-l border-[var(--border-1)] bg-[#0a0a0f] p-4"
+              className="flex h-full w-[360px] max-w-[92vw] flex-col border-l border-[var(--border-1)] bg-white p-4"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-white">{openContact.name || openContact.push_name || "Contacto"}</p>
+                  <p className="text-sm font-semibold text-black">{openContact.name || openContact.push_name || "Contacto"}</p>
                   {openContact.wa_number && <p className="text-xs text-[var(--fg-tertiary)]">+{openContact.wa_number}</p>}
                 </div>
-                <button onClick={() => setOpenContact(null)} className="text-[var(--fg-tertiary)] hover:text-white"><IconX size={16} /></button>
+                <button onClick={() => setOpenContact(null)} className="text-[var(--fg-tertiary)] hover:text-black"><IconX size={16} /></button>
               </div>
               <p className="mt-4 mb-2 text-[12px] uppercase tracking-wider text-[var(--fg-tertiary)]">Historial de interacciones</p>
               <div className="flex-1 space-y-2 overflow-auto">
@@ -248,7 +248,7 @@ export default function CrmPage() {
 function Empty() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
-      <span className="mb-3 text-violet-400"><IconUsers size={32} /></span>
+      <span className="mb-3 text-black"><IconUsers size={32} /></span>
       <p className="text-sm text-[var(--fg-secondary)]">Aún no hay datos en el CRM.</p>
       <p className="mt-1 text-xs text-[var(--fg-muted)]">En cuanto entre un WhatsApp, el contacto y su lead aparecen aquí solos.</p>
     </div>

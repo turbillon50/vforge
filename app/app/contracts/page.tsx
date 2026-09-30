@@ -82,7 +82,7 @@ export default function ContractsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
+    <div className="mx-auto max-w-2xl px-5 pb-16 pt-8 md:px-8 md:pt-12">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -90,13 +90,12 @@ export default function ContractsPage() {
         transition={{ ease: EASE }}
         className="relative mb-6"
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent" />
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-500/8">
-            <IconShield size={18} className="text-violet-400" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border-1)] bg-white">
+            <IconShield size={18} className="text-black" />
           </div>
           <div>
-            <h1 className="font-display text-xl font-bold text-white">
+            <h1 className="font-display text-xl font-semibold text-black">
               Contratos
             </h1>
             <p className="text-[12px] text-[var(--fg-tertiary)]">
@@ -122,7 +121,7 @@ export default function ContractsPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05, ease: EASE }}
-            className="relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[#0a0a12] p-4"
+            className="relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-white p-4"
           >
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
             <p
@@ -140,14 +139,13 @@ export default function ContractsPage() {
       <div className="mb-5 grid grid-cols-2 gap-3">
         <button
           onClick={() => setNewContract(true)}
-          className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 to-violet-500 py-3.5 text-sm font-semibold text-white shadow-[0_8px_30px_rgba(124,58,237,0.35)] transition-all active:scale-[0.98]"
+          className="group relative flex min-h-11 items-center justify-center gap-2 overflow-hidden rounded-xl bg-[var(--accent)] py-3.5 text-sm font-semibold text-white transition-all hover:bg-[var(--accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] active:scale-[0.98]"
         >
-          <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
           <IconPlus size={15} /> Nuevo contrato
         </button>
         <button
           onClick={() => setNewProject(true)}
-          className="flex items-center justify-center gap-2 rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] py-3.5 text-sm font-semibold text-[var(--fg-primary)] transition active:scale-[0.98] hover:text-white"
+          className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] bg-white py-3.5 text-sm font-semibold text-[var(--fg-primary)] transition hover:border-black active:scale-[0.98]"
         >
           <IconUsers size={15} /> Proyecto + invitación
         </button>
@@ -161,7 +159,7 @@ export default function ContractsPage() {
             onClick={() => setFilter(f.key)}
             className={`shrink-0 rounded-full border px-4 py-1.5 font-mono text-[12px] transition ${
               filter === f.key
-                ? "border-violet-500/40 bg-violet-500/12 text-violet-300"
+                ? "border-black bg-black text-white"
                 : "border-[var(--border-1)] text-[var(--fg-muted)] hover:text-[var(--fg-secondary)]"
             }`}
           >
@@ -196,12 +194,12 @@ export default function ContractsPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i * 0.04, 0.3), ease: EASE }}
-              className="group relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-[#0a0a12] p-4 transition hover:border-[var(--border-1)]"
+              className="group relative overflow-hidden rounded-2xl border border-[var(--border-1)] bg-white p-4 transition hover:border-black/30"
             >
               <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/6 to-transparent" />
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border-1)] bg-white/[0.025]">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border-1)] bg-[#f7f7f5]">
                     <IconFile size={16} className="text-[var(--fg-tertiary)]" />
                   </div>
                   <div>
@@ -248,7 +246,7 @@ export default function ContractsPage() {
                     <div
                       key={p.idx}
                       title={`${p.label} · ${money(p.amount)}`}
-                      className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]"
+                      className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/10"
                     >
                       <div
                         className="h-full rounded-full transition-all"
@@ -276,7 +274,7 @@ export default function ContractsPage() {
                   <button
                     onClick={() => sendToSign(c)}
                     disabled={sending === c.id}
-                    className="flex items-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-[12px] font-semibold text-violet-200 transition active:scale-95 disabled:opacity-50"
+                    className="flex items-center gap-1.5 rounded-lg border border-[var(--border-1)] bg-white px-3 py-1.5 text-[12px] font-semibold text-black transition hover:border-black active:scale-95 disabled:opacity-50"
                   >
                     {sending === c.id ? (
                       <IconLoader size={11} className="animate-spin" />

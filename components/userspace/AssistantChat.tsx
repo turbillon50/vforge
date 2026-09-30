@@ -125,21 +125,21 @@ export default function AssistantChat() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#0a0a0f]">
+    <div className="flex h-full min-h-0 flex-col bg-white">
       {/* Header */}
       <div className="relative flex items-center gap-3 border-b border-[var(--border-1)] px-5 py-4">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[var(--border-1)]" />
         {/* V avatar */}
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-violet-500 shadow-glow">
-          <IconSparkles size={15} className="text-white" />
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border-1)] bg-white">
+          <IconSparkles size={15} className="text-black" />
           <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0a0a0f] bg-emerald-400" />
         </div>
         <div>
           <p className="text-sm font-semibold text-on-surface">Asistente VForge</p>
           <p className="font-mono text-[10px] text-muted">
             {busy ? (
-              <span className="text-violet-400 flex items-center gap-1">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400" />
+              <span className="flex items-center gap-1 text-black">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-black" />
                 escribiendo…
               </span>
             ) : (
@@ -149,7 +149,7 @@ export default function AssistantChat() {
         </div>
         <div className="ml-auto">
           <div className="flex items-center gap-1.5 rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-1">
-            <IconZap size={10} className="text-violet-400" />
+            <IconZap size={10} className="text-black" />
             <span className="font-mono text-[10px] text-muted">Claude Sonnet</span>
           </div>
         </div>
@@ -174,10 +174,9 @@ export default function AssistantChat() {
           >
             {/* Central orb */}
             <div className="relative mb-6">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600/80 to-violet-500/80 shadow-glow backdrop-blur">
-                <IconSparkles className="h-7 w-7 text-white" aria-hidden />
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--border-1)] bg-white">
+                <IconSparkles className="h-7 w-7 text-black" aria-hidden />
               </div>
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-600 to-violet-500 opacity-20 blur-xl" />
             </div>
             <p className="font-display text-xl font-semibold tracking-tight text-on-surface">
               Hola, soy tu asistente
@@ -192,7 +191,7 @@ export default function AssistantChat() {
                 <button
                   key={prompt}
                   onClick={() => void send(prompt)}
-                  className="rounded-full border border-violet-500/25 bg-violet-500/6 px-4 py-2 text-[12px] text-violet-300 transition-all hover:border-violet-500/50 hover:bg-violet-500/12"
+                  className="rounded-full border border-[var(--border-1)] bg-white px-4 py-2 text-[12px] text-black transition-all hover:border-black"
                 >
                   {prompt}
                 </button>
@@ -210,13 +209,13 @@ export default function AssistantChat() {
                 className={m.role === "user" ? "flex justify-end" : "flex justify-start gap-3"}
               >
                 {m.role === "assistant" && (
-                  <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-violet-500">
-                    <IconSparkles size={12} className="text-white" />
+                  <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-[var(--border-1)] bg-white">
+                    <IconSparkles size={12} className="text-black" />
                   </div>
                 )}
 
                 {m.role === "user" ? (
-                  <div className="max-w-[82%] rounded-2xl rounded-br-sm bg-gradient-to-br from-violet-600 to-violet-500 px-4 py-3 text-sm text-white shadow-glow-violet">
+                  <div className="max-w-[82%] rounded-2xl rounded-br-sm bg-black px-4 py-3 text-sm text-white">
                     {m.content}
                   </div>
                 ) : (
@@ -230,7 +229,7 @@ export default function AssistantChat() {
                         {[0, 1, 2].map((j) => (
                           <span
                             key={j}
-                            className="h-1.5 w-1.5 rounded-full bg-violet-400"
+                            className="h-1.5 w-1.5 rounded-full bg-black"
                             style={{
                               animation: `typing-dot 1.2s ease-in-out infinite`,
                               animationDelay: `${j * 0.2}s`,
@@ -259,8 +258,8 @@ export default function AssistantChat() {
         <div
           className={`flex items-end gap-3 overflow-hidden rounded-2xl border bg-[var(--surface-1)] px-4 py-3 backdrop-blur-sm transition-all duration-200 ${
             busy
-              ? "border-violet-500/30"
-              : "border-[var(--border-1)] focus-within:border-violet-500/40 focus-within:bg-[var(--surface-1)]"
+              ? "border-black"
+              : "border-[var(--border-1)] focus-within:border-black focus-within:bg-[var(--surface-1)]"
           }`}
         >
           <textarea
@@ -283,7 +282,7 @@ export default function AssistantChat() {
             onClick={() => void send()}
             disabled={busy || !input.trim()}
             aria-label="Enviar"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-violet-500 text-white shadow-glow transition-all hover:brightness-110 disabled:opacity-30 disabled:shadow-none"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--accent)] text-white transition-all hover:bg-[var(--accent-hover)] disabled:opacity-30 disabled:shadow-none"
           >
             {busy ? (
               <IconLoader className="h-3.5 w-3.5 animate-spin" aria-hidden />
