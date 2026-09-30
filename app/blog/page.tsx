@@ -1,9 +1,8 @@
-import _Link from "next/link";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 export const metadata = {
-  title: "Blog — VForge",
+  title: "Blog",
   description: "Perspectivas sobre MCP, agentes de IA, desarrollo de software y el futuro de los productos digitales.",
 };
 
@@ -18,30 +17,30 @@ const POSTS = [
   {
     slug: "por-que-el-contexto-es-el-nuevo-codigo",
     date: "10 jun 2026",
-    tag: "Vision",
-    title: "Por que el contexto es el nuevo codigo",
-    excerpt: "Durante decadas, el valor estaba en el codigo. Ahora el codigo se genera. El nuevo diferencial es quien tiene el mejor contexto: estructura, memoria, historial de decisiones. VForge esta construido sobre esta premisa.",
+    tag: "Visión",
+    title: "Por qué el contexto es el nuevo código",
+    excerpt: "Durante décadas, el valor estaba en el código. Ahora el código se genera. El nuevo diferencial es quién tiene el mejor contexto: estructura, memoria, historial de decisiones. VForge está construido sobre esta premisa.",
   },
   {
     slug: "git-vercel-vforge-el-trio-perfecto",
     date: "2 jun 2026",
     tag: "Producto",
-    title: "Git + Vercel + VForge: el trio que completa el ciclo",
-    excerpt: "GitHub controla versiones. Vercel despliega. VForge conecta los agentes, lee el contexto y orquesta el ciclo completo. No es integracion superficial: es un flujo unificado desde la idea hasta produccion.",
+    title: "Git + Vercel + VForge: el trío que completa el ciclo",
+    excerpt: "GitHub controla versiones. Vercel despliega. VForge conecta los agentes, lee el contexto y orquesta el ciclo completo. No es integración superficial: es un flujo unificado desde la idea hasta producción.",
   },
   {
     slug: "el-desarrollador-del-futuro-es-un-operador",
     date: "25 may 2026",
     tag: "Comunidad",
     title: "El desarrollador del futuro es un operador",
-    excerpt: "No un artesano del codigo, sino un director de orquesta. El rol esta evolucionando: de escribir lineas a definir arquitectura, intenciones y sistemas. Los tools cambian. La mentalidad tambien.",
+    excerpt: "No un artesano del código, sino un director de orquesta. El rol está evolucionando: de escribir líneas a definir arquitectura, intenciones y sistemas. Las herramientas cambian. La mentalidad también.",
   },
   {
     slug: "construir-con-ia-sin-perder-el-control",
     date: "15 may 2026",
     tag: "Desarrollo",
     title: "Construir con IA sin perder el control de tu stack",
-    excerpt: "La autonomia de los agentes es poderosa y peligrosa a la vez. Como mantener visibilidad, auditoria y ownership de cada decision cuando una IA esta ejecutando codigo en tu nombre.",
+    excerpt: "La autonomía de los agentes es poderosa y peligrosa a la vez. Cómo mantener visibilidad, auditoría y ownership de cada decisión cuando una IA está ejecutando código en tu nombre.",
   },
 ];
 
@@ -74,7 +73,7 @@ export default function BlogPage() {
             </span>
           </h1>
           <p style={{ fontSize: 16, color: "#475569", lineHeight: 1.65, maxWidth: 500 }}>
-            MCP, agentes, infraestructura y la mentalidad detras de construir productos con IA.
+            MCP, agentes, infraestructura y la mentalidad detrás de construir productos con IA.
           </p>
         </div>
 
@@ -111,11 +110,8 @@ export default function BlogPage() {
               <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.65, marginBottom: 16, maxWidth: 640 }}>
                 {post.excerpt}
               </p>
-              <span style={{
-                fontSize: 13, color: "#60a5fa",
-                cursor: "pointer",
-              }}>
-                Leer articulo →
+              <span style={{ fontSize: 13, color: "#60a5fa" }}>
+                Próximamente
               </span>
             </article>
           ))}

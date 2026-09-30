@@ -1,4 +1,4 @@
-export const metadata = { title: "Política de Privacidad — VForge" };
+export const metadata = { title: "Política de Privacidad" };
 
 export default function PrivacyPage() {
   return (

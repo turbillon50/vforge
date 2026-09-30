@@ -8,7 +8,7 @@ const STACK = [
     items: [
       {
         name: "Claude",
-        tagline: "El agente V corre sobre Claude Sonnet 4.6. Razonamiento, codigo y contexto largo.",
+        tagline: "El agente V corre sobre Claude Sonnet 4.6. Razonamiento, código y contexto largo.",
         url: "https://www.anthropic.com",
         color: "#cc785c",
         logoBg: "rgba(204, 120, 92, 0.1)",
@@ -21,7 +21,7 @@ const STACK = [
       },
       {
         name: "Grok",
-        tagline: "Modelo de xAI para razonamiento rapido e integracion con datos en tiempo real.",
+        tagline: "Modelo de xAI para razonamiento rápido e integración con datos en tiempo real.",
         url: "https://x.ai",
         color: "#1d9bf0",
         logoBg: "rgba(29, 155, 240, 0.1)",
@@ -34,7 +34,7 @@ const STACK = [
       },
       {
         name: "OpenAI",
-        tagline: "GPT-4o y Codex para generacion de codigo, embeddings y completions.",
+        tagline: "GPT-4o y Codex para generación de código, embeddings y completions.",
         url: "https://openai.com",
         color: "#10a37f",
         logoBg: "rgba(16, 163, 127, 0.1)",
@@ -48,12 +48,12 @@ const STACK = [
     ],
   },
   {
-    category: "Inferencia y computo",
+    category: "Inferencia y cómputo",
     accent: "249,115,22",
     items: [
       {
         name: "Cerebras",
-        tagline: "Inferencia mas rapida del mundo: 1,800+ tokens/seg. Motor de velocidad de VForge.",
+        tagline: "Inferencia más rápida del mundo: 1,800+ tokens/seg. Motor de velocidad de VForge.",
         url: "https://www.cerebras.ai",
         color: "#f97316",
         logoBg: "rgba(249, 115, 22, 0.1)",
@@ -112,7 +112,7 @@ const STACK = [
     items: [
       {
         name: "Hugging Face",
-        tagline: "Hub de modelos, datasets y Spaces. Integracion directa con el pipeline de V.",
+        tagline: "Hub de modelos, datasets y Spaces. Integración directa con el pipeline de V.",
         url: "https://huggingface.co",
         color: "#fbbf24",
         logoBg: "rgba(251, 191, 36, 0.1)",
@@ -144,7 +144,7 @@ const STACK = [
       },
       {
         name: "pgvector + Qdrant",
-        tagline: "Base de datos vectorial semantica para memoria de largo plazo de los agentes.",
+        tagline: "Base de datos vectorial semántica para memoria de largo plazo de los agentes.",
         url: "https://qdrant.tech",
         color: "#818cf8",
         logoBg: "rgba(129, 140, 248, 0.1)",
@@ -192,9 +192,9 @@ export default function Labs() {
               <span style={{ display:"inline-block", width:24, height:1, background:"linear-gradient(90deg,#a78bfa,transparent)" }}/>
               VForge Labs
             </div>
-            <h2 style={{ fontSize:"clamp(2rem, 4vw, 3rem)", fontWeight:800, letterSpacing:"-0.04em", lineHeight:1.05, color:"#f0f4ff", marginBottom:12 }}>
+            <h1 style={{ fontSize:"clamp(2rem, 4vw, 3rem)", fontWeight:800, letterSpacing:"-0.04em", lineHeight:1.05, color:"#f0f4ff", marginBottom:12 }}>
               El stack que lo hace posible
-            </h2>
+            </h1>
             <p style={{ fontSize:16, color:"rgba(200, 215, 255, 0.72)", lineHeight:1.65, maxWidth:480 }}>
               Cada herramienta elegida para maximizar velocidad, control y ahorro. Sin vendor lock-in.
             </p>

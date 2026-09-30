@@ -29,7 +29,7 @@ const TOOLS = TODAS.filter((t) => t.publica);
 const TOOLS_PUBLICAS = TOOLS.length;
 
 export const metadata: Metadata = {
-  title: "Instalar VForge MCP — Documentación",
+  title: "Instalar MCP",
   description:
     "Conecta Claude Desktop con VForge. Guía oficial de instalación del Model Context Protocol de VForge.",
 };

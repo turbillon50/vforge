@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { FallaPantalla } from "@/components/system/FallaPantalla";
+import { reloadChunkErrorOnce } from "@/components/system/reload-chunk-once";
 
 export default function Error({
   error,
@@ -11,6 +12,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
+    if (reloadChunkErrorOnce(error)) return;
     console.error("[falla-raiz]", error?.digest ?? "sin-digest", error?.message);
   }, [error]);
 

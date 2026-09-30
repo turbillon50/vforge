@@ -38,14 +38,14 @@ const STEPS = [
     color: "#60a5fa",
     glow: "59,130,246",
     grad: "linear-gradient(135deg, #1a3a6e 0%, #0f2040 100%)",
-    detail: "El agente V genera, edita y estructura tu codigo en tiempo real. Una conversacion, codigo listo.",
+    detail: "El agente V genera, edita y estructura tu código en tiempo real. Una conversación, código listo.",
     tag: "MCP Agent",
     number: "01",
   },
   {
     id: "github",
     label: "GitHub",
-    sublabel: "Push automatico",
+    sublabel: "Push automático",
     icon: <GitHubSVG />,
     color: "#a78bfa",
     glow: "167,139,250",
@@ -62,19 +62,19 @@ const STEPS = [
     color: "#c4b5fd",
     glow: "196,181,253",
     grad: "linear-gradient(135deg, #4a2d8e 0%, #2a1860 100%)",
-    detail: "Cada push dispara un deployment automatico. Preview y produccion listos en segundos.",
+    detail: "Cada push dispara un deployment automático. Preview y producción listos en segundos.",
     tag: "CI/CD",
     number: "03",
   },
   {
     id: "artifact",
     label: "Artifact",
-    sublabel: "Producto en produccion",
+    sublabel: "Producto en producción",
     icon: <RocketSVG />,
     color: "#e9d5ff",
     glow: "233,213,255",
     grad: "linear-gradient(135deg, #5c3a9e 0%, #3a2070 100%)",
-    detail: "Tu producto vive. Dominio propio, HTTPS, escala automatica. VForge recuerda todo el contexto.",
+    detail: "Tu producto vive. Dominio propio, HTTPS, escala automática. VForge recuerda todo el contexto.",
     tag: "Live",
     number: "04",
   },
@@ -97,13 +97,13 @@ export function Metodo() {
         <div style={{ marginBottom:56 }}>
           <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:11, fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase", color:"#3b82f6", marginBottom:16 }}>
             <span style={{ display:"inline-block", width:24, height:1, background:"linear-gradient(90deg,#3b82f6,transparent)" }}/>
-            Como funciona
+            Cómo funciona
           </div>
           <h2 style={{ fontSize:"clamp(2rem, 4vw, 3rem)", fontWeight:800, letterSpacing:"-0.04em", lineHeight:1.05, color:"#f0f4ff", marginBottom:12 }}>
-            Un flujo. Cero friccion.
+            Un flujo. Cero fricción.
           </h2>
           <p style={{ fontSize:17, color:"rgba(200, 215, 255, 0.75)", lineHeight:1.65, maxWidth:480 }}>
-            De idea a produccion en una conversacion. VForge orquesta cada herramienta por ti.
+            De idea a producción en una conversación. VForge orquesta cada herramienta por ti.
           </p>
         </div>
 
@@ -220,8 +220,8 @@ export function Metodo() {
         {/* Feature cards */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:0, marginTop:3, borderRadius:16, overflow:"hidden", border:"1px solid rgba(59, 130, 246, 0.1)" }}>
           {[
-            { title:"Conecta tu repo", desc:"Autoriza VForge con tu GitHub. Leemos tu codigo, generamos contexto y preparamos los agentes.", tag:"GitHub", c:"59,130,246" },
-            { title:"Deploy automatico", desc:"Cada push genera un deployment en Vercel. Preview y produccion en segundos, sin CI manual.", tag:"Vercel", c:"167,139,250" },
+            { title:"Conecta tu repo", desc:"Autoriza VForge con tu GitHub. Leemos tu código, generamos contexto y preparamos los agentes.", tag:"GitHub", c:"59,130,246" },
+            { title:"Deploy automático", desc:"Cada push genera un deployment en Vercel. Preview y producción en segundos, sin CI manual.", tag:"Vercel", c:"167,139,250" },
             { title:"V orquesta todo", desc:"El Brain MCP centraliza la memoria. Agentes que leen contexto y ejecutan tareas en tiempo real.", tag:"MCP Bridge", c:"196,181,253" },
           ].map((card, i) => (
             <div key={i} style={{

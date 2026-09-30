@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { reloadChunkErrorOnce } from "@/components/system/reload-chunk-once";
 
 /**
  * Última red: aquí ni el layout raíz cargó, así que no hay tokens de tema ni
@@ -15,6 +16,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
+    if (reloadChunkErrorOnce(error)) return;
     console.error("[falla-global]", error?.digest ?? "sin-digest", error?.message);
   }, [error]);
 
