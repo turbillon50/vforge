@@ -306,11 +306,7 @@ export function PanelInspector({
           {errorEncargo ? (
             <p className="mt-1 text-[10px] leading-4 text-vf-error">{errorEncargo}</p>
           ) : null}
-          <Pista>
-            V redacta el encargo con el archivo, la línea y lo que ya aprendió de este proyecto. Lo hace un
-            agente encerrado en este proyecto, lo revisa dos veces y se ve aquí solo. Nada sale a producción
-            hasta que publiques.
-          </Pista>
+          <Pista>Lo hace un agente encerrado en este proyecto y lo revisa dos veces. Nada sale a producción hasta que publiques.</Pista>
           {encargos.length ? <ListaEncargos encargos={encargos.slice(0, 4)} /> : null}
         </section>
       </div>
