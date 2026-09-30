@@ -154,7 +154,9 @@ def crear(d):
     el = {"src": src, "etiqueta": limpio(el.get("etiqueta"), 40), "texto": limpio(el.get("texto"), 300)}
     etiqueta_proyecto = limpio(d.get("etiquetaProyecto"), 80) or proyecto
 
-    with conectar() as cn, cn.cursor() as cur:
+    cn = conectar()
+    cn.autocommit = False  # encargo y job entran juntos o no entra ninguno
+    with cn, cn.cursor() as cur:
         cur.execute(ESQUEMA)
         cur.execute(
             "INSERT INTO v_encargos (proyecto, agente, pedido, elemento) VALUES (%s,%s,%s,%s) RETURNING id",
@@ -164,9 +166,9 @@ def crear(d):
         prompt = redactar(num, proyecto, etiqueta_proyecto, pedido, el, lecciones(cur, proyecto))
         meta = {"tipo": "encargo_v", "encargo": num, "proyecto": proyecto, "timeout_secs": 1500}
         cur.execute(
-            """INSERT INTO dispatch_queue (agent, prompt, priority, source, status, metadata, gajo)
-               VALUES (%s,%s,%s,%s,'pending',%s::jsonb,%s) RETURNING id""",
-            (agente, prompt, 1, f"encargo-v:{proyecto}", json.dumps(meta), f"vivo-{proyecto}"[:60]),
+            """INSERT INTO dispatch_queue (agent, prompt, priority, source, status, metadata, gajo, project_id)
+               VALUES (%s,%s,%s,%s,'pending',%s::jsonb,%s,%s) RETURNING id""",
+            (agente, prompt, 1, f"encargo-v:{proyecto}", json.dumps(meta), f"vivo-{proyecto}"[:60], proyecto),
         )
         did = cur.fetchone()["id"]
         cur.execute("UPDATE v_encargos SET dispatch_id=%s WHERE id=%s", (did, num))
