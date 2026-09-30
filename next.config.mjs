@@ -10,6 +10,8 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // /pricing no es página propia: los precios viven en la portada (fuente única).
+      { source: "/pricing", destination: "/#precios", permanent: false },
       {
         source: "/vulcano",
         destination: "/app/vulcano",
