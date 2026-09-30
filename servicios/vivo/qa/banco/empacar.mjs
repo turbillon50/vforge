@@ -29,7 +29,7 @@ function resolver(especificador, desde) {
   const base = path.dirname(desde);
   // Los alias @/ los deja tsc como rutas relativas, pero por si acaso.
   if (especificador.startsWith("@/")) {
-    return requerir.resolve(path.join(RAIZ, ".banco-dist", especificador.slice(2)));
+    return requerir.resolve(path.join(RAIZ, process.env.BANCO_DIST ?? ".banco-dist", especificador.slice(2)));
   }
   if (especificador.startsWith(".")) {
     return requerir.resolve(path.resolve(base, especificador));
