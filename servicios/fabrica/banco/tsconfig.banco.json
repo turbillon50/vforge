@@ -1,0 +1,10 @@
+{
+  "extends": "../../vivo/qa/banco/tsconfig.banco.json",
+  "compilerOptions": {
+    "outDir": "../../../.banco-fabrica",
+    "rootDir": "../../..",
+    "baseUrl": "../../..",
+    "paths": { "@/*": ["./*"] }
+  },
+  "include": ["entrada.tsx"]
+}

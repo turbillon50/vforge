@@ -180,6 +180,32 @@ export function escribirVivo(
 }
 
 /**
+ * Encargo de V: V redacta el encargo con el elemento señalado (siempre pide
+ * revisar) y lo mete a la cola; un agente lo hace ENCERRADO en el worktree vivo.
+ */
+export function encargarVivo(
+  proyecto: string,
+  pedido: string,
+  elemento: { src: string; etiqueta: string; texto: string },
+): Promise<{ ok: true; encargo: number; dispatch: number }> {
+  return pedir("encargo", {
+    method: "POST",
+    body: JSON.stringify({ project: proyecto, pedido, elemento, agente: "claude" }),
+  });
+}
+
+/** Últimos encargos del proyecto con su estado y lo que V aprendió de cada uno. */
+export function listarEncargos(
+  proyecto: string,
+  limite = 8,
+): Promise<{ ok: true; encargos: import("@/components/studio/vivo/encargos-tipos").EncargoV[] }> {
+  return pedir("encargos", {
+    method: "POST",
+    body: JSON.stringify({ project: proyecto, limite }),
+  });
+}
+
+/**
  * Registra un proyecto en el motor vivo: el Hetzner clona el repo, instala y deja
  * la capa de edición lista. Es asíncrono: el avance se lee en `estadoVivo().preparando`.
  */

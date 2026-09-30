@@ -37,6 +37,7 @@ import { ReviewNotesTray } from "@/components/live/ReviewNotesTray";
 import { BarraVivo } from "@/components/studio/vivo/BarraVivo";
 import { TEXTO_FASE, useMotorVivo } from "@/components/studio/vivo/useMotorVivo";
 import { useCapaEdicion } from "@/components/studio/vivo/useCapaEdicion";
+import { useEncargos } from "@/components/studio/vivo/useEncargos";
 import { PanelInspector } from "@/components/studio/vivo/PanelInspector";
 import { PanelControl } from "@/components/studio/vivo/PanelControl";
 import {
@@ -422,6 +423,19 @@ function LiveWorkspace({
   const [pulsoControl, setPulsoControl] = useState(0);
   const [recarga, setRecarga] = useState(0);
   const capa = useCapaEdicion({ proyecto: vivo.proyecto, activa: editando && vivo.fase === "vivo" });
+  // Recarga esta vista y todas las ventanas abiertas de la Sala.
+  const recargarTodas = useCallback(() => {
+    setRecarga((n) => n + 1);
+    setPulsoControl((n) => n + 1);
+    try {
+      const c = new BroadcastChannel(`vf-sala-${project.id}`);
+      c.postMessage({ tipo: "recargar" });
+      c.close();
+    } catch {
+      /* navegador sin BroadcastChannel */
+    }
+  }, [project.id]);
+  const encargos = useEncargos(vivo.fase === "vivo" ? vivo.proyecto : null, recargarTodas);
   useEffect(() => {
     if (vivo.fase !== "vivo") {
       if (editando) setEditando(false);
@@ -636,15 +650,11 @@ function LiveWorkspace({
             ultimoCambio={capa.ultimoCambio}
             onEditar={(operacion) => void capa.editar(operacion)}
             onCerrar={capa.limpiar}
-            onDileAV={(peticion) => {
-              const el = capa.seleccion;
-              if (!el) return;
-              const texto =
-                `En el proyecto ${vivo.proyecto}, sobre el elemento <${el.etiqueta}> que vive en ${el.src}` +
-                (el.texto ? ` y dice "${el.texto}"` : "") +
-                `: ${peticion}\n\nEscribe el cambio en ese archivo del worktree vivo. No hagas deploy.`;
-              window.location.href = `/app/chat?vivo=${encodeURIComponent(vivo.proyecto)}&pide=${encodeURIComponent(texto)}`;
-            }}
+            onEncargar={(peticion) =>
+              capa.seleccion ? encargos.encargar(peticion, capa.seleccion) : Promise.resolve("Selecciona un elemento.")
+            }
+            encargos={encargos.encargos}
+            enviando={encargos.enviando}
           />
         </div>
       ) : null}

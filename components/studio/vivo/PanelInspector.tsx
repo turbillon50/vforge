@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { IconLoader, IconX } from "@/components/brand/VFIcons";
+import {
+  encargoAbierto,
+  TEXTO_ESTADO,
+  type EncargoV,
+} from "@/components/studio/vivo/encargos-tipos";
 import type {
   ElementoSeleccionado,
   OperacionEdicion,
@@ -13,7 +18,9 @@ import type {
  * que no lo apriete el ancho de la vista móvil ni lo pinte el CSS del proyecto.
  *
  * Tres cosas: editar el texto, mover color/tamaño/espaciado/alineación con
- * controles, y "dile a V" con el elemento como contexto.
+ * controles, y "Encárgalo": V redacta el encargo con este elemento, un agente
+ * lo hace encerrado en el worktree vivo, lo revisa dos veces y V anota qué
+ * estuvo mal y cómo se corrigió.
  */
 
 const PESOS = ["300", "400", "500", "600", "700", "800", "900"];
@@ -66,7 +73,9 @@ export function PanelInspector({
   ultimoCambio,
   onEditar,
   onCerrar,
-  onDileAV,
+  onEncargar,
+  encargos,
+  enviando,
 }: {
   elemento: ElementoSeleccionado;
   guardando: boolean;
@@ -74,10 +83,23 @@ export function PanelInspector({
   ultimoCambio: string | null;
   onEditar: (operacion: OperacionEdicion) => void;
   onCerrar: () => void;
-  onDileAV: (peticion: string) => void;
+  /** Devuelve null si el encargo entró a la cola, o el motivo si no. */
+  onEncargar: (peticion: string) => Promise<string | null>;
+  encargos: EncargoV[];
+  enviando: boolean;
 }) {
   const [texto, setTexto] = useState(elemento.texto);
   const [peticion, setPeticion] = useState("");
+  const [errorEncargo, setErrorEncargo] = useState<string | null>(null);
+
+  const mandar = async () => {
+    const p = peticion.trim();
+    if (p.length < 3 || enviando) return;
+    setErrorEncargo(null);
+    const error = await onEncargar(p);
+    if (error) setErrorEncargo(error);
+    else setPeticion("");
+  };
 
   // Al cambiar de elemento, los campos siguen al nuevo.
   useEffect(() => {
@@ -256,17 +278,16 @@ export function PanelInspector({
           </div>
         </section>
 
-        {/* ── Dile a V ──────────────────────────────────────── */}
+        {/* ── Encárgalo ─────────────────────────────────────── */}
         <section>
-          <Rotulo>Dile a V</Rotulo>
+          <Rotulo>Encárgalo</Rotulo>
           <textarea
             value={peticion}
             onChange={(e) => setPeticion(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && peticion.trim()) {
+              if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                onDileAV(peticion.trim());
-                setPeticion("");
+                void mandar();
               }
             }}
             rows={2}
@@ -275,16 +296,18 @@ export function PanelInspector({
           />
           <button
             type="button"
-            disabled={!peticion.trim()}
-            onClick={() => {
-              onDileAV(peticion.trim());
-              setPeticion("");
-            }}
-            className="vf-press mt-1.5 h-8 w-full rounded-md bg-[var(--vf-fg)] text-[11px] font-medium text-[var(--vf-bg-1)] disabled:opacity-30"
+            disabled={peticion.trim().length < 3 || enviando}
+            onClick={() => void mandar()}
+            className="vf-press mt-1.5 flex h-8 w-full items-center justify-center gap-1.5 rounded-md bg-[var(--vf-fg)] text-[11px] font-medium text-[var(--vf-bg-1)] disabled:opacity-30"
           >
-            Mandar con este elemento
+            {enviando ? <IconLoader size={10} className="animate-spin" /> : null}
+            Encargar con este elemento
           </button>
-          <Pista>V recibe el archivo, la línea y la etiqueta del elemento seleccionado.</Pista>
+          {errorEncargo ? (
+            <p className="mt-1 text-[10px] leading-4 text-vf-error">{errorEncargo}</p>
+          ) : null}
+          <Pista>Lo hace un agente encerrado en este proyecto y lo revisa dos veces. Nada sale a producción hasta que publiques.</Pista>
+          {encargos.length ? <ListaEncargos encargos={encargos.slice(0, 4)} /> : null}
         </section>
       </div>
 
@@ -304,6 +327,58 @@ export function PanelInspector({
         )}
       </footer>
     </aside>
+  );
+}
+
+function ListaEncargos({ encargos }: { encargos: EncargoV[] }) {
+  return (
+    <ul className="mt-2.5 space-y-1.5">
+      {encargos.map((e) => {
+        const abierto = encargoAbierto(e);
+        const bien = e.estado === "listo";
+        return (
+          <li key={e.id} className="rounded-md border border-[var(--vf-border)] bg-white px-2 py-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="min-w-0 truncate text-[11px] leading-4">{e.pedido}</p>
+              <span
+                className={cn(
+                  "shrink-0 font-mono text-[9px]",
+                  bien ? "text-vf-green" : e.estado === "fallo" ? "text-vf-error" : "text-[var(--vf-fg-2)]",
+                )}
+              >
+                {TEXTO_ESTADO[e.estado] ?? e.estado}
+              </span>
+            </div>
+            {abierto ? (
+              <div className="mt-1 h-1 overflow-hidden rounded-full bg-[var(--vf-bg-3)]">
+                <div
+                  className="h-full rounded-full bg-[var(--vf-fg)] transition-[width] duration-700"
+                  style={{ width: `${Math.max(6, Math.min(100, e.progreso ?? 6))}%` }}
+                />
+              </div>
+            ) : null}
+            {abierto && e.rastro ? (
+              <p className="mt-1 truncate font-mono text-[9px] text-[var(--vf-fg-2)]">
+                {e.rastro.split("\n").filter(Boolean).pop()}
+              </p>
+            ) : null}
+            {!abierto && e.leccion ? (
+              <p className="mt-1 text-[10px] leading-4 text-[var(--vf-fg-1)]">
+                <span className="font-medium">V aprendió:</span> {e.leccion}
+              </p>
+            ) : null}
+            {!abierto && e.mal && e.mal.toLowerCase() !== "nada" ? (
+              <p className="mt-0.5 text-[10px] leading-4 text-[var(--vf-fg-2)]">
+                Estaba mal: {e.mal} → {e.correccion ?? "—"}
+              </p>
+            ) : null}
+            {e.estado === "fallo" && e.error ? (
+              <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-vf-error">{e.error}</p>
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

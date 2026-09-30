@@ -88,6 +88,18 @@ const servidor = createServer(async (req, res) => {
       return json(res, r.codigo, r.datos);
     }
 
+    // Encargos de V: mismo contrato que /api/vivo/encargo de Next.
+    if (url.pathname === "/api/vivo/encargo") {
+      if (req.method === "POST") {
+        const { proyecto, pedido, elemento } = await leerCuerpo(req);
+        const r = await alMotor("/__vivo/api/encargo", { project: proyecto, pedido, elemento, agente: "claude" });
+        bitacora.push({ que: "encargo", pedido, codigo: r.codigo, datos: r.datos });
+        return json(res, r.codigo === 202 ? 202 : r.codigo, r.datos);
+      }
+      const r = await alMotor("/__vivo/api/encargos", { project: url.searchParams.get("proyecto"), limite: 8 });
+      return json(res, r.codigo, r.datos);
+    }
+
     if (url.pathname === "/api/banco/bitacora") {
       return json(res, 200, { bitacora });
     }

@@ -16,8 +16,11 @@ import { fileURLToPath } from "node:url";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.resolve(AQUI, "../../../..");
-const ENTRADA = path.join(RAIZ, ".banco-dist/servicios/vivo/qa/banco/entrada.js");
-const SALIDA = path.join(AQUI, "publico/banco.js");
+// Otros bancos (p. ej. el de la Fábrica) reusan este empaquetador con sus rutas.
+const ENTRADA = process.env.BANCO_ENTRADA
+  ? path.resolve(RAIZ, process.env.BANCO_ENTRADA)
+  : path.join(RAIZ, ".banco-dist/servicios/vivo/qa/banco/entrada.js");
+const SALIDA = process.env.BANCO_SALIDA ? path.resolve(RAIZ, process.env.BANCO_SALIDA) : path.join(AQUI, "publico/banco.js");
 
 const requerir = createRequire(path.join(RAIZ, "empacar-anclaje.cjs"));
 
@@ -26,7 +29,7 @@ function resolver(especificador, desde) {
   const base = path.dirname(desde);
   // Los alias @/ los deja tsc como rutas relativas, pero por si acaso.
   if (especificador.startsWith("@/")) {
-    return requerir.resolve(path.join(RAIZ, ".banco-dist", especificador.slice(2)));
+    return requerir.resolve(path.join(RAIZ, process.env.BANCO_DIST ?? ".banco-dist", especificador.slice(2)));
   }
   if (especificador.startsWith(".")) {
     return requerir.resolve(path.resolve(base, especificador));

@@ -8,15 +8,16 @@ import { cn } from "@/lib/utils";
 import { VWordmark } from "@/components/brand/VMark";
 import {
   IconActivity,
-  IconChat,
   IconCpu,
+  IconFactory,
+  IconHammer,
   IconHome,
   IconLayers,
   IconMenu,
   IconSettings,
   IconUsers,
+  IconPlug,
   IconX,
-  IconZap,
 } from "@/components/brand/VFIcons";
 import { monochromeClerkAppearance } from "@/components/auth/ClerkShell";
 import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
@@ -41,7 +42,7 @@ const PRIMARY_NAV: NavItem[] = [
     href: "/app/chat",
     label: "Construir",
     description: "Chat, herramientas y preview",
-    Icon: IconChat,
+    Icon: IconHammer,
   },
   {
     href: "/app/projects",
@@ -65,13 +66,13 @@ const PRIMARY_NAV: NavItem[] = [
     href: "/app/fabrica",
     label: "Fábrica",
     description: "La casa en vivo: alianza, V-Trading y Brain",
-    Icon: IconHome,
+    Icon: IconFactory,
   },
   {
     href: "/app/integrations",
     label: "Conexiones",
     description: "GitHub, Vercel y servicios",
-    Icon: IconZap,
+    Icon: IconPlug,
   },
   {
     href: "/app/admin",
