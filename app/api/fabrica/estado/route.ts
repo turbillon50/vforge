@@ -1,9 +1,12 @@
 /**
  * GET /api/fabrica/estado — estado vivo de la fábrica (solo owner).
  *
- * Lee el JSON que escribe el colector del Hetzner (Pulso · Unicorn 1.0) desde
- * PULSO_ESTADO_URL, del lado del servidor. El navegador nunca ve esa URL.
- * Solo lectura. Sin caché: cada llamada trae el estado del último minuto.
+ * Dos lecturas del colector del Hetzner, del lado del servidor (el navegador
+ * nunca ve la URL):
+ *   - estado.json   (cada minuto): servicios, V-Trading, Brain, feed de eventos
+ *   - trabajos.json (cada 10 s):   lo que está pasando ahora — cola, agentes,
+ *                                   motor vivo y tokens del día
+ * `?solo=ahora` trae sólo la parte rápida, para refrescar cada pocos segundos.
  */
 import { currentUser } from "@clerk/nextjs/server";
 import { isOwnerUser } from "@/lib/auth/owner";
@@ -13,7 +16,17 @@ export const dynamic = "force-dynamic";
 
 const NO_STORE = { "Content-Type": "application/json", "Cache-Control": "no-store" };
 
-export async function GET(): Promise<Response> {
+async function leer(url: string): Promise<{ ok: true; datos: unknown } | { ok: false; error: string }> {
+  try {
+    const r = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return { ok: false, error: "pulso_http_" + r.status };
+    return { ok: true, datos: await r.json() };
+  } catch (e) {
+    return { ok: false, error: "pulso_sin_senal_" + (e instanceof Error ? e.name : "Error") };
+  }
+}
+
+export async function GET(request: Request): Promise<Response> {
   let user: Awaited<ReturnType<typeof currentUser>> = null;
   try {
     user = await currentUser();
@@ -28,16 +41,17 @@ export async function GET(): Promise<Response> {
   if (!url) {
     return new Response(JSON.stringify({ error: "pulso_no_configurado" }), { status: 503, headers: NO_STORE });
   }
+  const urlAhora = url.replace(/estado\.json(\?.*)?$/, "trabajos.json");
+  const solo = new URL(request.url).searchParams.get("solo");
 
-  try {
-    const r = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(8000) });
-    if (!r.ok) {
-      return new Response(JSON.stringify({ error: "pulso_http_" + r.status }), { status: 502, headers: NO_STORE });
-    }
-    const data: unknown = await r.json();
-    return new Response(JSON.stringify(data), { status: 200, headers: NO_STORE });
-  } catch (e) {
-    const tipo = e instanceof Error ? e.name : "Error";
-    return new Response(JSON.stringify({ error: "pulso_sin_senal", tipo }), { status: 502, headers: NO_STORE });
+  if (solo === "ahora") {
+    const a = await leer(urlAhora);
+    if (!a.ok) return new Response(JSON.stringify({ error: a.error }), { status: 502, headers: NO_STORE });
+    return new Response(JSON.stringify({ ahora: a.datos }), { status: 200, headers: NO_STORE });
   }
+
+  const [e, a] = await Promise.all([leer(url), urlAhora !== url ? leer(urlAhora) : Promise.resolve(null)]);
+  if (!e.ok) return new Response(JSON.stringify({ error: e.error }), { status: 502, headers: NO_STORE });
+  const cuerpo = { ...(e.datos as Record<string, unknown>), ahora: a && a.ok ? a.datos : null };
+  return new Response(JSON.stringify(cuerpo), { status: 200, headers: NO_STORE });
 }

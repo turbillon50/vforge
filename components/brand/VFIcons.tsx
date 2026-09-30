@@ -21,6 +21,9 @@ export const IconSearch    = ({size=20,...p}:IP)=><svg {...b(size,p)}><circle cx
 export const IconExtLink   = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
 export const IconGlobe     = ({size=20,...p}:IP)=><svg {...b(size,p)}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
 export const IconLayout    = ({size=20,...p}:IP)=><svg {...b(size,p)}><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>;
+export const IconPlug      = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8z"/></svg>;
+export const IconHammer    = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="m15 12-8.37 8.37a2.12 2.12 0 0 1-3-3L12 9"/><path d="m18 15 4-4"/><path d="m21.5 11.5-1.91-1.91A2 2 0 0 1 19 8.17V7l-2.26-2.26a6 6 0 0 0-4.2-1.76L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.17a2 2 0 0 1 1.42.59L18.5 14.5"/></svg>;
+export const IconFactory   = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M17 18h1"/><path d="M12 18h1"/><path d="M7 18h1"/></svg>;
 export const IconZap       = ({size=20,...p}:IP)=><svg {...b(size,p)}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
 export const IconShield    = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
 export const IconCheck     = ({size=20,...p}:IP)=><svg {...b(size,p)}><polyline points="20 6 9 17 4 12"/></svg>;
