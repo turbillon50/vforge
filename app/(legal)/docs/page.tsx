@@ -1,4 +1,4 @@
-export const metadata = { title: "Documentación — VForge" };
+export const metadata = { title: "Documentación" };
 
 export default function DocsPage() {
   return (
@@ -51,16 +51,11 @@ export default function DocsPage() {
 
       <h2>Planes y límites</h2>
       <p>
-        VForge ofrece planes para distintos niveles de uso, con precios en USD:
+        La fuente vigente de precios está en la portada pública:
       </p>
-      <ul>
-        <li><strong>Free:</strong> acceso básico sin costo, con límites de uso para empezar.</li>
-        <li><strong>Studio (USD $20/mes):</strong> para construir y operar proyectos de forma continua.</li>
-        <li><strong>Forge (USD $100/mes):</strong> para mayor capacidad y volumen de trabajo.</li>
-        <li><strong>Pay-as-you-go:</strong> consumo medido, pagas según lo que uses.</li>
-      </ul>
       <p>
-        Las suscripciones se renuevan automáticamente y puedes cancelar cuando quieras; consulta los{" "}
+        <a href="/#precios">Ver precios</a>. Las suscripciones se renuevan automáticamente y puedes
+        cancelar cuando quieras; consulta los{" "}
         <a href="/terms">Términos</a> para el detalle de pagos, renovación y cancelación.
       </p>
 

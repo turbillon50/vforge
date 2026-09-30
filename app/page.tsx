@@ -3,11 +3,11 @@ import { redirect } from "next/navigation";
 import { MonochromeHome } from "@/components/marketing/MonochromeHome";
 
 export const metadata = {
-  title: "VForge — Visión para tu IA",
+  title: "Visión para tu IA",
   description:
     "Forge genera un MCP con tu propio acceso y lo conectas en tu IA: proyectos, GitHub, Vercel y secretos, sin salir del chat.",
   openGraph: {
-    title: "VForge — Visión para tu IA",
+    title: "Visión para tu IA",
     description:
       "Conecta tu IA a tus proyectos con el Model Context Protocol. Tus cuentas siguen siendo tuyas.",
     url: "https://vforge.site",
@@ -17,7 +17,7 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "VForge — Visión para tu IA",
+    title: "Visión para tu IA",
     description: "Conecta tu IA a tus proyectos con el Model Context Protocol.",
   },
 };

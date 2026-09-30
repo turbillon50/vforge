@@ -65,7 +65,7 @@ const PRODUCTS: Product[] = [
     priceLabel: "$5,000 MXN",
     accent: "#0ea5e9",
     bgImg: "/products/mcp.jpg",
-    fullDesc: "Llevamos tu aplicación al App Store de Apple. Configuración de cuenta de desarrollador, build firmado, assets, revisión de Apple y publicación. Tu app lista para iIconBell y iPad.",
+    fullDesc: "Llevamos tu aplicación al App Store de Apple. Configuración de cuenta de desarrollador, build firmado, assets, revisión de Apple y publicación. Tu app lista para iPhone y iPad.",
     timeline: [
       { phase: "Preparación", detail: "Configuración de App Store Connect" },
       { phase: "Build", detail: "Compilación y firma del paquete" },
