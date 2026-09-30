@@ -17,13 +17,16 @@ function primeraFrase(d: string): string {
   return corte > 20 ? limpio.slice(0, corte + 1) : limpio;
 }
 
-const TOOLS = MCP_TOOLS.map((t) => ({
+const TODAS = MCP_TOOLS.map((t) => ({
   name: t.name,
   desc: primeraFrase(t.description),
   publica: isPublicTool(t.name),
 }));
-const TOTAL_TOOLS = TOOLS.length;
-const TOOLS_PUBLICAS = TOOLS.filter((t) => t.publica).length;
+const TOTAL_TOOLS = TODAS.length;
+/* Seguridad: la página es pública. Solo se listan por nombre las tools públicas;
+   las que requieren token (incluidas las internas de operación) se cuentan, nunca se nombran. */
+const TOOLS = TODAS.filter((t) => t.publica);
+const TOOLS_PUBLICAS = TOOLS.length;
 
 export const metadata: Metadata = {
   title: "Instalar VForge MCP — Documentación",
@@ -169,7 +172,7 @@ export default function MCPDocsPage() {
               <h2 className="text-2xl font-bold text-white">{TOTAL_TOOLS} herramientas</h2>
             </div>
             <span className="font-mono text-[12px] text-[var(--fg-muted)]">
-              {TOOLS_PUBLICAS} sin token · {TOTAL_TOOLS - TOOLS_PUBLICAS} con token
+              {TOOLS_PUBLICAS} a la vista · {TOTAL_TOOLS - TOOLS_PUBLICAS} más al conectar tu token
             </span>
           </div>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
