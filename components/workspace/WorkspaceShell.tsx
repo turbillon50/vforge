@@ -62,6 +62,12 @@ const PRIMARY_NAV: NavItem[] = [
     Icon: IconCpu,
   },
   {
+    href: "/app/fabrica",
+    label: "Fábrica",
+    description: "La casa en vivo: alianza, V-Trading y Brain",
+    Icon: IconHome,
+  },
+  {
     href: "/app/integrations",
     label: "Conexiones",
     description: "GitHub, Vercel y servicios",
@@ -81,6 +87,7 @@ const TITLES: Record<string, string> = {
   "/app/projects": "Proyectos",
   "/app/activity": "Actividad",
   "/app/tablero": "Tablero",
+  "/app/fabrica": "Fábrica",
   "/app/integrations": "Conexiones",
   "/app/admin": "Administración",
   "/app/settings": "Configuración",
