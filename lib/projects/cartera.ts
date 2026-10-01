@@ -11,6 +11,7 @@ import {
   ensureProjectCarteraSchema,
   ensureProjectRepositoriesSchema,
 } from "@/lib/projects/repository-schema";
+import type { ProjectEtapa, ProjectEtapaHistoryItem } from "@/lib/projects/etapas";
 import { normalizePublishedUrl } from "@/lib/projects/viewport-url";
 
 export type CcnHealthLevel = "ok" | "warn" | "bad" | "unknown";
@@ -39,6 +40,14 @@ export interface CarteraProject {
   cartera_estado: string | null;
   cartera_prioridad: number | null;
   cartera_nota: string | null;
+  etapa: ProjectEtapa | null;
+  etapa_creado_en: string | null;
+  etapa_nota: string | null;
+  cliente_nombre: string | null;
+  cliente_whatsapp: string | null;
+  contrato_url: string | null;
+  demo_url: string | null;
+  etapa_historial: ProjectEtapaHistoryItem[];
   created_at: string | null;
   updated_at: string | null;
   last_push: string | null;
@@ -78,6 +87,14 @@ interface ProjectRow {
   cartera_estado: string | null;
   cartera_prioridad: number | null;
   cartera_nota: string | null;
+  etapa: ProjectEtapa | null;
+  etapa_creado_en: string | null;
+  etapa_nota: string | null;
+  cliente_nombre: string | null;
+  cliente_whatsapp: string | null;
+  contrato_url: string | null;
+  demo_url: string | null;
+  etapa_historial: ProjectEtapaHistoryItem[] | null;
   created_at: string | null;
   updated_at: string | null;
   last_push: string | null;
@@ -119,8 +136,25 @@ export async function loadCarteraProjects(): Promise<CarteraProject[]> {
     `SELECT p.id, p.name, p.description, p.category, p.status,
             p.domain, p.vercel_url,
             p.cartera_tipo, p.cartera_estado, p.cartera_prioridad, p.cartera_nota,
+            p.etapa, p.cliente_nombre, p.cliente_whatsapp, p.contrato_url, p.demo_url,
+            latest_etapa.creado_en AS etapa_creado_en,
+            latest_etapa.nota AS etapa_nota,
             p.created_at::text, p.updated_at::text,
             (SELECT max(pr.pushed_at)::text FROM project_repositories pr WHERE pr.project_id = p.id) AS last_push,
+            COALESCE((
+              SELECT jsonb_agg(
+                jsonb_build_object(
+                  'id', pe.id::text,
+                  'project_id', pe.project_id,
+                  'etapa', pe.etapa,
+                  'nota', pe.nota,
+                  'creado_por', pe.creado_por,
+                  'creado_en', to_char(pe.creado_en AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')
+                ) ORDER BY pe.creado_en ASC, pe.id ASC
+              )
+              FROM project_etapas pe
+              WHERE pe.project_id = p.id
+            ), '[]'::jsonb) AS etapa_historial,
             COALESCE((
               SELECT jsonb_agg(
                 jsonb_build_object(
@@ -138,6 +172,14 @@ export async function loadCarteraProjects(): Promise<CarteraProject[]> {
               WHERE pr.project_id = p.id
             ), '[]'::jsonb) AS repositories
        FROM projects p
+       LEFT JOIN LATERAL (
+         SELECT to_char(pe.creado_en AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS creado_en,
+                pe.nota
+           FROM project_etapas pe
+          WHERE pe.project_id = p.id
+          ORDER BY pe.creado_en DESC, pe.id DESC
+          LIMIT 1
+       ) latest_etapa ON true
       WHERE COALESCE(p.es_demo, false) = false
         AND cardinality(COALESCE(p.cartera_tipo, '{}'::text[])) > 0
       ORDER BY COALESCE(p.cartera_prioridad, 99), p.name ASC`,
@@ -149,12 +191,18 @@ export async function loadCarteraProjects(): Promise<CarteraProject[]> {
       return {
         ...row,
         cartera_tipo: row.cartera_tipo ?? [],
+        etapa_historial: normalizeEtapaHistory(row.etapa_historial),
         repositories,
         repository_groups: groupRepositories(repositories),
         health: await calculateProjectHealth(row),
       };
     }),
   );
+}
+
+function normalizeEtapaHistory(items: ProjectEtapaHistoryItem[] | null | undefined) {
+  if (!Array.isArray(items)) return [];
+  return items;
 }
 
 export async function loadDemoProjects(): Promise<DemoProject[]> {

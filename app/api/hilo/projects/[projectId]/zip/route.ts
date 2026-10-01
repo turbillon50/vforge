@@ -1,5 +1,8 @@
 import { hiloSqlListo } from "@/lib/hilo/server";
 import { resolveRequestOwner } from "@/lib/auth/request-owner";
+import { queryOne } from "@/lib/db/client";
+import { setProjectEtapa } from "@/lib/projects/etapas-server";
+import { ensureProjectCarteraSchema } from "@/lib/projects/repository-schema";
 import { importarZipWhatsApp } from "@/servicios/hilo/importar-zip.mjs";
 
 export const runtime = "nodejs";
@@ -184,6 +187,28 @@ export async function POST(
     ],
   );
 
+  let etapaActualizada: string | null = null;
+  if (nuevos > 0) {
+    try {
+      await ensureProjectCarteraSchema();
+      const current = await queryOne<{ etapa: string | null }>(
+        `SELECT etapa FROM projects WHERE id = $1 LIMIT 1`,
+        [projectId],
+      );
+      if (current?.etapa === "prospecto") {
+        const etapa = await setProjectEtapa({
+          projectId,
+          etapa: "chat_cargado",
+          nota: `Primer chat cargado desde ${file.name}.`,
+          creadoPor: access.userId,
+        });
+        if (etapa?.changed) etapaActualizada = "chat_cargado";
+      }
+    } catch {
+      etapaActualizada = null;
+    }
+  }
+
   return Response.json(
     {
       chat_detectado: chatRows[0],
@@ -195,6 +220,7 @@ export async function POST(
         total: parsed.messages.length,
       },
       adjuntos: parsed.attachments,
+      etapa_actualizada: etapaActualizada,
     },
     { status: 201, headers: { "Cache-Control": "no-store" } },
   );

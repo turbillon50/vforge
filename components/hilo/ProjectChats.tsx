@@ -10,6 +10,8 @@ type Props = {
   initialChats: HiloChat[];
   liveActive: boolean;
   className?: string;
+  uploadTone?: "accent" | "ink";
+  onUploaded?: (payload: { etapa_actualizada?: string | null }) => void;
 };
 
 function formatTime(value: string | null | undefined) {
@@ -29,6 +31,8 @@ export function ProjectChats({
   initialChats,
   liveActive,
   className,
+  uploadTone = "accent",
+  onUploaded,
 }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [chats, setChats] = useState(initialChats);
@@ -70,12 +74,13 @@ export function ProjectChats({
           { method: "POST", body: form },
         );
         const payload = (await response.json().catch(() => null)) as
-          | { error?: string; mensajes?: { nuevos: number; repetidos: number } }
+          | { error?: string; mensajes?: { nuevos: number; repetidos: number }; etapa_actualizada?: string | null }
           | null;
         if (!response.ok) throw new Error(payload?.error ?? `HTTP ${response.status}`);
         setMessage(
           `${payload?.mensajes?.nuevos ?? 0} nuevos, ${payload?.mensajes?.repetidos ?? 0} repetidos`,
         );
+        if (payload) onUploaded?.(payload);
         await reload();
       } catch (error) {
         setMessage(error instanceof Error ? error.message : String(error));
@@ -84,7 +89,7 @@ export function ProjectChats({
         if (inputRef.current) inputRef.current.value = "";
       }
     },
-    [projectId, reload],
+    [onUploaded, projectId, reload],
   );
 
   async function patchChat(chatId: string, body: { etiqueta?: string | null; monitorear?: boolean }) {
@@ -170,7 +175,12 @@ export function ProjectChats({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={!projectId || busy === "upload"}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[var(--accent)] bg-[var(--accent)] px-4 text-[13px] font-semibold text-[var(--color-surface)] disabled:cursor-not-allowed disabled:opacity-40"
+            className={cn(
+              "inline-flex h-11 items-center justify-center gap-2 rounded-md border px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40",
+              uploadTone === "accent"
+                ? "border-[var(--accent)] bg-[var(--accent)]"
+                : "border-black bg-black",
+            )}
           >
             {busy === "upload" ? <RefreshCw size={15} className="animate-spin" /> : <Upload size={15} />}
             Subir chat (.zip)
