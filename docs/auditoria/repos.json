@@ -454,9 +454,10 @@
     "torneos"
    ],
    "tipo": [
-    "cliente"
+    "demo_catalogo"
    ],
-   "estado": "parado_abandonado"
+   "estado": "parado_abandonado",
+   "nota": "Cliente JSC abandonó; la liga queda como demo nuestra para vender a otras ligas (primer uso: Jiraki Soccer League, oct-2026)"
   },
   "esteticar": {
    "repos": [
