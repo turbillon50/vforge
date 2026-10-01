@@ -128,6 +128,11 @@ export async function copyRepoWithGitApi({
     });
   }
 
+  if (targetTree.length === 0) {
+    const motivo = skipped.find((item) => item.message)?.message ?? "sin archivos copiables";
+    throw new Error(`No se copió ningún archivo de ${source.owner}/${source.repo}: ${motivo}`);
+  }
+
   const newTree = await octokit.request("POST /repos/{owner}/{repo}/git/trees", {
     owner: target.owner,
     repo: target.repo,
@@ -140,12 +145,24 @@ export async function copyRepoWithGitApi({
     tree: newTree.data.sha,
     parents: [],
   });
-  await octokit.request("POST /repos/{owner}/{repo}/git/refs", {
-    owner: target.owner,
-    repo: target.repo,
-    ref: `refs/heads/${TARGET_BRANCH}`,
-    sha: commit.data.sha,
-  });
+  // El repo destino nace con auto_init (GitHub no acepta blobs en un repo vacío):
+  // la rama ya existe y se reemplaza por la copia.
+  try {
+    await octokit.request("PATCH /repos/{owner}/{repo}/git/refs/{ref}", {
+      owner: target.owner,
+      repo: target.repo,
+      ref: `heads/${TARGET_BRANCH}`,
+      sha: commit.data.sha,
+      force: true,
+    });
+  } catch {
+    await octokit.request("POST /repos/{owner}/{repo}/git/refs", {
+      owner: target.owner,
+      repo: target.repo,
+      ref: `refs/heads/${TARGET_BRANCH}`,
+      sha: commit.data.sha,
+    });
+  }
   await octokit.request("PATCH /repos/{owner}/{repo}", {
     owner: target.owner,
     repo: target.repo,

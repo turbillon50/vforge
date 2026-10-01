@@ -165,6 +165,7 @@ export default function CarteraProjectsClient({
   async function submitAlta(form: AltaForm) {
     setAltaBusy(true);
     setAviso(null);
+    // La copia de la demo tarda; el error tiene que verse dentro del modal.
     try {
       const response = await fetch("/api/projects/clientes", {
         method: "POST",
@@ -380,6 +381,7 @@ export default function CarteraProjectsClient({
         <AltaClienteModal
           demos={demos}
           busy={altaBusy}
+          error={aviso}
           onClose={() => setAltaOpen(false)}
           onSubmit={(form) => void submitAlta(form)}
         />
@@ -580,11 +582,13 @@ function EtapaCard({
 function AltaClienteModal({
   demos,
   busy,
+  error,
   onClose,
   onSubmit,
 }: {
   demos: DemoProject[];
   busy: boolean;
+  error: string | null;
   onClose: () => void;
   onSubmit: (form: AltaForm) => void;
 }) {
@@ -716,6 +720,11 @@ function AltaClienteModal({
         </div>
 
         <div className="flex flex-col gap-2 border-t border-[var(--border-1)] px-5 py-4 md:flex-row md:items-center md:justify-end">
+          {error && !busy ? (
+            <p role="alert" className="mr-auto text-[12px] text-[var(--vf-error,#ef4444)]">
+              No se pudo: {error}
+            </p>
+          ) : null}
           <button
             type="button"
             onClick={onClose}

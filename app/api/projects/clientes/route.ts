@@ -27,8 +27,10 @@ interface Body {
 
 export async function POST(req: Request) {
   const access = await resolveRequestOwner();
-  if (!access.userId) return Response.json({ error: "unauthorized" }, { status: 401 });
-  if (!access.isOwner) return Response.json({ error: "forbidden" }, { status: 403 });
+  if (!access.userId)
+    return Response.json({ error: "unauthorized" }, { status: 401 });
+  if (!access.isOwner)
+    return Response.json({ error: "forbidden" }, { status: 403 });
 
   const body = (await req.json().catch(() => null)) as Body | null;
   if (!body) return Response.json({ error: "invalid_body" }, { status: 400 });
@@ -39,9 +41,12 @@ export async function POST(req: Request) {
   const rubro = cleanProjectText(body.rubro, 120);
   const demoId = cleanProjectText(body.demo_id, 160);
 
-  if (!clienteNombre) return Response.json({ error: "cliente_nombre_required" }, { status: 400 });
-  if (!projectName) return Response.json({ error: "project_name_required" }, { status: 400 });
-  if (!rubro) return Response.json({ error: "rubro_required" }, { status: 400 });
+  if (!clienteNombre)
+    return Response.json({ error: "cliente_nombre_required" }, { status: 400 });
+  if (!projectName)
+    return Response.json({ error: "project_name_required" }, { status: 400 });
+  if (!rubro)
+    return Response.json({ error: "rubro_required" }, { status: 400 });
 
   await ensureProjectCarteraSchema();
   await ensureProjectRepositoriesSchema();
@@ -50,19 +55,26 @@ export async function POST(req: Request) {
   const carteraNota = `Cliente: ${clienteNombre}. Rubro: ${rubro}.`;
 
   if (demoId) {
-    const result = await usarDemoComoBase({
-      demoId,
-      name: projectName,
-      auditUserId: access.userId,
-      projectId,
-      clienteNombre,
-      clienteWhatsapp,
-      rubro,
-      initialEtapa: "prospecto",
-      carteraTipo: ["cliente"],
-      carteraEstado: "prospecto",
-      carteraNota,
-    });
+    let result: Awaited<ReturnType<typeof usarDemoComoBase>>;
+    try {
+      result = await usarDemoComoBase({
+        demoId,
+        name: projectName,
+        auditUserId: access.userId,
+        projectId,
+        clienteNombre,
+        clienteWhatsapp,
+        rubro,
+        initialEtapa: "prospecto",
+        carteraTipo: ["cliente"],
+        carteraEstado: "prospecto",
+        carteraNota,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("[clientes] alta desde demo falló", message);
+      return Response.json({ error: message.slice(0, 300) }, { status: 502 });
+    }
 
     if (!result.ok) {
       return Response.json({ error: result.error }, { status: result.status });
@@ -112,15 +124,24 @@ export async function POST(req: Request) {
     )
   `;
 
-  const project = await queryOne<{ id: string; name: string; github_repo: string | null; github_url: string | null }>(
-    `SELECT id, name, github_repo, github_url FROM projects WHERE id = $1`,
-    [projectId],
-  );
+  const project = await queryOne<{
+    id: string;
+    name: string;
+    github_repo: string | null;
+    github_url: string | null;
+  }>(`SELECT id, name, github_repo, github_url FROM projects WHERE id = $1`, [
+    projectId,
+  ]);
 
   return Response.json(
     {
       ok: true,
-      project: project ?? { id: projectId, name: projectName, github_repo: null, github_url: null },
+      project: project ?? {
+        id: projectId,
+        name: projectName,
+        github_repo: null,
+        github_url: null,
+      },
       mode: "sin_demo",
       instructions: [],
       open_chats: true,

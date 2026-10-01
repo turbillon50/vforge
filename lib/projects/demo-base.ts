@@ -148,13 +148,7 @@ export async function usarDemoComoBase({
     mode = "template";
     repo = generated.data as GithubRepoCreated;
   } else {
-    const created = await octokit.request("POST /user/repos", {
-      name: repoName,
-      private: true,
-      auto_init: false,
-      description: `Base creada desde ${demo.github_repo}`,
-    });
-    repo = created.data as GithubRepoCreated;
+    repo = await crearOReusarRepo(octokit, repoName, demo.github_repo);
     const target = parseFullRepo(repo.full_name);
     if (target) {
       copyReport = await copyRepoWithGitApi({
@@ -235,4 +229,44 @@ export async function usarDemoComoBase({
     skipped: copyReport?.skipped ?? [],
     truncated: copyReport?.truncated ?? false,
   };
+}
+
+/**
+ * Crea el repo privado del cliente con auto_init (GitHub no acepta blobs en un repo vacío).
+ * Si el nombre ya existe y ningún proyecto lo usa (un alta anterior que falló a medias),
+ * se reutiliza: la copia reemplaza su rama main.
+ */
+async function crearOReusarRepo(
+  octokit: Awaited<ReturnType<typeof getGithubClient>>,
+  repoName: string,
+  sourceRepo: string,
+): Promise<GithubRepoCreated> {
+  try {
+    const created = await octokit.request("POST /user/repos", {
+      name: repoName,
+      private: true,
+      auto_init: true,
+      description: `Base creada desde ${sourceRepo}`,
+    });
+    return created.data as GithubRepoCreated;
+  } catch (error) {
+    const status = (error as { status?: number }).status;
+    if (status !== 422) throw error;
+    const fullName = `${GITHUB_OWNER}/${repoName}`;
+    const enUso = await queryOne<{ id: string }>(
+      `SELECT id FROM projects WHERE lower(github_repo) = lower($1)
+       UNION ALL
+       SELECT project_id FROM project_repositories WHERE lower(repo_full_name) = lower($1)
+       LIMIT 1`,
+      [fullName],
+    );
+    if (enUso) {
+      throw new Error(`El repo ${fullName} ya existe y es del proyecto ${enUso.id}; usa otro nombre de proyecto.`);
+    }
+    const existing = await octokit.request("GET /repos/{owner}/{repo}", {
+      owner: GITHUB_OWNER,
+      repo: repoName,
+    });
+    return existing.data as GithubRepoCreated;
+  }
 }
