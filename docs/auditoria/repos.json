@@ -64,7 +64,8 @@
   "ssante": {
    "repos": [
     "ssante",
-    "ssante-demo"
+    "ssante-demo",
+    "ssante-t9"
    ],
    "tipo": [
     "cliente"
@@ -692,6 +693,14 @@
     "registro"
    ],
    "nota": "71 repos archivados en GitHub (basura + versiones viejas de V&LIVING, Momentum, VForge, VanDeFi, Trading). Verificado: 272 total, 71 archivados, 201 vivos. Protegidos porque son donde vive el trabajo real: vliving-audit-fix (clon de trabajo de V&LIVING), ssante-t9 (repo real de Ssante), mipipa-srv (motor vivo), vulcano-ops (bitácora de infra). Lista exacta en el servidor: /root/vulcano-audit/archivados-20261001.txt"
+  },
+  "pipmx": {
+   "repos": [
+    "mipipa-srv"
+   ],
+   "tipo": [
+    "cliente"
+   ]
   }
  },
  "notas_luis": [
@@ -704,6 +713,10 @@
   "Catálogo: todos los demos de ambos lotes son activos. Hace falta un BUSCADOR del catálogo: ante cada proyecto nuevo, encontrar qué demo se adecúa para no construir de cero (hay stock suficiente para sacar casi cualquier proyecto hoy)",
   "PENDIENTE (Luis): revisar Neon y los dominios propios de cada proyecto, aun de los abandonados",
   "PENDIENTE URGENTE (Luis): analizar README de cada repo público, decidir cuáles pasan a privado y armar licencia; dejarlo como tarea",
-  "Luis: sí archivar versiones viejas en V&LIVING, Momentum, VForge, VanDeFi, Trading (pasarle antes la lista de cuál vive)"
+  "Luis: sí archivar versiones viejas en V&LIVING, Momentum, VForge, VanDeFi, Trading (pasarle antes la lista de cuál vive)",
+  "V&LIVING: vale lo que está en producción y lo necesario para ello; lo demás es basura (revisar vliving-audit-fix vs vliving-2026)",
+  "Ssante es un solo proyecto (incluye ssante-t9, el repo real)",
+  "Mi pipa es un solo proyecto (mipipa-srv + mipipa + pipmx-demo)",
+  "Todo lo de Vulcano es complementario de VForge; revisar qué sirve y qué no"
  ]
 }
