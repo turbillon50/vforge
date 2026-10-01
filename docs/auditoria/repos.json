@@ -393,6 +393,272 @@
    "estado": "relacion_rota_no_pago",
    "nota": "Luis rompió con Omar: no quería pagar; exigía la app al 100% cuando ya casi estaba terminada",
    "pendiente": "decidir si se reusa como nuestra/demo"
+  },
+  "goossip": {
+   "repos": [
+    "mkt-agent-"
+   ],
+   "tipo": [
+    "centro_control",
+    "comercializamos",
+    "inversion_momentum",
+    "store"
+   ]
+  },
+  "rideme": {
+   "repos": [
+    "RideMe",
+    "ride-me",
+    "premium-ride-share-screen",
+    "mobilidad-"
+   ],
+   "tipo": [
+    "comercializamos",
+    "inversion_momentum"
+   ]
+  },
+  "identykit": {
+   "repos": [
+    "identy-kit",
+    "identy-kit-v2"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "activo_le_debemos_entrega",
+   "prioridad": 1,
+   "nota": "Hay que cerrarlo bien y ya poner testers y mantenimiento"
+  },
+  "lutor": {
+   "repos": [
+    "lutor"
+   ],
+   "tipo": [
+    "comercializamos",
+    "centro_control",
+    "inversion_momentum"
+   ]
+  },
+  "modafy": {
+   "repos": [
+    "modafy"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "activo_le_debemos_entrega",
+   "prioridad": 1,
+   "nota": "Igual que EXCI: de las nuevas, Sara contenta, hay que lucirse"
+  },
+  "jsc": {
+   "repos": [
+    "jsc-liga",
+    "torneos"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "parado_abandonado"
+  },
+  "esteticar": {
+   "repos": [
+    "esteticar"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "activo_le_debemos_entrega"
+  },
+  "mtempresarial": {
+   "repos": [
+    "transport-jalisco"
+   ],
+   "tipo": [
+    "demo_catalogo"
+   ],
+   "estado": "le_quedamos_mal",
+   "nota": "Casi cerrada y acabamos mal; buena app; guardar en demos para operarla en su momento"
+  },
+  "mitcan": {
+   "repos": [
+    "mitcan"
+   ],
+   "tipo": [
+    "demo_catalogo"
+   ],
+   "estado": "no_adoptada",
+   "nota": "A Luis le encanta; demo estrella del catálogo; de los mejores módulos de administración. La pagó un chofer para que su jefe la adoptara y no se aceptó"
+  },
+  "cuponia": {
+   "repos": [
+    "cupones"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "parado_abandonado"
+  },
+  "samrs": {
+   "repos": [
+    "samsales"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "activo_le_debemos_entrega",
+   "prioridad": 1
+  },
+  "credeti": {
+   "repos": [
+    "hapicredit",
+    "credisumate",
+    "credisumate-app"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "parado_abandonado"
+  },
+  "trackport": {
+   "repos": [
+    "trackport-ops"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "parado_abandonado"
+  },
+  "yerro": {
+   "repos": [
+    "yerro-fiscal-intelligence"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "buscar_al_cliente",
+   "prioridad": 1,
+   "nota": "Hay que buscar a David: no se le terminó y es buena app. Si abandonó, se comercializa como nuestra"
+  },
+  "lnred": {
+   "repos": [
+    "vanta-cashless-app"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "buscar_al_cliente",
+   "prioridad": 1,
+   "nota": "Igual que YERRO: buscar al cliente; si abandonó, se comercializa como nuestra"
+  },
+  "arco": {
+   "repos": [
+    "arco"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "parado_abandonado"
+  },
+  "sentrix": {
+   "repos": [
+    "v0-sentrix-platform-demo"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "parado_abandonado"
+  },
+  "_lote_sept": {
+   "repos": [
+    "proadio-cancun",
+    "academiadebaile",
+    "asce-capacitacion",
+    "finora",
+    "clubmotorsport",
+    "ropesa-app",
+    "medix-clinic",
+    "keymaster",
+    "decaciones",
+    "clearance",
+    "importaciones-pwa",
+    "clean-car-os",
+    "bufalos-health-center",
+    "auxvial",
+    "toloks",
+    "hidoc",
+    "casino-messi",
+    "mipipa",
+    "icipar",
+    "ohtli",
+    "andromeda",
+    "your-brand",
+    "chatvvvv",
+    "PERPLEXITY"
+   ],
+   "tipo": [
+    "archivar"
+   ],
+   "nota": "Luis: archivar todos (confirmar antes de aplicar: incluye demos recientes)"
+  },
+  "_lote_viejo": {
+   "repos": [
+    "v-gift",
+    "v-tv",
+    "paradox-",
+    "sca-marchas",
+    "admin-panel-template",
+    "rivones",
+    "vetpets",
+    "board-game",
+    "dlucio",
+    "cafe-eduardo",
+    "break",
+    "break-runtime",
+    "forrajera-pos",
+    "bib-bib",
+    "bib-bib-v2",
+    "toonimaticsapp",
+    "v-realty",
+    "amavizca-team",
+    "flotillaos",
+    "istore",
+    "istore-pro",
+    "insignia-link",
+    "mp-cert-checkout-pro",
+    "tortillap",
+    "frontend-hakapoke",
+    "haka",
+    "vcapital-pwa",
+    "seguridad33",
+    "yourbrand",
+    "human-capital",
+    "solidworks",
+    "ai-companion-platform",
+    "coudadconecta",
+    "e7",
+    "hghc",
+    "hi-doc-pwa",
+    "hacker-",
+    "cristiana",
+    "MAESTRIAS",
+    "constructora",
+    "edge",
+    "family",
+    "api-comerce",
+    "transportador",
+    "magicbox",
+    "fronted-v-saas",
+    "hopnosis",
+    "v-code",
+    "v-property",
+    "sagrada-comunidad",
+    "ticket",
+    "jobber-",
+    "field-service-platform"
+   ],
+   "tipo": [
+    "demo_catalogo"
+   ]
   }
  },
  "notas_luis": [
