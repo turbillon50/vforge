@@ -33,8 +33,22 @@ NODEBIN=${VIVO_NODE_BIN:-/root/.nvm/versions/node/v20.20.2/bin}
 NVM_RAIZ=$(dirname "$(dirname "$(dirname "$NODEBIN")")")   # …/.nvm/versions → …/.nvm
 NVM_RAIZ=$(dirname "$NVM_RAIZ")
 
-HOGAR=$(mktemp -d /tmp/jaula-hogar.XXXXXX)
-limpiar() { python3 -c 'import shutil,sys; shutil.rmtree(sys.argv[1], ignore_errors=True)' "$HOGAR"; }
+HOGAR_PROPIO=1
+if [ -n "${JAULA_HOME_SRC:-}" ]; then
+  HOGAR=$(realpath -e "$JAULA_HOME_SRC")
+  case "$HOGAR" in
+    /tmp/*) ;;
+    *) echo "jaula: JAULA_HOME_SRC tiene que vivir en /tmp" >&2; exit 64 ;;
+  esac
+  HOGAR_PROPIO=0
+else
+  HOGAR=$(mktemp -d /tmp/jaula-hogar.XXXXXX)
+fi
+limpiar() {
+  if [ "$HOGAR_PROPIO" = "1" ]; then
+    python3 -c 'import shutil,sys; shutil.rmtree(sys.argv[1], ignore_errors=True)' "$HOGAR"
+  fi
+}
 trap limpiar EXIT
 
 args=(

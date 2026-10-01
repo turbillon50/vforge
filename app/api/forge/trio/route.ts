@@ -1,15 +1,15 @@
 /**
- * POST /api/forge/trio — un agente de la mesa del Trío, en streaming SSE.
+ * POST /api/forge/trio — columna V de la Sala de agentes, en streaming SSE.
  *
- * La página dispara tres POST en paralelo (uno por agente) con la MISMA
- * conversación compartida; así cada columna vive y falla por su cuenta.
+ * La página usa esta ruta sólo para V. Claude Code y Codex viven en el motor
+ * vivo por /api/vivo/agente.
  *
- * Body: { agente: "claude"|"chatgpt"|"v", projectId?: string|null,
+ * Body: { agente: "v", projectId?: string|null,
  *         modo: "responder"|"replicar", intercambios: IntercambioTrio[] }
  * SSE:  data: {type:"meta",model} · {type:"text",value} · {type:"error",message} · {type:"done"}
  *
  * Sólo owner: el middleware ya protege /api/forge(.*) y aquí se re-verifica.
- * Sin herramientas. No persiste: la conversación vive en el cliente.
+ * Sin herramientas para V. Claude Code y Codex salen por /api/vivo/agente.
  */
 import { isOwnerRequest } from "@/lib/forja/ojo";
 import { queryOne } from "@/lib/db/client";
@@ -26,8 +26,6 @@ import {
   type RespuestaTrio,
 } from "@/lib/trio/conversacion";
 import {
-  motorChatGPT,
-  motorClaude,
   motorV,
   sistemaDeV,
   type EventoMotor,
@@ -101,7 +99,10 @@ export async function POST(req: Request) {
   }
 
   const agente = body.agente;
-  if (!esAgente(agente)) return json({ error: "agente debe ser claude, chatgpt o v" }, 400);
+  if (!esAgente(agente)) return json({ error: "agente debe ser claude, codex o v" }, 400);
+  if (agente !== "v") {
+    return json({ error: "Claude Code y Codex trabajan por /api/vivo/agente." }, 400);
+  }
   const modo: ModoTrio = body.modo === "replicar" ? "replicar" : "responder";
   const intercambios = leerIntercambios(body.intercambios);
   if (!intercambios) return json({ error: "intercambios inválidos" }, 400);
@@ -125,14 +126,8 @@ export async function POST(req: Request) {
       };
       try {
         let motor: AsyncGenerator<EventoMotor>;
-        if (agente === "claude") {
-          motor = motorClaude(reglas, turnos, req.signal);
-        } else if (agente === "chatgpt") {
-          motor = motorChatGPT(reglas, turnos, req.signal);
-        } else {
-          const sistema = await sistemaDeV(proyecto ? proyecto.id : null, ultimaPregunta, reglas);
-          motor = motorV(sistema, turnos, req.signal);
-        }
+        const sistema = await sistemaDeV(proyecto ? proyecto.id : null, ultimaPregunta, reglas);
+        motor = motorV(sistema, turnos, req.signal);
         for await (const evento of motor) {
           if (evento.tipo === "modelo") send({ type: "meta", model: evento.valor });
           else send({ type: "text", value: evento.valor });
@@ -141,7 +136,7 @@ export async function POST(req: Request) {
       } catch (err) {
         if (!req.signal.aborted) {
           const mensaje = err instanceof Error ? err.message : "El proveedor no respondió.";
-          console.error(`[trio] ${agente} falló:`, mensaje);
+          console.error(`[sala-agentes] ${agente} falló:`, mensaje);
           send({ type: "error", message: mensaje.slice(0, 400) });
         }
       } finally {

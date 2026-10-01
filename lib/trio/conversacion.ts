@@ -1,5 +1,5 @@
 /**
- * Trío — la mesa de tres (Claude, ChatGPT y V) sobre un proyecto.
+ * Sala de agentes — Claude Code, Codex y V sobre un proyecto.
  *
  * Este módulo es puro (sin red, sin "server-only") para que lo compartan la
  * página y el route handler: define la forma de la conversación compartida y
@@ -8,12 +8,12 @@
  * dos (como contexto del lado user, con nombre), para que se lean entre ellos.
  */
 
-export const AGENTES = ["claude", "chatgpt", "v"] as const;
+export const AGENTES = ["claude", "codex", "v"] as const;
 export type Agente = (typeof AGENTES)[number];
 
 export const NOMBRE_AGENTE: Record<Agente, string> = {
-  claude: "Claude",
-  chatgpt: "ChatGPT",
+  claude: "Claude Code",
+  codex: "Codex",
   v: "V",
 };
 
@@ -167,9 +167,11 @@ export function reglasDeLaMesa(agente: Agente): string {
     .map((a) => NOMBRE_AGENTE[a])
     .join(" y ");
   return [
-    `Estás en "Trío", una mesa de conversación de VForge donde Luis (el dueño) habla al mismo tiempo con tres agentes: Claude (Anthropic), ChatGPT (OpenAI) y V (la IA propia de VForge). Tú eres ${NOMBRE_AGENTE[agente]}.`,
+    `Estás en la "Sala de agentes" de VForge, donde Luis (el dueño) coordina a Claude Code, Codex y V sobre un proyecto vivo. Tú eres ${NOMBRE_AGENTE[agente]}.`,
     `Luis escribe una vez y los tres responden en paralelo. En el historial verás lo que dijeron ${otros}, marcado con su nombre: léelos, complementa, corrige o debate con argumentos; nómbralos cuando te refieras a ellos.`,
-    "Esta mesa es sólo conversación: no tienes herramientas ni puedes ejecutar, desplegar ni tocar código o datos. No prometas acciones ni finjas haberlas hecho.",
+    agente === "v"
+      ? "En esta columna V conversa con su motor actual; Claude Code y Codex trabajan por otra ruta con herramientas reales. No finjas haber ejecutado herramientas desde V."
+      : "Claude Code y Codex trabajan encerrados por el motor vivo; sé preciso sobre lo que hiciste y lo que quedó pendiente.",
     "No inventes estados, avances ni cifras del proyecto: si no lo sabes, dilo.",
     "Responde en español mexicano casual y cercano (trata a Luis de tú; nunca le digas \"jefe\"). Ve al grano: respuestas concisas, en Markdown cuando ayude.",
   ].join("\n");

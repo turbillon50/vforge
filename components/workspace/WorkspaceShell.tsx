@@ -47,8 +47,8 @@ const PRIMARY_NAV: NavItem[] = [
   },
   {
     href: "/app/trio",
-    label: "Trío",
-    description: "Claude, ChatGPT y V en paralelo",
+    label: "Sala",
+    description: "Claude Code, Codex y V",
     Icon: IconTrio,
   },
   {
@@ -92,7 +92,7 @@ const PRIMARY_NAV: NavItem[] = [
 const TITLES: Record<string, string> = {
   "/app/chat": "Estudio",
   "/app/home": "Estudio",
-  "/app/trio": "Trío",
+  "/app/trio": "Sala de agentes",
   "/app/projects": "Proyectos",
   "/app/activity": "Actividad",
   "/app/tablero": "Tablero",

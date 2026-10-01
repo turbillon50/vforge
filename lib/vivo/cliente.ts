@@ -59,6 +59,8 @@ export type ResultadoEdicion = {
   sinCambio?: boolean;
 };
 
+export type AgenteVivo = "claude" | "codex";
+
 function base(): string {
   const bruto = (process.env.VIVO_API_BASE ?? BASE_POR_DEFECTO).trim();
   const url = new URL(bruto);
@@ -108,6 +110,27 @@ async function pedir<T>(ruta: string, init?: RequestInit): Promise<T> {
   } finally {
     clearTimeout(reloj);
   }
+}
+
+/** Stream de un agente real encerrado en el worktree vivo. */
+export function agenteVivo(
+  proyecto: string,
+  agente: AgenteVivo,
+  mensaje: string,
+  sesion?: string | null,
+  signal?: AbortSignal,
+): Promise<Response> {
+  return fetch(`${base()}/__vivo/api/agente`, {
+    method: "POST",
+    cache: "no-store",
+    signal,
+    headers: {
+      "content-type": "application/json",
+      accept: "text/event-stream",
+      "x-vivo-key": secreto(),
+    },
+    body: JSON.stringify({ project: proyecto, agente, mensaje, sesion: sesion || undefined }),
+  });
 }
 
 /** Enciende (o reutiliza) el dev server del proyecto y devuelve la URL con token. */

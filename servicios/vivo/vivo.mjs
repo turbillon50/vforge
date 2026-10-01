@@ -13,9 +13,18 @@
 
 import { createServer, request as httpRequest } from "node:http";
 import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
-import { spawn } from "node:child_process";
-import { readFileSync, writeFileSync, mkdirSync, existsSync, appendFileSync } from "node:fs";
+import { spawn, execFile } from "node:child_process";
+import {
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  existsSync,
+  appendFileSync,
+  copyFileSync,
+  chmodSync,
+} from "node:fs";
 import { resolve, dirname, relative, isAbsolute } from "node:path";
+import { tmpdir } from "node:os";
 import { createConnection } from "node:net";
 import { fileURLToPath } from "node:url";
 import { aplicarEdicion } from "./editor/aplicar-edicion.mjs";
@@ -42,6 +51,8 @@ const BITACORA = process.env.VIVO_LOG || "/var/log/vf-vivo.log";
 const DOMINIO_BASE = process.env.VIVO_BASE_HOST || "178.105.135.26.sslip.io";
 const NVM_NODE = process.env.VIVO_NODE_BIN || "/root/.nvm/versions/node/v20.20.2/bin";
 const JAULA = process.env.VIVO_JAULA || resolve(dirname(fileURLToPath(import.meta.url)), "jaula.sh");
+const LIMITE_AGENTE_MS = Number(process.env.VIVO_AGENT_TIMEOUT_MS || 20 * 60 * 1000);
+const CODEX_HOME_RAIZ = process.env.VIVO_CODEX_HOME_ROOT || resolve(tmpdir(), "vf-vivo-codex");
 
 if (!SECRETO || SECRETO.length < 32) {
   console.error("VIVO_SECRET falta o es muy corto (mínimo 32 caracteres).");
@@ -379,6 +390,511 @@ function correrEncargo(accion, entrada) {
   });
 }
 
+// ── Sala de agentes: Claude Code y Codex reales, encerrados ────────────────
+
+const AGENTES_SALA = new Set(["claude", "codex"]);
+const CLAUDE_SI = [
+  "Read",
+  "Edit",
+  "Write",
+  "Glob",
+  "Grep",
+  "Bash(git diff:*)",
+  "Bash(git status:*)",
+  "Bash(npx tsc:*)",
+];
+const CLAUDE_NO = [
+  "WebFetch",
+  "WebSearch",
+  "Task",
+  "Read(//proc/**)",
+  "Read(//tmp/hogar/**)",
+  "Read(**/.env*)",
+  "Edit(**/.env*)",
+  "Write(**/.env*)",
+];
+const candadosAgente = new Set();
+
+function sesionValida(valor) {
+  if (valor == null || valor === "") return null;
+  const sesion = String(valor).trim();
+  if (!/^[A-Za-z0-9._:@/-]{1,200}$/.test(sesion)) return false;
+  return sesion;
+}
+
+function mensajeCorto(mensaje) {
+  return String(mensaje || "cambio")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 70) || "cambio";
+}
+
+function mandarSse(res, evento) {
+  if (res.destroyed || res.writableEnded) return;
+  res.write(`data: ${JSON.stringify(evento)}\n\n`);
+}
+
+function recortarTexto(texto, limite = 120_000) {
+  const valor = String(texto || "");
+  return {
+    texto: valor.length > limite ? valor.slice(0, limite) : valor,
+    cortado: valor.length > limite,
+  };
+}
+
+function extraerSesion(obj) {
+  if (!obj || typeof obj !== "object") return null;
+  const o = obj;
+  const candidatos = [
+    o.session_id,
+    o.sessionId,
+    o.thread_id,
+    o.threadId,
+    o.conversation_id,
+    o.conversationId,
+    o.id && String(o.type || "").includes("session") ? o.id : null,
+  ];
+  for (const c of candidatos) {
+    if (typeof c === "string" && c.trim()) return c.trim();
+  }
+  return null;
+}
+
+function textoDeBloque(valor) {
+  if (typeof valor === "string") return valor;
+  if (Array.isArray(valor)) {
+    return valor
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object") {
+          if (typeof item.text === "string") return item.text;
+          if (typeof item.content === "string") return item.content;
+        }
+        return "";
+      })
+      .filter(Boolean)
+      .join("\n");
+  }
+  if (valor && typeof valor === "object") {
+    if (typeof valor.text === "string") return valor.text;
+    if (typeof valor.content === "string") return valor.content;
+    if (typeof valor.message === "string") return valor.message;
+  }
+  return "";
+}
+
+function comandoComoTexto(comando) {
+  if (Array.isArray(comando)) return comando.map((p) => String(p)).join(" ");
+  if (typeof comando === "string") return comando;
+  return "";
+}
+
+function esGitDiff(comando) {
+  return /\bgit\s+(?:-[A-Za-z]\s+\S+\s+)*diff\b/.test(comandoComoTexto(comando));
+}
+
+function herramientaNormalizada(agente, nombre, entrada = {}) {
+  const herramienta = String(nombre || "tool");
+  const archivo = typeof entrada.file_path === "string" ? entrada.file_path : typeof entrada.path === "string" ? entrada.path : null;
+  const comando = comandoComoTexto(entrada.command);
+  const patron = typeof entrada.pattern === "string" ? entrada.pattern : null;
+  let accion = "usó";
+  if (herramienta === "Read") accion = "leyó";
+  else if (herramienta === "Edit" || herramienta === "MultiEdit") accion = "editó";
+  else if (herramienta === "Write") accion = "escribió";
+  else if (herramienta === "Bash") accion = "corrió";
+  else if (herramienta === "Glob" || herramienta === "Grep") accion = "buscó";
+  return {
+    tipo: "herramienta",
+    agente,
+    herramienta,
+    accion,
+    archivo,
+    comando: comando || null,
+    patron,
+  };
+}
+
+function eventosClaude(obj, ctx) {
+  const salida = [];
+  ctx.sesion = extraerSesion(obj) || ctx.sesion;
+  const tipo = String(obj?.type || "");
+
+  if (tipo === "assistant") {
+    const bloques = Array.isArray(obj?.message?.content) ? obj.message.content : [];
+    for (const bloque of bloques) {
+      if (!bloque || typeof bloque !== "object") continue;
+      if (bloque.type === "text" && typeof bloque.text === "string") {
+        ctx.textoVisto = true;
+        salida.push({ tipo: "texto", agente: "claude", texto: bloque.text });
+      } else if (bloque.type === "tool_use") {
+        const entrada = bloque.input && typeof bloque.input === "object" ? bloque.input : {};
+        if (bloque.id) ctx.herramientas.set(String(bloque.id), { nombre: bloque.name, entrada });
+        salida.push(herramientaNormalizada("claude", bloque.name, entrada));
+      }
+    }
+  }
+
+  if (tipo === "user") {
+    const bloques = Array.isArray(obj?.message?.content) ? obj.message.content : [];
+    for (const bloque of bloques) {
+      if (!bloque || typeof bloque !== "object" || bloque.type !== "tool_result") continue;
+      const uso = ctx.herramientas.get(String(bloque.tool_use_id || ""));
+      const contenido = textoDeBloque(bloque.content);
+      if (uso?.nombre === "Bash" && esGitDiff(uso.entrada?.command) && contenido.trim()) {
+        const diff = recortarTexto(contenido);
+        salida.push({ tipo: "diff", agente: "claude", archivo: "git diff", contenido: diff.texto, cortado: diff.cortado });
+      }
+    }
+  }
+
+  if (tipo === "result") {
+    ctx.sesion = extraerSesion(obj) || ctx.sesion;
+    if (!ctx.textoVisto && typeof obj.result === "string" && obj.result.trim()) {
+      salida.push({ tipo: "texto", agente: "claude", texto: obj.result });
+      ctx.textoVisto = true;
+    }
+  }
+  return salida;
+}
+
+function eventosCodex(obj, ctx) {
+  const ev = obj?.msg && typeof obj.msg === "object" ? obj.msg : obj;
+  const salida = [];
+  ctx.sesion = extraerSesion(obj) || extraerSesion(ev) || ctx.sesion;
+  const tipo = String(ev?.type || obj?.type || "");
+  const id = String(ev?.call_id || ev?.id || obj?.id || "");
+  const item = ev?.item && typeof ev.item === "object" ? ev.item : null;
+  const comando = comandoComoTexto(ev?.command ?? item?.command);
+
+  if (/agent_message|assistant_message|message_delta|output_text_delta|response\.output_text\.delta/.test(tipo)) {
+    const texto = textoDeBloque(ev?.message ?? ev?.text ?? ev?.delta ?? ev?.value ?? item?.text ?? item?.message);
+    if (texto) salida.push({ tipo: "texto", agente: "codex", texto });
+  }
+
+  if (/exec_command_begin|command_started|command_execution|tool_call_started|item\.started/.test(tipo) && comando) {
+    ctx.herramientas.set(id, { comando });
+    salida.push({
+      tipo: "herramienta",
+      agente: "codex",
+      herramienta: "Bash",
+      accion: "corrió",
+      archivo: null,
+      comando,
+      patron: null,
+    });
+  }
+
+  if (/exec_command_end|command_finished|tool_call_completed|item\.completed/.test(tipo)) {
+    const previo = ctx.herramientas.get(id);
+    const comandoFinal = comando || previo?.comando || "";
+    const contenido = textoDeBloque(ev?.stdout) || textoDeBloque(ev?.output) || textoDeBloque(ev?.aggregated_output);
+    if (esGitDiff(comandoFinal) && contenido.trim()) {
+      const diff = recortarTexto(contenido);
+      salida.push({ tipo: "diff", agente: "codex", archivo: "git diff", contenido: diff.texto, cortado: diff.cortado });
+    }
+  }
+
+  if (/patch_apply|file_change|edit/.test(tipo) && !comando) {
+    salida.push({
+      tipo: "herramienta",
+      agente: "codex",
+      herramienta: "Patch",
+      accion: "editó",
+      archivo: typeof ev?.path === "string" ? ev.path : typeof item?.path === "string" ? item.path : null,
+      comando: null,
+      patron: null,
+    });
+  }
+
+  return salida;
+}
+
+function gitAgente(raiz, args, limiteMs = 60_000) {
+  return new Promise((res) => {
+    execFile(
+      "git",
+      ["-C", raiz, ...args],
+      { timeout: limiteMs, maxBuffer: 8 * 1024 * 1024 },
+      (error, stdout, stderr) => {
+        res({
+          ok: !error,
+          salida: String(stdout || "").trim(),
+          error: error ? String(stderr || error.message).trim() : null,
+        });
+      },
+    );
+  });
+}
+
+async function commitearAgente(raiz, agente, mensaje) {
+  const sucio = await gitAgente(raiz, ["status", "--porcelain"]);
+  if (!sucio.ok) return { ok: false, error: sucio.error || "no pude leer git status" };
+  if (!sucio.salida) return { ok: true, sinCambios: true, archivos: [] };
+  const archivos = sucio.salida
+    .split("\n")
+    .map((linea) => linea.slice(3).trim())
+    .filter(Boolean);
+
+  const add = await gitAgente(raiz, ["add", "-A"], 60_000);
+  if (!add.ok) return { ok: false, error: add.error || "git add falló", archivos };
+
+  const diffCrudo = await gitAgente(raiz, ["diff", "--cached", "--stat", "--patch", "--no-ext-diff"], 60_000);
+  const diff = recortarTexto(diffCrudo.ok ? diffCrudo.salida : "");
+  const asunto = `[estudio-vivo] agente ${agente}: ${mensajeCorto(mensaje)}`;
+  const commit = await gitAgente(
+    raiz,
+    [
+      "-c",
+      "core.hooksPath=/dev/null",
+      "-c",
+      "user.name=turbillon50",
+      "-c",
+      "user.email=turbillon50@gmail.com",
+      "commit",
+      "-m",
+      asunto,
+    ],
+    90_000,
+  );
+  if (!commit.ok) return { ok: false, error: commit.error || "git commit falló", archivos, diff: diff.texto, cortado: diff.cortado };
+  const sha = await gitAgente(raiz, ["rev-parse", "--short", "HEAD"], 15_000);
+  return { ok: true, sha: sha.salida || null, archivos, diff: diff.texto, cortado: diff.cortado };
+}
+
+function tokenClaude() {
+  try {
+    for (const linea of readFileSync("/root/.claude/oauth_token.env", "utf8").split("\n")) {
+      const limpia = linea.trim();
+      if (limpia.includes("CLAUDE_CODE_OAUTH_TOKEN=")) {
+        return limpia.split("=", 2)[1].trim().replace(/^['"]|['"]$/g, "");
+      }
+    }
+  } catch {
+    /* falta token */
+  }
+  return "";
+}
+
+function prepararHomeCodex(nombre) {
+  const seguro = nombre.replace(/[^a-z0-9-]/g, "_");
+  const hogar = resolve(CODEX_HOME_RAIZ, seguro);
+  const codexHome = resolve(hogar, ".codex");
+  mkdirSync(codexHome, { recursive: true, mode: 0o700 });
+  chmodSync(hogar, 0o700);
+  chmodSync(codexHome, 0o700);
+  copyFileSync("/root/.codex/auth.json", resolve(codexHome, "auth.json"));
+  chmodSync(resolve(codexHome, "auth.json"), 0o600);
+  return hogar;
+}
+
+async function correrAgente(req, res, cuerpo) {
+  const nombre = String(cuerpo.project || "");
+  const agente = String(cuerpo.agente || "");
+  const mensaje = String(cuerpo.mensaje || "").trim().slice(0, 30_000);
+  const sesion = sesionValida(cuerpo.sesion);
+  if (!nombreValido(nombre)) return json(res, 400, { error: "proyecto inválido" });
+  if (!AGENTES_SALA.has(agente)) return json(res, 400, { error: "agente debe ser claude o codex" });
+  if (!mensaje) return json(res, 400, { error: "mensaje vacío" });
+  if (sesion === false) return json(res, 400, { error: "sesión inválida" });
+
+  const conf = leerRegistro()[nombre];
+  if (!conf) return json(res, 400, { error: "proyecto desconocido" });
+  const raiz = resolve(conf.worktree || "");
+  if (!existsSync(resolve(raiz, ".git"))) return json(res, 400, { error: "worktree inválido" });
+
+  const llave = `${nombre}:${agente}`;
+  if (candadosAgente.has(llave)) {
+    return json(res, 409, { error: `${agente} ya está trabajando en ${nombre}` });
+  }
+  candadosAgente.add(llave);
+
+  let cmd;
+  let env;
+  try {
+    if (agente === "claude") {
+      const token = tokenClaude();
+      if (!token) {
+        candadosAgente.delete(llave);
+        return json(res, 500, { error: "falta el token de Claude Code" });
+      }
+      cmd = [
+        JAULA,
+        raiz,
+        "claude",
+        "-p",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--permission-mode",
+        "acceptEdits",
+        "--max-turns",
+        "80",
+        "--allowedTools",
+        ...CLAUDE_SI,
+        "--disallowedTools",
+        ...CLAUDE_NO,
+      ];
+      if (sesion) cmd.push("--resume", sesion);
+      env = {
+        PATH: "/usr/local/bin:/usr/bin:/bin",
+        VIVO_NODE_BIN: NVM_NODE,
+        CLAUDE_CODE_OAUTH_TOKEN: token,
+        DISABLE_AUTOUPDATER: "1",
+        JAULA_VARS: "CLAUDE_CODE_OAUTH_TOKEN DISABLE_AUTOUPDATER",
+      };
+    } else {
+      const hogarCodex = prepararHomeCodex(nombre);
+      cmd = [
+        JAULA,
+        raiz,
+        "codex",
+        "exec",
+        "--json",
+        "--sandbox",
+        "workspace-write",
+        "--skip-git-repo-check",
+      ];
+      if (sesion) cmd.push("resume", sesion, "-");
+      else cmd.push("-");
+      env = {
+        PATH: "/usr/local/bin:/usr/bin:/bin",
+        VIVO_NODE_BIN: NVM_NODE,
+        JAULA_HOME_SRC: hogarCodex,
+        HOME: "/tmp/hogar",
+        CODEX_HOME: "/tmp/hogar/.codex",
+        JAULA_VARS: "HOME CODEX_HOME",
+      };
+    }
+  } catch (error) {
+    candadosAgente.delete(llave);
+    return json(res, 500, { error: error instanceof Error ? error.message : "no pude preparar el agente" });
+  }
+
+  res.writeHead(200, {
+    "content-type": "text/event-stream; charset=utf-8",
+    "cache-control": "no-store, no-transform",
+    "x-accel-buffering": "no",
+  });
+  mandarSse(res, { tipo: "herramienta", agente, accion: "entró", herramienta: "jaula", archivo: nombre, comando: null, patron: null });
+
+  const ctx = { sesion: sesion || null, herramientas: new Map(), textoVisto: false };
+  const proc = spawn(cmd[0], cmd.slice(1), { cwd: raiz, env, stdio: ["pipe", "pipe", "pipe"] });
+  let stdout = "";
+  let stderr = "";
+  let terminado = false;
+  let agotado = false;
+
+  const matar = (signal = "SIGTERM") => {
+    if (terminado) return;
+    try {
+      proc.kill(signal);
+    } catch {
+      /* ya terminó */
+    }
+  };
+
+  const reloj = setTimeout(() => {
+    agotado = true;
+    mandarSse(res, { tipo: "error", agente, mensaje: "Tiempo límite de 20 minutos agotado." });
+    matar("SIGTERM");
+    setTimeout(() => matar("SIGKILL"), 3000).unref();
+  }, LIMITE_AGENTE_MS);
+
+  res.on("close", () => {
+    if (!terminado) matar("SIGTERM");
+  });
+
+  proc.stdin.end(mensaje);
+  proc.stderr.on("data", (buf) => {
+    stderr += buf.toString();
+    if (stderr.length > 20_000) stderr = stderr.slice(-20_000);
+  });
+  proc.stdout.on("data", (buf) => {
+    stdout += buf.toString();
+    const lineas = stdout.split(/\r?\n/);
+    stdout = lineas.pop() || "";
+    for (const linea of lineas) {
+      const limpia = linea.trim();
+      if (!limpia) continue;
+      try {
+        const obj = JSON.parse(limpia);
+        const eventos = agente === "claude" ? eventosClaude(obj, ctx) : eventosCodex(obj, ctx);
+        for (const ev of eventos) mandarSse(res, ev);
+      } catch {
+        mandarSse(res, { tipo: "texto", agente, texto: `${limpia}\n` });
+      }
+    }
+  });
+
+  proc.on("error", (error) => {
+    if (terminado) return;
+    terminado = true;
+    clearTimeout(reloj);
+    mandarSse(res, { tipo: "error", agente, mensaje: error.message });
+    candadosAgente.delete(llave);
+    try {
+      res.end();
+    } catch {
+      /* ya cerrado */
+    }
+  });
+
+  proc.on("close", async (codigo, signal) => {
+    if (terminado) return;
+    terminado = true;
+    clearTimeout(reloj);
+    try {
+      if (stdout.trim()) {
+        try {
+          const obj = JSON.parse(stdout.trim());
+          const eventos = agente === "claude" ? eventosClaude(obj, ctx) : eventosCodex(obj, ctx);
+          for (const ev of eventos) mandarSse(res, ev);
+        } catch {
+          mandarSse(res, { tipo: "texto", agente, texto: `${stdout.trim()}\n` });
+        }
+      }
+
+      if ((codigo && codigo !== 0) || signal || agotado) {
+        const detalle = stderr.trim().slice(-1200);
+        mandarSse(res, {
+          tipo: "error",
+          agente,
+          mensaje: detalle || `El proceso terminó con código ${codigo ?? "?"}${signal ? ` (${signal})` : ""}.`,
+        });
+      }
+
+      const guardado = await commitearAgente(raiz, agente, mensaje);
+      if (guardado.diff) {
+        mandarSse(res, { tipo: "diff", agente, archivo: "cambios guardados", contenido: guardado.diff, cortado: guardado.cortado });
+      }
+      if (!guardado.ok) {
+        mandarSse(res, { tipo: "error", agente, mensaje: `No pude commitear: ${guardado.error}` });
+      }
+      if (guardado.sha) log(`agente ${agente} en ${nombre}: commit ${guardado.sha}`);
+      mandarSse(res, {
+        tipo: "fin",
+        agente,
+        sesion: ctx.sesion,
+        codigo,
+        signal,
+        commit: guardado.sha || null,
+        sinCambios: Boolean(guardado.sinCambios),
+        archivos: guardado.archivos || [],
+      });
+    } catch (error) {
+      mandarSse(res, { tipo: "error", agente, mensaje: error instanceof Error ? error.message : "falló el cierre del agente" });
+    } finally {
+      candadosAgente.delete(llave);
+      try {
+        res.end();
+      } catch {
+        /* ya cerrado */
+      }
+    }
+  });
+}
+
 function esAdmin(req) {
   const llave = req.headers["x-vivo-key"];
   if (typeof llave !== "string" || llave.length !== SECRETO.length) return false;
@@ -446,6 +962,10 @@ const servidor = createServer(async (req, res) => {
       cuerpo = JSON.parse((await leerCuerpo(req)) || "{}");
     } catch {
       return json(res, 400, { error: "JSON inválido" });
+    }
+
+    if (ruta === "/__vivo/api/agente") {
+      return correrAgente(req, res, cuerpo);
     }
 
     if (ruta === "/__vivo/api/start") {

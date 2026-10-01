@@ -1,29 +1,18 @@
 import "server-only";
 
 /**
- * Motores del Trío. Cada uno es un generador async que emite deltas de texto.
- * Sin herramientas: es sólo conversación.
+ * Motor conversacional de V para la Sala de agentes.
  *
- * - Claude  → Anthropic Messages API (ANTHROPIC_API_KEY, vault → env).
- * - ChatGPT → OpenAI Chat Completions (OPENAI_API_KEY, vault → env).
- * - V       → el MISMO motor que usa /api/forge/run (resolveLlmEngine + modelo
- *             de agent_config "chat-main" + cascada de routing) y el MISMO system
- *             prompt de V (buildSystemPrompt); sólo se omiten las tools.
+ * Claude Code y Codex ya no pasan por API keys aquí: trabajan como CLIs reales
+ * dentro del motor vivo. Este archivo queda sólo para la columna V, usando el
+ * mismo motor que /api/forge/run y omitiendo tools.
  */
-import Anthropic from "@anthropic-ai/sdk";
-import OpenAI from "openai";
-import { getOperatorSecret } from "@/lib/vault/get-secret";
 import { buildSystemPrompt } from "@/lib/forge/system-prompt";
 import { getModelForTask } from "@/lib/forge/agent-config";
 import { modelForEngine, resolveLlmEngine } from "@/lib/forge/llm-engine";
 import { MODELS, normalizeSlug } from "@/lib/forge/models";
 import { routeFor } from "@/lib/forge/routing";
 import type { TurnoChat } from "@/lib/trio/conversacion";
-
-/** Modelo de Claude: el mismo que ya usa el asistente del workspace; override por env. */
-export const MODELO_CLAUDE = process.env.TRIO_CLAUDE_MODEL?.trim() || "claude-sonnet-4-6";
-/** Modelo de ChatGPT: el de la familia que ya usa el routing del repo (openai/gpt-5); override por env. */
-export const MODELO_CHATGPT = process.env.TRIO_OPENAI_MODEL?.trim() || "gpt-5";
 
 const MAX_TOKENS = 1600;
 
@@ -32,85 +21,12 @@ export interface EventoMotor {
   valor: string;
 }
 
-async function llave(nombre: string): Promise<string | null> {
-  try {
-    const valor = await getOperatorSecret(nombre);
-    if (valor?.trim()) return valor.trim();
-  } catch {
-    // vault caído: cae a env
-  }
-  return process.env[nombre]?.trim() || null;
-}
-
 function estadoHttp(err: unknown): number | null {
   if (err && typeof err === "object" && "status" in err) {
     const s = (err as { status?: unknown }).status;
     if (typeof s === "number") return s;
   }
   return null;
-}
-
-export async function* motorClaude(
-  sistema: string,
-  turnos: TurnoChat[],
-  signal: AbortSignal,
-): AsyncGenerator<EventoMotor> {
-  const apiKey = await llave("ANTHROPIC_API_KEY");
-  if (!apiKey) throw new Error("ANTHROPIC_API_KEY no está configurada.");
-  const cliente = new Anthropic({ apiKey });
-  yield { tipo: "modelo", valor: MODELO_CLAUDE };
-  const stream = cliente.messages.stream(
-    {
-      model: MODELO_CLAUDE,
-      max_tokens: MAX_TOKENS,
-      system: sistema,
-      messages: turnos,
-    },
-    { signal },
-  );
-  for await (const evento of stream) {
-    if (evento.type === "content_block_delta" && evento.delta.type === "text_delta") {
-      yield { tipo: "texto", valor: evento.delta.text };
-    }
-  }
-}
-
-export async function* motorChatGPT(
-  sistema: string,
-  turnos: TurnoChat[],
-  signal: AbortSignal,
-): AsyncGenerator<EventoMotor> {
-  const apiKey = await llave("OPENAI_API_KEY");
-  if (!apiKey) throw new Error("OPENAI_API_KEY no está configurada.");
-  const cliente = new OpenAI({ apiKey });
-  const mensajes = [{ role: "system" as const, content: sistema }, ...turnos];
-  yield { tipo: "modelo", valor: MODELO_CHATGPT };
-  try {
-    const stream = await cliente.chat.completions.create(
-      {
-        model: MODELO_CHATGPT,
-        messages: mensajes,
-        max_completion_tokens: MAX_TOKENS * 4, // los modelos de razonamiento gastan parte en pensar
-        stream: true,
-      },
-      { signal },
-    );
-    for await (const chunk of stream) {
-      const delta = chunk.choices?.[0]?.delta?.content;
-      if (delta) yield { tipo: "texto", valor: delta };
-    }
-  } catch (err) {
-    // Algunas organizaciones de OpenAI no tienen habilitado el streaming de ciertos
-    // modelos (exige verificación). En ese caso, una sola llamada sin stream.
-    const mensaje = err instanceof Error ? err.message : "";
-    if (estadoHttp(err) !== 400 || !/stream/i.test(mensaje)) throw err;
-    const completo = await cliente.chat.completions.create(
-      { model: MODELO_CHATGPT, messages: mensajes, max_completion_tokens: MAX_TOKENS * 4 },
-      { signal },
-    );
-    const texto = completo.choices?.[0]?.message?.content ?? "";
-    if (texto) yield { tipo: "texto", valor: texto };
-  }
 }
 
 /** Quita bloques <think>…</think> que algunos modelos abiertos emiten en el stream. */
@@ -144,7 +60,7 @@ export async function sistemaDeV(
   reglas: string,
 ): Promise<string> {
   const { systemPrompt } = await buildSystemPrompt({ projectId, userMessage: ultimoMensaje });
-  return `${systemPrompt}\n\n## Modo Trío\n${reglas}\nEn este modo NO tienes herramientas activas aunque arriba se mencionen: sólo conversas.`;
+  return `${systemPrompt}\n\n## Sala de agentes\n${reglas}\nEn esta columna NO tienes herramientas activas aunque arriba se mencionen: sólo conversas.`;
 }
 
 export async function* motorV(
