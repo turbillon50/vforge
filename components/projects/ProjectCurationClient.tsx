@@ -179,11 +179,24 @@ function displayNameFromRoot(root: string) {
     .join(" ");
 }
 
-function buildSuggestions(repos: RepoItem[], dismissed: Set<string>): Suggestion[] {
+/**
+ * Un repo está "ordenado" cuando vive en un proyecto real (con más de un repo).
+ * Ligado solo a su proyecto automático (un repo = un proyecto) sigue suelto:
+ * es justo lo que hay que agrupar.
+ */
+function estaAgrupado(repo: RepoItem, tamanos: Map<string, number>) {
+  return repo.linked_projects.some((p) => (tamanos.get(p.project_id) ?? 0) > 1);
+}
+
+function buildSuggestions(
+  repos: RepoItem[],
+  dismissed: Set<string>,
+  tamanos: Map<string, number>,
+): Suggestion[] {
   const groups = new Map<string, RepoItem[]>();
   for (const repo of repos) {
     if (repo.curation?.archived) continue;
-    if (repo.linked_projects.length > 0) continue;
+    if (estaAgrupado(repo, tamanos)) continue;
     const root = canonicalRoot(repo.name);
     if (!root || dismissed.has(root)) continue;
     groups.set(root, [...(groups.get(root) ?? []), repo]);
@@ -242,8 +255,12 @@ export default function ProjectCurationClient() {
     void load();
   }, [load]);
 
-  const repos = payload?.repos ?? [];
-  const projects = payload?.projects ?? [];
+  const repos = useMemo(() => payload?.repos ?? [], [payload]);
+  const projects = useMemo(() => payload?.projects ?? [], [payload]);
+  const tamanos = useMemo(
+    () => new Map(projects.map((p) => [p.id, p.repository_count])),
+    [projects],
+  );
 
   const visibleRepos = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -268,7 +285,10 @@ export default function ProjectCurationClient() {
     });
   }, [query, repos]);
 
-  const suggestions = useMemo(() => buildSuggestions(repos, dismissed), [repos, dismissed]);
+  const suggestions = useMemo(
+    () => buildSuggestions(repos, dismissed, tamanos),
+    [repos, dismissed, tamanos],
+  );
 
   const selectedRepos = useMemo(
     () => selectedArray(selected).map((name) => repos.find((repo) => repo.full_name === name)).filter(Boolean) as RepoItem[],
@@ -279,8 +299,8 @@ export default function ProjectCurationClient() {
     let linked = 0;
     let archived = 0;
     for (const repo of repos) {
-      if (repo.linked_projects.length > 0) linked += 1;
       if (repo.curation?.archived) archived += 1;
+      else if (estaAgrupado(repo, tamanos)) linked += 1;
     }
     return {
       total: repos.length,
@@ -288,7 +308,7 @@ export default function ProjectCurationClient() {
       pending: repos.length - linked - archived,
       archived,
     };
-  }, [repos]);
+  }, [repos, tamanos]);
 
   function toggleRepo(repo: RepoItem) {
     if (repo.curation?.archived) return;
@@ -366,7 +386,7 @@ export default function ProjectCurationClient() {
         <section className="grid border-b border-[var(--border-1)] bg-white md:grid-cols-4">
           <Stat label="Repos GitHub" value={String(stats.total)} />
           <Stat label="Por ordenar" value={String(stats.pending)} />
-          <Stat label="Ligados" value={String(stats.linked)} />
+          <Stat label="Agrupados" value={String(stats.linked)} />
           <Stat label="No-proyecto" value={String(stats.archived)} />
         </section>
 
@@ -658,7 +678,7 @@ function RepoRow({
             className="inline-flex min-w-0 items-center gap-1.5 text-[14px] font-semibold text-black hover:underline"
           >
             <Github size={14} className="shrink-0" />
-            <span className="truncate">{repo.full_name}</span>
+            <span className="truncate" title={repo.full_name}>{repo.name}</span>
             <ExternalLink size={12} className="shrink-0" />
           </a>
           {primary ? <Badge>principal</Badge> : null}
@@ -761,8 +781,8 @@ function SuggestionRow({
             >
               {selected.has(repo.full_name) ? <Check size={10} /> : null}
             </span>
-            <span className="min-w-0 truncate font-mono text-[12px] text-[var(--fg-secondary)]">
-              {repo.full_name}
+            <span className="min-w-0 truncate font-mono text-[12px] text-[var(--fg-secondary)]" title={repo.full_name}>
+              {repo.name}
             </span>
           </button>
         ))}
