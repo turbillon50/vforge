@@ -40,8 +40,7 @@
     "vliving-proyector",
     "vliving-frecuencia",
     "pulso-neutro",
-    "vliving-audit-fix",
-    "all-living-sept-2026"
+    "vliving-audit-fix"
    ],
    "tipo": [
     "comercializamos",
@@ -709,6 +708,15 @@
     "comercializamos"
    ],
    "nota": "Luis: proyecto bien importante (se había metido por error al lote viejo de demos)"
+  },
+  "allliving": {
+   "repos": [
+    "all-living-sept-2026"
+   ],
+   "tipo": [
+    "comercializamos"
+   ],
+   "nota": "All Living (alliving.live): proyecto propio aparte de V&LIVING, la parte ligera de operación; Luis lo marcó como importante"
   }
  },
  "notas_luis": [
