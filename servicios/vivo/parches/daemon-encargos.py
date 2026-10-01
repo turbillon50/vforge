@@ -24,7 +24,8 @@ _VIVO_REGISTRO = "/opt/vf-vivo/proyectos.json"
 _JAULA = "/opt/vf-vivo/jaula.sh"
 _ENCARGO_SI = ["Read", "Edit", "Write", "Glob", "Grep",
                "Bash(git diff:*)", "Bash(git status:*)", "Bash(npx tsc:*)"]
-_ENCARGO_NO = ["WebFetch", "WebSearch", "Task", "Read(//proc/**)", "Read(//tmp/hogar/**)"]
+_ENCARGO_NO = ["WebFetch", "WebSearch", "Task", "Read(//proc/**)", "Read(//tmp/hogar/**)",
+               "Read(**/.env*)", "Edit(**/.env*)", "Write(**/.env*)"]
 _vivo_locks = {}
 _vivo_locks_guard = threading.Lock()
 
