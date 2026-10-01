@@ -3,18 +3,25 @@ import {
   FeaturedProjectShell,
   TarjetaProyecto,
 } from "@/components/unicorn/TarjetaProyecto";
-import { loadVForgeExpediente } from "@/lib/unicorn/expediente";
+import { loadGroupedProjectExpedientes } from "@/lib/unicorn/expediente";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
-  const expediente = await loadVForgeExpediente().catch(() => null);
+  const expedientes = await loadGroupedProjectExpedientes().catch(() => []);
 
   return (
     <>
-      {expediente ? (
-        <FeaturedProjectShell>
-          <TarjetaProyecto expediente={expediente} />
+      {expedientes.length ? (
+        <FeaturedProjectShell
+          kicker="Repos agrupados"
+          title="Proyectos con fuente de verdad"
+        >
+          <div className="grid gap-5">
+            {expedientes.map((expediente) => (
+              <TarjetaProyecto key={expediente.project.id} expediente={expediente} />
+            ))}
+          </div>
         </FeaturedProjectShell>
       ) : null}
       <ProjectsCatalogClient />

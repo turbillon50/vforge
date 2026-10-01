@@ -6,6 +6,7 @@
 
 import { sql } from "./client";
 import { UNICORN_DDL } from "@/lib/mcp/unicorn";
+import { PROJECT_REPOSITORY_CURATION_DDL } from "@/lib/projects/repository-schema";
 
 let _healed = false;
 
@@ -552,6 +553,16 @@ async function ensureUnicornEventos(): Promise<void> {
   }
 }
 
+async function ensureProjectRepositoryCuration(): Promise<void> {
+  for (const ddl of PROJECT_REPOSITORY_CURATION_DDL) {
+    try {
+      await sql.query(ddl);
+    } catch {
+      // Ya existe o sin permisos: la ruta de curacion la reintenta.
+    }
+  }
+}
+
 /**
  * Heal the database schema. Runs once per process.
  * Call this from api routes or middleware that execute early.
@@ -573,6 +584,7 @@ export async function healDatabase(): Promise<void> {
     await ensureContractsPortal();
     await ensureVChat();
     await ensureVPlugins();
+    await ensureProjectRepositoryCuration();
     await ensureUnicornEventos();
   } catch (e) {
     // Silently fail - don't crash the app if database healing fails

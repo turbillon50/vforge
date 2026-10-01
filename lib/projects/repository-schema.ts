@@ -3,6 +3,23 @@ import "server-only";
 import { sql } from "@/lib/db/client";
 
 let schemaReady = false;
+let curationReady = false;
+
+export const PROJECT_REPOSITORY_CURATION_DDL: readonly string[] = [
+  `CREATE TABLE IF NOT EXISTS project_repository_curation (
+    repo_full_name  text PRIMARY KEY,
+    archived        boolean NOT NULL DEFAULT false,
+    archived_reason text,
+    archived_note   text,
+    previous_links  jsonb NOT NULL DEFAULT '[]'::jsonb,
+    archived_at     timestamptz,
+    archived_by     text,
+    created_at      timestamptz NOT NULL DEFAULT now(),
+    updated_at      timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_project_repository_curation_archived
+    ON project_repository_curation (archived, updated_at DESC)`,
+];
 
 /** Idempotent fallback for production environments where migrations lag deploys. */
 export async function ensureProjectRepositoriesSchema(): Promise<void> {
@@ -52,3 +69,10 @@ export async function ensureProjectRepositoriesSchema(): Promise<void> {
   schemaReady = true;
 }
 
+export async function ensureProjectRepositoryCurationSchema(): Promise<void> {
+  if (curationReady) return;
+  for (const ddl of PROJECT_REPOSITORY_CURATION_DDL) {
+    await sql.query(ddl);
+  }
+  curationReady = true;
+}

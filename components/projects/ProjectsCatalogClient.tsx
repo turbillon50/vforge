@@ -691,15 +691,23 @@ export default function ProjectsCatalogClient() {
               Proyectos
             </h1>
           </div>
-          <button
-            type="button"
-            onClick={() => void syncProjects()}
-            disabled={refreshing}
-            className="btn-primary shrink-0 disabled:opacity-50"
-          >
-            <IconRefresh size={13} className={refreshing ? "animate-spin" : ""} />
-            Sincronizar
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/app/projects/curar"
+              className="inline-flex min-h-11 items-center justify-center rounded-md border border-black bg-black px-4 text-[13px] font-semibold text-white"
+            >
+              Ordenar proyectos
+            </Link>
+            <button
+              type="button"
+              onClick={() => void syncProjects()}
+              disabled={refreshing}
+              className="btn-ghost disabled:opacity-50"
+            >
+              <IconRefresh size={13} className={refreshing ? "animate-spin" : ""} />
+              Sincronizar
+            </button>
+          </div>
         </div>
       </header>
 

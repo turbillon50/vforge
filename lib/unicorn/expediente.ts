@@ -406,3 +406,22 @@ export async function loadVForgeExpediente(): Promise<ExpedienteProyecto | null>
   );
   return project ? loadProjectExpediente(project) : null;
 }
+
+export async function loadGroupedProjectExpedientes(): Promise<ExpedienteProyecto[]> {
+  await ensureProjectRepositoriesSchema();
+  const projects = await queryAll<ProyectoExpedienteRow>(
+    `SELECT p.id, p.name, p.description, p.category, p.status,
+            p.github_repo, p.github_url, p.github_default_branch, p.github_private, p.github_language,
+            p.vercel_url, p.domain, p.desktop_url, p.mobile_url, p.admin_url,
+            p.client_name, p.progress_pct,
+            p.created_at::text, p.updated_at::text
+       FROM projects p
+       JOIN project_repositories pr ON pr.project_id = p.id
+      GROUP BY p.id
+     HAVING count(pr.repo_full_name) > 1
+      ORDER BY max(pr.pushed_at) DESC NULLS LAST,
+               p.updated_at DESC NULLS LAST,
+               p.name ASC`,
+  );
+  return Promise.all(projects.map((project) => loadProjectExpediente(project)));
+}

@@ -622,14 +622,22 @@ export function ExpedienteShell({ children }: { children: ReactNode }) {
   );
 }
 
-export function FeaturedProjectShell({ children }: { children: ReactNode }) {
+export function FeaturedProjectShell({
+  children,
+  title = "Proyectos agrupados",
+  kicker = "Tarjeta C",
+}: {
+  children: ReactNode;
+  title?: string;
+  kicker?: string;
+}) {
   return (
     <section className="overflow-x-hidden bg-[var(--color-background)] px-4 py-5 md:px-8 md:py-8">
       <div className="mx-auto w-full max-w-[1180px] min-w-0">
         <div className="mb-4 flex min-w-0 items-end justify-between gap-4">
           <div className="min-w-0">
-            <p className="font-mono text-[12px] uppercase text-[var(--fg-muted)]">Proyecto destacado</p>
-            <h2 className="mt-1 text-[22px] font-semibold text-black">VForge</h2>
+            <p className="font-mono text-[12px] uppercase text-[var(--fg-muted)]">{kicker}</p>
+            <h2 className="mt-1 text-[22px] font-semibold text-black">{title}</h2>
           </div>
           <div className="hidden items-center gap-2 text-[12px] text-[var(--fg-muted)] md:flex">
             <Activity size={14} />
