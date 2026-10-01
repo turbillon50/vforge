@@ -2,10 +2,12 @@ import "server-only";
 
 import { queryAll, queryOne } from "@/lib/db/client";
 import { leerEventos, type UnicornDb, type UnicornEvento } from "@/lib/mcp/unicorn";
+import { listProjectEtapas } from "@/lib/projects/etapas-server";
 import {
   ensureProjectCarteraSchema,
   ensureProjectRepositoriesSchema,
 } from "@/lib/projects/repository-schema";
+import type { ProjectEtapa, ProjectEtapaHistoryItem } from "@/lib/projects/etapas";
 import type { ProjectRepositoryRole } from "@/lib/projects/repository-groups";
 import {
   normalizePublishedUrl,
@@ -39,6 +41,11 @@ export interface ProyectoExpedienteRow {
   mobile_url: string | null;
   admin_url: string | null;
   client_name: string | null;
+  etapa: ProjectEtapa | null;
+  cliente_nombre: string | null;
+  cliente_whatsapp: string | null;
+  contrato_url: string | null;
+  demo_url: string | null;
   progress_pct: number | null;
   created_at: string | null;
   updated_at: string | null;
@@ -92,6 +99,7 @@ export interface ExpedienteProyecto {
   now: Array<{ label: string; value: string | null; state: DatoEstado }>;
   conversations: ConexionExpediente[];
   mcpConnections: ConexionExpediente[];
+  etapaHistorial: ProjectEtapaHistoryItem[];
   timeline: UnicornEvento[];
   eventSourcesUnavailable: Array<{ fuente: string; motivo: string }>;
 }
@@ -336,10 +344,11 @@ async function loadTimeline(projectId: string): Promise<{
 export async function loadProjectExpediente(
   project: ProyectoExpedienteRow,
 ): Promise<ExpedienteProyecto> {
-  const [cover, repositories, timeline] = await Promise.all([
+  const [cover, repositories, timeline, etapaHistorial] = await Promise.all([
     loadProjectCover(project),
     loadRepositories(project),
     loadTimeline(project.id),
+    listProjectEtapas(project.id).catch(() => []),
   ]);
 
   return {
@@ -348,6 +357,7 @@ export async function loadProjectExpediente(
     repositories,
     infra: infraFromProject(project),
     now: [
+      { label: "Etapa", value: project.etapa, state: project.etapa ? "real" : "sin_dato" },
       { label: "Estado", value: project.status, state: project.status ? "real" : "sin_dato" },
       {
         label: "Avance",
@@ -369,6 +379,7 @@ export async function loadProjectExpediente(
       { name: "Momentum", detail: "Proyectos, clientes y mercado", state: "por_conectar" },
       { name: "Eternime", detail: "Memorias ligadas a este proyecto", state: "por_conectar" },
     ],
+    etapaHistorial,
     timeline: timeline.events,
     eventSourcesUnavailable: timeline.unavailable,
   };
@@ -377,11 +388,14 @@ export async function loadProjectExpediente(
 export async function loadProjectExpedienteById(
   projectId: string,
 ): Promise<ExpedienteProyecto | null> {
+  await ensureProjectCarteraSchema();
   const project = await queryOne<ProyectoExpedienteRow>(
     `SELECT id, name, description, category, status,
             github_repo, github_url, github_default_branch, github_private, github_language,
             vercel_url, domain, desktop_url, mobile_url, admin_url,
-            client_name, progress_pct,
+            COALESCE(cliente_nombre, client_name) AS client_name,
+            etapa, cliente_nombre, cliente_whatsapp, contrato_url, demo_url,
+            progress_pct,
             created_at::text, updated_at::text
        FROM projects
       WHERE id = $1
@@ -392,11 +406,14 @@ export async function loadProjectExpedienteById(
 }
 
 export async function loadVForgeExpediente(): Promise<ExpedienteProyecto | null> {
+  await ensureProjectCarteraSchema();
   const project = await queryOne<ProyectoExpedienteRow>(
     `SELECT id, name, description, category, status,
             github_repo, github_url, github_default_branch, github_private, github_language,
             vercel_url, domain, desktop_url, mobile_url, admin_url,
-            client_name, progress_pct,
+            COALESCE(cliente_nombre, client_name) AS client_name,
+            etapa, cliente_nombre, cliente_whatsapp, contrato_url, demo_url,
+            progress_pct,
             created_at::text, updated_at::text
        FROM projects
       WHERE lower(COALESCE(github_repo, '')) = lower($1)
@@ -417,7 +434,9 @@ export async function loadGroupedProjectExpedientes(): Promise<ExpedienteProyect
     `SELECT p.id, p.name, p.description, p.category, p.status,
             p.github_repo, p.github_url, p.github_default_branch, p.github_private, p.github_language,
             p.vercel_url, p.domain, p.desktop_url, p.mobile_url, p.admin_url,
-            p.client_name, p.progress_pct,
+            COALESCE(p.cliente_nombre, p.client_name) AS client_name,
+            p.etapa, p.cliente_nombre, p.cliente_whatsapp, p.contrato_url, p.demo_url,
+            p.progress_pct,
             p.created_at::text, p.updated_at::text
        FROM projects p
        JOIN project_repositories pr ON pr.project_id = p.id

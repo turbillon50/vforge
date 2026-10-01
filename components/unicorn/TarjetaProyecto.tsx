@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { ProjectChats } from "@/components/hilo/ProjectChats";
 import type { HiloDashboardData } from "@/lib/hilo/types";
+import { etapaLabel } from "@/lib/projects/etapas";
 import type {
   ConexionExpediente,
   DatoEstado,
@@ -303,6 +304,9 @@ export function TarjetaProyecto({ expediente }: { expediente: ExpedienteProyecto
             {statusLabel(project.status)}
           </span>
           <span className="inline-flex h-8 items-center gap-2 rounded-full border border-[var(--border-1)] bg-white/95 px-3 text-[12px] font-semibold text-black">
+            {etapaLabel(project.etapa)}
+          </span>
+          <span className="inline-flex h-8 items-center gap-2 rounded-full border border-[var(--border-1)] bg-white/95 px-3 text-[12px] font-semibold text-black">
             <BookOpen size={13} />
             {expediente.repositories.length} repositorios
           </span>
@@ -336,10 +340,10 @@ export function TarjetaProyecto({ expediente }: { expediente: ExpedienteProyecto
       </div>
 
       <div className="grid border-t border-[var(--border-1)] md:grid-cols-4">
+        <Stat label="Etapa" value={etapaLabel(project.etapa)} />
         <Stat label="Último cambio" value={fmtDate(project.updated_at, true)} />
         <Stat label="Dominio" value={project.domain || "sin dato"} />
         <Stat label="Repositorio principal" value={primary?.fullName || "sin dato"} />
-        <Stat label="TRAMA" value="por conectar" />
       </div>
     </article>
   );
@@ -450,6 +454,69 @@ function ConnectionGrid({ items }: { items: ConexionExpediente[] }) {
   );
 }
 
+function displayNowValue(label: string, value: string | null, state: DatoEstado) {
+  if (label === "Último cambio") return fmtDate(value, true);
+  if (label === "Etapa") return etapaLabel(value);
+  return value || estadoTexto(state);
+}
+
+function EtapaHistory({ expediente }: { expediente: ExpedienteProyecto }) {
+  const project = expediente.project;
+  return (
+    <div className="grid gap-5">
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="min-w-0 rounded-md border border-[var(--border-1)] p-4">
+          <p className="text-[12px] text-[var(--fg-muted)]">Etapa actual</p>
+          <p className="mt-2 break-words text-[20px] font-semibold text-black">
+            {etapaLabel(project.etapa)}
+          </p>
+        </div>
+        <LinkBox label="Demo" href={project.demo_url} />
+        <LinkBox label="Contrato" href={project.contrato_url} />
+      </div>
+
+      {expediente.etapaHistorial.length ? (
+        <div className="grid gap-0 md:grid-cols-5">
+          {expediente.etapaHistorial.slice(-5).map((event) => (
+            <div key={event.id} className="relative min-w-0 border-l border-black pb-5 pl-4 md:border-l-0 md:border-t md:pb-0 md:pl-0 md:pr-4 md:pt-4">
+              <p className="font-mono text-[12px] text-[var(--fg-muted)]">{fmtDate(event.creado_en, true)}</p>
+              <p className="mt-2 break-words text-[15px] font-medium leading-5 text-black">
+                {etapaLabel(event.etapa)}
+              </p>
+              <p className="mt-2 line-clamp-2 text-[12px] text-[var(--fg-muted)]">
+                {event.nota || "sin nota"}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyLine label="sin historial de etapa" />
+      )}
+    </div>
+  );
+}
+
+function LinkBox({ label, href }: { label: string; href: string | null }) {
+  return (
+    <div className="min-w-0 rounded-md border border-[var(--border-1)] p-4">
+      <p className="text-[12px] text-[var(--fg-muted)]">{label}</p>
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-2 inline-flex max-w-full items-center gap-1.5 text-[14px] font-semibold text-black hover:underline"
+        >
+          <span className="truncate">{host(href)}</span>
+          <ExternalLink size={13} />
+        </a>
+      ) : (
+        <p className="mt-2 text-[14px] font-semibold text-black">sin enlace</p>
+      )}
+    </div>
+  );
+}
+
 export function ExpedienteProyectoView({
   expediente,
   hilo,
@@ -485,7 +552,8 @@ export function ExpedienteProyectoView({
           </Link>
         </div>
 
-        <div className="mt-8 grid border-y border-black md:grid-cols-5">
+        <div className="mt-8 grid border-y border-black md:grid-cols-6">
+          <Ficha label="Etapa" value={etapaLabel(project.etapa)} />
           <Ficha label="Dominio" value={project.domain || "sin dato"} />
           <Ficha label="Estado" value={statusLabel(project.status)} />
           <Ficha label="Repositorios" value={String(expediente.repositories.length)} />
@@ -548,7 +616,7 @@ export function ExpedienteProyectoView({
               <div key={item.label} className="min-w-0 rounded-md border border-[var(--border-1)] p-4">
                 <p className="text-[12px] text-[var(--fg-muted)]">{item.label}</p>
                 <p className="mt-2 break-words text-[18px] font-semibold text-black">
-                  {item.label === "Último cambio" ? fmtDate(item.value, true) : item.value || estadoTexto(item.state)}
+                  {displayNowValue(item.label, item.value, item.state)}
                 </p>
                 <div className="mt-3">
                   <StateBadge state={item.state} />
@@ -560,6 +628,14 @@ export function ExpedienteProyectoView({
 
         <Chapter
           num="04"
+          title="Embudo"
+          body="Etapa actual e historial de avance comercial y entrega."
+        >
+          <EtapaHistory expediente={expediente} />
+        </Chapter>
+
+        <Chapter
+          num="05"
           title="Conversaciones y memoria"
           body="TRAMA y MCPs quedan declarados como pendientes de conexión."
         >
@@ -570,7 +646,7 @@ export function ExpedienteProyectoView({
         </Chapter>
 
         <Chapter
-          num="05"
+          num="06"
           title="Chats del proyecto"
           body="Exportaciones de WhatsApp ligadas al expediente."
         >
@@ -578,12 +654,13 @@ export function ExpedienteProyectoView({
             projectId={project.id}
             initialChats={hilo?.chats ?? []}
             liveActive={hilo?.service.active ?? false}
+            uploadTone="ink"
             className="rounded-md border border-[var(--border-1)]"
           />
         </Chapter>
 
         <Chapter
-          num="06"
+          num="07"
           title="Línea de tiempo"
           body="Eventos reales leídos por Unicorn desde las fuentes disponibles."
         >

@@ -1,6 +1,6 @@
 import CarteraProjectsClient from "@/components/projects/CarteraProjectsClient";
 import { resolveRequestOwner } from "@/lib/auth/request-owner";
-import { loadCarteraProjects } from "@/lib/projects/cartera";
+import { loadCarteraProjects, loadDemoProjects } from "@/lib/projects/cartera";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +22,9 @@ export default async function ProjectsPage() {
     );
   }
 
-  const projects = await loadCarteraProjects().catch(() => []);
-  return <CarteraProjectsClient projects={projects} />;
+  const [projects, demos] = await Promise.all([
+    loadCarteraProjects().catch(() => []),
+    loadDemoProjects().catch(() => []),
+  ]);
+  return <CarteraProjectsClient projects={projects} demos={demos} />;
 }
