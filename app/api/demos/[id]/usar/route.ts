@@ -8,7 +8,7 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 const GITHUB_OWNER = "turbillon50";
 const TARGET_BRANCH = "main";
@@ -237,23 +237,24 @@ async function copyRepoWithGitApi({
     sha: string;
   }> = [];
 
-  for (const item of tree.data.tree) {
-    if (!item.path) continue;
+  // Copia en paralelo (8 a la vez): una demo de cientos de archivos cabe en el tiempo límite.
+  const copiar = async (item: (typeof tree.data.tree)[number]) => {
+    if (!item.path) return;
 
     if (item.type === "commit") {
       skipped.push({ path: item.path, reason: "submodule" });
-      continue;
+      return;
     }
-    if (item.type !== "blob") continue;
+    if (item.type !== "blob") return;
 
     const size = typeof item.size === "number" ? item.size : undefined;
     if (size !== undefined && size > MAX_FILE_BYTES) {
       skipped.push({ path: item.path, reason: "too_large", size });
-      continue;
+      return;
     }
     if (!item.sha) {
       skipped.push({ path: item.path, reason: "missing_blob_sha" });
-      continue;
+      return;
     }
 
     try {
@@ -288,7 +289,13 @@ async function copyRepoWithGitApi({
         message: error instanceof Error ? error.message : String(error),
       });
     }
-  }
+  };
+  const cola = [...tree.data.tree];
+  await Promise.all(
+    Array.from({ length: 8 }, async () => {
+      for (let item = cola.shift(); item; item = cola.shift()) await copiar(item);
+    }),
+  );
 
   if (tree.data.truncated) {
     skipped.push({
