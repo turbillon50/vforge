@@ -90,11 +90,20 @@ export async function listProjects(
   const { token } = await getCreds(options);
   const team = await getDefaultTeam(options);
   const max = options.max ?? 50;
-  const data = await vercelJson<{ projects: VercelProject[] }>(
-    `/v9/projects?limit=${max}`,
-    { method: "GET", token, teamId: team.id },
-  );
-  return data.projects;
+  // Vercel entrega como máximo 100 por página: hay que seguir la paginación.
+  const out: VercelProject[] = [];
+  let until: number | null = null;
+  while (out.length < max) {
+    const pagina = Math.min(100, max - out.length);
+    const data: { projects: VercelProject[]; pagination?: { next?: number | null } } = await vercelJson(
+      `/v9/projects?limit=${pagina}${until ? `&until=${until}` : ""}`,
+      { method: "GET", token, teamId: team.id },
+    );
+    out.push(...data.projects);
+    until = data.pagination?.next ?? null;
+    if (!until || data.projects.length === 0) break;
+  }
+  return out;
 }
 
 export async function getProject(
