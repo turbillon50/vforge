@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tarjeta de proyecto · 3 opciones</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--line:#e6e6e2;--line2:#efefeb;--ink:#0b0b0c;--ink2:#34363a;--ink3:#6b6e73;--ink4:#9a9da2;--acc:#FF5A1F;--ok:#15803d;--run:#b45309;--err:#dc2626;--sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box}html{overflow-x:clip;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}h1,h2,h3,h4,p{margin:0}
+.ic{flex:none;display:block}
+.wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+.top{display:flex;align-items:center;gap:12px;padding:20px 0;border-bottom:1px solid var(--line);margin-bottom:40px;flex-wrap:wrap}
+.top .mk{width:26px;height:26px;border-radius:7px;background:var(--ink);color:#fff;display:grid;place-items:center;font:700 13px/1 var(--sans)}
+.top b{font-weight:600}.top .sep{color:var(--ink4)}.top .op{color:var(--ink3)}
+.top .r{margin-left:auto;display:flex;gap:10px;align-items:center}
+.top .back{font-size:13px;color:var(--ink3)}.top .back:hover{color:var(--ink)}
+.ej{display:inline-flex;align-items:center;font:500 10px/1 var(--sans);letter-spacing:.02em;color:var(--ink3);border:1px dashed #cfcfca;border-radius:99px;padding:3px 7px;vertical-align:middle;white-space:nowrap;background:transparent}
+.vlabel{display:flex;align-items:baseline;gap:12px;margin:0 0 18px;flex-wrap:wrap}
+.vlabel .n{font:500 11px/1 var(--mono);color:var(--ink4);letter-spacing:.06em;text-transform:uppercase}
+.vlabel h2{font-size:15px;font-weight:600}.vlabel p{color:var(--ink3);font-size:13px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex:none}
+.dot.ok{background:var(--ok)}.dot.run{background:var(--run)}.dot.none{background:#c4c4bf}.dot.srv{background:var(--ink2)}.dot.err{background:var(--err)}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);white-space:nowrap}
+.lang{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink3);white-space:nowrap}.lang i{flex:none;width:8px;height:8px;border-radius:50%}
+.av{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;font:600 11px/1 var(--sans);border:2px solid #fff;flex:none}
+.av.k1{background:#1d1e21;color:#fff}.av.k2{background:#5a5d63;color:#fff}.av.k3{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.avs{display:inline-flex}.avs .av+.av{margin-left:-8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:10px;font:600 14px/1 var(--sans);border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;white-space:nowrap}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 1px 0 rgba(0,0,0,.04),0 6px 16px -8px rgba(255,90,31,.6)}
+.btn.pri:hover{filter:brightness(.96)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--ink2);padding:0 10px}
+.btn.lg{height:48px;padding:0 20px;font-size:15px;border-radius:12px}
+.mono{font-family:var(--mono)}
+.foot{margin:64px 0 40px;padding-top:20px;border-top:1px solid var(--line);color:var(--ink4);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media (max-width:640px){.wrap{padding:0 16px}.top{margin-bottom:28px;padding:14px 0;row-gap:8px}.top .sep{display:none}.top .op{flex-basis:100%;order:3;font-size:13px}.top .r{margin-left:auto}.top .r .back{font-size:12px}}
+
+.intro{max-width:720px;margin-bottom:36px}.intro h1{font-size:34px;font-weight:600;letter-spacing:-.03em;line-height:1.1}.intro p{color:var(--ink3);font-size:15px;margin-top:12px}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.op{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.op .pv{aspect-ratio:4/5;overflow:hidden;border-bottom:1px solid var(--line);background:var(--bg)}
+.op .pv img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.op .tx{padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1}
+.op .tx .l{font:500 11px/1 var(--mono);color:var(--ink4);letter-spacing:.06em;text-transform:uppercase}
+.op h2{font-size:18px;font-weight:600;letter-spacing:-.01em}.op p{color:var(--ink3);font-size:13.5px}
+.op .ln2{display:flex;gap:14px;margin-top:auto;padding-top:8px;font-size:13px;font-weight:600}.op .ln2 a{display:inline-flex;gap:6px;align-items:center}.op .ln2 a+a{color:var(--ink3);font-weight:500}
+.note2{margin-top:28px;color:var(--ink3);font-size:13px}
+@media (max-width:980px){.cols{grid-template-columns:1fr}.op{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.op .pv{border-bottom:0;border-right:1px solid var(--line)}}
+@media (max-width:640px){.intro h1{font-size:27px}.op{display:flex}.op .pv{aspect-ratio:4/3;border-right:0;border-bottom:1px solid var(--line)}}
+</style></head><body><div class="wrap">
+<header class="top"><span class="mk">V</span><b>VForge</b><span class="sep">/</span><span style="color:var(--ink3)">Maquetas · Tarjeta de proyecto</span><div class="r"><span class="ej">datos de ejemplo</span></div></header>
+<div class="intro"><h1>Tarjeta de proyecto: tres caminos</h1><p>Todo VForge en una sola tarjeta —repos, capturas, expediente, chats de TRAMA y conexiones MCP— en tres estructuras distintas. Cada una trae la tarjeta y la vista de expediente al abrirla. Nada está aplicado a la app: tú eliges.</p></div>
+<div class="cols"><article class="op"><a class="pv" href="opcion-a.html"><img src="capturas/opcion-a-escritorio.png" alt="Vista previa de la opción A" loading="lazy"></a><div class="tx"><span class="l">Opción A</span><h2>Galería tipo Airbnb</h2><p>Tarjeta compacta con carrusel de capturas arriba; al abrirla, ficha tipo anuncio con galería, repos en lista y un panel lateral fijo para entrar a la Sala.</p><div class="ln2"><a href="opcion-a.html">Abrir opción A <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a href="capturas/opcion-a-celular.png">Ver en celular</a></div></div></article><article class="op"><a class="pv" href="opcion-b.html"><img src="capturas/opcion-b-escritorio.png" alt="Vista previa de la opción B" loading="lazy"></a><div class="tx"><span class="l">Opción B</span><h2>Panel horizontal denso</h2><p>Un renglón ancho que ya muestra repos, deploys, tokens y conexiones sin abrirlo; el expediente es un panel tipo Linear con índice lateral y tableros.</p><div class="ln2"><a href="opcion-b.html">Abrir opción B <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a href="capturas/opcion-b-celular.png">Ver en celular</a></div></div></article><article class="op"><a class="pv" href="opcion-c.html"><img src="capturas/opcion-c-escritorio.png" alt="Vista previa de la opción C" loading="lazy"></a><div class="tx"><span class="l">Opción C</span><h2>Portada grande + mosaico</h2><p>Portada de revista con los 5 repos en mosaico de capturas; el expediente se lee por capítulos (repos, infra, ahora mismo, memoria, hitos).</p><div class="ln2"><a href="opcion-c.html">Abrir opción C <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a href="capturas/opcion-c-celular.png">Ver en celular</a></div></div></article></div>
+<p class="note2">Una sola acción en naranja por vista: “Abrir expediente” en la tarjeta y “Entrar a la Sala” en el expediente.</p>
+<footer class="foot"><span>Maquetas estáticas · no tocan producción</span><span>Todos los datos son de ejemplo</span></footer>
+</div></body></html>
