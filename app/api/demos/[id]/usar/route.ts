@@ -1,5 +1,5 @@
 import { resolveRequestOwner } from "@/lib/auth/request-owner";
-import { useDemoAsBase } from "@/lib/projects/demo-base";
+import { usarDemoComoBase } from "@/lib/projects/demo-base";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export async function POST(
 
   const body = (await req.json().catch(() => null)) as { name?: unknown } | null;
   const { id } = await params;
-  const result = await useDemoAsBase({
+  const result = await usarDemoComoBase({
     demoId: id,
     name: typeof body?.name === "string" ? body.name : "",
     auditUserId: access.userId,

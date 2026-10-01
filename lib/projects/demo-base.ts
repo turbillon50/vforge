@@ -86,7 +86,7 @@ export async function nextProjectId(base: string): Promise<string> {
   return candidate;
 }
 
-export async function useDemoAsBase({
+export async function usarDemoComoBase({
   demoId,
   name,
   auditUserId,

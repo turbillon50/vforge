@@ -5,7 +5,7 @@ import {
   cleanProjectText,
   nextProjectId,
   slugifyProject,
-  useDemoAsBase,
+  usarDemoComoBase,
 } from "@/lib/projects/demo-base";
 import { setProjectEtapa } from "@/lib/projects/etapas-server";
 import {
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
   const carteraNota = `Cliente: ${clienteNombre}. Rubro: ${rubro}.`;
 
   if (demoId) {
-    const result = await useDemoAsBase({
+    const result = await usarDemoComoBase({
       demoId,
       name: projectName,
       auditUserId: access.userId,
