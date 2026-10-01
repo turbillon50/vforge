@@ -1,5 +1,5 @@
 -- ============================================================================
--- 048_hilo.sql - Hilo: WhatsApp Web solo lectura para el Owner
+-- 050_hilo.sql - Hilo: WhatsApp Web solo lectura para el Owner
 -- ============================================================================
 -- Dos sesiones WhatsApp Web persistentes (personal y negocio) guardan mensajes
 -- entrantes/salientes observados sin enviar ni marcar acciones desde VForge.
@@ -87,5 +87,5 @@ CREATE INDEX IF NOT EXISTS idx_hilo_hallazgos_importante
   ON hilo_hallazgos (importante, created_at DESC)
   WHERE importante = true;
 
-INSERT INTO schema_migrations (version) VALUES ('048_hilo')
+INSERT INTO schema_migrations (version) VALUES ('050_hilo')
   ON CONFLICT (version) DO NOTHING;

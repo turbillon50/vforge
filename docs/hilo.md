@@ -47,7 +47,7 @@ HILO_SECRET=...
 
 ## Base de datos
 
-La migracion idempotente vive en `migrations/048_hilo.sql`. El servicio tambien asegura el schema al arrancar.
+La migracion idempotente vive en `migrations/050_hilo.sql`. El servicio tambien asegura el schema al arrancar.
 
 Tablas principales:
 

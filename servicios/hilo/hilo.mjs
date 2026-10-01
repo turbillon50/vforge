@@ -11,7 +11,7 @@ import { ensureHiloSchema } from "./schema.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LINEAS = ["personal", "negocio"];
-const CHROMIUM_PATH = process.env.HILO_CHROMIUM_PATH ?? "/opt/pw-browsers/chromium";
+const CHROMIUM_PATH = process.env.HILO_CHROMIUM_PATH ?? "/usr/bin/google-chrome";
 const DATA_DIR = process.env.HILO_DATA_DIR ?? "/var/lib/hilo";
 const HOST = process.env.HILO_API_HOST ?? "127.0.0.1";
 const PORT = Number(process.env.HILO_API_PORT ?? "9320");

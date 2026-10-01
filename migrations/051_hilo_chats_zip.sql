@@ -1,5 +1,5 @@
 -- ============================================================================
--- 049_hilo_chats_zip.sql - Hilo: chats ligados por proyecto e import ZIP
+-- 051_hilo_chats_zip.sql - Hilo: chats ligados por proyecto e import ZIP
 -- ============================================================================
 -- Luis exporta conversaciones desde WhatsApp como ZIP y las liga a un proyecto.
 -- La tabla hilo_chats es el puente entre historial importado y chat vivo.
@@ -70,5 +70,5 @@ ALTER TABLE hilo_hallazgos
   ADD CONSTRAINT hilo_hallazgos_linea_check
   CHECK (linea IN ('personal','negocio','zip'));
 
-INSERT INTO schema_migrations (version) VALUES ('049_hilo_chats_zip')
+INSERT INTO schema_migrations (version) VALUES ('051_hilo_chats_zip')
   ON CONFLICT (version) DO NOTHING;

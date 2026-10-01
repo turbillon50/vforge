@@ -134,9 +134,9 @@ export const HILO_DDL = [
     version text PRIMARY KEY,
     applied_at timestamptz NOT NULL DEFAULT now()
   )`,
-  `INSERT INTO schema_migrations (version) VALUES ('048_hilo')
+  `INSERT INTO schema_migrations (version) VALUES ('050_hilo')
     ON CONFLICT (version) DO NOTHING`,
-  `INSERT INTO schema_migrations (version) VALUES ('049_hilo_chats_zip')
+  `INSERT INTO schema_migrations (version) VALUES ('051_hilo_chats_zip')
     ON CONFLICT (version) DO NOTHING`,
 ];
 

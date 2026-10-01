@@ -1,4 +1,5 @@
 import "server-only";
+import { ensureHiloSchema } from "@/servicios/hilo/schema.mjs";
 
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import type {
@@ -25,7 +26,7 @@ let cachedSql: NeonQueryFunction<false, false> | null = null;
 
 function getHiloSql(): NeonQueryFunction<false, false> | null {
   if (cachedSql) return cachedSql;
-  const url = process.env.HILO_DATABASE_URL;
+  const url = process.env.HILO_DATABASE_URL || process.env.DATABASE_URL;
   if (!url) return null;
   cachedSql = neon(url);
   return cachedSql;
@@ -34,6 +35,21 @@ function getHiloSql(): NeonQueryFunction<false, false> | null {
 export function getHiloSqlOrThrow(): NeonQueryFunction<false, false> {
   const sql = getHiloSql();
   if (!sql) throw new Error("HILO_DATABASE_URL no esta configurado.");
+  return sql;
+}
+
+let esquemaListo: Promise<void> | null = null;
+
+/** Igual que getHiloSqlOrThrow, pero deja las tablas del Hilo creadas (idempotente, una vez). */
+export async function hiloSqlListo(): Promise<NeonQueryFunction<false, false>> {
+  const sql = getHiloSqlOrThrow();
+  if (!esquemaListo) {
+    esquemaListo = ensureHiloSchema({ query: (ddl: string) => sql.query(ddl) }).catch((error) => {
+      esquemaListo = null;
+      throw error;
+    });
+  }
+  await esquemaListo;
   return sql;
 }
 
@@ -121,6 +137,7 @@ export async function loadHiloDashboardData(projectId?: string | null): Promise<
   }
 
   try {
+    await hiloSqlListo();
     const [mensajes, hallazgos, chats, projects] = await Promise.all([
       queryRows<HiloMensaje>(
         sql,

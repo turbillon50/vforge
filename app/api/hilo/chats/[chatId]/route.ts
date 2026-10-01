@@ -1,4 +1,4 @@
-import { getHiloSqlOrThrow } from "@/lib/hilo/server";
+import { hiloSqlListo } from "@/lib/hilo/server";
 import { resolveRequestOwner } from "@/lib/auth/request-owner";
 
 export const runtime = "nodejs";
@@ -45,7 +45,7 @@ export async function PATCH(
       ? body.etiqueta.trim().slice(0, 80) || null
       : null;
   const monitorear = updatesMonitorear ? Boolean(body.monitorear) : false;
-  const sql = getHiloSqlOrThrow();
+  const sql = await hiloSqlListo();
 
   const rows = (await sql.query(
     `UPDATE hilo_chats

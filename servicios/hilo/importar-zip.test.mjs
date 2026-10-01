@@ -1,3 +1,4 @@
+process.env.HILO_TZ_OFFSET_MIN = "0"; // las fixtures se comparan en UTC
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";

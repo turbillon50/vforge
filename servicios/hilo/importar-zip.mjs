@@ -2,7 +2,7 @@
 import crypto from "node:crypto";
 import path from "node:path";
 import { Buffer } from "node:buffer";
-import yauzl from "yauzl";
+import { unzipSync } from "fflate";
 
 const MAX_ENTRIES = 20_000;
 const MAX_TEXT_BYTES = 20 * 1024 * 1024;
@@ -88,100 +88,47 @@ function decodeText(buffer) {
   return new TextDecoder("utf-8", { fatal: false }).decode(bytes.slice(start));
 }
 
-function readEntry(zipfile, entry) {
-  return new Promise((resolve, reject) => {
-    if (entry.uncompressedSize > MAX_TEXT_BYTES) {
-      reject(new Error(`El TXT de WhatsApp supera ${MAX_TEXT_BYTES} bytes`));
-      return;
-    }
-    zipfile.openReadStream(entry, (error, stream) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      const chunks = [];
-      let size = 0;
-      stream.on("data", (chunk) => {
-        size += chunk.length;
-        if (size > MAX_TEXT_BYTES) {
-          stream.destroy(new Error(`El TXT de WhatsApp supera ${MAX_TEXT_BYTES} bytes`));
-          return;
-        }
-        chunks.push(chunk);
-      });
-      stream.on("error", reject);
-      stream.on("end", () => resolve(Buffer.concat(chunks)));
-    });
-  });
-}
-
 export function leerZipWhatsApp(input) {
+  // fflate ya es dependencia de VForge: el importador corre igual en la ruta de
+  // Next (Vercel) que en el servicio del Hetzner, sin paquetes extra.
   const buffer = Buffer.isBuffer(input) ? input : Buffer.from(input);
+  const datos = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
   return new Promise((resolve, reject) => {
-    yauzl.fromBuffer(buffer, { lazyEntries: true, autoClose: false }, (error, zipfile) => {
-      if (error) {
-        reject(new Error(`ZIP invalido: ${error.message}`));
-        return;
-      }
-
+    try {
       const entries = [];
-      let count = 0;
       let selected = null;
-
-      zipfile.readEntry();
-      zipfile.on("entry", (entry) => {
-        count += 1;
-        if (count > MAX_ENTRIES) {
-          zipfile.close();
-          reject(new Error(`ZIP demasiado grande: mas de ${MAX_ENTRIES} entradas`));
-          return;
-        }
-
-        const isDir = entry.fileName.endsWith("/");
-        if (!isDir) {
-          entries.push({
-            name: cleanInvisible(entry.fileName),
-            size: entry.uncompressedSize,
-          });
-        }
-
-        if (!isDir && isTextEntry(entry.fileName)) {
-          const score = isLikelyChatText(entry.fileName) ? 2 : 1;
-          if (!selected || score > selected.score || (score === selected.score && entry.uncompressedSize > selected.entry.uncompressedSize)) {
-            selected = { entry, score };
+      let count = 0;
+      // Primera pasada: sólo listar (no descomprime nada).
+      unzipSync(datos, {
+        filter: (file) => {
+          count += 1;
+          if (count > MAX_ENTRIES) throw new Error(`ZIP demasiado grande: mas de ${MAX_ENTRIES} entradas`);
+          if (file.name.endsWith("/")) return false;
+          entries.push({ name: cleanInvisible(file.name), size: file.originalSize });
+          if (isTextEntry(file.name)) {
+            const score = isLikelyChatText(file.name) ? 2 : 1;
+            if (!selected || score > selected.score || (score === selected.score && file.originalSize > selected.size)) {
+              selected = { name: file.name, size: file.originalSize, score };
+            }
           }
-        }
-
-        zipfile.readEntry();
+          return false;
+        },
       });
-
-      zipfile.on("error", (zipError) => {
-        zipfile.close();
-        reject(zipError);
+      if (!selected) throw new Error("El ZIP no trae un archivo .txt de chat de WhatsApp");
+      if (selected.size > MAX_TEXT_BYTES) throw new Error(`El TXT de WhatsApp supera ${MAX_TEXT_BYTES} bytes`);
+      // Segunda pasada: descomprime sólo el TXT elegido.
+      const salida = unzipSync(datos, { filter: (file) => file.name === selected.name });
+      const contenido = salida[selected.name];
+      if (!contenido) throw new Error("No pude leer el TXT del ZIP");
+      resolve({
+        textFile: { name: cleanInvisible(selected.name), size: selected.size },
+        text: decodeText(Buffer.from(contenido)),
+        entries,
       });
-      zipfile.on("end", async () => {
-        if (!selected) {
-          zipfile.close();
-          reject(new Error("El ZIP no trae un archivo .txt de chat de WhatsApp"));
-          return;
-        }
-        try {
-          const textBuffer = await readEntry(zipfile, selected.entry);
-          zipfile.close();
-          resolve({
-            textFile: {
-              name: cleanInvisible(selected.entry.fileName),
-              size: selected.entry.uncompressedSize,
-            },
-            text: decodeText(textBuffer),
-            entries,
-          });
-        } catch (readError) {
-          zipfile.close();
-          reject(readError);
-        }
-      });
-    });
+    } catch (error) {
+      const mensaje = error instanceof Error ? error.message : String(error);
+      reject(new Error(mensaje.startsWith("El ") || mensaje.startsWith("ZIP") || mensaje.startsWith("No ") ? mensaje : `ZIP invalido: ${mensaje}`));
+    }
   });
 }
 
@@ -247,7 +194,10 @@ function parseTimestamp(raw, languageHint) {
   ) {
     return null;
   }
-  return date.toISOString();
+  // El export trae hora local del teléfono, sin zona. Luis vive en Cancún
+  // (UTC-5 todo el año); HILO_TZ_OFFSET_MIN la cambia si hace falta.
+  const offsetMin = Number(process.env.HILO_TZ_OFFSET_MIN ?? -300);
+  return new Date(date.getTime() - (Number.isFinite(offsetMin) ? offsetMin : -300) * 60_000).toISOString();
 }
 
 function splitTimestampLine(line, languageHint) {

@@ -1,4 +1,4 @@
-import { getHiloSqlOrThrow } from "@/lib/hilo/server";
+import { hiloSqlListo } from "@/lib/hilo/server";
 import { resolveRequestOwner } from "@/lib/auth/request-owner";
 import { importarZipWhatsApp } from "@/servicios/hilo/importar-zip.mjs";
 
@@ -69,7 +69,7 @@ export async function POST(
     return jsonError("El archivo debe ser .zip valido", 400);
   }
 
-  const sql = getHiloSqlOrThrow();
+  const sql = await hiloSqlListo();
   const projects = (await sql.query(
     `SELECT id, name FROM projects WHERE id = $1 LIMIT 1`,
     [projectId],
