@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   Group,
@@ -390,7 +391,35 @@ function LiveWorkspace({
   // depender de una URL de deploy: se enciende solo y se edita aquí mismo.
   const esDueno = me.role === "owner" || me.isPlatformOwner;
   const [nombreVivo, setNombreVivo] = useState<string | null>(null);
-  const vivo = useMotorVivo({ auto: esDueno ? nombreVivo : null });
+  const vivo = useMotorVivo({ auto: esDueno ? nombreVivo : null, fijo: true });
+  const router = useRouter();
+  // Cambiar de proyecto desde la sala: lista real de proyectos de VForge.
+  const [otrosProyectos, setOtrosProyectos] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    if (!esDueno) return;
+    let vigente = true;
+    fetch("/api/projects", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((datos: unknown) => {
+        if (!vigente || !datos) return;
+        const lista = Array.isArray(datos)
+          ? datos
+          : Array.isArray((datos as { projects?: unknown }).projects)
+            ? (datos as { projects: unknown[] }).projects
+            : [];
+        setOtrosProyectos(
+          lista
+            .map((p) => p as { id?: unknown; name?: unknown })
+            .filter((p) => typeof p.id === "string")
+            .map((p) => ({ id: String(p.id), name: String(p.name ?? p.id) }))
+            .sort((a, b) => a.name.localeCompare(b.name, "es")),
+        );
+      })
+      .catch(() => undefined);
+    return () => {
+      vigente = false;
+    };
+  }, [esDueno]);
   // Nombre del proyecto en el motor: el id de VForge (normalizado igual que el servidor).
   const idVivo = project.id.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/^-+|-+$/g, "").slice(0, 63);
   useEffect(() => {
@@ -638,6 +667,13 @@ function LiveWorkspace({
             marcados={capa.marcados}
             verControl={verControl}
             onVerControl={setVerControl}
+            selector={{
+              actual: project.id,
+              opciones: otrosProyectos,
+              onCambiar: (id) => {
+                if (id && id !== project.id) router.push(`/app/live/${encodeURIComponent(id)}`);
+              },
+            }}
           />
         </div>
       ) : null}

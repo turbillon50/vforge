@@ -14,8 +14,8 @@ export default async function ProjectsPage() {
     <>
       {expedientes.length ? (
         <FeaturedProjectShell
-          kicker="Repos agrupados"
-          title="Proyectos con fuente de verdad"
+          kicker="Con repos ligados · los 12 más activos"
+          title="Tus proyectos"
         >
           <div className="grid gap-5">
             {expedientes.map((expediente) => (

@@ -418,10 +418,11 @@ export async function loadGroupedProjectExpedientes(): Promise<ExpedienteProyect
        FROM projects p
        JOIN project_repositories pr ON pr.project_id = p.id
       GROUP BY p.id
-     HAVING count(pr.repo_full_name) > 1
-      ORDER BY max(pr.pushed_at) DESC NULLS LAST,
+      ORDER BY count(pr.repo_full_name) DESC,
+               max(pr.pushed_at) DESC NULLS LAST,
                p.updated_at DESC NULLS LAST,
-               p.name ASC`,
+               p.name ASC
+      LIMIT 12`,
   );
   return Promise.all(projects.map((project) => loadProjectExpediente(project)));
 }

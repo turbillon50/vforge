@@ -39,9 +39,24 @@ export async function POST(request: Request) {
     fila = null;
   }
   if (!fila) return Response.json({ error: "Proyecto no encontrado." }, { status: 404 });
+  if (!fila.github_repo) {
+    // Fuente de verdad: los repos agrupados en "Ordenar proyectos".
+    try {
+      const principal = await queryOne<{ repo_full_name: string; default_branch: string | null }>(
+        `SELECT repo_full_name, default_branch FROM project_repositories
+          WHERE project_id = $1 ORDER BY is_primary DESC, pushed_at DESC NULLS LAST LIMIT 1`,
+        [projectId],
+      );
+      if (principal) {
+        fila = { ...fila, github_repo: principal.repo_full_name, github_default_branch: principal.default_branch };
+      }
+    } catch {
+      /* tabla aún no existe: se queda sin repo */
+    }
+  }
   const repo = (fila.github_repo ?? "").replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").trim();
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) {
-    return Response.json({ error: "Este proyecto no tiene repo de GitHub ligado." }, { status: 422 });
+    return Response.json({ error: "Este proyecto no tiene repo de GitHub ligado. Lígalo en Proyectos → Ordenar proyectos." }, { status: 422 });
   }
 
   const nombre = fila.id.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/^-+|-+$/g, "").slice(0, 63);

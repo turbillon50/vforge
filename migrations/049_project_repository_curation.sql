@@ -18,5 +18,5 @@ CREATE TABLE IF NOT EXISTS project_repository_curation (
 CREATE INDEX IF NOT EXISTS idx_project_repository_curation_archived
   ON project_repository_curation (archived, updated_at DESC);
 
-INSERT INTO schema_migrations (version) VALUES ('048_project_repository_curation')
+INSERT INTO schema_migrations (version) VALUES ('049_project_repository_curation')
 ON CONFLICT (version) DO NOTHING;

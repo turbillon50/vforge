@@ -51,8 +51,11 @@ type Fase = "apagado" | "arrancando" | "vivo" | "error";
 
 const LLAVE_PROYECTO = "vf-vivo-proyecto";
 
-export function useMotorVivo(opciones?: { auto?: string | null }) {
+export function useMotorVivo(opciones?: { auto?: string | null; fijo?: boolean }) {
   const auto = opciones?.auto ?? null;
+  // fijo: la pantalla ES de un proyecto (la sala en vivo). El motor sigue a ese
+  // proyecto y nunca al último que se abrió en otra pantalla.
+  const fijo = opciones?.fijo ?? false;
   const [encendido, setEncendido] = useState(false);
   const [fase, setFase] = useState<Fase>("apagado");
   const [proyecto, setProyecto] = useState("");
@@ -74,9 +77,17 @@ export function useMotorVivo(opciones?: { auto?: string | null }) {
 
   // Recuerda el último proyecto que Luis abrió en vivo.
   useEffect(() => {
-    const guardado = window.localStorage.getItem(LLAVE_PROYECTO);
-    if (guardado) setProyecto(guardado);
-  }, []);
+    if (fijo) return;
+    try {
+      const guardado = window.localStorage.getItem(LLAVE_PROYECTO);
+      if (guardado) setProyecto(guardado);
+    } catch {
+      /* sin almacenamiento: se elige a mano */
+    }
+  }, [fijo]);
+  useEffect(() => {
+    if (fijo) setProyecto(auto ?? "");
+  }, [fijo, auto]);
 
   const leerEstado = useCallback(async () => {
     try {
@@ -125,7 +136,13 @@ export function useMotorVivo(opciones?: { auto?: string | null }) {
       setFase("arrancando");
       setError(null);
       setEncendido(true);
-      window.localStorage.setItem(LLAVE_PROYECTO, elegido);
+      if (!fijo) {
+        try {
+          window.localStorage.setItem(LLAVE_PROYECTO, elegido);
+        } catch {
+          /* sin almacenamiento */
+        }
+      }
       setProyecto(elegido);
       try {
         const respuesta = await fetch("/api/vivo/start", {
@@ -153,7 +170,7 @@ export function useMotorVivo(opciones?: { auto?: string | null }) {
         setError(caught instanceof Error ? caught.message : "No se pudo encender el motor vivo.");
       }
     },
-    [leerEstado],
+    [leerEstado, fijo],
   );
 
   const apagar = useCallback(async () => {

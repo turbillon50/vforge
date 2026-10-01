@@ -23,6 +23,7 @@ export function BarraVivo({
   marcados,
   verControl,
   onVerControl,
+  selector,
 }: {
   encendido: boolean;
   fase: "apagado" | "arrancando" | "vivo" | "error";
@@ -38,6 +39,15 @@ export function BarraVivo({
   marcados: number | null;
   verControl: boolean;
   onVerControl: (valor: boolean) => void;
+  /**
+   * En la sala de un proyecto el combo NO elige qué encender: cambia de proyecto
+   * (navega). El motor siempre es el del proyecto abierto.
+   */
+  selector?: {
+    actual: string;
+    opciones: { id: string; name: string }[];
+    onCambiar: (id: string) => void;
+  };
 }) {
   if (disponible === false) {
     return (
@@ -72,20 +82,38 @@ export function BarraVivo({
         </span>
       </div>
 
-      <select
-        value={proyecto}
-        onChange={(event) => setProyecto(event.target.value)}
-        disabled={fase === "arrancando" || encendido}
-        aria-label="Proyecto del motor vivo"
-        className="h-7 max-w-[190px] rounded-md border border-[var(--vf-border-1)] bg-[var(--vf-bg-1)] px-2 text-[11px] text-[var(--vf-fg)] disabled:opacity-55"
-      >
-        <option value="">Elige proyecto…</option>
-        {proyectos.map((nombre) => (
-          <option key={nombre} value={nombre}>
-            {nombre}
-          </option>
-        ))}
-      </select>
+      {selector ? (
+        <select
+          value={selector.actual}
+          onChange={(event) => selector.onCambiar(event.target.value)}
+          aria-label="Cambiar de proyecto"
+          className="h-7 max-w-[240px] rounded-md border border-[var(--vf-border-1)] bg-[var(--vf-bg-1)] px-2 text-[11px] text-[var(--vf-fg)]"
+        >
+          {selector.opciones.some((o) => o.id === selector.actual) ? null : (
+            <option value={selector.actual}>{selector.actual}</option>
+          )}
+          {selector.opciones.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.name}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <select
+          value={proyecto}
+          onChange={(event) => setProyecto(event.target.value)}
+          disabled={fase === "arrancando" || encendido}
+          aria-label="Proyecto del motor vivo"
+          className="h-7 max-w-[190px] rounded-md border border-[var(--vf-border-1)] bg-[var(--vf-bg-1)] px-2 text-[11px] text-[var(--vf-fg)] disabled:opacity-55"
+        >
+          <option value="">Elige proyecto…</option>
+          {proyectos.map((nombre) => (
+            <option key={nombre} value={nombre}>
+              {nombre}
+            </option>
+          ))}
+        </select>
+      )}
 
       {encendido ? (
         <button
