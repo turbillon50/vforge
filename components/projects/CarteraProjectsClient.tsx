@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { IconArrowR, IconBranch, IconClock, IconInfo } from "@/components/brand/VFIcons";
 import { BarraFiltros, GrupoFiltros } from "@/components/ui/BarraFiltros";
@@ -42,7 +41,6 @@ export default function CarteraProjectsClient({
   projects: CarteraProject[];
 }) {
   const [filters, setFilters] = useState<Filters>(EMPTY);
-  const router = useRouter();
   const [cargando, setCargando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const autoIntentado = useRef(false);
@@ -57,7 +55,7 @@ export default function CarteraProjectsClient({
       const d = (await r.json().catch(() => null)) as { reales?: number; demos?: number; error?: string } | null;
       if (!r.ok) throw new Error(d?.error ?? `HTTP ${r.status}`);
       setAviso(`Cartera cargada: ${d?.reales ?? 0} proyectos reales y ${d?.demos ?? 0} demos.`);
-      router.refresh();
+      window.location.reload();
     } catch (error) {
       setAviso(`No se pudo cargar la auditoría: ${error instanceof Error ? error.message : "error"}`);
     } finally {
@@ -143,7 +141,7 @@ export default function CarteraProjectsClient({
         </div>
       </header>
 
-      <section className="sticky top-[58px] z-10 border-b border-[var(--border-1)] bg-[var(--color-background)]/95 px-page-sm py-4 backdrop-blur md:px-page-md xl:px-page-lg">
+      <section className="border-b border-[var(--border-1)] bg-[var(--color-background)]/95 px-page-sm py-4 backdrop-blur md:px-page-md xl:px-page-lg">
         <BarraFiltros
           resumen={`${filtered.length} de ${projects.length} proyectos`}
           activos={active}

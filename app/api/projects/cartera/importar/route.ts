@@ -36,6 +36,16 @@ interface AuditEntry {
 
 interface AuditFile {
   decisiones?: Record<string, AuditEntry>;
+  dominios_por_repo?: Record<string, string>;
+}
+
+/** Dominio propio de un repo (sale del cruce con Vercel en la auditoría). */
+function dominioDe(repoFullName: string | null | undefined): string | null {
+  if (!repoFullName) return null;
+  const mapa = (reposAudit as AuditFile).dominios_por_repo ?? {};
+  const corto = repoFullName.split("/").pop() ?? repoFullName;
+  const d = mapa[corto];
+  return d && !d.startsWith("*") ? d : null;
 }
 
 interface ImportStats {
@@ -66,6 +76,7 @@ export async function POST() {
   };
 
   const decisiones = (reposAudit as AuditFile).decisiones ?? {};
+  const reposReales = new Set<string>();
   for (const [familyId, raw] of Object.entries(decisiones)) {
     const tipos = cleanTypes(raw.tipo);
     const decision = cleanText(raw.decision, 80);
@@ -76,7 +87,8 @@ export async function POST() {
     }
 
     const repos = cleanRepos(raw.repos, familyId, stats);
-    const isDemo = tipos.includes("demo_catalogo");
+    // Demo sólo si NO tiene otro tipo: "nuestro + demo" (ej. Ruta 618) es proyecto real.
+    const isDemo = tipos.length > 0 && tipos.every((t) => t === "demo_catalogo");
     if (isDemo) {
       for (const repoName of repos) {
         await upsertDemoProject({
@@ -100,6 +112,7 @@ export async function POST() {
       continue;
     }
 
+    for (const r of repos) reposReales.add(r.toLowerCase());
     await upsertRealProject({
       familyId,
       tipos: realTypes,
@@ -110,6 +123,12 @@ export async function POST() {
     stats.reales += 1;
     if (repos.length === 0) stats.sin_repos += 1;
     stats.repos_ligados += repos.length;
+  }
+
+  // Un repo que pasó de demo a proyecto real deja de aparecer en el catálogo (no se borra nada).
+  for (const r of reposReales) {
+    const demoId = `demo-${slugify(r.split("/").pop() ?? r)}`;
+    await sql`UPDATE projects SET es_demo = false, demo_destacado = false, updated_at = now() WHERE id = ${demoId} AND es_demo = true`;
   }
 
   await sql`
@@ -156,12 +175,13 @@ async function upsertRealProject({
     INSERT INTO projects (
       id, name, description, category, status,
       github_repo, github_url, github_private, github_language, github_default_branch,
-      cartera_tipo, cartera_estado, cartera_prioridad, cartera_nota, es_demo
+      cartera_tipo, cartera_estado, cartera_prioridad, cartera_nota, es_demo, domain
     ) VALUES (
       ${familyId}, ${humanName(familyId)}, ${description}, ${categoryFor(tipos, estado, priority)}, 'unknown',
       ${primary?.full_name ?? null}, ${primary?.html_url ?? null}, ${primary?.private ?? false},
       ${primary?.language ?? null}, ${primary?.default_branch ?? null},
-      ${tipos}::text[], ${estado}, ${priority}, ${note}, false
+      ${tipos}::text[], ${estado}, ${priority}, ${note}, false,
+      ${repos.map((r) => dominioDe(r)).find(Boolean) ?? null}
     )
     ON CONFLICT (id) DO UPDATE SET
       name = COALESCE(NULLIF(projects.name, ''), EXCLUDED.name),
@@ -176,6 +196,7 @@ async function upsertRealProject({
       cartera_prioridad = EXCLUDED.cartera_prioridad,
       cartera_nota = EXCLUDED.cartera_nota,
       es_demo = false,
+      domain = COALESCE(NULLIF(projects.domain, ''), EXCLUDED.domain),
       updated_at = now()
   `;
 
@@ -214,12 +235,12 @@ async function upsertDemoProject({
       id, name, description, category, status,
       github_repo, github_url, github_private, github_language, github_default_branch,
       cartera_tipo, cartera_estado, cartera_prioridad, cartera_nota,
-      es_demo, demo_destacado
+      es_demo, demo_destacado, domain
     ) VALUES (
       ${id}, ${source.name}, ${description}, 'archivo', 'unknown',
       ${source.full_name}, ${source.html_url}, ${source.private}, ${source.language}, ${source.default_branch},
       ${["demo_catalogo"]}::text[], ${estado}, ${cleanPriority(entry.prioridad)}, ${noteWithFamily(note, familyId)},
-      true, false
+      true, false, ${dominioDe(source.full_name)}
     )
     ON CONFLICT (id) DO UPDATE SET
       name = COALESCE(NULLIF(projects.name, ''), EXCLUDED.name),
@@ -234,6 +255,7 @@ async function upsertDemoProject({
       cartera_prioridad = EXCLUDED.cartera_prioridad,
       cartera_nota = EXCLUDED.cartera_nota,
       es_demo = true,
+      domain = COALESCE(NULLIF(projects.domain, ''), EXCLUDED.domain),
       updated_at = now()
   `;
 
