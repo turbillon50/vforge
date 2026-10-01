@@ -2,7 +2,10 @@ import "server-only";
 
 import { queryAll, queryOne } from "@/lib/db/client";
 import { leerEventos, type UnicornDb, type UnicornEvento } from "@/lib/mcp/unicorn";
-import { ensureProjectRepositoriesSchema } from "@/lib/projects/repository-schema";
+import {
+  ensureProjectCarteraSchema,
+  ensureProjectRepositoriesSchema,
+} from "@/lib/projects/repository-schema";
 import type { ProjectRepositoryRole } from "@/lib/projects/repository-groups";
 import {
   normalizePublishedUrl,
@@ -409,6 +412,7 @@ export async function loadVForgeExpediente(): Promise<ExpedienteProyecto | null>
 
 export async function loadGroupedProjectExpedientes(): Promise<ExpedienteProyecto[]> {
   await ensureProjectRepositoriesSchema();
+  await ensureProjectCarteraSchema();
   const projects = await queryAll<ProyectoExpedienteRow>(
     `SELECT p.id, p.name, p.description, p.category, p.status,
             p.github_repo, p.github_url, p.github_default_branch, p.github_private, p.github_language,
@@ -417,6 +421,7 @@ export async function loadGroupedProjectExpedientes(): Promise<ExpedienteProyect
             p.created_at::text, p.updated_at::text
        FROM projects p
        JOIN project_repositories pr ON pr.project_id = p.id
+      WHERE COALESCE(p.es_demo, false) = false
       GROUP BY p.id
       ORDER BY count(pr.repo_full_name) DESC,
                max(pr.pushed_at) DESC NULLS LAST,
