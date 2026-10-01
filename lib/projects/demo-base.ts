@@ -267,6 +267,16 @@ async function crearOReusarRepo(
       owner: GITHUB_OWNER,
       repo: repoName,
     });
+    if ((existing.data as { size?: number }).size === 0) {
+      // Repo vacío: la API de contenidos sí lo acepta y deja una rama para que la copia la reemplace.
+      await octokit.request("PUT /repos/{owner}/{repo}/contents/{path}", {
+        owner: GITHUB_OWNER,
+        repo: repoName,
+        path: "README.md",
+        message: "init",
+        content: Buffer.from(`# ${repoName}\n`).toString("base64"),
+      });
+    }
     return existing.data as GithubRepoCreated;
   }
 }
