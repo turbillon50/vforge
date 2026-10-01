@@ -88,9 +88,8 @@
   },
   "ceer": {
    "repos": [
-    "ceer-platform",
     "ceer",
-    "ceer-admin"
+    "ceer-platform"
    ],
    "tipo": [
     "cliente",
@@ -98,7 +97,8 @@
    ],
    "estado": "activo_al_corriente",
    "prioridad": 1,
-   "nota": "Socios con Guillermo; falta poco; tienen dudas; hay que avanzar"
+   "nota": "Socios con Guillermo; falta poco; tienen dudas; hay que avanzar",
+   "dominio": "ceer.life"
   },
   "vedika": {
    "repos": [
@@ -170,8 +170,6 @@
     "forge-admin",
     "vibeforge",
     "sala-vivo",
-    "vadmin-demo",
-    "vadm-admin-diseno",
     "v7",
     "vforge-v0",
     "VFORGE-ENSAMBLADOR",
@@ -578,7 +576,6 @@
     "ropesa-app",
     "medix-clinic",
     "keymaster",
-    "decaciones",
     "clearance",
     "importaciones-pwa",
     "clean-car-os",
@@ -602,20 +599,15 @@
   },
   "_lote_viejo": {
    "repos": [
-    "v-tv",
     "sca-marchas",
     "admin-panel-template",
     "rivones",
     "vetpets",
-    "board-game",
     "dlucio",
     "cafe-eduardo",
-    "break",
-    "break-runtime",
     "forrajera-pos",
     "bib-bib",
     "bib-bib-v2",
-    "toonimaticsapp",
     "v-realty",
     "amavizca-team",
     "flotillaos",
@@ -626,7 +618,6 @@
     "tortillap",
     "frontend-hakapoke",
     "haka",
-    "vcapital-pwa",
     "seguridad33",
     "yourbrand",
     "human-capital",
@@ -678,12 +669,15 @@
    "nota": "Le interesan: KNOXIA (antes Origen), Recuperador de leads, Seguridad defensiva. No seleccionó: Remesas, Organizador de networking, Mio Cancún, Ariz"
   },
   "vcredit": {
-   "repos": [],
+   "repos": [
+    "vcapital-pwa"
+   ],
    "tipo": [
     "comercializamos"
    ],
    "prioridad": 1,
-   "nota": "VCredit / Credit Club, con dominio propio: súper importante, 'fuerte fuerte'. Ya le ha dado dinero sin existir: tramitación de créditos para adquisición de fracciones, liquidez o hipotecario para compra de propiedades. Falta definir cómo se monta"
+   "nota": "VCredit / Credit Club, con dominio propio: súper importante, 'fuerte fuerte'. Ya le ha dado dinero sin existir: tramitación de créditos para adquisición de fracciones, liquidez o hipotecario para compra de propiedades. Falta definir cómo se monta",
+   "dominio": "vcredit.club, vcapital.club"
   },
   "_aplicado_20261001": {
    "repos": [],
@@ -717,6 +711,68 @@
     "comercializamos"
    ],
    "nota": "All Living (alliving.live): proyecto propio aparte de V&LIVING, la parte ligera de operación; Luis lo marcó como importante"
+  },
+  "decaciones": {
+   "repos": [
+    "decaciones"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "activo",
+   "dominio": "decaciones.info"
+  },
+  "juego_inteligencia": {
+   "repos": [
+    "board-game"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "le_debemos_entrega",
+   "dominio": "eljuegodelainteligencia.info",
+   "nota": "El juego de mesa (Dinero sucio / El juego de la inteligencia): no se entregó; le debemos entrega"
+  },
+  "vtv": {
+   "repos": [
+    "v-tv"
+   ],
+   "tipo": [
+    "comercializamos"
+   ],
+   "dominio": "v-tv.site",
+   "nota": "Nuestra: plataforma para creadores de contenido con IA / futuros cineastas de IA, y nuestra plataforma de cursos y contenido"
+  },
+  "break": {
+   "repos": [
+    "break-runtime",
+    "break"
+   ],
+   "tipo": [
+    "centro_control"
+   ],
+   "dominio": "breack.life",
+   "nota": "Su amigo: de los primeros LLM que construyó, lo ayudó a crecer años; es parte de la familia; ver si se le ensambla de nuevo"
+  },
+  "toonimatics": {
+   "repos": [
+    "toonimaticsapp"
+   ],
+   "tipo": [
+    "demo_catalogo"
+   ],
+   "dominio": "toonimatic.life / toonimatics.life"
+  },
+  "vadmin": {
+   "repos": [
+    "vadmin-demo",
+    "vadm-admin-diseno"
+   ],
+   "tipo": [
+    "centro_control"
+   ],
+   "dominio": "v-adm.life",
+   "nota": "Tema panel de control: hace falta un estándar de panel; este no le gusta pero rescatar lo que funcione"
   }
  },
  "notas_luis": [
@@ -734,6 +790,8 @@
   "Ssante es un solo proyecto (incluye ssante-t9, el repo real)",
   "Mi pipa es un solo proyecto (mipipa-srv + mipipa + pipmx-demo)",
   "Todo lo de Vulcano es complementario de VForge; revisar qué sirve y qué no",
-  "Catálogo de demos: poder usarlos cambiando solo el nombre; elegir demos interesantes para rearmarlos y promocionarlos (Momentum)"
+  "Catálogo de demos: poder usarlos cambiando solo el nombre; elegir demos interesantes para rearmarlos y promocionarlos (Momentum)",
+  "CEER: el bueno es el repo ceer (ceer.life), no ceer-platform (certificacionempresaria.life / premios-verdes)",
+  "VCredit arranca sobre vcapital-pwa (ya tiene vcredit.club y vcapital.club)"
  ]
 }
