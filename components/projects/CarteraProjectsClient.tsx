@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { IconArrowR, IconBranch, IconClock, IconInfo } from "@/components/brand/VFIcons";
 import { BarraFiltros, GrupoFiltros } from "@/components/ui/BarraFiltros";
@@ -41,6 +42,35 @@ export default function CarteraProjectsClient({
   projects: CarteraProject[];
 }) {
   const [filters, setFilters] = useState<Filters>(EMPTY);
+  const router = useRouter();
+  const [cargando, setCargando] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const autoIntentado = useRef(false);
+
+  // La cartera sale de docs/auditoria/repos.json. Si la DB todavía no la tiene,
+  // se carga sola (idempotente); después Luis puede recargarla con el botón.
+  async function cargarAuditoria() {
+    setCargando(true);
+    setAviso(null);
+    try {
+      const r = await fetch("/api/projects/cartera/importar", { method: "POST" });
+      const d = (await r.json().catch(() => null)) as { reales?: number; demos?: number; error?: string } | null;
+      if (!r.ok) throw new Error(d?.error ?? `HTTP ${r.status}`);
+      setAviso(`Cartera cargada: ${d?.reales ?? 0} proyectos reales y ${d?.demos ?? 0} demos.`);
+      router.refresh();
+    } catch (error) {
+      setAviso(`No se pudo cargar la auditoría: ${error instanceof Error ? error.message : "error"}`);
+    } finally {
+      setCargando(false);
+    }
+  }
+  useEffect(() => {
+    if (projects.length === 0 && !autoIntentado.current) {
+      autoIntentado.current = true;
+      void cargarAuditoria();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projects.length]);
   const update = (patch: Partial<Filters>) => setFilters((prev) => ({ ...prev, ...patch }));
 
   const tipos = useMemo(
@@ -82,8 +112,28 @@ export default function CarteraProjectsClient({
               Proyectos reales
             </h1>
             <p className="mt-3 max-w-3xl text-[14px] leading-6 text-[var(--fg-secondary)]">
-              La cartera sale de la auditoria y de la DB. Las demos viven aparte para no mezclar stock con compromisos reales.
+              La cartera sale de la auditoría y de la DB. Las demos viven aparte para no mezclar stock con compromisos reales.
             </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-[13px]">
+              <Link href="/app/demos" className="rounded-md border border-black bg-black px-3 py-2 font-semibold text-white">
+                Catálogo de demos
+              </Link>
+              <Link href="/app/projects/curar" className="rounded-md border border-[var(--border-1)] bg-white px-3 py-2 font-medium hover:border-black">
+                Ordenar repos
+              </Link>
+              <Link href="/app/projects/todos" className="rounded-md border border-[var(--border-1)] bg-white px-3 py-2 font-medium hover:border-black">
+                Inventario completo
+              </Link>
+              <button
+                type="button"
+                onClick={() => void cargarAuditoria()}
+                disabled={cargando}
+                className="rounded-md border border-[var(--border-1)] bg-white px-3 py-2 font-medium hover:border-black disabled:opacity-50"
+              >
+                {cargando ? "Cargando auditoría…" : "Recargar auditoría"}
+              </button>
+            </div>
+            {aviso ? <p className="mt-2 text-[12px] text-[var(--fg-secondary)]">{aviso}</p> : null}
           </div>
           <div className="grid grid-cols-3 border border-[var(--border-1)] bg-white">
             <Kpi label="Reales" value={projects.length} />

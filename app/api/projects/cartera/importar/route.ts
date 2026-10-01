@@ -316,7 +316,25 @@ function categoryFor(tipos: string[], estado: string | null, priority: number | 
   return "en_revision";
 }
 
+// Nombres con los que Luis llama a cada familia (auditoría 1-oct-2026).
+const NOMBRES: Record<string, string> = {
+  happytoc: "HappyToc", vliving: "V&LIVING", allliving: "All Living", zuxen: "Zuxen", ssante: "Ssante",
+  ruta618: "Ruta 618 / Last Mile", ceer: "CEER", vedika: "Védika", premmex: "PREMMEX", studiodj: "StudioDJ",
+  momentum: "Momentum", vforge: "VForge", vulcano: "Vulcano (infra)", eternime: "Eternime",
+  mindcontextia: "MindContextIA", trama: "TRAMA", trading: "V-TRADING", vandefi: "VanDeFi",
+  allglobal: "All Global (institucional)", apsus: "APSUS", castores_bitacora: "Castores — Bitácora",
+  castores_store: "Castores — Store", icep: "ICEP Control", exci: "EXCI", contarea: "ElContaREA",
+  luspa: "Lucienne Spa", netmas: "NetMás Móvil", goossip: "Goossip", rideme: "RideMe", identykit: "Identy-Kit",
+  lutor: "LUTOR", modafy: "Modafy", jsc: "Junior Soccer Club", esteticar: "Esteticar",
+  mtempresarial: "MT Empresarial", mitcan: "Mitcan / CSN", cuponia: "Cuponia", samrs: "SAM RS",
+  credeti: "Crede-ti", trackport: "Track-Port", yerro: "YERRO", lnred: "LNRED", arco: "ARCO", sentrix: "Sentrix",
+  paradox: "Paradox", vcredit: "VCredit / Credit Club", vgift: "V-Gift", pipmx: "Mi pipa / PIPMX",
+  decaciones: "Decaciones", juego_inteligencia: "El juego de la inteligencia", vtv: "V-TV", break: "Break",
+  toonimatics: "Toonimatics", vadmin: "V-Admin",
+};
+
 function humanName(id: string) {
+  if (NOMBRES[id]) return NOMBRES[id];
   return id
     .split(/[-_]+/)
     .filter(Boolean)

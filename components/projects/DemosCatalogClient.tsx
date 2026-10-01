@@ -67,7 +67,7 @@ export default function DemosCatalogClient({
     }
   }
 
-  async function useAsBase(demo: DemoProject) {
+  async function usarComoBase(demo: DemoProject) {
     const name = window.prompt("Nombre del nuevo proyecto");
     if (!name?.trim()) return;
     setBusyId(demo.id);
@@ -155,7 +155,7 @@ export default function DemosCatalogClient({
                 demo={demo}
                 busy={busyId === demo.id}
                 onToggleDestacado={() => void toggleDestacado(demo)}
-                onUseAsBase={() => void useAsBase(demo)}
+                onUseAsBase={() => void usarComoBase(demo)}
               />
             ))}
           </div>
