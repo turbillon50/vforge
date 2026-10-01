@@ -1,0 +1,3 @@
+[12/31/24, 10:15:00 PM] Luis: Hello assistant
+[12/31/24, 10:16:00 PM] Assistant: Here is the doc
+[12/31/24, 10:17:00 PM] Assistant: <attached: Project Brief.pdf>

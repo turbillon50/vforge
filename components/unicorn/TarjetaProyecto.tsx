@@ -18,6 +18,8 @@ import {
   Radio,
   Unlock,
 } from "lucide-react";
+import { ProjectChats } from "@/components/hilo/ProjectChats";
+import type { HiloDashboardData } from "@/lib/hilo/types";
 import type {
   ConexionExpediente,
   DatoEstado,
@@ -448,7 +450,13 @@ function ConnectionGrid({ items }: { items: ConexionExpediente[] }) {
   );
 }
 
-export function ExpedienteProyectoView({ expediente }: { expediente: ExpedienteProyecto }) {
+export function ExpedienteProyectoView({
+  expediente,
+  hilo,
+}: {
+  expediente: ExpedienteProyecto;
+  hilo?: Pick<HiloDashboardData, "chats" | "service">;
+}) {
   const project = expediente.project;
   const primary = expediente.repositories.find((repo) => repo.isPrimary) ?? expediente.repositories[0];
 
@@ -563,6 +571,19 @@ export function ExpedienteProyectoView({ expediente }: { expediente: ExpedienteP
 
         <Chapter
           num="05"
+          title="Chats del proyecto"
+          body="Exportaciones de WhatsApp ligadas al expediente."
+        >
+          <ProjectChats
+            projectId={project.id}
+            initialChats={hilo?.chats ?? []}
+            liveActive={hilo?.service.active ?? false}
+            className="rounded-md border border-[var(--border-1)]"
+          />
+        </Chapter>
+
+        <Chapter
+          num="06"
           title="Línea de tiempo"
           body="Eventos reales leídos por Unicorn desde las fuentes disponibles."
         >

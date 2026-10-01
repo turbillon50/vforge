@@ -21,6 +21,13 @@
  * "tiempo real" es polling barato con cursor opaco y orden estable (ts, clave).
  */
 import type { McpPrincipal } from "./rbac";
+import {
+  UNICORN_DDL as SHARED_UNICORN_DDL,
+  UnicornParamError as SharedUnicornParamError,
+  ensureUnicornTable as ensureSharedUnicornTable,
+  publishUnicornEvent,
+  resetUnicornEnsureForTests,
+} from "./unicorn-shared.mjs";
 
 /* ================================ tipos ================================ */
 
@@ -98,31 +105,15 @@ const DETALLE_PREVIEW = 1500;
 /* ============================== migración ============================== */
 
 /** Misma DDL que migrations/047_unicorn_eventos.sql. Idempotente. */
-export const UNICORN_DDL: readonly string[] = [
-  `CREATE TABLE IF NOT EXISTS unicorn_eventos (
-    id       bigserial PRIMARY KEY,
-    proyecto text NOT NULL,
-    tipo     text NOT NULL,
-    titulo   text NOT NULL,
-    detalle  jsonb NOT NULL DEFAULT '{}'::jsonb,
-    origen   text,
-    autor    text,
-    ts       timestamptz NOT NULL DEFAULT now()
-  )`,
-  `CREATE INDEX IF NOT EXISTS idx_unicorn_eventos_ts ON unicorn_eventos (ts, id)`,
-  `CREATE INDEX IF NOT EXISTS idx_unicorn_eventos_proyecto ON unicorn_eventos (proyecto, ts DESC)`,
-];
+export const UNICORN_DDL: readonly string[] = SHARED_UNICORN_DDL;
 
-let _ensured = false;
 export async function ensureUnicornTable(db: UnicornDb): Promise<void> {
-  if (_ensured) return;
-  for (const ddl of UNICORN_DDL) await db.query(ddl);
-  _ensured = true;
+  await ensureSharedUnicornTable(db);
 }
 
 /** Sólo para pruebas: olvida que la tabla ya se aseguró. */
 export function __resetUnicornEnsure(): void {
-  _ensured = false;
+  resetUnicornEnsureForTests();
 }
 
 /* ============================== utilidades ============================== */
@@ -550,51 +541,12 @@ async function toolEstado(dbs: UnicornDbs): Promise<ToolResult> {
 }
 
 async function toolPublicar(dbs: UnicornDbs, args: Record<string, unknown>, autor: string | null): Promise<ToolResult> {
-  const proyecto = reqProyecto(args.proyecto);
-  const tipo = optString(args.tipo, "tipo", 60);
-  if (!tipo || !TIPO_RE.test(tipo)) {
-    throw new UnicornParamError("'tipo' es obligatorio: minúsculas, números y _ . : - (p. ej. feature, valor, deploy, precio).");
-  }
-  const titulo = optString(args.titulo, "titulo", 200);
-  if (!titulo) throw new UnicornParamError("Falta 'titulo' (1-200 caracteres).");
-  const origen = optString(args.origen, "origen", 40);
-  if (origen && !ORIGEN_RE.test(origen)) throw new UnicornParamError("'origen' debe ser un slug (p. ej. vforge, momentum, mindcontext).");
-
-  let detalle: unknown = {};
-  if (args.detalle !== undefined && args.detalle !== null) {
-    if (typeof args.detalle === "string") detalle = { texto: args.detalle };
-    else if (typeof args.detalle === "object") detalle = args.detalle;
-    else throw new UnicornParamError("'detalle' debe ser texto u objeto JSON.");
-  }
-  const detalleJson = JSON.stringify(detalle);
-  if (detalleJson.length > DETALLE_MAX) throw new UnicornParamError(`'detalle' excede ${DETALLE_MAX} caracteres serializado.`);
-
-  const existe = await dbs.app.query<{ id: string }>("SELECT id FROM projects WHERE id = $1 LIMIT 1", [proyecto]);
-  if (existe.length === 0) return fail(`Proyecto '${proyecto}' no existe en VForge; no se publica un evento huérfano.`);
-
-  await ensureUnicornTable(dbs.app);
-  const rows = await dbs.app.query<{ id: string; ts_iso: string }>(
-    `INSERT INTO unicorn_eventos (proyecto, tipo, titulo, detalle, origen, autor)
-     VALUES ($1, $2, $3, $4::jsonb, $5, $6)
-     RETURNING id::text AS id, ${TS_ISO("ts")} AS ts_iso`,
-    [proyecto, tipo, titulo, detalleJson, origen ?? "vforge", autor],
-  );
-  const r = rows[0];
-  if (!r) return fail("No se pudo registrar el evento.");
-  return json({
-    ok: true,
-    evento: {
-      fuente: "unicorn",
-      id: r.id,
-      proyecto,
-      tipo,
-      titulo,
-      detalle,
-      origen: origen ?? "vforge",
-      ts: r.ts_iso,
-      cursor: encodeCursor({ t: r.ts_iso, k: `unicorn:${r.id}` }),
-    },
+  const result = await publishUnicornEvent(dbs.app, args, {
+    autor,
+    defaultOrigen: "vforge",
   });
+  if (!result.ok) return fail(result.error ?? "No se pudo registrar el evento.");
+  return json({ ok: true, evento: result.evento });
 }
 
 /**
@@ -626,7 +578,7 @@ export async function runUnicornTool(
         return fail(`Tool unicorn desconocida: ${name}`);
     }
   } catch (e) {
-    if (e instanceof UnicornParamError) return fail(`Parámetros inválidos: ${e.message}`);
+    if (e instanceof UnicornParamError || e instanceof SharedUnicornParamError) return fail(`Parámetros inválidos: ${e.message}`);
     throw e;
   }
 }

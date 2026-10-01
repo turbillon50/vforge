@@ -1,0 +1,21 @@
+[Unit]
+Description=VForge Hilo WhatsApp Web read-only listener
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hilo
+Group=hilo
+WorkingDirectory=/opt/vforge/servicios/hilo
+EnvironmentFile=/etc/hilo/hilo.env
+ExecStart=/usr/bin/node /opt/vforge/servicios/hilo/hilo.mjs
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/hilo
+
+[Install]
+WantedBy=multi-user.target

@@ -11,6 +11,7 @@ import {
   IconCpu,
   IconFactory,
   IconHammer,
+  IconHilo,
   IconHome,
   IconLayers,
   IconMenu,
@@ -64,6 +65,12 @@ const PRIMARY_NAV: NavItem[] = [
     Icon: IconActivity,
   },
   {
+    href: "/app/hilo",
+    label: "Hilo",
+    description: "WhatsApp en solo lectura",
+    Icon: IconHilo,
+  },
+  {
     href: "/app/tablero",
     label: "Tablero",
     description: "Agentes y avance en vivo",
@@ -95,6 +102,7 @@ const TITLES: Record<string, string> = {
   "/app/trio": "Trío",
   "/app/projects": "Proyectos",
   "/app/activity": "Actividad",
+  "/app/hilo": "Hilo",
   "/app/tablero": "Tablero",
   "/app/fabrica": "Fábrica",
   "/app/integrations": "Conexiones",
