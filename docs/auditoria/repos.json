@@ -685,6 +685,13 @@
    ],
    "prioridad": 1,
    "nota": "VCredit / Credit Club, con dominio propio: súper importante, 'fuerte fuerte'. Ya le ha dado dinero sin existir: tramitación de créditos para adquisición de fracciones, liquidez o hipotecario para compra de propiedades. Falta definir cómo se monta"
+  },
+  "_aplicado_20261001": {
+   "repos": [],
+   "tipo": [
+    "registro"
+   ],
+   "nota": "71 repos archivados en GitHub (basura + versiones viejas de V&LIVING, Momentum, VForge, VanDeFi, Trading). Verificado: 272 total, 71 archivados, 201 vivos. Protegidos porque son donde vive el trabajo real: vliving-audit-fix (clon de trabajo de V&LIVING), ssante-t9 (repo real de Ssante), mipipa-srv (motor vivo), vulcano-ops (bitácora de infra). Lista exacta en el servidor: /root/vulcano-audit/archivados-20261001.txt"
   }
  },
  "notas_luis": [
