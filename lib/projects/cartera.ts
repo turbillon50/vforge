@@ -349,7 +349,7 @@ async function loadCover(projectId: string, publicUrl: string | null) {
   }
   return {
     src: null,
-    label: publicUrl ? "sin captura guardada" : "sin captura ni URL",
+    label: publicUrl ? "sin captura guardada" : "sin deploy",
   };
 }
 

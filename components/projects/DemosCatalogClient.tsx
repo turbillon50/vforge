@@ -1,16 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IconCopy, IconGithub, IconStar, IconX } from "@/components/brand/VFIcons";
 import { BarraFiltros } from "@/components/ui/BarraFiltros";
 import type { DemoProject } from "@/lib/projects/cartera";
 
 const TZ = "America/Cancun";
+const MAX_LIVE_PREVIEWS = 6;
 
 interface UseResult {
   project?: { id: string; name: string; github_repo: string; github_url: string };
   mode?: string;
   instructions?: string[];
+  copied_files?: number | null;
+  skipped?: Array<{ path: string; reason: string; size?: number; message?: string }>;
+  truncated?: boolean;
 }
 
 export default function DemosCatalogClient({
@@ -23,22 +27,41 @@ export default function DemosCatalogClient({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [result, setResult] = useState<UseResult | null>(null);
+  const [visiblePreviewIds, setVisiblePreviewIds] = useState<Set<string>>(() => new Set());
 
   const filtered = useMemo(() => {
     const words = norm(q).split(/\s+/).filter(Boolean);
     if (!words.length) return demos;
-    return demos.filter((demo) => {
-      const hay = norm([
-        demo.name,
-        demo.description,
-        demo.rubro,
-        demo.cartera_nota,
-        demo.primary_repo,
-        ...demo.modules,
-      ].filter(Boolean).join(" "));
-      return words.every((word) => hay.includes(word));
-    });
+    return demos
+      .map((demo, index) => ({
+        demo,
+        index,
+        score: relevanceScore(demo, words),
+      }))
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score || a.index - b.index)
+      .map((item) => item.demo);
   }, [demos, q]);
+
+  const setPreviewVisible = useCallback((id: string, visible: boolean) => {
+    setVisiblePreviewIds((prev) => {
+      const alreadyVisible = prev.has(id);
+      if (alreadyVisible === visible) return prev;
+      const next = new Set(prev);
+      if (visible) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const activePreviewIds = useMemo(() => {
+    const active = new Set<string>();
+    for (const demo of filtered) {
+      if (active.size >= MAX_LIVE_PREVIEWS) break;
+      if (demo.public_url && visiblePreviewIds.has(demo.id)) active.add(demo.id);
+    }
+    return active;
+  }, [filtered, visiblePreviewIds]);
 
   async function toggleDestacado(demo: DemoProject) {
     setBusyId(demo.id);
@@ -68,7 +91,7 @@ export default function DemosCatalogClient({
   }
 
   async function usarComoBase(demo: DemoProject) {
-    const name = window.prompt("Nombre del nuevo proyecto");
+    const name = window.prompt("Slug del nuevo proyecto (minusculas y guiones)");
     if (!name?.trim()) return;
     setBusyId(demo.id);
     setMessage(null);
@@ -82,7 +105,10 @@ export default function DemosCatalogClient({
       const payload = (await response.json().catch(() => null)) as UseResult & { error?: string };
       if (!response.ok) throw new Error(payload?.error ?? `HTTP ${response.status}`);
       setResult(payload);
-      setMessage(`Proyecto creado: ${payload.project?.name ?? name}`);
+      const copied = typeof payload.copied_files === "number"
+        ? ` - ${payload.copied_files} archivos copiados`
+        : "";
+      setMessage(`Proyecto creado: ${payload.project?.name ?? name}${copied}`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "No se pudo crear el proyecto.");
     } finally {
@@ -117,7 +143,7 @@ export default function DemosCatalogClient({
           busqueda={{
             valor: q,
             onCambio: setQ,
-            placeholder: "Buscar por nombre, descripcion, rubro o modulos...",
+            placeholder: "Buscar por nombre, rubro, descripcion, dominio o familia...",
             etiqueta: "Buscar demos",
           }}
           resumen={`${filtered.length} de ${demos.length} demos`}
@@ -139,6 +165,16 @@ export default function DemosCatalogClient({
               {result.instructions.join("\n")}
             </pre>
           ) : null}
+          {result?.skipped?.length ? (
+            <pre className="mt-3 overflow-x-auto rounded-md border border-[var(--border-1)] bg-[var(--color-background)] p-3 text-left font-mono text-[11px] leading-5 text-[var(--fg-secondary)]">
+              {[
+                "Archivos omitidos:",
+                ...result.skipped.map((item) =>
+                  `${item.path} - ${item.reason}${item.size ? ` (${formatBytes(item.size)})` : ""}`,
+                ),
+              ].join("\n")}
+            </pre>
+          ) : null}
         </div>
       ) : null}
 
@@ -154,8 +190,10 @@ export default function DemosCatalogClient({
                 key={demo.id}
                 demo={demo}
                 busy={busyId === demo.id}
+                previewActive={activePreviewIds.has(demo.id)}
                 onToggleDestacado={() => void toggleDestacado(demo)}
                 onUseAsBase={() => void usarComoBase(demo)}
+                onPreviewVisibility={setPreviewVisible}
               />
             ))}
           </div>
@@ -168,17 +206,21 @@ export default function DemosCatalogClient({
 function DemoCard({
   demo,
   busy,
+  previewActive,
   onToggleDestacado,
   onUseAsBase,
+  onPreviewVisibility,
 }: {
   demo: DemoProject;
   busy: boolean;
+  previewActive: boolean;
   onToggleDestacado: () => void;
   onUseAsBase: () => void;
+  onPreviewVisibility: (id: string, visible: boolean) => void;
 }) {
   return (
     <article className="grid min-w-0 overflow-hidden rounded-lg border border-[var(--border-1)] bg-white">
-      <DemoPreview demo={demo} />
+      <DemoPreview demo={demo} active={previewActive} onVisible={onPreviewVisibility} />
       <div className="grid min-w-0 gap-4 p-4">
         <div className="min-w-0">
           <div className="flex min-w-0 items-start justify-between gap-3">
@@ -243,7 +285,38 @@ function DemoCard({
   );
 }
 
-function DemoPreview({ demo }: { demo: DemoProject }) {
+function DemoPreview({
+  demo,
+  active,
+  onVisible,
+}: {
+  demo: DemoProject;
+  active: boolean;
+  onVisible: (id: string, visible: boolean) => void;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!demo.public_url) return undefined;
+    const node = ref.current;
+    if (!node) return undefined;
+
+    if (typeof IntersectionObserver === "undefined") {
+      onVisible(demo.id, true);
+      return () => onVisible(demo.id, false);
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => onVisible(demo.id, Boolean(entry?.isIntersecting)),
+      { rootMargin: "0px", threshold: 0.05 },
+    );
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+      onVisible(demo.id, false);
+    };
+  }, [demo.id, demo.public_url, onVisible]);
+
   if (demo.cover_src) {
     return (
       <div className="relative aspect-[16/10] overflow-hidden border-b border-[var(--border-1)] bg-[var(--color-background)]">
@@ -254,14 +327,26 @@ function DemoPreview({ demo }: { demo: DemoProject }) {
   }
   if (demo.public_url) {
     return (
-      <div className="relative aspect-[16/10] overflow-hidden border-b border-[var(--border-1)] bg-[var(--color-background)]">
-        <iframe
-          src={demo.public_url}
-          title={`Vista previa de ${demo.name}`}
-          loading="lazy"
-          className="h-[200%] w-[200%] origin-top-left scale-50 border-0"
-        />
-        <PreviewLabel label="iframe del dominio" />
+      <div ref={ref} className="relative aspect-[16/10] overflow-hidden border-b border-[var(--border-1)] bg-[var(--color-background)]">
+        {active ? (
+          <iframe
+            src={demo.public_url}
+            title={`Vista previa de ${demo.name}`}
+            loading="lazy"
+            tabIndex={-1}
+            className="pointer-events-none h-[200%] w-[200%] origin-top-left scale-50 border-0"
+          />
+        ) : (
+          <div className="grid h-full place-items-center p-6 text-center">
+            <div>
+              <p className="text-[14px] font-semibold text-black">Deploy listo</p>
+              <p className="mt-1 text-[12px] text-[var(--fg-muted)]">
+                Vista previa en espera.
+              </p>
+            </div>
+          </div>
+        )}
+        <PreviewLabel label={active ? "deploy en vivo" : demo.cover_label} />
       </div>
     );
   }
@@ -306,6 +391,37 @@ function norm(value: string) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+}
+
+function relevanceScore(demo: DemoProject, words: string[]) {
+  const fields = [
+    { value: demo.name, weight: 500 },
+    { value: demo.rubro, weight: 320 },
+    { value: demo.description, weight: 220 },
+    { value: demo.domain, weight: 160 },
+    { value: demo.vercel_url, weight: 140 },
+    { value: demo.cartera_nota, weight: 100 },
+    { value: demo.primary_repo, weight: 80 },
+    { value: demo.modules.join(" "), weight: 60 },
+  ];
+  let score = 0;
+  for (const word of words) {
+    let matched = false;
+    for (const field of fields) {
+      const hay = norm(field.value ?? "");
+      if (!hay.includes(word)) continue;
+      matched = true;
+      score += hay === word ? field.weight + 40 : field.weight;
+    }
+    if (!matched) return 0;
+  }
+  return score;
+}
+
+function formatBytes(value: number) {
+  if (value >= 1024 * 1024) return `${Math.round(value / (1024 * 1024))} MB`;
+  if (value >= 1024) return `${Math.round(value / 1024)} KB`;
+  return `${value} B`;
 }
 
 function estadoHumano(value: string) {

@@ -2,6 +2,7 @@ import reposAudit from "@/docs/auditoria/repos.json";
 import { sql } from "@/lib/db/client";
 import { resolveRequestOwner } from "@/lib/auth/request-owner";
 import { listAllUserRepos, type RepoSummary } from "@/lib/github/client";
+import { refreshDemoVercelUrls } from "@/lib/projects/demo-vercel-urls";
 import {
   ensureProjectCarteraSchema,
   ensureProjectRepositoriesSchema,
@@ -139,7 +140,22 @@ export async function POST() {
     )
   `;
 
-  return json({ ok: true, ...stats });
+  const demoUrls = await refreshDemoVercelUrls({ auditUserId: access.userId }).catch((error) => ({
+    ok: false,
+    vercel_available: false,
+    scanned: 0,
+    matched: 0,
+    updated: 0,
+    unresolved: 0,
+    errors: [
+      {
+        resource: "demos.urls",
+        message: error instanceof Error ? error.message : String(error),
+      },
+    ],
+  }));
+
+  return json({ ok: true, ...stats, demo_urls: demoUrls });
 }
 
 async function loadGithubRepoMap(userId: string): Promise<Map<string, RepoSummary> | null> {
