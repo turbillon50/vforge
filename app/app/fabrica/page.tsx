@@ -11,9 +11,11 @@
  * Todas las horas son las del reloj de TU computadora y corren en vivo. Todo dato es
  * real (colector del Hetzner vía /api/fabrica/estado); lo que no tiene medidor se dice.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { IconBrain, IconCode, IconCpu } from "@/components/brand/VFIcons";
+import { GrupoFiltros, type OpcionFiltro } from "@/components/ui/BarraFiltros";
+import { CONCEPTOS, METRICAS, SECCIONES, VTRADING, paraQue, queEsAgente, queEsEvento, queEsServicio } from "@/lib/fabrica/glosario";
 
 const REFRESH_TODO_MS = 30_000;
 const REFRESH_AHORA_MS = 5_000;
@@ -123,15 +125,91 @@ function useReloj(): number {
   return t;
 }
 
-const NOMBRE_AGENTE: Record<string, string> = { claude: "Claude", codex: "Codex", mesh: "Cerebras", shell: "Shell", browser: "Navegador", grok: "Grok" };
+const NOMBRE_AGENTE: Record<string, string> = { claude: "Claude", codex: "Codex", mesh: "Cerebras", cerebras: "Cerebras", v: "V", shell: "Shell", browser: "Navegador", grok: "Grok" };
+const nombreAgente = (a: string) => NOMBRE_AGENTE[a] ?? a;
+
+/**
+ * Ícono "i" con la explicación de algo. En escritorio basta pasar el mouse (title);
+ * tocándolo (celular o clic) se despliega una nota fija que nunca se sale de la
+ * pantalla. Los lectores de pantalla la leen siempre por aria-describedby.
+ */
+function Info({ texto, etiqueta }: { texto: string | null | undefined; etiqueta?: string }) {
+  const id = useId();
+  const boton = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number; width: number } | null>(null);
+
+  const medir = useCallback(() => {
+    const r = boton.current?.getBoundingClientRect();
+    if (!r) return null;
+    const width = Math.min(272, window.innerWidth - 32);
+    const left = Math.min(Math.max(16, r.left + r.width / 2 - width / 2), window.innerWidth - 16 - width);
+    return { left, top: r.bottom + 6, width };
+  }, []);
+
+  const abierto = pos !== null;
+  useEffect(() => {
+    if (!abierto) return;
+    const cerrar = (ev: Event) => {
+      if (ev.type === "keydown" && (ev as KeyboardEvent).key !== "Escape") return;
+      if (ev.type === "pointerdown" && boton.current?.contains(ev.target as Node)) return;
+      setPos(null);
+    };
+    // Al hacer scroll la nota sigue al ícono en vez de cerrarse (en celular el toque mueve la página).
+    const seguir = () => setPos(medir());
+    document.addEventListener("pointerdown", cerrar);
+    document.addEventListener("keydown", cerrar);
+    window.addEventListener("scroll", seguir, true);
+    window.addEventListener("resize", seguir);
+    return () => {
+      document.removeEventListener("pointerdown", cerrar);
+      document.removeEventListener("keydown", cerrar);
+      window.removeEventListener("scroll", seguir, true);
+      window.removeEventListener("resize", seguir);
+    };
+  }, [abierto, medir]);
+
+  if (!texto) return null;
+  const alternar = () => setPos(pos ? null : medir());
+  return (
+    <>
+      <button
+        ref={boton}
+        type="button"
+        onClick={alternar}
+        title={texto}
+        aria-label={`Qué es${etiqueta ? ` ${etiqueta}` : ""}`}
+        aria-describedby={id}
+        aria-expanded={pos !== null}
+        className="inline-grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border border-[var(--border-1)] align-middle font-serif text-[11px] italic leading-none text-[var(--fg-muted)] transition hover:border-black hover:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-black"
+      >
+        i
+      </button>
+      <span id={id} className="sr-only">
+        {texto}
+      </span>
+      {pos && (
+        <span
+          aria-hidden
+          className="fixed z-50 rounded-xl border border-[var(--border-1)] bg-white px-3.5 py-2.5 text-left text-[13px] font-normal normal-case leading-5 tracking-normal text-[var(--fg-secondary)] shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+          style={{ left: pos.left, top: pos.top, width: pos.width }}
+        >
+          {texto}
+        </span>
+      )}
+    </>
+  );
+}
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return <section className={cn("min-w-0 rounded-2xl border border-[var(--border-1)] bg-white", className)}>{children}</section>;
 }
-function CardHead({ title, right }: { title: string; right?: React.ReactNode }) {
+function CardHead({ title, right, info }: { title: string; right?: React.ReactNode; info?: string }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-[var(--border-1)] px-5 py-4">
-      <h2 className="text-[15px] font-medium tracking-[-0.01em] text-black">{title}</h2>
+      <h2 className="flex items-center gap-2 text-[15px] font-medium tracking-[-0.01em] text-black">
+        {title}
+        <Info texto={info} etiqueta={title} />
+      </h2>
       {right}
     </div>
   );
@@ -269,8 +347,25 @@ export default function FabricaPage() {
       }),
     [e.eventos],
   );
-  const tipos = useMemo(() => Array.from(new Set(eventos.map((x) => x.tipo))).filter(Boolean), [eventos]);
-  const filtrados = filtro === "todos" ? eventos : eventos.filter((x) => x.tipo === filtro);
+  // Conteo por tipo sobre lo que ya llegó del colector: es lo que se ve en las pastillas.
+  const porTipo = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const x of eventos) if (x.tipo) m.set(x.tipo, (m.get(x.tipo) ?? 0) + 1);
+    return m;
+  }, [eventos]);
+  // Si el tipo elegido deja de venir en el feed (se refresca cada tanto), se vuelve a "Todos"
+  // en vez de dejar la lista vacía sin explicación.
+  const filtroVigente = filtro !== "todos" && porTipo.has(filtro) ? filtro : "todos";
+  const filtrados = filtroVigente === "todos" ? eventos : eventos.filter((x) => x.tipo === filtroVigente);
+  const opcionesTipo = useMemo<OpcionFiltro[]>(
+    () => [
+      { id: "todos", label: "Todos", n: eventos.length },
+      ...Array.from(porTipo.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([t, n]) => ({ id: t, label: ETIQUETA_TIPO[t] ?? t, n })),
+    ],
+    [eventos.length, porTipo],
+  );
   const visibles = todos ? filtrados : filtrados.slice(0, 7);
 
   // Lo que está pasando ahora: jobs de la cola + agentes corriendo fuera de ella.
@@ -288,7 +383,7 @@ export default function FabricaPage() {
         id: -(p.desde ?? Math.random()),
         agente: p.motor,
         proyecto: p.proyecto,
-        titulo: p.titulo ?? `Sesión de ${NOMBRE_AGENTE[p.motor] ?? p.motor} lanzada fuera de la cola`,
+        titulo: p.titulo ?? `Sesión de ${nombreAgente(p.motor)} lanzada fuera de la cola`,
         estado: "trabajando",
         avance: null,
         rastro: null,
@@ -322,6 +417,7 @@ export default function FabricaPage() {
   const alianza = [
     {
       n: "Claude",
+      clave: "claude",
       Icono: IconBrain,
       rol: "director: arquitectura y criterio",
       activo: quehace("claude"),
@@ -330,6 +426,7 @@ export default function FabricaPage() {
     },
     {
       n: "Codex",
+      clave: "codex",
       Icono: IconCode,
       rol: `manos · ${str(codex.sesion) ?? "sesión desconocida"}`,
       activo: quehace("codex"),
@@ -338,6 +435,7 @@ export default function FabricaPage() {
     },
     {
       n: "Cerebras",
+      clave: "mesh",
       Icono: IconCpu,
       rol: "obrero: gpt-oss-120b · qwen-3.8-27b",
       activo: null,
@@ -381,6 +479,7 @@ export default function FabricaPage() {
         <Card className="mb-5">
           <CardHead
             title="Trabajando ahora"
+            info={SECCIONES.trabajando}
             right={
               <span className="text-[13px] tabular-nums text-[var(--fg-muted)]">
                 {trabajando.length} en curso · {enCola.length} en cola
@@ -400,12 +499,23 @@ export default function FabricaPage() {
                   <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
                     <div className="min-w-0 flex-1">
                       <p className="text-[15px] font-medium leading-6 text-black">{t.titulo}</p>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[13px] text-[var(--fg-secondary)]">
-                        <span>{NOMBRE_AGENTE[t.agente] ?? t.agente}</span>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-[var(--fg-secondary)]">
+                        <span className="inline-flex items-center gap-1.5">
+                          {nombreAgente(t.agente)}
+                          <Info texto={queEsAgente(t.agente)} etiqueta={nombreAgente(t.agente)} />
+                        </span>
                         <span className="text-[var(--fg-muted)]">·</span>
                         <span className="font-medium text-black">{t.proyecto ?? "sin proyecto"}</span>
                         {t.id > 0 && <span className="font-mono text-[11px] text-[var(--fg-muted)]">#{t.id}</span>}
-                        {t.encerrado && <Chip>en jaula</Chip>}
+                        {t.encerrado && (
+                          <span className="inline-flex items-center gap-1.5">
+                            <Chip>en jaula</Chip>
+                            <Info texto={CONCEPTOS.enJaula} etiqueta="en jaula" />
+                          </span>
+                        )}
+                      </p>
+                      <p className="mt-1 text-[12px] leading-5 text-[var(--fg-muted)]">
+                        <span className="text-[var(--fg-secondary)]">Para qué:</span> {paraQue(t, nombreAgente(t.agente))}
                       </p>
                     </div>
                     <span className="shrink-0 font-mono text-[12px] tabular-nums text-[var(--fg-secondary)]">
@@ -416,7 +526,16 @@ export default function FabricaPage() {
                     <Barra avance={activo ? t.avance : null} activo={activo} />
                   </div>
                   <p className="mt-1.5 flex flex-wrap justify-between gap-x-3 font-mono text-[11px] text-[var(--fg-muted)]">
-                    <span className="min-w-0 truncate">{t.rastro ?? (activo && t.avance === null ? "sin medidor de avance" : "")}</span>
+                    {t.rastro ? (
+                      <span className="min-w-0 truncate">{t.rastro}</span>
+                    ) : activo && t.avance === null ? (
+                      <span className="inline-flex min-w-0 items-center gap-1.5">
+                        <span className="truncate">sin medidor de avance</span>
+                        <Info texto={CONCEPTOS.sinMedidor} etiqueta="sin medidor de avance" />
+                      </span>
+                    ) : (
+                      <span />
+                    )}
                     <span className="shrink-0 tabular-nums">{activo ? (lleva ? `lleva ${lleva}` : "") : t.desde ? `esperando ${duracion(reloj / 1000 - t.desde)}` : ""}</span>
                   </p>
                 </li>
@@ -427,13 +546,19 @@ export default function FabricaPage() {
             <div className="border-t border-[var(--border-1)] px-5 py-3 text-[13px] text-[var(--fg-secondary)]">
               {ahora?.vivo?.length ? (
                 <p>
-                  <span className="text-black">Motor vivo:</span>{" "}
+                  <span className="inline-flex items-center gap-1.5 text-black">
+                    Motor vivo:
+                    <Info texto={CONCEPTOS.motorVivo} etiqueta="motor vivo" />
+                  </span>{" "}
                   {ahora.vivo.map((v) => `${v.proyecto}${v.listo ? "" : " (arrancando)"}`).join(" · ")}
                 </p>
               ) : null}
               {ahora?.terminados?.length ? (
                 <p className="mt-1">
-                  <span className="text-black">Terminó en los últimos 30 min:</span>{" "}
+                  <span className="inline-flex items-center gap-1.5 text-black">
+                    Terminó en los últimos 30 min:
+                    <Info texto={CONCEPTOS.terminados} etiqueta="terminados" />
+                  </span>{" "}
                   {ahora.terminados.slice(0, 4).map((t, i) => (
                     <span key={t.id}>
                       {i > 0 && " · "}
@@ -451,26 +576,38 @@ export default function FabricaPage() {
           <Card className="order-2 self-start lg:order-1">
             <CardHead
               title="Actividad"
+              info={SECCIONES.actividad}
               right={
-                <label className="flex items-center gap-2 text-[13px] text-[var(--fg-secondary)]">
-                  <span className="sr-only">Filtrar eventos</span>
-                  <select
-                    value={filtro}
-                    onChange={(ev) => setFiltro(ev.target.value)}
-                    className="cursor-pointer rounded-md border border-transparent bg-transparent py-1 pr-1 text-[13px] outline-none hover:border-[var(--border-1)] focus-visible:border-black"
-                  >
-                    <option value="todos">Todos los eventos</option>
-                    {tipos.map((t) => (
-                      <option key={t} value={t}>
-                        {ETIQUETA_TIPO[t] ?? t}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <span className="text-[13px] tabular-nums text-[var(--fg-muted)]">
+                  {filtroVigente === "todos" ? `${eventos.length} eventos` : `${filtrados.length} de ${eventos.length}`}
+                </span>
               }
             />
+            {porTipo.size > 1 && (
+              <div className="border-b border-[var(--border-1)] px-5 py-3">
+                <GrupoFiltros
+                  etiqueta="Filtrar eventos por tipo"
+                  ocultarEtiqueta
+                  opciones={opcionesTipo}
+                  valor={filtroVigente}
+                  onCambio={(v) => {
+                    setFiltro(v);
+                    setTodos(false);
+                  }}
+                />
+              </div>
+            )}
+            {filtroVigente !== "todos" && queEsEvento(filtroVigente) && (
+              <p className="border-b border-[var(--border-1)] px-5 py-3 text-[12px] leading-5 text-[var(--fg-muted)]">
+                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--fg-secondary)]">{ETIQUETA_TIPO[filtroVigente] ?? filtroVigente}</span> · {queEsEvento(filtroVigente)}
+              </p>
+            )}
             <ol className="relative px-5 py-2">
-              {visibles.length === 0 && <li className="py-6 text-[14px] text-[var(--fg-muted)]">Todavía no hay eventos.</li>}
+              {visibles.length === 0 && (
+                <li className="py-6 text-[14px] text-[var(--fg-muted)]">
+                  {eventos.length === 0 ? "Todavía no hay eventos." : "No hay eventos de este tipo."}
+                </li>
+              )}
               {visibles.map((ev, i) => (
                 <li key={`${ev.t}-${i}`} className="grid grid-cols-[64px_16px_minmax(0,1fr)] gap-3 border-b border-[var(--border-1)] py-5 last:border-b-0 md:grid-cols-[72px_16px_minmax(0,1fr)_auto]">
                   <span className="pt-0.5">
@@ -485,8 +622,9 @@ export default function FabricaPage() {
                     <p className="text-[15px] font-medium leading-6 text-black">{ev.titulo}</p>
                     {ev.detalle && <p className="mt-0.5 break-words text-[13px] leading-5 text-[var(--fg-secondary)]">{ev.detalle}</p>}
                   </div>
-                  <span className="col-start-3 md:col-start-auto">
+                  <span className="col-start-3 inline-flex items-center gap-1.5 md:col-start-auto md:self-start">
                     <Chip>{ETIQUETA_TIPO[ev.tipo] ?? ev.tipo}</Chip>
+                    <Info texto={queEsEvento(ev.tipo)} etiqueta={`un evento ${ETIQUETA_TIPO[ev.tipo] ?? ev.tipo}`} />
                   </span>
                 </li>
               ))}
@@ -496,7 +634,7 @@ export default function FabricaPage() {
                 <button
                   type="button"
                   onClick={() => setTodos((v) => !v)}
-                  className="inline-flex h-10 items-center justify-center rounded-full bg-[var(--accent)] px-5 text-[14px] font-medium text-white transition hover:bg-[var(--accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+                  className="inline-flex h-10 items-center justify-center rounded-full bg-black px-5 text-[14px] font-medium text-white transition hover:bg-[#262626] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                 >
                   {todos ? "Ver menos" : `Ver toda la actividad (${filtrados.length})`}
                 </button>
@@ -507,29 +645,38 @@ export default function FabricaPage() {
           <div className="order-1 flex min-w-0 flex-col gap-5 lg:order-2">
             {/* Métricas */}
             <Card className="p-5">
-              <h2 className="text-[15px] font-medium tracking-[-0.01em] text-black">Hoy en la fábrica</h2>
+              <h2 className="flex items-center gap-2 text-[15px] font-medium tracking-[-0.01em] text-black">
+                Hoy en la fábrica
+                <Info texto={SECCIONES.hoy} etiqueta="Hoy en la fábrica" />
+              </h2>
               <dl className="mt-4 grid grid-cols-2 gap-y-4 sm:grid-cols-4 sm:divide-x sm:divide-[var(--border-1)]">
                 {[
-                  ["Trabajando", ahora ? fmtN(trabajando.length) : "—"],
-                  ["En cola", ahora ? fmtN(enCola.length) : "—"],
-                  ["Tokens hoy", fmtTok(tokensHoy)],
-                  ["Codex semana", codexLim ? `${fmtN(codexLim.usado_pct)}%` : "—"],
-                ].map(([k, v], i) => (
+                  ["Trabajando", ahora ? fmtN(trabajando.length) : "—", METRICAS.trabajando],
+                  ["En cola", ahora ? fmtN(enCola.length) : "—", METRICAS.enCola],
+                  ["Tokens hoy", fmtTok(tokensHoy), METRICAS.tokensHoy],
+                  ["Codex semana", codexLim ? `${fmtN(codexLim.usado_pct)}%` : "—", METRICAS.codexSemana],
+                ].map(([k, v, q], i) => (
                   <div key={k} className={cn("min-w-0", i > 0 && "sm:pl-4")}>
-                    <dt className="text-[12px] text-[var(--fg-secondary)]">{k}</dt>
+                    <dt className="flex items-center gap-1.5 text-[12px] text-[var(--fg-secondary)]">
+                      {k}
+                      <Info texto={q} etiqueta={k} />
+                    </dt>
                     <dd className="mt-1 text-[26px] font-medium tabular-nums tracking-[-0.03em] text-black">{v}</dd>
                   </div>
                 ))}
               </dl>
               <div className="mt-5">
-                <p className="mb-2 text-[12px] text-[var(--fg-secondary)]">Tokens por hora, hoy (hora de Cancún)</p>
+                <p className="mb-2 flex items-center gap-1.5 text-[12px] text-[var(--fg-secondary)]">
+                  Tokens por hora, hoy (hora de Cancún)
+                  <Info texto={METRICAS.tokensHora} etiqueta="tokens por hora" />
+                </p>
                 <BarrasHora tokens={tk} horaActual={horaCancun(reloj)} />
               </div>
             </Card>
 
             {/* Alianza */}
             <Card>
-              <CardHead title="La alianza" />
+              <CardHead title="La alianza" info={SECCIONES.alianza} />
               <ul className="px-5">
                 {alianza.map((a) => (
                   <li key={a.n} className="flex items-center gap-3 border-b border-[var(--border-1)] py-3.5 last:border-b-0">
@@ -537,7 +684,10 @@ export default function FabricaPage() {
                       <a.Icono size={18} />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[15px] font-medium text-black">{a.n}</span>
+                      <span className="flex items-center gap-1.5 text-[15px] font-medium text-black">
+                        {a.n}
+                        <Info texto={queEsAgente(a.clave)} etiqueta={a.n} />
+                      </span>
                       <span className="block text-[13px] leading-5 text-[var(--fg-secondary)]">{a.activo ?? a.reposo}</span>
                       <span className="block truncate text-[11px] text-[var(--fg-muted)]">{a.rol}</span>
                     </span>
@@ -552,21 +702,29 @@ export default function FabricaPage() {
 
             {/* Consumo de tokens */}
             <Card>
-              <CardHead title="Consumo de tokens" right={<span className="text-[13px] text-[var(--fg-muted)]">hoy</span>} />
+              <CardHead title="Consumo de tokens" info={SECCIONES.tokens} right={<span className="text-[13px] text-[var(--fg-muted)]">hoy</span>} />
               <ul className="px-5 py-1">
                 {(
                   [
-                    ["Claude", tk?.claude, "servidor: daemon, agentes y jaula"],
-                    ["Codex", tk?.codex, "ChatGPT Pro"],
-                    ["Cerebras", tk?.cerebras, "el router sólo anota los de salida"],
+                    ["Claude", "claude", tk?.claude, "servidor: daemon, agentes y jaula"],
+                    ["Codex", "codex", tk?.codex, "ChatGPT Pro"],
+                    ["Cerebras", "mesh", tk?.cerebras, "el router sólo anota los de salida"],
                   ] as const
-                ).map(([n, m, nota]) => (
+                ).map(([n, clave, m, nota]) => (
                   <li key={n} className="border-b border-[var(--border-1)] py-3 last:border-b-0">
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="text-[14px] font-medium text-black">{n}</span>
+                      <span className="inline-flex items-center gap-1.5 text-[14px] font-medium text-black">
+                        {n}
+                        <Info texto={queEsAgente(clave)} etiqueta={n} />
+                      </span>
                       <span className="text-[18px] font-medium tabular-nums tracking-[-0.02em] text-black">{fmtTok(m ? totalMotor(m) : null)}</span>
                     </div>
                     <p className="mt-0.5 font-mono text-[11px] text-[var(--fg-muted)]">
+                      {m && (
+                        <>
+                          <Info texto={`${METRICAS.entrada} ${METRICAS.cache} ${METRICAS.salida}`} etiqueta="entrada, caché y salida" />{" "}
+                        </>
+                      )}
                       {m ? `entrada ${fmtTok(m.entrada)} · caché ${fmtTok(m.cache)} · salida ${fmtTok(m.salida)}` : "sin consumo hoy"} · {nota}
                     </p>
                     {n === "Codex" && codexLim && (
@@ -584,10 +742,22 @@ export default function FabricaPage() {
 
             {/* V-Trading */}
             <Card>
-              <CardHead title="V-Trading" right={<span className="text-[13px] text-[var(--fg-muted)]">modo papel</span>} />
+              <CardHead
+                title="V-Trading"
+                info={SECCIONES.vtrading}
+                right={
+                  <span className="inline-flex items-center gap-1.5 text-[13px] text-[var(--fg-muted)]">
+                    modo papel
+                    <Info texto={VTRADING.modoPapel} etiqueta="modo papel" />
+                  </span>
+                }
+              />
               <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 py-5">
                 <div className="min-w-0">
-                  <p className="text-[13px] text-[var(--fg-secondary)]">v6.0</p>
+                  <p className="flex items-center gap-1.5 text-[13px] text-[var(--fg-secondary)]">
+                    v6.0
+                    <Info texto={VTRADING.v60} etiqueta="v6.0" />
+                  </p>
                   <p className="mt-1 text-[30px] font-medium tabular-nums tracking-[-0.03em] text-black">{fmtN(v60Abiertas)}</p>
                   <p className="text-[13px] text-[var(--fg-secondary)]">abiertas</p>
                   {v60Abiertas > 0 && (
@@ -598,7 +768,10 @@ export default function FabricaPage() {
                 </div>
                 <span className="h-full w-px bg-[var(--border-1)]" aria-hidden />
                 <div className="min-w-0">
-                  <p className="text-[13px] text-[var(--fg-secondary)]">v5.9</p>
+                  <p className="flex items-center gap-1.5 text-[13px] text-[var(--fg-secondary)]">
+                    v5.9
+                    <Info texto={VTRADING.v59} etiqueta="v5.9" />
+                  </p>
                   <p className="mt-1 text-[30px] font-medium tabular-nums tracking-[-0.03em] text-black">{fmtN(num(v59.cerradas))}</p>
                   <p className="text-[13px] text-[var(--fg-secondary)]">cerradas</p>
                   <p className={cn("mt-2 text-[15px] tabular-nums", v59Net !== null && v59Net < 0 ? "text-[#e5484d]" : "text-[#138a43]")}>{fmtUsd(v59Net)}</p>
@@ -609,16 +782,21 @@ export default function FabricaPage() {
 
             {/* Servicios */}
             <Card>
-              <CardHead title="Servicios" right={<span className="text-[13px] tabular-nums text-[var(--fg-muted)]">{sanos}/{servicios.length}</span>} />
+              <CardHead title="Servicios" info={SECCIONES.servicios} right={<span className="text-[13px] tabular-nums text-[var(--fg-muted)]">{sanos}/{servicios.length}</span>} />
               <ul className="grid grid-cols-1 gap-x-6 px-5 py-2 sm:grid-cols-2">
                 {servicios.length === 0 && <li className="py-3 text-[13px] text-[var(--fg-muted)]">—</li>}
                 {servicios.map(([n, v]) => (
-                  <li key={n} className="flex items-center justify-between gap-3 border-b border-[var(--border-1)] py-2.5 text-[14px]">
-                    <span className="flex min-w-0 items-center gap-2.5">
-                      <Dot ok={v === "active"} />
-                      <span className="truncate text-black">{n}</span>
+                  <li key={n} className="flex items-start justify-between gap-3 border-b border-[var(--border-1)] py-2.5 text-[14px]">
+                    <span className="flex min-w-0 items-start gap-2.5">
+                      <span className="pt-[7px]">
+                        <Dot ok={v === "active"} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-black">{n}</span>
+                        {queEsServicio(n) && <span className="mt-0.5 block text-[12px] leading-[18px] text-[var(--fg-muted)]">{queEsServicio(n)}</span>}
+                      </span>
                     </span>
-                    <span className={cn("shrink-0 text-[12px]", v === "active" ? "text-[var(--fg-secondary)]" : "text-[#e5484d]")}>
+                    <span className={cn("shrink-0 pt-0.5 text-[12px]", v === "active" ? "text-[var(--fg-secondary)]" : "text-[#e5484d]")}>
                       {v === "active" ? "En vivo" : "Caído"}
                     </span>
                   </li>

@@ -10,6 +10,7 @@ import {
   IconCheck,
 } from "@/components/brand/VFIcons";
 import { cn } from "@/lib/utils";
+import { BarraFiltros, GrupoFiltros, type OpcionFiltro } from "@/components/ui/BarraFiltros";
 
 /* ───────────── tipos: espejo de servidor/tablero/estado.py ───────────── */
 
@@ -226,6 +227,14 @@ const ESTADO_UI: Record<string, { label: string; dot: string; chip: string }> = 
   },
 };
 
+/** Minúsculas y sin acentos, para buscar sin pelearse con la ortografía. */
+function normTxt(s: string) {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 function ui(estado: string) {
   return ESTADO_UI[estado] ?? ESTADO_UI.quieto;
 }
@@ -385,6 +394,45 @@ function Contenido({
   const trabajando = estado.frentes.filter((f) => f.estado === "trabajando").length;
   const conLista = estado.frentes.filter((f) => f.avance.pct != null);
 
+  // ── filtro de frentes: por estado y por texto (tag, proyecto, rama, modelo, brief) ──
+  const [filtroEstado, setFiltroEstado] = useState<string>("todos");
+  const [q, setQ] = useState("");
+
+  const porTexto = useMemo(() => {
+    const palabras = normTxt(q).split(/\s+/).filter(Boolean);
+    if (!palabras.length) return estado.frentes;
+    return estado.frentes.filter((f) => {
+      const hay = normTxt([f.tag, f.nombre, f.proyecto, f.rama, f.modelo, f.brief].filter(Boolean).join(" "));
+      return palabras.every((w) => hay.includes(w));
+    });
+  }, [estado.frentes, q]);
+
+  const opcionesEstado = useMemo<OpcionFiltro[]>(() => {
+    const n = new Map<string, number>();
+    for (const f of porTexto) n.set(f.estado, (n.get(f.estado) ?? 0) + 1);
+    // Mismo orden que ESTADO_UI (de lo urgente a lo quieto); un estado nuevo del servidor va al final.
+    const orden = [...Object.keys(ESTADO_UI), ...[...n.keys()].filter((k) => !ESTADO_UI[k])];
+    return [
+      { id: "todos", label: "Todos", n: porTexto.length },
+      ...orden
+        .filter((k) => (n.get(k) ?? 0) > 0 || k === filtroEstado)
+        .map((k) => ({ id: k, label: ESTADO_UI[k]?.label ?? k, n: n.get(k) ?? 0 })),
+    ];
+  }, [porTexto, filtroEstado]);
+
+  const filtrando = filtroEstado !== "todos" || q.trim() !== "";
+  const nActivos = (filtroEstado !== "todos" ? 1 : 0) + (q.trim() ? 1 : 0);
+  const resultado = useMemo(() => {
+    const lista = filtroEstado === "todos" ? porTexto : porTexto.filter((f) => f.estado === filtroEstado);
+    // Al filtrar se ven juntos los vivos primero y luego los quietos, en un solo lugar.
+    const vivos = new Set(activos.map((f) => f.tag));
+    return [...lista.filter((f) => vivos.has(f.tag)), ...lista.filter((f) => !vivos.has(f.tag))];
+  }, [porTexto, filtroEstado, activos]);
+  const limpiar = () => {
+    setFiltroEstado("todos");
+    setQ("");
+  };
+
   return (
     <div className="flex flex-col gap-8">
       {estado.alertas.length > 0 && (
@@ -420,6 +468,55 @@ function Contenido({
         />
       </section>
 
+      {estado.frentes.length > 1 && (
+        <section className="rounded-2xl border border-[var(--border-1)] bg-white p-4">
+          <BarraFiltros
+            busqueda={{
+              valor: q,
+              onCambio: setQ,
+              placeholder: "Buscar frente, proyecto, rama o modelo…",
+              etiqueta: "Buscar frentes",
+            }}
+            resumen={
+              filtrando
+                ? `${resultado.length} de ${estado.frentes.length} frentes`
+                : `${estado.frentes.length} frentes · ${activos.length} vivos`
+            }
+            activos={nActivos}
+            onLimpiar={limpiar}
+          >
+            <GrupoFiltros
+              etiqueta="Estado del frente"
+              opciones={opcionesEstado}
+              valor={filtroEstado}
+              onCambio={setFiltroEstado}
+            />
+          </BarraFiltros>
+        </section>
+      )}
+
+      {filtrando ? (
+        <section>
+          <Titulo>Frentes que coinciden</Titulo>
+          <div className="flex flex-col gap-3">
+            {resultado.map((f) => (
+              <TarjetaFrente key={f.tag} f={f} ahora={ahora} mandar={mandar} />
+            ))}
+            {resultado.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-[var(--border-1)] px-4 py-8 text-center">
+                <p className="text-[14px] text-[var(--fg-secondary)]">Ningún frente coincide con estos filtros.</p>
+                <button
+                  type="button"
+                  onClick={limpiar}
+                  className={cn(BOTON, "mt-3 border border-[var(--border-1)] bg-white text-black hover:border-black")}
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      ) : (
       <section>
         <Titulo>
           Frentes vivos
@@ -440,12 +537,13 @@ function Contenido({
           )}
         </div>
       </section>
+      )}
 
       <Consumo estado={estado} />
 
       <Salud salud={estado.salud} />
 
-      {dormidos.length > 0 && (
+      {dormidos.length > 0 && !filtrando && (
         <section>
           <Titulo>Quietos y cerrados</Titulo>
           <div className="flex flex-col gap-3">

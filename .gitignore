@@ -57,3 +57,9 @@ bsd-*.md
 __pycache__/
 *.pyc
 .env*
+
+# bancos de prueba (salidas generadas)
+.banco-fabrica/
+servicios/fabrica/banco/publico/banco.js
+servicios/fabrica/banco/publico/banco.css
+.claude/worktrees/
