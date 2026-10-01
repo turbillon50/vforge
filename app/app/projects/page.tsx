@@ -4,17 +4,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   IconChevD,
-  IconExtLink,
   IconGithub,
   IconLayout,
   IconRefresh,
-  IconSearch,
   IconTrash,
-  IconUsers,
   IconX,
 } from "@/components/brand/VFIcons";
 import { InviteShare } from "@/components/live/InviteShare";
 import { RepositoryGroupManager } from "@/components/projects/RepositoryGroupManager";
+import { BusquedaFiltro, GrupoFiltros } from "@/components/ui/BarraFiltros";
 import type { ProjectRepository } from "@/lib/projects/repository-groups";
 
 /* ───────────────────────── tipos ───────────────────────── */
@@ -205,6 +203,9 @@ const SORTS: SortDef[] = [
 ];
 const SORT_BY_ID = Object.fromEntries(SORTS.map((x) => [x.id, x])) as Record<Sort, SortDef>;
 
+/** Id de la pastilla "Todos" en filtros de una sola opción cuyo valor vacío es "". */
+const TODOS = "__todos";
+
 /** Proyectos por tanda. Cada fila es un componente pesado; el catálogo entero no se pinta de golpe. */
 const PAGINA = 40;
 
@@ -300,6 +301,37 @@ function dueInfo(p: Project, today: number) {
   if (days === 0) return { text: "Entrega hoy", color: C.rojo, days };
   if (days <= 7) return { text: `Entrega en ${days} d`, color: C.ambar, days };
   return { text: `Entrega ${fecha(p.due_date)}`, color: "", days };
+}
+
+/* ── una sola regla por opción: la usan el filtro y el conteo de cada pastilla ── */
+
+function matchActivity(p: Project, a: Activity, now: number) {
+  if (a === "all") return true;
+  const last = p.last_push ? new Date(p.last_push).getTime() : null;
+  const age = last === null ? null : (now - last) / DAY;
+  if (a === "never") return last === null;
+  if (a === "dormant") return age !== null && age > 90;
+  return age !== null && age <= Number(a);
+}
+
+function matchDue(p: Project, d: Due, today: number) {
+  if (d === "all") return true;
+  const ms = dueMs(p);
+  const done = (p.progress_pct ?? 0) >= 100;
+  if (d === "undated") return ms === null;
+  if (d === "dated") return ms !== null;
+  if (d === "overdue") return ms !== null && ms < today && !done;
+  if (d === "week") return ms !== null && ms >= today && ms <= today + 7 * DAY;
+  return ms !== null && ms >= today && ms <= today + 30 * DAY;
+}
+
+function matchProgress(p: Project, pr: Progress) {
+  const v = p.progress_pct ?? 0;
+  if (pr === "all") return true;
+  if (pr === "0") return v === 0;
+  if (pr === "low") return v >= 1 && v <= 49;
+  if (pr === "high") return v >= 50 && v <= 99;
+  return v >= 100;
 }
 
 /* ── filtros en la URL: se pueden guardar y compartir ── */
@@ -507,35 +539,12 @@ export default function ProjectsPage() {
         if (!needle.split(/\s+/).every((w) => hay.includes(w))) return false;
       }
       if (skip !== "cats" && f.cats.length && !f.cats.includes(p.category)) return false;
-      if (skip !== "client" && f.client && (p.client_name ?? "") !== f.client) return false;
+      if (skip !== "client" && f.client && (p.client_name ?? "").trim() !== f.client) return false;
       if (skip !== "lang" && f.lang && (p.github_language ?? "") !== f.lang) return false;
 
-      if (skip !== "activity" && f.activity !== "all") {
-        const last = p.last_push ? new Date(p.last_push).getTime() : null;
-        const age = last === null ? null : (now - last) / DAY;
-        if (f.activity === "never" && last !== null) return false;
-        if (f.activity === "dormant" && (age === null || age <= 90)) return false;
-        if (["7", "30", "90"].includes(f.activity) && (age === null || age > Number(f.activity)))
-          return false;
-      }
-
-      if (skip !== "due" && f.due !== "all") {
-        const ms = dueMs(p);
-        const done = (p.progress_pct ?? 0) >= 100;
-        if (f.due === "undated" && ms !== null) return false;
-        if (f.due === "dated" && ms === null) return false;
-        if (f.due === "overdue" && (ms === null || ms >= today || done)) return false;
-        if (f.due === "week" && (ms === null || ms < today || ms > today + 7 * DAY)) return false;
-        if (f.due === "month" && (ms === null || ms < today || ms > today + 30 * DAY)) return false;
-      }
-
-      if (skip !== "progress" && f.progress !== "all") {
-        const v = p.progress_pct ?? 0;
-        if (f.progress === "0" && v !== 0) return false;
-        if (f.progress === "low" && (v < 1 || v > 49)) return false;
-        if (f.progress === "high" && (v < 50 || v > 99)) return false;
-        if (f.progress === "done" && v < 100) return false;
-      }
+      if (skip !== "activity" && !matchActivity(p, f.activity, now)) return false;
+      if (skip !== "due" && !matchDue(p, f.due, today)) return false;
+      if (skip !== "progress" && !matchProgress(p, f.progress)) return false;
 
       for (const flag of f.flags) {
         if (flag === skip) continue;
@@ -661,6 +670,8 @@ export default function ProjectsPage() {
   }
 
   const nActive = activeCount(f);
+  // Lo que vive dentro de "Más filtros" (búsqueda y estado ya están siempre a la vista).
+  const nAdvanced = nActive - (f.q ? 1 : 0) - f.cats.length;
   const toggle = <T,>(arr: T[], v: T) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
   // Cada fila monta un ProjectRow completo (pastillas, barra de avance, acciones y,
@@ -749,23 +760,15 @@ export default function ProjectsPage() {
 
       {/* ── barra de búsqueda y filtros ── */}
       <section className="z-10 border-b border-[var(--border-1)] bg-[#f7f7f5]/95 px-page-sm md:px-page-md py-3 backdrop-blur md:sticky md:top-[59px]">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center">
-          <label className="flex min-h-11 flex-1 items-center gap-2 rounded-md border border-[var(--border-1)] bg-white px-3">
-            <IconSearch size={14} className="shrink-0 text-[var(--fg-muted)]" />
-            <span className="sr-only">Buscar proyectos</span>
-            <input
-              value={f.q}
-              onChange={(e) => upd({ q: e.target.value })}
-              placeholder="Buscar proyecto, cliente, repo, comentario…"
-              className="min-h-11 min-w-0 flex-1 bg-transparent text-[14px] text-black placeholder:text-[var(--fg-muted)]"
-            />
-            {f.q ? (
-              <button type="button" onClick={() => upd({ q: "" })} aria-label="Borrar búsqueda" className="grid h-11 w-11 shrink-0 place-items-center">
-                <IconX size={14} />
-              </button>
-            ) : null}
-          </label>
-          <div className="flex flex-wrap gap-2">
+        <div className="flex min-w-0 flex-col gap-2 md:flex-row md:items-center">
+          <BusquedaFiltro
+            valor={f.q}
+            onCambio={(v) => upd({ q: v })}
+            placeholder="Buscar proyecto, cliente, repo, comentario…"
+            etiqueta="Buscar proyectos"
+            className="flex-1"
+          />
+          <div className="flex min-w-0 flex-wrap gap-2">
             <SortControl
               label="Ordenar por"
               value={f.sort}
@@ -777,83 +780,138 @@ export default function ProjectsPage() {
               type="button"
               onClick={() => setFiltersOpen((v) => !v)}
               aria-expanded={filtersOpen}
+              aria-controls="proyectos-mas-filtros"
               className={
-                nActive
-                  ? "inline-flex min-h-11 items-center gap-2 rounded-md border border-black bg-black px-4 text-[13px] text-white"
-                  : "inline-flex min-h-11 items-center gap-2 rounded-md border border-[var(--border-1)] bg-white px-4 text-[13px] text-black"
+                nAdvanced
+                  ? "inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-black bg-black px-4 text-[13px] font-medium text-white md:flex-none"
+                  : "inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] bg-white px-4 text-[13px] font-medium text-black hover:border-black md:flex-none"
               }
             >
-              Filtros{nActive ? ` · ${nActive}` : ""}
+              Más filtros
+              {nAdvanced ? (
+                <span className="min-w-[1.25rem] rounded-full bg-white/15 px-1.5 text-center text-[12px] tabular-nums">
+                  {nAdvanced}
+                </span>
+              ) : null}
               <IconChevD size={14} className={filtersOpen ? "rotate-180 transition" : "transition"} />
             </button>
           </div>
         </div>
 
+        {/* El estado es el filtro que más se usa: siempre a la vista, no escondido tras un botón. */}
+        <GrupoFiltros
+          className="mt-3"
+          etiqueta="Estado"
+          multiple
+          todos={{ label: "Todos", n: count("cats", () => true) }}
+          opciones={CATEGORIES.map((c) => ({
+            id: c.id,
+            label: c.label,
+            n: count("cats", (p) => p.category === c.id),
+          }))}
+          valor={f.cats}
+          onCambio={(v) => upd({ cats: v })}
+        />
+
         {filtersOpen ? (
-          <div className="mt-3 grid gap-4 border-t border-[var(--border-1)] pt-4 lg:grid-cols-2">
-            <Group label="Estado">
-              {CATEGORIES.map((c) => (
-                <Chip
-                  key={c.id}
-                  active={f.cats.includes(c.id)}
-                  label={c.label}
-                  n={count("cats", (p) => p.category === c.id)}
-                  onClick={() => upd({ cats: toggle(f.cats, c.id) })}
-                />
-              ))}
-            </Group>
+          <div
+            id="proyectos-mas-filtros"
+            className="mt-3 grid min-w-0 gap-4 border-t border-[var(--border-1)] pt-4 lg:grid-cols-2"
+          >
+            <GrupoFiltros
+              etiqueta="Actividad (último push)"
+              opciones={ACTIVITY.map((a) => ({
+                id: a.id,
+                label: a.label,
+                n: count("activity", (p) => matchActivity(p, a.id, now)),
+              }))}
+              valor={f.activity}
+              onCambio={(v) => upd({ activity: v })}
+            />
 
-            <Group label="Actividad (último push)">
-              {ACTIVITY.map((a) => (
-                <Chip
-                  key={a.id}
-                  active={f.activity === a.id}
-                  label={a.label}
-                  onClick={() => upd({ activity: a.id })}
-                />
-              ))}
-            </Group>
+            <GrupoFiltros
+              etiqueta="Entrega"
+              opciones={DUE.map((d) => ({
+                id: d.id,
+                label: d.label,
+                n: count("due", (p) => matchDue(p, d.id, todayStart())),
+              }))}
+              valor={f.due}
+              onCambio={(v) => upd({ due: v })}
+            />
 
-            <Group label="Entrega">
-              {DUE.map((d) => (
-                <Chip key={d.id} active={f.due === d.id} label={d.label} onClick={() => upd({ due: d.id })} />
-              ))}
-            </Group>
+            <GrupoFiltros
+              etiqueta="Avance"
+              opciones={PROGRESS.map((pr) => ({
+                id: pr.id,
+                label: pr.label,
+                n: count("progress", (p) => matchProgress(p, pr.id)),
+              }))}
+              valor={f.progress}
+              onCambio={(v) => upd({ progress: v })}
+            />
 
-            <Group label="Avance">
-              {PROGRESS.map((p) => (
-                <Chip
-                  key={p.id}
-                  active={f.progress === p.id}
-                  label={p.label}
-                  onClick={() => upd({ progress: p.id })}
-                />
-              ))}
-            </Group>
+            <GrupoFiltros
+              etiqueta="Marcas"
+              multiple
+              opciones={FLAGS.map((fl) => ({
+                id: fl.id,
+                label: fl.label,
+                n: count(fl.id, (p) => {
+                  if (fl.id === "priority") return !!p.delivery_priority;
+                  if (fl.id === "domain") return hasDomain(p);
+                  if (fl.id === "nodomain") return !hasDomain(p);
+                  if (fl.id === "repo") return !!p.github_repo || p.repository_count > 0;
+                  if (fl.id === "norepo") return !p.github_repo && !(p.repository_count > 0);
+                  if (fl.id === "vercel") return !!p.vercel_url;
+                  if (fl.id === "notes") return (p.notes_count ?? 0) > 0;
+                  if (fl.id === "owed") return owed(p) > 0;
+                  return !!relatedHint(p);
+                }),
+              }))}
+              valor={f.flags}
+              onCambio={(v) => upd({ flags: v })}
+            />
 
-            <Group label="Marcas" wide>
-              {FLAGS.map((fl) => (
-                <Chip
-                  key={fl.id}
-                  active={f.flags.includes(fl.id)}
-                  label={fl.label}
-                  n={count(fl.id, (p) => {
-                    if (fl.id === "priority") return !!p.delivery_priority;
-                    if (fl.id === "domain") return hasDomain(p);
-                    if (fl.id === "nodomain") return !hasDomain(p);
-                    if (fl.id === "repo") return !!p.github_repo || p.repository_count > 0;
-                    if (fl.id === "norepo") return !p.github_repo && !(p.repository_count > 0);
-                    if (fl.id === "vercel") return !!p.vercel_url;
-                    if (fl.id === "notes") return (p.notes_count ?? 0) > 0;
-                    if (fl.id === "owed") return owed(p) > 0;
-                    return !!relatedHint(p);
-                  })}
-                  onClick={() => upd({ flags: toggle(f.flags, fl.id) })}
-                />
-              ))}
-            </Group>
+            {clients.length ? (
+              <GrupoFiltros
+                className="lg:col-span-2"
+                etiqueta="Cliente"
+                opciones={[
+                  { id: TODOS, label: "Todos", n: count("client", () => true) },
+                  ...clients.map((c) => ({
+                    id: c,
+                    label: c,
+                    n: count("client", (p) => (p.client_name ?? "").trim() === c),
+                  })),
+                ]}
+                valor={f.client || TODOS}
+                onCambio={(v) => upd({ client: v === TODOS ? "" : v })}
+              />
+            ) : (
+              <p className="text-[13px] text-[var(--fg-secondary)] lg:col-span-2">
+                Cliente: aún no hay clientes capturados en los proyectos.
+              </p>
+            )}
 
-            <div className="lg:col-span-2">
+            {languages.length ? (
+              <GrupoFiltros
+                className="lg:col-span-2"
+                etiqueta="Lenguaje"
+                opciones={[
+                  { id: TODOS, label: "Todos", n: count("lang", () => true) },
+                  ...languages.map((l) => ({
+                    id: l,
+                    label: l,
+                    n: count("lang", (p) => (p.github_language ?? "") === l),
+                  })),
+                ]}
+                valor={f.lang || TODOS}
+                onCambio={(v) => upd({ lang: v === TODOS ? "" : v })}
+              />
+            ) : null}
+
+            <div className="min-w-0 lg:col-span-2">
               <p className="mb-1.5 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
                 Si empatan, luego por
               </p>
@@ -868,34 +926,21 @@ export default function ProjectsPage() {
                 onDir={() => upd({ dir2: f.dir2 === "desc" ? "asc" : "desc" })}
               />
             </div>
-
-            <div className="grid gap-2 sm:grid-cols-2 lg:col-span-2">
-              <SelectBox
-                label="Cliente"
-                value={f.client}
-                onChange={(v) => upd({ client: v })}
-                options={clients}
-                empty={clients.length ? "Todos los clientes" : "Aún no hay clientes capturados"}
-              />
-              <SelectBox
-                label="Lenguaje"
-                value={f.lang}
-                onChange={(v) => upd({ lang: v })}
-                options={languages}
-                empty="Todos los lenguajes"
-              />
-            </div>
           </div>
         ) : null}
 
         {nActive ? (
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 text-[13px] tabular-nums text-[var(--fg-secondary)]" aria-live="polite">
+              {filtered.length} de {projects.length}
+            </span>
             {activePills(f, upd, toggle).map((pill) => (
               <button
                 key={pill.key}
                 type="button"
                 onClick={pill.clear}
-                className="inline-flex items-center gap-1 rounded-full border border-black bg-white px-2.5 py-1 text-[12px] text-black"
+                aria-label={`Quitar filtro ${pill.label}`}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-black bg-white px-3 text-[13px] text-black hover:bg-black hover:text-white"
               >
                 {pill.label}
                 <IconX size={11} />
@@ -904,7 +949,7 @@ export default function ProjectsPage() {
             <button
               type="button"
               onClick={() => setF({ ...EMPTY, sort: f.sort, dir: f.dir, sort2: f.sort2, dir2: f.dir2 })}
-              className="px-2 py-1 text-[12px] underline underline-offset-4"
+              className="inline-flex min-h-9 items-center px-2 text-[13px] font-medium underline underline-offset-4"
             >
               Limpiar todo
             </button>
@@ -1083,45 +1128,6 @@ function Stat({
   );
 }
 
-function Group({ label, children, wide }: { label: string; children: React.ReactNode; wide?: boolean }) {
-  return (
-    <div className={wide ? "lg:col-span-2" : undefined}>
-      <p className="mb-1.5 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">{label}</p>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
-    </div>
-  );
-}
-
-function Chip({
-  active,
-  label,
-  n,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  n?: number;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={
-        active
-          ? "inline-flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-full border border-black bg-black px-3 text-[13px] text-white"
-          : "inline-flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--border-1)] bg-white px-3 text-[13px] text-black hover:border-black"
-      }
-    >
-      {label}
-      {n !== undefined ? (
-        <span className={active ? "tabular-nums text-white/70" : "tabular-nums text-[var(--fg-muted)]"}>{n}</span>
-      ) : null}
-    </button>
-  );
-}
-
 function SortControl({
   label,
   value,
@@ -1139,13 +1145,14 @@ function SortControl({
 }) {
   const def = value ? SORT_BY_ID[value] : null;
   return (
-    <div className="flex min-h-11 flex-1 items-stretch overflow-hidden rounded-md border border-[var(--border-1)] bg-white text-[13px] md:flex-none">
+    // El select nativo trae `outline: none` global: el foco se marca en el borde de la caja.
+    <div className="flex min-h-11 w-full min-w-0 items-stretch overflow-hidden rounded-xl border border-[var(--border-1)] bg-white text-[13px] transition-colors focus-within:border-black hover:border-black md:w-auto">
       <label className="flex min-w-0 flex-1 items-center gap-2 px-3">
-        <span className="whitespace-nowrap text-[var(--fg-muted)]">{label}</span>
+        <span className="whitespace-nowrap text-[var(--fg-secondary)]">{label}</span>
         <select
           value={value}
           onChange={(e) => onField(e.target.value)}
-          className="min-w-0 flex-1 bg-transparent text-black"
+          className="min-w-0 flex-1 cursor-pointer bg-transparent font-medium text-black"
         >
           {allowNone ? <option value="">Nada</option> : null}
           {SORTS.map((s) => (
@@ -1161,10 +1168,11 @@ function SortControl({
           onClick={onDir}
           title="Cambiar dirección"
           aria-label={`Dirección: ${dir === "desc" ? def.desc : def.asc}. Tocar para invertir`}
-          className="flex min-h-11 items-center gap-1.5 whitespace-nowrap border-l border-[var(--border-1)] px-3 text-black hover:bg-[#f7f7f5]"
+          className="flex min-h-11 items-center gap-1.5 whitespace-nowrap border-l border-[var(--border-1)] px-3 font-medium text-black hover:bg-[#f7f7f5] focus-visible:outline-offset-[-3px]"
         >
           <span aria-hidden className="text-[15px] leading-none">{dir === "desc" ? "↓" : "↑"}</span>
-          {dir === "desc" ? def.desc : def.asc}
+          {/* En celular solo la flecha: el texto le robaba todo el ancho al selector. */}
+          <span className="hidden sm:inline">{dir === "desc" ? def.desc : def.asc}</span>
         </button>
       ) : null}
     </div>
@@ -1193,38 +1201,6 @@ function HeadSort({
       {label}
       <span aria-hidden>{on ? (f.dir === "desc" ? "↓" : "↑") : "↕"}</span>
     </button>
-  );
-}
-
-function SelectBox({
-  label,
-  value,
-  onChange,
-  options,
-  empty,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-  empty: string;
-}) {
-  return (
-    <label className="flex min-h-11 items-center gap-2 rounded-md border border-[var(--border-1)] bg-white px-3 text-[13px]">
-      <span className="whitespace-nowrap text-[var(--fg-muted)]">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="min-w-0 flex-1 bg-transparent text-black"
-      >
-        <option value="">{empty}</option>
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
-    </label>
   );
 }
 

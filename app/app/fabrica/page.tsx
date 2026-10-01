@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { IconBrain, IconCode, IconCpu } from "@/components/brand/VFIcons";
+import { GrupoFiltros, type OpcionFiltro } from "@/components/ui/BarraFiltros";
 
 const REFRESH_TODO_MS = 30_000;
 const REFRESH_AHORA_MS = 5_000;
@@ -269,8 +270,25 @@ export default function FabricaPage() {
       }),
     [e.eventos],
   );
-  const tipos = useMemo(() => Array.from(new Set(eventos.map((x) => x.tipo))).filter(Boolean), [eventos]);
-  const filtrados = filtro === "todos" ? eventos : eventos.filter((x) => x.tipo === filtro);
+  // Conteo por tipo sobre lo que ya llegó del colector: es lo que se ve en las pastillas.
+  const porTipo = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const x of eventos) if (x.tipo) m.set(x.tipo, (m.get(x.tipo) ?? 0) + 1);
+    return m;
+  }, [eventos]);
+  // Si el tipo elegido deja de venir en el feed (se refresca cada tanto), se vuelve a "Todos"
+  // en vez de dejar la lista vacía sin explicación.
+  const filtroVigente = filtro !== "todos" && porTipo.has(filtro) ? filtro : "todos";
+  const filtrados = filtroVigente === "todos" ? eventos : eventos.filter((x) => x.tipo === filtroVigente);
+  const opcionesTipo = useMemo<OpcionFiltro[]>(
+    () => [
+      { id: "todos", label: "Todos", n: eventos.length },
+      ...Array.from(porTipo.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([t, n]) => ({ id: t, label: ETIQUETA_TIPO[t] ?? t, n })),
+    ],
+    [eventos.length, porTipo],
+  );
   const visibles = todos ? filtrados : filtrados.slice(0, 7);
 
   // Lo que está pasando ahora: jobs de la cola + agentes corriendo fuera de ella.
@@ -452,25 +470,31 @@ export default function FabricaPage() {
             <CardHead
               title="Actividad"
               right={
-                <label className="flex items-center gap-2 text-[13px] text-[var(--fg-secondary)]">
-                  <span className="sr-only">Filtrar eventos</span>
-                  <select
-                    value={filtro}
-                    onChange={(ev) => setFiltro(ev.target.value)}
-                    className="cursor-pointer rounded-md border border-transparent bg-transparent py-1 pr-1 text-[13px] outline-none hover:border-[var(--border-1)] focus-visible:border-black"
-                  >
-                    <option value="todos">Todos los eventos</option>
-                    {tipos.map((t) => (
-                      <option key={t} value={t}>
-                        {ETIQUETA_TIPO[t] ?? t}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <span className="text-[13px] tabular-nums text-[var(--fg-muted)]">
+                  {filtroVigente === "todos" ? `${eventos.length} eventos` : `${filtrados.length} de ${eventos.length}`}
+                </span>
               }
             />
+            {porTipo.size > 1 && (
+              <div className="border-b border-[var(--border-1)] px-5 py-3">
+                <GrupoFiltros
+                  etiqueta="Filtrar eventos por tipo"
+                  ocultarEtiqueta
+                  opciones={opcionesTipo}
+                  valor={filtroVigente}
+                  onCambio={(v) => {
+                    setFiltro(v);
+                    setTodos(false);
+                  }}
+                />
+              </div>
+            )}
             <ol className="relative px-5 py-2">
-              {visibles.length === 0 && <li className="py-6 text-[14px] text-[var(--fg-muted)]">Todavía no hay eventos.</li>}
+              {visibles.length === 0 && (
+                <li className="py-6 text-[14px] text-[var(--fg-muted)]">
+                  {eventos.length === 0 ? "Todavía no hay eventos." : "No hay eventos de este tipo."}
+                </li>
+              )}
               {visibles.map((ev, i) => (
                 <li key={`${ev.t}-${i}`} className="grid grid-cols-[64px_16px_minmax(0,1fr)] gap-3 border-b border-[var(--border-1)] py-5 last:border-b-0 md:grid-cols-[72px_16px_minmax(0,1fr)_auto]">
                   <span className="pt-0.5">
