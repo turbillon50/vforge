@@ -3,7 +3,10 @@ import { resolveRequestOwner } from "@/lib/auth/request-owner";
 import { createRepo } from "@/lib/github/client";
 import { neon } from "@neondatabase/serverless";
 import { ensureDeliveryColumns } from "@/lib/projects/delivery-meta";
-import { ensureProjectRepositoriesSchema } from "@/lib/projects/repository-schema";
+import {
+  ensureProjectCarteraSchema,
+  ensureProjectRepositoriesSchema,
+} from "@/lib/projects/repository-schema";
 import type { ProjectRepository } from "@/lib/projects/repository-groups";
 
 export const runtime = "nodejs";
@@ -61,6 +64,7 @@ export async function GET() {
 
   await ensureDeliveryColumns();
   await ensureProjectRepositoriesSchema();
+  await ensureProjectCarteraSchema();
 
   const rows = await queryAll<ProjectRow>(
     `SELECT p.id, p.name, p.category, p.status,
@@ -98,6 +102,7 @@ export async function GET() {
             (SELECT count(*)::int FROM project_repositories pr WHERE pr.project_id = p.id)
               AS repository_count
        FROM projects p
+      WHERE COALESCE(p.es_demo, false) = false
        ORDER BY
          COALESCE(p.delivery_priority, false) DESC,
          CASE p.category

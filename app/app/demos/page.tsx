@@ -1,10 +1,10 @@
-import CarteraProjectsClient from "@/components/projects/CarteraProjectsClient";
+import DemosCatalogClient from "@/components/projects/DemosCatalogClient";
 import { resolveRequestOwner } from "@/lib/auth/request-owner";
-import { loadCarteraProjects } from "@/lib/projects/cartera";
+import { loadDemoProjects } from "@/lib/projects/cartera";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProjectsPage() {
+export default async function DemosPage() {
   const access = await resolveRequestOwner();
   if (!access.userId || !access.isOwner) {
     return (
@@ -13,15 +13,15 @@ export default async function ProjectsPage() {
           <p className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
             Owner-only
           </p>
-          <h1 className="mt-3 text-[24px] font-semibold text-black">Cartera privada</h1>
+          <h1 className="mt-3 text-[24px] font-semibold text-black">Catalogo privado</h1>
           <p className="mt-2 text-[14px] text-[var(--fg-secondary)]">
-            Esta vista solo se abre para el operador de VForge.
+            Las demos de VForge solo estan disponibles para el operador.
           </p>
         </section>
       </main>
     );
   }
 
-  const projects = await loadCarteraProjects().catch(() => []);
-  return <CarteraProjectsClient projects={projects} />;
+  const demos = await loadDemoProjects().catch(() => []);
+  return <DemosCatalogClient initialDemos={demos} />;
 }

@@ -4,6 +4,7 @@ import { sql } from "@/lib/db/client";
 
 let schemaReady = false;
 let curationReady = false;
+let carteraReady = false;
 
 export const PROJECT_REPOSITORY_CURATION_DDL: readonly string[] = [
   `CREATE TABLE IF NOT EXISTS project_repository_curation (
@@ -19,6 +20,20 @@ export const PROJECT_REPOSITORY_CURATION_DDL: readonly string[] = [
   )`,
   `CREATE INDEX IF NOT EXISTS idx_project_repository_curation_archived
     ON project_repository_curation (archived, updated_at DESC)`,
+];
+
+export const PROJECT_CARTERA_DDL: readonly string[] = [
+  `ALTER TABLE projects ADD COLUMN IF NOT EXISTS cartera_tipo text[] NOT NULL DEFAULT '{}'::text[]`,
+  `ALTER TABLE projects ADD COLUMN IF NOT EXISTS cartera_estado text`,
+  `ALTER TABLE projects ADD COLUMN IF NOT EXISTS cartera_prioridad int`,
+  `ALTER TABLE projects ADD COLUMN IF NOT EXISTS cartera_nota text`,
+  `ALTER TABLE projects ADD COLUMN IF NOT EXISTS es_demo boolean NOT NULL DEFAULT false`,
+  `ALTER TABLE projects ADD COLUMN IF NOT EXISTS demo_destacado boolean NOT NULL DEFAULT false`,
+  `CREATE INDEX IF NOT EXISTS idx_projects_cartera_tipo ON projects USING gin (cartera_tipo)`,
+  `CREATE INDEX IF NOT EXISTS idx_projects_cartera_estado ON projects (cartera_estado)`,
+  `CREATE INDEX IF NOT EXISTS idx_projects_cartera_prioridad ON projects (cartera_prioridad)`,
+  `CREATE INDEX IF NOT EXISTS idx_projects_es_demo ON projects (es_demo, updated_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_projects_demo_destacado ON projects (demo_destacado, updated_at DESC)`,
 ];
 
 /** Idempotent fallback for production environments where migrations lag deploys. */
@@ -75,4 +90,12 @@ export async function ensureProjectRepositoryCurationSchema(): Promise<void> {
     await sql.query(ddl);
   }
   curationReady = true;
+}
+
+export async function ensureProjectCarteraSchema(): Promise<void> {
+  if (carteraReady) return;
+  for (const ddl of PROJECT_CARTERA_DDL) {
+    await sql.query(ddl);
+  }
+  carteraReady = true;
 }

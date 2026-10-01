@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { VWordmark } from "@/components/brand/VMark";
 import {
   IconActivity,
+  IconBoxes,
   IconCpu,
   IconFactory,
   IconHammer,
@@ -59,6 +60,12 @@ const PRIMARY_NAV: NavItem[] = [
     Icon: IconLayers,
   },
   {
+    href: "/app/demos",
+    label: "Demos",
+    description: "Catalogo reutilizable",
+    Icon: IconBoxes,
+  },
+  {
     href: "/app/activity",
     label: "Actividad",
     description: "Eventos del sistema",
@@ -101,6 +108,7 @@ const TITLES: Record<string, string> = {
   "/app/home": "Estudio",
   "/app/trio": "Trío",
   "/app/projects": "Proyectos",
+  "/app/demos": "Demos",
   "/app/activity": "Actividad",
   "/app/hilo": "Hilo",
   "/app/tablero": "Tablero",
