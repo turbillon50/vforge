@@ -35,6 +35,9 @@
     "lib/live/see-cdp.ts",
     "lib/live/run-console.ts",
     "lib/live/work-order.ts",
-    "lib/live/room-tasks.ts"
+    "lib/live/room-tasks.ts",
+    "lib/mcp/rbac.ts",
+    "lib/mcp/registry.ts",
+    "lib/mcp/unicorn.ts"
   ]
 }

@@ -4,8 +4,9 @@ import { recall } from "@/lib/forge/semantic-recall";
 import { resolveAccessForUser } from "@/lib/connect/resolve-token";
 import { githubClientFromToken } from "@/lib/github/client";
 import { randomBytes } from "node:crypto";
-import { type McpPrincipal, isPublicTool, isAdmin } from "./rbac";
+import { type McpPrincipal, isAdmin, toolsVisibleFor } from "./rbac";
 import { MCP_TOOLS, type McpToolDef } from "./registry";
+import { isUnicornTool, runUnicornTool } from "./unicorn";
 
 /** El registro vive en `registry.ts` (sin dependencias) para que la página
  *  pública /mcp pueda contarlo sin arrastrar Neon ni GitHub. Se re-exporta
@@ -14,11 +15,12 @@ export { MCP_TOOLS };
 export type { McpToolDef };
 
 
-/** Tools visibles para un principal: public ve sólo las públicas; admin|client
- *  ven todas. Lo usa tools/list para no anunciar tools que igual rebotarían. */
+/** Tools visibles para un principal: exactamente las que puede llamar según
+ *  rbac.canCallTool (public → públicas; client → públicas + datos; admin →
+ *  todo, incluidas operador y unicorn). Lo usa tools/list para no anunciar
+ *  tools que igual rebotarían con 401. */
 export function mcpToolsForScope(principal: McpPrincipal): McpToolDef[] {
-  if (principal.scope === "admin" || principal.scope === "client") return MCP_TOOLS;
-  return MCP_TOOLS.filter((t) => isPublicTool(t.name));
+  return toolsVisibleFor(principal, MCP_TOOLS);
 }
 
 function text(t: string) {
@@ -282,6 +284,12 @@ function helpText(principal: McpPrincipal): string {
   lines.push("• vulcano_update_project — actualiza estado de proyecto en Brain (agentes).");
   lines.push("• vulcano_save_lesson — persiste lección/error/patrón en Brain (agentes).");
   lines.push("• vulcano_memory_search — búsqueda semántica en Brain (agentes).");
+  lines.push("\n## Unicorn — MCP maestro del ecosistema (sólo Owner)");
+  lines.push("• unicorn_estado — resumen: proyectos, en producción, live, último evento y cursor actual.");
+  lines.push("• unicorn_proyectos — lista de proyectos con estado, repos y URLs (filtros categoria/estado/q).");
+  lines.push("• unicorn_expediente — detalle de un proyecto: repos, URLs y últimos eventos.");
+  lines.push("• unicorn_eventos — eventos con cursor (polling): unicorn, auditoría, actividad y salud.");
+  lines.push("• unicorn_publicar_evento — publica un cambio (proyecto, tipo, título, detalle) para las demás apps.");
   const scopeName =
     principal.scope === "admin" ? "admin (operador — ves todo)" :
     principal.scope === "client" ? "client (ves SOLO tu forge)" :
@@ -332,6 +340,19 @@ export async function runMcpTool(
       return text(VFORGE_METHOD);
     case "help":
       return text(helpText(principal));
+  }
+
+  // --- UNICORN: sólo Owner. runUnicornTool revalida el scope (defensa en profundidad). ---
+  if (isUnicornTool(name)) {
+    const { brainSql } = await import("@/lib/db/nervous");
+    const nervousUrl =
+      process.env.NERVOUS_DATABASE_URL ?? process.env.BRAIN_DATABASE_URL ?? process.env.DATABASE_URL;
+    return runUnicornTool(name, args, principal, {
+      app: { query: <T,>(q: string, p?: unknown[]) => queryAll<T>(q, p ?? []) },
+      nervous: nervousUrl
+        ? { query: async <T,>(q: string, p?: unknown[]) => (await brainSql.query(q, p ?? [])) as T[] }
+        : null,
+    });
   }
 
   // --- GATE de datos: todo lo demás exige admin|client. public/anon => 401. ---

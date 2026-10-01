@@ -5,6 +5,7 @@
  */
 
 import { sql } from "./client";
+import { UNICORN_DDL } from "@/lib/mcp/unicorn";
 
 let _healed = false;
 
@@ -538,6 +539,20 @@ async function ensureVPlugins(): Promise<void> {
 }
 
 /**
+ * MCP maestro Unicorn: tabla unicorn_eventos (migración 047). La DDL vive en
+ * lib/mcp/unicorn.ts para que migración, runtime y heal no diverjan.
+ */
+async function ensureUnicornEventos(): Promise<void> {
+  for (const ddl of UNICORN_DDL) {
+    try {
+      await sql.query(ddl);
+    } catch {
+      // Ya existe o sin permisos: la tool la reintenta al publicar.
+    }
+  }
+}
+
+/**
  * Heal the database schema. Runs once per process.
  * Call this from api routes or middleware that execute early.
  */
@@ -558,6 +573,7 @@ export async function healDatabase(): Promise<void> {
     await ensureContractsPortal();
     await ensureVChat();
     await ensureVPlugins();
+    await ensureUnicornEventos();
   } catch (e) {
     // Silently fail - don't crash the app if database healing fails
     console.error("[V auto-heal] Database healing failed:", e);

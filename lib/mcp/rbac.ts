@@ -91,6 +91,15 @@ export const TOOL_KIND: Record<string, ToolKind> = {
   vulcano_brain_module: "data",
   vulcano_salud: "data",
   v_instruct: "data",
+
+  // ---- UNICORN (MCP maestro del protocolo Unicorn) — solo Owner (admin) ----
+  // Estado de todos los proyectos + flujo de eventos entre apps. Ver
+  // lib/mcp/unicorn.ts y docs/unicorn-mcp.md.
+  unicorn_estado: "data",
+  unicorn_proyectos: "data",
+  unicorn_expediente: "data",
+  unicorn_eventos: "data",
+  unicorn_publicar_evento: "data",
 };
 
 /**
@@ -114,6 +123,12 @@ export const OPERATOR_TOOLS: ReadonlySet<string> = new Set([
   "vulcano_memory_search",
   "v_instruct",
   "vforge_navegador_see",
+  // Unicorn — ven TODO el portafolio y escriben eventos: solo Owner
+  "unicorn_estado",
+  "unicorn_proyectos",
+  "unicorn_expediente",
+  "unicorn_eventos",
+  "unicorn_publicar_evento",
 ]);
 
 export function isOperatorTool(name: string): boolean {
@@ -140,6 +155,12 @@ export function canCallTool(principal: McpPrincipal, name: string): boolean {
   // Tools de operador (brain_exec, brain_query, shell, deploy real) — solo admin (Luis)
   if (isOperatorTool(name)) return principal.scope === "admin";
   return principal.scope === "admin" || principal.scope === "client";
+}
+
+/** Tools que este principal puede LLAMAR (lo que anuncia tools/list). Usa el
+ *  mismo gate que tools/call, así nunca se anuncia algo que rebotaría con 401. */
+export function toolsVisibleFor<T extends { name: string }>(principal: McpPrincipal, tools: readonly T[]): T[] {
+  return tools.filter((t) => canCallTool(principal, t.name));
 }
 
 /** Does this principal have access to ANY data tool? */
