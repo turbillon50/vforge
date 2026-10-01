@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sala de mando VForge - Opcion A</title>
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --card: #ffffff;
+      --line: #e6e6e2;
+      --line-strong: #d8d8d2;
+      --ink: #111111;
+      --muted: #686866;
+      --soft: #f0f0ed;
+      --soft-2: #eaeae6;
+      --accent: #FF5A1F;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-width: 0; overflow-x: hidden; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+    button, input, textarea { font: inherit; }
+    .page { width: min(100%, 1440px); margin: 0 auto; padding: 20px; }
+    .sample {
+      display: inline-flex;
+      align-items: center;
+      height: 20px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(260px, .8fr) auto;
+      gap: 12px;
+      align-items: stretch;
+      margin-bottom: 14px;
+    }
+    .objective, .project, .decision-panel, .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+    .objective { padding: 18px 18px 16px; min-width: 0; }
+    .label {
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .11em;
+      line-height: 1.2;
+    }
+    h1, h2, h3, p { margin: 0; }
+    h1 { margin-top: 8px; font-size: clamp(24px, 2.2vw, 34px); line-height: 1.02; font-weight: 650; }
+    .objective p { margin-top: 8px; color: var(--muted); line-height: 1.45; max-width: 760px; }
+    .project {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      min-width: 0;
+    }
+    .project-name { font-size: 18px; font-weight: 650; }
+    .project-meta { display: flex; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 12px; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 24px;
+      padding: 0 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--bg);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .decision-panel {
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      align-content: center;
+      min-width: 190px;
+    }
+    .btn {
+      border: 1px solid var(--line-strong);
+      background: var(--card);
+      color: var(--ink);
+      height: 38px;
+      padding: 0 14px;
+      border-radius: 6px;
+      cursor: default;
+      font-size: 13px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, .85fr) minmax(520px, 1.5fr) minmax(300px, .95fr);
+      gap: 14px;
+      align-items: start;
+    }
+    .stack { display: grid; gap: 12px; min-width: 0; }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      padding: 14px 14px 0;
+    }
+    .section-head h2 { font-size: 15px; font-weight: 680; }
+    .section-head span { color: var(--muted); font-size: 12px; }
+    .posture-list { display: grid; gap: 8px; padding: 12px; }
+    .posture {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 12px;
+      min-width: 0;
+      background: #fff;
+    }
+    .agent {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+    .logo-box, .codex-mark, .v-mark {
+      width: 32px;
+      height: 32px;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--bg);
+      color: #111;
+    }
+    .logo-box svg { width: 19px; height: 19px; display: block; }
+    .codex-mark {
+      background: #111;
+      color: #fff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 15px;
+      border-color: #111;
+    }
+    .v-mark {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+      font-weight: 750;
+      font-size: 17px;
+      letter-spacing: .02em;
+    }
+    .agent-text { min-width: 0; }
+    .agent-name { display: block; font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .agent-role { display: block; color: var(--muted); font-size: 11px; margin-top: 1px; }
+    .state {
+      margin-top: 10px;
+      display: inline-flex;
+      padding: 4px 7px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #2f2f2d;
+      font-size: 11px;
+      font-weight: 650;
+    }
+    .posture p { margin-top: 9px; color: #383836; font-size: 13px; line-height: 1.4; }
+    .board { padding: 12px; }
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .lane {
+      min-width: 0;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 10px;
+    }
+    .lane-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .task {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 10px;
+      margin-top: 8px;
+      min-width: 0;
+    }
+    .task:first-of-type { margin-top: 0; }
+    .task strong { display: block; font-size: 13px; line-height: 1.25; }
+    .task small { display: block; margin-top: 6px; color: var(--muted); font-size: 11px; line-height: 1.3; }
+    .progress {
+      position: relative;
+      height: 6px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--soft-2);
+      margin-top: 9px;
+    }
+    .progress span { position: absolute; inset: 0 auto 0 0; width: var(--w); background: #171717; border-radius: inherit; }
+    .live-grid { display: grid; gap: 8px; padding: 12px; }
+    .live {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 11px;
+      background: #fff;
+      min-width: 0;
+    }
+    .live:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -45%;
+      width: 40%;
+      height: 2px;
+      background: #111;
+      opacity: .18;
+      animation: scan 3.4s ease-in-out infinite;
+    }
+    @keyframes scan {
+      0% { transform: translateX(0); }
+      55%, 100% { transform: translateX(360%); }
+    }
+    .live-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 9px;
+    }
+    .pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #111;
+      display: inline-block;
+      animation: pulse 1.7s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: .35; transform: scale(.8); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11px;
+      color: var(--muted);
+      word-break: break-word;
+    }
+    pre {
+      margin: 8px 0 0;
+      padding: 9px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: #2f2f2d;
+      font: 11px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .log-list { padding: 8px 14px 14px; display: grid; gap: 8px; }
+    .log-item {
+      display: grid;
+      grid-template-columns: 68px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .log-item:first-child { border-top: 0; }
+    .log-item time { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; }
+    @media (max-width: 980px) {
+      .topbar, .layout { grid-template-columns: 1fr; }
+      .decision-panel { grid-template-columns: 1fr 1fr; min-width: 0; }
+      .board-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .page { padding: 12px; }
+      .decision-panel { grid-template-columns: 1fr; }
+      .section-head { align-items: flex-start; flex-direction: column; gap: 4px; }
+      .log-item { grid-template-columns: 54px minmax(0, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <section class="objective">
+        <span class="sample">ejemplo</span>
+        <div class="label" style="margin-top:14px">Objetivo de la sesion</div>
+        <h1>Definir la sala de planeacion donde agentes proponen, Luis decide y el trabajo arranca con dueno claro.</h1>
+        <p>Opcion A usa una mesa de guerra: posturas a la izquierda, reparto al centro, evidencia de trabajo y bitacora a la derecha.</p>
+      </section>
+      <aside class="project">
+        <div>
+          <div class="label">Proyecto elegido</div>
+          <div class="project-name">vForge / Sala de mando</div>
+        </div>
+        <div class="project-meta">
+          <span class="chip">rama claude/sala-mando</span>
+          <span class="chip">prioridad alta</span>
+          <span class="chip">revision Luis</span>
+        </div>
+      </aside>
+      <aside class="decision-panel" aria-label="Decision de Luis">
+        <button class="btn primary">Aprobar postura</button>
+        <button class="btn">Pedir replanteamiento</button>
+      </aside>
+    </div>
+
+    <div class="layout">
+      <section class="card">
+        <div class="section-head">
+          <h2>Posturas</h2>
+          <span>3 agentes</span>
+        </div>
+        <div class="posture-list">
+          <article class="posture">
+            <div class="agent">
+              <span class="logo-box" aria-label="Claude Code">
+                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Claude Code</title><path d="M21 10.5h3v3h-3v3h-1.5v3H18v-3h-1.5v3H15v-3H9v3H7.5v-3H6v3H4.5v-3H3v-3H0v-3h3v-6h18Zm-15 0h1.5v-3H6Zm10.5 0H18v-3h-1.5z"/></svg>
+              </span>
+              <span class="agent-text"><span class="agent-name">Claude Code</span><span class="agent-role">repos, git, calidad</span></span>
+            </div>
+            <span class="state">de acuerdo</span>
+            <p>Propone separar decision visual de implementacion: primero maqueta estatica, luego prompt a v0 si Luis elige.</p>
+          </article>
+          <article class="posture">
+            <div class="agent">
+              <span class="codex-mark" aria-label="Codex terminal">&gt;_</span>
+              <span class="agent-text"><span class="agent-name">Codex</span><span class="agent-role">prototipo y verificacion</span></span>
+            </div>
+            <span class="state">propuesta alterna</span>
+            <p>Quiere que cada panel tenga evidencia operativa: archivo, comando, diff y commit visible sin abrir otra ruta.</p>
+          </article>
+          <article class="posture">
+            <div class="agent">
+              <span class="v-mark" aria-label="V">V</span>
+              <span class="agent-text"><span class="agent-name">V</span><span class="agent-role">ejecucion y audit trail</span></span>
+            </div>
+            <span class="state">objecion</span>
+            <p>Objeta pantallas de demo vacias: la sala debe mostrar quien trabaja, que entrega y que queda bloqueado.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <h2>Reparto: quien hace que</h2>
+          <span>avance global 62%</span>
+        </div>
+        <div class="board">
+          <div class="board-grid">
+            <div class="lane">
+              <div class="lane-title">
+                <span>Claude Code</span>
+                <span class="chip">revision</span>
+              </div>
+              <div class="task">
+                <strong>Auditar /app/trio</strong>
+                <small>estado: hecho</small>
+                <div class="progress"><span style="--w:100%"></span></div>
+              </div>
+              <div class="task">
+                <strong>Pasar supervisor</strong>
+                <small>estado: por hacer</small>
+                <div class="progress"><span style="--w:18%"></span></div>
+              </div>
+            </div>
+            <div class="lane">
+              <div class="lane-title">
+                <span>Codex</span>
+                <span class="chip">trabajando</span>
+              </div>
+              <div class="task">
+                <strong>Maquetar tablero compacto</strong>
+                <small>estado: trabajando</small>
+                <div class="progress"><span style="--w:72%"></span></div>
+              </div>
+              <div class="task">
+                <strong>Validar 390 y 1440</strong>
+                <small>estado: revision</small>
+                <div class="progress"><span style="--w:54%"></span></div>
+              </div>
+            </div>
+            <div class="lane">
+              <div class="lane-title">
+                <span>V</span>
+                <span class="chip">por hacer</span>
+              </div>
+              <div class="task">
+                <strong>Asignar owners finales</strong>
+                <small>estado: por hacer</small>
+                <div class="progress"><span style="--w:28%"></span></div>
+              </div>
+              <div class="task">
+                <strong>Registrar entrega en bitacora</strong>
+                <small>estado: revision</small>
+                <div class="progress"><span style="--w:66%"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="stack">
+        <section class="card">
+          <div class="section-head">
+            <h2>Trabajo en vivo</h2>
+            <span><i class="pulse"></i> activo</span>
+          </div>
+          <div class="live-grid">
+            <article class="live">
+              <div class="live-top"><strong>Claude Code</strong><span class="mono">leyendo</span></div>
+              <div class="mono">docs/playbook.md</div>
+              <pre>comando: rg "Sala de mando" app docs
+diff: + criterio de planeacion
+commit: pending-supervisor</pre>
+            </article>
+            <article class="live">
+              <div class="live-top"><strong>Codex</strong><span class="mono">editando</span></div>
+              <div class="mono">maquetas/sala-mando/opcion-a.html</div>
+              <pre>- tarjetas sueltas
++ carriles con avance y owners
+comando: viewport 390/1440
+commit: mock-a-026</pre>
+            </article>
+            <article class="live">
+              <div class="live-top"><strong>V</strong><span class="mono">preparando</span></div>
+              <div class="mono">audit_events.preview</div>
+              <pre>comando: registrar entrega
+diff: + decision aprobada
+commit: audit-sala-017</pre>
+            </article>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>Decisiones y bitacora</h2>
+            <span>cronologico</span>
+          </div>
+          <div class="log-list">
+            <div class="log-item"><time>09:14</time><div>Decidido: la sala es de planeacion, no solo chat triple.</div></div>
+            <div class="log-item"><time>09:22</time><div>Entregado: tres posturas con estado visible para Luis.</div></div>
+            <div class="log-item"><time>09:31</time><div>Pendiente: Luis elige opcion para pasarla a app real.</div></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
