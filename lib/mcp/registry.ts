@@ -343,4 +343,78 @@ export const MCP_TOOLS: McpToolDef[] = [
     },
   },
 
+  /* ================ UNICORN — MCP maestro del protocolo (solo Owner) ================ */
+  /* Ver lib/mcp/unicorn.ts y docs/unicorn-mcp.md. En OPERATOR_TOOLS: admin ONLY. */
+  {
+    name: "unicorn_estado",
+    description:
+      "UNICORN (Owner): resumen del ecosistema en una llamada — total de proyectos, en producción, live, con error, conteo por categoría/estado, eventos publicados en 24 h, último evento y el cursor actual para empezar a hacer polling con unicorn_eventos. JSON.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "unicorn_proyectos",
+    description:
+      "UNICORN (Owner): lista los proyectos reales de VForge (tabla projects) con categoría, estado, repos (project_repositories) y URLs (vercel_url, domain, desktop/mobile/admin). Sin montos ni org_id. JSON.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        categoria: {
+          type: "string",
+          enum: ["produccion", "activo", "en_revision", "en_pausa", "archivo", "pendiente_borrado"],
+          description: "Filtra por categoría",
+        },
+        estado: { type: "string", enum: ["live", "building", "error", "idle", "unknown"], description: "Filtra por estado de deploy" },
+        q: { type: "string", description: "Busca en id o nombre" },
+        limit: { type: "number", description: "Máximo de proyectos (1-300; default 100)" },
+      },
+    },
+  },
+  {
+    name: "unicorn_expediente",
+    description:
+      "UNICORN (Owner): expediente de un proyecto — campos de projects, todos sus repos, URLs y los últimos eventos de todas las fuentes (unicorn, auditoría, actividad, salud) con su cursor. JSON.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        proyecto: { type: "string", description: "id del proyecto (p. ej. vforge)" },
+        limit_eventos: { type: "number", description: "Eventos recientes (1-100; default 20)" },
+      },
+      required: ["proyecto"],
+    },
+  },
+  {
+    name: "unicorn_eventos",
+    description:
+      "UNICORN (Owner): flujo de eventos para polling. Sin cursor devuelve los más recientes y un cursor; con cursor devuelve SOLO lo posterior, en orden ascendente, y el cursor nuevo. Fuentes: unicorn (publicados por las apps), auditoria (audit_events / Actividad), actividad (v_project_activity), salud (project_events). JSON.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cursor: { type: "string", description: "Cursor opaco devuelto por la llamada anterior" },
+        desde: { type: "string", description: "Alternativa al cursor: fecha ISO 8601 desde la cual leer" },
+        proyecto: { type: "string", description: "Filtra por id de proyecto" },
+        fuentes: {
+          type: "array",
+          items: { type: "string", enum: ["unicorn", "auditoria", "actividad", "salud"] },
+          description: "Limita las fuentes (default: todas)",
+        },
+        limit: { type: "number", description: "Máximo de eventos (1-200; default 50)" },
+      },
+    },
+  },
+  {
+    name: "unicorn_publicar_evento",
+    description:
+      "UNICORN (Owner, escribe): publica un evento de cambio en unicorn_eventos para que las demás apps (Momentum, MindContext, Eternime, TRAMA) lo lean con unicorn_eventos. El proyecto debe existir en VForge. Devuelve el evento con su cursor.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        proyecto: { type: "string", description: "id del proyecto (debe existir en projects)" },
+        tipo: { type: "string", description: "Slug del tipo: feature, valor, deploy, precio, estado… (minúsculas, _ . : -)" },
+        titulo: { type: "string", description: "Título corto (1-200)" },
+        detalle: { description: "Texto u objeto JSON con el detalle (máx. 8000 caracteres serializado)" },
+        origen: { type: "string", description: "App que publica (slug; default vforge): momentum, mindcontext, eternime, trama…" },
+      },
+      required: ["proyecto", "tipo", "titulo"],
+    },
+  },
 ];

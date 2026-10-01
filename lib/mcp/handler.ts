@@ -1,6 +1,6 @@
 import { resolveMcpToken } from "@/lib/mcp/tokens";
 import { mcpToolsForScope, runMcpTool } from "@/lib/mcp/tools";
-import { ANON_PRINCIPAL, type McpPrincipal, canCallTool, toolKind } from "@/lib/mcp/rbac";
+import { ANON_PRINCIPAL, type McpPrincipal, canCallTool, isOperatorTool, toolKind } from "@/lib/mcp/rbac";
 
 const PROTOCOL_VERSION = "2024-11-05";
 
@@ -113,8 +113,10 @@ export async function handleMcp(req: Request, forcePublic = false): Promise<Resp
       if (!canCallTool(principal, name)) {
         return unauthorized(
           id,
-          `unauthorized: la tool "${name}" (${toolKind(name)}) requiere un token MCP válido (admin o client). ` +
-            `Sin token sólo están disponibles las tools públicas.`,
+          isOperatorTool(name)
+            ? `unauthorized: la tool "${name}" es de operador y requiere un token de Owner (scope admin/operator).`
+            : `unauthorized: la tool "${name}" (${toolKind(name)}) requiere un token MCP válido (admin o client). ` +
+                `Sin token sólo están disponibles las tools públicas.`,
         );
       }
       try {
