@@ -182,7 +182,8 @@ export async function POST(
       parsed.messages.map((m) => `${m.autor ?? ""}|${m.texto ?? ""}`),
     ],
   )) as Array<{ uid: string }>;
-  if (corregidos.length) nuevos = Math.max(0, nuevos - corregidos.length);
+  const fechasCorregidas = corregidos.length;
+  if (fechasCorregidas) nuevos = Math.max(0, nuevos - fechasCorregidas);
 
   await sql.query(
     `INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
@@ -233,6 +234,7 @@ export async function POST(
       rango_fechas: parsed.range,
       mensajes: {
         nuevos,
+        fechas_corregidas: fechasCorregidas,
         repetidos,
         total: parsed.messages.length,
       },

@@ -179,7 +179,7 @@ export async function usarDemoComoBase({
       cartera_tipo, cartera_estado, cartera_nota, es_demo,
       etapa, cliente_nombre, cliente_whatsapp
     ) VALUES (
-      ${newProjectId}, ${cleanName}, ${demo.description}, 'en_revision', 'unknown',
+      ${newProjectId}, ${cleanName}, ${[cleanProjectText(clienteNombre, 160), cleanProjectText(rubro, 120)].filter(Boolean).join(" — ") || demo.description}, 'en_revision', 'unknown',
       ${repo.full_name}, ${repo.html_url}, ${repo.private ?? true}, ${repo.default_branch ?? "main"},
       ${carteraTipo}::text[], ${carteraEstado}, ${note}, false,
       ${initialEtapa}, ${cleanProjectText(clienteNombre, 160)}, ${cleanProjectText(clienteWhatsapp, 80)}

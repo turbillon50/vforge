@@ -74,11 +74,11 @@ export function ProjectChats({
           { method: "POST", body: form },
         );
         const payload = (await response.json().catch(() => null)) as
-          | { error?: string; mensajes?: { nuevos: number; repetidos: number }; etapa_actualizada?: string | null }
+          | { error?: string; mensajes?: { nuevos: number; repetidos: number; fechas_corregidas?: number }; etapa_actualizada?: string | null }
           | null;
         if (!response.ok) throw new Error(payload?.error ?? `HTTP ${response.status}`);
         setMessage(
-          `${payload?.mensajes?.nuevos ?? 0} nuevos, ${payload?.mensajes?.repetidos ?? 0} repetidos`,
+          `${payload?.mensajes?.nuevos ?? 0} nuevos, ${payload?.mensajes?.repetidos ?? 0} repetidos${payload?.mensajes?.fechas_corregidas ? `, ${payload.mensajes.fechas_corregidas} con fecha corregida` : ""}`,
         );
         if (payload) onUploaded?.(payload);
         await reload();
