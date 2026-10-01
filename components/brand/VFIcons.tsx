@@ -9,6 +9,7 @@ const b = (sz:number, p:IP) => ({
 // Nav & UI
 export const IconChat      = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
 export const IconChats     = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h8M8 13h5" opacity=".5"/></svg>;
+export const IconTrio      = ({size=20,...p}:IP)=><svg {...b(size,p)}><rect x="2" y="4" width="5.5" height="16" rx="1.5"/><rect x="9.25" y="4" width="5.5" height="16" rx="1.5"/><rect x="16.5" y="4" width="5.5" height="16" rx="1.5"/><path d="M4 8h1.5M11.25 8h1.5M18.5 8H20" opacity=".5"/></svg>;
 export const IconBranch    = ({size=20,...p}:IP)=><svg {...b(size,p)}><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 9v3a6 6 0 0 0 6 6h3"/><circle cx="18" cy="6" r="3"/><path d="M15 6H9"/></svg>;
 export const IconRocket    = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M12 2s4.5 3 4.5 9.5L12 14l-4.5-2.5C7.5 5 12 2 12 2z"/><path d="M12 14v8"/><circle cx="12" cy="10" r="2"/></svg>;
 export const IconLayers    = ({size=20,...p}:IP)=><svg {...b(size,p)}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>;
