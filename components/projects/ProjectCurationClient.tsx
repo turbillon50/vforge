@@ -327,7 +327,17 @@ export default function ProjectCurationClient() {
     setSelected(new Set(names));
     setProjectName(group.name);
     setPrimaryRepo(names[0] ?? "");
-    setMessage(`Grupo listo: ${group.name}`);
+    // Si ya existe un proyecto real con ese nombre, se agrega ahí: nunca duplicar.
+    const norma = (v: string) => v.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const existente = projects.find(
+      (p) => norma(p.id) === norma(group.root) || norma(p.name) === norma(group.root),
+    );
+    if (existente) {
+      setTargetProject(existente.id);
+      setMessage(`Ya existe "${existente.name}": usa "Agregar repos" para meterlos ahí.`);
+    } else {
+      setMessage(`Grupo listo: ${group.name}. Revisa el nombre y dale "Crear proyecto".`);
+    }
   }
 
   async function mutate(action: string, body: Record<string, unknown>) {
