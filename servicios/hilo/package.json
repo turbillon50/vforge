@@ -1,0 +1,20 @@
+{
+  "name": "@vforge/hilo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node hilo.mjs",
+    "analista": "node analista.mjs",
+    "test:importar-zip": "node --test importar-zip.test.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "playwright-core": "^1.49.0",
+    "qrcode": "^1.5.4",
+    "yauzl": "^2.10.0"
+  }
+}

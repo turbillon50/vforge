@@ -1,0 +1,4 @@
+[31/12/24, 10:15:00 p. m.] Luis: Hola asistente
+[31/12/24, 10:16:00 p. m.] Asistente: Listo
+con detalle extra
+[31/12/24, 10:17:00 p. m.] Asistente: <adjunto: AUDIO-2024-12-31-22-17-00.opus>

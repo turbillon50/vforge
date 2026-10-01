@@ -9,6 +9,7 @@ const b = (sz:number, p:IP) => ({
 // Nav & UI
 export const IconChat      = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
 export const IconChats     = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h8M8 13h5" opacity=".5"/></svg>;
+export const IconHilo      = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M5 5.5A3.5 3.5 0 0 1 8.5 2h7A3.5 3.5 0 0 1 19 5.5v6a3.5 3.5 0 0 1-3.5 3.5H12l-4.5 4v-4A3.5 3.5 0 0 1 4 11.5z"/><path d="M8 8h8"/><path d="M8 11h4.5"/><path d="M17 18c1.7 0 3-1.3 3-3"/><path d="M4 18c-1.7 0-3-1.3-3-3"/></svg>;
 export const IconTrio      = ({size=20,...p}:IP)=><svg {...b(size,p)}><rect x="2" y="4" width="5.5" height="16" rx="1.5"/><rect x="9.25" y="4" width="5.5" height="16" rx="1.5"/><rect x="16.5" y="4" width="5.5" height="16" rx="1.5"/><path d="M4 8h1.5M11.25 8h1.5M18.5 8H20" opacity=".5"/></svg>;
 export const IconBranch    = ({size=20,...p}:IP)=><svg {...b(size,p)}><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 9v3a6 6 0 0 0 6 6h3"/><circle cx="18" cy="6" r="3"/><path d="M15 6H9"/></svg>;
 export const IconRocket    = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M12 2s4.5 3 4.5 9.5L12 14l-4.5-2.5C7.5 5 12 2 12 2z"/><path d="M12 14v8"/><circle cx="12" cy="10" r="2"/></svg>;
@@ -104,4 +105,3 @@ export const IconThumbDown = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M
 export const IconWand      = ({size=20,...p}:IP)=><svg {...b(size,p)}><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8L19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2L19 5"/><path d="M3 21l9-9"/><path d="M12.2 6.2L11 5"/></svg>;
 export const IconArrowUp   = ({size=20,...p}:IP)=><svg {...b(size,p)}><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>;
 export const IconHistory   = ({size=20,...p}:IP)=><svg {...b(size,p)}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.51"/><path d="M12 7v5l3 3"/></svg>;
-
