@@ -57,8 +57,13 @@ export async function copyRepoWithGitApi({
     path: string;
     mode: "100644" | "100755" | "120000";
     type: "blob";
-    sha: string;
+    sha?: string;
+    content?: string;
   }> = [];
+  // GitHub limita la creación de contenido (~80 escrituras/min): el texto va dentro del
+  // árbol (una sola escritura) y sólo los binarios se suben como blob.
+  let inlineBytes = 0;
+  const INLINE_MAX_BYTES = 20 * 1024 * 1024;
 
   // Copia en paralelo (8 a la vez): una demo de cientos de archivos cabe en el tiempo límite.
   const copiar = async (item: (typeof tree.data.tree)[number]) => {
@@ -89,6 +94,18 @@ export async function copyRepoWithGitApi({
           file_sha: item.sha,
         },
       );
+      const raw = Buffer.from(sourceBlob.data.content, "base64");
+      const text = comoTexto(raw);
+      if (text !== null && inlineBytes + raw.length <= INLINE_MAX_BYTES) {
+        inlineBytes += raw.length;
+        targetTree.push({
+          path: item.path,
+          mode: copyableBlobMode(item.mode),
+          type: "blob",
+          content: text,
+        });
+        return;
+      }
       const createdBlob = await octokit.request(
         "POST /repos/{owner}/{repo}/git/blobs",
         {
@@ -180,3 +197,9 @@ function copyableBlobMode(mode: string | undefined): "100644" | "100755" | "1200
   return mode === "100755" || mode === "120000" ? mode : "100644";
 }
 
+/** Devuelve el archivo como texto UTF-8 si lo es sin pérdida; null si es binario. */
+function comoTexto(raw: Buffer): string | null {
+  if (raw.includes(0)) return null;
+  const text = raw.toString("utf8");
+  return Buffer.from(text, "utf8").equals(raw) ? text : null;
+}
