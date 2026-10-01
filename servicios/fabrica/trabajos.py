@@ -170,7 +170,10 @@ def procesos():
         if clave not in vistos or (ini and ini < (vistos[clave]["desde"] or 1e12)):
             proy, job = proyecto_de_carpeta(cwd)
             prompt = None
-            if "-p" in arg:
+            if motor == "codex":
+                libres = [a for a in arg[arg.index("exec") + 1:] if not a.startswith("-")] if "exec" in arg else []
+                prompt = max(libres, key=len) if libres else None
+            elif "-p" in arg:
                 i = arg.index("-p")
                 if i + 1 < len(arg) and not arg[i + 1].startswith("-"):
                     prompt = arg[i + 1]
