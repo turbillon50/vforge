@@ -267,7 +267,15 @@ async function crearOReusarRepo(
       owner: GITHUB_OWNER,
       repo: repoName,
     });
-    if ((existing.data as { size?: number }).size === 0) {
+    const tieneRama = await octokit
+      .request("GET /repos/{owner}/{repo}/branches/{branch}", {
+        owner: GITHUB_OWNER,
+        repo: repoName,
+        branch: (existing.data as { default_branch?: string }).default_branch ?? "main",
+      })
+      .then(() => true)
+      .catch(() => false);
+    if (!tieneRama) {
       // Repo vacío: la API de contenidos sí lo acepta y deja una rama para que la copia la reemplace.
       await octokit.request("PUT /repos/{owner}/{repo}/contents/{path}", {
         owner: GITHUB_OWNER,
