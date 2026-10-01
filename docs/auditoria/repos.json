@@ -1,0 +1,406 @@
+{
+ "categorias": [
+  "cliente",
+  "comercializamos",
+  "centro_control",
+  "demo_catalogo",
+  "archivar",
+  "store",
+  "fork_marca"
+ ],
+ "decisiones": {
+  "_basura": {
+   "decision": "archivar",
+   "nota": "Luis: va. Respaldos -srv, ramas de trabajo, copias QA, pruebas, plantillas ajenas, metodos-archivo"
+  },
+  "happytoc": {
+   "repos": [
+    "happytoc",
+    "happytoc-pwa"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "cliente_abandono",
+   "nota": "Pagó las dos primeras partes; debe 4,000 MXN; ya no contesta, ella abandonó",
+   "debe_mxn": 4000
+  },
+  "vliving": {
+   "repos": [
+    "vliving-2026",
+    "vliving-admin",
+    "vliving-plataforma",
+    "vliving-frontend",
+    "vliving-app",
+    "v-living",
+    "final-v-living",
+    "v-living-fina",
+    "vliving-vindex",
+    "vliving-rentas",
+    "vliving-proyector",
+    "vliving-frecuencia",
+    "pulso-neutro",
+    "vliving-audit-fix",
+    "all-living-sept-2026"
+   ],
+   "tipo": [
+    "comercializamos",
+    "centro_control"
+   ],
+   "pendiente": "que versiones viejas se archivan"
+  },
+  "zuxen": {
+   "repos": [
+    "zuxen",
+    "zuxen-mexico"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "cliente_satisfecho_le_debemos_mejoras",
+   "nota": "Javier es amigo; lo quiere de aliado para atraer usuarios; faltan mejoras que pidió",
+   "prioridad": 1
+  },
+  "ssante": {
+   "repos": [
+    "ssante",
+    "ssante-demo"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "cliente_satisfecho_le_debemos_mejoras",
+   "nota": "Misma relación que Zuxen: cliente satisfecho, le debemos mejoras",
+   "prioridad": 1
+  },
+  "ruta618": {
+   "repos": [
+    "ruta-618-app",
+    "ruta618-v2"
+   ],
+   "tipo": [
+    "comercializamos",
+    "demo_catalogo"
+   ],
+   "estado": "le_quedamos_mal_dinero_devuelto",
+   "prioridad": 3,
+   "nota": "Luis devolvió el dinero; la app es nuestra; cambiar nombre, rearmar como \"Last Mile\" para venta en Momentum; no urge"
+  },
+  "ceer": {
+   "repos": [
+    "ceer-platform",
+    "ceer",
+    "ceer-admin"
+   ],
+   "tipo": [
+    "cliente",
+    "socios"
+   ],
+   "estado": "activo_al_corriente",
+   "prioridad": 1,
+   "nota": "Socios con Guillermo; falta poco; tienen dudas; hay que avanzar"
+  },
+  "vedika": {
+   "repos": [
+    "vedika-app",
+    "vedika",
+    "vedika77"
+   ],
+   "tipo": [
+    "socios"
+   ],
+   "estado": "activo",
+   "prioridad": 1,
+   "nota": "Súper amigo, alianza; Luis va de socio; no debe dinero"
+  },
+  "premmex": {
+   "repos": [
+    "premmex",
+    "premmex-v2",
+    "premmex-admin",
+    "premmex-cobrador",
+    "premmex-client"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "activo_al_corriente",
+   "prioridad": 1,
+   "nota": "Ya está; le urgen detalles menores"
+  },
+  "studiodj": {
+   "repos": [
+    "dj-console"
+   ],
+   "tipo": [
+    "demo_catalogo"
+   ]
+  },
+  "momentum": {
+   "repos": [
+    "vmomentum-market",
+    "momentum",
+    "momentum-shell",
+    "vmomentum-lab",
+    "vmomentum-market-creativo",
+    "vmomentum-forge",
+    "vmomentum-admin",
+    "vmomentum-panel-core",
+    "v-momentum-pwa",
+    "v-momentum-backend",
+    "v-momentum-factory-",
+    "bemomentum-pwa-final"
+   ],
+   "tipo": [
+    "centro_control",
+    "comercializamos",
+    "operacion"
+   ],
+   "nota": "Súper importante; ligada íntimamente con todo; es operación; se comercializa y dentro de la misma app se buscan inversionistas",
+   "pendiente": "qué versiones viejas se archivan"
+  },
+  "vforge": {
+   "repos": [
+    "vforge",
+    "vforge-live",
+    "vforge-catalogo",
+    "catalogo-compoentes",
+    "catalogo-crystal",
+    "vforge-inspector",
+    "forge-admin",
+    "vibeforge",
+    "sala-vivo",
+    "vadmin-demo",
+    "vadm-admin-diseno",
+    "v7",
+    "vforge-v0",
+    "VFORGE-ENSAMBLADOR",
+    "vforge-master-tenplate-",
+    "v-forge-autonomy-core"
+   ],
+   "tipo": [
+    "centro_control"
+   ],
+   "nota": "Es la fábrica; por ahora solo nuestra; a futuro versión para usuarios normales",
+   "pendiente": "versiones viejas"
+  },
+  "vulcano": {
+   "repos": [
+    "vulcano-infra",
+    "mesh-router",
+    "skills-vault",
+    "vulcano-marketplace",
+    "al-review-vulcano",
+    "mega-mcp",
+    "market-proxy",
+    "mcp-pack",
+    "organismo"
+   ],
+   "tipo": [
+    "centro_control"
+   ]
+  },
+  "eternime": {
+   "repos": [
+    "eternime-lobby"
+   ],
+   "tipo": [
+    "comercializamos",
+    "centro_control",
+    "store",
+    "inversion_momentum"
+   ]
+  },
+  "mindcontextia": {
+   "repos": [
+    "mindcontextia"
+   ],
+   "tipo": [
+    "comercializamos",
+    "centro_control",
+    "store",
+    "inversion_momentum"
+   ]
+  },
+  "trama": {
+   "repos": [
+    "trama"
+   ],
+   "tipo": [
+    "centro_control",
+    "comercializamos",
+    "inversion_momentum"
+   ]
+  },
+  "trading": {
+   "repos": [
+    "finanzas",
+    "v-trading-casa-final",
+    "v-tan",
+    "tanit-fronted",
+    "nasbot",
+    "bybit-proxy",
+    "moneymaker"
+   ],
+   "tipo": [
+    "comercializamos",
+    "inversion_momentum"
+   ],
+   "nota": "La versión Tanit es solo de Luis (rediseño para operar); V-TRADING es producto importante, ligado íntimamente con VanDeFi",
+   "pendiente": "qué repos viejos se archivan"
+  },
+  "vandefi": {
+   "repos": [
+    "vanlink",
+    "vandefi",
+    "vandefi-origin",
+    "vandefi-3.1",
+    "v-defi-stich",
+    "VPAY",
+    "Fractal",
+    "Fractal.Ai"
+   ],
+   "tipo": [
+    "comercializamos",
+    "inversion_momentum"
+   ],
+   "prioridad": 1,
+   "nota": "De nuestros mejores proyectos; depurar versiones viejas y en su momento borrar orígenes, dejar algo limpio"
+  },
+  "allglobal": {
+   "repos": [
+    "all-global-os",
+    "all-global-holding-llc",
+    "final-allglobal",
+    "global-holdings-nexus",
+    "agh"
+   ],
+   "tipo": [
+    "institucional"
+   ],
+   "prioridad": 2,
+   "nota": "Landscape de todo: página institucional con toda la info de cómo trabajamos; no app"
+  },
+  "apsus": {
+   "repos": [
+    "microcreditos",
+    "apsus-visual"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "cerrado_mantenimiento"
+  },
+  "castores_bitacora": {
+   "repos": [
+    "FINAL-CASTORES",
+    "castores-final"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "cerrado_mantenimiento",
+   "nota": "Cliente súper contento; app terminada, solo faltaban unos temas"
+  },
+  "castores_store": {
+   "repos": [
+    "castores-store",
+    "castores-store-cz"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "medio_parado",
+   "nota": "Segundo proyecto de Juan Reyes: la store, está medio parada"
+  },
+  "icep": {
+   "repos": [
+    "icep-control"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "activo_le_debemos_entrega"
+  },
+  "exci": {
+   "repos": [
+    "apruebaelexci"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "activo_le_debemos_entrega",
+   "nota": "Súper contento; de los nuevos que vamos como se debe; poner especial atención en ir cumpliendo bien"
+  },
+  "contarea": {
+   "repos": [
+    "contarea",
+    "contarea-demo"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "activo_le_debemos_entrega",
+   "nota": "Va muy bien, mismo caso que EXCI"
+  },
+  "luspa": {
+   "repos": [
+    "lu-spa"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "activo",
+   "nota": "Es de Jimmy, socio de Luis; se lo está regalando; no urge, va muy bien"
+  },
+  "_demos_prospectos": {
+   "repos": [
+    "ehecatl-demo",
+    "valores-demo",
+    "lsm-demo",
+    "peninsula-demo",
+    "peninsula-v2",
+    "funemove-demo",
+    "pirotecnia-kyo",
+    "puntoflash-demo",
+    "internum360",
+    "hidalgo-app",
+    "copoma-demo",
+    "comarca-fire",
+    "indcom-demo",
+    "kai-coffee-demo",
+    "archisoluciones-demo",
+    "protrack-demo",
+    "obratrack-ricardo",
+    "rutalink-demo",
+    "obleas-demo",
+    "obleas-miel",
+    "obleas-miel-v2",
+    "pipmx-demo",
+    "forge-demo"
+   ],
+   "tipo": [
+    "demo_catalogo"
+   ]
+  },
+  "netmas": {
+   "repos": [
+    "netmas-distribuidores"
+   ],
+   "tipo": [
+    "cliente"
+   ],
+   "estado": "relacion_rota_no_pago",
+   "nota": "Luis rompió con Omar: no quería pagar; exigía la app al 100% cuando ya casi estaba terminada",
+   "pendiente": "decidir si se reusa como nuestra/demo"
+  }
+ },
+ "notas_luis": [
+  "Nueva categoria: demos/catalogo — cosas que no se vendieron o valen la pena desarrollar, para cuando alguien pida algo",
+  "Por cliente: ver quién abandonó, a quién le quedamos mal, a quién le debemos y qué podemos entregar todavía",
+  "Prioridades: CEER + los dos multinivel (Zuxen, Ssante) = prioridad 1 activos",
+  "Todas las de prioridad 1 entran a un área de Mantenimiento constante (posible GPU); las terminadas pasan a mantenimiento; habrá área de testers",
+  "Nueva dimensión: qué proyectos se van a Momentum para captar inversión",
+  "Regla: proyectos con muchas versiones/procesos → depurar, en su momento borrar orígenes y dejar un solo repo limpio"
+ ]
+}
