@@ -1,14 +1,12 @@
-import OpenAI from "openai";
 import { buildSystemPrompt } from "@/lib/forge/system-prompt";
 import { getOperatorSecret } from "@/lib/vault/get-secret";
 import { speakInFamily } from "@/lib/family/client";
 import { sql } from "@/lib/db/client";
+import { meshAdapter } from "@/lib/forge/adapters/mesh";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
-
-const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 interface RequestBody {
   messageId: string;
@@ -21,7 +19,7 @@ interface RequestBody {
 
 // Internal endpoint: invoked fire-and-forget from /api/family-incoming after
 // persisting a message from family. Loads vForge's REAL system prompt
-// (knowledge_base, agent_directives, installed skills) and uses OpenRouter
+// (knowledge_base, agent_directives, installed skills) and uses the mesh
 // to generate a response in his own voice. Then posts to family via
 // speakInFamily(). If the model decides not to respond, posts nothing.
 //
@@ -76,38 +74,33 @@ export async function POST(req: Request): Promise<Response> {
     "NO uses markdown pesado (sin headers, sin code blocks largos), es un chat. Mantén la respuesta corta — una o dos oraciones es perfecto si basta.",
   ].join("\n");
 
-  // Get OpenRouter key from vault or env.
-  const apiKey = await getOperatorSecret("OPENROUTER_API_KEY", {
-    auditUserId: "vforge_self",
-  }).catch(() => null);
-  if (!apiKey) {
-    return Response.json(
-      { ok: false, error: "OPENROUTER_API_KEY not configured" },
-      { status: 503 },
-    );
-  }
-
-  const openrouter = new OpenAI({
-    apiKey,
-    baseURL: OPENROUTER_BASE_URL,
-    defaultHeaders: {
-      "HTTP-Referer": "https://vforge.site",
-      "X-Title": "vForge / family",
-    },
-  });
-
   let replyText = "";
   try {
-    const completion = await openrouter.chat.completions.create({
-      model: "anthropic/claude-3.5-sonnet",
+    const completion = await meshAdapter.execute({
+      policy: "v",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userTurn },
       ],
-      max_tokens: 600,
-      stream: false,
+      maxTokens: 600,
+      temperature: 0.4,
+    }, {
+      userId: "vforge_self",
+      sessionId: messageId,
+      signal: req.signal,
+      vault: {
+        async getOperatorSecret(name) {
+          return getOperatorSecret(name, { auditUserId: "vforge_self" });
+        },
+        async getProjectSecret(projectId, name) {
+          return getOperatorSecret(name, {
+            auditUserId: "vforge_self",
+            projectId,
+          });
+        },
+      },
     });
-    replyText = (completion.choices?.[0]?.message?.content ?? "").trim();
+    replyText = completion.content.trim();
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown error";
     // Log via audit but don't break — family already has the original message.

@@ -7,7 +7,7 @@ import "server-only";
  * - Claude  → Anthropic Messages API (ANTHROPIC_API_KEY, vault → env).
  * - ChatGPT → OpenAI Chat Completions (OPENAI_API_KEY, vault → env).
  * - V       → el MISMO motor que usa /api/forge/run (resolveLlmEngine + modelo
- *             de agent_config "chat-main" + cascada de routing) y el MISMO system
+ *             de agent_config "chat-main") y el MISMO system
  *             prompt de V (buildSystemPrompt); sólo se omiten las tools.
  */
 import Anthropic from "@anthropic-ai/sdk";
@@ -16,8 +16,6 @@ import { getOperatorSecret } from "@/lib/vault/get-secret";
 import { buildSystemPrompt } from "@/lib/forge/system-prompt";
 import { getModelForTask } from "@/lib/forge/agent-config";
 import { modelForEngine, resolveLlmEngine } from "@/lib/forge/llm-engine";
-import { MODELS, normalizeSlug } from "@/lib/forge/models";
-import { routeFor } from "@/lib/forge/routing";
 import type { TurnoChat } from "@/lib/trio/conversacion";
 
 /** Modelo de Claude: el mismo que ya usa el asistente del workspace; override por env. */
@@ -155,21 +153,13 @@ export async function* motorV(
   const engine = resolveLlmEngine();
   const llm = engine.client;
   if (!llm) {
-    throw new Error("V no tiene motor configurado (CEREBRAS_API_KEY u OPENROUTER_API_KEY).");
+    throw new Error("V no tiene motor configurado (CEREBRAS_API_KEY o MESH_API_KEY).");
   }
 
   // Misma resolución de modelo que /api/forge/run.
   const configurado =
     (await getModelForTask("chat-main").catch(() => null)) ?? engine.defaultChatModel;
-  let cascada: string[];
-  if (engine.name === "cerebras") {
-    cascada = [modelForEngine(engine, configurado)];
-  } else {
-    const conocido = !!MODELS[normalizeSlug(configurado)];
-    cascada = conocido
-      ? routeFor("chat-main", { forceSlug: normalizeSlug(configurado) }).cascade
-      : [configurado, ...routeFor("chat-main").cascade];
-  }
+  const cascada = [modelForEngine(engine, configurado)];
 
   const mensajes = [{ role: "system" as const, content: sistema }, ...turnos];
   let ultimoError: unknown = null;

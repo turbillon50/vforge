@@ -9,8 +9,7 @@ import { sql } from "@/lib/db/client";
 import { buildSystemPrompt } from "@/lib/forge/system-prompt";
 import { TOOLS, executeTool } from "@/lib/forge/tools";
 import { getOperatorSecret } from "@/lib/vault/get-secret";
-import { routeFor } from "@/lib/forge/routing";
-import { estimateCostForModel, MODELS, normalizeSlug } from "@/lib/forge/models";
+import { estimateCostForModel } from "@/lib/forge/models";
 import { getModelForTask } from "@/lib/forge/agent-config";
 import {
   modelForEngine,
@@ -110,7 +109,7 @@ export async function POST(req: Request) {
   const engine = resolveLlmEngine();
   if (engine.name === "none" && !process.env.HETZNER_SECRET) {
     return jsonError(
-      "No model engine configured (CEREBRAS_API_KEY, OPENROUTER fallback o HETZNER_SECRET)",
+      "No model engine configured (CEREBRAS_API_KEY, MESH_API_KEY o HETZNER_SECRET)",
       500,
     );
   }
@@ -169,21 +168,9 @@ export async function POST(req: Request) {
   const configuredModel =
     dbConfiguredModel ?? config.default_model ?? engine.defaultChatModel;
 
-  // Con Cerebras: un solo modelo mapeado (sin cascade OpenRouter).
-  let cascade: string[];
-  if (engine.name === "cerebras") {
-    cascade = [modelForEngine(engine, configuredModel)];
-  } else {
-    const isKnownSlug = !!MODELS[normalizeSlug(configuredModel)];
-    const routing = isKnownSlug
-      ? routeFor("chat-main", { forceSlug: normalizeSlug(configuredModel) })
-      : routeFor("chat-main");
-    cascade = isKnownSlug
-      ? routing.cascade
-      : [configuredModel, ...routing.cascade];
-  }
-
-  const routing = routeFor("chat-main");
+  // OpenRouter fue retirado: un solo modelo del motor activo.
+  const cascade = [modelForEngine(engine, configuredModel)];
+  const routingReason = `engine=${engine.name}`;
 
   const lastUserTurn = messages[messages.length - 1];
   if (lastUserTurn.role === "user") {
@@ -257,11 +244,8 @@ export async function POST(req: Request) {
         });
       }
 
-      // Solo relay Hetzner/Claude si NO hay Cerebras y el slug es anthropic/*
-      if (
-        engine.name !== "cerebras" &&
-        configuredModel.startsWith("anthropic/")
-      ) {
+      // Solo relay Hetzner si no hay cliente Cerebras/mesh en este runtime.
+      if (engine.name === "none") {
         try {
           const handled = await runViaHetznerRelay({
             systemPrompt,
@@ -516,7 +500,7 @@ export async function POST(req: Request) {
               stop_reason: lastStopReason,
               cascade_tried: triedSlugs,
               fallbacks: fallbackEvents,
-              routing_reason: routing.reason,
+              routing_reason: routingReason,
             })}::jsonb
           )
         `;

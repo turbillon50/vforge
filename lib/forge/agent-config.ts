@@ -2,11 +2,10 @@
  * V's self-config layer.
  *
  * Cascade: agent_config (Neon) → env → defaults.
- * Default chat-main: Cerebras (llama-3.3-70b), no OpenRouter.
+ * Default chat-main: Cerebras/mesh, sin gateways externos.
  */
 import { sql } from "@/lib/db/client";
 import { MODELS, normalizeSlug, type TaskKind } from "./models";
-import { isValidOpenRouterSlug } from "./openrouter-catalog";
 import { CEREBRAS_DEFAULT_MODEL } from "./llm-engine";
 
 interface ConfigRow {
@@ -55,28 +54,11 @@ export async function setModelForTask(
   const normalized = normalizeSlug(model);
   const isKnown = !!MODELS[normalized];
   if (!isKnown) {
-    const looksLikeSlug = normalized.includes("/") || !normalized.includes(" ");
-    if (!looksLikeSlug) {
+    const looksLikeModelId = !normalized.includes(" ");
+    if (!looksLikeModelId) {
       throw new Error(
         `Model '${model}' doesn't look like a valid id.`,
       );
-    }
-    // Cerebras ids (llama-3.3-70b) no pasan por catálogo OpenRouter
-    if (normalized.includes("/")) {
-      try {
-        const found = await isValidOpenRouterSlug(normalized);
-        if (!found) {
-          throw new Error(
-            `Model '${normalized}' not found in OpenRouter catalog.`,
-          );
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (msg.startsWith("Model '")) throw err;
-        console.warn(
-          `[agent-config] catalog check skipped for '${normalized}': ${msg}`,
-        );
-      }
     }
   }
   const updatedBy = options.updatedBy ?? "operator_luis";
@@ -123,14 +105,14 @@ const ENV_BY_TASK: Partial<Record<TaskKind, string>> = {
   classification: "MODEL_CLASSIFY",
 };
 
-/** Defaults: Cerebras, no OpenRouter/Claude. */
+/** Defaults: Cerebras/mesh. */
 const DEFAULT_BY_TASK: Record<TaskKind, string> = {
   "chat-main": CEREBRAS_DEFAULT_MODEL,
   reasoning: CEREBRAS_DEFAULT_MODEL,
   "code-edit": CEREBRAS_DEFAULT_MODEL,
-  classification: "llama3.1-8b",
-  summarization: "llama3.1-8b",
-  extraction: "llama3.1-8b",
-  "web-search": "llama3.1-8b",
-  embedding: "llama3.1-8b",
+  classification: "gemma-4-31b",
+  summarization: "gemma-4-31b",
+  extraction: "qwen-3-32b",
+  "web-search": "gemma-4-31b",
+  embedding: "gemma-4-31b",
 };

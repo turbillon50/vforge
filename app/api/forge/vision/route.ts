@@ -1,20 +1,17 @@
-import OpenAI from "openai";
 import { sql } from "@/lib/db/client";
-import { normalizeSlug } from "@/lib/forge/models";
+import { meshAdapter } from "@/lib/forge/adapters/mesh";
+import { getOperatorSecret } from "@/lib/vault/get-secret";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 // Vision → brief técnico. Recibe una imagen (screenshot de app/diseño),
-// la manda a Claude Sonnet con visión, y devuelve un brief listo para que V
+// la manda al mesh con image_url, y devuelve un brief listo para que V
 // arranque la construcción. Vision + generación pueden tardar; 300 = mismo
 // techo que /run para no morir antes de responder.
 export const maxDuration = 300;
 
-const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 const OPERATOR_USER_ID = "operator_luis";
-
-// claude-sonnet-4-6 (pedido) → slug OpenRouter canónico via normalizeSlug.
-const VISION_MODEL = normalizeSlug("claude-sonnet-4-6");
+const VISION_MODEL = "mesh:auto";
 
 const VISION_PROMPT = `Eres V, el arquitecto técnico de V·Momentum. Analiza esta imagen de una app/diseño y produce un BRIEF TÉCNICO accionable para reconstruirla con Next.js + Tailwind.
 
@@ -72,26 +69,14 @@ export async function POST(req: Request): Promise<Response> {
     return jsonError("imageBase64 (string) required", 400);
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return jsonError("ANTHROPIC_API_KEY not configured", 500);
-  }
-
-  const client = new OpenAI({
-    apiKey,
-    baseURL: OPENROUTER_BASE_URL,
-    defaultHeaders: {
-      "HTTP-Referer": "https://vforge.site",
-      "X-Title": "VForge Vision",
-    },
-  });
-
   const userNote = (body.note || "").trim();
   let brief: string;
+  let model = VISION_MODEL;
   try {
-    const completion = await client.chat.completions.create({
-      model: VISION_MODEL,
-      max_tokens: 2200,
+    const completion = await meshAdapter.execute({
+      policy: "auto",
+      maxTokens: 2200,
+      temperature: 0.2,
       messages: [
         { role: "system", content: VISION_PROMPT },
         {
@@ -110,11 +95,28 @@ export async function POST(req: Request): Promise<Response> {
           ],
         },
       ],
+    }, {
+      userId: OPERATOR_USER_ID,
+      sessionId: body.projectId ?? "forge-vision",
+      projectId: body.projectId ?? null,
+      signal: req.signal,
+      vault: {
+        async getOperatorSecret(name) {
+          return getOperatorSecret(name, { auditUserId: OPERATOR_USER_ID });
+        },
+        async getProjectSecret(projectId, name) {
+          return getOperatorSecret(name, {
+            auditUserId: OPERATOR_USER_ID,
+            projectId,
+          });
+        },
+      },
     });
-    brief = completion.choices[0]?.message?.content?.trim() || "";
+    brief = completion.content.trim();
+    model = completion.layer ? `mesh:${completion.layer}` : VISION_MODEL;
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
-    return jsonError(`vision model failed: ${detail}`, 502);
+    return jsonError(`mesh vision failed: ${detail}`, 502);
   }
 
   if (!brief) {
@@ -148,7 +150,7 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   return new Response(
-    JSON.stringify({ ok: true, brief, savedId, model: VISION_MODEL }),
+    JSON.stringify({ ok: true, brief, savedId, model }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
 }

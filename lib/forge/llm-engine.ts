@@ -1,10 +1,10 @@
 /**
  * Motor LLM de V — Cerebras primero (cloud o endpoint dedicado a nuestras GPUs).
- * OpenRouter queda como fallback opcional, no como default.
+ * Mesh Hetzner queda como fallback OpenAI-compatible cuando no hay key directa.
  */
 import OpenAI from "openai";
 
-export type LlmEngineName = "cerebras" | "openrouter" | "none";
+export type LlmEngineName = "cerebras" | "mesh" | "none";
 
 export interface LlmEngine {
   name: LlmEngineName;
@@ -15,19 +15,20 @@ export interface LlmEngine {
 }
 
 const CEREBRAS_DEFAULT_BASE = "https://api.cerebras.ai/v1";
+const MESH_DEFAULT_BASE = "https://api.mindcontextia.one/mesh";
 /** Modelos públicos típicos en Cerebras Inference. */
 export const CEREBRAS_DEFAULT_MODEL =
-  process.env.CEREBRAS_MODEL?.trim() || "llama-3.3-70b";
+  process.env.CEREBRAS_MODEL?.trim() || "gpt-oss-120b";
 
 /**
- * Quita prefijos tipo anthropic/ o openrouter que no aplican en Cerebras.
+ * Quita prefijos de gateways externos que no aplican en Cerebras.
  */
 export function toCerebrasModelId(slug: string): string {
   const s = slug.trim();
   if (!s) return CEREBRAS_DEFAULT_MODEL;
   // Ya es id Cerebras
   if (!s.includes("/")) return s;
-  // openrouter-style → última parte útil
+  // provider/model → última parte útil
   const last = s.split("/").pop() || s;
   // anthropic/claude-* no existe en Cerebras → default nuestro
   if (s.startsWith("anthropic/") || last.startsWith("claude")) {
@@ -58,22 +59,18 @@ export function resolveLlmEngine(): LlmEngine {
     };
   }
 
-  const orKey =
-    process.env.OPENROUTER_API_KEY?.trim() ||
-    process.env.ANTHROPIC_API_KEY?.trim();
-  if (orKey) {
+  const meshKey = process.env.MESH_API_KEY?.trim();
+  if (meshKey) {
+    const baseURL =
+      process.env.MESH_ROUTER_URL?.replace(/\/$/, "") || MESH_DEFAULT_BASE;
     return {
-      name: "openrouter",
+      name: "mesh",
       client: new OpenAI({
-        apiKey: orKey,
-        baseURL: "https://openrouter.ai/api/v1",
-        defaultHeaders: {
-          "HTTP-Referer": "https://vforge.site",
-          "X-Title": "vForge",
-        },
+        apiKey: meshKey,
+        baseURL: `${baseURL}/v1`,
       }),
-      defaultChatModel: "anthropic/claude-sonnet-4.6",
-      label: "OpenRouter (fallback)",
+      defaultChatModel: "auto",
+      label: "Mesh Hetzner",
     };
   }
 
@@ -88,5 +85,8 @@ export function resolveLlmEngine(): LlmEngine {
 /** Normaliza el slug configurado al id que entiende el motor activo. */
 export function modelForEngine(engine: LlmEngine, configured: string): string {
   if (engine.name === "cerebras") return toCerebrasModelId(configured);
+  if (engine.name === "mesh") {
+    return engine.defaultChatModel;
+  }
   return configured;
 }

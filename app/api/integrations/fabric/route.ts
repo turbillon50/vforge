@@ -36,7 +36,8 @@ export async function GET() {
       models: {
         configured: Boolean(
           process.env.HETZNER_SECRET ||
-            process.env.OPENROUTER_API_KEY ||
+            process.env.MESH_API_KEY ||
+            process.env.CEREBRAS_API_KEY ||
             process.env.GEMINI_API_KEY ||
             process.env.ANTHROPIC_API_KEY,
         ),

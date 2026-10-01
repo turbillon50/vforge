@@ -29,7 +29,6 @@ All adapters implement `ForgeAdapter<Input, Output>` from
 |---|---|---|---|---|
 | `_contract.ts` | ✅ ready | — | M3 | — |
 | `anthropic.ts` | 🔜 M3 | `anthropic-claude` | M3 | ADR-002, ADR-005 |
-| `openrouter.ts` | ✅ ready | `openrouter-gateway` | M3 | ADR-005, ADR-009 |
 | `mesh.ts` | ✅ ready | `mesh-router` — IA propia (Cerebras + GPUs). **Preferida** para inferencia nueva | M3 | ADR-005 |
 | `openai-image.ts` | 🔜 M6 | `openai-image` | M6 | ADR-005 |
 | `e2b-sandbox.ts` | 🔜 M5 | `e2b-microvm` | M5 | ADR-009 |
@@ -51,14 +50,11 @@ All adapters implement `ForgeAdapter<Input, Output>` from
 > ForgeAdapter shape so the routing policy can treat it uniformly with the
 > rest. No behavior change to the existing code until that move happens.
 
-## Mesh vs OpenRouter (jun 2026)
+## OpenRouter retirado (2026-10-01)
 
-Para **features nuevas** de inferencia (sugerir/generar copy, clasificación,
-side-tasks) usar el adapter `mesh-router`, **no** `openrouter-gateway`. Luis
-dejó de construir sobre OpenRouter; la capa de IA preferida es su Mesh propio
-(Cerebras + GPUs en Hetzner/Vast.ai), enrutado por `policy` (`fast`/`local`/`v`/
-`auto`). `openrouter-gateway` se mantiene para lo que ya lo usa (no se quita
-`OPENROUTER_API_KEY`), pero no se construye nada nuevo encima.
+OpenRouter ya no es proveedor de vForge. Para inferencia (sugerir/generar copy,
+clasificación, side-tasks y visión vía `image_url`) usar `mesh-router`, enrutado
+por `policy` (`fast`/`local`/`v`/`auto`) sobre Cerebras + GPUs propias.
 
 ## Adding a new adapter
 

@@ -1,5 +1,5 @@
 /**
- * Routing policy v1 — picks an OpenRouter model for a given task.
+ * Routing policy v1 — picks a Cerebras/mesh model for a given task.
  */
 import { MODELS, TASK_PREFERENCES, type TaskKind, type ModelKind } from "./models";
 

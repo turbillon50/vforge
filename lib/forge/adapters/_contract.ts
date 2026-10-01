@@ -5,7 +5,7 @@
  * this interface. See `docs/architecture.md §3.1` for the design and
  * `docs/decisions/009-external-service-stack.md` for the catalog.
  *
- * Implementation files live alongside this one (`openrouter.ts`,
+ * Implementation files live alongside this one (`mesh.ts`,
  * `e2b-sandbox.ts`, …). Each file is added when its milestone (M3, M5, M9,
  * etc.) lands — not before, to avoid orphan stubs.
  */

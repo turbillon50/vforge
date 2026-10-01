@@ -1,5 +1,8 @@
 # Motor Cerebras (sin OpenRouter)
 
+Nota 2026-10-01: OpenRouter se retiró como proveedor de vForge. La inferencia
+viva debe ir por Cerebras directo o por el mesh de Hetzner.
+
 ## Origen de credenciales
 
 En Hetzner (`/root/mesh-router/config.json` → bloque `cerebras`):
@@ -23,4 +26,4 @@ También alimenta `/opt/vchat-local` (v.mindcontextia.one).
 
 1. Con `CEREBRAS_API_KEY` → Estudio usa **solo Cerebras**.
 2. Slugs `anthropic/claude-*` se remapean al modelo Cerebras.
-3. OpenRouter solo si no hay key Cerebras.
+3. Con `MESH_API_KEY` → las rutas auxiliares usan el mesh (`policy` fast/local/v/auto).

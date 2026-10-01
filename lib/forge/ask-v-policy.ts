@@ -12,7 +12,7 @@ export const ROOM_CEREBRAS_MODEL = "gpt-oss-120b";
  * responde 404 y la sala se queda sin V en cuanto alguien manda una foto.
  */
 export const ROOM_CEREBRAS_VISION_MODEL =
-  process.env.CEREBRAS_VISION_MODEL?.trim() || "llama-4-scout-17b-16e-instruct";
+  process.env.CEREBRAS_VISION_MODEL?.trim() || "qwen-3.8-27b";
 
 export function cerebrasTalkModel(hasExpedientePhotos: boolean): string {
   return hasExpedientePhotos ? ROOM_CEREBRAS_VISION_MODEL : ROOM_CEREBRAS_MODEL;

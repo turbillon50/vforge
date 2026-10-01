@@ -6,6 +6,7 @@ import OpenAI from "openai";
 import { getOperatorSecret } from "@/lib/vault/get-secret";
 import { buildSystemPrompt } from "@/lib/forge/system-prompt";
 import { getModelForTask, setModelForTask } from "@/lib/forge/agent-config";
+import { meshAdapter } from "@/lib/forge/adapters/mesh";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,26 +40,29 @@ export async function POST(req: Request) {
     }
   }
 
-  const orKey = await getOperatorSecret("OPENROUTER_API_KEY", {
-    auditUserId: "operator_luis",
-  });
   report.chatMainModel = await getModelForTask("chat-main").catch(
     (e) => "ERR:" + String(e),
   );
-  if (orKey) {
-    try {
-      const r = await fetch("https://openrouter.ai/api/v1/credits", {
-        headers: { Authorization: `Bearer ${orKey}` },
-        cache: "no-store",
-      });
-      report.openrouterCredits = {
-        status: r.status,
-        data: await r.json().catch(() => null),
-      };
-    } catch (e) {
-      report.openrouterCredits = { error: String(e) };
-    }
-  }
+  const cerebrasKey = await getOperatorSecret("CEREBRAS_API_KEY", {
+    auditUserId: "operator_luis",
+  }).catch(() => null);
+  report.cerebras = {
+    configured: Boolean(cerebrasKey),
+    baseURL: process.env.CEREBRAS_BASE_URL ? "custom" : "default",
+  };
+  report.mesh = await meshAdapter.health({
+    vault: {
+      async getOperatorSecret(name) {
+        return getOperatorSecret(name, { auditUserId: "operator_luis" });
+      },
+      async getProjectSecret(projectId, name) {
+        return getOperatorSecret(name, {
+          auditUserId: "operator_luis",
+          projectId,
+        });
+      },
+    },
+  }).catch((e) => ({ status: "error", message: String(e) }));
 
   if (body.gemini_names) {
     const out: Record<string, unknown> = {};
@@ -82,44 +86,41 @@ export async function POST(req: Request) {
     report.gemini_keys = out;
   }
 
-  if (body.test && orKey) {
+  if (body.test) {
     const { systemPrompt } = await buildSystemPrompt({ projectId: null });
-    const client = new OpenAI({
-      apiKey: orKey,
-      baseURL: "https://openrouter.ai/api/v1",
-    });
-    const configured =
-      typeof report.chatMainModel === "string" ? report.chatMainModel : "";
-    const candidates = (body.models ?? [configured, "google/gemini-2.5-flash"]).filter(
-      (m, i, a) => m.includes("/") && !m.startsWith("anthropic/") && a.indexOf(m) === i,
-    );
-    const errors: unknown[] = [];
-    for (const m of candidates) {
-      try {
-        const c = await client.chat.completions.create({
-          model: m,
-          max_tokens: 400,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: body.message ?? "Hola V, prueba de vida." },
-          ],
-        });
-        report.test = {
-          model: m,
-          ok: true,
-          text: c.choices?.[0]?.message?.content ?? "",
-        };
-        break;
-      } catch (e) {
-        const err = e as { status?: number; message?: string };
-        errors.push({
-          model: m,
-          status: err?.status ?? null,
-          msg: String(err?.message ?? e).slice(0, 250),
-        });
-      }
+    try {
+      const c = await meshAdapter.execute({
+        policy: "auto",
+        maxTokens: 400,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: body.message ?? "Hola V, prueba de vida." },
+        ],
+      }, {
+        userId: "operator_luis",
+        sessionId: "v-diag",
+        signal: req.signal,
+        vault: {
+          async getOperatorSecret(name) {
+            return getOperatorSecret(name, { auditUserId: "operator_luis" });
+          },
+          async getProjectSecret(projectId, name) {
+            return getOperatorSecret(name, {
+              auditUserId: "operator_luis",
+              projectId,
+            });
+          },
+        },
+      });
+      report.test = {
+        ok: true,
+        provider: "mesh",
+        layer: c.layer,
+        text: c.content,
+      };
+    } catch (e) {
+      report.test = { ok: false, error: String(e).slice(0, 300) };
     }
-    if (errors.length) report.testErrors = errors;
   }
 
   if (body.test_gemini) {
