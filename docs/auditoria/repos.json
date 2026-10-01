@@ -596,15 +596,14 @@
     "PERPLEXITY"
    ],
    "tipo": [
-    "archivar"
+    "demo_catalogo"
    ],
-   "nota": "Luis: archivar todos (confirmar antes de aplicar: incluye demos recientes)"
+   "nota": "Luis: todos son demos activos (corregido; no se archivan)"
   },
   "_lote_viejo": {
    "repos": [
     "v-gift",
     "v-tv",
-    "paradox-",
     "sca-marchas",
     "admin-panel-template",
     "rivones",
@@ -659,6 +658,33 @@
    "tipo": [
     "demo_catalogo"
    ]
+  },
+  "_pendientes": {},
+  "_pendientes2": {},
+  "_versiones_viejas": {},
+  "paradox": {
+   "repos": [
+    "paradox-"
+   ],
+   "tipo": [
+    "centro_control"
+   ],
+   "nota": "Herramienta del centro de control empresarial (sale del lote de demos)"
+  },
+  "_propios_sin_repo": {
+   "repos": [],
+   "tipo": [
+    "interes"
+   ],
+   "nota": "Le interesan: KNOXIA (antes Origen), Recuperador de leads, Seguridad defensiva. No seleccionó: Remesas, Organizador de networking, Mio Cancún, Ariz"
+  },
+  "vcredit": {
+   "repos": [],
+   "tipo": [
+    "comercializamos"
+   ],
+   "prioridad": 1,
+   "nota": "VCredit / Credit Club, con dominio propio: súper importante, 'fuerte fuerte'. Ya le ha dado dinero sin existir: tramitación de créditos para adquisición de fracciones, liquidez o hipotecario para compra de propiedades. Falta definir cómo se monta"
   }
  },
  "notas_luis": [
@@ -667,6 +693,10 @@
   "Prioridades: CEER + los dos multinivel (Zuxen, Ssante) = prioridad 1 activos",
   "Todas las de prioridad 1 entran a un área de Mantenimiento constante (posible GPU); las terminadas pasan a mantenimiento; habrá área de testers",
   "Nueva dimensión: qué proyectos se van a Momentum para captar inversión",
-  "Regla: proyectos con muchas versiones/procesos → depurar, en su momento borrar orígenes y dejar un solo repo limpio"
+  "Regla: proyectos con muchas versiones/procesos → depurar, en su momento borrar orígenes y dejar un solo repo limpio",
+  "Catálogo: todos los demos de ambos lotes son activos. Hace falta un BUSCADOR del catálogo: ante cada proyecto nuevo, encontrar qué demo se adecúa para no construir de cero (hay stock suficiente para sacar casi cualquier proyecto hoy)",
+  "PENDIENTE (Luis): revisar Neon y los dominios propios de cada proyecto, aun de los abandonados",
+  "PENDIENTE URGENTE (Luis): analizar README de cada repo público, decidir cuáles pasan a privado y armar licencia; dejarlo como tarea",
+  "Luis: sí archivar versiones viejas en V&LIVING, Momentum, VForge, VanDeFi, Trading (pasarle antes la lista de cuál vive)"
  ]
 }
