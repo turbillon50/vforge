@@ -603,7 +603,6 @@
   },
   "_lote_viejo": {
    "repos": [
-    "v-gift",
     "v-tv",
     "sca-marchas",
     "admin-panel-template",
@@ -701,6 +700,15 @@
    "tipo": [
     "cliente"
    ]
+  },
+  "vgift": {
+   "repos": [
+    "v-gift"
+   ],
+   "tipo": [
+    "comercializamos"
+   ],
+   "nota": "Luis: proyecto bien importante (se había metido por error al lote viejo de demos)"
   }
  },
  "notas_luis": [
@@ -717,6 +725,7 @@
   "V&LIVING: vale lo que está en producción y lo necesario para ello; lo demás es basura (revisar vliving-audit-fix vs vliving-2026)",
   "Ssante es un solo proyecto (incluye ssante-t9, el repo real)",
   "Mi pipa es un solo proyecto (mipipa-srv + mipipa + pipmx-demo)",
-  "Todo lo de Vulcano es complementario de VForge; revisar qué sirve y qué no"
+  "Todo lo de Vulcano es complementario de VForge; revisar qué sirve y qué no",
+  "Catálogo de demos: poder usarlos cambiando solo el nombre; elegir demos interesantes para rearmarlos y promocionarlos (Momentum)"
  ]
 }
