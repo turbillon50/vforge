@@ -167,6 +167,23 @@ export async function POST(
     else repetidos += 1;
   }
 
+  // Si el mismo mensaje (autor + texto) ya estaba con otra hora, es una importación vieja
+  // con la fecha mal leída (día/mes vs mes/día): se queda la versión nueva y se quita la vieja.
+  const corregidos = (await sql.query(
+    `DELETE FROM hilo_mensajes
+      WHERE hilo_chat_id = $1
+        AND origen = 'zip'
+        AND NOT (uid = ANY($2::text[]))
+        AND (COALESCE(autor, '') || '|' || COALESCE(texto, '')) = ANY($3::text[])
+      RETURNING uid`,
+    [
+      parsed.chat.id,
+      parsed.messages.map((m) => m.uid),
+      parsed.messages.map((m) => `${m.autor ?? ""}|${m.texto ?? ""}`),
+    ],
+  )) as Array<{ uid: string }>;
+  if (corregidos.length) nuevos = Math.max(0, nuevos - corregidos.length);
+
   await sql.query(
     `INSERT INTO audit_events (user_id, action, resource_type, resource_id, ring, payload)
      VALUES ($1, 'hilo.zip.import', 'project', $2, 1, $3::jsonb)`,

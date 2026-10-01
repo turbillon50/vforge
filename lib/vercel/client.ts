@@ -184,6 +184,8 @@ export interface TriggerDeployInput {
   ghRepoFullName: string;
   branch: string;
   target?: "production" | "preview" | "staging";
+  /** id numérico del repo en GitHub; si viene, no se consulta GitHub (necesario en repos privados). */
+  repoId?: number;
 }
 
 export async function triggerDeployment(
@@ -194,15 +196,14 @@ export async function triggerDeployment(
   const team = await getDefaultTeam(options);
 
   // Need numeric repoId for gitSource
-  const ghRes = await fetch(
-    `https://api.github.com/repos/${input.ghRepoFullName}`,
-  );
-  if (!ghRes.ok) {
-    throw new Error(
-      `cannot read GitHub repo ${input.ghRepoFullName}: ${ghRes.status}`,
-    );
+  let repoId = input.repoId;
+  if (!repoId) {
+    const ghRes = await fetch(`https://api.github.com/repos/${input.ghRepoFullName}`);
+    if (!ghRes.ok) {
+      throw new Error(`cannot read GitHub repo ${input.ghRepoFullName}: ${ghRes.status}`);
+    }
+    repoId = ((await ghRes.json()) as { id: number }).id;
   }
-  const ghJson = (await ghRes.json()) as { id: number };
 
   const data = await vercelJson<{ id: string; url: string; readyState?: string }>(
     `/v13/deployments?forceNew=1`,
@@ -216,7 +217,7 @@ export async function triggerDeployment(
         target: input.target ?? "production",
         gitSource: {
           type: "github",
-          repoId: ghJson.id,
+          repoId,
           ref: input.branch,
         },
       }),

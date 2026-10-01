@@ -177,7 +177,7 @@ function parseTimestamp(raw, languageHint) {
   } else if (second > 12) {
     month = first;
     day = second;
-  } else if (languageHint === "en") {
+  } else if (languageHint === "en" || languageHint === "mdy") {
     month = first;
     day = second;
   } else {
@@ -270,9 +270,37 @@ function detectChatName(textFileName, participants) {
   return "Chat WhatsApp";
 }
 
+// Decide si el export viene día/mes o mes/día mirando TODO el archivo, no línea por línea:
+// 1) si algún primer número pasa de 12, es día/mes; si el segundo pasa de 12, es mes/día;
+// 2) si todo es ambiguo (ej. "10/1/26"), los adjuntos traen la fecha real en el nombre
+//    ("00000028-AUDIO-2026-10-01-12-43-26.opus") y se compara contra la línea que los cita.
+export function detectDateOrder(lines) {
+  let dmy = 0;
+  let mdy = 0;
+  for (const raw of lines) {
+    const line = cleanInvisible(raw);
+    const m = line.match(/^\[?(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/);
+    if (!m) continue;
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    if (a > 12) dmy += 10;
+    if (b > 12) mdy += 10;
+    const att = line.match(/-(\d{4})-(\d{2})-(\d{2})-\d{2}-\d{2}-\d{2}\./);
+    if (att) {
+      const mo = Number(att[2]);
+      const d = Number(att[3]);
+      if (a === mo && b === d && a !== b) mdy += 1;
+      if (a === d && b === mo && a !== b) dmy += 1;
+    }
+  }
+  if (mdy > dmy) return "mdy";
+  if (dmy > mdy) return "dmy";
+  return null;
+}
+
 function buildMessages(text, textFileName) {
-  const languageHint = inferLanguageFromName(textFileName);
   const lines = cleanInvisible(text).replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+  const languageHint = detectDateOrder(lines) ?? inferLanguageFromName(textFileName);
   const parsed = [];
 
   for (const line of lines) {

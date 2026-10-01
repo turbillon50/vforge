@@ -527,7 +527,9 @@ function EtapaCard({
             {project.cliente_nombre || "Sin cliente capturado"}
           </p>
           <h4 className="mt-1 break-words text-[15px] font-semibold leading-tight text-black">
-            {project.name}
+            <a href={`/app/projects/${encodeURIComponent(project.id)}/expediente`} className="hover:underline">
+              {project.name}
+            </a>
           </h4>
         </div>
         <span className="shrink-0 rounded-full border border-[var(--border-1)] px-2 py-1 font-mono text-[10px] uppercase text-[var(--fg-muted)]">

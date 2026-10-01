@@ -2,6 +2,7 @@ import "server-only";
 
 import { queryOne, sql } from "@/lib/db/client";
 import { getGithubClient } from "@/lib/github/client";
+import { createProject, triggerDeployment } from "@/lib/vercel/client";
 import { copyRepoWithGitApi, parseFullRepo, type CopyReport } from "@/lib/projects/repo-copy";
 import { setProjectEtapa } from "@/lib/projects/etapas-server";
 import { type ProjectEtapa } from "@/lib/projects/etapas";
@@ -49,6 +50,7 @@ export interface UseDemoAsBaseResult {
   copied_files: number | null;
   skipped: CopyReport["skipped"];
   truncated: boolean;
+  vercel: { project_id: string; url: string; deploy: string | null } | { error: string } | null;
 }
 
 export function cleanProjectName(value: unknown): string | null {
@@ -199,6 +201,49 @@ export async function usarDemoComoBase({
       html_url = EXCLUDED.html_url,
       updated_at = now()
   `;
+  // Cada demo nace con su despliegue: proyecto en Vercel ligado al repo + primer deploy,
+  // y queda reportado en el expediente (vercel_project_id / vercel_url / domain).
+  let vercel: UseDemoAsBaseResult["vercel"] = null;
+  try {
+    const vp = await createProject(
+      { name: repoName, framework: "nextjs", gitRepository: { type: "github", repo: repo.full_name } },
+      { auditUserId },
+    );
+    const domain = `${repoName}.vercel.app`;
+    let deploy: string | null = null;
+    try {
+      const ghRepo = await octokit.request("GET /repos/{owner}/{repo}", {
+        owner: GITHUB_OWNER,
+        repo: repoName,
+      });
+      const d = await triggerDeployment(
+        {
+          projectId: vp.id,
+          name: repoName,
+          ghRepoFullName: repo.full_name,
+          branch: repo.default_branch ?? "main",
+          repoId: (ghRepo.data as { id: number }).id,
+        },
+        { auditUserId },
+      );
+      deploy = d.id;
+    } catch (error) {
+      console.error("[demo-base] deploy inicial falló", error);
+    }
+    await sql`
+      UPDATE projects
+         SET vercel_project_id = ${vp.id},
+             vercel_url = ${`https://${domain}`},
+             domain = COALESCE(NULLIF(domain, ''), ${domain}),
+             updated_at = now()
+       WHERE id = ${newProjectId}
+    `;
+    vercel = { project_id: vp.id, url: `https://${domain}`, deploy };
+  } catch (error) {
+    vercel = { error: error instanceof Error ? error.message.slice(0, 200) : "vercel_failed" };
+    console.error("[demo-base] proyecto Vercel no creado", error);
+  }
+
   await setProjectEtapa({
     projectId: newProjectId,
     etapa: initialEtapa,
@@ -228,6 +273,7 @@ export async function usarDemoComoBase({
     copied_files: copyReport?.copied_files ?? null,
     skipped: copyReport?.skipped ?? [],
     truncated: copyReport?.truncated ?? false,
+    vercel,
   };
 }
 
