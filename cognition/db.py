@@ -4,7 +4,7 @@ db.py — Conexión y utilidades compartidas por las 5 capas cognitivas de Vulca
 Una sola fuente de verdad para:
   - el connection string de Neon (mismo pooler que bandit_router / dispatch_queue),
   - helpers de query (q / one / run),
-  - el cliente LLM barato (OpenRouter) que las capas usan para SINTETIZAR
+  - el cliente LLM barato (mesh/Cerebras) que las capas usan para SINTETIZAR
     (destilar lecciones, resumir episodios, normalizar preguntas) — NO para chatear.
   - notificación a Luis por WhatsApp vía el puente Baileys personal (puerto 3001).
 
@@ -26,9 +26,12 @@ DB_URL = os.environ.get(
     ".c-8.us-east-1.aws.neon.tech/neondb?sslmode=require",
 )
 
-OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+MESH_KEY = os.environ.get("MESH_API_KEY", "")
+MESH_URL = os.environ.get("MESH_ROUTER_URL", "https://api.mindcontextia.one/mesh").rstrip("/")
+CEREBRAS_KEY = os.environ.get("CEREBRAS_API_KEY", "")
+CEREBRAS_URL = os.environ.get("CEREBRAS_BASE_URL", "https://api.cerebras.ai/v1").rstrip("/")
 # Modelo barato y rápido para síntesis interna (no es el motor de chat de V).
-SYNTH_MODEL = os.environ.get("VULCANO_SYNTH_MODEL", "anthropic/claude-3.5-haiku")
+SYNTH_MODEL = os.environ.get("VULCANO_SYNTH_MODEL", "gpt-oss-120b")
 
 # Puente WhatsApp personal de Luis (Baileys, ver CLAUDE.md).
 BAILEYS_URL = os.environ.get("BAILEYS_URL", "http://178.105.135.26:3001")
@@ -66,26 +69,38 @@ def run(sql, params=None):
 
 
 def llm(prompt, system=None, max_tokens=700, temperature=0.2):
-    """Llamada de síntesis a OpenRouter. Devuelve texto o '' si falla.
+    """Llamada de síntesis a mesh/Cerebras. Devuelve texto o '' si falla.
 
     Se usa para destilar/resumir DENTRO del sistema cognitivo. Tolerante a
-    fallos: si OpenRouter no responde, la capa hace fallback determinista.
+    fallos: si el motor no responde, la capa hace fallback determinista.
     """
+    if not MESH_KEY and not CEREBRAS_KEY:
+        return ""
     msgs = []
     if system:
         msgs.append({"role": "system", "content": system})
     msgs.append({"role": "user", "content": prompt})
-    body = json.dumps({
-        "model": SYNTH_MODEL,
+    use_mesh = bool(MESH_KEY)
+    body_dict = {
+        "model": "auto" if use_mesh else SYNTH_MODEL,
         "messages": msgs,
         "max_tokens": max_tokens,
         "temperature": temperature,
-    }).encode()
+    }
+    if use_mesh:
+        body_dict["policy"] = "fast"
+    body = json.dumps(body_dict).encode()
+    url = (
+        f"{MESH_URL}/v1/chat/completions"
+        if use_mesh
+        else f"{CEREBRAS_URL}/chat/completions"
+    )
+    api_key = MESH_KEY or CEREBRAS_KEY
     req = urllib.request.Request(
-        "https://openrouter.ai/api/v1/chat/completions",
+        url,
         data=body,
         headers={
-            "Authorization": f"Bearer {OPENROUTER_KEY}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "X-Title": "vulcano-cognition",
         },

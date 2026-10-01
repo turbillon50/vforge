@@ -34,7 +34,8 @@ interface PlatformHealth {
   ts?: string;
   db?: { status?: string; latency_ms?: number };
   vault?: { status?: string };
-  openrouter?: { status?: string; latency_ms?: number };
+  cerebras?: { status?: string; latency_ms?: number };
+  mesh?: { status?: string; latency_ms?: number };
 }
 
 const SERVICES: Service[] = [
@@ -223,12 +224,12 @@ export default function IntegrationsPage() {
         <HealthCell label="Vault cifrado" state={health?.vault?.status} />
         <HealthCell
           label="Motor auxiliar"
-          state={health?.openrouter?.status}
+          state={health?.mesh?.status ?? health?.cerebras?.status}
           detail={
-            health?.openrouter?.status === "missing-key"
+            (health?.mesh?.status ?? health?.cerebras?.status) === "missing-key"
               ? "Opcional"
-              : health?.openrouter?.latency_ms !== undefined
-                ? `${health.openrouter.latency_ms} ms`
+              : (health?.mesh?.latency_ms ?? health?.cerebras?.latency_ms) !== undefined
+                ? `${health?.mesh?.latency_ms ?? health?.cerebras?.latency_ms} ms`
                 : undefined
           }
         />

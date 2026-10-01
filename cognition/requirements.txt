@@ -1,2 +1,2 @@
 psycopg2-binary>=2.9
-# urllib (stdlib) cubre OpenRouter y Baileys; sin más dependencias a propósito.
+# urllib (stdlib) cubre mesh/Cerebras y Baileys; sin más dependencias a propósito.

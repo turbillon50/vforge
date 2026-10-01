@@ -44,7 +44,7 @@ const SIGNALS: Record<string, string[]> = {
   tickets: ["ticket_tailor", "tickettailor", "eventbrite"],
   maps: ["maps", "google_maps", "mapbox", "geolocation"],
   storage: ["blob", "s3", "cloudinary", "uploadthing"],
-  ai: ["anthropic", "openai", "openrouter", "gemini", "claude"],
+  ai: ["anthropic", "openai", "cerebras", "mesh", "gemini", "claude"],
 };
 
 export interface DiagnosticItem {

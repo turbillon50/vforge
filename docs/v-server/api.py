@@ -7,20 +7,14 @@ Endpoints:
   POST /ssh-execute     → SSH a server remoto (paramiko)
   POST /browser         → Playwright (goto/click/type/screenshot/get_html/
                           get_text/describe_element/execute_script)
-  POST /generate-image  → Generación vía OpenRouter (Gemini Image / FLUX /
-                          Recraft según el parámetro `model`). Default:
-                          google/gemini-3.1-flash-image-preview ("Nano
-                          Banana") — state of the art con multi-turn y
-                          edición.
+  POST /generate-image  → Retirado el 2026-10-01 junto con OpenRouter.
 
 Deps en el servidor (instalar antes de usar):
-  pip install flask paramiko playwright requests
+  pip install flask paramiko playwright
   playwright install chromium
   playwright install-deps   # libs del sistema (necesita sudo)
 
 Env vars opcionales (configurar como Environment= en el systemd unit):
-  OPENROUTER_API_KEY  → habilita /generate-image (Luis ya usa esta key en
-                        Tanit, se puede reutilizar)
   V_SERVER_TOKEN      → si está definido, todos los endpoints (excepto
                         /health) requieren header X-V-Token con ese valor
 
@@ -35,7 +29,6 @@ import os
 import subprocess
 from io import StringIO
 
-import requests
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
@@ -242,81 +235,9 @@ def browser_action():
 
 @app.route("/generate-image", methods=["POST"])
 def generate_image():
-    api_key = os.environ.get("OPENROUTER_API_KEY")
-    if not api_key:
-        return jsonify({
-            "error": "OPENROUTER_API_KEY no configurada en el servidor",
-        }), 503
-    data = request.json or {}
-    prompt = data.get("prompt", "")
-    size = data.get("size", "1024x1024")
-    negative = data.get("negative_prompt", "")
-    model = data.get("model", "google/gemini-3.1-flash-image-preview")
-    if not prompt:
-        return jsonify({"error": "prompt requerido"}), 400
-
-    # OpenRouter image gen usa chat completions con modalities=["image","text"].
-    # `size` y `negative_prompt` se inyectan al prompt — no son parámetros
-    # nativos de la API. Si pasas un modelo distinto que sí acepte size
-    # como parámetro nativo, este endpoint igual funciona porque OpenRouter
-    # ignora keys no soportadas.
-    enriched_prompt = prompt
-    if size and size != "1024x1024":
-        enriched_prompt = f"{enriched_prompt}\n\nImage size: {size}"
-    if negative:
-        enriched_prompt = f"{enriched_prompt}\n\nAvoid: {negative}"
-
-    try:
-        resp = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": "https://vforge.local",
-                "X-Title": "vForge V Agent",
-            },
-            json={
-                "model": model,
-                "messages": [{"role": "user", "content": enriched_prompt}],
-                "modalities": ["image", "text"],
-            },
-            timeout=90,
-        )
-        if resp.status_code != 200:
-            return jsonify({
-                "error": f"openrouter {resp.status_code}: {resp.text[:300]}",
-            }), 502
-        body = resp.json()
-        choices = body.get("choices") or []
-        if not choices:
-            return jsonify({"error": "openrouter no devolvió choices", "body": body}), 502
-        message = choices[0].get("message") or {}
-        images = message.get("images") or []
-        if not images:
-            return jsonify({
-                "error": "el modelo no devolvió imágenes",
-                "text_response": message.get("content"),
-            }), 502
-        # Cada imagen: {"type":"image_url","image_url":{"url":"data:image/png;base64,..."}}
-        first = images[0]
-        data_url = (first.get("image_url") or {}).get("url", "")
-        if not data_url.startswith("data:"):
-            return jsonify({"error": "formato de imagen inesperado", "raw": first}), 502
-        # data:image/png;base64,XXXX  →  separar mime y base64
-        try:
-            header, b64 = data_url.split(",", 1)
-            mime = header.split(";")[0].replace("data:", "") or "image/png"
-        except Exception:
-            return jsonify({"error": "no se pudo parsear data URL"}), 502
-        return {
-            "image_base64": b64,
-            "mime": mime,
-            "size": size,
-            "model": model,
-            "all_images": len(images),
-        }
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return jsonify({
+        "error": "generate-image retirado: OpenRouter dejó de ser proveedor el 2026-10-01",
+    }), 410
 
 
 if __name__ == "__main__":

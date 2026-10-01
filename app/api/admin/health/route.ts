@@ -13,7 +13,8 @@
  *     ok: boolean,
  *     db: { status, latency_ms? },
  *     vault: { status, error? },
- *     openrouter: { status, balance_usd?, usage_usd?, latency_ms?, error? }
+ *     cerebras: { status, latency_ms?, error? },
+ *     mesh: { status, latency_ms?, error? }
  *   }
  *
  * No auth in the operator MVP. Lock down behind Clerk when M11 lands.
@@ -21,6 +22,7 @@
 import { sql } from "@/lib/db/client";
 import { getOperatorSecret } from "@/lib/vault/get-secret";
 import { vaultSelfTest } from "@/lib/vault/operator-crypto";
+import { meshAdapter } from "@/lib/forge/adapters/mesh";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,30 +38,32 @@ interface VaultHealth {
   error?: string;
 }
 
-interface OpenRouterHealth {
-  status: "ok" | "missing-key" | "error";
-  balance_usd?: number;
-  usage_usd?: number;
+interface ProviderHealth {
+  status: "ok" | "missing-key" | "degraded" | "error";
   latency_ms?: number;
+  key?: string;
   error?: string;
+  reason?: string;
 }
 
 export async function GET() {
   const ts = new Date().toISOString();
 
-  const [db, vault, openrouter] = await Promise.all([
+  const [db, vault, cerebras, mesh] = await Promise.all([
     checkDb(),
     Promise.resolve(checkVault()),
-    checkOpenRouter(),
+    checkCerebras(),
+    checkMesh(),
   ]);
 
   const ok =
     db.status === "ok" &&
     vault.status === "ok" &&
-    (openrouter.status === "ok" || openrouter.status === "missing-key");
+    isNonFatalProvider(cerebras) &&
+    isNonFatalProvider(mesh);
 
   return new Response(
-    JSON.stringify({ ts, ok, db, vault, openrouter }),
+    JSON.stringify({ ts, ok, db, vault, cerebras, mesh }),
     {
       status: ok ? 200 : 503,
       headers: { "Content-Type": "application/json" },
@@ -86,16 +90,24 @@ function checkVault(): VaultHealth {
   return { status: "error", error: probe.error };
 }
 
-async function checkOpenRouter(): Promise<OpenRouterHealth> {
-  const apiKey = await getOperatorSecret("OPENROUTER_API_KEY", {
+function isNonFatalProvider(provider: ProviderHealth): boolean {
+  return provider.status === "ok" || provider.status === "missing-key";
+}
+
+async function checkCerebras(): Promise<ProviderHealth> {
+  const apiKey = await getOperatorSecret("CEREBRAS_API_KEY", {
     auditUserId: "health-check",
   }).catch(() => null);
-  if (!apiKey) return { status: "missing-key" };
+  if (!apiKey) return { status: "missing-key", key: "CEREBRAS_API_KEY" };
 
   const start = Date.now();
   try {
-    const resp = await fetch("https://openrouter.ai/api/v1/credits", {
+    const base =
+      process.env.CEREBRAS_BASE_URL?.replace(/\/$/, "") ??
+      "https://api.cerebras.ai/v1";
+    const resp = await fetch(`${base}/models`, {
       headers: { Authorization: `Bearer ${apiKey}` },
+      cache: "no-store",
     });
     const latency = Date.now() - start;
     if (!resp.ok) {
@@ -105,18 +117,39 @@ async function checkOpenRouter(): Promise<OpenRouterHealth> {
         error: `${resp.status} ${resp.statusText}`,
       };
     }
-    const json = (await resp.json()) as {
-      data?: { total_credits?: number; total_usage?: number };
-    };
     return {
       status: "ok",
       latency_ms: latency,
-      balance_usd: json.data?.total_credits ?? 0,
-      usage_usd: json.data?.total_usage ?? 0,
     };
   } catch (err) {
     return {
       status: "error",
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+async function checkMesh(): Promise<ProviderHealth> {
+  const start = Date.now();
+  try {
+    const health = await meshAdapter.health({
+      vault: {
+        async getOperatorSecret(name) {
+          return getOperatorSecret(name, { auditUserId: "health-check" });
+        },
+        async getProjectSecret(projectId, name) {
+          return getOperatorSecret(name, {
+            auditUserId: "health-check",
+            projectId,
+          });
+        },
+      },
+    });
+    return { ...health, latency_ms: Date.now() - start };
+  } catch (err) {
+    return {
+      status: "error",
+      latency_ms: Date.now() - start,
       error: err instanceof Error ? err.message : String(err),
     };
   }

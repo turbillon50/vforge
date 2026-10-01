@@ -19,7 +19,7 @@
  * El adapter la lee del vault como cualquier otro secreto; en Vercel cae al
  * env `MESH_API_KEY` vía el cascade de lib/vault/get-secret.ts.
  *
- * Igual que `openrouter.ts`, usa `fetch` directo (sin SDK) y no implementa
+ * Usa `fetch` directo (sin SDK) y no implementa
  * streaming: el caso de uso son side-tasks cortas (sugerir/generar copy), no
  * el chat principal.
  */
@@ -30,9 +30,16 @@ import {
   AdapterError,
 } from "./_contract";
 
+type MeshContent =
+  | string
+  | Array<
+      | { type: "text"; text: string }
+      | { type: "image_url"; image_url: { url: string } }
+    >;
+
 interface MeshMessage {
   role: "system" | "user" | "assistant";
-  content: string;
+  content: MeshContent;
 }
 
 /** Política de enrutamiento del Mesh — qué cuerpo atiende la inferencia. */

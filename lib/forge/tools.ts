@@ -58,17 +58,13 @@ import { routeFor } from "@/lib/forge/routing";
 import { MODELS } from "@/lib/forge/models";
 import { listAgentConfig, setModelForTask } from "@/lib/forge/agent-config";
 import { callVServer } from "@/lib/forge/v-server";
+import { meshAdapter, type MeshPolicy } from "@/lib/forge/adapters/mesh";
 import {
   getBridgeStatus,
   approvePending,
   rejectPending,
   dispatchBridgeTask,
 } from "@/lib/forge/bridge";
-import {
-  listAllOpenRouterModels,
-  getOpenRouterModel,
-  searchOpenRouterModels,
-} from "@/lib/forge/openrouter-catalog";
 import {
   getPlan as integrationGetPlan,
   setItemStatus as integrationSetItemStatus,
@@ -97,7 +93,6 @@ const PROTECTED_CORE_PATHS = new Set<string>([
   "lib/forge/routing.ts",
   "lib/forge/model-config.ts",
   "lib/forge/agent-config.ts",
-  "lib/forge/openrouter-catalog.ts",
   "lib/forge/models.ts",
 ]);
 
@@ -754,7 +749,7 @@ required: ["repo", "sha"],
   {
     name: "model_recommend",
     description:
-      "Pregunta al router qué modelo usar para una tarea. Devuelve { primary, cascade, reason }. Úsala antes de invocar openrouter_query para tareas side cuando quieras elegir modelo barato/balanceado consciente. Task kinds: 'chat-main', 'reasoning', 'code-edit', 'classification', 'summarization', 'extraction'. costPreference: 'cheapest' | 'balanced' | 'premium' | 'free-only' (default 'balanced').",
+      "Pregunta al router qué modelo Cerebras/mesh usar para una tarea. Devuelve { primary, cascade, reason }. Úsala antes de mesh_query para tareas side cuando quieras elegir modelo barato/balanceado consciente. Task kinds: 'chat-main', 'reasoning', 'code-edit', 'classification', 'summarization', 'extraction'. costPreference: 'cheapest' | 'balanced' | 'premium' | 'free-only' (default 'balanced').",
     input_schema: {
       type: "object",
       properties: {
@@ -805,7 +800,7 @@ required: ["repo", "sha"],
   {
     name: "agent_config_set",
     description:
-      "Cambia el modelo que V usará para un tipo de tarea específico. Aplica al siguiente turno SIN redeploy. Úsala cuando Luis te diga 'usa Haiku para chat', 'cambia clasificación a Gemini Flash', 'para código usa Sonnet'. task_kind debe ser uno de: chat-main, reasoning, code-edit, classification, summarization, extraction. model debe ser un slug válido de OpenRouter (ej. 'anthropic/claude-haiku-4.5', 'google/gemini-2.5-flash').",
+      "Cambia el modelo que V usará para un tipo de tarea específico. Aplica al siguiente turno SIN redeploy. Úsala cuando Luis te diga 'usa gpt-oss para chat' o 'cambia clasificación a gemma'. task_kind debe ser uno de: chat-main, reasoning, code-edit, classification, summarization, extraction. model debe ser un id válido de Cerebras/mesh (ej. 'gpt-oss-120b', 'gemma-4-31b', 'qwen-3-32b', 'auto').",
     input_schema: {
       type: "object",
       properties: {
@@ -824,7 +819,7 @@ required: ["repo", "sha"],
         model: {
           type: "string",
           description:
-            "Slug de OpenRouter (ej. 'anthropic/claude-haiku-4.5', 'google/gemini-2.5-flash', 'anthropic/claude-sonnet-4.6').",
+            "ID de modelo Cerebras/mesh (ej. 'gpt-oss-120b', 'gemma-4-31b', 'qwen-3-32b', 'auto').",
         },
       },
       required: ["task_kind", "model"],
@@ -840,7 +835,7 @@ required: ["repo", "sha"],
         model: {
           type: "string",
           description:
-            "Slug de OpenRouter del nuevo modelo principal.",
+            "ID de modelo Cerebras/mesh del nuevo modelo principal.",
         },
       },
       required: ["model"],
@@ -1118,70 +1113,18 @@ required: ["repo", "sha"],
     },
   },
 
-  // ─── OpenRouter catálogo en vivo (365+ modelos) ───────────────────
+  // ─── Mesh / Cerebras side-task inference ──────────────────────────
   {
-    name: "openrouter_list_models",
+    name: "mesh_query",
     description:
-      "Lista modelos disponibles en OpenRouter en vivo (cache 15 min). Útil para descubrir qué modelos hay sin estar limitada al registry hardcoded de 9. Devuelve { id, name, provider, context_length, pricing_per_1m, supports_tools, is_free } por modelo. Default: 50 modelos. Pasa provider='anthropic' o 'google' para filtrar.",
+      "Hace una consulta one-shot al mesh de Luis (Cerebras/GPU propia). Úsala para clasificación, resumen, extracción o decisión ligera sin salir a gateways externos. NO la uses para conversación principal con Luis. Devuelve { content, layer, tokensIn, tokensOut, costUsd }.",
     input_schema: {
       type: "object",
       properties: {
-        limit: {
-          type: "number",
-          description: "Cuántos modelos devolver. 0 = todos (~365). Default 50.",
-        },
-        provider: {
+        policy: {
           type: "string",
-          description: "Filtrar por provider (ej. 'anthropic', 'google', 'meta-llama', 'openai', 'deepseek', 'mistralai').",
-        },
-      },
-    },
-  },
-  {
-    name: "openrouter_get_model",
-    description:
-      "Detalle completo de un modelo de OpenRouter por slug. Devuelve descripción, context_length, pricing exacto, supports_tools, is_free. Úsala antes de agent_config_set para confirmar que el slug existe y ver costos reales.",
-    input_schema: {
-      type: "object",
-      properties: {
-        slug: {
-          type: "string",
-          description: "OpenRouter slug (ej. 'deepseek/deepseek-chat', 'anthropic/claude-haiku-4.5').",
-        },
-      },
-      required: ["slug"],
-    },
-  },
-  {
-    name: "openrouter_search_models",
-    description:
-      "Busca modelos en OpenRouter por filtros: free, supports_tools, min_context, max_cost_per_1m_in, max_cost_per_1m_out, provider, query (substring). Ordenado por más barato primero. Úsala para encontrar 'el más barato con tools y context > 100K' o 'todos los free de Google'.",
-    input_schema: {
-      type: "object",
-      properties: {
-        free: { type: "boolean", description: "true = solo gratis; false = solo de paga; omit = todos." },
-        supports_tools: { type: "boolean", description: "true = solo modelos que soportan tool calling." },
-        min_context: { type: "number", description: "Tokens mínimos de contexto (ej. 100000)." },
-        max_cost_per_1m_in: { type: "number", description: "USD máximo por 1M tokens de input." },
-        max_cost_per_1m_out: { type: "number", description: "USD máximo por 1M tokens de output." },
-        provider: { type: "string", description: "Filtrar por provider." },
-        query: { type: "string", description: "Substring en id o name (ej. 'haiku', 'flash')." },
-        limit: { type: "number", description: "Default 25." },
-      },
-    },
-  },
-
-  // ─── OpenRouter (ADR-009, M3) ─────────────────────────────────────
-  {
-    name: "openrouter_query",
-    description:
-      "Hace una consulta one-shot a un modelo accesible vía OpenRouter (Gemini, Mistral, Llama, Claude alternativo, etc.). Úsala cuando necesites una clasificación rápida y barata (ej. categorizar un repo, resumir un dump de logs, decidir si un archivo es código vs documentación) y no quieras gastar tokens de Anthropic en ello. NO la uses para conversación con Luis — esa va por el cerebro principal. Devuelve { content, model, tokensIn, tokensOut, costUsd }. Modelos sugeridos: 'google/gemini-2.5-flash' (más barato), 'anthropic/claude-haiku-4.5' (cuando el costo es secundario), 'meta-llama/llama-3.3-70b-instruct' (open-source).",
-    input_schema: {
-      type: "object",
-      properties: {
-        model: {
-          type: "string",
-          description: "Slug del modelo en OpenRouter (ej. 'google/gemini-2.5-flash'). Ver openrouter.ai/models.",
+          enum: ["fast", "local", "v", "auto"],
+          description: "Ruta del mesh. Default 'fast'. Usa 'auto' si el mensaje trae imagen o no sabes cuál conviene.",
         },
         system: {
           type: "string",
@@ -1196,7 +1139,7 @@ required: ["repo", "sha"],
           description: "Tope de tokens de output. Default 512.",
         },
       },
-      required: ["model", "prompt"],
+      required: ["prompt"],
     },
   },
 
@@ -1339,14 +1282,14 @@ required: ["repo", "sha"],
   {
     name: "image_generation",
     description:
-      "Genera una imagen vía OpenRouter (Gemini Image / FLUX / Recraft) en el servidor de V. Default: google/gemini-3.1-flash-image-preview ('Nano Banana') con generación + edición + multi-turn. ~$0.014/imagen 1024x1024 contra el saldo OpenRouter de Luis. Úsala para hero images, ilustraciones, logos preliminares. (Nota: endpoint /generate-image puede no estar implementado todavía en api.py — si 404, repórtalo a Luis.)",
+      "Retirada: la generación de imágenes por el servidor de V dependía de OpenRouter y quedó desactivada el 2026-10-01. Si Luis pide una imagen, reporta que esta vía ya no está disponible y usa el flujo de imágenes vigente fuera de esta tool.",
     input_schema: {
       type: "object",
       properties: {
         prompt: { type: "string", description: "Descripción de la imagen, preferentemente en inglés. Sé específico: estilo, composición, colores, iluminación, mood." },
         size: { type: "string", enum: ["512x512", "768x768", "1024x1024"], description: "Tamaño de salida. Default 1024x1024." },
         negative_prompt: { type: "string", description: "Qué evitar (ej. 'blurry, watermark'). Se inyecta como 'Avoid: ...'." },
-        model: { type: "string", description: "ID del modelo OpenRouter. Default: google/gemini-3.1-flash-image-preview. Alternativas: black-forest-labs/flux.2-pro, sourceful/riverflow-v2-standard-preview." },
+        model: { type: "string", description: "Ignorado; la vía OpenRouter fue retirada." },
       },
       required: ["prompt"],
     },
@@ -3519,115 +3462,24 @@ async function dispatch(
       };
     }
 
-    // ─── OpenRouter catálogo en vivo ───────────────────────────────
-    case "openrouter_list_models": {
-      const limit =
-        typeof input.limit === "number" ? input.limit : 50;
-      const provider =
-        typeof input.provider === "string" && input.provider.length > 0
-          ? input.provider
-          : undefined;
-      const models = await listAllOpenRouterModels({ limit, provider });
-      return {
-        ok: true,
-        content: JSON.stringify({
-          total: models.length,
-          models: models.map((m) => ({
-            id: m.id,
-            name: m.name,
-            provider: m.provider,
-            context_length: m.context_length,
-            pricing_per_1m_in: Number((m.pricing.prompt * 1_000_000).toFixed(4)),
-            pricing_per_1m_out: Number((m.pricing.completion * 1_000_000).toFixed(4)),
-            supports_tools: m.supports_tools,
-            is_free: m.is_free,
-          })),
-        }),
-        summary: `${models.length} modelos${provider ? ` de ${provider}` : ""}`,
-      };
-    }
-    case "openrouter_get_model": {
-      const slug = requireString(input.slug, "slug");
-      const model = await getOpenRouterModel(slug);
-      if (!model) {
-        return {
-          ok: false,
-          content: JSON.stringify({
-            error: `Slug '${slug}' no existe en OpenRouter.`,
-          }),
-          summary: `slug '${slug}' no encontrado`,
-        };
-      }
-      return {
-        ok: true,
-        content: JSON.stringify({
-          id: model.id,
-          name: model.name,
-          description: model.description,
-          provider: model.provider,
-          context_length: model.context_length,
-          pricing_per_1m_in: Number((model.pricing.prompt * 1_000_000).toFixed(6)),
-          pricing_per_1m_out: Number((model.pricing.completion * 1_000_000).toFixed(6)),
-          supports_tools: model.supports_tools,
-          is_free: model.is_free,
-          modality: model.modality,
-        }),
-        summary: `${model.id}${model.is_free ? " (free)" : ""}`,
-      };
-    }
-    case "openrouter_search_models": {
-      const filter: Record<string, unknown> = {};
-      if (typeof input.free === "boolean") filter.free = input.free;
-      if (typeof input.supports_tools === "boolean")
-        filter.supports_tools = input.supports_tools;
-      if (typeof input.min_context === "number")
-        filter.min_context = input.min_context;
-      if (typeof input.max_cost_per_1m_in === "number")
-        filter.max_cost_per_1m_in = input.max_cost_per_1m_in;
-      if (typeof input.max_cost_per_1m_out === "number")
-        filter.max_cost_per_1m_out = input.max_cost_per_1m_out;
-      if (typeof input.provider === "string" && input.provider.length > 0)
-        filter.provider = input.provider;
-      if (typeof input.query === "string" && input.query.length > 0)
-        filter.query = input.query;
-      if (typeof input.limit === "number") filter.limit = input.limit;
-      const models = await searchOpenRouterModels(filter);
-      return {
-        ok: true,
-        content: JSON.stringify({
-          total: models.length,
-          filter,
-          models: models.map((m) => ({
-            id: m.id,
-            name: m.name,
-            provider: m.provider,
-            context_length: m.context_length,
-            pricing_per_1m_in: Number((m.pricing.prompt * 1_000_000).toFixed(4)),
-            pricing_per_1m_out: Number((m.pricing.completion * 1_000_000).toFixed(4)),
-            supports_tools: m.supports_tools,
-            is_free: m.is_free,
-          })),
-        }),
-        summary: `${models.length} matches`,
-      };
-    }
-
-    case "openrouter_query": {
-      const model = requireString(input.model, "model");
+    case "mesh_query": {
       const prompt = requireString(input.prompt, "prompt");
       const system =
         typeof input.system === "string" && input.system.length > 0
           ? input.system
           : null;
       const maxTokens = clampNumber(input.max_tokens, 1, 4096, 512);
+      const rawPolicy = typeof input.policy === "string" ? input.policy : "fast";
+      const policy: MeshPolicy = ["fast", "local", "v", "auto"].includes(rawPolicy)
+        ? (rawPolicy as MeshPolicy)
+        : "fast";
 
-      const { openRouterAdapter } = await import("./adapters/openrouter");
       const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [];
       if (system) messages.push({ role: "system", content: system });
       messages.push({ role: "user", content: prompt });
 
-      const result = await openRouterAdapter.execute(
-        { model, messages, maxTokens },
+      const result = await meshAdapter.execute(
+        { policy, messages, maxTokens },
         {
           userId: ctx.userId,
           sessionId: ctx.sessionId,
@@ -3649,13 +3501,14 @@ async function dispatch(
         ok: true,
         content: JSON.stringify({
           content: result.content,
-          model: result.model,
+          policy,
+          layer: result.layer,
           tokensIn: result.tokensIn,
           tokensOut: result.tokensOut,
           costUsd: result.costUsd,
           finishReason: result.finishReason,
         }),
-        summary: `${result.model}: ${result.tokensIn}+${result.tokensOut} tok ($${result.costUsd.toFixed(6)})`,
+        summary: `mesh/${result.layer ?? policy}: ${result.tokensIn}+${result.tokensOut} tok ($${result.costUsd.toFixed(6)})`,
       };
     }
 
@@ -3742,22 +3595,14 @@ async function dispatch(
       return { ok: true, content: JSON.stringify(res.body), summary: `browser ${action} OK` };
     }
     case "image_generation": {
-      const prompt = requireString(input.prompt, "prompt");
-      const size = typeof input.size === "string" ? input.size : "1024x1024";
-      const payload: Record<string, unknown> = { prompt, size };
-      if (typeof input.negative_prompt === "string") payload.negative_prompt = input.negative_prompt;
-      if (typeof input.model === "string") payload.model = input.model;
-      const res = await callVServer("/generate-image", payload, { timeoutMs: 120_000 });
-      if (!res.ok) {
-        return {
-          ok: false,
-          content: JSON.stringify({ error: res.error, status: res.status, body: res.body }),
-          summary: `image_generation falló: ${res.error}`,
-        };
-      }
-      const body = (res.body ?? {}) as { model?: string };
-      const modelUsed = body.model ?? (typeof input.model === "string" ? input.model : "gemini-image");
-      return { ok: true, content: JSON.stringify(res.body), summary: `imagen ${size} (${modelUsed})` };
+      return {
+        ok: false,
+        content: JSON.stringify({
+          error:
+            "image_generation retirada: OpenRouter dejó de ser proveedor el 2026-10-01",
+        }),
+        summary: "image_generation retirada",
+      };
     }
     case "ssh_command_executor": {
       const host = requireString(input.host, "host");

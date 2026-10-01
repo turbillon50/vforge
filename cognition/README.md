@@ -126,7 +126,7 @@ rsync -az cognition/ root@178.105.135.26:/root/agents/cognition/
 ssh root@178.105.135.26 'cd /root/agents/cognition && pip3 install -r requirements.txt'
 
 # 3. .env en el server (/root/agents/cognition/.env)
-#    NEON_DATABASE_URL=... OPENROUTER_API_KEY=... BAILEYS_SECRET=... LUIS_WA=...
+#    NEON_DATABASE_URL=... MESH_API_KEY=... BAILEYS_SECRET=... LUIS_WA=...
 #    HETZNER_URL=http://178.105.135.26 BRAIN_SECRET=superclaude2025
 
 # 4. Daemon como servicio
@@ -185,7 +185,7 @@ pregunte, (e) reusa una cadena de razonamiento previa.
 - **FTS español en vez de pgvector** para arrancar sin dependencias. Si la recuperación
   semántica se queda corta, migrar `episodes`/`reasoning_chains` a `vector` es aditivo
   (columna nueva + índice ivfflat); el resto no cambia.
-- **Tolerancia a fallos**: cada capa degrada a comportamiento determinista si OpenRouter
+- **Tolerancia a fallos**: cada capa degrada a comportamiento determinista si mesh/Cerebras
   o una tabla CRM no están. El daemon nunca muere por un chequeo individual.
 - **Anti-spam estructural**: el índice parcial único `(kind, subject) WHERE status open`
   hace imposible duplicar una alerta abierta.

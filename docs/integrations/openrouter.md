@@ -1,5 +1,8 @@
 # Integración: OpenRouter (gateway secundario a LLMs no-Anthropic)
 
+> Estado actual: OpenRouter fue retirado como proveedor de vForge el 2026-10-01.
+> Este documento queda como histórico; la inferencia viva va por Cerebras/mesh.
+
 > *Entra en M3 (Fase 1) como adapter paralelo al de Anthropic directo. No reemplaza a `anthropic-claude`; añade Gemini, Mistral, Llama y similares para tareas baratas o como fallback cuando Anthropic se degrade. ADR-009 lo declara secundario por decisión deliberada (ver ADR-005).*
 
 ---

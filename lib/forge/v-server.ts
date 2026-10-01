@@ -7,7 +7,7 @@
  *
  *   /execute         → corre código Python/Node, devuelve stdout/stderr
  *   /browser         → Playwright (goto, click, type, evaluate, screenshot)
- *   /generate-image  → generación vía OpenRouter / Gemini / FLUX
+ *   /generate-image  → retirado el 2026-10-01 junto con OpenRouter
  *   /ssh-execute     → SSH a server remoto vía paramiko
  *
  * Todos los endpoints están implementados en docs/v-server/api.py. Si
