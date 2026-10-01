@@ -17,6 +17,7 @@ import {
   IconSettings,
   IconUsers,
   IconPlug,
+  IconTrio,
   IconX,
 } from "@/components/brand/VFIcons";
 import { monochromeClerkAppearance } from "@/components/auth/ClerkShell";
@@ -43,6 +44,12 @@ const PRIMARY_NAV: NavItem[] = [
     label: "Construir",
     description: "Chat, herramientas y preview",
     Icon: IconHammer,
+  },
+  {
+    href: "/app/trio",
+    label: "Trío",
+    description: "Claude, ChatGPT y V en paralelo",
+    Icon: IconTrio,
   },
   {
     href: "/app/projects",
@@ -85,6 +92,7 @@ const PRIMARY_NAV: NavItem[] = [
 const TITLES: Record<string, string> = {
   "/app/chat": "Estudio",
   "/app/home": "Estudio",
+  "/app/trio": "Trío",
   "/app/projects": "Proyectos",
   "/app/activity": "Actividad",
   "/app/tablero": "Tablero",
@@ -174,7 +182,8 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isStudio = pathname === "/app/chat";
-  const isFixedWorkspace = isStudio || pathname === "/forge" || pathname === "/v";
+  const isFixedWorkspace =
+    isStudio || pathname === "/app/trio" || pathname === "/forge" || pathname === "/v";
   const isSetup = pathname.startsWith("/app/setup");
   const isLive = pathname.startsWith("/app/live/");
 
