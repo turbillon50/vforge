@@ -21,8 +21,8 @@ mueven agentes, y cada paso queda en el expediente (GitHub + Vercel + Neon + eta
 | Fotos fotorrealistas | Higgsfield | ✅ (cuidar marcas en ropa) |
 | Avanzar la línea de avance | Vulcano picando la API | ✅ |
 | Leer lo que contesta el cliente y sugerir el siguiente paso | Analista de señales | 🟡 recién conectado |
-| Contrato | LUTOR | 🟡 en construcción |
-| Firma | aceptación simple en LUTOR | 🟡 (firma avanzada: después) |
+| Contrato | LUTOR (`POST /api/contratos`, plantilla oficial contrato-pwa) | ✅ probado en producción el 1-oct (crear → link → aceptar → callback) |
+| Firma | aceptación electrónica simple en `lutor.site/c/<token>` → expediente pasa a Firmado | ✅ (firma avanzada: después) |
 | Cobro del anticipo | Mercado Pago / Stripe | ❌ |
 | Construcción de la versión real y entrega | agentes | ❌ (mismo motor que la demo, con más alcance) |
 | Mantenimiento | salud + sanidad + alertas | 🟡 piezas sueltas |
