@@ -33,22 +33,38 @@ export function ThinkingIndicator() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.25 }}
-      className="flex items-center gap-3 rounded-xl border border-[var(--border-1)] bg-white px-3 py-2"
+      className="flex items-center gap-3 rounded-xl border border-violet-500/20 bg-violet-500/[0.06] px-3 py-2"
       aria-live="polite"
       aria-label="V está procesando"
     >
-      {/* Aro de carga: una línea morada girando. Sin degradados ni luz difusa. */}
-      <motion.span
-        aria-hidden
-        className="h-5 w-5 shrink-0 rounded-full border-2"
-        style={{
-          borderColor: "var(--border-2)",
-          borderTopColor: "var(--vf-violet)",
-        }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 0.9, ease: "linear", repeat: Infinity }}
-      />
-      <div className="relative h-[1.2rem] min-w-0 flex-1 overflow-hidden">
+      <div className="relative h-6 w-6 shrink-0">
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background:
+              "conic-gradient(from 0deg, rgba(139,92,246,0.95), rgba(34,211,238,0.95), rgba(139,92,246,0.95))",
+            filter: "blur(0.5px)",
+          }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2.2, ease: "linear", repeat: Infinity }}
+        />
+        <div className="absolute inset-[3px] rounded-full bg-void" />
+        <motion.div
+          className="absolute inset-[5px] rounded-full bg-gradient-to-br from-violet-400 to-violet-400"
+          animate={{ scale: [0.8, 1.1, 0.8], opacity: [0.85, 1, 0.85] }}
+          transition={{ duration: 1.3, ease: "easeInOut", repeat: Infinity }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -inset-2 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle at center, rgba(139,92,246,0.35), transparent 65%)",
+            filter: "blur(5px)",
+          }}
+        />
+      </div>
+      <div className="relative h-[1.2rem] flex-1 min-w-0 overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.span
             key={phase}
@@ -56,7 +72,7 @@ export function ThinkingIndicator() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute inset-0 font-sans text-[14px] font-semibold tracking-tight text-[var(--fg-primary)]"
+            className="absolute inset-0 bg-gradient-to-r from-violet-300 via-on-surface to-violet-300 bg-clip-text font-sans text-[14px] font-semibold tracking-tight text-transparent"
           >
             {PHASES[phase]}
           </motion.span>
@@ -68,9 +84,9 @@ export function ThinkingIndicator() {
         animate={{ opacity: [0.4, 1, 0.4] }}
         transition={{ duration: 1.4, ease: "easeInOut", repeat: Infinity }}
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-[var(--vf-violet)]" />
-        <span className="h-1.5 w-1.5 rounded-full bg-[var(--vf-violet)]" />
-        <span className="h-1.5 w-1.5 rounded-full bg-[var(--vf-violet)]" />
+        <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
+        <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
+        <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
       </motion.div>
     </motion.div>
   );

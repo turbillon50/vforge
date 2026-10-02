@@ -941,10 +941,10 @@ export function ChatExperience() {
   }));
 
   return (
-    <div className="flex h-full min-h-0 flex-col" style={{ background: "#ffffff" }}>
+    <div className="flex h-full min-h-0 flex-col" style={{ background: "#000000" }}>
       <div
-        className="sticky top-0 z-40 flex-shrink-0 border-b border-[var(--border-1)]"
-        style={{ paddingTop: "env(safe-area-inset-top, 0px)", background: "#ffffff" }}
+        className="sticky top-0 z-40 flex-shrink-0 border-b border-app backdrop-blur-xl"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)", background: "rgba(0,0,0,0.72)" }}
       >
         <div className="mx-auto flex h-12 max-w-3xl items-center gap-1 px-2 sm:px-3 md:px-8">
           {/* Volver (solo móvil) */}
@@ -987,7 +987,7 @@ export function ChatExperience() {
                   className="fixed inset-0 z-30"
                   onClick={() => setScopeMenuOpen(false)}
                 />
-                <div className="absolute left-1/2 top-full z-40 mt-1 max-h-[60vh] w-[260px] -translate-x-1/2 overflow-y-auto rounded-md border border-[var(--border-1)] bg-white">
+                <div className="absolute left-1/2 top-full z-40 mt-1 max-h-[60vh] w-[260px] -translate-x-1/2 overflow-y-auto rounded-md border border-app bg-ink shadow-elev">
                   {scopeOptions.map((opt) => (
                     <button
                       key={opt.id}
@@ -1047,7 +1047,7 @@ export function ChatExperience() {
                     setBuilderNote(null);
                   }}
                 />
-                <div className="absolute right-0 top-full z-40 mt-1 w-[240px] overflow-hidden rounded-xl border border-[var(--border-1)] bg-white">
+                <div className="absolute right-0 top-full z-40 mt-1 w-[240px] overflow-hidden rounded-xl border border-app bg-ink shadow-elev backdrop-blur-xl">
                   {!repoFormOpen ? (
                     <>
                       <button
@@ -1077,7 +1077,7 @@ export function ChatExperience() {
                         value={repoName}
                         onChange={(e) => setRepoName(e.target.value)}
                         placeholder="mi-proyecto"
-                        className="mb-2 w-full rounded-md border border-[var(--border-1)] bg-white px-3 py-2 text-sm text-[var(--fg-primary)] placeholder:text-[var(--fg-muted)] focus:border-[var(--vf-violet)] focus:outline-none"
+                        className="mb-2 w-full rounded-md border border-app bg-void px-3 py-2 text-sm text-on-surface placeholder:text-muted focus:border-violet-500/40 focus:outline-none"
                         style={{ fontSize: 16, touchAction: "manipulation" }}
                       />
                       <button
@@ -1125,7 +1125,7 @@ export function ChatExperience() {
                     setBuilderNote(null);
                   }}
                 />
-                <div className="absolute right-0 top-full z-40 mt-1 w-[230px] overflow-hidden rounded-xl border border-[var(--border-1)] bg-white">
+                <div className="absolute right-0 top-full z-40 mt-1 w-[230px] overflow-hidden rounded-xl border border-app bg-ink shadow-elev backdrop-blur-xl">
                   <button
                     type="button"
                     disabled={builderBusy}
@@ -1168,7 +1168,7 @@ export function ChatExperience() {
                   className="fixed inset-0 z-30"
                   onClick={() => setHeaderMenuOpen(false)}
                 />
-                <div className="absolute right-0 top-full z-40 mt-1 w-[180px] overflow-hidden rounded-xl border border-[var(--border-1)] bg-white">
+                <div className="absolute right-0 top-full z-40 mt-1 w-[180px] overflow-hidden rounded-xl border border-app bg-ink shadow-elev">
                   <button
                     type="button"
                     disabled={pending}
@@ -1272,12 +1272,12 @@ export function ChatExperience() {
       {sessionsOpen && (
         <>
           <div
-            className="fixed inset-0 z-[70] bg-black/40"
+            className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-[2px]"
             onClick={() => setSessionsOpen(false)}
           />
-          <div className="fixed inset-y-0 right-0 z-[71] flex w-[88vw] max-w-sm flex-col border-l border-[var(--border-1)] bg-white">
+          <div className="fixed inset-y-0 right-0 z-[71] flex w-[88vw] max-w-sm flex-col border-l border-[var(--border-1)] bg-[#0b0716]/85 shadow-[0_0_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
             <div className="flex items-center justify-between border-b border-[var(--border-1)] px-4 py-3">
-              <p className="font-display text-sm font-semibold text-[var(--fg-primary)]">Tus chats</p>
+              <p className="font-display text-sm font-semibold text-white">Tus chats</p>
               <button
                 type="button"
                 onClick={() => setSessionsOpen(false)}
@@ -1291,20 +1291,20 @@ export function ChatExperience() {
                 type="button"
                 onClick={startNewSession}
                 disabled={pending}
-                className="flex w-full items-center gap-2 rounded-xl bg-[var(--vf-violet)] px-3 py-2.5 text-sm font-medium text-white transition hover:bg-[var(--vf-violet-strong)] disabled:opacity-50"
+                className="flex w-full items-center gap-2 rounded-xl border border-violet-400/50 bg-violet-500/25 px-3 py-2.5 text-sm font-medium text-white transition hover:bg-violet-500/35 disabled:opacity-50"
               >
-                <IconPlus size={15} />
+                <IconPlus size={15} className="text-violet-300" />
                 Nuevo chat
               </button>
             </div>
             <div className="mt-2 flex-1 overflow-y-auto px-3 pb-4">
               {sessionsLoading && (
-                <p className="px-2 py-3 font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--fg-secondary)]">
+                <p className="px-2 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--fg-tertiary)]">
                   Cargando chats…
                 </p>
               )}
               {!sessionsLoading && sessions.length === 0 && (
-                <p className="px-2 py-3 text-sm text-[var(--fg-secondary)]">Sin chats todavía.</p>
+                <p className="px-2 py-3 text-sm text-[var(--fg-tertiary)]">Sin chats todavía.</p>
               )}
               {sessions.map((sess) => (
                 <button
@@ -1313,12 +1313,12 @@ export function ChatExperience() {
                   onClick={() => void switchSession(sess.session_id)}
                   className={`mt-1.5 flex w-full flex-col gap-0.5 rounded-xl border px-3 py-2.5 text-left transition ${
                     sess.session_id === sessionIdRef.current
-                      ? "border-[var(--vf-violet)] bg-[var(--vf-violet-soft)] text-[var(--vf-violet-ink)]"
-                      : "border-[var(--border-1)] bg-white text-[var(--fg-primary)] hover:bg-[var(--surface-1)]"
+                      ? "border-violet-400/50 bg-violet-500/20 text-white"
+                      : "border-transparent bg-[var(--surface-1)] text-[var(--fg-primary)] hover:bg-white/[0.12] hover:text-white"
                   }`}
                 >
                   <span className="truncate text-sm font-medium">{sess.title}</span>
-                  <span className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--fg-tertiary)]">
                     {new Date(sess.last_at).toLocaleString("es-MX", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })} · {sess.count} msgs
                   </span>
                 </button>
@@ -1329,8 +1329,8 @@ export function ChatExperience() {
       )}
 
       <div
-        className="vf-composer-pad flex-shrink-0 border-t border-[var(--border-1)]"
-        style={{ background: "#ffffff" }}
+        className="vf-composer-pad flex-shrink-0 border-t border-app backdrop-blur-xl"
+        style={{ background: "rgba(0,0,0,0.96)" }}
       >
         <div className="mx-auto max-w-3xl px-3 pb-2 pt-2 sm:px-4 md:px-8">
           {messages.length <= 1 && (
@@ -1417,7 +1417,7 @@ function Composer({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
-  // Dictado por voz del botón de V desde otra ruta: deja el texto en
+  // Dictado por voz del VOrb desde otra ruta: el orbe deja el texto en
   // sessionStorage y navega aquí; lo consumimos al montar y enfocamos.
   // (En el chat el orbe inyecta directo en el textarea[data-chat-input].)
   useEffect(() => {
@@ -1614,18 +1614,18 @@ function Composer({
         data-vorb-avoid
         className="group/composer relative overflow-hidden rounded-2xl transition-all duration-300"
         style={{
-          background: "#ffffff",
-          border: "1px solid var(--border-1)",
+          background: "#0a0a0a",
+          border: "1px solid rgba(255,255,255,0.08)",
         }}
         onFocusCapture={(e) => {
-          e.currentTarget.style.borderColor = "var(--vf-violet)";
+          e.currentTarget.style.borderColor = "rgba(124,58,237,0.45)";
         }}
         onBlurCapture={(e) => {
-          e.currentTarget.style.borderColor = "var(--border-1)";
+          e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
         }}
       >
         <div className="flex items-end gap-1.5 px-2 py-2 sm:gap-2">
-          <div className="flex items-center gap-0.5 pb-0.5 text-[var(--fg-secondary)] sm:gap-1">
+          <div className="flex items-center gap-0.5 pb-0.5 text-on-surface-variant sm:gap-1">
             {/* Adjuntar archivo */}
             <input
               ref={fileInputRef}
@@ -1718,10 +1718,12 @@ function Composer({
               type="submit"
               disabled={!input.trim() && !attachment}
               aria-label={sendLabel}
-              className={`flex h-10 w-10 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-90 disabled:cursor-not-allowed disabled:opacity-35 ${
-                input.trim() || attachment ? "scale-100" : "scale-95"
+              className={`flex h-10 w-10 items-center justify-center rounded-full text-white transition-all duration-200 active:scale-90 disabled:cursor-not-allowed disabled:opacity-35 disabled:saturate-50 ${
+                input.trim() || attachment
+                  ? "scale-100 shadow-[0_4px_18px_rgba(124,58,237,0.45)] hover:shadow-[0_4px_24px_rgba(124,58,237,0.6)]"
+                  : "scale-95"
               }`}
-              style={{ touchAction: "manipulation", background: "var(--vf-violet)" }}
+              style={{ touchAction: "manipulation", background: "linear-gradient(135deg, #7c3aed, #8b5cf6)" }}
             >
               <IconArrowUp size={17} strokeWidth={2.5} />
             </button>
@@ -1823,7 +1825,7 @@ function MessageBubble({
     >
       <div
         className="chat-bubble-user max-w-[82%] min-w-0 rounded-2xl rounded-br-md px-4 py-2.5 font-sans text-[15px] font-normal leading-[1.55] text-white sm:text-[16px]"
-        style={{ background: "var(--vf-violet)", border: "1px solid var(--vf-violet-strong)" }}
+        style={{ background: "#1c1c1f", border: "1px solid rgba(255,255,255,0.06)" }}
       >
         {msg.image && (
           // eslint-disable-next-line @next/next/no-img-element
