@@ -15,6 +15,7 @@
  */
 import type { Tool } from "@anthropic-ai/sdk/resources/messages";
 import { sql } from "@/lib/db/client";
+import { MANOS_TOOLS, MANOS_TOOL_NAMES } from "@/lib/embudo/manos-defs";
 import {
   listAllUserRepos,
   getRepo,
@@ -1445,6 +1446,8 @@ required: ["repo", "sha"],
       required: ["serviceId", "status"],
     },
   },
+  // Manos del embudo de clientes + LUTOR (mismas funciones que el MCP; lib/embudo/manos.ts)
+  ...MANOS_TOOLS.map((t) => ({ name: t.name, description: t.description, input_schema: t.schema as Tool["input_schema"] })),
 ];
 
 export interface ToolExecutionContext {
@@ -1505,7 +1508,10 @@ function requiredModeForTool(name: string): AutonomyMode {
     name.startsWith("skill_") ||
     name.startsWith("directive_") ||
     name === "memory_save" ||
-    name === "agent_config_set"
+    name === "agent_config_set" ||
+    name === "embudo_mover" ||
+    name === "embudo_contrato" ||
+    name === "lutor"
   ) {
     return "build";
   }
@@ -1577,6 +1583,10 @@ async function dispatch(
   input: Record<string, unknown>,
   ctx: ToolExecutionContext,
 ): Promise<ToolExecutionResult> {
+  if (MANOS_TOOL_NAMES.has(name)) {
+    const { runManosTool } = await import("@/lib/embudo/manos");
+    return runManosTool(name, input, ctx.userId);
+  }
   switch (name) {
     case "github_list_repos": {
       const max = clampNumber(input.max, 1, 200, 50);

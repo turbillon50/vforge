@@ -1,3 +1,4 @@
+import { MANOS_TOOL_NAMES } from "@/lib/embudo/manos-defs";
 import { queryAll, queryOne, sql, ensureDatabaseHealed } from "@/lib/db/client";
 import { brainQueryAll } from "@/lib/db/brain";
 import { recall } from "@/lib/forge/semantic-recall";
@@ -340,6 +341,14 @@ export async function runMcpTool(
       return text(VFORGE_METHOD);
     case "help":
       return text(helpText(principal));
+  }
+
+  // --- MANOS del embudo + LUTOR: sólo Owner (admin). ---
+  if (MANOS_TOOL_NAMES.has(name)) {
+    if (principal.scope !== "admin") return err(`401: ${name} es solo para el Owner (token admin).`);
+    const { runManosTool } = await import("@/lib/embudo/manos");
+    const r = await runManosTool(name, args, principal.userId ?? "mcp");
+    return r.ok ? text(r.content) : err(r.content);
   }
 
   // --- UNICORN: sólo Owner. runUnicornTool revalida el scope (defensa en profundidad). ---

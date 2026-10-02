@@ -100,6 +100,15 @@ export const TOOL_KIND: Record<string, ToolKind> = {
   unicorn_expediente: "data",
   unicorn_eventos: "data",
   unicorn_publicar_evento: "data",
+
+  // ---- Manos del embudo + LUTOR (lib/embudo/manos.ts) — solo Owner (admin) ----
+  vforge_pulso: "data",
+  embudo_tablero: "data",
+  embudo_cliente: "data",
+  embudo_mover: "data",
+  embudo_analizar: "data",
+  embudo_contrato: "data",
+  lutor: "data",
 };
 
 /**
@@ -129,6 +138,14 @@ export const OPERATOR_TOOLS: ReadonlySet<string> = new Set([
   "unicorn_expediente",
   "unicorn_eventos",
   "unicorn_publicar_evento",
+  // Manos del embudo + LUTOR: solo Owner
+  "vforge_pulso",
+  "embudo_tablero",
+  "embudo_cliente",
+  "embudo_mover",
+  "embudo_analizar",
+  "embudo_contrato",
+  "lutor",
 ]);
 
 export function isOperatorTool(name: string): boolean {

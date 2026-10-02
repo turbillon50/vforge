@@ -1,3 +1,4 @@
+import { MANOS_TOOLS } from "@/lib/embudo/manos-defs";
 /**
  * Registro de tools del MCP de VForge: SOLO datos, cero dependencias.
  *
@@ -417,4 +418,6 @@ export const MCP_TOOLS: McpToolDef[] = [
       required: ["proyecto", "tipo", "titulo"],
     },
   },
+  /* ================ MANOS del embudo + LUTOR (solo Owner) — lib/embudo/manos.ts ================ */
+  ...MANOS_TOOLS.map((t) => ({ name: t.name, description: `MANOS (Owner): ${t.description}`, inputSchema: t.schema as McpToolDef["inputSchema"] })),
 ];
