@@ -19,7 +19,6 @@
 ✅ NEON_API_KEY=[in vault, functional]
    → Full database access, create branches, execute queries
    
-✅ OPENROUTER_API_KEY=[in vault, functional]
    → Access to Gemini, Mistral, Llama, Claude, all models
    
 ✅ ANTHROPIC_API_KEY=[in vault, functional]

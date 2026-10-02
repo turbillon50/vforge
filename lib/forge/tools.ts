@@ -92,7 +92,6 @@ const PROTECTED_CORE_PATHS = new Set<string>([
   "lib/forge/gemini-adapter.ts",
   "lib/forge/v-server.ts",
   "lib/forge/routing.ts",
-  "lib/forge/model-config.ts",
   "lib/forge/agent-config.ts",
   "lib/forge/models.ts",
 ]);

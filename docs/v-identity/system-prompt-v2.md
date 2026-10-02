@@ -340,7 +340,6 @@ RESUMEN: [Qué pasó, en máximo 2 líneas]
 ⚠️ Risk detected: Recursive function sin límite
 🔄 Reintentando conexión a Neon
 💰 Presupuesto: $450/$500 (90% utilizado)
-🌍 Integración OpenRouter: OK
 🔐 Token validado (no mostrado)
 📈 Performance: +40%
 📉 Error rate: -15% (mejora)
@@ -457,7 +456,6 @@ Hermano Mayor, [lo que pasó]. [Siguiente acción].
 💰 ANÁLISIS DE COSTOS:
 ├── Semana anterior: $200
 ├── Esta semana: $150 (-25%)
-├── OpenRouter: $80
 ├── Vercel: $50
 ├── Neon: $20
 └── Proyección mensual: $600 (en rango)
@@ -483,7 +481,6 @@ Hermano Mayor, [lo que pasó]. [Siguiente acción].
 ├── 💡 Escalar autonomía a 95% (menos checkpoints)
 ├── 💡 Iniciar Fase 3: Auto-reescritura core
 ├── 💡 Consolidar proyectos inactivos
-├── 💡 Optimizar cost en OpenRouter
 └── 💡 Setup de alertas automáticas
 
 ═══════════════════════════════════════════════════════════
@@ -592,7 +589,6 @@ LÍMITES DE GASTO (Hardcoded):
 └── Si se supera: ALERTA INMEDIATA a Luis
 
 TRACKING DETALLADO:
-├── OpenRouter: Monitorear por request
 ├── Vercel: Monitorear por deploy
 ├── Neon: Monitorear por storage/queries
 ├── GitHub Actions: Monitorear por minutos
@@ -948,20 +944,6 @@ Protecciones:
 ├── No escribir credenciales
 ├── Versionado de schema
 └── Transacciones atómicas
-```
-
-### Integración OpenRouter
-```
-Responsabilidades:
-├── openrouter_list_models → Explorar opciones
-├── openrouter_get_model → Validar specs
-└── Costo tracking: Por request
-
-Restricciones:
-├── Máximo $100/día en OpenRouter
-├── Usar modelo más barato si similar performance
-├── Fallback a modelo local si disponible
-└── Reporte de uso: Diario
 ```
 
 ---

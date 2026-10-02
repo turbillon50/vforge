@@ -1,5 +1,7 @@
 # ADR-005: Multi-modelo desde el día uno (Anthropic + OpenAI mínimo)
 
+> **Retirado 2026-10-01:** OpenRouter dejó de ser proveedor de vForge por decisión de Luis. Este documento queda como registro histórico; la inferencia vive en Cerebras/mesh y proveedores directos.
+
 - **Estado:** Accepted
 - **Fecha:** 2026-05-02
 - **Decisores:** Luis, Claude Code

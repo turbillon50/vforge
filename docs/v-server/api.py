@@ -7,7 +7,7 @@ Endpoints:
   POST /ssh-execute     → SSH a server remoto (paramiko)
   POST /browser         → Playwright (goto/click/type/screenshot/get_html/
                           get_text/describe_element/execute_script)
-  POST /generate-image  → Retirado el 2026-10-01 junto con OpenRouter.
+  POST /generate-image  → Gemini directo (gemini-3.1-flash-image).
 
 Deps en el servidor (instalar antes de usar):
   pip install flask paramiko playwright
@@ -26,6 +26,7 @@ nginx + Let's Encrypt delante para TLS.
 
 import base64
 import os
+import requests
 import subprocess
 from io import StringIO
 
@@ -235,9 +236,43 @@ def browser_action():
 
 @app.route("/generate-image", methods=["POST"])
 def generate_image():
-    return jsonify({
-        "error": "generate-image retirado: OpenRouter dejó de ser proveedor el 2026-10-01",
-    }), 410
+    """Imagen con Gemini directo (Google AI). OpenRouter retirado el 2026-10-01."""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return jsonify({"error": "GEMINI_API_KEY no configurada"}), 503
+    data = request.json or {}
+    prompt = data.get("prompt", "")
+    size = data.get("size", "1024x1024")
+    negative = data.get("negative_prompt", "")
+    model = os.environ.get("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")
+    if not prompt:
+        return jsonify({"error": "prompt requerido"}), 400
+    enriched_prompt = prompt
+    if size and size != "1024x1024":
+        enriched_prompt = f"{enriched_prompt}\n\nImage size: {size}"
+    if negative:
+        enriched_prompt = f"{enriched_prompt}\n\nAvoid: {negative}"
+    try:
+        resp = requests.post(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+            headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
+            json={"contents": [{"parts": [{"text": enriched_prompt}]}],
+                  "generationConfig": {"responseModalities": ["IMAGE", "TEXT"]}},
+            timeout=120,
+        )
+        if resp.status_code != 200:
+            return jsonify({"error": f"gemini {resp.status_code}: {resp.text[:300]}"}), 502
+        parts = (((resp.json().get("candidates") or [{}])[0].get("content") or {}).get("parts")) or []
+        images = [p["inlineData"] for p in parts if p.get("inlineData", {}).get("data")]
+        if not images:
+            texto = " ".join(p.get("text", "") for p in parts).strip()
+            return jsonify({"error": "modelo no devolvio imagen", "text_response": texto}), 502
+        first = images[0]
+        return {"image_base64": first["data"], "mime": first.get("mimeType", "image/png"),
+                "size": size, "model": model, "all_images": len(images)}
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == "__main__":

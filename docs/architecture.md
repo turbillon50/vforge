@@ -180,7 +180,7 @@ El frontend que estamos construyendo en v0 ya tiene la cara para todo el cerebro
 
 ### ADR-005: Multi-modelo desde el día uno
 
-**Decisión:** Forge usa Anthropic para razonamiento/código, OpenAI para imagen y voz, y se reserva la opción de añadir Gemini, Mistral, Llama via OpenRouter más adelante.
+**Decisión:** Forge usa Anthropic para razonamiento/código, OpenAI para imagen y voz, y Cerebras/mesh para inferencia rápida. (OpenRouter se retiró el 2026-10-01; no se usa.)
 
 **Razón:** el routing inteligente entre modelos es una ventaja competitiva. Cada modelo tiene un sweet spot.
 
@@ -209,7 +209,6 @@ El frontend que estamos construyendo en v0 ya tiene la cara para todo el cerebro
 | **M0** | Setup Vault real (cifrado AES-256, master key derivation, permission rings) | Neon | 3 días |
 | **M1** | Brain endpoint stub: `/api/forge/run` con streaming, conversa con Claude sin tools | — | 1 día |
 | **M2** | Model registry + routing policy heurística | — | 1 día |
-| **M3** | Adapters `anthropic-claude` (Sonnet + Opus + Haiku) + `openrouter-gateway` (Gemini, Mistral, Llama vía OpenRouter para tareas baratas) | OpenRouter | 1.5 días |
 | **M4** | Adapter `anthropic-web-search` → Forge investiga online | — | 1 día |
 | **M5** | Adapters `e2b-microvm` (sandbox) + `claude-code-sdk` (corre dentro de E2B) → Forge edita el repo (Anillo 1) | E2B | 4 días |
 | **M6** | Adapter `openai-image` (gpt-image-1) → Forge propone variantes de logo | — | 2 días |

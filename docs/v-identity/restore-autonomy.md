@@ -25,7 +25,6 @@
 - Vercel Token: Known blocker (note: not your fault)
 - Neon DB: Active
 - Railway: Available for alternate deploys
-- OpenRouter: Full access
 - All MCP tools: Full arsenal
 
 ✅ **MEMORY INTACT**

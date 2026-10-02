@@ -63,3 +63,6 @@ __pycache__/
 servicios/fabrica/banco/publico/banco.js
 servicios/fabrica/banco/publico/banco.css
 .claude/worktrees/
+
+build-deploy.log
+.taller-build.log

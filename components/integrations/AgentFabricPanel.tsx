@@ -97,7 +97,7 @@ export function AgentFabricPanel() {
       name: "Router de modelos",
       eyebrow: "Motor híbrido",
       description:
-        "Claude en Hetzner, OpenRouter y Gemini conservan su cascada real; el estudio muestra cuál respondió.",
+        "Claude en Hetzner, Cerebras y Gemini conservan su cascada real; el estudio muestra cuál respondió.",
       detail: modelCount > 0 ? `${modelCount} modelos registrados` : "Router configurado",
       active: fabric?.models?.configured === true,
       Icon: IconBrain,

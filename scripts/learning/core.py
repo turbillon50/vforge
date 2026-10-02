@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 core.py — Núcleo compartido del protocolo de aprendizaje de Vulcano.
-DB, LLM (OpenRouter + fallback ollama), notificación a Luis, dedup y logging.
+DB, LLM (claude CLI → Cerebras → ollama), notificación a Luis, dedup y logging.
 
 Todo lo demás (signals, post_session, contrast, digest, decay) importa de aquí.
 """
@@ -15,14 +15,14 @@ DB_URL = "postgresql://neondb_owner:REDACTED_BRAIN_DB@ep-super-glitter-aqj6d5g0-
 BRAIN_LOCAL = "http://127.0.0.1:9000"
 ENGINE_NOTIFY = "http://127.0.0.1:3003/notify"   # V Momentum Engine → WhatsApp Luis
 OLLAMA = "http://127.0.0.1:11434/api/generate"
-LEARN_MODEL = os.environ.get("LEARN_MODEL", "anthropic/claude-sonnet-4-5")
+LEARN_MODEL = os.environ.get("LEARN_MODEL", "gpt-oss-120b")  # id de Cerebras
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(levelname)s [%(name)s] %(message)s")
 
 
 def _load_env(path="/root/.env"):
-    """Carga llaves del .env del server (OPENROUTER_API_KEY, etc.) sin pisar las ya seteadas."""
+    """Carga llaves del .env del server (CEREBRAS_API_KEY, etc.) sin pisar las ya seteadas."""
     try:
         with open(path) as fh:
             for line in fh:
@@ -36,7 +36,7 @@ def _load_env(path="/root/.env"):
 
 
 _load_env()
-OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+CEREBRAS_KEY = os.environ.get("CEREBRAS_API_KEY", "")
 
 
 # ── DB ──────────────────────────────────────────────────────────────────────
@@ -76,13 +76,13 @@ def llm(system, user, max_tokens=2048, want_json=False, model=None):
     """
     Cadena de motores, de mejor a fallback:
       1) claude CLI (OAuth vivo en el server, gratis, fuerte)  ← primario
-      2) OpenRouter (si la key tiene crédito; hoy da 402)
+      2) Cerebras (gpt-oss-120b, proveedor directo)
       3) ollama qwen2.5:1.5b local (último recurso, débil)
     Devuelve string. Si want_json, extrae el primer bloque JSON.
     """
     out = _llm_claude_cli(system, user)
-    if not out and OPENROUTER_KEY:
-        out = _llm_openrouter(system, user, max_tokens, model)
+    if not out and CEREBRAS_KEY:
+        out = _llm_cerebras(system, user, max_tokens, model)
     if not out:
         out = _llm_ollama(system, user)
     if want_json and out:
@@ -108,29 +108,27 @@ def _llm_claude_cli(system, user):
     return None
 
 
-def _llm_openrouter(system, user, max_tokens, model):
+def _llm_cerebras(system, user, max_tokens, model):
     try:
         payload = json.dumps({
-            "model": model or LEARN_MODEL,
-            "max_tokens": max_tokens,
+            "model": model if model and "/" not in model else LEARN_MODEL,
+            "max_tokens": max(max_tokens, 800),
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
         }).encode()
         req = _ur.Request(
-            "https://openrouter.ai/api/v1/chat/completions", data=payload,
+            "https://api.cerebras.ai/v1/chat/completions", data=payload,
             headers={
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + OPENROUTER_KEY,
-                "HTTP-Referer": "https://vforge.site",
-                "X-Title": "Vulcano-Learning",
+                "Authorization": "Bearer " + CEREBRAS_KEY,
             })
         with _ur.urlopen(req, timeout=90) as r:
             data = json.loads(r.read())
         return data["choices"][0]["message"]["content"]
     except Exception as e:
-        logging.warning("openrouter llm failed: %s", e)
+        logging.warning("cerebras llm failed: %s", e)
         return None
 
 

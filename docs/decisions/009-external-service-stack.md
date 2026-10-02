@@ -1,5 +1,7 @@
 # ADR-009: External service stack — OpenRouter, E2B, Trigger.dev, Turso, Liveblocks, Polar.sh, Unkey, Resend
 
+> **Retirado 2026-10-01:** OpenRouter dejó de ser proveedor de vForge por decisión de Luis. Este documento queda como registro histórico; la inferencia vive en Cerebras/mesh y proveedores directos.
+
 - **Estado:** Accepted
 - **Fecha:** 2026-05-12
 - **Decisores:** Luis, Claude Code
