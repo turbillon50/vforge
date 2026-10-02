@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Sin la burbuja "N" de desarrollo: en vivo.vforge.site tapaba "Volver al sitio".
+  devIndicators: false,
   // Fijar la raíz del proyecto: hay un package-lock.json en /root que hacía que
   // Turbopack infiriera /root como workspace root (y fallara al leer ese dir).
   turbopack: {

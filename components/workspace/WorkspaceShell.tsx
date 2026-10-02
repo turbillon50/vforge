@@ -43,6 +43,12 @@ type NavItem = {
 
 const PRIMARY_NAV: NavItem[] = [
   {
+    href: "/app/colectivo",
+    label: "Colectivo",
+    description: "Trío, V y Fábrica con todos los modelos",
+    Icon: IconTrio,
+  },
+  {
     href: "/app/chat",
     label: "Construir",
     description: "Chat, herramientas y preview",
@@ -108,6 +114,7 @@ const TITLES: Record<string, string> = {
   "/app/chat": "Estudio",
   "/app/home": "Estudio",
   "/app/trio": "Trío",
+  "/app/colectivo": "Colectivo",
   "/app/projects": "Proyectos",
   "/app/demos": "Demos",
   "/app/activity": "Actividad",
@@ -200,7 +207,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isStudio = pathname === "/app/chat";
   const isFixedWorkspace =
-    isStudio || pathname === "/app/trio" || pathname === "/forge" || pathname === "/v";
+    isStudio || pathname === "/app/trio" || pathname === "/app/colectivo" || pathname === "/forge" || pathname === "/v";
   const isSetup = pathname.startsWith("/app/setup");
   const isLive = pathname.startsWith("/app/live/");
 
