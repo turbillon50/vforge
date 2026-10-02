@@ -26,11 +26,13 @@ export function tokenTone(h: TokenHealth | null): TokenTone {
   return "green";
 }
 
+/* Tonos oscuros: estos colores se usan como color de TEXTO sobre fondo blanco,
+   así que los pasteles anteriores no alcanzaban contraste legible. */
 export const TONE_COLOR: Record<TokenTone, string> = {
-  green: "#34d399",
-  amber: "#fbbf24",
-  red: "#f87171",
-  unknown: "#94a3b8",
+  green: "#15803d",
+  amber: "#b45309",
+  red: "#b91c1c",
+  unknown: "#6b6e73",
 };
 
 /** "6.3h" / "12h" / "—" para etiquetas compactas. */

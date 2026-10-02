@@ -9,7 +9,6 @@ import { UtilizacionPanel } from "@/components/cockpit/UtilizacionPanel";
 import { IconActivity, IconCpu, IconShield, IconBoxes, IconMaximize } from "@/components/brand/VFIcons";
 import { TokenRiskBanner } from "@/components/workspace/TokenHealth";
 import { AGENT_LOGOS, LogoGrok } from "@/components/brand/AgentLogos";
-import { useLiteMotion } from "@/components/cockpit/use-lite-motion";
 import type {
   ActiveJob,
   EsferasPayload,
@@ -17,19 +16,18 @@ import type {
   GrokVerdict,
 } from "@/components/cockpit/esferas-types";
 
-const HUE: Record<string, string> = {
-  claude: "#a78bfa",
-  codex: "#8b5cf6",
-  grok: "#f472b6",
-  shell: "#34d399",
-  browser: "#38bdf8",
-};
+/* Ley visual: morado SOLO como acento. Un agente trabajando se marca en morado;
+   en reposo, gris. Los colores de estado (verde/ámbar/rojo) son señal, no
+   decoración, y van en tono oscuro para leerse sobre blanco. */
+const VIOLET = "#7c3aed";
+const VIOLET_INK = "#5b21b6";
+const GRAY_INK = "#55585d";
 
-/** Color por veredicto Grok. */
+/** Color por veredicto Grok — contraste sobre blanco. */
 const VERDICT_HUE: Record<GrokVerdict, string> = {
-  APROBADO: "#34d399",
-  RECHAZADO: "#f87171",
-  REVISION: "#fbbf24",
+  APROBADO: "#15803d",
+  RECHAZADO: "#b91c1c",
+  REVISION: "#b45309",
 };
 
 const POLL_MS = 4000;
@@ -53,25 +51,21 @@ function rel(iso: string | null, now: number): string {
 }
 
 const STATUS_HUE: Record<string, string> = {
-  running: "#34d399",
-  active: "#34d399",
-  in_progress: "#34d399",
-  pending: "#fbbf24",
-  queued: "#fbbf24",
-  done: "#8b5cf6",
-  failed: "#f87171",
-  error: "#f87171",
+  running: "#15803d",
+  active: "#15803d",
+  in_progress: "#15803d",
+  pending: "#b45309",
+  queued: "#b45309",
+  done: VIOLET_INK,
+  failed: "#b91c1c",
+  error: "#b91c1c",
 };
 
-/** Un número grande que late suavemente cada vez que cambia su valor. */
+/** Un número grande que se desliza cada vez que cambia su valor. */
 function LiveMetric({ value, label, accent }: { value: number; label: string; accent: string }) {
   return (
-    <div className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-4">
-      <div
-        className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-50 blur-2xl"
-        style={{ background: accent }}
-      />
-      <p className="label-caps text-[12px] text-muted">{label}</p>
+    <div className="vf-card overflow-hidden p-4">
+      <p className="text-[12px] font-medium text-[var(--fg-muted)]">{label}</p>
       <div className="relative mt-1 h-9 overflow-hidden">
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
@@ -80,7 +74,7 @@ function LiveMetric({ value, label, accent }: { value: number; label: string; ac
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -14, opacity: 0 }}
             transition={{ duration: 0.32, ease: "easeOut" }}
-            className="absolute font-display text-3xl font-bold"
+            className="absolute font-display text-3xl font-bold tabular-nums"
             style={{ color: accent }}
           >
             {value}
@@ -92,7 +86,6 @@ function LiveMetric({ value, label, accent }: { value: number; label: string; ac
 }
 
 export default function TallerPage() {
-  const lite = useLiteMotion();
   const [data, setData] = useState<EsferasPayload | null>(null);
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
@@ -144,7 +137,7 @@ export default function TallerPage() {
   const projects = data?.projects ?? [];
   const health = data?.health;
 
-  // MULTI-ESFERA: jobs corriendo (uno por esfera central) filtrados por proyecto.
+  // Jobs corriendo filtrados por proyecto.
   const jobs: ActiveJob[] = useMemo(
     () => (data?.jobs ?? []).filter((j) => !selected || j.projectKey === selected),
     [data, selected],
@@ -162,7 +155,7 @@ export default function TallerPage() {
 
   // Reposo: últimos N jobs CERRADOS de las últimas 24h (restRecent del backend)
   // como minis apagados con su sello Grok. Filtrados por proyecto si hay uno
-  // seleccionado. Alimenta la constelación cuando no hay esferas vivas.
+  // seleccionado. Alimenta la lista cuando no hay trabajo vivo.
   const restJobs: FeedItem[] = useMemo(
     () => (data?.restRecent ?? []).filter((f) => !selected || f.projectKey === selected),
     [data, selected],
@@ -176,7 +169,7 @@ export default function TallerPage() {
       <PageHeader
         eyebrow="Operación en vivo"
         title="Taller"
-        description="Quién trabaja en qué, ahora mismo. Las esferas Vulcano reportando desde Hetzner en tiempo real."
+        description="Quién trabaja en qué, ahora mismo. Los agentes Vulcano reportando desde Hetzner en tiempo real."
         actions={
           <div className="flex items-center gap-2">
             {/* Healthcheck de los procesos del daemon en el server */}
@@ -217,49 +210,34 @@ export default function TallerPage() {
       <TokenRiskBanner />
 
       {/* pb amplio en móvil: la última fila del feed debe poder desplazarse por
-          encima de la esfera flotante (VOrb) y del nav inferior. */}
+          encima del botón flotante de V y del nav inferior. */}
       <div className="space-y-5 p-4 pb-28 sm:space-y-6 sm:p-5 sm:pb-28 md:p-8">
-        {/* Hero con asset Higgsfield + overlay obsidian */}
-        <div className="relative h-[140px] overflow-hidden rounded-2xl border border-[var(--border-1)] sm:h-[180px]">
-          <img
-            src="/taller/taller-hero.png"
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-            }}
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(90deg, var(--color-void) 8%, color-mix(in oklab, var(--color-void) 55%, transparent) 60%, color-mix(in oklab, var(--color-void) 85%, transparent) 100%)",
-            }}
-          />
-          <div className="relative flex h-full flex-col justify-end p-5 md:p-6">
-            <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
-              <IconActivity size={13} /> Cabina del operador
-            </p>
-            <h2 className="mt-1 font-display text-lg font-bold text-[var(--fg-primary)] md:text-xl">
-              {jobs.length > 0
-                ? `${jobs.length} ${jobs.length === 1 ? "esfera construyendo" : "esferas construyendo"} ahora`
-                : "Esferas en reposo"}
-            </h2>
-          </div>
+        {/* Resumen de la operación — texto en claro, sin imagen de fondo */}
+        <div className="vf-card p-5 md:p-6">
+          <p className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--fg-muted)]">
+            <IconActivity size={13} /> Trabajo en curso
+          </p>
+          <h2 className="mt-1 font-display text-lg font-bold text-[var(--fg-primary)] md:text-xl">
+            {jobs.length > 0
+              ? `${jobs.length} ${jobs.length === 1 ? "agente trabajando" : "agentes trabajando"} ahora`
+              : "Ningún agente trabajando ahora"}
+          </h2>
+          <p className="mt-1 text-[13px] text-[var(--fg-secondary)]">
+            {jobs.length > 0
+              ? "Cada tarjeta es una tarea real corriendo en el servidor."
+              : "Cuando se despache trabajo, aparecerá aquí."}
+          </p>
         </div>
 
         {/* Selector de proyecto — ESFERA = PROYECTO */}
         {projects.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="label-caps text-[12px] text-muted">Proyecto</span>
+            <span className="text-[12px] font-medium text-[var(--fg-muted)]">Proyecto</span>
             <button
               onClick={() => setSelected(null)}
-              className="chip min-h-[44px] px-3.5 text-[12px] transition active:scale-95"
-              style={{
-                borderColor: selected === null ? "#0a0a0a" : undefined,
-                color: selected === null ? "#0a0a0a" : undefined,
-                background: selected === null ? "#ffffff" : undefined,
-              }}
+              data-on={selected === null}
+              aria-pressed={selected === null}
+              className="chip min-h-[44px] px-3.5 transition active:scale-95"
             >
               Todos
             </button>
@@ -267,16 +245,13 @@ export default function TallerPage() {
               <button
                 key={p.key}
                 onClick={() => setSelected(p.key === selected ? null : p.key)}
-                className="chip min-h-[44px] px-3.5 text-[12px] transition active:scale-95"
-                style={{
-                  borderColor: selected === p.key ? "#0a0a0a" : undefined,
-                  color: selected === p.key ? "#0a0a0a" : undefined,
-                  background: selected === p.key ? "#ffffff" : undefined,
-                }}
-                title={`${p.active} esfera(s) activa(s)`}
+                data-on={selected === p.key}
+                aria-pressed={selected === p.key}
+                className="chip min-h-[44px] px-3.5 transition active:scale-95"
+                title={`${p.active} tarea(s) activa(s)`}
               >
                 {p.label}
-                <span className="ml-1 text-muted">· {p.active}</span>
+                <span className="text-[var(--fg-muted)]">· {p.active}</span>
               </button>
             ))}
           </div>
@@ -284,19 +259,18 @@ export default function TallerPage() {
 
         {/* Métricas vivas */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <LiveMetric value={jobs.length} label="Esferas activas" accent="#34d399" />
-          <LiveMetric value={proyectosActivos} label="Proyectos activos" accent="#0a0a0a" />
-          <LiveMetric value={data?.queue?.running ?? 0} label="Jobs corriendo" accent="#34363a" />
-          <LiveMetric value={pendingCount} label="En cola" accent="#fbbf24" />
+          <LiveMetric value={jobs.length} label="Agentes trabajando" accent="#15803d" />
+          <LiveMetric value={proyectosActivos} label="Proyectos activos" accent="#090909" />
+          <LiveMetric value={data?.queue?.running ?? 0} label="Tareas corriendo" accent="#34363a" />
+          <LiveMetric value={pendingCount} label="En cola" accent="#34363a" />
         </div>
 
-        {/* Toggle de vista del núcleo: Detalle (un diagrama) vs Constelación
-            (zoom out, un mini-núcleo por job para supervisar TODO) */}
+        {/* Vista del trabajo: Todas las tareas (lista) vs Una tarea (detalle) */}
         <div className="flex items-center justify-between gap-3">
-          <div className="inline-flex rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-1">
+          <div className="inline-flex rounded-xl border border-[var(--border-1)] bg-white p-1">
             {([
-              { id: "detalle", label: "Detalle", Icon: IconMaximize },
-              { id: "constelacion", label: "Constelación", Icon: IconBoxes },
+              { id: "detalle", label: "Una tarea", Icon: IconMaximize },
+              { id: "constelacion", label: "Todas", Icon: IconBoxes },
             ] as const).map(({ id, label, Icon }) => {
               const on = view === id;
               return (
@@ -308,8 +282,8 @@ export default function TallerPage() {
                   }}
                   className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition active:scale-95"
                   style={{
-                    background: on ? "#0a0a0a" : "transparent",
-                    color: on ? "#ffffff" : "var(--fg-tertiary)",
+                    background: on ? VIOLET : "transparent",
+                    color: on ? "#ffffff" : "var(--fg-secondary)",
                   }}
                   aria-pressed={on}
                 >
@@ -324,9 +298,9 @@ export default function TallerPage() {
                 setFocusJob(null);
                 setView("constelacion");
               }}
-              className="chip inline-flex min-h-[40px] items-center gap-1.5 px-3 text-[12px] text-black transition active:scale-95"
+              className="chip inline-flex min-h-[40px] px-3 text-[var(--fg-primary)] transition active:scale-95"
             >
-              <IconBoxes size={13} /> Volver a constelación
+              <IconBoxes size={13} /> Ver todas
             </button>
           )}
         </div>
@@ -380,8 +354,8 @@ export default function TallerPage() {
         <UtilizacionPanel />
 
         {/* Tablero: quién trabaja en qué */}
-        <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
-          <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
+        <section className="vf-card overflow-hidden p-5">
+          <p className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--fg-muted)]">
             <IconActivity size={13} /> Quién trabaja en qué
           </p>
 
@@ -393,19 +367,18 @@ export default function TallerPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="py-4 text-center text-[13px] text-muted"
+                  className="py-4 text-center text-[13px] text-[var(--fg-secondary)]"
                 >
                   {error
-                    ? "No se pudo leer el estado de las esferas."
+                    ? "No se pudo leer el estado de los agentes."
                     : selected
-                      ? "Ninguna esfera trabaja en este proyecto ahora mismo."
+                      ? "Ningún agente trabaja en este proyecto ahora mismo."
                       : idle
-                        ? "Esferas en reposo — ninguna está construyendo ahora mismo."
-                        : "Ninguna esfera está construyendo ahora mismo."}
+                        ? "Sin trabajo en curso — ningún agente está construyendo ahora mismo."
+                        : "Ningún agente está construyendo ahora mismo."}
                 </motion.p>
               ) : (
                 jobs.map((j, i) => {
-                  const hue = (j.agent && HUE[j.agent]) || "#8b5cf6";
                   const Logo = j.agent ? AGENT_LOGOS[j.agent] : LogoGrok;
                   return (
                     <motion.div
@@ -415,46 +388,41 @@ export default function TallerPage() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 12 }}
                       transition={{ duration: 0.3, delay: i * 0.07, ease: "easeOut" }}
-                      className="flex items-center gap-3 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3"
+                      className="flex items-center gap-3 rounded-xl border border-[var(--border-1)] bg-white p-3"
                     >
-                      <motion.div
-                        animate={lite ? {} : {
-                          boxShadow: [`0 0 0px ${hue}00`, `0 0 16px ${hue}aa`, `0 0 0px ${hue}00`],
-                        }}
-                        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                        className="grid h-10 w-10 flex-none place-items-center rounded-xl border"
-                        style={{
-                          borderColor: `${hue}55`,
-                          background: `radial-gradient(circle at 50% 35%, ${hue}33, rgba(10,10,15,0.85))`,
-                        }}
-                      >
-                        <Logo size={18} style={{ color: hue }} />
-                      </motion.div>
+                      <div className="grid h-10 w-10 flex-none place-items-center rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)]">
+                        <Logo size={18} style={{ color: VIOLET_INK }} />
+                      </div>
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[13px] font-semibold text-on-surface">{j.agentName}</span>
+                          <span className="text-[13px] font-semibold text-[var(--fg-primary)]">{j.agentName}</span>
                           {j.project && (
                             <span
                               className="truncate rounded-full border px-2 py-0.5 text-[12px] font-medium"
-                              style={{ borderColor: `${hue}40`, color: hue, background: `${hue}14` }}
+                              style={{
+                                borderColor: VIOLET,
+                                color: VIOLET_INK,
+                                background: "var(--vf-violet-soft)",
+                              }}
                             >
                               {j.project}
                             </span>
                           )}
                           {typeof j.progress === "number" && (
-                            <span className="text-[12px] text-muted">{j.progress}%</span>
+                            <span className="text-[12px] text-[var(--fg-muted)]">{j.progress}%</span>
                           )}
                         </div>
-                        <p className="mt-0.5 truncate text-[12px] text-muted">
+                        <p className="mt-0.5 truncate text-[12px] text-[var(--fg-secondary)]">
                           {truncate(j.task) || "Tarea en curso"}
                         </p>
                       </div>
 
-                      <span className="flex-none text-[12px] text-muted">{rel(j.since, now)}</span>
+                      <span className="flex-none text-[12px] text-[var(--fg-muted)]">{rel(j.since, now)}</span>
                       <span
                         className="h-2 w-2 flex-none rounded-full"
-                        style={{ background: hue, boxShadow: `0 0 8px ${hue}` }}
+                        style={{ background: "#15803d" }}
+                        title="Trabajando"
                       />
                     </motion.div>
                   );
@@ -466,9 +434,9 @@ export default function TallerPage() {
 
         {/* Último veredicto del auditor Grok */}
         {data?.lastVerdict && (
-          <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
-            <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
-              <LogoGrok size={13} style={{ color: "#f472b6" }} /> Auditor Grok
+          <section className="vf-card overflow-hidden p-5">
+            <p className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--fg-muted)]">
+              <LogoGrok size={13} /> Auditor Grok
             </p>
             <div className="mt-3 flex items-center gap-3">
               <span
@@ -483,8 +451,8 @@ export default function TallerPage() {
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-[12px] font-medium text-on-surface">
-                    Job #{data.lastVerdict.id}
+                  <span className="text-[12px] font-medium text-[var(--fg-primary)]">
+                    Tarea #{data.lastVerdict.id}
                   </span>
                   {data.lastVerdict.project && (
                     <span className="truncate text-[12px] text-[var(--fg-muted)]">
@@ -493,25 +461,25 @@ export default function TallerPage() {
                   )}
                 </div>
                 {data.lastVerdict.notes && (
-                  <p className="mt-0.5 line-clamp-2 text-[12px] text-muted">
+                  <p className="mt-0.5 line-clamp-2 text-[12px] text-[var(--fg-secondary)]">
                     {truncate(data.lastVerdict.notes, 180)}
                   </p>
                 )}
               </div>
-              <span className="flex-none text-[12px] text-muted">{rel(data.lastVerdict.ts, now)}</span>
+              <span className="flex-none text-[12px] text-[var(--fg-muted)]">{rel(data.lastVerdict.ts, now)}</span>
             </div>
           </section>
         )}
 
         {/* Feed de actividad reciente con timestamps relativos */}
         {feed.length > 0 && (
-          <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
-            <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
+          <section className="vf-card overflow-hidden p-5">
+            <p className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--fg-muted)]">
               <IconActivity size={13} /> Actividad reciente
             </p>
             <div className="mt-3 space-y-1.5">
               {feed.map((f) => {
-                const hue = STATUS_HUE[f.status] ?? "#94a3b8";
+                const hue = STATUS_HUE[f.status] ?? GRAY_INK;
                 return (
                   <div
                     key={f.id}
@@ -519,15 +487,15 @@ export default function TallerPage() {
                   >
                     <span
                       className="h-1.5 w-1.5 flex-none rounded-full"
-                      style={{ background: hue, boxShadow: `0 0 6px ${hue}` }}
+                      style={{ background: hue }}
                     />
-                    <span className="flex-none font-medium text-on-surface">{f.agentName}</span>
+                    <span className="flex-none font-medium text-[var(--fg-primary)]">{f.agentName}</span>
                     {f.project && (
                       <span className="hidden max-w-[90px] flex-none truncate text-[12px] text-[var(--fg-muted)] sm:inline">
                         {f.project}
                       </span>
                     )}
-                    <span className="min-w-0 flex-1 truncate text-muted">{truncate(f.task, 64)}</span>
+                    <span className="min-w-0 flex-1 truncate text-[var(--fg-secondary)]">{truncate(f.task, 64)}</span>
                     {f.grokVerdict && (
                       <span
                         className="hidden flex-none items-center gap-1 rounded-full px-1.5 py-0.5 text-[12px] font-semibold sm:inline-flex"
@@ -547,7 +515,7 @@ export default function TallerPage() {
                     >
                       {f.status}
                     </span>
-                    <span className="flex-none text-[12px] text-muted">{rel(f.ts, now)}</span>
+                    <span className="flex-none text-[12px] text-[var(--fg-muted)]">{rel(f.ts, now)}</span>
                   </div>
                 );
               })}

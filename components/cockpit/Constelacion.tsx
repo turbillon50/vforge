@@ -1,13 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { VulcanoCore } from "@/components/vulcano/VulcanoCore";
 import { AGENT_LOGOS, LogoGrok } from "@/components/brand/AgentLogos";
 import { IconActivity } from "@/components/brand/VFIcons";
 import type {
   ActiveJob,
-  EsferaId,
   EsferaState,
   FeedItem,
   GrokVerdict,
@@ -15,41 +12,24 @@ import type {
 import { useLiteMotion } from "@/components/cockpit/use-lite-motion";
 
 /**
- * VISTA CONSTELACIÓN (zoom out): un MINI-núcleo por job activo para supervisar
- * TODO en tiempo real. Cada mini = la misma idea del Taller en pequeño: la
- * esfera central pulsando, los 5 agentes a disposición del job (el que ejecuta
- * iluminado, el resto en reposo), tag del proyecto, barra de progreso y tiempo
- * corriendo. Sin jobs activos → reposo honesto con los últimos N jobs apagados
- * y su sello de veredicto Grok. Tap en un mini → zoom-in al diagrama de detalle.
+ * VISTA "TODAS LAS TAREAS": una tarjeta por tarea corriendo, para supervisar
+ * todo de un vistazo. Cada tarjeta dice el proyecto, el agente que la ejecuta,
+ * qué está haciendo, su avance y cuánto lleva corriendo. Tap en una tarjeta →
+ * abre su detalle. Sin tareas activas → los últimos cierres (24h) con su sello
+ * de veredicto Grok.
+ *
+ * Ley visual 2-oct-2026: fondo blanco, borde gris fino, morado solo como
+ * acento. Nada de esferas decorativas ni efectos de luz.
  */
 
-const ACCENT = "#8b5cf6";
-
-const HUE: Record<string, string> = {
-  claude: "#a78bfa",
-  codex: "#8b5cf6",
-  grok: "#f472b6",
-  shell: "#34d399",
-  browser: "#38bdf8",
-};
+const VIOLET = "#7c3aed";
+const VIOLET_INK = "#5b21b6";
 
 const VERDICT_HUE: Record<GrokVerdict, string> = {
-  APROBADO: "#34d399",
-  RECHAZADO: "#f87171",
-  REVISION: "#fbbf24",
+  APROBADO: "#15803d",
+  RECHAZADO: "#b91c1c",
+  REVISION: "#b45309",
 };
-
-/** Orden estable del roster — los 5 agentes a disposición de CADA job. */
-const ROSTER: EsferaId[] = ["claude", "codex", "grok", "shell", "browser"];
-
-/** Posición de un agente en el aro del mini (coords locales 0-100). */
-function ringPos(i: number, total: number, radius: number) {
-  const angle = (-90 + (360 / total) * i) * (Math.PI / 180);
-  return {
-    x: 50 + radius * Math.cos(angle),
-    y: 50 + radius * Math.sin(angle),
-  };
-}
 
 /** "12m 04s" / "1h 12m" — tiempo corriendo, vivo. */
 function elapsed(iso: string | null, now: number): string {
@@ -66,7 +46,7 @@ function elapsed(iso: string | null, now: number): string {
   return `${s}s`;
 }
 
-/** "hace N d/h/min" para los minis en reposo. */
+/** "hace N d/h/min" para las tareas ya cerradas. */
 function ago(iso: string | null, now: number): string {
   if (!iso) return "";
   const ms = now - Date.parse(iso);
@@ -79,207 +59,149 @@ function ago(iso: string | null, now: number): string {
   return `hace ${Math.floor(h / 24)} d`;
 }
 
-/** Aro de los 5 agentes alrededor del orbe del mini. */
-function AgentRing({
-  activeAgents,
-  radius,
-  dotPx,
-  dim,
-}: {
-  activeAgents: Set<EsferaId | null>;
-  radius: number;
-  dotPx: number;
-  dim: boolean;
-}) {
-  const lite = useLiteMotion();
-  return (
-    <>
-      {ROSTER.map((id, i) => {
-        const p = ringPos(i, ROSTER.length, radius);
-        const Logo = AGENT_LOGOS[id];
-        const on = activeAgents.has(id);
-        const hue = HUE[id] ?? ACCENT;
-        return (
-          <motion.div
-            key={id}
-            className="absolute -translate-x-1/2 -translate-y-1/2 grid place-items-center rounded-lg border"
-            style={{
-              left: `${p.x}%`,
-              top: `${p.y}%`,
-              width: dotPx,
-              height: dotPx,
-              borderColor: on ? `${hue}66` : "var(--border-2)",
-              background: on
-                ? `radial-gradient(circle at 50% 35%, ${hue}33, rgba(10,10,15,0.85))`
-                : "var(--surface-2)",
-            }}
-            animate={
-              on && !dim && !lite
-                ? { boxShadow: [`0 0 0px ${hue}00`, `0 0 12px ${hue}aa`, `0 0 0px ${hue}00`] }
-                : {}
-            }
-            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <Logo
-              size={Math.round(dotPx * 0.52)}
-              style={{ color: on ? hue : "var(--fg-muted)" }}
-            />
-          </motion.div>
-        );
-      })}
-    </>
-  );
-}
-
-/** Un MINI-núcleo de un job ACTIVO. */
-function MiniLive({
+/** Tarjeta de una tarea ACTIVA. */
+function TareaViva({
   job,
   now,
-  big,
   onZoom,
 }: {
   job: ActiveJob;
   now: number;
-  big: boolean;
   onZoom: () => void;
 }) {
   const lite = useLiteMotion();
-  const hue = (job.agent && HUE[job.agent]) || ACCENT;
-  const active = useMemo(() => new Set<EsferaId | null>([job.agent]), [job.agent]);
-  const orb = big ? 96 : 60;
-  const ringR = big ? 40 : 38;
-  const dot = big ? 30 : 22;
+  const Logo = job.agent ? AGENT_LOGOS[job.agent] : LogoGrok;
 
   return (
     <motion.button
       type="button"
       onClick={onZoom}
       layout
-      initial={{ opacity: 0, scale: 0.85 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.85 }}
-      whileHover={{ y: -3 }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ duration: 0.32, ease: "easeOut" }}
-      className="glass group relative flex flex-col overflow-hidden rounded-2xl border p-3 text-left sm:p-4"
-      style={{ borderColor: `${hue}33` }}
-      aria-label={`Abrir detalle de ${job.agentName}${job.project ? ` · ${job.project}` : ""}`}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 8 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.28, ease: "easeOut" }}
+      className="flex flex-col rounded-xl border border-[var(--border-1)] bg-white p-3.5 text-left transition-colors hover:border-[var(--vf-violet)] sm:p-4"
+      aria-label={`Ver detalle de ${job.agentName}${job.project ? ` · ${job.project}` : ""}`}
     >
-      {/* Glow del acento del agente que ejecuta */}
-      <div
-        className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-40 blur-2xl transition-opacity group-hover:opacity-60"
-        style={{ background: hue }}
-      />
-
-      {/* Cabecera: proyecto + tiempo corriendo */}
-      <div className="relative mb-1 flex items-center justify-between gap-2">
+      {/* Proyecto + tiempo corriendo */}
+      <div className="mb-2.5 flex items-center justify-between gap-2">
         <span
-          className="truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold"
-          style={{ borderColor: `${hue}40`, color: hue, background: `${hue}14` }}
+          className="truncate rounded-full border px-2 py-0.5 text-[12px] font-semibold"
+          style={{
+            borderColor: VIOLET,
+            color: VIOLET_INK,
+            background: "var(--vf-violet-soft)",
+          }}
           title={job.project ?? job.agentName}
         >
           {job.project || job.agentName}
         </span>
-        <span className="flex flex-none items-center gap-1 text-[10px] font-medium text-[var(--fg-tertiary)]">
-          <span className="h-1.5 w-1.5 rounded-full" style={{ background: hue, boxShadow: `0 0 6px ${hue}` }} />
+        <span className="flex flex-none items-center gap-1.5 text-[12px] font-medium tabular-nums text-[var(--fg-secondary)]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#15803d]" aria-hidden />
           {elapsed(job.since, now)}
         </span>
       </div>
 
-      {/* Mini-órbita: orbe central pulsando + los 5 agentes del job */}
-      <div className="relative mx-auto aspect-square w-full max-w-[200px]">
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <VulcanoCore size={orb} accent={hue} driving />
+      {/* Agente que la ejecuta */}
+      <div className="flex items-center gap-2.5">
+        <span className="grid h-9 w-9 flex-none place-items-center rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)]">
+          <Logo size={17} style={{ color: VIOLET_INK }} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate text-[13px] font-semibold text-[var(--fg-primary)]">
+              {job.agentName}
+            </span>
+            {typeof job.progress === "number" && (
+              <span className="flex-none text-[12px] tabular-nums text-[var(--fg-muted)]">
+                {job.progress}%
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-[var(--fg-secondary)]">
+            {job.task || "Tarea en curso"}
+          </p>
         </div>
-        <AgentRing activeAgents={active} radius={ringR} dotPx={dot} dim={false} />
       </div>
 
-      {/* Tarea + progreso */}
-      <div className="relative mt-1">
-        <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-[11px] font-medium text-on-surface">{job.agentName}</span>
-          {typeof job.progress === "number" && (
-            <span className="flex-none text-[10px] text-[var(--fg-tertiary)]">{job.progress}%</span>
-          )}
-        </div>
-        <p className="mt-0.5 line-clamp-1 text-[10px] text-muted">{job.task || "Tarea en curso"}</p>
-        {/* Barra: determinada si hay progreso, si no un barrido indeterminado */}
-        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/[0.06]">
-          {typeof job.progress === "number" ? (
-            <motion.div
-              className="h-full rounded-full"
-              style={{ background: hue, boxShadow: `0 0 8px ${hue}` }}
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min(100, Math.max(2, job.progress))}%` }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-            />
-          ) : (
-            <motion.div
-              className="h-full w-1/3 rounded-full"
-              style={{ background: hue, boxShadow: `0 0 8px ${hue}` }}
-              animate={lite ? { x: "120%" } : { x: ["-120%", "320%"] }}
-              transition={lite ? { duration: 0 } : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-            />
-          )}
-        </div>
+      {/* Barra: determinada si hay avance, si no un barrido indeterminado */}
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--surface-2)]">
+        {typeof job.progress === "number" ? (
+          <motion.div
+            className="h-full rounded-full"
+            style={{ background: VIOLET }}
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.min(100, Math.max(2, job.progress))}%` }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          />
+        ) : (
+          <motion.div
+            className="h-full w-1/3 rounded-full"
+            style={{ background: VIOLET }}
+            animate={lite ? { x: "120%" } : { x: ["-120%", "320%"] }}
+            transition={lite ? { duration: 0 } : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          />
+        )}
       </div>
     </motion.button>
   );
 }
 
-/** Un MINI-núcleo en REPOSO — último job cerrado, gris, con sello Grok. */
-function MiniRest({ item, now }: { item: FeedItem; now: number }) {
-  const active = useMemo(() => new Set<EsferaId | null>([item.agent]), [item.agent]);
+/** Tarjeta de una tarea ya CERRADA, con su sello Grok. */
+function TareaCerrada({ item, now }: { item: FeedItem; now: number }) {
   const verdict = item.grokVerdict;
+  const Logo = item.agent ? AGENT_LOGOS[item.agent] : LogoGrok;
   return (
-    <div className="glass relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border-1)] p-3 opacity-90 sm:p-4">
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="truncate rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-2 py-0.5 text-[10px] font-medium text-[var(--fg-tertiary)]">
+    <div className="flex flex-col rounded-xl border border-[var(--border-1)] bg-white p-3.5 sm:p-4">
+      <div className="mb-2.5 flex items-center justify-between gap-2">
+        <span className="truncate rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-2 py-0.5 text-[12px] font-medium text-[var(--fg-secondary)]">
           {item.project || item.agentName}
         </span>
         {verdict ? (
           <span
-            className="flex flex-none items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold"
-            style={{
-              color: VERDICT_HUE[verdict],
-              background: `${VERDICT_HUE[verdict]}14`,
-              border: `1px solid ${VERDICT_HUE[verdict]}33`,
-            }}
+            className="flex flex-none items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] font-semibold"
+            style={{ color: VERDICT_HUE[verdict], borderColor: VERDICT_HUE[verdict] }}
             title={item.grokNotes ?? verdict}
           >
-            <LogoGrok size={9} /> {verdict}
+            <LogoGrok size={10} /> {verdict}
           </span>
         ) : (
           <span
-            className="flex flex-none items-center gap-1 rounded-full border border-[var(--border-1)] bg-[var(--surface-1)] px-1.5 py-0.5 text-[9px] font-medium text-[var(--fg-muted)]"
-            title="Job cerrado sin auditoría Grok"
+            className="flex flex-none items-center gap-1 rounded-full border border-[var(--border-1)] px-2 py-0.5 text-[12px] font-medium text-[var(--fg-muted)]"
+            title="Tarea cerrada sin auditoría Grok"
           >
-            <LogoGrok size={9} style={{ color: "#6b7280" }} /> sin auditar
+            <LogoGrok size={10} /> sin auditar
           </span>
         )}
       </div>
 
-      <div className="relative mx-auto aspect-square w-full max-w-[180px] grayscale">
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <VulcanoCore size={54} accent="#6b7280" driving={false} />
+      <div className="flex items-center gap-2.5">
+        <span className="grid h-9 w-9 flex-none place-items-center rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)]">
+          <Logo size={17} style={{ color: "var(--fg-muted)" }} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <span className="block truncate text-[13px] font-medium text-[var(--fg-primary)]">
+            {item.agentName}
+          </span>
+          <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-[var(--fg-secondary)]">
+            {item.task || "Tarea finalizada"}
+          </p>
         </div>
-        <AgentRing activeAgents={active} radius={38} dotPx={20} dim />
       </div>
 
-      <div className="mt-1">
-        <p className="line-clamp-1 text-[10px] text-[var(--fg-tertiary)]">{item.task || "Job finalizado"}</p>
-        <p className="mt-0.5 text-[10px] text-[var(--fg-muted)]">{ago(item.ts, now)}</p>
-      </div>
+      <p className="mt-2.5 text-[12px] text-[var(--fg-muted)]">{ago(item.ts, now)}</p>
     </div>
   );
 }
 
-/** Clases de grid responsivo según cuántos minis activos. */
+/** Clases de grid responsivo según cuántas tareas activas. */
 function gridFor(count: number): string {
-  if (count <= 1) return "grid-cols-1 max-w-[420px] mx-auto";
-  if (count <= 4) return "grid-cols-2";
-  if (count <= 6) return "grid-cols-2 sm:grid-cols-3";
-  return "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4";
+  if (count <= 1) return "grid-cols-1 max-w-[460px]";
+  if (count <= 4) return "grid-cols-1 sm:grid-cols-2";
+  if (count <= 6) return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
+  return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 }
 
 export function Constelacion({
@@ -303,65 +225,63 @@ export function Constelacion({
 }) {
   void esferas; // roster fijo; se mantiene la firma por si el orden cambia
   const live = jobs.length > 0;
-  const big = jobs.length === 1;
   // Marca de tiempo del cierre más reciente para el header en reposo.
   const lastAgo = lastJobAt ? ago(lastJobAt, now) : null;
 
   return (
-    <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-4 sm:p-5">
-      <div className="relative mb-1 flex items-center justify-between">
-        <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
-          <IconActivity size={13} /> Constelación · supervisión total
+    <section className="vf-card overflow-hidden p-4 sm:p-5">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <p className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--fg-muted)]">
+          <IconActivity size={13} /> Todas las tareas
         </p>
         {live ? (
-          <span className="chip text-[10px] text-emerald-600 dark:text-emerald-300">
-            {jobs.length} {jobs.length === 1 ? "job vivo" : "jobs vivos"}
+          <span className="chip" style={{ color: "#15803d", borderColor: "#15803d" }}>
+            {jobs.length} {jobs.length === 1 ? "tarea viva" : "tareas vivas"}
           </span>
         ) : lastAgo ? (
-          <span className="chip text-[10px] text-[var(--fg-secondary)]">
-            Último job {lastAgo === "ahora" ? "ahora" : lastAgo.startsWith("hace") ? lastAgo : `hace ${lastAgo}`}
+          <span className="chip">
+            Última tarea {lastAgo === "ahora" ? "ahora" : lastAgo.startsWith("hace") ? lastAgo : `hace ${lastAgo}`}
           </span>
         ) : (
-          <span className="chip text-[10px] text-muted">En reposo</span>
+          <span className="chip">Sin trabajo en curso</span>
         )}
       </div>
-      <p className="relative mb-3 text-[12px] text-muted">
+      <p className="mb-3 text-[13px] text-[var(--fg-secondary)]">
         {live
-          ? "Un mini-núcleo por job corriendo. Toca uno para hacer zoom a su diagrama de detalle."
+          ? "Una tarjeta por tarea corriendo. Toca una para ver su detalle."
           : restJobs.length > 0
-            ? "Sin jobs activos — los últimos cierres en reposo (24h), con su veredicto Grok."
-            : "Sin jobs activos — sin cierres en las últimas 24h."}
+            ? "Sin tareas activas — estos son los últimos cierres (24h), con su veredicto Grok."
+            : "Sin tareas activas — sin cierres en las últimas 24h."}
       </p>
 
       {daemonPaused && (
-        <div className="relative mb-3 flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2.5">
-          <span className="mt-0.5 h-2 w-2 flex-none rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]" />
-          <p className="text-[12px] leading-relaxed text-amber-200/90">
-            <span className="font-semibold">Núcleo pausado.</span> El daemon Vulcano no está vivo
-            ahora mismo — la constelación muestra el último estado conocido.
+        <div className="mb-3 flex items-start gap-2 rounded-xl border border-[#b45309] bg-[#fffbeb] px-3 py-2.5">
+          <span className="mt-1.5 h-2 w-2 flex-none rounded-full bg-[#b45309]" aria-hidden />
+          <p className="text-[13px] leading-relaxed text-[#7c2d12]">
+            <span className="font-semibold">Despacho pausado.</span> El daemon Vulcano no está vivo
+            ahora mismo — esto es el último estado conocido, no actividad en curso.
           </p>
         </div>
       )}
 
       {live ? (
-        <div className={`relative grid gap-3 ${gridFor(jobs.length)}`}>
+        <div className={`grid gap-3 ${gridFor(jobs.length)}`}>
           {jobs.map((j) => (
-            <MiniLive key={j.id} job={j} now={now} big={big} onZoom={() => onZoom(j)} />
+            <TareaViva key={j.id} job={j} now={now} onZoom={() => onZoom(j)} />
           ))}
         </div>
       ) : restJobs.length > 0 ? (
-        <div className="relative grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {restJobs.map((f) => (
-            <MiniRest key={f.id} item={f} now={now} />
+            <TareaCerrada key={f.id} item={f} now={now} />
           ))}
         </div>
       ) : (
-        <div className="relative grid place-items-center py-10 text-center">
-          <VulcanoCore size={84} accent={ACCENT} driving={false} />
-          <p className="mt-3 text-[13px] text-muted">
+        <div className="rounded-xl border border-dashed border-[var(--border-2)] py-10 text-center">
+          <p className="text-[13px] text-[var(--fg-secondary)]">
             {error
-              ? "No se pudo leer el estado de las esferas."
-              : "Esferas en reposo — ningún job ha corrido recientemente."}
+              ? "No se pudo leer el estado de los agentes."
+              : "Sin trabajo en curso — ninguna tarea ha corrido recientemente."}
           </p>
         </div>
       )}

@@ -7,13 +7,10 @@ import { AGENT_LOGOS, LogoGrok } from "@/components/brand/AgentLogos";
 import type { UtilizacionPayload } from "@/lib/cockpit/utilizacion";
 import type { EsferaId } from "@/components/cockpit/esferas-types";
 
-const HUE: Record<string, string> = {
-  claude: "#a78bfa",
-  codex: "#8b5cf6",
-  grok: "#f472b6",
-  shell: "#34d399",
-  browser: "#38bdf8",
-};
+/* Ley visual 2-oct-2026: morado como único acento. Las barras de ocupación
+   usan el mismo morado; no hay un color por agente. */
+const VIOLET = "#7c3aed";
+const VIOLET_INK = "#5b21b6";
 
 const POLL_MS = 8000;
 
@@ -60,87 +57,79 @@ export function UtilizacionPanel() {
   const maxPct = Math.max(1, ...agents.map((a) => a.occupancyPct));
 
   return (
-    <section className="glass relative overflow-hidden rounded-2xl border border-[var(--border-1)] p-5">
+    <section className="vf-card overflow-hidden p-5">
       <div className="flex items-center justify-between gap-2">
-        <p className="label-caps flex items-center gap-1.5 text-[var(--fg-muted)]">
+        <p className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--fg-muted)]">
           <IconActivity size={13} /> Utilización · últimas 24h
         </p>
         <div className="flex items-center gap-2">
           {data?.backlog && (
             <span
-              className="chip text-[10px] text-muted"
+              className="chip"
               title={`${data.backlog.activos} activos · ${data.backlog.recurrentes} recurrentes · ${data.backlog.unaVezPendientes} una-vez pendientes`}
             >
               Reserva: {data.backlog.activos}
             </span>
           )}
           <span className="text-right">
-            <span className="block font-display text-2xl font-bold text-emerald-300">
+            <span className="block font-display text-2xl font-bold tabular-nums text-[#15803d]">
               {data?.utilDone ?? 0}
             </span>
-            <span className="label-caps block text-[9px] text-muted">trabajo útil</span>
+            <span className="block text-[12px] text-[var(--fg-muted)]">trabajo útil</span>
           </span>
         </div>
       </div>
 
       <div className="mt-4 space-y-2.5">
         {agents.map((a) => {
-          const hue = HUE[a.id] || "#8b5cf6";
           const Logo = AGENT_LOGOS[a.id as EsferaId] ?? LogoGrok;
           // El ancho relativo escala al máximo del periodo para que las barras
           // pequeñas sean visibles; el número muestra el % absoluto real.
           const w = Math.max(a.occupancyPct > 0 ? 4 : 0, (a.occupancyPct / maxPct) * 100);
           return (
             <div key={a.id} className="flex items-center gap-3">
-              <div
-                className="grid h-8 w-8 flex-none place-items-center rounded-lg border"
-                style={{
-                  borderColor: `${hue}55`,
-                  background: `radial-gradient(circle at 50% 35%, ${hue}2e, rgba(10,10,15,0.85))`,
-                }}
-              >
-                <Logo size={15} style={{ color: hue }} />
+              <div className="grid h-8 w-8 flex-none place-items-center rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)]">
+                <Logo size={15} style={{ color: a.runningNow ? VIOLET_INK : "var(--fg-muted)" }} />
               </div>
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-1.5 text-[12px] font-semibold text-on-surface">
+                  <span className="flex items-center gap-1.5 text-[12px] font-semibold text-[var(--fg-primary)]">
                     {a.name}
                     {a.runningNow && (
                       <span
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{ background: hue, boxShadow: `0 0 7px ${hue}` }}
+                        className="h-1.5 w-1.5 rounded-full bg-[#15803d]"
                         title="Trabajando ahora"
                       />
                     )}
                   </span>
-                  <span className="flex-none text-[11px] text-muted">
-                    <span style={{ color: hue }}>{a.occupancyPct}%</span> · {a.doneCount} jobs
+                  <span className="flex-none text-[12px] text-[var(--fg-secondary)]">
+                    <span className="font-semibold" style={{ color: VIOLET_INK }}>
+                      {a.occupancyPct}%
+                    </span>{" "}
+                    · {a.doneCount} tareas
                     {a.failedCount > 0 && (
-                      <span className="text-rose-300"> · {a.failedCount} fallo{a.failedCount > 1 ? "s" : ""}</span>
+                      <span className="text-[#b91c1c]"> · {a.failedCount} fallo{a.failedCount > 1 ? "s" : ""}</span>
                     )}
                   </span>
                 </div>
-                <div className="mt-1 h-2 overflow-hidden rounded-full bg-[var(--surface-1)]">
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-[var(--surface-2)]">
                   <motion.div
                     className="h-full rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${w}%` }}
                     transition={{ duration: 0.6, ease: "easeOut" }}
-                    style={{
-                      background: `linear-gradient(90deg, ${hue}, ${hue}aa)`,
-                      boxShadow: a.occupancyPct > 0 ? `0 0 10px ${hue}66` : "none",
-                    }}
+                    style={{ background: VIOLET }}
                   />
                 </div>
-                <p className="mt-0.5 text-[10px] text-muted">{fmtDur(a.busySeconds)} ocupado</p>
+                <p className="mt-0.5 text-[12px] text-[var(--fg-muted)]">{fmtDur(a.busySeconds)} ocupado</p>
               </div>
             </div>
           );
         })}
       </div>
 
-      <p className="mt-3 text-[10px] text-muted">
+      <p className="mt-3 text-[12px] text-[var(--fg-muted)]">
         {error
           ? "Sin señal del daemon — reintentando."
           : data?.source === "empty"

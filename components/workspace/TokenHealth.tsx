@@ -9,7 +9,7 @@
 //  · TokenRiskBanner       — banner sutil en el Taller si el estado es crítico
 //  · TokenToastHost        — host de toasts (montar una vez en el shell)
 //  · pushTokenToast        — emisor de toast desde cualquier punto
-// Dark premium · VFIcons · Framer Motion · CERO MOCK.
+// Fondo blanco, borde gris fino, morado solo acento · CERO MOCK.
 
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -38,10 +38,11 @@ export function pushTokenToast(message: string, tone: ToastTone = "ok") {
   );
 }
 
+/* Tonos de estado en versión oscura, para leerse sobre blanco. */
 const TOAST_HUE: Record<ToastTone, string> = {
-  ok: "#34d399",
-  warn: "#fbbf24",
-  err: "#f87171",
+  ok: "#15803d",
+  warn: "#b45309",
+  err: "#b91c1c",
 };
 
 export function TokenToastHost() {
@@ -74,16 +75,13 @@ export function TokenToastHost() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.96 }}
               transition={{ duration: 0.28, ease: "easeOut" }}
-              className="pointer-events-auto flex items-center gap-2.5 rounded-xl border bg-[#0b0b12]/95 px-3.5 py-2.5 backdrop-blur-xl"
-              style={{ borderColor: `${hue}40`, boxShadow: `0 8px 30px -12px ${hue}66` }}
+              className="pointer-events-auto flex items-center gap-2.5 rounded-xl border bg-white px-3.5 py-2.5"
+              style={{ borderColor: hue }}
             >
-              <span
-                className="grid h-6 w-6 flex-none place-items-center rounded-lg"
-                style={{ background: `${hue}1a`, color: hue }}
-              >
+              <span className="grid h-6 w-6 flex-none place-items-center rounded-lg" style={{ color: hue }}>
                 <Icon size={13} />
               </span>
-              <span className="text-[12.5px] leading-snug text-[var(--fg-primary)]">{t.message}</span>
+              <span className="text-[13px] leading-snug text-[var(--fg-primary)]">{t.message}</span>
             </motion.div>
           );
         })}
@@ -178,7 +176,7 @@ function PulseDot({ color, size = 6 }: { color: string; size?: number }) {
       />
       <span
         className="relative inline-flex h-full w-full rounded-full"
-        style={{ background: color, boxShadow: `0 0 6px ${color}` }}
+        style={{ background: color }}
       />
     </span>
   );
@@ -199,7 +197,7 @@ function ReconnectButton({
         type="button"
         onClick={onClick}
         disabled={reconnecting}
-        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-violet-500 px-5 text-[14px] font-medium text-white shadow-glow-violet transition active:scale-[0.98] disabled:opacity-50"
+        className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--vf-violet)] px-5 text-[14px] font-medium text-white transition hover:bg-[var(--vf-violet-strong)] active:scale-[0.98] disabled:opacity-50"
         style={{ minHeight: 44, touchAction: "manipulation" }}
       >
         <motion.span
@@ -218,7 +216,7 @@ function ReconnectButton({
       type="button"
       onClick={onClick}
       disabled={reconnecting}
-      className="inline-flex items-center gap-1 rounded-lg border border-amber-400/30 bg-amber-400/10 px-2 py-1 font-mono text-[10px] text-amber-200 transition hover:bg-amber-400/15 active:scale-95 disabled:opacity-50"
+      className="inline-flex items-center gap-1 rounded-lg border border-[#b45309] bg-white px-2 py-1 font-mono text-[12px] font-semibold text-[#b45309] transition hover:bg-[#fffbeb] active:scale-95 disabled:opacity-50"
     >
       <motion.span
         animate={reconnecting ? { rotate: 360 } : { rotate: 0 }}
@@ -246,16 +244,16 @@ export function TokenHealthIndicator({ className }: { className?: string }) {
   return (
     <div className={cn("group/th relative flex items-center gap-2", className)}>
       <PulseDot color={color} />
-      <span className="font-mono text-[10px] text-[var(--fg-tertiary)]">
-        Token <span style={{ color }}>{hoursLabel(health)}</span>
+      <span className="font-mono text-[12px] text-[var(--fg-secondary)]">
+        Token <span className="font-semibold" style={{ color }}>{hoursLabel(health)}</span>
       </span>
       {showReconnect && <ReconnectButton reconnecting={reconnecting} onClick={reconnect} />}
 
-      {/* Tooltip premium */}
-      <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-[220px] rounded-lg border border-[var(--border-1)] bg-[#0b0b12]/95 px-2.5 py-1.5 opacity-0 shadow-xl backdrop-blur-xl transition-opacity duration-150 group-hover/th:opacity-100">
-        <p className="text-[11px] leading-snug text-[var(--fg-primary)]">{tooltipText(health)}</p>
+      {/* Tooltip */}
+      <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-[220px] rounded-lg border border-[var(--border-1)] bg-white px-2.5 py-1.5 opacity-0 transition-opacity duration-150 group-hover/th:opacity-100">
+        <p className="text-[12px] leading-snug text-[var(--fg-primary)]">{tooltipText(health)}</p>
         {health?.checked_at && (
-          <p className="mt-0.5 font-mono text-[9px] text-[var(--fg-muted)]">
+          <p className="mt-0.5 font-mono text-[12px] text-[var(--fg-muted)]">
             Verificado {new Date(health.checked_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
           </p>
         )}
@@ -282,20 +280,20 @@ export function TokenReconnectCard() {
             : "Consultando…";
 
   return (
-    <div className="mb-4 rounded-xl border border-app bg-tint-1/[0.05] p-5">
+    <div className="mb-4 rounded-xl border border-[var(--border-1)] bg-white p-5">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-display text-sm font-semibold text-on-surface">Conexión Claude</h3>
-        <span className="flex items-center gap-1.5 font-mono text-[11px]" style={{ color }}>
+        <h3 className="font-display text-sm font-semibold text-[var(--fg-primary)]">Conexión Claude</h3>
+        <span className="flex items-center gap-1.5 font-mono text-[12px] font-semibold" style={{ color }}>
           <PulseDot color={color} />
           {tone !== "unknown" ? hoursLabel(health) : "—"}
         </span>
       </div>
 
-      <p className="mt-3 text-[13px] leading-relaxed text-on-surface-variant">
+      <p className="mt-3 text-[13px] leading-relaxed text-[var(--fg-secondary)]">
         Estado del token OAuth que mantiene vivos a los agentes Vulcano en Hetzner.{" "}
-        <span style={{ color }}>{statusLabel}</span>
+        <span className="font-medium" style={{ color }}>{statusLabel}</span>
         {health?.checked_at && (
-          <span className="text-muted">
+          <span className="text-[var(--fg-muted)]">
             {" "}· verificado{" "}
             {new Date(health.checked_at).toLocaleString("es-MX", {
               day: "numeric",
@@ -330,19 +328,19 @@ export function TokenRiskBanner() {
           transition={{ duration: 0.3, ease: "easeOut" }}
           className="overflow-hidden"
         >
-          <div className="mx-4 mt-4 flex items-center gap-3 rounded-xl border border-rose-500/25 bg-rose-500/[0.06] px-4 py-3 sm:mx-5 md:mx-8">
-            <span className="grid h-7 w-7 flex-none place-items-center rounded-lg bg-rose-500/15 text-rose-300">
+          <div className="mx-4 mt-4 flex items-center gap-3 rounded-xl border border-[#b91c1c] bg-[#fef2f2] px-4 py-3 sm:mx-5 md:mx-8">
+            <span className="grid h-7 w-7 flex-none place-items-center rounded-lg text-[#b91c1c]">
               <IconWarn size={14} />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-medium text-rose-200">Conexión en riesgo</p>
-              <p className="text-[12px] text-rose-200/60">Los agentes pueden pausarse si el token expira.</p>
+              <p className="text-[13px] font-semibold text-[#b91c1c]">Conexión en riesgo</p>
+              <p className="text-[12px] text-[#7f1d1d]">Los agentes pueden pausarse si el token expira.</p>
             </div>
             <button
               type="button"
               onClick={reconnect}
               disabled={reconnecting}
-              className="inline-flex flex-none items-center gap-1.5 rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-1.5 text-[12px] font-medium text-rose-100 transition hover:bg-rose-400/15 active:scale-95 disabled:opacity-50"
+              className="inline-flex flex-none items-center gap-1.5 rounded-lg border border-[#b91c1c] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#b91c1c] transition hover:bg-[#fef2f2] active:scale-95 disabled:opacity-50"
             >
               <motion.span
                 animate={reconnecting ? { rotate: 360 } : { rotate: 0 }}

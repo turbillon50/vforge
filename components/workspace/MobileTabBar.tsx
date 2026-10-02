@@ -1,10 +1,11 @@
 "use client";
 
-/* PWA móvil VForge — v1 (2026-10-02, aprobado por Luis).
-   Barra inferior glass CLARA con 5 pestañas reales y botón central violeta.
-   Aditivo: no sustituye ningún nav existente (drawer y VOrb se quedan).
+/* PWA móvil VForge — v1 (2026-10-02).
+   Barra inferior BLANCA opaca, borde gris fino, 5 pestañas reales y botón
+   central morado (único acento). Sin glass, sin blur, sin sombra de color.
+   Aditivo: no sustituye ningún nav existente (drawer y botón de V se quedan).
    Pestañas = rutas que ya existen con datos reales:
-   Núcleo(/app/tablero) · Taller(/app/taller) · Chat(/app/chat) ·
+   Tablero(/app/tablero) · Taller(/app/taller) · Chat(/app/chat) ·
    Blueprint(/app/blueprint) · Navegador(/app/vulcano) */
 
 import Link from "next/link";
@@ -25,7 +26,7 @@ type Tab = {
 };
 
 const TABS_IZQ: Tab[] = [
-  { href: "/app/tablero", label: "Núcleo", Icon: IconActivity },
+  { href: "/app/tablero", label: "Tablero", Icon: IconActivity },
   { href: "/app/taller", label: "Taller", Icon: IconCpu },
 ];
 
@@ -51,14 +52,16 @@ function TabLink({ tab, pathname, onNavigate }: { tab: Tab; pathname: string; on
       aria-label={label}
       className={cn(
         "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-1 py-1.5 transition-colors duration-200",
-        active ? "text-[#7c3aed]" : "text-[var(--fg-muted)] hover:text-black",
+        active
+          ? "text-[var(--vf-violet-ink)]"
+          : "text-[var(--fg-secondary)] hover:text-black",
       )}
     >
       <Icon size={19} className="shrink-0" />
       <span
         className={cn(
-          "max-w-full truncate text-[9.5px] font-medium uppercase",
-          active ? "tracking-[0.14em]" : "tracking-[0.1em]",
+          "max-w-full truncate text-[11px] tracking-[0.02em]",
+          active ? "font-semibold" : "font-medium",
         )}
       >
         {label}
@@ -76,7 +79,7 @@ export function MobileTabBar({ onNavigate }: { onNavigate?: () => void }) {
       data-vorb-avoid
       data-mobile-tabbar
       aria-label="Navegación móvil"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border-1)] bg-white/85 backdrop-blur-lg md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border-1)] bg-white md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="mx-auto flex h-16 max-w-lg items-stretch px-2">
@@ -84,7 +87,7 @@ export function MobileTabBar({ onNavigate }: { onNavigate?: () => void }) {
           <TabLink key={t.href} tab={t} pathname={pathname} onNavigate={onNavigate} />
         ))}
 
-        {/* Botón central violeta: Hablar con V */}
+        {/* Botón central morado: el único acento de color de la barra */}
         <Link
           href={CHAT.href}
           onClick={onNavigate}
@@ -94,18 +97,19 @@ export function MobileTabBar({ onNavigate }: { onNavigate?: () => void }) {
         >
           <span
             className={cn(
-              "grid h-12 w-12 place-items-center rounded-full text-white shadow-lg ring-4 ring-white transition-transform duration-200 active:scale-95",
-              chatActivo ? "bg-[#6d28d9]" : "bg-[#7c3aed]",
+              "grid h-12 w-12 place-items-center rounded-full border-4 border-white text-white transition-transform duration-200 active:scale-95",
+              chatActivo ? "bg-[var(--vf-violet-strong)]" : "bg-[var(--vf-violet)]",
             )}
           >
             <IconChats size={20} />
           </span>
           <span
             className={cn(
-              "mt-0.5 text-[9.5px] font-medium uppercase",
-              chatActivo ? "text-[#7c3aed]" : "text-[var(--fg-muted)]",
+              "mt-0.5 text-[11px] tracking-[0.02em]",
+              chatActivo
+                ? "font-semibold text-[var(--vf-violet-ink)]"
+                : "font-medium text-[var(--fg-secondary)]",
             )}
-            style={{ letterSpacing: "0.1em" }}
           >
             {CHAT.label}
           </span>

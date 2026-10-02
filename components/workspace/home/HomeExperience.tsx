@@ -29,7 +29,7 @@ interface BillingMe { plan: string; status: string | null; }
 
 /* ── skeleton ── */
 function Skel({ h = "h-[72px]" }: { h?: string }) {
-  return <div className={`${h} animate-pulse rounded-xl`} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }} />;
+  return <div className={`${h} animate-pulse rounded-xl`} style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }} />;
 }
 
 /* ── widget card ── */
@@ -40,13 +40,11 @@ function Widget({ title, href, children }: { title: string; href: string; childr
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="rounded-2xl p-5"
-      style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}
+      style={{ background: "#ffffff", border: "1px solid var(--border-1)" }}
     >
       <div className="mb-4 flex items-center justify-between">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.46)" }}>{title}</p>
-        <Link href={href} className="text-[11px] transition-colors" style={{ color: "rgba(124,58,237,0.8)" }}
-          onMouseEnter={e => (e.currentTarget.style.color = "rgba(167,139,250,1)")}
-          onMouseLeave={e => (e.currentTarget.style.color = "rgba(124,58,237,0.8)")}>
+        <p className="font-mono text-[12px] uppercase tracking-[0.14em]" style={{ color: "var(--fg-muted)" }}>{title}</p>
+        <Link href={href} className="text-[12px] font-medium transition-colors hover:underline" style={{ color: "var(--vf-violet-ink)" }}>
           Ver todo →
         </Link>
       </div>
@@ -66,12 +64,12 @@ const ACTIONS = [
 ];
 
 function eventIcon(action: string) {
-  if (action.includes("deploy") || action.includes("vercel")) return { Icon: IconRocket, color: "#a78bfa" };
-  if (action.includes("secret") || action.includes("vault"))  return { Icon: IconKey,    color: "#8b5cf6" };
-  if (action.includes("forge") || action.includes("chat"))    return { Icon: IconSparkles,color: "#a78bfa" };
-  if (action.includes("error") || action.includes("fail"))    return { Icon: IconWarn,   color: "#ef4444" };
-  if (action.includes("ok")   || action.includes("complete")) return { Icon: IconCheck,  color: "#22c55e" };
-  return { Icon: IconActivity, color: "rgba(255,255,255,0.46)" };
+  if (action.includes("deploy") || action.includes("vercel")) return { Icon: IconRocket, color: "#5b21b6" };
+  if (action.includes("secret") || action.includes("vault"))  return { Icon: IconKey,    color: "#5b21b6" };
+  if (action.includes("forge") || action.includes("chat"))    return { Icon: IconSparkles,color: "#5b21b6" };
+  if (action.includes("error") || action.includes("fail"))    return { Icon: IconWarn,   color: "#b91c1c" };
+  if (action.includes("ok")   || action.includes("complete")) return { Icon: IconCheck,  color: "#15803d" };
+  return { Icon: IconActivity, color: "var(--fg-muted)" };
 }
 
 
@@ -88,31 +86,31 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
   return (
     <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
       className="mb-8 rounded-2xl p-5 md:p-6"
-      style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
+      style={{ background: "#ffffff", border: "1px solid var(--border-1)" }}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Empieza aquí</p>
-          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.58)" }}>Tres pasos para tener tu primera app viva.</p>
+          <p className="font-display text-[15px] font-semibold" style={{ color: "var(--fg-primary)" }}>Empieza aquí</p>
+          <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>Tres pasos para tener tu primera app viva.</p>
         </div>
-        <span className="font-mono text-[11px]" style={{ color: "rgba(255,255,255,0.58)" }}>{doneCount}/3</span>
+        <span className="font-mono text-[12px]" style={{ color: "var(--fg-secondary)" }}>{doneCount}/3</span>
       </div>
-      <div className="mb-5 h-1 w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
-        <div className="h-full rounded-full" style={{ width: `${(doneCount / 3) * 100}%`, background: "linear-gradient(90deg,#7c3aed,#a78bfa)", transition: "width .6s ease" }} />
+      <div className="mb-5 h-1 w-full overflow-hidden rounded-full" style={{ background: "var(--surface-2)" }}>
+        <div className="h-full rounded-full" style={{ width: `${(doneCount / 3) * 100}%`, background: "var(--vf-violet)", transition: "width .6s ease" }} />
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         {steps.map((st, i) => (
           <div key={i} className="rounded-xl p-4"
-            style={{ background: st.done ? "rgba(124,58,237,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${st.done ? "rgba(124,58,237,0.25)" : "rgba(255,255,255,0.08)"}` }}>
+            style={{ background: st.done ? "var(--vf-violet-soft)" : "#ffffff", border: `1px solid ${st.done ? "var(--vf-violet)" : "var(--border-1)"}` }}>
             <div className="mb-2 flex h-6 w-6 items-center justify-center rounded-full"
-              style={{ background: st.done ? "rgba(124,58,237,0.9)" : "rgba(255,255,255,0.06)", color: "#fff" }}>
-              {st.done ? <IconCheck size={13} /> : <span className="text-[11px] font-semibold">{i + 1}</span>}
+              style={{ background: st.done ? "var(--vf-violet)" : "var(--surface-2)", color: st.done ? "#ffffff" : "var(--fg-secondary)" }}>
+              {st.done ? <IconCheck size={13} /> : <span className="text-[12px] font-semibold">{i + 1}</span>}
             </div>
-            <p className="text-[13px] font-medium" style={{ color: "#fff" }}>{st.title}</p>
-            <p className="mt-0.5 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.58)" }}>{st.desc}</p>
+            <p className="text-[13px] font-medium" style={{ color: "var(--fg-primary)" }}>{st.title}</p>
+            <p className="mt-0.5 text-[12.5px] leading-snug" style={{ color: "var(--fg-secondary)" }}>{st.desc}</p>
             {!st.done
-              ? <Link href={st.href} className="mt-3 inline-block rounded-full px-4 py-1.5 text-[12px] font-medium" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}>{st.cta} →</Link>
-              : <p className="mt-3 flex items-center gap-1 text-[11px] font-medium" style={{ color: "#9aa0aa" }}><IconCheck size={12} /> Listo</p>}
-            <button onClick={() => window.dispatchEvent(new CustomEvent("vforge:open-v", { detail: { prompt: st.vq } }))} className="mt-2 text-[11px] transition-colors" style={{ color: "rgba(167,139,250,0.85)" }}>Pregúntale a V &rarr;</button>
+              ? <Link href={st.href} className="mt-3 inline-block rounded-full px-4 py-1.5 text-[12px] font-medium" style={{ background: "var(--vf-violet)", color: "#ffffff" }}>{st.cta} →</Link>
+              : <p className="mt-3 flex items-center gap-1 text-[12px] font-medium" style={{ color: "var(--fg-muted)" }}><IconCheck size={12} /> Listo</p>}
+            <button onClick={() => window.dispatchEvent(new CustomEvent("vforge:open-v", { detail: { prompt: st.vq } }))} className="mt-2 text-[12px] transition-colors" style={{ color: "var(--vf-violet-ink)" }}>Pregúntale a V &rarr;</button>
           </div>
         ))}
       </div>
@@ -120,29 +118,28 @@ function FirstSteps({ connected, projects, loading }: { connected: string[]; pro
   );
 }
 
-/* ── Vitrina "Qué puedes hacer" (con hueco de imagen para Higgsfield) ── */
+/* ── Vitrina "Qué puedes hacer" ── */
 function Showcase() {
   const cards = [
-    { icon: IconSparkles, title: "Construye hablando con V", desc: "Describe tu idea y V la vuelve una app real.", href: "/workspace#crear", g: "linear-gradient(135deg,#1a1530,#0d0b1a)" },
-    { icon: IconBranch, title: "Configurador visual", desc: "Arma tu app por módulos con preview en vivo.", href: "/workspace#crear", g: "linear-gradient(135deg,#161421,#0c0b16)" },
-    { icon: IconKey, title: "200+ integraciones", desc: "GitHub, Vercel, Stripe, Neon y más en un clic.", href: "/workspace/conexiones", g: "linear-gradient(135deg,#1a1525,#0d0b16)" },
-    { icon: IconRocket, title: "Deploy en segundos", desc: "Publica a producción sin salir de aquí.", href: "/workspace#crear", g: "linear-gradient(135deg,#171327,#0c0b18)" },
+    { icon: IconSparkles, title: "Construye hablando con V", desc: "Describe tu idea y V la vuelve una app real.", href: "/workspace#crear" },
+    { icon: IconBranch, title: "Configurador visual", desc: "Arma tu app por módulos con preview en vivo.", href: "/workspace#crear" },
+    { icon: IconKey, title: "200+ integraciones", desc: "GitHub, Vercel, Stripe, Neon y más en un clic.", href: "/workspace/conexiones" },
+    { icon: IconRocket, title: "Deploy en segundos", desc: "Publica a producción sin salir de aquí.", href: "/workspace#crear" },
   ];
   return (
     <section className="mb-8">
-      <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.46)" }}>Qué puedes hacer</p>
+      <p className="mb-3 font-mono text-[12px] uppercase tracking-[0.14em]" style={{ color: "var(--fg-muted)" }}>Qué puedes hacer</p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c, i) => {
           const Icon = c.icon;
           return (
-            <Link key={i} href={c.href} className="block overflow-hidden rounded-2xl" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
-              {/* IMG-SLOT: mañana cambiar este div por <img src={...} / alt="" aria-hidden="true"> de Higgsfield */}
-              <div className="flex h-24 items-center justify-center" style={{ background: c.g }}>
-                <Icon size={24} style={{ color: "rgba(255,255,255,0.85)" }} />
+            <Link key={i} href={c.href} className="block overflow-hidden rounded-xl transition-colors hover:border-[var(--vf-violet)]" style={{ border: "1px solid var(--border-1)", background: "#ffffff" }}>
+              <div className="flex h-24 items-center justify-center" style={{ background: "var(--surface-1)", borderBottom: "1px solid var(--border-1)" }}>
+                <Icon size={24} style={{ color: "var(--vf-violet-ink)" }} />
               </div>
-              <div className="p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
-                <p className="text-[13px] font-semibold" style={{ color: "#fff" }}>{c.title}</p>
-                <p className="mt-1 text-[11.5px] leading-snug" style={{ color: "rgba(255,255,255,0.58)" }}>{c.desc}</p>
+              <div className="p-4">
+                <p className="text-[13px] font-semibold" style={{ color: "var(--fg-primary)" }}>{c.title}</p>
+                <p className="mt-1 text-[12.5px] leading-snug" style={{ color: "var(--fg-secondary)" }}>{c.desc}</p>
               </div>
             </Link>
           );
@@ -182,11 +179,11 @@ function CreateApp() {
   };
 
   return (
-    <div id="crear" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
+    <div id="crear" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "#ffffff", border: "1px solid var(--border-1)" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Crea tu app y publícala</p>
-          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Un nombre y listo: repo en GitHub + deploy en Vercel, en segundos.</p>
+          <p className="font-display text-[15px] font-semibold" style={{ color: "var(--fg-primary)" }}>Crea tu app y publícala</p>
+          <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>Un nombre y listo: repo en GitHub + deploy en Vercel, en segundos.</p>
         </div>
         {!open && (
           <button onClick={() => setOpen(true)} className="vf-btn rounded-full px-5 py-2.5 text-[13px] font-semibold text-white">Crear app →</button>
@@ -194,46 +191,46 @@ function CreateApp() {
       </div>
       {open && (
         <div className="mt-4">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.58)" }}>Elige una plantilla</p>
+          <p className="mb-2 text-[12px] font-medium uppercase tracking-wide" style={{ color: "var(--fg-secondary)" }}>Elige una plantilla</p>
           <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {[["landing","Landing","Cuenta qué haces","#7c3aed"],["tienda","Tienda","Vende con Stripe","#16a34a"],["portafolio","Portafolio","Muestra tu trabajo","#0ea5e9"],["blanco","En blanco","Lienzo libre","#a78bfa"]].map(([id,t,d,c]) => (
-              <button key={id} type="button" onClick={() => setTpl(id)} className="rounded-xl p-3 text-left transition" style={{ background: tpl===id ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)", border: tpl===id ? `1px solid ${c}` : "1px solid rgba(255,255,255,0.09)", boxShadow: tpl===id ? `0 0 0 1px ${c}, inset 0 1px 0 rgba(255,255,255,0.06)` : "none" }}>
-                <span className="block h-7 w-7 rounded-lg" style={{ background: `radial-gradient(120% 120% at 30% 25%, ${c}, transparent 70%)`, border: `1px solid ${c}` }} />
-                <span className="mt-2 block text-[12.5px] font-semibold" style={{ color: "#fff" }}>{t}</span>
-                <span className="block text-[10.5px]" style={{ color: "rgba(255,255,255,0.58)" }}>{d}</span>
+            {[["landing","Landing","Cuenta qué haces"],["tienda","Tienda","Vende con Stripe"],["portafolio","Portafolio","Muestra tu trabajo"],["blanco","En blanco","Lienzo libre"]].map(([id,t,d]) => (
+              <button key={id} type="button" onClick={() => setTpl(id)} className="rounded-xl p-3 text-left transition" style={{ background: tpl===id ? "var(--vf-violet-soft)" : "#ffffff", border: tpl===id ? "1px solid var(--vf-violet)" : "1px solid var(--border-1)" }}>
+                <span className="block h-7 w-7 rounded-lg" style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }} />
+                <span className="mt-2 block text-[13px] font-semibold" style={{ color: "var(--fg-primary)" }}>{t}</span>
+                <span className="block text-[12px]" style={{ color: "var(--fg-secondary)" }}>{d}</span>
               </button>
             ))}
           </div>
-          <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="¿Qué hace tu app? (objetivo, 1-2 líneas)" rows={2} className="mb-3 w-full rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", resize: "vertical" }} />
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.46)" }}>Capacidades</p>
+          <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="¿Qué hace tu app? (objetivo, 1-2 líneas)" rows={2} className="mb-3 w-full rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "#ffffff", border: "1px solid var(--border-1)", color: "var(--fg-primary)", resize: "vertical" }} />
+          <p className="mb-2 text-[12px] font-medium uppercase tracking-wide" style={{ color: "var(--fg-muted)" }}>Capacidades</p>
           <div className="mb-3 flex flex-wrap gap-2">
             {["Autenticación", "Pagos", "Base de datos", "IA / V", "Dominio", "Panel admin", "Notificaciones", "Multi-idioma"].map((m) => {
               const on = mods.includes(m);
               return (
-                <button key={m} type="button" onClick={() => setMods((pp) => (on ? pp.filter((x) => x !== m) : [...pp, m]))} className="rounded-full px-3 py-1.5 text-[12px] transition" style={{ background: on ? "rgba(124,58,237,0.16)" : "rgba(255,255,255,0.04)", border: `1px solid ${on ? "rgba(124,58,237,0.4)" : "rgba(255,255,255,0.12)"}`, color: on ? "#c4b5fd" : "rgba(255,255,255,0.7)" }}>{m}</button>
+                <button key={m} type="button" onClick={() => setMods((pp) => (on ? pp.filter((x) => x !== m) : [...pp, m]))} className="rounded-full px-3 py-1.5 text-[12px] transition" style={{ background: on ? "var(--vf-violet-soft)" : "#ffffff", border: `1px solid ${on ? "var(--vf-violet)" : "var(--border-1)"}`, color: on ? "var(--vf-violet-ink)" : "var(--fg-secondary)" }}>{m}</button>
               );
             })}
           </div>
-          <label className="mb-3 flex cursor-pointer items-center gap-2 text-[12.5px]" style={{ color: "rgba(255,255,255,0.6)" }}>
+          <label className="mb-3 flex cursor-pointer items-center gap-2 text-[12.5px]" style={{ color: "var(--fg-secondary)" }}>
             <input type="checkbox" checked={priv} onChange={(e) => setPriv(e.target.checked)} /> Repositorio privado
           </label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && run()} placeholder="Nombre de tu app" autoFocus
-              className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-            <button onClick={run} disabled={busy || !name.trim()} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>
+              className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "#ffffff", border: "1px solid var(--border-1)", color: "var(--fg-primary)" }} />
+            <button onClick={run} disabled={busy || !name.trim()} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "var(--vf-violet)", color: "#ffffff" }}>
               {busy ? "Creando y publicando…" : "Crear y publicar"}
             </button>
           </div>
-          {err && <p className="mt-3 text-[12.5px]" style={{ color: "#fca5a5" }}>{err}</p>}
+          {err && <p className="mt-3 text-[12.5px]" style={{ color: "#b91c1c" }}>{err}</p>}
           {res && (
-            <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(34,197,94,0.07)", border: "1px solid rgba(34,197,94,0.25)" }}>
-              <p className="text-[12.5px] font-medium" style={{ color: "#86efac" }}>Tu app está viva.</p>
+            <div className="mt-3 rounded-xl p-3" style={{ background: "#f0fdf4", border: "1px solid #15803d" }}>
+              <p className="text-[12.5px] font-medium" style={{ color: "#166534" }}>Tu app está viva.</p>
               <div className="mt-1.5 flex flex-wrap gap-3 text-[12.5px]">
-                {res.deploy?.url && <a href={res.deploy.url} target="_blank" rel="noreferrer" style={{ color: "#a78bfa" }}>Ver en vivo →</a>}
-                {res.repo?.url && <a href={res.repo.url} target="_blank" rel="noreferrer" style={{ color: "rgba(255,255,255,0.6)" }}>Ver repo →</a>}
+                {res.deploy?.url && <a href={res.deploy.url} target="_blank" rel="noreferrer" style={{ color: "var(--vf-violet-ink)" }}>Ver en vivo →</a>}
+                {res.repo?.url && <a href={res.repo.url} target="_blank" rel="noreferrer" style={{ color: "var(--fg-secondary)" }}>Ver repo →</a>}
               </div>
               {res.deploy?.url && (
-                <iframe title="preview" src={res.deploy.url} className="mt-3 h-72 w-full rounded-lg" style={{ border: "1px solid rgba(255,255,255,0.12)", background: "#fff" }} />
+                <iframe title="preview" src={res.deploy.url} className="mt-3 h-72 w-full rounded-lg" style={{ border: "1px solid var(--border-1)", background: "#ffffff" }} />
               )}
             </div>
           )}
@@ -270,26 +267,26 @@ function CobroApp() {
   };
 
   return (
-    <div id="cobros" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
+    <div id="cobros" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "#ffffff", border: "1px solid var(--border-1)" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Cobra en segundos</p>
-          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Crea un producto y un link de pago con tu Stripe. El dinero llega a tu cuenta.</p>
+          <p className="font-display text-[15px] font-semibold" style={{ color: "var(--fg-primary)" }}>Cobra en segundos</p>
+          <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>Crea un producto y un link de pago con tu Stripe. El dinero llega a tu cuenta.</p>
         </div>
         {!open && <button onClick={() => setOpen(true)} className="vf-btn rounded-full px-5 py-2.5 text-[13px] font-semibold text-white">Crear cobro →</button>}
       </div>
       {open && (
         <div className="mt-4">
           <div className="flex flex-col gap-2 sm:flex-row">
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="Qué cobras (ej. Asesoría)" className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-            <input value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} inputMode="decimal" placeholder="Monto MXN" className="w-full rounded-full px-4 py-2.5 text-[14px] outline-none sm:w-40" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-            <button onClick={run} disabled={busy || !name.trim() || !amount} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>{busy ? "Creando…" : "Generar link"}</button>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Qué cobras (ej. Asesoría)" className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "#ffffff", border: "1px solid var(--border-1)", color: "var(--fg-primary)" }} />
+            <input value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} inputMode="decimal" placeholder="Monto MXN" className="w-full rounded-full px-4 py-2.5 text-[14px] outline-none sm:w-40" style={{ background: "#ffffff", border: "1px solid var(--border-1)", color: "var(--fg-primary)" }} />
+            <button onClick={run} disabled={busy || !name.trim() || !amount} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "var(--vf-violet)", color: "#ffffff" }}>{busy ? "Creando…" : "Generar link"}</button>
           </div>
-          {err && <p className="mt-3 text-[12.5px]" style={{ color: "#fca5a5" }}>{err}</p>}
+          {err && <p className="mt-3 text-[12.5px]" style={{ color: "#b91c1c" }}>{err}</p>}
           {url && (
-            <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(34,197,94,0.07)", border: "1px solid rgba(34,197,94,0.25)" }}>
-              <p className="text-[12.5px] font-medium" style={{ color: "#86efac" }}>Link de pago listo.</p>
-              <a href={url} target="_blank" rel="noreferrer" className="mt-1 block break-all text-[12.5px]" style={{ color: "#a78bfa" }}>{url}</a>
+            <div className="mt-3 rounded-xl p-3" style={{ background: "#f0fdf4", border: "1px solid #15803d" }}>
+              <p className="text-[12.5px] font-medium" style={{ color: "#166534" }}>Link de pago listo.</p>
+              <a href={url} target="_blank" rel="noreferrer" className="mt-1 block break-all text-[12.5px]" style={{ color: "var(--vf-violet-ink)" }}>{url}</a>
             </div>
           )}
         </div>
@@ -324,17 +321,17 @@ function ConnectLLM() {
 
   const opts = [["anthropic", "Anthropic"], ["openai", "OpenAI"], ["gemini", "Gemini"]];
   return (
-    <div className="mb-8 rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)" }}>
-      <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Conecta tu IA <span className="text-[12px] font-normal" style={{ color: "rgba(255,255,255,0.58)" }}>(opcional)</span></p>
-      <p className="mb-3 text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Trae tu propia key y V corre con tu modelo. Sin key, usa el V de la casa gratis.</p>
+    <div className="mb-8 rounded-2xl p-5" style={{ background: "#ffffff", border: "1px solid var(--border-1)" }}>
+      <p className="font-display text-[15px] font-semibold" style={{ color: "var(--fg-primary)" }}>Conecta tu IA <span className="text-[12px] font-normal" style={{ color: "var(--fg-secondary)" }}>(opcional)</span></p>
+      <p className="mb-3 text-[12px]" style={{ color: "var(--fg-secondary)" }}>Trae tu propia key y V corre con tu modelo. Sin key, usa el V de la casa gratis.</p>
       <div className="flex flex-col gap-2 sm:flex-row">
-        <select value={provider} onChange={e => setProvider(e.target.value)} className="rounded-lg px-3 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}>
-          {opts.map(([v, l]) => <option key={v} value={v} style={{ color: "#000" }}>{l}</option>)}
+        <select value={provider} onChange={e => setProvider(e.target.value)} className="rounded-lg px-3 py-2.5 text-[13px] outline-none" style={{ background: "#ffffff", border: "1px solid var(--border-1)", color: "var(--fg-primary)" }}>
+          {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
-        <input value={key} onChange={e => setKey(e.target.value)} type="password" placeholder="Tu API key" className="flex-1 rounded-full px-4 py-2.5 text-[13px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-        <button onClick={save} disabled={busy || !key.trim()} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: done ? "#16a34a" : "#fff", color: done ? "#fff" : "#000" }}>{busy ? "Validando…" : done ? "Conectado ✓" : "Conectar"}</button>
+        <input value={key} onChange={e => setKey(e.target.value)} type="password" placeholder="Tu API key" className="flex-1 rounded-full px-4 py-2.5 text-[13px] outline-none" style={{ background: "#ffffff", border: "1px solid var(--border-1)", color: "var(--fg-primary)" }} />
+        <button onClick={save} disabled={busy || !key.trim()} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: done ? "#15803d" : "var(--vf-violet)", color: "#ffffff" }}>{busy ? "Validando…" : done ? "Conectado ✓" : "Conectar"}</button>
       </div>
-      {msg && <p className="mt-2 text-[12px]" style={{ color: done ? "#86efac" : "#fca5a5" }}>{msg}</p>}
+      {msg && <p className="mt-2 text-[12px]" style={{ color: done ? "#166534" : "#b91c1c" }}>{msg}</p>}
     </div>
   );
 }
@@ -371,32 +368,32 @@ function DomainBuyer() {
   };
 
   return (
-    <div id="dominio" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
+    <div id="dominio" className="mb-8 rounded-2xl p-5 md:p-6" style={{ background: "#ffffff", border: "1px solid var(--border-1)" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="font-display text-[15px] font-semibold" style={{ color: "#fff" }}>Tu dominio propio</p>
-          <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>Busca y compra un dominio para tu app, desde tu Vercel.</p>
+          <p className="font-display text-[15px] font-semibold" style={{ color: "var(--fg-primary)" }}>Tu dominio propio</p>
+          <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>Busca y compra un dominio para tu app, desde tu Vercel.</p>
         </div>
-        {!open && <button onClick={() => setOpen(true)} className="rounded-full px-5 py-2.5 text-[13px] font-semibold" style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5)" }}>Buscar dominio →</button>}
+        {!open && <button onClick={() => setOpen(true)} className="rounded-full px-5 py-2.5 text-[13px] font-semibold" style={{ background: "var(--vf-violet)", color: "#ffffff" }}>Buscar dominio →</button>}
       </div>
       {open && (
         <div className="mt-4">
           <div className="flex flex-col gap-2 sm:flex-row">
-            <input value={name} onChange={e => { setName(e.target.value); setInfo(null); setBought(false); }} onKeyDown={e => e.key === "Enter" && check()} placeholder="tudominio.com" className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
-            <button onClick={check} disabled={busy || !name.trim()} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>{busy ? "Buscando…" : "Buscar"}</button>
+            <input value={name} onChange={e => { setName(e.target.value); setInfo(null); setBought(false); }} onKeyDown={e => e.key === "Enter" && check()} placeholder="tudominio.com" className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none" style={{ background: "#ffffff", border: "1px solid var(--border-1)", color: "var(--fg-primary)" }} />
+            <button onClick={check} disabled={busy || !name.trim()} className="rounded-full px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50" style={{ background: "var(--vf-violet)", color: "#ffffff" }}>{busy ? "Buscando…" : "Buscar"}</button>
           </div>
-          {err && <p className="mt-3 text-[12.5px]" style={{ color: "#fca5a5" }}>{err}</p>}
+          {err && <p className="mt-3 text-[12.5px]" style={{ color: "#b91c1c" }}>{err}</p>}
           {info && !bought && (
-            <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)" }}>
+            <div className="mt-3 rounded-xl p-3" style={{ background: "var(--surface-1)", border: "1px solid var(--border-1)" }}>
               {info.available
                 ? <div className="flex items-center justify-between gap-3">
-                    <span className="text-[13px]" style={{ color: "#86efac" }}>{name.trim().toLowerCase()} está disponible{info.price ? ` · $${info.price} USD/año` : ""}</span>
-                    {info.price && <button onClick={buy} disabled={busy} className="rounded-full px-4 py-2 text-[12.5px] font-semibold disabled:opacity-50" style={{ background: "#7c3aed", color: "#fff" }}>{busy ? "Comprando…" : `Comprar por $${info.price}`}</button>}
+                    <span className="text-[13px]" style={{ color: "#166534" }}>{name.trim().toLowerCase()} está disponible{info.price ? ` · $${info.price} USD/año` : ""}</span>
+                    {info.price && <button onClick={buy} disabled={busy} className="rounded-full px-4 py-2 text-[12.5px] font-semibold disabled:opacity-50" style={{ background: "var(--vf-violet)", color: "#ffffff" }}>{busy ? "Comprando…" : `Comprar por $${info.price}`}</button>}
                   </div>
-                : <span className="text-[13px]" style={{ color: "#fca5a5" }}>No disponible. Prueba otro.</span>}
+                : <span className="text-[13px]" style={{ color: "#b91c1c" }}>No disponible. Prueba otro.</span>}
             </div>
           )}
-          {bought && <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(34,197,94,0.07)", border: "1px solid rgba(34,197,94,0.25)" }}><p className="text-[12.5px] font-medium" style={{ color: "#86efac" }}>¡Dominio comprado! Conéctalo a tu app desde Vercel.</p></div>}
+          {bought && <div className="mt-3 rounded-xl p-3" style={{ background: "#f0fdf4", border: "1px solid #15803d" }}><p className="text-[12.5px] font-medium" style={{ color: "#166534" }}>¡Dominio comprado! Conéctalo a tu app desde Vercel.</p></div>}
         </div>
       )}
     </div>
@@ -436,7 +433,7 @@ export function HomeExperience({ name }: { name: string }) {
       {/* ── Header ── */}
       <div className="mb-16 mt-4">
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="font-mono text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.46)", letterSpacing: "0.22em" }}>
+          className="font-mono text-[12px] uppercase" style={{ color: "var(--fg-muted)", letterSpacing: "0.22em" }}>
           {greeting()}, {name}
         </motion.p>
         <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -445,7 +442,7 @@ export function HomeExperience({ name }: { name: string }) {
           style={{ fontSize: "clamp(2.8rem, 6.5vw, 4.4rem)", lineHeight: 1.0,
                    letterSpacing: "-0.05em", marginTop: 16, fontWeight: 600 }}>
           Tu fábrica está{" "}
-          <span style={{ color: "#fff", fontWeight: 500 }}>despierta.</span>
+          <span style={{ color: "var(--vf-violet)", fontWeight: 500 }}>despierta.</span>
         </motion.h1>
       </div>
 
@@ -467,10 +464,10 @@ export function HomeExperience({ name }: { name: string }) {
           { label: "Actividad", value: loading ? "—" : events.length + " eventos", icon: IconActivity },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-xl p-4"
-            style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}>
-            <Icon size={14} style={{ color: "rgba(124,58,237,0.8)", marginBottom: 8 }} />
-            <p className="text-[1.4rem] font-bold tabular-nums" style={{ color: "#fff" }}>{value}</p>
-            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.46)" }}>{label}</p>
+            style={{ background: "#ffffff", border: "1px solid var(--border-1)" }}>
+            <Icon size={14} style={{ color: "var(--vf-violet-ink)", marginBottom: 8 }} />
+            <p className="text-[1.4rem] font-bold tabular-nums" style={{ color: "var(--fg-primary)" }}>{value}</p>
+            <p className="text-[12px]" style={{ color: "var(--fg-muted)" }}>{label}</p>
           </div>
         ))}
       </motion.div>
@@ -482,24 +479,24 @@ export function HomeExperience({ name }: { name: string }) {
         <Widget title="Proyectos recientes" href="/app/projects">
           {loading ? <div className="space-y-2">{[0,1,2].map(i => <Skel key={i} h="h-[48px]" />)}</div>
           : projects.length === 0
-            ? <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.46)" }}>
+            ? <p className="text-[13px]" style={{ color: "var(--fg-muted)" }}>
                 Sin proyectos.{" "}
-                <Link href="/app/projects" style={{ color: "#a78bfa" }}>Crea uno →</Link>
+                <Link href="/app/projects" style={{ color: "var(--vf-violet-ink)" }}>Crea uno →</Link>
               </p>
             : <div className="space-y-1">
                 {projects.map(p => (
                   <Link key={p.id} href={`/app/projects`}
                     className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors"
                     style={{ background: "transparent" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                    onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-1)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                     <div className="flex items-center gap-2.5">
                       <span className="h-2 w-2 rounded-full flex-shrink-0"
-                        style={{ background: p.vercel_url ? "#22c55e" : "rgba(255,255,255,0.2)" }} />
-                      <span className="text-[13px]" style={{ color: "rgba(255,255,255,0.8)" }}>{p.name}</span>
+                        style={{ background: p.vercel_url ? "#15803d" : "var(--border-2)" }} />
+                      <span className="text-[13px]" style={{ color: "var(--fg-primary)" }}>{p.name}</span>
                     </div>
                     {p.vercel_url && (
-                      <span className="font-mono text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>live</span>
+                      <span className="font-mono text-[12px]" style={{ color: "var(--fg-muted)" }}>live</span>
                     )}
                   </Link>
                 ))}
@@ -510,18 +507,18 @@ export function HomeExperience({ name }: { name: string }) {
         <Widget title="Actividad reciente" href="/app/activity">
           {loading ? <div className="space-y-2">{[0,1,2].map(i => <Skel key={i} h="h-[44px]" />)}</div>
           : events.length === 0
-            ? <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.46)" }}>Sin actividad registrada aún.</p>
+            ? <p className="text-[13px]" style={{ color: "var(--fg-muted)" }}>Sin actividad registrada aún.</p>
             : <div className="space-y-1">
                 {events.slice(0, 6).map(ev => {
                   const { Icon, color } = eventIcon(ev.action);
                   return (
                     <div key={ev.id} className="flex items-center gap-3 rounded-lg px-2 py-2">
                       <Icon size={13} style={{ color, flexShrink: 0 }} />
-                      <span className="flex-1 truncate text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>
+                      <span className="flex-1 truncate text-[12px]" style={{ color: "var(--fg-secondary)" }}>
                         {ev.action}
                       </span>
-                      <span className="font-mono text-[10px] tabular-nums flex-shrink-0"
-                        style={{ color: "rgba(255,255,255,0.2)" }}>
+                      <span className="font-mono text-[12px] tabular-nums flex-shrink-0"
+                        style={{ color: "var(--fg-muted)" }}>
                         {timeAgo(ev.created_at)}
                       </span>
                     </div>
@@ -533,25 +530,25 @@ export function HomeExperience({ name }: { name: string }) {
 
       {/* ── Quick actions ── */}
       <div className="mt-8">
-        <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.14em]"
-          style={{ color: "rgba(255,255,255,0.2)" }}>Acceso rápido</p>
+        <p className="mb-4 font-mono text-[12px] uppercase tracking-[0.14em]"
+          style={{ color: "var(--fg-muted)" }}>Acceso rápido</p>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
           {ACTIONS.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href}
               className="flex flex-col items-center gap-2 rounded-xl py-4 px-2 transition-all text-center"
-              style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.015))", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 2px rgba(0,0,0,0.45), 0 4px 10px -2px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.55)" }}
+              style={{ background: "#ffffff", border: "1px solid var(--border-1)" }}
               onMouseEnter={e => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.background = "rgba(124,58,237,0.08)";
-                el.style.borderColor = "rgba(124,58,237,0.2)";
+                el.style.background = "var(--vf-violet-soft)";
+                el.style.borderColor = "var(--vf-violet)";
               }}
               onMouseLeave={e => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.background = "rgba(255,255,255,0.02)";
-                el.style.borderColor = "rgba(255,255,255,0.07)";
+                el.style.background = "#ffffff";
+                el.style.borderColor = "var(--border-1)";
               }}>
-              <Icon size={18} style={{ color: "rgba(167,139,250,0.8)" }} />
-              <span className="text-[11px] leading-tight" style={{ color: "rgba(255,255,255,0.5)" }}>{label}</span>
+              <Icon size={18} style={{ color: "var(--vf-violet-ink)" }} />
+              <span className="text-[12px] leading-tight" style={{ color: "var(--fg-secondary)" }}>{label}</span>
             </Link>
           ))}
         </div>
@@ -561,18 +558,16 @@ export function HomeExperience({ name }: { name: string }) {
       {!loading && billing?.plan === "free" && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
           className="mt-8 flex items-center justify-between rounded-2xl p-5"
-          style={{ background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.18)" }}>
+          style={{ background: "var(--vf-violet-soft)", border: "1px solid var(--vf-violet)" }}>
           <div>
-            <p className="text-[13px] font-semibold" style={{ color: "#fff" }}>Estás en el plan Free</p>
-            <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <p className="text-[13px] font-semibold" style={{ color: "var(--fg-primary)" }}>Estás en el plan Free</p>
+            <p className="text-[12px]" style={{ color: "var(--fg-muted)" }}>
               Sube a Forge Pro para MCP ilimitado, +200 skills y deploy sin límites.
             </p>
           </div>
           <a href="/pricing"
-            className="flex-shrink-0 rounded-xl px-4 py-2 text-[13px] font-semibold transition-all"
-            style={{ background: "linear-gradient(180deg,#ffffff,#ededf2)", color: "#0a0810", boxShadow: "0 6px 16px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.7)" }}
-            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.88)")}
-            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "#fff")}>
+            className="flex-shrink-0 rounded-xl px-4 py-2 text-[13px] font-semibold transition-colors"
+            style={{ background: "var(--vf-violet)", color: "#ffffff" }}>
             Ver planes →
           </a>
         </motion.div>
