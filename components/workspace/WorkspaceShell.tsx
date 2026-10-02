@@ -16,6 +16,7 @@ import {
   IconHome,
   IconLayers,
   IconMenu,
+  IconMic,
   IconSettings,
   IconUsers,
   IconPlug,
@@ -41,6 +42,12 @@ type NavItem = {
 };
 
 const PRIMARY_NAV: NavItem[] = [
+  {
+    href: "/app/hablar",
+    label: "Hablar con V",
+    description: "V en tiempo real, con manos y memoria",
+    Icon: IconMic,
+  },
   {
     href: "/app/colectivo",
     label: "Colectivo",
@@ -114,6 +121,7 @@ const TITLES: Record<string, string> = {
   "/app/home": "Estudio",
   "/app/trio": "Trío",
   "/app/colectivo": "Colectivo",
+  "/app/hablar": "Hablar con V",
   "/app/projects": "Proyectos",
   "/app/demos": "Demos",
   "/app/activity": "Actividad",
@@ -206,7 +214,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isStudio = pathname === "/app/chat";
   const isFixedWorkspace =
-    isStudio || pathname === "/app/trio" || pathname === "/app/colectivo" || pathname === "/forge" || pathname === "/v";
+    isStudio || pathname === "/app/trio" || pathname === "/app/colectivo" || pathname === "/app/hablar" || pathname === "/forge" || pathname === "/v";
   const isSetup = pathname.startsWith("/app/setup");
   const isLive = pathname.startsWith("/app/live/");
 
@@ -307,7 +315,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
               contenido. Al ser una franja del shell, el Estudio se encoge solo
               (main es flex-1) y nunca queda nada tapado. */}
           <LimiteDeError nombre="OwnerPushBanner">
-            {pathname !== "/app/colectivo" && <OwnerPushBanner />}
+            {pathname !== "/app/colectivo" && pathname !== "/app/hablar" && <OwnerPushBanner />}
           </LimiteDeError>
 
           <main
