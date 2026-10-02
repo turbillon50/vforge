@@ -11,7 +11,6 @@ import {
   IconBoxes,
   IconCpu,
   IconFactory,
-  IconHammer,
   IconHilo,
   IconHome,
   IconLayers,
@@ -20,7 +19,6 @@ import {
   IconSettings,
   IconUsers,
   IconPlug,
-  IconTrio,
   IconX,
 } from "@/components/brand/VFIcons";
 import { monochromeClerkAppearance } from "@/components/auth/ClerkShell";
@@ -44,75 +42,9 @@ type NavItem = {
 const PRIMARY_NAV: NavItem[] = [
   {
     href: "/app/hablar",
-    label: "Hablar con V",
-    description: "V en tiempo real, con manos y memoria",
+    label: "V",
+    description: "Plática, manos, memoria, colectivo y encargos en una sola pantalla",
     Icon: IconMic,
-  },
-  {
-    href: "/app/colectivo",
-    label: "Colectivo",
-    description: "Trío, V y Fábrica con todos los modelos",
-    Icon: IconTrio,
-  },
-  {
-    href: "/app/chat",
-    label: "Construir",
-    description: "Chat, herramientas y preview",
-    Icon: IconHammer,
-  },
-  {
-    href: "/app/trio",
-    label: "Trío",
-    description: "Claude, ChatGPT y V en paralelo",
-    Icon: IconTrio,
-  },
-  {
-    href: "/app/projects",
-    label: "Proyectos",
-    description: "Salas y viewports",
-    Icon: IconLayers,
-  },
-  {
-    href: "/app/demos",
-    label: "Demos",
-    description: "Catalogo reutilizable",
-    Icon: IconBoxes,
-  },
-  {
-    href: "/app/activity",
-    label: "Actividad",
-    description: "Eventos del sistema",
-    Icon: IconActivity,
-  },
-  {
-    href: "/app/hilo",
-    label: "Hilo",
-    description: "WhatsApp en solo lectura",
-    Icon: IconHilo,
-  },
-  {
-    href: "/app/tablero",
-    label: "Tablero",
-    description: "Agentes y avance en vivo",
-    Icon: IconCpu,
-  },
-  {
-    href: "/app/fabrica",
-    label: "Fábrica",
-    description: "La casa en vivo: alianza, V-Trading y Brain",
-    Icon: IconFactory,
-  },
-  {
-    href: "/app/integrations",
-    label: "Conexiones",
-    description: "GitHub, Vercel y servicios",
-    Icon: IconPlug,
-  },
-  {
-    href: "/app/admin",
-    label: "Administración",
-    description: "Usuarios y permisos",
-    Icon: IconUsers,
   },
 ];
 
@@ -121,7 +53,7 @@ const TITLES: Record<string, string> = {
   "/app/home": "Estudio",
   "/app/trio": "Trío",
   "/app/colectivo": "Colectivo",
-  "/app/hablar": "Hablar con V",
+  "/app/hablar": "V",
   "/app/projects": "Proyectos",
   "/app/demos": "Demos",
   "/app/activity": "Actividad",
