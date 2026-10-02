@@ -19,6 +19,7 @@ import {
   Unlock,
 } from "lucide-react";
 import { ProjectChats } from "@/components/hilo/ProjectChats";
+import { EmbudoAcciones } from "@/components/projects/EmbudoAcciones";
 import type { HiloDashboardData } from "@/lib/hilo/types";
 import { etapaLabel } from "@/lib/projects/etapas";
 import type {
@@ -632,6 +633,9 @@ export function ExpedienteProyectoView({
           body="Etapa actual e historial de avance comercial y entrega."
         >
           <EtapaHistory expediente={expediente} />
+          <div className="mt-6">
+            <EmbudoAcciones projectId={project.id} etapa={project.etapa} contratoUrl={project.contrato_url} />
+          </div>
         </Chapter>
 
         <Chapter

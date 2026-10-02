@@ -22,6 +22,11 @@ export const HILO_DDL = [
     WHERE monitorear = true`,
   `CREATE INDEX IF NOT EXISTS idx_hilo_chats_nombre
     ON hilo_chats (lower(chat_nombre))`,
+  `ALTER TABLE hilo_chats ADD COLUMN IF NOT EXISTS vivo_linea text`,
+  `ALTER TABLE hilo_chats ADD COLUMN IF NOT EXISTS vivo_chat_key text`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_hilo_chats_vivo
+    ON hilo_chats (vivo_linea, vivo_chat_key)
+    WHERE vivo_chat_key IS NOT NULL`,
   `CREATE TABLE IF NOT EXISTS hilo_mensajes (
     uid          text PRIMARY KEY,
     linea        text CHECK (linea IN ('personal', 'negocio')),
