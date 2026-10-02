@@ -25,7 +25,6 @@ import {
 import { monochromeClerkAppearance } from "@/components/auth/ClerkShell";
 import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
 import { ConnectionGate } from "@/components/workspace/ConnectionGate";
-import { MobileTabBar } from "@/components/workspace/MobileTabBar";
 import { OwnerPushBanner } from "@/components/pwa/OwnerPushBanner";
 import { LimiteDeError } from "@/components/system/LimiteDeError";
 
@@ -308,29 +307,26 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
               contenido. Al ser una franja del shell, el Estudio se encoge solo
               (main es flex-1) y nunca queda nada tapado. */}
           <LimiteDeError nombre="OwnerPushBanner">
-            <OwnerPushBanner />
+            {pathname !== "/app/colectivo" && <OwnerPushBanner />}
           </LimiteDeError>
 
           <main
             className={cn(
               isFixedWorkspace
                 ? "flex min-h-0 flex-1 overflow-hidden"
-                : "min-h-[calc(100svh-58px-72px)] pb-16 md:pb-0",
+                : "min-h-[calc(100svh-58px-72px)]",
             )}
           >
             {children}
           </main>
           {isFixedWorkspace ? null : (
-            <footer className="mb-16 flex h-[72px] items-center justify-between border-t border-[var(--border-1)] bg-white px-page-sm md:mb-0 md:px-page-md xl:px-page-lg">
+            <footer className="flex h-[72px] items-center justify-between border-t border-[var(--border-1)] bg-white px-page-sm md:px-page-md xl:px-page-lg">
               <p className="font-mono text-label-caps uppercase text-[var(--fg-muted)]">
                 VForge
               </p>
               <p className="text-body-sm text-[var(--fg-secondary)] transition-colors duration-200 hover:text-black">Control room</p>
             </footer>
           )}
-          {/* PWA móvil v1: barra inferior glass. En pantallas fijas (chat/trio)
-              también se monta porque el composer deja gap (data-vorb-avoid). */}
-          <MobileTabBar />
         </div>
       </div>
     </ConnectionGate>
