@@ -1,7 +1,7 @@
 -- ============================================================================
 -- vForge M-self-config — Agent config table (V can reconfigure herself)
 -- ============================================================================
--- Lets V pick which OpenRouter model gets used per task kind without
+-- Lets V pick which model gets used per task kind without
 -- a code deploy. The router in /api/forge/run reads from this table
 -- first, then falls back to env vars (PR #30), then to the registry
 -- defaults in lib/forge/models.ts.

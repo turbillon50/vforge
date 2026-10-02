@@ -127,7 +127,7 @@ const PRODUCTS: Product[] = [
     sphere: "/sphere-orange.png",
     badge: "Máxima potencia",
     fullDesc: "Construimos un modelo de lenguaje empresarial a la medida, con memoria persistente y capacidad de coordinar tu negocio completo. Conectado a tus datos, tus herramientas y tus procesos.",
-    capabilities: ["Memoria persistente", "Memoria semántica", "Memoria vectorial", "Memoria maestra", "OpenRouter / Gemini / Claude / GPT", "Bases documentales", "Automatizaciones integradas"],
+    capabilities: ["Memoria persistente", "Memoria semántica", "Memoria vectorial", "Memoria maestra", "Cerebras / Gemini / Claude / GLM", "Bases documentales", "Automatizaciones integradas"],
     note: "BI es un ejemplo de LLM empresarial capaz de operar y coordinar una empresa completa.",
   },
 ];

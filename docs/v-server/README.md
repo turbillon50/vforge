@@ -110,8 +110,8 @@ Environment="V_SERVER_TOKEN=algun-token-largo-y-secreto"
 
 Después `systemctl daemon-reload && systemctl restart v-server`.
 
-Nota 2026-10-01: `/generate-image` quedó retirado junto con OpenRouter y responde
-410. No configurar keys de OpenRouter en este servidor.
+Nota 2026-10-02: `/generate-image` genera con Gemini directo (`GEMINI_API_KEY`, modelo `gemini-3.1-flash-image`). OpenRouter quedó retirado y no responde
+No configurar keys de OpenRouter en este servidor.
 
 ### Auth
 

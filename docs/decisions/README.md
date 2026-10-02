@@ -44,7 +44,7 @@
 | [006](./006-operator-paid-billing-mvp.md) | Accepted | Billing en cuenta de operador en MVP, pass-through en v2 |
 | [007](./007-adopt-next-16-tailwind-4.md) | Accepted (Tailwind corregido) | Adoptar Next 16 + React 19; Tailwind quedó en 3.4 (la migración v4 no se completó — ver corrección 2026-05-29) |
 | [008](./008-zero-knowledge-vault.md) | Accepted | Zero-Knowledge Vault con Vault Master Password separado del Clerk password |
-| [009](./009-external-service-stack.md) | Accepted | Stack de servicios externos: OpenRouter, E2B, Trigger.dev, Turso, Liveblocks, Polar.sh, Unkey, Resend |
+| [009](./009-external-service-stack.md) | Accepted (OpenRouter retirado 2026-10-01) | Stack de servicios externos: E2B, Trigger.dev, Turso, Liveblocks, Polar.sh, Unkey, Resend |
 | [010](./010-execute-first-doctrine.md) | Accepted | V ejecuta directo — sin gates de pre-confirmación; anillos = clasificación de blast radius (supersede en parte ADR-004) |
 | [011](./011-owner-studio-and-client-boundary.md) | Accepted | `/app/chat` es el estudio owner canónico; `/workspace` y `/app/live` conservan aislamiento de clientes |
 
