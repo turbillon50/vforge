@@ -33,15 +33,14 @@ function timeAgo(iso: string | null): string {
 
 function RepoInitials({ name }: { name: string }) {
   const initials = name.replace(/[-_]/g, " ").split(" ").slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("");
-  const hue = (name.split("").reduce((a, c) => a + c.charCodeAt(0), 0) * 37) % 360;
   return (
     <div style={{
       width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-      background: `hsl(${hue},35%,20%)`,
-      border: `1px solid hsl(${hue},30%,28%)`,
+      background: "var(--surface-1)",
+      border: "1px solid var(--border-1)",
       display: "flex", alignItems: "center", justifyContent: "center",
       fontSize: 12, fontWeight: 700,
-      color: `hsl(${hue},60%,70%)`,
+      color: "var(--fg-secondary)",
       fontFamily: "monospace",
     }}>
       {initials || name[0]?.toUpperCase()}
@@ -50,14 +49,14 @@ function RepoInitials({ name }: { name: string }) {
 }
 
 function StatusDot({ pushed_at, archived }: { pushed_at: string | null; archived?: boolean }) {
-  if (archived) return <span style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "inline-block" }} />;
+  if (archived) return <span title="Archivado" style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--border-2)", display: "inline-block" }} />;
   const days = pushed_at ? Math.floor((Date.now() - new Date(pushed_at).getTime()) / 86400000) : 999;
-  const color = days < 7 ? "#22c55e" : days < 60 ? "#a78bfa" : "rgba(255,255,255,0.2)";
-  const glow = days < 7 ? "0 0 6px #22c55e88" : days < 60 ? "0 0 6px #a78bfa44" : "none";
+  const color = days < 7 ? "#15803d" : days < 60 ? "var(--vf-violet)" : "var(--border-2)";
+  const titulo = days < 7 ? "Movido esta semana" : days < 60 ? "Movido en los últimos 2 meses" : "Sin movimiento reciente";
   return (
-    <span style={{
+    <span title={titulo} style={{
       width: 8, height: 8, borderRadius: "50%", display: "inline-block", flexShrink: 0,
-      background: color, boxShadow: glow,
+      background: color,
     }} />
   );
 }
@@ -101,12 +100,12 @@ export default function RepoVisionPage() {
   if (needsConnect) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:"60vh", padding:"0 20px" }}>
       <div style={{ maxWidth:360, width:"100%", textAlign:"center" }}>
-        <div style={{ fontSize:13, fontWeight:600, color:"rgba(168,85,247,0.8)", marginBottom:8, letterSpacing:"0.1em", fontFamily:"monospace" }}>REPOVISION</div>
-        <div style={{ fontSize:20, fontWeight:700, color:"#fff", marginBottom:8 }}>Conecta GitHub</div>
-        <div style={{ fontSize:13, color:"rgba(255,255,255,0.4)", marginBottom:24 }}>Para ver tus repos necesitas autorizar tu cuenta de GitHub.</div>
+        <div style={{ fontSize:13, fontWeight:600, color:"var(--vf-violet-ink)", marginBottom:8, letterSpacing:"0.1em", fontFamily:"monospace" }}>REPOSITORIOS</div>
+        <div style={{ fontSize:20, fontWeight:700, color:"var(--fg-primary)", marginBottom:8 }}>Conecta GitHub</div>
+        <div style={{ fontSize:13, color:"var(--fg-secondary)", marginBottom:24 }}>Para ver tus repos necesitas autorizar tu cuenta de GitHub.</div>
         <a href="/api/auth/github/start" style={{
-          display:"block", padding:"11px 0", borderRadius:10,
-          background:"#fff", color:"#000", fontWeight:600, fontSize:14, textDecoration:"none",
+          display:"block", padding:"13px 0", borderRadius:10,
+          background:"var(--vf-violet)", color:"#ffffff", fontWeight:600, fontSize:14, textDecoration:"none",
         }}>Conectar GitHub →</a>
       </div>
     </div>
@@ -118,34 +117,34 @@ export default function RepoVisionPage() {
       <div style={{ padding:"28px 28px 0", display:"flex", alignItems:"center", justifyContent:"space-between", gap:16 }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           <div>
-            <div style={{ fontSize:18, fontWeight:700, color:"#fff", letterSpacing:"-0.02em" }}>Repositorios</div>
-            {!loading && <div style={{ fontSize:12, color:"rgba(255,255,255,0.35)", marginTop:2 }}>{repos.length} repos conectados</div>}
+            <div style={{ fontSize:18, fontWeight:700, color:"var(--fg-primary)", letterSpacing:"-0.02em" }}>Repositorios</div>
+            {!loading && <div style={{ fontSize:12, color:"var(--fg-muted)", marginTop:2 }}>{repos.length} repos conectados</div>}
           </div>
         </div>
         {/* Search */}
         <div style={{ position:"relative", maxWidth:240 }}>
-          <svg style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", opacity:0.35 }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <svg style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:"var(--fg-muted)" }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input
             value={query} onChange={e => setQuery(e.target.value)}
             placeholder="Buscar…"
             style={{
-              height:34, paddingLeft:32, paddingRight:12, borderRadius:8,
-              background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)",
-              color:"#fff", fontSize:13, outline:"none", width:200,
+              height:38, paddingLeft:32, paddingRight:12, borderRadius:8,
+              background:"#ffffff", border:"1px solid var(--border-1)",
+              color:"var(--fg-primary)", fontSize:13, outline:"none", width:200,
             }}
           />
         </div>
       </div>
 
       {/* Tabs */}
-      <div style={{ padding:"20px 28px 0", display:"flex", gap:4, borderBottom:"1px solid rgba(255,255,255,0.06)", marginBottom:0 }}>
+      <div style={{ padding:"20px 28px 0", display:"flex", gap:4, borderBottom:"1px solid var(--border-1)", marginBottom:0 }}>
         {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            padding:"8px 14px", fontSize:13, fontWeight:500, borderRadius:"8px 8px 0 0",
-            background: tab === t.id ? "rgba(255,255,255,0.07)" : "transparent",
-            color: tab === t.id ? "#fff" : "rgba(255,255,255,0.4)",
+          <button key={t.id} onClick={() => setTab(t.id)} aria-pressed={tab === t.id} style={{
+            minHeight:40, padding:"8px 14px", fontSize:13, fontWeight: tab === t.id ? 600 : 500, borderRadius:"8px 8px 0 0",
+            background: "transparent",
+            color: tab === t.id ? "var(--vf-violet-ink)" : "var(--fg-secondary)",
             border: "none", cursor:"pointer",
-            borderBottom: tab === t.id ? "2px solid #a855f7" : "2px solid transparent",
+            borderBottom: tab === t.id ? "2px solid var(--vf-violet)" : "2px solid transparent",
           }}>
             {t.label}
           </button>
@@ -155,7 +154,7 @@ export default function RepoVisionPage() {
       {/* Error */}
       {error && (
         <div style={{ margin:"16px 28px 0", padding:"10px 14px", borderRadius:8, fontSize:13,
-          background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", color:"#f87171" }}>
+          background:"#fef2f2", border:"1px solid #b91c1c", color:"#b91c1c" }}>
           {error}
         </div>
       )}
@@ -167,56 +166,56 @@ export default function RepoVisionPage() {
           Array.from({ length: 6 }).map((_, i) => (
             <div key={i} style={{
               display:"flex", alignItems:"center", gap:14, padding:"16px 0",
-              borderBottom:"1px solid rgba(255,255,255,0.05)",
+              borderBottom:"1px solid var(--border-1)",
             }}>
-              <div style={{ width:36, height:36, borderRadius:8, background:"rgba(255,255,255,0.05)" }} />
+              <div style={{ width:36, height:36, borderRadius:8, background:"var(--surface-2)" }} />
               <div style={{ flex:1 }}>
-                <div style={{ height:13, width:"30%", borderRadius:4, background:"rgba(255,255,255,0.06)", marginBottom:8 }} />
-                <div style={{ height:11, width:"60%", borderRadius:4, background:"rgba(255,255,255,0.04)" }} />
+                <div style={{ height:13, width:"30%", borderRadius:4, background:"var(--surface-2)", marginBottom:8 }} />
+                <div style={{ height:11, width:"60%", borderRadius:4, background:"var(--surface-2)" }} />
               </div>
             </div>
           ))
         ) : visible.length === 0 ? (
-          <div style={{ padding:"60px 0", textAlign:"center", color:"rgba(255,255,255,0.3)", fontSize:13 }}>
+          <div style={{ padding:"60px 0", textAlign:"center", color:"var(--fg-secondary)", fontSize:13 }}>
             No hay repositorios{query ? ` que coincidan con "${query}"` : ""}
           </div>
         ) : visible.map(repo => (
           <a key={repo.full_name} href={repo.html_url} target="_blank" rel="noreferrer"
             style={{
               display:"flex", alignItems:"center", gap:14, padding:"14px 0",
-              borderBottom:"1px solid rgba(255,255,255,0.05)",
+              borderBottom:"1px solid var(--border-1)",
               textDecoration:"none", cursor:"pointer",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-1)")}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
           >
             <RepoInitials name={repo.name} />
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
-                <span style={{ fontSize:14, fontWeight:600, color:"#fff" }}>{repo.name}</span>
+                <span style={{ fontSize:14, fontWeight:600, color:"var(--fg-primary)" }}>{repo.name}</span>
                 {repo.private && (
-                  <span style={{ fontSize:10, fontWeight:600, padding:"1px 6px", borderRadius:4,
-                    background:"rgba(255,255,255,0.06)", color:"rgba(255,255,255,0.4)", fontFamily:"monospace" }}>
+                  <span style={{ fontSize:12, fontWeight:600, padding:"1px 6px", borderRadius:4,
+                    border:"1px solid var(--border-1)", color:"var(--fg-secondary)", fontFamily:"monospace" }}>
                     privado
                   </span>
                 )}
                 {repo.archived && (
-                  <span style={{ fontSize:10, fontWeight:600, padding:"1px 6px", borderRadius:4,
-                    background:"rgba(255,255,255,0.04)", color:"rgba(255,255,255,0.3)", fontFamily:"monospace" }}>
+                  <span style={{ fontSize:12, fontWeight:600, padding:"1px 6px", borderRadius:4,
+                    border:"1px solid var(--border-1)", color:"var(--fg-muted)", fontFamily:"monospace" }}>
                     archivado
                   </span>
                 )}
               </div>
-              <div style={{ fontSize:12, color:"rgba(255,255,255,0.35)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+              <div style={{ fontSize:12, color:"var(--fg-secondary)", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                 {repo.description ?? repo.full_name}
               </div>
             </div>
             <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
               <StatusDot pushed_at={repo.pushed_at} archived={repo.archived} />
-              <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)", minWidth:64, textAlign:"right" }}>
+              <span style={{ fontSize:12, color:"var(--fg-muted)", minWidth:64, textAlign:"right" }}>
                 {timeAgo(repo.pushed_at)}
               </span>
-              <svg style={{ opacity:0.2 }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+              <svg style={{ color:"var(--fg-muted)" }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
             </div>
           </a>
         ))}

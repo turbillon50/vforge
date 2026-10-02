@@ -1,4 +1,4 @@
-.fx-root { --ink:#0A0A0A; --ink2:#3F3F46; --muted:#71717A; --line:#E8E8E8; --line2:#DADADA; --soft:#F6F6F6; --black:#0A0A0A; --white:#FFFFFF; --accent:#FF5A1F; --accent-hover:#E84D14; --ease:cubic-bezier(.22,.61,.36,1); color:var(--ink); }
+.fx-root { --ink:#0A0A0A; --ink2:#3F3F46; --muted:#71717A; --line:#E8E8E8; --line2:#DADADA; --soft:#F6F6F6; --black:#0A0A0A; --white:#FFFFFF; --accent:#7c3aed; --accent-hover:#6d28d9; --ease:cubic-bezier(.22,.61,.36,1); color:var(--ink); }
 .fx-root *{ box-sizing:border-box; }
 
 /* ===== SPLASH (CSS puro, sin flash: fill-mode both mantiene el estado 0% desde el frame 0) ===== */

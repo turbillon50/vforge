@@ -65,46 +65,27 @@ export function TallerPanel({
 
   return (
     <div className="relative mx-auto w-full max-w-5xl">
-      <div className="absolute -inset-8 -z-10 bg-violet-500/20 opacity-20 blur-[80px]" />
-      <div className="glass-strong overflow-hidden rounded-xl shadow-elev sm:rounded-2xl">
-        {/* ---- Window chrome con fondo Higgsfield + overlay obsidian ---- */}
-        <div className="relative overflow-hidden border-b border-app">
-          {/* Fondo sutil del header: cockpit obsidian con overlay para legibilidad */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-[0.22]"
-            style={{ backgroundImage: "url(/taller/taller-hero.png)" }}
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(5,5,9,0.55) 0%, rgba(5,5,9,0.82) 70%, var(--color-void) 100%)",
-            }}
-          />
-          <div className="relative flex items-center justify-between gap-2 px-3 py-2.5 sm:px-5 sm:py-3">
+      <div className="overflow-hidden rounded-xl border border-[var(--border-1)] bg-white sm:rounded-2xl">
+        {/* ---- Barra del panel: blanca, borde gris, sin imagen de fondo ---- */}
+        <div className="border-b border-[var(--border-1)] bg-[var(--surface-1)]">
+          <div className="flex items-center justify-between gap-2 px-3 py-2.5 sm:px-5 sm:py-3">
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="h-2 w-2 rounded-full bg-error-crimson/70 sm:h-2.5 sm:w-2.5" />
-              <span className="h-2 w-2 rounded-full bg-yellow-400/70 sm:h-2.5 sm:w-2.5" />
-              <span className="h-2 w-2 rounded-full bg-success-emerald/70 sm:h-2.5 sm:w-2.5" />
+              <span className="h-2 w-2 rounded-full bg-[#b91c1c] sm:h-2.5 sm:w-2.5" />
+              <span className="h-2 w-2 rounded-full bg-[#b45309] sm:h-2.5 sm:w-2.5" />
+              <span className="h-2 w-2 rounded-full bg-[#15803d] sm:h-2.5 sm:w-2.5" />
             </div>
-            <div className="hidden truncate font-mono text-[10px] uppercase tracking-[0.14em] text-muted sm:block sm:text-[11px] sm:tracking-[0.18em]">
+            <div className="hidden truncate font-mono text-[12px] text-[var(--fg-muted)] sm:block">
               vforge://workspace/taller
             </div>
             <div
-              className={`flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] sm:text-[11px] sm:tracking-[0.18em] ${
-                live ? "text-violet-400" : "text-amber-300/80"
-              }`}
+              className="flex items-center gap-1.5 font-mono text-[12px] font-semibold uppercase"
+              style={{ color: live ? "#15803d" : "#b45309" }}
             >
               <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  live
-                    ? "bg-violet-400 shadow-[0_0_8px_rgba(34,211,238,0.7)]"
-                    : "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]"
-                }`}
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ background: live ? "#15803d" : "#b45309" }}
               />
-              {live ? "LIVE" : "OFFLINE"}
+              {live ? "EN VIVO" : "SIN SEÑAL"}
             </div>
           </div>
         </div>
@@ -112,16 +93,22 @@ export function TallerPanel({
         {/* ---- Cuerpo: 3 columnas ---- */}
         <div className="grid grid-cols-12 gap-0">
           {/* Columna 1 — nav lateral */}
-          <div className="col-span-3 hidden border-r border-app bg-tint-2/[0.08] p-4 md:block">
-            <p className="label-caps mb-3 text-muted">Taller</p>
+          <div className="col-span-3 hidden border-r border-[var(--border-1)] bg-[var(--surface-1)] p-4 md:block">
+            <p className="mb-3 text-[12px] font-medium text-[var(--fg-muted)]">Taller</p>
             {NAV_ITEMS.map((i) => (
               <div
                 key={i.label}
-                className={`mb-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm ${
+                className="mb-1 flex items-center gap-3 rounded-md border px-3 py-2 text-sm"
+                style={
                   i.active
-                    ? "bg-violet-500/15 text-violet-100 ring-1 ring-violet-500/30"
-                    : "text-on-surface-variant"
-                }`}
+                    ? {
+                        borderColor: "var(--vf-violet)",
+                        background: "var(--vf-violet-soft)",
+                        color: "var(--vf-violet-ink)",
+                        fontWeight: 550,
+                      }
+                    : { borderColor: "transparent", color: "var(--fg-secondary)" }
+                }
               >
                 <i.icon size={14} />
                 {i.label}
@@ -131,7 +118,7 @@ export function TallerPanel({
 
           {/* Columna 2 — actividad / conversación en vivo */}
           <div className="col-span-12 p-4 sm:p-5 md:col-span-6 md:p-7">
-            <p className="label-caps mb-4 text-muted">V · Operación en vivo</p>
+            <p className="mb-4 text-[12px] font-medium text-[var(--fg-muted)]">V · Operación en vivo</p>
 
             {loading ? (
               <div className="flex flex-col items-center justify-center gap-5 py-10">
@@ -150,19 +137,19 @@ export function TallerPanel({
                     ? "Relay en línea. Te dejo el estado vivo de los procesos y la actividad reciente del host."
                     : "No alcanzo el relay de Hetzner ahora mismo. Muestro lo último que tengo; reintentando en segundo plano."}
                   <ul className="mt-3 space-y-1.5 text-[13px]">
-                    <li className="flex items-center gap-2 text-on-surface">
-                      <IconCheck size={14} className={live ? "text-success-emerald" : "text-muted"} />
-                      <span className={live ? "" : "text-on-surface-variant"}>
+                    <li className="flex items-center gap-2 text-[var(--fg-primary)]">
+                      <IconCheck size={14} style={{ color: live ? "#15803d" : "var(--fg-muted)" }} />
+                      <span className={live ? "" : "text-[var(--fg-secondary)]"}>
                         Relay {live ? "respondiendo" : "sin respuesta"}
                       </span>
                     </li>
-                    <li className="flex items-center gap-2 text-on-surface">
+                    <li className="flex items-center gap-2 text-[var(--fg-primary)]">
                       {hasServices ? (
-                        <IconCheck size={14} className="text-success-emerald" />
+                        <IconCheck size={14} style={{ color: "#15803d" }} />
                       ) : (
-                        <IconActivity size={14} className="animate-pulse text-violet-400" />
+                        <IconActivity size={14} className="animate-pulse" style={{ color: "var(--vf-violet)" }} />
                       )}
-                      <span className={hasServices ? "" : "text-on-surface-variant"}>
+                      <span className={hasServices ? "" : "text-[var(--fg-secondary)]"}>
                         {hasServices
                           ? `${metrics.servicesOnline ?? 0}/${metrics.servicesTotal ?? services.length} procesos activos`
                           : "Leyendo procesos pm2…"}
@@ -172,10 +159,10 @@ export function TallerPanel({
                 </Bubble>
 
                 {/* Feed de actividad reciente */}
-                <div className="mt-5 rounded-lg border border-app-strong bg-tint-2/[0.08] p-3">
-                  <p className="label-caps mb-2 text-muted">Actividad reciente</p>
+                <div className="mt-5 rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] p-3">
+                  <p className="mb-2 text-[12px] font-medium text-[var(--fg-muted)]">Actividad reciente</p>
                   {events.length === 0 ? (
-                    <p className="py-2 text-[13px] text-on-surface-variant">
+                    <p className="py-2 text-[13px] text-[var(--fg-secondary)]">
                       Sin eventos recientes registrados.
                     </p>
                   ) : (
@@ -194,8 +181,8 @@ export function TallerPanel({
           </div>
 
           {/* Columna 3 — métricas de operación */}
-          <div className="col-span-12 border-t border-app p-4 sm:p-5 md:col-span-3 md:border-l md:border-t-0 md:p-6">
-            <p className="label-caps mb-4 text-muted">Métricas</p>
+          <div className="col-span-12 border-t border-[var(--border-1)] p-4 sm:p-5 md:col-span-3 md:border-l md:border-t-0 md:p-6">
+            <p className="mb-4 text-[12px] font-medium text-[var(--fg-muted)]">Métricas</p>
 
             {loading ? (
               <div className="space-y-3">
@@ -231,8 +218,8 @@ export function TallerPanel({
                 )}
 
                 {/* Lista de procesos en vivo */}
-                <div className="mt-5 rounded-md border border-app-strong bg-tint-2/[0.08] p-3">
-                  <p className="label-caps mb-2 text-muted">Procesos</p>
+                <div className="mt-5 rounded-md border border-[var(--border-1)] bg-[var(--surface-1)] p-3">
+                  <p className="mb-2 text-[12px] font-medium text-[var(--fg-muted)]">Procesos</p>
                   {!hasServices ? (
                     <div className="space-y-2 py-1">
                       <Skeleton className="h-3.5 w-full" />
@@ -244,17 +231,13 @@ export function TallerPanel({
                       return (
                         <div key={s.name} className="flex items-center gap-2 py-1 text-[12px]">
                           <span
-                            className={`h-1.5 w-1.5 flex-none rounded-full ${
-                              on
-                                ? "bg-success-emerald shadow-[0_0_6px_rgba(16,185,129,0.6)]"
-                                : "bg-amber-400"
-                            }`}
+                            className="h-1.5 w-1.5 flex-none rounded-full"
+                            style={{ background: on ? "#15803d" : "#b45309" }}
                           />
-                          <span className="truncate font-mono text-on-surface-variant">{s.name}</span>
+                          <span className="truncate font-mono text-[var(--fg-secondary)]">{s.name}</span>
                           <span
-                            className={`ml-auto font-mono text-[10px] uppercase ${
-                              on ? "text-success-emerald" : "text-amber-300"
-                            }`}
+                            className="ml-auto font-mono text-[12px] font-semibold uppercase"
+                            style={{ color: on ? "#15803d" : "#b45309" }}
                           >
                             {on ? "on" : s.status || "off"}
                           </span>
@@ -273,7 +256,7 @@ export function TallerPanel({
 }
 
 // ---------------------------------------------------------------------------
-// Subcomponentes (portados del chrome premium de OperatorPreview).
+// Subcomponentes del panel.
 // ---------------------------------------------------------------------------
 
 function Bubble({
@@ -291,14 +274,27 @@ function Bubble({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
-      className={`mb-3 max-w-[90%] rounded-xl border px-4 py-3 text-[14px] leading-relaxed ${
+      className="mb-3 max-w-[90%] rounded-xl border px-4 py-3 text-[14px] leading-relaxed"
+      style={
         isB
-          ? "ml-0 border-violet-500/20 bg-violet-500/[0.06] text-on-surface"
-          : "ml-auto border-app-strong bg-tint-1/[0.05] text-on-surface-variant"
-      }`}
+          ? {
+              marginLeft: 0,
+              borderColor: "var(--vf-violet)",
+              background: "var(--vf-violet-soft)",
+              color: "var(--fg-primary)",
+            }
+          : {
+              marginLeft: "auto",
+              borderColor: "var(--border-1)",
+              background: "var(--surface-1)",
+              color: "var(--fg-secondary)",
+            }
+      }
     >
       {isB && (
-        <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.2em] text-violet-300">V</p>
+        <p className="mb-1 font-mono text-[12px] font-semibold uppercase" style={{ color: "var(--vf-violet-ink)" }}>
+          V
+        </p>
       )}
       {children}
     </motion.div>
@@ -316,20 +312,15 @@ function Stat({
   hint: string;
   tone?: "default" | "cyan" | "violet";
 }) {
-  const dotClass =
-    tone === "cyan"
-      ? "bg-violet-400 shadow-[0_0_10px_rgba(34,211,238,0.6)]"
-      : tone === "violet"
-      ? "bg-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.6)]"
-      : "bg-success-emerald shadow-[0_0_10px_rgba(16,185,129,0.5)]";
+  const dotColor = tone === "default" ? "#15803d" : "var(--vf-violet)";
   return (
-    <div className="mb-3 flex items-center justify-between rounded-md border border-app bg-tint-1/[0.05] px-3 py-2.5">
+    <div className="mb-3 flex items-center justify-between rounded-md border border-[var(--border-1)] bg-[var(--surface-1)] px-3 py-2.5">
       <div>
-        <p className="label-caps text-muted">{label}</p>
-        <p className="font-display text-lg font-semibold text-on-surface">{value}</p>
+        <p className="text-[12px] font-medium text-[var(--fg-muted)]">{label}</p>
+        <p className="font-display text-lg font-semibold text-[var(--fg-primary)]">{value}</p>
       </div>
-      <div className="flex items-center gap-2 text-[11px] text-on-surface-variant">
-        <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
+      <div className="flex items-center gap-2 text-[12px] text-[var(--fg-secondary)]">
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: dotColor }} />
         {hint}
       </div>
     </div>
@@ -345,15 +336,10 @@ function ActivityItem({
   label: string;
   tone: "violet" | "cyan" | "emerald";
 }) {
-  const c =
-    tone === "violet"
-      ? "text-violet-300"
-      : tone === "cyan"
-      ? "text-violet-400"
-      : "text-success-emerald";
+  const c = tone === "emerald" ? "#15803d" : "var(--vf-violet-ink)";
   return (
-    <div className="flex items-center gap-2 py-1.5 text-[12px] text-on-surface-variant">
-      <Icon size={12} className={c} />
+    <div className="flex items-center gap-2 py-1.5 text-[12px] text-[var(--fg-secondary)]">
+      <Icon size={12} style={{ color: c }} />
       <span className="truncate font-mono">{label}</span>
     </div>
   );

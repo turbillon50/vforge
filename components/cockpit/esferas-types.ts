@@ -1,4 +1,4 @@
-/** Tipos compartidos del estado de las esferas Vulcano (cockpit / taller). */
+/** Tipos compartidos del estado de los agentes Vulcano (taller). */
 
 export type EsferaId = "claude" | "codex" | "grok" | "shell" | "browser";
 

@@ -1,9 +1,12 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { ForgeMark } from "@/components/brand/ForgeMark";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-/** V flotante para el CLIENTE — chat real seguro por tenant. Look premium + alma de hermana. */
+/** V flotante para el CLIENTE — chat real seguro por tenant.
+    Ley visual 2-oct-2026: panel blanco, borde gris fino, morado solo como
+    acento (botón, burbuja del usuario). Nada de esferas ni efectos de luz. */
 export function ClientV() {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([{ role: "assistant", content: "¿Qué onda, hermano? Soy V. Te ayudo a conectar, crear tu app y cobrar. ¿En qué le entramos?" }]);
@@ -40,58 +43,59 @@ export function ClientV() {
     <>
       {!open && (
         <button onClick={() => setOpen(true)} aria-label="Hablar con V"
-          className="fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full transition-transform hover:scale-105"
-          style={{ background: "radial-gradient(120% 120% at 30% 25%, #a78bfa, #7c3aed 60%, #4c1d95)", boxShadow: "0 10px 30px -8px rgba(124,58,237,0.6), inset 0 1px 0 rgba(255,255,255,0.3)" }}>
-          <span className="font-display text-[20px] font-bold text-white">V</span>
+          className="fixed bottom-5 right-5 z-[60] grid h-14 w-14 place-items-center rounded-full border-2 border-white bg-[var(--vf-violet)] transition-transform hover:scale-105 active:scale-95">
+          <ForgeMark size={20} className="text-white" />
         </button>
       )}
       {open && (
-        <div className="fixed bottom-5 right-5 z-[60] flex w-[min(92vw,390px)] flex-col overflow-hidden rounded-3xl"
-          style={{ height: "min(72vh,580px)", background: "rgba(10,8,16,0.97)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 30px 80px -20px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.05)", backdropFilter: "blur(18px)" }}>
+        <div className="fixed bottom-5 right-5 z-[60] flex w-[min(92vw,390px)] flex-col overflow-hidden rounded-2xl border border-[var(--border-1)] bg-white"
+          style={{ height: "min(72vh,580px)" }}>
           {/* Header */}
-          <div className="flex items-center gap-3 border-b border-white/[0.08] px-4 py-3">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg,#a78bfa,#7c3aed)" }}>
-              <span className="absolute inset-0 animate-pulse rounded-full" style={{ background: "rgba(124,58,237,0.35)" }} />
-              <span className="relative font-bold text-white">V</span>
+          <div className="flex items-center gap-3 border-b border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-3">
+            <div className="grid h-9 w-9 place-items-center rounded-full bg-[var(--vf-violet)]">
+              <ForgeMark size={14} className="text-white" />
             </div>
             <div className="flex-1">
-              <div className="text-[14px] font-semibold text-white">V</div>
-              <div className="flex items-center gap-1.5 text-[11px] text-emerald-400">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" /> En línea · tu hermana IA
+              <div className="text-[14px] font-semibold text-[var(--fg-primary)]">V</div>
+              <div className="flex items-center gap-1.5 text-[12px] text-[#15803d]">
+                <span className="h-2 w-2 rounded-full bg-[#15803d]" /> En línea · tu hermana IA
               </div>
             </div>
-            <button onClick={() => setOpen(false)} className="text-[18px] leading-none text-white/40 hover:text-white/70">×</button>
+            <button onClick={() => setOpen(false)} aria-label="Cerrar"
+              className="grid h-8 w-8 place-items-center rounded-lg text-[18px] leading-none text-[var(--fg-muted)] hover:bg-white hover:text-[var(--fg-primary)]">×</button>
           </div>
           {/* Mensajes */}
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
             {msgs.map((m, i) => (
               m.role === "assistant" ? (
                 <div key={i} className="flex gap-2.5">
-                  <div className="mt-0.5 h-7 w-7 flex-shrink-0 rounded-full" style={{ background: "linear-gradient(135deg,#a78bfa,#7c3aed)" }} />
-                  <div className="max-w-[82%] rounded-3xl border border-white/[0.08] bg-white/[0.06] px-4 py-2.5 text-[13.5px] leading-relaxed text-white/90 backdrop-blur-md">{m.content}</div>
+                  <div className="mt-0.5 grid h-7 w-7 flex-shrink-0 place-items-center rounded-full bg-[var(--vf-violet)]">
+                    <ForgeMark size={11} className="text-white" />
+                  </div>
+                  <div className="max-w-[82%] rounded-2xl border border-[var(--border-1)] bg-[var(--surface-1)] px-4 py-2.5 text-[14px] leading-relaxed text-[var(--fg-primary)]">{m.content}</div>
                 </div>
               ) : (
                 <div key={i} className="flex justify-end">
-                  <div className="max-w-[82%] rounded-3xl px-4 py-2.5 text-[13.5px] leading-relaxed text-white" style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}>{m.content}</div>
+                  <div className="max-w-[82%] rounded-2xl bg-[var(--vf-violet)] px-4 py-2.5 text-[14px] leading-relaxed text-white">{m.content}</div>
                 </div>
               )
             ))}
             {msgs.length <= 1 && !busy && (
               <div className="flex flex-wrap gap-2 pl-9">
                 {["¿Cómo creo mi app?", "Conectar mi Stripe", "¿Qué puedo hacer aquí?"].map((q) => (
-                  <button key={q} onClick={() => send(q)} className="rounded-full border px-3 py-1.5 text-[12px] transition-colors" style={{ background: "rgba(124,58,237,0.12)", borderColor: "rgba(124,58,237,0.32)", color: "#c4b5fd" }}>{q}</button>
+                  <button key={q} onClick={() => send(q)} className="rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors hover:bg-[var(--vf-violet-soft)]" style={{ borderColor: "var(--vf-violet)", background: "#ffffff", color: "var(--vf-violet-ink)" }}>{q}</button>
                 ))}
               </div>
             )}
-            {busy && <div className="pl-9 text-[12px] text-white/40">V está pensando…</div>}
+            {busy && <div className="pl-9 text-[12px] text-[var(--fg-muted)]">V está pensando…</div>}
             <div ref={endRef} />
           </div>
           {/* Input */}
-          <div className="border-t border-white/[0.08] p-3">
+          <div className="border-t border-[var(--border-1)] bg-[var(--surface-1)] p-3">
             <div className="flex gap-2">
               <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Pregúntale algo a V…" autoFocus
-                className="flex-1 rounded-2xl border border-white/[0.1] bg-white/[0.06] px-4 py-2.5 text-[13.5px] text-white placeholder-white/40 outline-none focus:border-[rgba(124,58,237,0.5)]" />
-              <button onClick={() => send()} disabled={busy || !input.trim()} className="rounded-2xl px-5 text-[13px] font-semibold text-white transition-transform hover:scale-105 disabled:opacity-50" style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}>Enviar</button>
+                className="flex-1 rounded-xl border border-[var(--border-1)] bg-white px-4 py-2.5 text-[14px] text-[var(--fg-primary)] placeholder-[var(--fg-muted)] outline-none focus:border-[var(--vf-violet)]" />
+              <button onClick={() => send()} disabled={busy || !input.trim()} className="rounded-xl bg-[var(--vf-violet)] px-5 text-[13px] font-semibold text-white transition-colors hover:bg-[var(--vf-violet-strong)] disabled:opacity-50">Enviar</button>
             </div>
           </div>
         </div>

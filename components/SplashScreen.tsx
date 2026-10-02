@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { VMark } from "@/components/brand/VMark";
+import { ForgeWordmark } from "@/components/brand/ForgeMark";
 
 const SPLASH_KEY = "vf-monochrome-splash-v1";
 
@@ -53,12 +53,21 @@ export default function SplashScreen() {
             initial={{ opacity: 0, y: 3 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className="flex items-center gap-3"
+            className="flex flex-col items-center gap-5"
           >
-            <VMark size={30} />
-            <span className="font-display text-[20px] font-semibold tracking-[-0.04em]">
-              VForge
-            </span>
+            {/* Logo aprobado VForge: triángulo invertido + FORGE tracking amplio */}
+            <ForgeWordmark size={22} tracking="0.34em" />
+            <motion.span
+              aria-hidden="true"
+              className="block h-[2px] w-24 overflow-hidden rounded-full bg-[#ede9fe]"
+            >
+              <motion.span
+                className="block h-full w-1/3 rounded-full bg-[#7c3aed]"
+                initial={{ x: "-100%" }}
+                animate={{ x: "300%" }}
+                transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </motion.span>
           </motion.div>
         </motion.div>
       ) : null}

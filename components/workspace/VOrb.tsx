@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { IconChats, IconCpu, IconMic, IconGlobe, IconWorkflow } from "@/components/brand/VFIcons";
+import { ForgeMark } from "@/components/brand/ForgeMark";
 
-// Accesos FIJOS de la burbuja de V — iguales en toda la app.
+// Accesos FIJOS del botón flotante de V — iguales en toda la app.
 // Taller (sala de máquinas) y Blueprint (editor de flujos) siempre primero.
 const ITEMS = [
   { label: "Taller", Icon: IconCpu, href: "/app/taller", primary: true },
@@ -15,7 +16,7 @@ const ITEMS = [
   { label: "Navegador", Icon: IconGlobe, href: "/app/vulcano" },
 ];
 
-const ORB = 56;
+const BOTON = 56;
 const GAP = 12;
 const LONG_PRESS_MS = 400;
 
@@ -23,17 +24,17 @@ function avoidCollision(p: { x: number; y: number }): { x: number; y: number } {
   if (typeof window === "undefined") return p;
   let { x, y } = p;
   // Clamp dentro del viewport
-  x = Math.max(8, Math.min(window.innerWidth - ORB - 8, x));
-  y = Math.max(8, Math.min(window.innerHeight - ORB - 8, y));
+  x = Math.max(8, Math.min(window.innerWidth - BOTON - 8, x));
+  y = Math.max(8, Math.min(window.innerHeight - BOTON - 8, y));
   // Solo evitar elementos visibles que realmente colisionan (ej: MobileNav, composer del chat)
   const els = document.querySelectorAll<HTMLElement>("[data-vorb-avoid]");
   for (const el of Array.from(els)) {
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) continue;
-    // Solo evitar si el centro de la esfera está dentro del elemento
-    const cx = x + ORB / 2, cy = y + ORB / 2;
+    // Solo evitar si el centro del botón está dentro del elemento
+    const cx = x + BOTON / 2, cy = y + BOTON / 2;
     const inside = cx > r.left && cx < r.right && cy > r.top && cy < r.bottom;
-    if (inside) y = Math.max(8, r.top - ORB - GAP);
+    if (inside) y = Math.max(8, r.top - BOTON - GAP);
   }
   return { x, y };
 }
@@ -79,11 +80,11 @@ export function VOrb() {
 
   useEffect(() => {
     // Posición inicial: esquina inferior derecha, con espacio para el MobileNav en móvil.
-    // En el chat SIEMPRE pegada a la franja inferior, encima del composer (nunca sobre el texto).
+    // En el chat SIEMPRE pegado a la franja inferior, encima del composer (nunca sobre el texto).
     const mobile = window.matchMedia("(max-width: 767px)").matches;
     const onChat = window.location.pathname.startsWith("/app/chat");
     const bottomGap = onChat ? 96 : mobile ? 90 : 28; // chat: arriba del composer; móvil: sobre el nav
-    const bottomLockedY = window.innerHeight - ORB - bottomGap;
+    const bottomLockedY = window.innerHeight - BOTON - bottomGap;
     const defaultPos = { x: window.innerWidth - 76, y: bottomLockedY };
     try {
       const s = localStorage.getItem("vorb_pos_v3");
@@ -91,8 +92,8 @@ export function VOrb() {
         const saved = JSON.parse(s);
         // Validar que la posición guardada esté dentro del viewport actual
         if (saved.x >= 0 && saved.x < window.innerWidth && saved.y >= 0 && saved.y < window.innerHeight) {
-          // Respetar la posicion libre donde el usuario dejo la esfera (tambien en el
-          // chat). avoidCollision solo evita que tape el composer/nav, no la clava.
+          // Respetar la posicion libre donde el usuario dejo el boton (tambien en el
+          // chat). avoidCollision solo evita que tape el composer/nav, no lo clava.
           setPos(avoidCollision(saved));
           return;
         }
@@ -101,12 +102,12 @@ export function VOrb() {
     setPos(defaultPos);
   }, []);
 
-  // Al entrar/cambiar a /app/chat, anclar la esfera a la franja inferior (nunca sobre el texto).
-  // El VOrb se monta una vez en el shell, así que este efecto reactiva el anclaje al navegar.
+  // Al entrar/cambiar a /app/chat, anclar el botón a la franja inferior (nunca sobre el texto).
+  // Se monta una vez en el shell, así que este efecto reactiva el anclaje al navegar.
   useEffect(() => {
     const onChat = pathname?.startsWith("/app/chat") ?? false;
     if (!onChat) return;
-    // Al entrar al chat NO clavamos la esfera abajo: respetamos su posicion libre,
+    // Al entrar al chat NO clavamos el boton abajo: respetamos su posicion libre,
     // solo evitamos que tape el composer/nav si justo cae encima.
     setPos((p) => (p.x < 0 ? p : avoidCollision(p)));
   }, [pathname]);
@@ -120,8 +121,8 @@ export function VOrb() {
         if (drag.current) return;
         // Solo re-clamp en resize, sin perseguir cambios de DOM (evita el salto)
         const clamped = {
-          x: Math.max(8, Math.min(window.innerWidth - ORB - 8, pos.x)),
-          y: Math.max(8, Math.min(window.innerHeight - ORB - 8, pos.y)),
+          x: Math.max(8, Math.min(window.innerWidth - BOTON - 8, pos.x)),
+          y: Math.max(8, Math.min(window.innerHeight - BOTON - 8, pos.y)),
         };
         if (clamped.x !== pos.x || clamped.y !== pos.y) setPos(clamped);
       });
@@ -237,7 +238,7 @@ export function VOrb() {
     router.push("/app/chat");
   }
 
-  // ── Gestos del orbe: tap = menú · long-press = dictado · drag = mover ──
+  // ── Gestos del botón: tap = menú · long-press = dictado · drag = mover ──
   function down(e: React.PointerEvent) {
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     drag.current = { moved: false, sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y };
@@ -254,7 +255,7 @@ export function VOrb() {
   }
   function move(e: React.PointerEvent) {
     const d = drag.current; if (!d) return;
-    // Mientras graba, el orbe no se arrastra (el dedo se mueve poco al hablar)
+    // Mientras graba, el boton no se arrastra (el dedo se mueve poco al hablar)
     if (recordingRef.current || longPressFired.current) return;
     const dx = e.clientX - d.sx, dy = e.clientY - d.sy;
     if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
@@ -281,9 +282,9 @@ export function VOrb() {
     if (!d.moved) {
       setOpen((o) => !o);
     } else {
-      // Caso 3: arrastre → la esfera se queda LIBRE donde el usuario la solto.
+      // Caso 3: arrastre → el boton se queda LIBRE donde el usuario lo solto.
       // Sin snap a esquinas ni franja inferior forzada. avoidCollision solo hace
-      // clamp al viewport y la sube si justo cae sobre el composer/nav.
+      // clamp al viewport y lo sube si justo cae sobre el composer/nav.
       const np = avoidCollision({ x: pos.x, y: pos.y });
       setPos(np);
       try { localStorage.setItem("vorb_pos_v3", JSON.stringify(np)); } catch {}
@@ -291,14 +292,14 @@ export function VOrb() {
     drag.current = null;
   }
 
-  // El VOrb se queda visible en TODA la app, incluido /app/chat.
-  // Solo se oculta en el home (/app/home) y la raíz (/app), donde la esfera de V
-  // ya es la protagonista del hero y un flotante sería redundante.
+  // El botón de V se queda visible en TODA la app, incluido /app/chat.
+  // Solo se oculta en el home (/app/home) y la raíz (/app), donde V ya es la
+  // protagonista del hero y un flotante sería redundante.
   const HIDE_ON = ["/app/home"];
   if (pathname === "/app" || HIDE_ON.some((p) => pathname?.startsWith(p))) return null;
   if (pos.x < 0) return null;
   const onLeft = pos.x + 28 < (typeof window !== "undefined" ? window.innerWidth / 2 : 200);
-  // Solo en el chat la esfera se encoge al scrollear/leer; nunca mientras graba.
+  // Solo en el chat el botón se encoge al scrollear/leer; nunca mientras graba.
   const inChat = pathname?.startsWith("/app/chat") ?? false;
   const shrink = inChat && scrolling && !open && !recording && !transcribing;
 
@@ -320,7 +321,7 @@ export function VOrb() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] bg-black/30"
             aria-hidden
           />
         )}
@@ -332,26 +333,20 @@ export function VOrb() {
               key="vorb-menu"
               role="menu"
               aria-label="V — Menú"
-              initial={{ opacity: 0, y: 14, scale: 0.95 }}
+              initial={{ opacity: 0, y: 14, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 14, scale: 0.95 }}
+              exit={{ opacity: 0, y: 14, scale: 0.97 }}
               transition={{ type: "spring", stiffness: 420, damping: 32 }}
-              style={{
-                transformOrigin: onLeft ? "bottom left" : "bottom right",
-                background: "rgba(10,8,20,0.85)",
-                border: "1px solid rgba(255,255,255,0.10)",
-                borderRadius: 20,
-                boxShadow:
-                  "0 28px 90px rgba(0,0,0,0.72), 0 0 0 1px rgba(124,58,237,0.12), inset 0 1px 0 rgba(255,255,255,0.06)",
-                backdropFilter: "blur(24px) saturate(1.4)",
-                WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-              }}
-              className={"absolute bottom-[72px] flex w-64 flex-col gap-1 p-2.5 " + (onLeft ? "left-0" : "right-0")}
+              style={{ transformOrigin: onLeft ? "bottom left" : "bottom right" }}
+              className={
+                "absolute bottom-[72px] flex w-64 flex-col gap-1 rounded-2xl border border-[var(--border-1)] bg-white p-2.5 " +
+                (onLeft ? "left-0" : "right-0")
+              }
             >
               {/* Header del menú */}
               <div className="mb-1 flex items-center gap-2 px-2.5 py-1.5">
-                <div className="vorb-menu-dot" />
-                <span className="text-[11px] font-semibold tracking-widest text-violet-300/60 uppercase">V — Menú</span>
+                <ForgeMark size={12} className="text-[var(--vf-violet)]" />
+                <span className="text-[12px] font-semibold text-[var(--fg-muted)]">V — Menú</span>
               </div>
               {ITEMS.map((it, i) => {
                 const active = isActive(it.href);
@@ -364,46 +359,44 @@ export function VOrb() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.05 + i * 0.05, type: "spring", stiffness: 480, damping: 30 }}
                     whileTap={{ scale: 0.97 }}
-                    style={{
-                      borderRadius: 14,
-                      border: active
-                        ? "1px solid rgba(124,58,237,0.55)"
-                        : "1px solid rgba(255,255,255,0.06)",
-                      background: active
-                        ? "linear-gradient(90deg, rgba(124,58,237,0.28), rgba(34,211,238,0.10))"
-                        : "rgba(255,255,255,0.025)",
-                    }}
-                    className="group flex items-center gap-3 px-2.5 py-2 text-sm font-medium text-[var(--fg-primary)] transition-colors hover:bg-white/[0.07]"
+                    style={
+                      active
+                        ? {
+                            borderColor: "var(--vf-violet)",
+                            background: "var(--vf-violet-soft)",
+                          }
+                        : undefined
+                    }
+                    className="group flex items-center gap-3 rounded-xl border border-transparent px-2.5 py-2 text-sm font-medium text-[var(--fg-primary)] transition-colors hover:border-[var(--border-1)] hover:bg-[var(--surface-1)]"
                   >
-                    {/* Ícono en círculo con glow violeta */}
                     <span
                       aria-hidden
-                      className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                      style={{
-                        background: active
-                          ? "radial-gradient(circle at 50% 40%, rgba(124,58,237,0.55), rgba(34,211,238,0.18))"
-                          : "radial-gradient(circle at 50% 40%, rgba(124,58,237,0.30), rgba(20,12,40,0.5))",
-                        border: "1px solid rgba(255,255,255,0.10)",
-                        boxShadow: active
-                          ? "0 0 14px rgba(124,58,237,0.55), inset 0 1px 0 rgba(255,255,255,0.14)"
-                          : "0 0 10px rgba(124,58,237,0.22), inset 0 1px 0 rgba(255,255,255,0.08)",
-                      }}
+                      className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)]"
                     >
-                      <it.Icon size={15} className={active ? "text-violet-200" : "text-violet-200/85"} />
+                      <it.Icon
+                        size={15}
+                        style={{ color: active ? "var(--vf-violet-ink)" : "var(--fg-secondary)" }}
+                      />
                     </span>
                     <span className="flex-1 text-left">{it.label}</span>
                     {it.primary && (
-                      <span className="rounded-md bg-violet-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-violet-300">
+                      <span
+                        className="rounded-md border px-1.5 py-0.5 text-[11px] font-semibold uppercase"
+                        style={{ borderColor: "#15803d", color: "#15803d" }}
+                      >
                         Live
                       </span>
                     )}
                     {active && !it.primary && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(124,58,237,0.9)]" />
+                      <span
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ background: "var(--vf-violet)" }}
+                      />
                     )}
                   </motion.button>
                 );
               })}
-              {/* Divider + share */}
+              {/* Divider + compartir */}
               <div className="mt-1.5 border-t border-[var(--border-1)] pt-1.5">
                 <motion.button
                   onClick={() => {
@@ -418,17 +411,11 @@ export function VOrb() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.05 + ITEMS.length * 0.05, type: "spring", stiffness: 480, damping: 30 }}
                   whileTap={{ scale: 0.97 }}
-                  style={{ borderRadius: 14, border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.025)" }}
-                  className="group flex w-full items-center gap-3 px-2.5 py-2 text-sm font-medium text-[var(--fg-secondary)] transition-colors hover:bg-white/[0.07] hover:text-[var(--fg-primary)]"
+                  className="group flex w-full items-center gap-3 rounded-xl border border-transparent px-2.5 py-2 text-sm font-medium text-[var(--fg-secondary)] transition-colors hover:border-[var(--border-1)] hover:bg-[var(--surface-1)] hover:text-[var(--fg-primary)]"
                 >
                   <span
                     aria-hidden
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-violet-300"
-                    style={{
-                      background: "radial-gradient(circle at 50% 40%, rgba(34,211,238,0.28), rgba(20,12,40,0.5))",
-                      border: "1px solid rgba(255,255,255,0.10)",
-                      boxShadow: "0 0 10px rgba(34,211,238,0.20), inset 0 1px 0 rgba(255,255,255,0.08)",
-                    }}
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[var(--border-1)] bg-[var(--surface-1)] text-[var(--fg-secondary)]"
                   >
                     ⇧
                   </span>
@@ -447,13 +434,13 @@ export function VOrb() {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
-              className={"absolute bottom-[72px] whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold tracking-wide " + (onLeft ? "left-0" : "right-0")}
+              className={
+                "absolute bottom-[72px] whitespace-nowrap rounded-full border bg-white px-3 py-1.5 text-[12px] font-semibold " +
+                (onLeft ? "left-0" : "right-0")
+              }
               style={{
-                background: "rgba(10,8,20,0.9)",
-                border: "1px solid rgba(255,255,255,0.10)",
-                color: recording ? "#fca5a5" : "#67e8f9",
-                backdropFilter: "blur(16px)",
-                WebkitBackdropFilter: "blur(16px)",
+                borderColor: recording ? "#b91c1c" : "var(--vf-violet)",
+                color: recording ? "#b91c1c" : "var(--vf-violet-ink)",
               }}
             >
               {recording ? "● Grabando… suelta para enviar" : "Transcribiendo…"}
@@ -461,7 +448,7 @@ export function VOrb() {
           )}
         </AnimatePresence>
 
-        {/* ESFERA V — cristal con Higgsfield */}
+        {/* Botón de V — morado plano, el único acento. Sin efectos decorativos. */}
         <button
           onPointerDown={down}
           onPointerMove={move}
@@ -469,124 +456,22 @@ export function VOrb() {
           aria-label={recording ? "Grabando voz — suelta para enviar" : "V"}
           style={{
             touchAction: "none",
-            // En el chat: al scrollear/leer la esfera se aparta discreta (40%).
+            // En el chat: al scrollear/leer el botón se aparta discreto (40%).
             // Al grabar/transcribir nunca se encoge.
             transform: recording ? "scale(1.12)" : shrink ? "scale(0.4)" : open ? "scale(1.08)" : "scale(1)",
             opacity: shrink ? 0.4 : 1,
             transition: "transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease",
+            background: recording ? "#b91c1c" : "var(--vf-violet)",
           }}
-          className={
-            "vorb-crystal relative h-14 w-14 cursor-grab rounded-full active:scale-95 " +
-            (open ? "vorb-open " : "") +
-            (recording ? "vorb-recording " : "") +
-            (transcribing ? "vorb-transcribing " : "")
-          }
+          className="grid h-14 w-14 cursor-grab place-items-center rounded-full border-2 border-white text-white active:scale-95"
         >
-          {/* Ondas de grabación */}
-          {recording && (
-            <>
-              <span aria-hidden className="vorb-wave" />
-              <span aria-hidden className="vorb-wave vorb-wave-2" />
-            </>
-          )}
-          {/* Capa base: imagen Higgsfield como textura de cristal */}
-          <span aria-hidden className="vorb-crystal-bg" />
-          {/* Anillo exterior giratorio */}
-          <span aria-hidden className="vorb-crystal-ring" />
-          {/* Capa glassmorphism encima */}
-          <span aria-hidden className="vorb-crystal-glass" />
-          {/* Reflejo especular */}
-          <span aria-hidden className="vorb-crystal-gloss" />
-          {/* Halo de energía */}
-          <span aria-hidden className="vorb-crystal-halo" />
-          {/* Chispa */}
-          <span aria-hidden className="vorb-crystal-spark" />
-          {/* Núcleo de micrófono mientras graba */}
-          {recording && (
-            <span aria-hidden className="vorb-mic-core">
-              <IconMic size={18} className="text-white drop-shadow-[0_0_6px_rgba(239,68,68,0.9)]" />
-            </span>
+          {recording ? (
+            <IconMic size={20} />
+          ) : (
+            <ForgeMark size={20} className="text-white" />
           )}
         </button>
       </div>
-
-      <style>{`
-@keyframes vorbIn{from{opacity:0;transform:translateY(10px) scale(0.96)}to{opacity:1;transform:none}}
-@keyframes vorbSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-@keyframes vorbBreath{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.3);opacity:.9}}
-@keyframes vorbHue{0%,100%{filter:hue-rotate(0deg) saturate(1.2)}40%{filter:hue-rotate(-30deg) saturate(1.5)}70%{filter:hue-rotate(20deg) saturate(1.3)}}
-@keyframes vorbGloss{0%,100%{opacity:.4;transform:translate(-20%,-20%) scale(.85)}50%{opacity:.85;transform:translate(-12%,-14%) scale(1.1)}}
-@keyframes vorbSpark{0%,85%,100%{opacity:0;transform:scale(.5)}90%{opacity:.9;transform:scale(1.2)}95%{opacity:.2}}
-@keyframes vorbRec{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.55),0 12px 40px rgba(239,68,68,.4),0 0 60px rgba(124,58,237,.35)}50%{box-shadow:0 0 0 10px rgba(239,68,68,0),0 12px 40px rgba(239,68,68,.55),0 0 80px rgba(124,58,237,.6)}}
-@keyframes vorbWave{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.1);opacity:0}}
-
-.vorb-menu-dot{width:6px;height:6px;border-radius:9999px;background:radial-gradient(circle,#8b5cf6,#7c3aed);box-shadow:0 0 8px #8b5cf680}
-
-.vorb-crystal{
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.12) inset,
-    0 12px 40px rgba(124,58,237,0.6),
-    0 0 80px rgba(124,58,237,0.25),
-    0 2px 8px rgba(0,0,0,0.8);
-}
-.vorb-crystal-bg{
-  position:absolute;inset:0;border-radius:9999px;overflow:hidden;
-  background-image:url('https://d8j0ntlcm91z4.cloudfront.net/user_3DDb66hXpSaWG4DmoX3Ae5V2dqt/hf_20260608_082007_063c8411-35b1-4eb4-a5b3-bc7c5bd62f50.png');
-  background-size:300%;
-  background-position:35% 30%;
-  animation:vorbHue 8s ease-in-out infinite;
-}
-.vorb-crystal-ring{
-  position:absolute;inset:-3px;border-radius:9999px;
-  background:conic-gradient(from 0deg,rgba(124,58,237,0.9),rgba(34,211,238,0.8),rgba(167,139,250,0.7),rgba(255,255,255,0.5),rgba(124,58,237,0.9));
-  animation:vorbSpin 4s linear infinite;
-  mask:radial-gradient(circle,transparent 88%,black 100%);
-  -webkit-mask:radial-gradient(circle,transparent 88%,black 100%);
-}
-.vorb-crystal-glass{
-  position:absolute;inset:2px;border-radius:9999px;
-  background:radial-gradient(circle at 50% 50%, rgba(124,58,237,0.15) 0%, rgba(20,10,40,0.3) 60%, rgba(0,0,0,0.1) 100%);
-  backdrop-filter:blur(2px);
-  border:1px solid rgba(255,255,255,0.08);
-}
-.vorb-crystal-gloss{
-  position:absolute;inset:5px;border-radius:9999px;
-  background:radial-gradient(ellipse at 30% 25%, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.4) 25%, transparent 55%);
-  mix-blend-mode:screen;
-  animation:vorbGloss 4s ease-in-out infinite;
-}
-.vorb-crystal-halo{
-  position:absolute;inset:-12px;border-radius:9999px;
-  background:radial-gradient(circle,rgba(124,58,237,0.5),rgba(34,211,238,0.2) 50%,transparent 70%);
-  filter:blur(10px);
-  animation:vorbBreath 3s ease-in-out infinite;
-  pointer-events:none;
-}
-.vorb-crystal-spark{
-  position:absolute;inset:8px;border-radius:9999px;
-  background:radial-gradient(circle at 65% 65%, rgba(255,255,255,0.95), rgba(34,211,238,0.5) 30%, transparent 55%);
-  mix-blend-mode:screen;
-  animation:vorbSpark 6s ease-in-out infinite;
-}
-.vorb-open .vorb-crystal-ring{animation-duration:1.5s}
-.vorb-open .vorb-crystal-halo{animation-duration:1.2s;opacity:1.2}
-
-/* Estado grabando: pulso rojo/violeta + ondas + giro acelerado */
-.vorb-recording{animation:vorbRec 1.1s ease-out infinite}
-.vorb-recording .vorb-crystal-ring{animation-duration:0.9s}
-.vorb-recording .vorb-crystal-halo{animation-duration:0.9s;background:radial-gradient(circle,rgba(239,68,68,0.5),rgba(124,58,237,0.3) 50%,transparent 70%)}
-.vorb-transcribing .vorb-crystal-ring{animation-duration:0.6s}
-.vorb-wave{
-  position:absolute;inset:0;border-radius:9999px;pointer-events:none;
-  border:2px solid rgba(239,68,68,0.5);
-  animation:vorbWave 1.4s ease-out infinite;
-}
-.vorb-wave-2{animation-delay:0.7s;border-color:rgba(124,58,237,0.5)}
-.vorb-mic-core{
-  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  z-index:2;pointer-events:none;
-}
-`}</style>
     </>
   );
 }

@@ -11,15 +11,14 @@ import {
   IconBoxes,
   IconCpu,
   IconFactory,
-  IconHammer,
   IconHilo,
   IconHome,
   IconLayers,
   IconMenu,
+  IconMic,
   IconSettings,
   IconUsers,
   IconPlug,
-  IconTrio,
   IconX,
 } from "@/components/brand/VFIcons";
 import { monochromeClerkAppearance } from "@/components/auth/ClerkShell";
@@ -42,64 +41,10 @@ type NavItem = {
 
 const PRIMARY_NAV: NavItem[] = [
   {
-    href: "/app/chat",
-    label: "Construir",
-    description: "Chat, herramientas y preview",
-    Icon: IconHammer,
-  },
-  {
-    href: "/app/trio",
-    label: "Trío",
-    description: "Claude, ChatGPT y V en paralelo",
-    Icon: IconTrio,
-  },
-  {
-    href: "/app/projects",
-    label: "Proyectos",
-    description: "Salas y viewports",
-    Icon: IconLayers,
-  },
-  {
-    href: "/app/demos",
-    label: "Demos",
-    description: "Catalogo reutilizable",
-    Icon: IconBoxes,
-  },
-  {
-    href: "/app/activity",
-    label: "Actividad",
-    description: "Eventos del sistema",
-    Icon: IconActivity,
-  },
-  {
-    href: "/app/hilo",
-    label: "Hilo",
-    description: "WhatsApp en solo lectura",
-    Icon: IconHilo,
-  },
-  {
-    href: "/app/tablero",
-    label: "Tablero",
-    description: "Agentes y avance en vivo",
-    Icon: IconCpu,
-  },
-  {
-    href: "/app/fabrica",
-    label: "Fábrica",
-    description: "La casa en vivo: alianza, V-Trading y Brain",
-    Icon: IconFactory,
-  },
-  {
-    href: "/app/integrations",
-    label: "Conexiones",
-    description: "GitHub, Vercel y servicios",
-    Icon: IconPlug,
-  },
-  {
-    href: "/app/admin",
-    label: "Administración",
-    description: "Usuarios y permisos",
-    Icon: IconUsers,
+    href: "/app/hablar",
+    label: "V",
+    description: "Plática, manos, memoria, colectivo y encargos en una sola pantalla",
+    Icon: IconMic,
   },
 ];
 
@@ -107,6 +52,8 @@ const TITLES: Record<string, string> = {
   "/app/chat": "Estudio",
   "/app/home": "Estudio",
   "/app/trio": "Trío",
+  "/app/colectivo": "Colectivo",
+  "/app/hablar": "V",
   "/app/projects": "Proyectos",
   "/app/demos": "Demos",
   "/app/activity": "Actividad",
@@ -199,7 +146,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isStudio = pathname === "/app/chat";
   const isFixedWorkspace =
-    isStudio || pathname === "/app/trio" || pathname === "/forge" || pathname === "/v";
+    isStudio || pathname === "/app/trio" || pathname === "/app/colectivo" || pathname === "/app/hablar" || pathname === "/forge" || pathname === "/v";
   const isSetup = pathname.startsWith("/app/setup");
   const isLive = pathname.startsWith("/app/live/");
 
@@ -300,7 +247,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
               contenido. Al ser una franja del shell, el Estudio se encoge solo
               (main es flex-1) y nunca queda nada tapado. */}
           <LimiteDeError nombre="OwnerPushBanner">
-            <OwnerPushBanner />
+            {pathname !== "/app/colectivo" && pathname !== "/app/hablar" && <OwnerPushBanner />}
           </LimiteDeError>
 
           <main

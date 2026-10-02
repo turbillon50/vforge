@@ -10,32 +10,28 @@ import type {
   GrokVerdict,
 } from "@/components/cockpit/esferas-types";
 
-const HUE: Record<string, string> = {
-  claude: "#a78bfa",
-  codex: "#8b5cf6",
-  grok: "#f472b6",
-  shell: "#34d399",
-  browser: "#38bdf8",
-};
+/* Ley visual 2-oct-2026: morado solo como acento; los estados van en tono
+   oscuro para leerse sobre blanco. */
+const VIOLET_INK = "#5b21b6";
 
 const VERDICT_HUE: Record<GrokVerdict, string> = {
-  APROBADO: "#34d399",
-  RECHAZADO: "#f87171",
-  REVISION: "#fbbf24",
+  APROBADO: "#15803d",
+  RECHAZADO: "#b91c1c",
+  REVISION: "#b45309",
 };
 
 const STATUS_HUE: Record<string, string> = {
-  running: "#34d399",
-  active: "#34d399",
-  in_progress: "#34d399",
-  pending: "#fbbf24",
-  queued: "#fbbf24",
-  done: "#8b5cf6",
-  failed: "#f87171",
-  error: "#f87171",
+  running: "#15803d",
+  active: "#15803d",
+  in_progress: "#15803d",
+  pending: "#b45309",
+  queued: "#b45309",
+  done: VIOLET_INK,
+  failed: "#b91c1c",
+  error: "#b91c1c",
 };
 
-/** Objetivo del popup: un job corriendo, o una esfera de agente. */
+/** Objetivo de la ficha: una tarea corriendo, o un agente. */
 export type DetailTarget =
   | { kind: "job"; job: ActiveJob }
   | { kind: "agent"; esfera: EsferaState };
@@ -55,7 +51,7 @@ function elapsed(iso: string | null, now: number): string {
   return `${s}s`;
 }
 
-/** "hace N días/h/min" para el último job en reposo. */
+/** "hace N días/h/min" para la última tarea cerrada. */
 function agoLabel(iso: string | null, now: number): string | null {
   if (!iso) return null;
   const t = Date.parse(iso);
@@ -72,16 +68,16 @@ function agoLabel(iso: string | null, now: number): string | null {
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-3 border-t border-[var(--border-1)] py-2.5">
-      <span className="label-caps flex-none pt-0.5 text-[10px] text-muted">{label}</span>
-      <span className="min-w-0 text-right text-[13px] text-on-surface">{value}</span>
+      <span className="flex-none pt-0.5 text-[12px] font-medium text-[var(--fg-muted)]">{label}</span>
+      <span className="min-w-0 text-right text-[13px] text-[var(--fg-primary)]">{value}</span>
     </div>
   );
 }
 
 /**
- * Popup de detalle de una esfera (job o agente). Mobile-first: bottom-sheet en
- * móvil, tarjeta centrada en desktop. Datos REALES de dispatch_queue vía el
- * payload del cockpit — CERO mock. Cierre por backdrop, botón ✕ o Esc.
+ * Ficha de detalle de una tarea o de un agente. Mobile-first: hoja inferior en
+ * móvil, tarjeta centrada en escritorio. Datos REALES de dispatch_queue — CERO
+ * mock. Cierre por fondo, botón ✕ o Esc.
  */
 export function EsferaDetail({
   target,
@@ -103,7 +99,6 @@ export function EsferaDetail({
 
   // Normaliza job/agente a un modelo común para el render.
   const agentId = target.kind === "job" ? target.job.agent : target.esfera.id;
-  const hue = (agentId && HUE[agentId]) || "#8b5cf6";
   const Logo = agentId ? AGENT_LOGOS[agentId] : LogoGrok;
 
   const agentName =
@@ -153,7 +148,7 @@ export function EsferaDetail({
       <button
         aria-label="Cerrar"
         onClick={onClose}
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40"
       />
 
       {/* Panel: bottom-sheet en móvil, tarjeta centrada en desktop */}
@@ -164,57 +159,35 @@ export function EsferaDetail({
         animate={{ y: 0, opacity: 1, scale: 1 }}
         exit={{ y: 40, opacity: 0, scale: 0.98 }}
         transition={{ type: "spring", stiffness: 320, damping: 30 }}
-        className="glass relative z-10 w-full max-w-[440px] overflow-hidden rounded-t-3xl border border-[var(--border-1)] pb-[max(env(safe-area-inset-bottom),1rem)] sm:rounded-3xl sm:pb-0"
-        style={{ boxShadow: `0 -8px 60px ${hue}22, 0 0 0 1px ${hue}1a inset` }}
+        className="relative z-10 w-full max-w-[440px] overflow-hidden rounded-t-2xl border border-[var(--border-1)] bg-white pb-[max(env(safe-area-inset-bottom),1rem)] sm:rounded-2xl sm:pb-0"
       >
-        {/* Glow superior por color del agente */}
-        <div
-          className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full opacity-40 blur-3xl"
-          style={{ background: hue }}
-        />
-        {/* Asa del sheet (solo móvil) */}
-        <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-white/15 sm:hidden" />
+        {/* Asa de la hoja (solo móvil) */}
+        <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-[var(--border-2)] sm:hidden" />
 
         <div className="relative p-5 pt-4 sm:pt-5">
           {/* Cabecera: agente + estado + cerrar */}
           <div className="flex items-center gap-3">
-            <motion.div
-              animate={
-                working
-                  ? { boxShadow: [`0 0 0px ${hue}00`, `0 0 22px ${hue}aa`, `0 0 0px ${hue}00`] }
-                  : {}
-              }
-              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-              className="grid h-12 w-12 flex-none place-items-center rounded-2xl border"
-              style={{
-                borderColor: `${hue}55`,
-                background: `radial-gradient(circle at 50% 35%, ${hue}33, rgba(10,10,15,0.85))`,
-              }}
-            >
-              <Logo size={22} style={{ color: hue }} />
-            </motion.div>
+            <div className="grid h-12 w-12 flex-none place-items-center rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)]">
+              <Logo size={22} style={{ color: working ? VIOLET_INK : "var(--fg-muted)" }} />
+            </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h3 className="truncate font-display text-base font-bold text-white">
+                <h3 className="truncate font-display text-base font-bold text-[var(--fg-primary)]">
                   {agentName}
                 </h3>
                 <span
-                  className="flex-none rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                  style={{
-                    color: statusHue,
-                    background: `${statusHue}1a`,
-                    border: `1px solid ${statusHue}40`,
-                  }}
+                  className="flex-none rounded-full border px-2 py-0.5 text-[12px] font-semibold"
+                  style={{ color: statusHue, borderColor: statusHue }}
                 >
                   {working ? statusRaw || "running" : "en reposo"}
                 </span>
               </div>
-              {role && <p className="truncate text-[11px] text-muted">{role}</p>}
+              {role && <p className="truncate text-[12px] text-[var(--fg-muted)]">{role}</p>}
             </div>
             <button
               onClick={onClose}
               aria-label="Cerrar"
-              className="grid h-9 w-9 flex-none place-items-center rounded-xl border border-[var(--border-1)] text-[var(--fg-secondary)] transition active:scale-95 hover:text-white"
+              className="grid h-9 w-9 flex-none place-items-center rounded-xl border border-[var(--border-1)] bg-white text-[var(--fg-secondary)] transition active:scale-95 hover:text-black"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -226,29 +199,29 @@ export function EsferaDetail({
           {working ? (
             <div className="mt-4">
               {task && (
-                <p className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3 text-[13px] leading-relaxed text-on-surface">
+                <p className="rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3 text-[13px] leading-relaxed text-[var(--fg-primary)]">
                   {task}
                 </p>
               )}
 
               <div className="mt-1">
-                {jobId != null && <Row label="Job" value={`#${jobId}`} />}
+                {jobId != null && <Row label="Tarea" value={`#${jobId}`} />}
                 {project && (
                   <Row
                     label="Proyecto"
                     value={
-                      <span style={{ color: hue }} className="font-medium">
+                      <span style={{ color: VIOLET_INK }} className="font-medium">
                         {project}
                       </span>
                     }
                   />
                 )}
-                {source && <Row label="Origen" value={<span className="text-muted">{source}</span>} />}
+                {source && <Row label="Origen" value={<span className="text-[var(--fg-secondary)]">{source}</span>} />}
                 {gajo && <Row label="Gajo" value={<span className="font-mono text-[12px] text-[var(--fg-muted)]">{gajo}</span>} />}
                 <Row
                   label="Corriendo"
                   value={
-                    <span className="font-mono tabular-nums" style={{ color: working ? "#34d399" : undefined }}>
+                    <span className="font-mono tabular-nums" style={{ color: working ? "#15803d" : undefined }}>
                       {elapsed(since, now)}
                     </span>
                   }
@@ -256,13 +229,13 @@ export function EsferaDetail({
                 {typeof progress === "number" && (
                   <div className="border-t border-[var(--border-1)] py-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="label-caps text-[10px] text-muted">Avance</span>
-                      <span className="text-[13px] font-medium text-on-surface">{progress}%</span>
+                      <span className="text-[12px] font-medium text-[var(--fg-muted)]">Avance</span>
+                      <span className="text-[13px] font-medium text-[var(--fg-primary)]">{progress}%</span>
                     </div>
                     <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--surface-2)]">
                       <motion.div
                         className="h-full rounded-full"
-                        style={{ background: hue }}
+                        style={{ background: "var(--vf-violet)" }}
                         initial={{ width: 0 }}
                         animate={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
                         transition={{ duration: 0.6, ease: "easeOut" }}
@@ -280,18 +253,20 @@ export function EsferaDetail({
                   <div className="mb-1.5 flex items-center gap-1.5">
                     <span
                       className="h-1.5 w-1.5 animate-pulse rounded-full"
-                      style={{ background: hue, boxShadow: `0 0 6px ${hue}` }}
+                      style={{ background: "#15803d" }}
                     />
-                    <span className="label-caps text-[10px] text-muted">
+                    <span className="text-[12px] font-medium text-[var(--fg-muted)]">
                       Actividad en vivo
                     </span>
                   </div>
-                  <div className="space-y-1 rounded-xl border border-[var(--border-1)] bg-black/30 p-3">
+                  <div className="space-y-1 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3">
                     {logLines.map((line, i) => (
                       <p
                         key={i}
-                        className={`truncate font-mono text-[11px] leading-relaxed ${
-                          i === logLines.length - 1 ? "text-on-surface" : "text-muted"
+                        className={`truncate font-mono text-[12px] leading-relaxed ${
+                          i === logLines.length - 1
+                            ? "text-[var(--fg-primary)]"
+                            : "text-[var(--fg-secondary)]"
                         }`}
                         title={line}
                       >
@@ -306,48 +281,41 @@ export function EsferaDetail({
               {grokVerdict && (
                 <div
                   className="mt-3 rounded-xl border p-3"
-                  style={{
-                    borderColor: `${VERDICT_HUE[grokVerdict]}40`,
-                    background: `${VERDICT_HUE[grokVerdict]}10`,
-                  }}
+                  style={{ borderColor: VERDICT_HUE[grokVerdict], background: "#ffffff" }}
                 >
                   <div className="flex items-center gap-2">
                     <span
-                      className="flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold"
-                      style={{
-                        color: VERDICT_HUE[grokVerdict],
-                        background: `${VERDICT_HUE[grokVerdict]}1a`,
-                        border: `1px solid ${VERDICT_HUE[grokVerdict]}55`,
-                      }}
+                      className="flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[12px] font-semibold"
+                      style={{ color: VERDICT_HUE[grokVerdict], borderColor: VERDICT_HUE[grokVerdict] }}
                     >
                       <IconShield size={12} /> {grokVerdict}
                     </span>
-                    <span className="flex items-center gap-1 text-[11px] text-muted">
-                      <LogoGrok size={11} style={{ color: "#f472b6" }} /> Auditor Grok
+                    <span className="flex items-center gap-1 text-[12px] text-[var(--fg-secondary)]">
+                      <LogoGrok size={11} /> Auditor Grok
                     </span>
                   </div>
                   {grokNotes && (
-                    <p className="mt-2 text-[12px] leading-relaxed text-muted">{grokNotes}</p>
+                    <p className="mt-2 text-[12px] leading-relaxed text-[var(--fg-secondary)]">{grokNotes}</p>
                   )}
                 </div>
               )}
             </div>
           ) : (
-            /* Esfera en reposo */
+            /* Agente en reposo */
             <div className="mt-4">
-              <div className="flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3 text-[13px] text-muted">
+              <div className="flex items-center gap-2 rounded-xl border border-[var(--border-1)] bg-[var(--surface-1)] p-3 text-[13px] text-[var(--fg-secondary)]">
                 <IconActivity size={14} />
-                En reposo — sin job corriendo ahora mismo.
+                En reposo — sin tarea corriendo ahora mismo.
               </div>
               {target.kind === "agent" && target.esfera.lastProject ? (
                 <div className="mt-1">
                   <Row
-                    label="Último job"
-                    value={<span className="font-medium text-on-surface">{target.esfera.lastProject}</span>}
+                    label="Última tarea"
+                    value={<span className="font-medium text-[var(--fg-primary)]">{target.esfera.lastProject}</span>}
                   />
                   <Row
                     label="Cuándo"
-                    value={<span className="text-muted">{agoLabel(target.esfera.lastSince, now) ?? "—"}</span>}
+                    value={<span className="text-[var(--fg-secondary)]">{agoLabel(target.esfera.lastSince, now) ?? "—"}</span>}
                   />
                 </div>
               ) : (
