@@ -79,20 +79,25 @@ export default function GlobalError({
             >
               Recargar
             </button>
-            <a
-              href="/"
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = "/";
+              }}
               style={{
                 borderRadius: 8,
                 padding: "10px 18px",
                 border: "1px solid #E8E8E8",
+                background: "#FFFFFF",
                 color: "#0A0A0A",
                 fontSize: 14,
                 fontWeight: 500,
                 textDecoration: "none",
+                cursor: "pointer",
               }}
             >
               Ir al inicio
-            </a>
+            </button>
           </div>
           {error?.digest ? (
             <p

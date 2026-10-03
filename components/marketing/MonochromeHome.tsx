@@ -32,6 +32,40 @@ function BrandMark({ name, size = 20 }: { name: string; size?: number }) {
   );
 }
 
+function MindContextMark({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3.25a4.2 4.2 0 0 0-4.1 3.3 3.35 3.35 0 0 0-1.13 6.45 3.64 3.64 0 0 0 4.32 5.33 3.04 3.04 0 0 0 5.5-1.8 3.52 3.52 0 0 0 .7-6.65A4.18 4.18 0 0 0 12 3.25Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.1 9.35h5.8M8.75 13h6.5M11.1 16.45h2.1" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SearchMark({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m20 20-4.6-4.6M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PlusMark({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function MicMark({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 14.5a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5.5a3 3 0 0 0 3 3Z" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M19 11.5a7 7 0 0 1-14 0M12 18.5V22M8.5 22h7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /* Logo oficial de GitHub (Octocat mark) */
 function GitHubMark({ size = 40, className = "" }: { size?: number; className?: string }) {
   return (
@@ -55,11 +89,19 @@ function VercelMark({ size = 38, className = "" }: { size?: number; className?: 
   );
 }
 
-const CHECK = (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M20 6 9 17l-5-5" />
-  </svg>
-);
+const onboardingButtons = [
+  { name: "GitHub", caption: "Repos", icon: <BrandMark name="GitHub" size={18} /> },
+  { name: "Vercel", caption: "Deploys", icon: <BrandMark name="Vercel" size={18} /> },
+  { name: "Mind Context", caption: "Fuentes", icon: <MindContextMark size={18} /> },
+  { name: "MCPs", caption: "Fábrica", icon: <BrandMark name="MCP" size={18} /> },
+];
+
+const footerColumns = [
+  { title: "Producto", items: ["Chat", "Marketplace", "Propuestas", "Previews"] },
+  { title: "Conectores", items: ["GitHub", "Vercel", "Mind Context", "MCPs"] },
+  { title: "Operación", items: ["Trama", "Lutor", "Dominios", "Facturación"] },
+  { title: "Compañía", items: ["Documentación", "Soporte", "Privacidad", "Términos"] },
+];
 
 /* Marca el dispositivo la primera vez que se ve el splash. localStorage, no sessionStorage:
    "visitas repetidas" es por aparato, no por pestaña. */
@@ -151,10 +193,10 @@ export function MonochromeHome() {
   }, [menuOpen]);
 
   const navLinks = [
-    { href: "#como", label: "Cómo funciona" },
-    { href: "#que", label: "Qué hace" },
-    { href: "#integraciones", label: "Integraciones" },
-    { href: "#precios", label: "Precios" },
+    { href: "#flujo", label: "Flujo" },
+    { href: "#incluye", label: "Qué incluye" },
+    { href: "#integraciones", label: "Conectores" },
+    { href: "#footer", label: "Mapa" },
   ];
 
   return (
@@ -228,38 +270,85 @@ export function MonochromeHome() {
       {/* ===== MAIN ===== */}
       <main id="fx-main" className="fx-main">
         {/* HERO */}
-        <section className="fx-hero">
-          <div className="fx-eyebrow fx-reveal"><span className="dot" />Model Context Protocol · v1</div>
-          <h1 className="fx-reveal d1">Visión para tu <b>IA de confianza</b></h1>
-          <p className="fx-sub fx-reveal d2">
-            Forge genera un MCP con tu propio acceso y lo conectas en tu IA — Claude, ChatGPT o la que uses.
-            Tu asistente ve tus proyectos, lanza previews y despliega sobre la infraestructura que ya tienes.
-          </p>
-          <div className="fx-herocta fx-reveal d3">
-            <Link className="fx-pill solid" href="/sign-up">Empezar gratis</Link>
-            <Link className="fx-pill ghost" href="#como">Ver cómo funciona</Link>
+        <section className="fx-hero fx-hero-workspace">
+          <div className="fx-hero-copy">
+            <div className="fx-eyebrow fx-reveal"><span className="dot" />Fábrica de apps · chat profesional</div>
+            <h1 className="fx-reveal d1">Pregunta lo que quieras. <b>Forja lo que vendas.</b></h1>
+            <p className="fx-sub fx-reveal d2">
+              VForge convierte conversaciones reales en propuesta, preview, plantilla, repo y despliegue.
+              Una pantalla limpia para operar tu fábrica sin brincar entre veinte chats.
+            </p>
+            <div className="fx-herocta fx-reveal d3">
+              <Link className="fx-pill solid" href="/sign-up">Entrar a Forge</Link>
+              <Link className="fx-pill ghost" href="#flujo">Ver flujo</Link>
+            </div>
           </div>
-          <div className="fx-scroll fx-reveal d5"><span>Desliza</span><div className="bar" /></div>
+
+          <div className="fx-chat-shell fx-reveal d2" aria-label="Vista previa del chat VForge">
+            <div className="fx-chat-top">
+              <button type="button" aria-label="Abrir navegación"><span /><span /><span /></button>
+              <div className="fx-chat-brand"><ForgeMark size={15} /><span>FORGE</span></div>
+              <div className="fx-avatar" aria-label="Perfil">LU</div>
+            </div>
+
+            <div className="fx-chat-body">
+              <div className="fx-source-bar">
+                <SearchMark size={16} />
+                <span>WhatsApp, Claude, ChatGPT, Trama...</span>
+                <b>15 fuentes</b>
+              </div>
+
+              <div className="fx-message user">Tengo este chat con un cliente. Quiero una app y una propuesta.</div>
+              <div className="fx-message assistant">
+                <span className="fx-message-kicker">VForge</span>
+                Te armo la ruta: propuesta comercial, preview visual, plantilla base y repositorio listo para desplegar.
+                <div className="fx-message-actions">
+                  <span>Propuesta</span>
+                  <span>Preview</span>
+                  <span>Repo</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="fx-fixed-dock" aria-label="Botonera fija de onboarding">
+              {onboardingButtons.map((item) => (
+                <button type="button" key={item.name}>
+                  <span className="fx-dock-icon">{item.icon}</span>
+                  <span>
+                    <b>{item.name}</b>
+                    <small>{item.caption}</small>
+                  </span>
+                  <i aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+
+            <div className="fx-compose">
+              <button type="button" className="fx-compose-round" aria-label="Abrir Castores"><PlusMark /></button>
+              <div className="fx-compose-field">Trabajar en VForge</div>
+              <button type="button" className="fx-compose-round mic" aria-label="Dictar"><MicMark /></button>
+            </div>
+          </div>
         </section>
 
-        {/* COMO FUNCIONA */}
-        <section id="como">
+        {/* FLUJO */}
+        <section id="flujo">
           <div className="fx-wrap">
             <div className="fx-sechead fx-reveal">
-              <span className="tag">/ Cómo funciona</span>
-              <h2>Cuatro pasos. <b>Cero fricción.</b></h2>
-              <p>No migras nada. Forge se monta sobre lo que ya usas y le da ojos a tu IA.</p>
+              <span className="tag">/ Flujo</span>
+              <h2>De conversación a entrega. <b>Sin teatro.</b></h2>
+              <p>El chat no responde por responder: estructura, cotiza, visualiza y deja listo el arranque técnico.</p>
             </div>
             <div className="fx-steps">
               {[
-                ["01", "Inicia sesión", "Entras con tu cuenta. Sin configurar servidores ni claves a mano.",
-                  <path key="a" d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />],
-                ["02", "Genera tu MCP", "Forge crea un endpoint MCP con tu acceso, listo para pegar en tu IA.",
-                  <path key="b" d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3" />],
-                ["03", "Conecta tu infra", "GitHub, Vercel, Clerk, Neon y Stripe — enlazados con un clic.",
-                  <path key="c" d="M9 12h6M12 9v6M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4z" />],
-                ["04", "Tu IA ya ve todo", "Pregunta, previsualiza y despliega. Tu asistente opera tu stack.",
-                  <g key="d"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></g>],
+                ["01", "Carga la fuente", "WhatsApp, SIP/Trama, Claude, ChatGPT o un brief directo.",
+                  <path key="a" d="M4 7h16M4 12h11M4 17h7M18 15l2 2 3-4" />],
+                ["02", "Entiende el caso", "Resume intención, dolores, módulos, riesgos y preguntas faltantes.",
+                  <path key="b" d="M12 3a7 7 0 0 0-7 7c0 4.8 7 11 7 11s7-6.2 7-11a7 7 0 0 0-7-7zM9.5 10h5" />],
+                ["03", "Genera propuesta", "Crea texto vendible, alcance, fases, precio y siguientes pasos.",
+                  <path key="c" d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6" />],
+                ["04", "Forja el arranque", "Preview, plantilla, repo, deploy y MCPs conectados por permisos.",
+                  <g key="d"><path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5M2 12l10 5 10-5" /></g>],
               ].map(([n, t, d, ic], i) => (
                 <div className={`fx-step fx-reveal d${i + 1}`} key={n as string}>
                   <div className="ic"><svg viewBox="0 0 24 24">{ic}</svg></div>
@@ -272,28 +361,28 @@ export function MonochromeHome() {
           </div>
         </section>
 
-        {/* QUE HACEMOS */}
-        <section id="que">
+        {/* QUE INCLUYE */}
+        <section id="incluye">
           <div className="fx-wrap">
             <div className="fx-sechead fx-reveal">
-              <span className="tag">/ Qué hace</span>
-              <h2>Tu infraestructura, <b>hablada.</b></h2>
-              <p>Todo lo que harías en cinco pestañas, tu IA lo hace en una conversación.</p>
+              <span className="tag">/ Qué incluye</span>
+              <h2>Tu fábrica, <b>en una pantalla.</b></h2>
+              <p>El centro es el chat. Los lados son trabajo organizado; la botonera inferior es el superpower fijo.</p>
             </div>
             <div className="fx-feats">
               {[
-                ["Visión de cuenta", "Proyectos, repos, deploys y bases de datos — todo el estado de tu cuenta a la vista de tu IA en tiempo real.",
-                  <path key="a" d="M3 9h18M9 21V9M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" />],
-                ["Previews al vuelo", "Pide un cambio y obtén una URL de preview lista para revisar, antes de tocar producción.",
-                  <path key="b" d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />],
-                ["Deploys por voz", "\"Sube a producción.\" Forge encadena commit, build y deploy sobre tu Vercel — con tu firma.",
-                  <path key="c" d="M22 12h-4l-3 9L9 3l-3 9H2" />],
-                ["Bóveda de secretos", "Tus claves viven cifradas. Se usan sin exponerse y se rotan cuando lo pides.",
-                  <g key="d"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></g>],
-                ["Verificación real", "Forge comprueba que cada conexión responde — nada de \"listo\" sin evidencia.",
-                  <path key="e" d="M20 6 9 17l-5-5" />],
-                ["Historial vivo", "Cada acción queda registrada: quién, qué y cuándo. Auditable de punta a punta.",
-                  <g key="f"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></g>],
+                ["Chat profesional", "Proyectos, carpetas, historial y conversación con fuentes. No es un bot suelto.",
+                  <path key="a" d="M4 5h16v10H7l-3 3V5z" />],
+                ["Botonera fija", "GitHub, Vercel, Mind Context y MCPs siempre visibles, con estado y acciones reales.",
+                  <path key="b" d="M4 8h16M4 16h16M7 5v6M17 13v6" />],
+                ["Widget Dock", "Castores abre apps, widgets y marketplace sin ensuciar la conversación principal.",
+                  <path key="c" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />],
+                ["Fuentes reales", "WhatsApp, Trama, chats, documentos y repos entran como evidencia, no como contexto inventado.",
+                  <path key="d" d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" />],
+                ["Preview vendible", "Antes de programar todo, genera imagen, estructura y propuesta para cerrar al cliente.",
+                  <path key="e" d="M3 6h18v12H3zM7 10h4M7 14h10" />],
+                ["Repo y despliegue", "Cuando el cliente dice sí, el camino sigue a GitHub, Vercel y MCP sin cambiar de herramienta.",
+                  <path key="f" d="M12 3v12M7 8l5-5 5 5M5 21h14" />],
               ].map(([t, d, ic], i) => (
                 <div className={`fx-feat fx-reveal d${(i % 3) + 1}`} key={t as string}>
                   <div className="ic"><svg viewBox="0 0 24 24">{ic}</svg></div>
@@ -317,60 +406,40 @@ export function MonochromeHome() {
           </div>
         </section>
 
-        {/* PRECIOS */}
-        <section id="precios">
-          <div className="fx-wrap">
-            <div className="fx-sechead center fx-reveal">
-              <span className="tag">/ Precios</span>
-              <h2>Empieza gratis. <b>Crece cuando quieras.</b></h2>
-            </div>
-            <div className="fx-prices">
-              <div className="fx-plan fx-reveal d1">
-                <div className="pname">Free</div>
-                <div className="amt">$0<small> /mes</small></div>
-                <p className="pdesc">Para probar la visión con un proyecto.</p>
-                <ul>
-                  {["1 proyecto conectado", "MCP con tu acceso", "Previews ilimitados", "Bóveda de secretos"].map((f) => (
-                    <li key={f}>{CHECK}{f}</li>
-                  ))}
-                </ul>
-                <Link className="fx-pill ghost" href="/sign-up">Empezar gratis</Link>
-              </div>
-              <div className="fx-plan hi fx-reveal d2">
-                <div className="badge">Recomendado</div>
-                <div className="pname">Starter</div>
-                <div className="amt">$20<small> /mes</small></div>
-                <p className="pdesc">Para operar tu stack completo con tu IA.</p>
-                <ul>
-                  {["Hasta 10 proyectos", "Deploys a producción", "Todas las integraciones", "Historial y auditoría", "Rotación de claves"].map((f) => (
-                    <li key={f}>{CHECK}{f}</li>
-                  ))}
-                </ul>
-                <Link className="fx-pill solid ink" href="/sign-up">Elegir Starter</Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* CTA FINAL */}
         <section className="fx-ctafinal">
           <div className="fx-wrap">
-            <h2 className="fx-reveal">Dale <b>ojos</b> a tu IA.</h2>
-            <p className="fx-reveal d1">Conecta tu infraestructura en minutos y deja que tu asistente construya contigo.</p>
-            <div className="fx-reveal d2"><Link className="fx-pill solid" href="/sign-up">Empezar gratis</Link></div>
+            <h2 className="fx-reveal">Afíliate a tu <b>fábrica de apps.</b></h2>
+            <p className="fx-reveal d1">Trae conversación y cliente. Forge te ayuda a convertirlo en propuesta, producto y seguimiento.</p>
+            <div className="fx-reveal d2"><Link className="fx-pill solid" href="/sign-up">Entrar a Forge</Link></div>
           </div>
         </section>
 
         {/* FOOTER */}
-        <footer className="fx-footer">
-          <div className="fx-brand"><ForgeMark size={19} /><span className="name">Forge</span></div>
-          <nav>
-            <Link href="#como">Cómo funciona</Link>
-            <Link href="#precios">Precios</Link>
-            <Link href="/developers">Docs</Link>
-            <Link href="/terminos">Términos</Link>
-          </nav>
-          <div className="fmeta">© 2026 · vforge.site</div>
+        <footer id="footer" className="fx-footer fx-footer-rich">
+          <div className="fx-footer-head">
+            <div>
+              <div className="fx-brand"><ForgeMark size={20} /><span className="name">Forge</span></div>
+              <p>Apps reales. Infra propia. Chat inteligente.</p>
+            </div>
+            <Link className="fx-pill solid" href="/sign-in">Entrar</Link>
+          </div>
+          <div className="fx-footer-grid">
+            {footerColumns.map((col) => (
+              <div key={col.title}>
+                <h3>{col.title}</h3>
+                {col.items.map((item) => (
+                  <Link href={item === "Términos" ? "/terminos" : item === "Privacidad" ? "/privacidad" : "#"} key={item}>
+                    {item}
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="fx-footer-bottom">
+            <div className="fmeta">© 2026 · All Global Holding · vforge.site</div>
+            <span>Hecho para personas que construyen.</span>
+          </div>
         </footer>
       </main>
     </div>

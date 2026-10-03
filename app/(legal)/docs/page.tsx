@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = { title: "Documentación" };
 
 export default function DocsPage() {
@@ -51,12 +53,12 @@ export default function DocsPage() {
 
       <h2>Planes y límites</h2>
       <p>
-        La fuente vigente de precios está en la portada pública:
+        La fuente vigente de entrada y operación está en la portada pública:
       </p>
       <p>
-        <a href="/#precios">Ver precios</a>. Las suscripciones se renuevan automáticamente y puedes
+        <Link href="/">Ver portada</Link>. Las suscripciones se renuevan automáticamente y puedes
         cancelar cuando quieras; consulta los{" "}
-        <a href="/terms">Términos</a> para el detalle de pagos, renovación y cancelación.
+        <Link href="/terms">Términos</Link> para el detalle de pagos, renovación y cancelación.
       </p>
 
       <h2>RepoVision</h2>
