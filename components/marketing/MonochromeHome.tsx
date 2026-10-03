@@ -215,7 +215,7 @@ export function MonochromeHome() {
           {/* nace VForge */}
           <div className="fx-nace">
             <ForgeMark size={38} className="fx-tri" />
-            <span className="fx-word">Forge</span>
+            <span className="fx-word">VForge</span>
           </div>
         </div>
         <div className="fx-skip">Toca para saltar</div>
@@ -230,7 +230,7 @@ export function MonochromeHome() {
 
       {/* ===== HEADER ===== */}
       <header id="fx-hdr" className={`fx-hdr${menuOpen ? " open" : ""}`}>
-        <div className="fx-brand"><ForgeMark size={22} /><span className="name">Forge</span></div>
+        <div className="fx-brand"><ForgeMark size={22} /><span className="name">VForge</span></div>
         <nav className="fx-links">
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href}>{link.label}</Link>
@@ -272,22 +272,22 @@ export function MonochromeHome() {
         {/* HERO */}
         <section className="fx-hero fx-hero-workspace">
           <div className="fx-hero-copy">
-            <div className="fx-eyebrow fx-reveal"><span className="dot" />Fábrica de apps · chat profesional</div>
-            <h1 className="fx-reveal d1">Pregunta lo que quieras. <b>Forja lo que vendas.</b></h1>
+            <div className="fx-eyebrow fx-reveal"><span className="dot" />Apps reales · chat profesional</div>
+            <h1 className="fx-reveal d1">Del chat a una app <b>lista para vender.</b></h1>
             <p className="fx-sub fx-reveal d2">
-              VForge convierte conversaciones reales en propuesta, preview, plantilla, repo y despliegue.
+              VForge toma conversaciones reales y las baja a propuesta, preview, plantilla, repo y despliegue.
               Una pantalla limpia para operar tu fábrica sin brincar entre veinte chats.
             </p>
             <div className="fx-herocta fx-reveal d3">
-              <Link className="fx-pill solid" href="/sign-up">Entrar a Forge</Link>
-              <Link className="fx-pill ghost" href="#flujo">Ver flujo</Link>
+              <Link className="fx-pill solid" href="/sign-up">Entrar</Link>
+              <Link className="fx-pill ghost" href="#flujo">Ver proceso</Link>
             </div>
           </div>
 
           <div className="fx-chat-shell fx-reveal d2" aria-label="Vista previa del chat VForge">
             <div className="fx-chat-top">
               <button type="button" aria-label="Abrir navegación"><span /><span /><span /></button>
-              <div className="fx-chat-brand"><ForgeMark size={15} /><span>FORGE</span></div>
+              <div className="fx-chat-brand"><ForgeMark size={15} /><span>VFORGE</span></div>
               <div className="fx-avatar" aria-label="Perfil">LU</div>
             </div>
 
@@ -298,10 +298,10 @@ export function MonochromeHome() {
                 <b>15 fuentes</b>
               </div>
 
-              <div className="fx-message user">Tengo este chat con un cliente. Quiero una app y una propuesta.</div>
+              <div className="fx-message user">Tengo este chat con un cliente. Necesito propuesta y preview.</div>
               <div className="fx-message assistant">
                 <span className="fx-message-kicker">VForge</span>
-                Te armo la ruta: propuesta comercial, preview visual, plantilla base y repositorio listo para desplegar.
+                Te dejo propuesta comercial, preview visual, plantilla base y repositorio listo para desplegar.
                 <div className="fx-message-actions">
                   <span>Propuesta</span>
                   <span>Preview</span>
@@ -350,7 +350,7 @@ export function MonochromeHome() {
                   <path key="b" d="M12 3a7 7 0 0 0-7 7c0 4.8 7 11 7 11s7-6.2 7-11a7 7 0 0 0-7-7zM9.5 10h5" />],
                 ["03", "Genera propuesta", "Crea texto vendible, alcance, fases, precio y siguientes pasos.",
                   <path key="c" d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6" />],
-                ["04", "Forja el arranque", "Preview, plantilla, repo, deploy y MCPs conectados por permisos.",
+                ["04", "Arma el arranque", "Preview, plantilla, repo, deploy y MCPs conectados por permisos.",
                   <g key="d"><path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5M2 12l10 5 10-5" /></g>],
               ].map(([n, t, d, ic], i) => (
                 <div className={`fx-step fx-reveal d${i + 1}`} key={n as string}>
@@ -413,8 +413,8 @@ export function MonochromeHome() {
         <section className="fx-ctafinal">
           <div className="fx-wrap">
             <h2 className="fx-reveal">Afíliate a tu <b>fábrica de apps.</b></h2>
-            <p className="fx-reveal d1">Trae conversación y cliente. Forge te ayuda a convertirlo en propuesta, producto y seguimiento.</p>
-            <div className="fx-reveal d2"><Link className="fx-pill solid" href="/sign-up">Entrar a Forge</Link></div>
+            <p className="fx-reveal d1">Trae conversación y cliente. VForge te ayuda a bajarlo a propuesta, producto y seguimiento.</p>
+            <div className="fx-reveal d2"><Link className="fx-pill solid" href="/sign-up">Entrar</Link></div>
           </div>
         </section>
 

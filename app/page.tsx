@@ -3,13 +3,13 @@ import { redirect } from "next/navigation";
 import { MonochromeHome } from "@/components/marketing/MonochromeHome";
 
 export const metadata = {
-  title: "Visión para tu IA",
+  title: "VForge — Chat profesional para apps",
   description:
-    "Forge genera un MCP con tu propio acceso y lo conectas en tu IA: proyectos, GitHub, Vercel y secretos, sin salir del chat.",
+    "VForge baja conversaciones reales a propuesta, preview, plantilla, repositorio y despliegue desde un chat profesional.",
   openGraph: {
-    title: "Visión para tu IA",
+    title: "VForge — Chat profesional para apps",
     description:
-      "Conecta tu IA a tus proyectos con el Model Context Protocol. Tus cuentas siguen siendo tuyas.",
+      "Del chat con tu cliente a una app lista para vender: propuesta, preview, repo, deploy y conectores.",
     url: "https://vforge.site",
     siteName: "VForge",
     locale: "es_MX",
@@ -17,8 +17,8 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Visión para tu IA",
-    description: "Conecta tu IA a tus proyectos con el Model Context Protocol.",
+    title: "VForge — Chat profesional para apps",
+    description: "Convierte conversaciones reales en propuesta, preview y despliegue.",
   },
 };
 
