@@ -136,8 +136,8 @@ function IntroSignal({ active }: { active: boolean }) {
       aria-hidden="true"
     >
       <div className={cn("flex items-center gap-1.5", active && "animate-pulse")}>
-        <span className="size-2.5 rounded-full bg-white/86" />
-        <span className="size-2.5 rounded-full bg-white/54" />
+        <span className="size-2.5 rounded-full bg-white/90" />
+        <span className="size-2.5 rounded-full bg-white/60" />
       </div>
     </div>
   );
@@ -151,8 +151,8 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       {!isUser && (
         <div className="mt-1 grid size-8 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.06]">
           <div className="flex items-center gap-1">
-            <span className="size-1.5 rounded-full bg-white/78" />
-            <span className="size-1.5 rounded-full bg-white/45" />
+            <span className="size-1.5 rounded-full bg-white/80" />
+            <span className="size-1.5 rounded-full bg-white/50" />
           </div>
         </div>
       )}
