@@ -228,7 +228,9 @@ html[data-vf-splash="off"] .fx-hero .fx-reveal{ animation:fxRevealIn .9s var(--e
   box-shadow:0 7px 24px rgba(10,10,10,.05);
 }
 .fx-dock-icon{ display:grid; place-items:center; width:24px; height:24px; flex:0 0 24px; }
-.fx-fixed-dock b{ display:block; font-size:12px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fx-dock-text{ display:block; min-width:0; max-width:100%; }
+.fx-fixed-dock b{ display:block; max-width:100%; font-size:12px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fx-dock-mobile{ display:none; }
 .fx-fixed-dock small{ display:block; margin-top:2px; color:var(--muted); font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .fx-fixed-dock i{
   position:absolute; right:10px; bottom:9px; width:6px; height:6px; border-radius:999px; background:var(--accent);
@@ -277,7 +279,18 @@ html[data-vf-splash="off"] .fx-hero .fx-reveal{ animation:fxRevealIn .9s var(--e
     text-align:center;
   }
   .fx-dock-icon{ width:19px; height:19px; flex-basis:19px; }
-  .fx-fixed-dock b{ font-size:9.5px; line-height:1.05; white-space:normal; }
+  .fx-dock-text{ width:100%; min-width:0; }
+  .fx-dock-full{ display:none; }
+  .fx-dock-mobile{ display:block; white-space:pre-line; overflow-wrap:anywhere; }
+  .fx-fixed-dock b{
+    min-height:20px;
+    font-size:9px;
+    line-height:1.05;
+    letter-spacing:0;
+    white-space:normal;
+    text-align:center;
+    text-wrap:balance;
+  }
   .fx-fixed-dock small{ display:none; }
   .fx-fixed-dock i{ right:8px; bottom:8px; width:5px; height:5px; }
   .fx-compose{ gap:7px; }

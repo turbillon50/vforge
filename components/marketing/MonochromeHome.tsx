@@ -90,10 +90,10 @@ function VercelMark({ size = 38, className = "" }: { size?: number; className?: 
 }
 
 const onboardingButtons = [
-  { name: "GitHub", caption: "Repos", icon: <BrandMark name="GitHub" size={18} /> },
-  { name: "Vercel", caption: "Deploys", icon: <BrandMark name="Vercel" size={18} /> },
-  { name: "Mind Context", caption: "Fuentes", icon: <MindContextMark size={18} /> },
-  { name: "MCPs", caption: "Fábrica", icon: <BrandMark name="MCP" size={18} /> },
+  { name: "GitHub", mobileName: "GitHub", caption: "Repos", icon: <BrandMark name="GitHub" size={18} /> },
+  { name: "Vercel", mobileName: "Vercel", caption: "Deploys", icon: <BrandMark name="Vercel" size={18} /> },
+  { name: "Mind Context", mobileName: "Mind\nContext", caption: "Fuentes", icon: <MindContextMark size={18} /> },
+  { name: "MCPs", mobileName: "MCPs", caption: "Fábrica", icon: <BrandMark name="MCP" size={18} /> },
 ];
 
 const footerColumns = [
@@ -312,10 +312,13 @@ export function MonochromeHome() {
 
             <div className="fx-fixed-dock" aria-label="Botonera fija de onboarding">
               {onboardingButtons.map((item) => (
-                <button type="button" key={item.name}>
+                <button type="button" key={item.name} aria-label={`${item.name}: ${item.caption}`}>
                   <span className="fx-dock-icon">{item.icon}</span>
-                  <span>
-                    <b>{item.name}</b>
+                  <span className="fx-dock-text">
+                    <b>
+                      <span className="fx-dock-full">{item.name}</span>
+                      <span className="fx-dock-mobile">{item.mobileName}</span>
+                    </b>
                     <small>{item.caption}</small>
                   </span>
                   <i aria-hidden="true" />
