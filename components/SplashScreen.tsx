@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { VMark } from "@/components/brand/VMark";
+import { ForgeMark, GitHubMark, VercelMark } from "@/components/marketing/MonochromeHome";
+import "./marketing/monochrome-home.css";
 
 const SPLASH_KEY = "vf-monochrome-splash-v1";
 
@@ -32,7 +33,7 @@ export default function SplashScreen() {
     if (yaVisto) return;
 
     setVisible(true);
-    const timer = window.setTimeout(() => setVisible(false), 560);
+    const timer = window.setTimeout(() => setVisible(false), 2350);
     return () => {
       window.clearTimeout(timer);
       setVisible(false);
@@ -46,20 +47,25 @@ export default function SplashScreen() {
           aria-hidden="true"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.14 }}
-          className="fixed inset-0 z-[9999] grid place-items-center bg-white text-black"
+          transition={{ duration: 0.24 }}
+          className="fx-root fixed inset-0 z-[9999] bg-[#0A0A0A] text-white"
         >
-          <motion.div
-            initial={{ opacity: 0, y: 3 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex items-center gap-3"
-          >
-            <VMark size={30} />
-            <span className="font-display text-[20px] font-semibold tracking-[-0.04em]">
-              VForge
-            </span>
-          </motion.div>
+          <div className="fx-splash">
+            <div className="fx-seq">
+              <div className="fx-cimientos">
+                <span className="fx-b fx-b-gh">
+                  <GitHubMark size={40} />
+                </span>
+                <span className="fx-b fx-b-vc">
+                  <VercelMark size={40} />
+                </span>
+              </div>
+              <div className="fx-nace">
+                <ForgeMark size={38} className="fx-tri" />
+                <span className="fx-word">VForge</span>
+              </div>
+            </div>
+          </div>
         </motion.div>
       ) : null}
     </AnimatePresence>

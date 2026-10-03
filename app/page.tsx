@@ -1,5 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { MobileChatLaunch } from "@/components/marketing/MobileChatLaunch";
 import { MonochromeHome } from "@/components/marketing/MonochromeHome";
 
 export const metadata = {
@@ -25,6 +27,8 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  const ua = (await headers()).get("user-agent") ?? "";
+  const isMobile = /Android|iPhone|iPad|iPod|Mobile|CriOS|FxiOS/i.test(ua);
   let userId: string | null = null;
 
   try {
@@ -35,6 +39,7 @@ export default async function HomePage() {
     // La portada pública sigue disponible si Clerk no está configurado.
   }
 
+  if (isMobile) return <MobileChatLaunch />;
   if (userId) redirect("/app/chat");
 
   return <MonochromeHome />;

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import "./monochrome-home.css";
 
 /* Logo aprobado VForge: triángulo invertido relleno */
-function ForgeMark({ size = 19, className = "" }: { size?: number; className?: string }) {
+export function ForgeMark({ size = 19, className = "" }: { size?: number; className?: string }) {
   return (
     <svg viewBox="0 0 16 14" width={size} height={(size * 14) / 16} aria-hidden="true" className={className}>
       <path d="M0 0h16L8 14z" fill="currentColor" />
@@ -67,7 +67,7 @@ function MicMark({ size = 18 }: { size?: number }) {
 }
 
 /* Logo oficial de GitHub (Octocat mark) */
-function GitHubMark({ size = 40, className = "" }: { size?: number; className?: string }) {
+export function GitHubMark({ size = 40, className = "" }: { size?: number; className?: string }) {
   return (
     <svg viewBox="0 0 98 96" width={size} height={size} aria-hidden="true" className={className}>
       <path
@@ -81,7 +81,7 @@ function GitHubMark({ size = 40, className = "" }: { size?: number; className?: 
 }
 
 /* Logo oficial de Vercel (triángulo) */
-function VercelMark({ size = 38, className = "" }: { size?: number; className?: string }) {
+export function VercelMark({ size = 38, className = "" }: { size?: number; className?: string }) {
   return (
     <svg viewBox="0 0 76 65" width={size} height={(size * 65) / 76} aria-hidden="true" className={className}>
       <path fill="#fff" d="M37.527 0 75.054 65H0z" />
