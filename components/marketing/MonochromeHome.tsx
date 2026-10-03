@@ -422,7 +422,7 @@ export function MonochromeHome() {
         <footer id="footer" className="fx-footer fx-footer-rich">
           <div className="fx-footer-head">
             <div>
-              <div className="fx-brand"><ForgeMark size={20} /><span className="name">Forge</span></div>
+              <div className="fx-brand"><ForgeMark size={20} /><span className="name">VForge</span></div>
               <p>Apps reales. Infra propia. Chat inteligente.</p>
             </div>
             <Link className="fx-pill solid" href="/sign-in">Entrar</Link>
