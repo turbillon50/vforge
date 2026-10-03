@@ -23,17 +23,24 @@ import {
   IconBrain,
   IconCheck,
   IconChevD,
+  IconChat,
   IconClip,
+  IconDatabase,
   IconExtLink,
   IconGithub,
   IconGlobe,
   IconLayout,
   IconLoader,
+  IconMenu,
+  IconMic,
   IconPlus,
+  IconPlug,
   IconRefresh,
-  IconRocket,
+  IconSearch,
   IconSend,
   IconShield,
+  IconTriangle,
+  IconUsers,
   IconWifi,
   IconX,
 } from "@/components/brand/VFIcons";
@@ -244,15 +251,18 @@ export function ForgeStudio() {
   const [currentModel, setCurrentModel] = useState<string | null>(null);
 
   const [previewMode, setPreviewMode] = useState<PreviewMode>("triple");
-  const [chatShare, setChatShare] = useState(() => {
+  const [chatShare] = useState(() => {
     if (typeof window === "undefined") return 58;
     const n = Number(localStorage.getItem("vf-chat-share"));
     return n >= 32 && n <= 70 ? n : 58;
   });
-  const chatShareRef = useRef(chatShare);
   const [previewKey, setPreviewKey] = useState(0);
   const [dataRefresh, setDataRefresh] = useState(0);
   const [mobilePane, setMobilePane] = useState<MobilePane>("build");
+  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
+  const [connectorsOpen, setConnectorsOpen] = useState(false);
+  const [widgetsOpen, setWidgetsOpen] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [system, setSystem] = useState<SystemState>({
     connections: new Set(),
     ojoOnline: null,
@@ -574,12 +584,6 @@ export function ForgeStudio() {
   const previewUrlActual =
     vivo.fase === "vivo" && vivo.urlBase ? vivo.urlBase : fallbackPreviewUrl;
 
-  const githubUrl =
-    normalizeExternalUrl(project?.github_url) ||
-    (project?.github_repo
-      ? `https://github.com/${project.github_repo.replace(/^\/+/, "")}`
-      : null);
-
   async function newConversation() {
     if (sending) return;
     setComposerError(null);
@@ -815,193 +819,249 @@ export function ForgeStudio() {
     setMobilePane("build");
   }
 
+  const activeProjectName = project?.name ?? projects.find((item) => item.id === activeProjectId)?.name ?? "VForge";
+  const assistantLabel = modelLabel(currentModel);
+  const userInitials =
+    live?.me.name
+      ?.split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "LU";
+  const anyPanelOpen = leftPanelOpen || connectorsOpen || widgetsOpen || workspaceOpen;
+  const closePanels = () => {
+    setLeftPanelOpen(false);
+    setConnectorsOpen(false);
+    setWidgetsOpen(false);
+    setWorkspaceOpen(false);
+  };
+  const ask = (text: string) => {
+    closePanels();
+    setMobilePane("build");
+    void sendPrompt(text);
+  };
+  const connectionPill = (active: boolean) =>
+    active ? "bg-[#ff5a1f] text-white" : "bg-[#f2f2ef] text-[#71717a]";
+  const connectorRows = [
+    {
+      id: "github",
+      label: "GitHub",
+      detail: project?.github_repo || (system.connections.has("github") ? "Conectado" : "Pendiente"),
+      active: Boolean(project?.github_repo || system.connections.has("github")),
+      Icon: IconGithub,
+      action: () =>
+        system.connections.has("github") || project?.github_repo
+          ? ask("Muéstrame mis repos de GitHub, separa los que ya tienen proyecto en VForge y dime cuál conviene abrir primero.")
+          : (window.location.href = "/app/integrations"),
+    },
+    {
+      id: "vercel",
+      label: "Vercel",
+      detail: project?.domain || project?.vercel_url || (system.connections.has("vercel") ? "Conectado" : "Pendiente"),
+      active: Boolean(project?.domain || project?.vercel_url || system.connections.has("vercel")),
+      Icon: IconTriangle,
+      action: () =>
+        system.connections.has("vercel") || project?.vercel_url
+          ? ask("Revisa mis proyectos de Vercel y dime qué está desplegado, qué está roto y qué falta por conectar.")
+          : (window.location.href = "/app/integrations"),
+    },
+    {
+      id: "mind",
+      label: "Mind Context",
+      detail: system.modelCount ? `${system.modelCount} fuentes/modelos` : "Fuentes",
+      active: Boolean(system.modelCount || system.fabric?.models.configured),
+      Icon: IconBrain,
+      action: () =>
+        ask("Abre Mind Context: dime qué fuentes reales tiene este chat y qué fuente falta conectar para vender mejor."),
+    },
+    {
+      id: "mcps",
+      label: "MCPs",
+      detail:
+        system.ojoOnline === true
+          ? "MetaMCP listo"
+          : system.fabric?.mcp.configured
+            ? "MCP activo"
+            : "Pendiente",
+      active: system.ojoOnline === true || system.fabric?.mcp.configured === true,
+      Icon: IconPlug,
+      action: () =>
+        ask("Abre la fábrica de MCPs: dime qué MCPs están disponibles, cuáles faltan y cuál conviene conectar para este cliente."),
+    },
+  ];
+  const widgetRows = [
+    ["Castores", "Porta-widgets", IconPlus, () => ask("Abre Castores como porta-widgets y dime qué apps puedo montar aquí.")],
+    ["Trama", "WhatsApp", IconChat, () => ask("Prepara Trama: necesito conectar una conversación de WhatsApp como fuente real.")],
+    ["SIP", "Ingreso", IconDatabase, () => ask("Prepara SIP como fuente de entrada y dime qué datos mínimos necesita.")],
+    ["Lutor", "Contratos", IconShield, () => ask("Abre Lutor para preparar contrato, alcance y firma del cliente.")],
+    ["Gossip", "Mensajes", IconUsers, () => ask("Revisa Gossip: qué mensajes/notificaciones necesita este proyecto.")],
+    ["Marketplace", "Apps", IconLayout, () => (window.location.href = "/app/marketplace")],
+  ] as const;
+
   return (
-    <div className="vf-mobile-stable flex h-full min-h-0 flex-col overflow-hidden overscroll-none bg-[#efefec] text-[var(--vf-fg)]">
-      <StudioToolbar
-        projects={projects}
-        activeProjectId={activeProjectId}
-        project={project}
-        loading={projectsLoading || projectLoading}
-        sending={sending}
-        canPrompt={Boolean(sessionId)}
-        githubUrl={githubUrl}
-        previewUrl={previewUrlActual}
-        onProjectChange={setActiveProjectId}
-        onCreate={() => setShowCreate(true)}
-        onDeploy={requestDeploy}
-      />
+    <div
+      className="vf-mobile-stable relative flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 overflow-hidden overscroll-none bg-[#fbfaf7] text-[var(--vf-fg)]"
+      data-chat-share={Math.round(chatShare)}
+      data-mobile-pane={mobilePane}
+    >
+      {anyPanelOpen ? (
+        <button
+          type="button"
+          aria-label="Cerrar paneles"
+          onClick={closePanels}
+          className="fixed inset-0 z-30 bg-black/10 backdrop-blur-[2px]"
+        />
+      ) : null}
 
-      <div className="grid grid-cols-2 border-b border-[var(--vf-border)] bg-[var(--vf-bg-1)] p-1 lg:hidden">
-        <MobilePaneButton active={mobilePane === "build"} onClick={() => setMobilePane("build")}>
-          Construir
-        </MobilePaneButton>
-        <MobilePaneButton active={mobilePane === "preview"} onClick={() => setMobilePane("preview")}>
-          Ver proyecto
-        </MobilePaneButton>
-      </div>
-
-      <div
-        className="grid h-full min-h-0 flex-1 grid-cols-1 lg:[grid-template-columns:var(--vf-split)]"
-        style={{ ["--vf-split" as string]: `minmax(0, ${chatShare}fr) 6px minmax(0, ${100 - chatShare}fr)` }}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 flex w-[min(86vw,340px)] flex-col border-r border-[#deded8] bg-white shadow-[24px_0_80px_rgba(0,0,0,0.12)] transition-transform duration-300",
+          leftPanelOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+        aria-label="Historial y proyectos"
       >
-        <section
-          className={cn(
-            "h-full min-h-0 flex-col overflow-hidden border-r border-[var(--vf-border)] bg-[var(--vf-bg-1)]",
-            mobilePane === "build" ? "flex" : "hidden lg:flex",
-          )}
-        >
-          <header className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-[var(--vf-border)] px-4">
-            {modelLabel(currentModel) ? (
-              <p className="truncate text-[13px] text-[var(--vf-fg-1)]">
-                {modelLabel(currentModel)}
-              </p>
-            ) : (
-              <span aria-hidden />
-            )}
-            <button
-              type="button"
-              onClick={() => void newConversation()}
-              disabled={sending || conversationLoading}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-caption hover:border-[var(--vf-fg)] disabled:opacity-45"
-            >
-              <IconPlus size={11} /> Nueva
-            </button>
-          </header>
-
-          <div
-            ref={conversationViewportRef}
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3"
-          >
-            {conversationLoading ? (
-              <div className="grid h-full min-h-[260px] place-items-center">
-                <div className="text-center">
-                  <IconLoader size={17} className="mx-auto animate-spin" />
-                  <p className="mt-3 font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
-                    Recuperando contexto
-                  </p>
-                </div>
-              </div>
-            ) : messages.length === 0 ? (
-              <EmptyConversation
-                hasProject={Boolean(project)}
-                onSuggestion={(text) => void sendPrompt(text)}
-              />
-            ) : (
-              <div className="space-y-6">
-                {messages.map((message) => (
-                  <Message key={message.id} message={message} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="vf-studio-composer shrink-0 border-t border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-3 py-2">
-            {attachment ? (
-              <div className="mb-2 flex items-center justify-between gap-3 rounded-md border border-[var(--vf-border)] bg-[var(--vf-bg-2)] px-3 py-2">
-                <div className="min-w-0">
-                  <p className="truncate text-[10px] font-medium">{attachment.name}</p>
-                  <p className="font-mono text-label-caps uppercase text-[var(--vf-fg-2)]">
-                    Imagen adjunta
-                  </p>
-                </div>
-                <button type="button" onClick={() => setAttachment(null)} aria-label="Quitar imagen">
-                  <IconX size={12} />
-                </button>
-              </div>
-            ) : null}
-
-            <div className="rounded-xl border border-[var(--vf-border)] bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.05)] focus-within:border-black">
-              <textarea
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    void sendPrompt();
-                  }
-                }}
-                rows={2}
-                disabled={sending || !sessionId}
-                placeholder={
-                  project
-                    ? `Dile a V qué construir, revisar o desplegar en ${project.name}…`
-                    : "Crea o selecciona un proyecto para trabajar con contexto…"
-                }
-                className="max-h-24 min-h-[36px] w-full resize-none bg-transparent px-1.5 py-1 text-[14px] leading-5 text-[var(--vf-fg)] placeholder:text-[var(--vf-fg-2)] disabled:opacity-55"
-              />
-              <div className="flex items-center justify-between gap-3 pt-1">
-                <div className="flex items-center gap-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(event) => {
-                      attachFile(event.target.files?.[0]);
-                      event.target.value = "";
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={sending}
-                    className="grid h-8 w-8 place-items-center rounded-md border border-transparent hover:border-[var(--vf-border)] hover:bg-[var(--vf-bg-2)]"
-                    aria-label="Adjuntar imagen"
-                  >
-                    <IconClip size={13} />
-                  </button>
-                  <span className="hidden font-mono text-label-caps uppercase text-[var(--vf-fg-2)] sm:inline">
-                    Enter envía · Shift + Enter separa
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void sendPrompt()}
-                  disabled={!draft.trim() || sending || !sessionId}
-                  className="vf-press grid h-9 w-9 place-items-center rounded-md bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-25"
-                  aria-label="Enviar instrucción"
-                >
-                  {sending ? <IconLoader size={13} className="animate-spin" /> : <IconSend size={13} />}
-                </button>
-              </div>
+        <div className="flex h-16 items-center justify-between border-b border-[#ededeb] px-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <VMark size={18} />
+            <div className="min-w-0">
+              <p className="truncate text-[12px] font-semibold tracking-[0.28em]">VFORGE</p>
+              <p className="truncate text-[11px] text-[#71717a]">Chat profesional</p>
             </div>
-            {composerError ? (
-              <p className="mt-2 text-[10px] leading-4 text-[var(--vf-fg-1)]">{composerError}</p>
-            ) : null}
+          </div>
+          <button type="button" onClick={() => setLeftPanelOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-[#deded8]" aria-label="Cerrar">
+            <IconX size={14} />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          <button
+            type="button"
+            onClick={() => {
+              setLeftPanelOpen(false);
+              void newConversation();
+            }}
+            disabled={sending || conversationLoading}
+            className="mb-4 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-black px-4 text-[13px] font-medium text-white disabled:opacity-40"
+          >
+            <IconPlus size={14} /> Nuevo chat
+          </button>
+          <label className="mb-4 block">
+            <span className="mb-2 block font-mono text-[10px] uppercase tracking-[0.18em] text-[#71717a]">Proyecto activo</span>
+            <span className="relative block">
+              <select
+                value={activeProjectId}
+                onChange={(event) => {
+                  setActiveProjectId(event.target.value);
+                  setLeftPanelOpen(false);
+                }}
+                disabled={sending || projectsLoading || projectLoading}
+                className="h-12 w-full appearance-none rounded-xl border border-[#deded8] bg-[#fbfaf7] pl-3 pr-9 text-[13px] font-medium disabled:opacity-50"
+              >
+                <option value="">{projects.length === 0 ? "Sin proyectos" : "Sin proyecto fijo"}</option>
+                {projects.map((item) => (
+                  <option key={item.id} value={item.id}>{item.name}</option>
+                ))}
+              </select>
+              <IconChevD size={13} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#71717a]" />
+            </span>
+          </label>
+          <div className="space-y-2">
+            <button type="button" onClick={() => setShowCreate(true)} className="flex h-11 w-full items-center gap-3 rounded-xl border border-[#deded8] px-3 text-left text-[13px]">
+              <IconPlus size={15} /> Crear proyecto
+            </button>
+            <Link href="/app/projects" className="flex h-11 w-full items-center gap-3 rounded-xl border border-[#deded8] px-3 text-[13px]">
+              <IconLayout size={15} /> Proyectos
+            </Link>
+            <Link href="/app/marketplace" className="flex h-11 w-full items-center gap-3 rounded-xl border border-[#deded8] px-3 text-[13px]">
+              <IconSearch size={15} /> Marketplace
+            </Link>
+          </div>
+        </div>
+      </aside>
+
+      <aside
+        className={cn(
+          "fixed inset-y-0 right-0 z-40 flex w-[min(88vw,380px)] flex-col border-l border-[#deded8] bg-white shadow-[-24px_0_80px_rgba(0,0,0,0.12)] transition-transform duration-300",
+          connectorsOpen ? "translate-x-0" : "translate-x-full",
+        )}
+        aria-label="Conectores"
+      >
+        <div className="flex h-16 items-center justify-between border-b border-[#ededeb] px-5">
+          <div>
+            <p className="text-[14px] font-semibold">Conectores</p>
+            <p className="text-[11px] text-[#71717a]">{activeProjectName}</p>
+          </div>
+          <button type="button" onClick={() => setConnectorsOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-[#deded8]" aria-label="Cerrar">
+            <IconX size={14} />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          <div className="space-y-2">
+            {connectorRows.map(({ id, label, detail, active, Icon, action }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={action}
+                className="flex min-h-16 w-full items-center gap-3 rounded-2xl border border-[#deded8] bg-[#fbfaf7] px-3 text-left"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white">
+                  <Icon size={18} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <b className="block truncate text-[13px]">{label}</b>
+                  <small className="block truncate text-[11px] text-[#71717a]">{detail}</small>
+                </span>
+                <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", connectionPill(active))} aria-hidden />
+              </button>
+            ))}
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button type="button" onClick={requestDeploy} disabled={!project || sending || !sessionId} className="min-h-12 rounded-xl bg-black px-3 text-[12px] font-medium text-white disabled:opacity-35">
+              Desplegar
+            </button>
+            <button type="button" onClick={() => setWorkspaceOpen(true)} className="min-h-12 rounded-xl border border-[#deded8] px-3 text-[12px] font-medium">
+              Ver proyecto
+            </button>
+          </div>
+        </div>
+        <div className="hidden sm:block">
+          <SystemStrip project={project} system={system} currentModel={currentModel} />
+        </div>
+      </aside>
+
+      {widgetsOpen ? (
+        <section className="fixed inset-x-3 bottom-[98px] z-50 mx-auto max-w-[560px] rounded-[28px] border border-[#deded8] bg-white p-4 shadow-[0_28px_90px_rgba(0,0,0,0.18)] sm:bottom-28" aria-label="Castores widgets">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[14px] font-semibold">Castores</p>
+              <p className="text-[11px] text-[#71717a]">Widgets y apps conectables</p>
+            </div>
+            <button type="button" onClick={() => setWidgetsOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-[#deded8]" aria-label="Cerrar Castores">
+              <IconX size={14} />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {widgetRows.map(([label, caption, Icon, action]) => (
+              <button key={label} type="button" onClick={action} className="min-h-[74px] rounded-2xl border border-[#deded8] bg-[#fbfaf7] px-3 py-3 text-left">
+                <Icon size={17} />
+                <b className="mt-2 block text-[12px]">{label}</b>
+                <span className="block text-[10px] text-[#71717a]">{caption}</span>
+              </button>
+            ))}
           </div>
         </section>
+      ) : null}
 
-        <div
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Ajustar paneles"
-          className="hidden w-1.5 cursor-col-resize bg-[var(--vf-border)] hover:bg-black lg:block"
-          onPointerDown={(event) => {
-            event.preventDefault();
-            const grid = event.currentTarget.parentElement;
-            if (!grid) return;
-            const rect = grid.getBoundingClientRect();
-            const move = (ev: PointerEvent) => {
-              const pct = ((ev.clientX - rect.left) / rect.width) * 100;
-              const next = Math.min(70, Math.max(32, pct));
-              chatShareRef.current = next;
-              setChatShare(next);
-            };
-            const up = () => {
-              window.removeEventListener("pointermove", move);
-              window.removeEventListener("pointerup", up);
-              localStorage.setItem("vf-chat-share", String(Math.round(chatShareRef.current)));
-            };
-            window.addEventListener("pointermove", move);
-            window.addEventListener("pointerup", up);
-          }}
-        />
-        <section
-          className={cn(
-            "h-full min-h-0 flex-col overflow-hidden bg-[var(--vf-bg)]",
-            mobilePane === "preview" ? "flex" : "hidden lg:flex",
-          )}
-        >
+      {workspaceOpen ? (
+        <section className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-[#deded8] bg-[#fbfaf7] shadow-[-28px_0_90px_rgba(0,0,0,0.16)] lg:w-[min(76vw,1180px)]" aria-label="Preview del proyecto">
+          <div className="flex h-14 items-center justify-between border-b border-[#deded8] bg-white px-4">
+            <div className="min-w-0">
+              <p className="truncate text-[13px] font-semibold">{activeProjectName}</p>
+              <p className="truncate text-[11px] text-[#71717a]">Proyecto y vista previa</p>
+            </div>
+            <button type="button" onClick={() => setWorkspaceOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-[#deded8]" aria-label="Cerrar preview">
+              <IconX size={14} />
+            </button>
+          </div>
           <PreviewHeader
             mode={previewMode}
             setMode={setPreviewMode}
@@ -1011,7 +1071,6 @@ export function ForgeStudio() {
               setDataRefresh((value) => value + 1);
             }}
           />
-
           <BarraVivo
             encendido={vivo.encendido}
             fase={vivo.fase}
@@ -1028,59 +1087,33 @@ export function ForgeStudio() {
             verControl={verControl}
             onVerControl={setVerControl}
           />
-
           <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-page-sm md:p-page-md">
-            {previewMode === "canvas" ? (
-              <AppCanvas
-                projectId={activeProjectId}
-                projectName={project?.name ?? "Proyecto"}
-                src={previewUrlActual}
-                frameKey={previewKey}
-              />
-            ) : !activeProjectId && vivo.fase !== "vivo" ? (
-              // Con el motor vivo encendido el preview no depende de que haya un
-              // proyecto de VForge seleccionado: el proyecto lo manda el motor.
-              <NoProject onCreate={() => setShowCreate(true)} />
-            ) : activeProjectId && projectLoading && !project ? (
-              <div className="grid h-full min-h-[360px] place-items-center border border-[var(--vf-border)] bg-[var(--vf-bg-1)]">
-                <IconLoader size={18} className="animate-spin" />
-              </div>
-            ) : activeProjectId && projectError && !project ? (
-              <div className="grid h-full min-h-[360px] place-items-center border border-[var(--vf-fg)] bg-[var(--vf-bg-1)] p-8 text-center">
-                <div>
-                  <p className="text-[13px] font-medium">{projectError}</p>
-                  <button
-                    type="button"
-                    onClick={() => setDataRefresh((value) => value + 1)}
-                    className="mt-4 text-[11px] underline underline-offset-4"
-                  >
-                    Volver a intentar
-                  </button>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-page-sm md:p-page-md">
+              {previewMode === "canvas" ? (
+                <AppCanvas projectId={activeProjectId} projectName={project?.name ?? "Proyecto"} src={previewUrlActual} frameKey={previewKey} />
+              ) : !activeProjectId && vivo.fase !== "vivo" ? (
+                <NoProject onCreate={() => setShowCreate(true)} />
+              ) : activeProjectId && projectLoading && !project ? (
+                <div className="grid h-full min-h-[360px] place-items-center border border-[var(--vf-border)] bg-[var(--vf-bg-1)]">
+                  <IconLoader size={18} className="animate-spin" />
                 </div>
-              </div>
-            ) : previewMode === "triple" ? (
-              <TriplePreview
-                projectName={vivo.fase === "vivo" ? vivo.proyecto : (project?.name ?? "Proyecto")}
-                urls={viewports}
-                frameKey={previewKey}
-              />
-            ) : previewMode === "par" ? (
-              <ParPreview
-                projectName={vivo.fase === "vivo" ? vivo.proyecto : (project?.name ?? "Proyecto")}
-                urls={{ desktop: viewports.desktop, mobile: viewports.mobile }}
-                frameKey={previewKey}
-              />
-            ) : previewMode === "desktop" || previewMode === "mobile" || previewMode === "admin" ? (
-              <SinglePreview
-                projectName={vivo.fase === "vivo" ? vivo.proyecto : (project?.name ?? "Proyecto")}
-                mode={previewMode}
-                url={viewports[previewMode]}
-                frameKey={previewKey}
-              />
-            ) : null}
-          </div>
-
+              ) : activeProjectId && projectError && !project ? (
+                <div className="grid h-full min-h-[360px] place-items-center border border-[var(--vf-fg)] bg-[var(--vf-bg-1)] p-8 text-center">
+                  <div>
+                    <p className="text-[13px] font-medium">{projectError}</p>
+                    <button type="button" onClick={() => setDataRefresh((value) => value + 1)} className="mt-4 text-[11px] underline underline-offset-4">
+                      Volver a intentar
+                    </button>
+                  </div>
+                </div>
+              ) : previewMode === "triple" ? (
+                <TriplePreview projectName={vivo.fase === "vivo" ? vivo.proyecto : (project?.name ?? "Proyecto")} urls={viewports} frameKey={previewKey} />
+              ) : previewMode === "par" ? (
+                <ParPreview projectName={vivo.fase === "vivo" ? vivo.proyecto : (project?.name ?? "Proyecto")} urls={{ desktop: viewports.desktop, mobile: viewports.mobile }} frameKey={previewKey} />
+              ) : previewMode === "desktop" || previewMode === "mobile" || previewMode === "admin" ? (
+                <SinglePreview projectName={vivo.fase === "vivo" ? vivo.proyecto : (project?.name ?? "Proyecto")} mode={previewMode} url={viewports[previewMode]} frameKey={previewKey} />
+              ) : null}
+            </div>
             {editando && capa.seleccion ? (
               <PanelInspector
                 elemento={capa.seleccion}
@@ -1089,42 +1122,156 @@ export function ForgeStudio() {
                 ultimoCambio={capa.ultimoCambio}
                 onEditar={(operacion) => void capa.editar(operacion)}
                 onCerrar={capa.limpiar}
-                onEncargar={(peticion) =>
-                  capa.seleccion
-                    ? encargos.encargar(peticion, capa.seleccion)
-                    : Promise.resolve("Selecciona un elemento.")
-                }
+                onEncargar={(peticion) => capa.seleccion ? encargos.encargar(peticion, capa.seleccion) : Promise.resolve("Selecciona un elemento.")}
                 encargos={encargos.encargos}
                 enviando={encargos.enviando}
               />
             ) : null}
-
             {verControl && vivo.fase === "vivo" ? (
               <PanelControl
                 proyecto={vivo.proyecto}
                 refrescar={pulsoControl}
                 onCerrar={() => setVerControl(false)}
                 onCambio={() => {
-                  // Deshacer cambió los archivos: la vista tiene que releer.
                   setPreviewKey((value) => value + 1);
-                  // Y el retrato del elemento seleccionado ya no corresponde al
-                  // código (se veía el texto viejo en el inspector después de
-                  // deshacer). Se suelta la selección: la capa vuelve a
-                  // anunciarse al recargar y se puede volver a hacer clic.
                   capa.limpiar();
                 }}
               />
             ) : null}
           </div>
-
         </section>
-      </div>
+      ) : null}
 
-      <SystemStrip
-        project={project}
-        system={system}
-        currentModel={currentModel}
-      />
+      <main className="relative z-10 mx-auto flex h-full min-h-0 w-full min-w-0 max-w-full flex-col px-3 pb-[max(10px,env(safe-area-inset-bottom))] pt-2 sm:max-w-[960px] sm:px-5 sm:pt-4">
+        <header className="flex h-14 shrink-0 items-center justify-between gap-3">
+          <button type="button" onClick={() => setLeftPanelOpen(true)} className="grid h-11 w-11 place-items-center rounded-full border border-[#deded8] bg-white shadow-[0_6px_24px_rgba(0,0,0,0.04)]" aria-label="Abrir chats y proyectos">
+            <IconMenu size={18} />
+          </button>
+          <div className="min-w-0 text-center">
+            <p className="truncate text-[12px] font-semibold tracking-[0.28em]">VFORGE</p>
+            <p className="truncate text-[11px] text-[#71717a]">{assistantLabel ?? activeProjectName}</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button type="button" onClick={() => setConnectorsOpen(true)} className="grid h-11 w-11 place-items-center rounded-full border border-[#deded8] bg-white shadow-[0_6px_24px_rgba(0,0,0,0.04)]" aria-label="Abrir conectores">
+              <IconPlug size={17} />
+            </button>
+            <Link href="/app/perfil" className="grid h-11 w-11 place-items-center rounded-full border border-[#ff5a1f]/35 bg-white text-[12px] font-semibold text-[#ff5a1f]" aria-label="Perfil, usuarios y pagos">
+              {userInitials}
+            </Link>
+          </div>
+        </header>
+
+        <section className="mt-2 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden rounded-[28px] border border-[#deded8] bg-white shadow-[0_22px_80px_rgba(0,0,0,0.08)]">
+          <div className="flex min-h-12 shrink-0 items-center justify-between gap-3 border-b border-[#ededeb] px-4">
+            <button type="button" onClick={() => setLeftPanelOpen(true)} className="hidden min-w-0 items-center gap-2 text-left text-[12px] text-[#71717a] sm:flex">
+              <IconChat size={14} />
+              <span className="truncate">{activeProjectName}</span>
+            </button>
+            <span className="sm:hidden" aria-hidden />
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setWorkspaceOpen(true)} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#deded8] px-3 text-[11px]">
+                <IconLayout size={12} /> Proyecto
+              </button>
+              <button type="button" onClick={() => void newConversation()} disabled={sending || conversationLoading} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#deded8] px-3 text-[11px] disabled:opacity-40">
+                <IconPlus size={12} /> Nuevo
+              </button>
+            </div>
+          </div>
+
+          <div ref={conversationViewportRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
+            {conversationLoading ? (
+              <div className="grid h-full min-h-[260px] place-items-center">
+                <div className="text-center">
+                  <IconLoader size={17} className="mx-auto animate-spin" />
+                  <p className="mt-3 font-mono text-label-caps uppercase text-[#71717a]">Recuperando contexto</p>
+                </div>
+              </div>
+            ) : messages.length === 0 ? (
+              <EmptyConversation hasProject={Boolean(project)} onSuggestion={(text) => void sendPrompt(text)} />
+            ) : (
+              <div className="space-y-6">
+                {messages.map((message) => <Message key={message.id} message={message} />)}
+              </div>
+            )}
+          </div>
+
+          <div className="shrink-0 border-t border-[#ededeb] bg-[#fbfaf7] px-3 py-3 sm:px-4">
+            {attachment ? (
+              <div className="mb-2 flex items-center justify-between gap-3 rounded-2xl border border-[#deded8] bg-white px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-[11px] font-medium">{attachment.name}</p>
+                  <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#71717a]">Imagen adjunta</p>
+                </div>
+                <button type="button" onClick={() => setAttachment(null)} aria-label="Quitar imagen" className="grid h-8 w-8 place-items-center rounded-full border border-[#deded8]">
+                  <IconX size={12} />
+                </button>
+              </div>
+            ) : null}
+
+            <div className="mb-2 grid grid-cols-4 gap-2">
+              {connectorRows.map(({ id, label, Icon, action, active }) => (
+                <button key={id} type="button" onClick={action} className="relative flex min-h-[66px] min-w-0 flex-col items-center justify-center gap-1 rounded-2xl border border-[#deded8] bg-white px-1 text-center shadow-[0_5px_18px_rgba(0,0,0,0.04)]">
+                  <Icon size={17} />
+                  <span className="max-w-full whitespace-normal break-words text-[10px] font-semibold leading-[1.05]">{label}</span>
+                  <i className={cn("absolute bottom-2 right-2 h-1.5 w-1.5 rounded-full", connectionPill(active))} aria-hidden />
+                </button>
+              ))}
+            </div>
+
+            <form
+              onSubmit={(event: FormEvent<HTMLFormElement>) => {
+                event.preventDefault();
+                void sendPrompt();
+              }}
+              className="flex min-w-0 items-end gap-2"
+            >
+              <button type="button" onClick={() => setWidgetsOpen(true)} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#ff5a1f] text-white shadow-[0_10px_28px_rgba(255,90,31,0.25)]" aria-label="Abrir Castores">
+                <IconPlus size={18} />
+              </button>
+              <div className="min-w-0 flex-1 rounded-[24px] border border-[#deded8] bg-white px-4 py-2 focus-within:border-black">
+                <textarea
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      void sendPrompt();
+                    }
+                  }}
+                  rows={1}
+                  disabled={sending || !sessionId}
+                  placeholder={project ? `Trabajar en ${project.name}` : "Trabajar en VForge"}
+                  className="max-h-28 min-h-[28px] w-full resize-none bg-transparent py-1 text-[14px] leading-5 outline-none placeholder:text-[#9a9a9a] disabled:opacity-55"
+                />
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  <div className="flex items-center gap-1">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) => {
+                        attachFile(event.target.files?.[0]);
+                        event.target.value = "";
+                      }}
+                    />
+                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={sending} className="grid h-7 w-7 place-items-center rounded-full hover:bg-[#f2f2ef]" aria-label="Adjuntar imagen">
+                      <IconClip size={13} />
+                    </button>
+                  </div>
+                  {composerError ? <p className="truncate text-[10px] text-[#71717a]">{composerError}</p> : null}
+                </div>
+              </div>
+              <button type="button" className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-[#deded8] bg-white" aria-label="Dictar">
+                <IconMic size={17} />
+              </button>
+              <button type="submit" disabled={!draft.trim() || sending || !sessionId} className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-black text-white disabled:opacity-25" aria-label="Enviar">
+                {sending ? <IconLoader size={15} className="animate-spin" /> : <IconSend size={15} />}
+              </button>
+            </form>
+          </div>
+        </section>
+      </main>
 
       {showCreate ? (
         <CreateProjectDialog
@@ -1138,157 +1285,6 @@ export function ForgeStudio() {
         />
       ) : null}
     </div>
-  );
-}
-
-function StudioToolbar({
-  projects,
-  activeProjectId,
-  project,
-  loading,
-  sending,
-  canPrompt,
-  githubUrl,
-  previewUrl,
-  onProjectChange,
-  onCreate,
-  onDeploy,
-}: {
-  projects: ProjectSummary[];
-  activeProjectId: string;
-  project: ProjectDetail | null;
-  loading: boolean;
-  sending: boolean;
-  canPrompt: boolean;
-  githubUrl: string | null;
-  previewUrl: string | null;
-  onProjectChange: (id: string) => void;
-  onCreate: () => void;
-  onDeploy: () => void;
-}) {
-  return (
-    <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-[var(--vf-border)] bg-[var(--vf-bg-1)] px-4">
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <label className="relative min-w-0 flex-1 sm:max-w-[310px]">
-          <span className="sr-only">Proyecto activo</span>
-          <select
-            value={activeProjectId}
-            onChange={(event) => onProjectChange(event.target.value)}
-            disabled={sending || loading}
-            className="h-10 w-full appearance-none rounded-md border border-[var(--vf-border-1)] bg-[var(--vf-bg-1)] pl-3 pr-8 text-[11px] font-medium text-[var(--vf-fg)] disabled:opacity-55"
-          >
-            <option value="">
-              {projects.length === 0 ? "Sin proyectos" : "Selecciona un proyecto"}
-            </option>
-            {projects.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-          <IconChevD
-            size={11}
-            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"
-          />
-        </label>
-        <button
-          type="button"
-          onClick={onCreate}
-          className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-3 text-[10px] hover:border-[var(--vf-fg)]"
-        >
-          <IconPlus size={12} /> <span className="hidden sm:inline">Nuevo proyecto</span>
-        </button>
-      </div>
-
-      <div className="flex shrink-0 items-center gap-1.5">
-        {githubUrl ? (
-          <a
-            href={githubUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[10px] hover:border-[var(--vf-fg)]"
-          >
-            <IconGithub size={12} /> <span className="hidden xl:inline">GitHub</span>
-          </a>
-        ) : (
-          <Link
-            href="/app/integrations"
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[10px] hover:border-[var(--vf-fg)]"
-          >
-            <IconGithub size={12} /> <span className="hidden xl:inline">Conectar</span>
-          </Link>
-        )}
-        <button
-          type="button"
-          onClick={onDeploy}
-          disabled={!project || sending || !canPrompt}
-          className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--vf-fg)] px-3 text-[10px] font-medium text-[var(--vf-bg-1)] disabled:opacity-30"
-        >
-          {sending ? <IconLoader size={12} className="animate-spin" /> : <IconRocket size={12} />}
-          <span className="hidden sm:inline">Desplegar</span>
-        </button>
-        {project ? (
-          <Link
-            href={`/app/live/${encodeURIComponent(project.id)}`}
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[10px] hover:border-[var(--vf-fg)]"
-          >
-            <IconLayout size={12} /> <span>Sala</span>
-          </Link>
-        ) : null}
-        {project ? (
-          <button
-            type="button"
-            onClick={() =>
-              window.open(
-                `/ventana/${encodeURIComponent(project.id)}?device=iphone`,
-                `vf-${project.id}-iphone-${Date.now()}`,
-                "popup,width=520,height=980",
-              )
-            }
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--vf-border-1)] px-2.5 text-[10px] hover:border-[var(--vf-fg)]"
-            title="Abre el celular en una ventana aparte"
-          >
-            Celular ↗
-          </button>
-        ) : null}
-        {previewUrl ? (
-          <a
-            href={previewUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="grid h-9 w-9 place-items-center rounded-md border border-[var(--vf-border-1)] hover:border-[var(--vf-fg)]"
-            aria-label="Abrir proyecto"
-          >
-            <IconExtLink size={12} />
-          </a>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function MobilePaneButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "h-9 rounded-md font-mono text-[9px] uppercase tracking-[0.12em]",
-        active
-          ? "bg-[var(--vf-fg)] text-[var(--vf-bg-1)]"
-          : "text-[var(--vf-fg-2)]",
-      )}
-    >
-      {children}
-    </button>
   );
 }
 
