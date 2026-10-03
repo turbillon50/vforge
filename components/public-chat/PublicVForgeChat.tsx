@@ -62,18 +62,22 @@ const connectors: Connector[] = [
   {
     id: "mind",
     label: "MindContextIA",
-    caption: "Memoria",
+    caption: "Fuentes",
+    logo: "/logos/mindcontext-beforge.svg",
     alt: "MindContextIA",
     prompt: "Quiero agregar fuentes reales al MindContextIA de este proyecto.",
     summary: "Fuentes, memoria y modelos para que el contexto no se pierda.",
+    logoScale: "h-full w-full",
   },
   {
     id: "momentum",
     label: "Momentum",
     caption: "Anuncios",
+    logo: "/logos/momentum-bw.svg",
     alt: "Momentum",
     prompt: "Quiero preparar este proyecto para publicarlo o promocionarlo en Momentum.",
     summary: "Promoción, anuncios y salida comercial cuando el proyecto esté listo.",
+    logoScale: "h-full w-full",
   },
 ];
 
@@ -107,16 +111,10 @@ function normalizeError(status: number) {
 
 function ConnectorLogo({ connector, className = "" }: { connector: Connector; className?: string }) {
   if (!connector.logo) {
-    const mark = connector.id === "mind" ? "IA" : "M";
-    const palette =
-      connector.id === "mind"
-        ? "bg-[#f4f0ff] text-[#4d38ff] ring-[#6f5cff]/25"
-        : "bg-[#f6f7f8] text-[#080808] ring-white/60";
-
     return (
-      <span className={cn("grid place-items-center overflow-hidden rounded-2xl ring-1", palette, className)}>
+      <span className={cn("grid place-items-center overflow-hidden rounded-2xl bg-[#f4f0ff] text-[#4d38ff] ring-1 ring-[#6f5cff]/25", className)}>
         <span className="text-[13px] font-black leading-none tracking-[-0.08em]" aria-label={connector.alt}>
-          {mark}
+          IA
         </span>
       </span>
     );
@@ -126,23 +124,6 @@ function ConnectorLogo({ connector, className = "" }: { connector: Connector; cl
     <span className={cn("grid place-items-center overflow-hidden rounded-2xl bg-[#f8f8f5] ring-1 ring-white/70", className)}>
       <img src={connector.logo} alt={connector.alt} className={cn("object-contain", connector.logoScale || "h-[58%] w-[58%]")} />
     </span>
-  );
-}
-
-function IntroSignal({ active }: { active: boolean }) {
-  return (
-    <div
-      className={cn(
-        "grid h-16 w-16 place-items-center rounded-full border border-white/12 bg-white/[0.045] shadow-[0_24px_68px_rgba(0,0,0,.55)] transition duration-700",
-        active ? "scale-100 opacity-100" : "scale-90 opacity-0",
-      )}
-      aria-hidden="true"
-    >
-      <div className={cn("flex items-center gap-1.5", active && "animate-pulse")}>
-        <span className="size-2.5 rounded-full bg-white/90" />
-        <span className="size-2.5 rounded-full bg-white/60" />
-      </div>
-    </div>
   );
 }
 
@@ -182,7 +163,6 @@ export function PublicVForgeChat() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeConnector, setActiveConnector] = useState<ConnectorId | null>(null);
   const [introSeen, setIntroSeen] = useState(false);
-  const [introSignalActive, setIntroSignalActive] = useState(true);
   const [sessionId, setSessionId] = useState("guest");
   const scrollerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -194,9 +174,6 @@ export function PublicVForgeChat() {
     } catch {
       setIntroSeen(false);
     }
-
-    const timer = window.setTimeout(() => setIntroSignalActive(false), 2200);
-    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -390,13 +367,7 @@ export function PublicVForgeChat() {
           <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
             {messages.length === 0 ? (
               <div className="flex min-h-[calc(100dvh-300px)] flex-col items-center justify-center text-center">
-                <IntroSignal active={introSignalActive} />
-                <div
-                  className={cn(
-                    "transition duration-700",
-                    introSignalActive ? "translate-y-5 opacity-0" : "-translate-y-2 opacity-100",
-                  )}
-                >
+                <div>
                   <div role="heading" aria-level={1} className="text-[31px] font-semibold leading-[1.08] tracking-[-0.03em] text-white">
                     Control de tu software.
                     <br />
