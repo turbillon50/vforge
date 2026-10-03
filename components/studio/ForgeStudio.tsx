@@ -7,6 +7,7 @@ import { PanelInspector } from "@/components/studio/vivo/PanelInspector";
 import { PanelControl } from "@/components/studio/vivo/PanelControl";
 import { useCapaEdicion } from "@/components/studio/vivo/useCapaEdicion";
 import { useEncargos } from "@/components/studio/vivo/useEncargos";
+import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import {
   useCallback,
@@ -23,6 +24,7 @@ import {
   IconBrain,
   IconCheck,
   IconChevD,
+  IconCreditCard,
   IconChat,
   IconClip,
   IconDatabase,
@@ -38,6 +40,7 @@ import {
   IconRefresh,
   IconSearch,
   IconSend,
+  IconSettings,
   IconShield,
   IconTriangle,
   IconUsers,
@@ -246,6 +249,8 @@ function parseSseBlock(block: string): Record<string, unknown> | null {
 }
 
 export function ForgeStudio() {
+  const { signOut } = useClerk();
+  const { user } = useUser();
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [activeProjectId, setActiveProjectId] = useState("");
   const [project, setProject] = useState<ProjectDetail | null>(null);
@@ -277,6 +282,8 @@ export function ForgeStudio() {
   const [connectorsOpen, setConnectorsOpen] = useState(false);
   const [widgetsOpen, setWidgetsOpen] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [system, setSystem] = useState<SystemState>({
     connections: new Set(),
     ojoOnline: null,
@@ -839,19 +846,35 @@ export function ForgeStudio() {
   const activeProjectName = project?.name ?? projects.find((item) => item.id === activeProjectId)?.name ?? "VForge";
   const assistantLabel = modelLabel(currentModel);
   const userInitials =
-    live?.me.name
-      ?.split(/\s+/)
+    (user?.fullName || live?.me.name || user?.primaryEmailAddress?.emailAddress)
+      ?.split(/[\s@._-]+/)
       .filter(Boolean)
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
       .join("") || "LU";
-  const anyPanelOpen = leftPanelOpen || connectorsOpen || widgetsOpen || workspaceOpen;
+  const userName =
+    user?.fullName ||
+    live?.me.name ||
+    user?.primaryEmailAddress?.emailAddress ||
+    "Luis Turbo";
+  const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
+  const anyPanelOpen = leftPanelOpen || connectorsOpen || widgetsOpen || workspaceOpen || profileOpen;
   const closePanels = useCallback(() => {
     setLeftPanelOpen(false);
     setConnectorsOpen(false);
     setWidgetsOpen(false);
     setWorkspaceOpen(false);
+    setProfileOpen(false);
   }, []);
+  const handleSignOut = useCallback(async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await signOut({ redirectUrl: "/" });
+    } finally {
+      setSigningOut(false);
+    }
+  }, [signOut, signingOut]);
   useEffect(() => {
     if (!anyPanelOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1053,6 +1076,53 @@ export function ForgeStudio() {
         </div>
       </aside>
 
+      <aside
+        className={cn(
+          "fixed inset-y-0 right-0 z-40 flex w-[min(88vw,360px)] flex-col border-l border-[#deded8] bg-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-[-24px_0_80px_rgba(0,0,0,0.12)] transition-transform duration-300",
+          profileOpen ? "translate-x-0" : "translate-x-full",
+        )}
+        aria-label="Cuenta"
+      >
+        <div className="flex h-16 items-center justify-between border-b border-[#ededeb] px-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#ff5a1f]/35 bg-white text-[12px] font-semibold text-[#ff5a1f]">
+              {userInitials}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-[14px] font-semibold">{userName}</p>
+              {userEmail ? <p className="truncate text-[11px] text-[#71717a]">{userEmail}</p> : null}
+            </div>
+          </div>
+          <button type="button" onClick={() => setProfileOpen(false)} className="grid h-9 w-9 place-items-center rounded-full border border-[#deded8]" aria-label="Cerrar cuenta">
+            <IconX size={14} />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          <div className="space-y-2">
+            <Link href="/app/settings" onClick={closePanels} className="flex min-h-12 w-full items-center gap-3 rounded-2xl border border-[#deded8] bg-[#fbfaf7] px-3 text-[13px] font-medium">
+              <IconSettings size={16} /> Cuenta y seguridad
+            </Link>
+            <Link href="/billing" onClick={closePanels} className="flex min-h-12 w-full items-center gap-3 rounded-2xl border border-[#deded8] bg-[#fbfaf7] px-3 text-[13px] font-medium">
+              <IconCreditCard size={16} /> Pagos y facturación
+            </Link>
+            <Link href="/app/integrations" onClick={closePanels} className="flex min-h-12 w-full items-center gap-3 rounded-2xl border border-[#deded8] bg-[#fbfaf7] px-3 text-[13px] font-medium">
+              <IconPlug size={16} /> Conectores
+            </Link>
+          </div>
+        </div>
+        <div className="border-t border-[#ededeb] p-4">
+          <button
+            type="button"
+            onClick={() => void handleSignOut()}
+            disabled={signingOut}
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-black px-4 text-[13px] font-semibold text-white disabled:opacity-45"
+          >
+            {signingOut ? <IconLoader size={14} className="animate-spin" /> : <IconX size={14} />}
+            Cerrar sesión
+          </button>
+        </div>
+      </aside>
+
       {widgetsOpen ? (
         <section className="fixed inset-x-3 bottom-[calc(98px+env(safe-area-inset-bottom))] z-50 mx-auto max-w-[560px] rounded-[28px] border border-[#deded8] bg-white p-4 shadow-[0_28px_90px_rgba(0,0,0,0.18)] sm:bottom-28" aria-label="Castores widgets">
           <div className="mb-3 flex items-center justify-between gap-3">
@@ -1180,9 +1250,9 @@ export function ForgeStudio() {
             <button type="button" onClick={() => setConnectorsOpen(true)} className="grid h-11 w-11 place-items-center rounded-full border border-[#deded8] bg-white shadow-[0_6px_24px_rgba(0,0,0,0.04)]" aria-label="Abrir conectores">
               <IconPlug size={17} />
             </button>
-            <Link href="/app/perfil" className="grid h-11 w-11 place-items-center rounded-full border border-[#ff5a1f]/35 bg-white text-[12px] font-semibold text-[#ff5a1f]" aria-label="Perfil, usuarios y pagos">
+            <button type="button" onClick={() => setProfileOpen(true)} className="grid h-11 w-11 place-items-center rounded-full border border-[#ff5a1f]/35 bg-white text-[12px] font-semibold text-[#ff5a1f]" aria-label="Abrir cuenta, usuarios y pagos">
               {userInitials}
-            </Link>
+            </button>
           </div>
         </header>
 
