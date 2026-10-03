@@ -1,11 +1,11 @@
 {
   "name": "VForge",
   "short_name": "VForge",
-  "description": "Escritorio, móvil y administración en una sala privada de revisión.",
-  "start_url": "/app/chat",
+  "description": "Chat profesional para convertir una idea en una app.",
+  "start_url": "/chat",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#080808",
+  "theme_color": "#080808",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

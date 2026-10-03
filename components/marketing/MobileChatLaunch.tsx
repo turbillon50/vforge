@@ -6,7 +6,7 @@ import { ForgeMark, GitHubMark, VercelMark } from "./MonochromeHome";
 import "./monochrome-home.css";
 
 const CHAT_SPLASH_KEY = "vf-monochrome-splash-v1";
-const CHAT_URL = "/app/chat";
+const CHAT_URL = "/chat";
 
 export function MobileChatLaunch() {
   const router = useRouter();
