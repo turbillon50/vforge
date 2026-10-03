@@ -64,11 +64,11 @@ const connectors: Connector[] = [
     id: "mind",
     label: "Mind Context",
     caption: "Fuentes",
-    logo: "/logos/mindcontext.svg",
+    logo: "/logos/mindcontext-beforge.svg",
     alt: "Mind Context",
     prompt: "Quiero agregar fuentes reales al Mind Context de este proyecto.",
     summary: "Fuentes, memoria y modelos para que el contexto no se pierda.",
-    logoScale: "h-[72%] w-[72%]",
+    logoScale: "h-[58%] w-[58%]",
   },
   {
     id: "momentum",
@@ -135,7 +135,10 @@ function IntroSignal({ active }: { active: boolean }) {
       )}
       aria-hidden="true"
     >
-      <div className={cn("h-0 w-0 border-x-[16px] border-t-[28px] border-x-transparent border-t-white", active && "animate-pulse")} />
+      <div className={cn("flex items-center gap-1.5", active && "animate-pulse")}>
+        <span className="size-2.5 rounded-full bg-white/86" />
+        <span className="size-2.5 rounded-full bg-white/54" />
+      </div>
     </div>
   );
 }
@@ -147,7 +150,10 @@ function MessageBubble({ message }: { message: ChatMessage }) {
     <article className={cn("flex w-full gap-3", isUser ? "justify-end" : "justify-start")}>
       {!isUser && (
         <div className="mt-1 grid size-8 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.06]">
-          <div className="h-0 w-0 border-x-[7px] border-t-[12px] border-x-transparent border-t-white/80" />
+          <div className="flex items-center gap-1">
+            <span className="size-1.5 rounded-full bg-white/78" />
+            <span className="size-1.5 rounded-full bg-white/45" />
+          </div>
         </div>
       )}
       <div
@@ -211,11 +217,7 @@ export function PublicVForgeChat() {
         href: `vf://${connector.id}`,
         label: connector.label,
         desc: connector.caption,
-        icon: connector.compactLogo ? (
-          <img src={connector.logo} alt="" className="h-7 w-7 object-contain" aria-hidden="true" />
-        ) : (
-          <img src={connector.logo} alt="" className="h-6 w-6 object-contain" aria-hidden="true" />
-        ),
+        icon: <ConnectorLogo connector={connector} className="size-9 rounded-xl" />,
       })),
     [],
   );
@@ -429,6 +431,7 @@ export function PublicVForgeChat() {
                   <button
                     key={connector.id}
                     type="button"
+                    aria-label={`Abrir ${connector.label}`}
                     onClick={() => openConnector(connector.id)}
                     className="group relative flex h-[76px] min-w-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-[24px] border border-white/15 bg-[linear-gradient(180deg,rgba(255,255,255,.125),rgba(255,255,255,.052))] px-1 text-center shadow-[inset_0_1px_0_rgba(255,255,255,.14),0_18px_42px_rgba(0,0,0,.34)] transition active:scale-[.97]"
                   >
@@ -513,9 +516,6 @@ export function PublicVForgeChat() {
           >
             <div className="mb-8 flex items-center justify-between">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="grid size-11 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.055]">
-                  <div className="h-0 w-0 border-x-[8px] border-t-[14px] border-x-transparent border-t-white" />
-                </div>
                 <div className="min-w-0">
                   <div className="truncate text-xs font-semibold uppercase tracking-[0.36em] text-white">VFORGE</div>
                   <div className="mt-1 truncate text-xs text-white/50">Chat profesional</div>
