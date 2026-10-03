@@ -12,7 +12,6 @@ import {
   Plus,
   Search,
   Settings2,
-  Sparkles,
   UserRound,
   X,
 } from "lucide-react";
@@ -31,7 +30,7 @@ type Connector = {
   id: ConnectorId;
   label: string;
   caption: string;
-  logo: string;
+  logo?: string;
   alt: string;
   prompt: string;
   summary: string;
@@ -62,23 +61,19 @@ const connectors: Connector[] = [
   },
   {
     id: "mind",
-    label: "Mind Context",
-    caption: "Fuentes",
-    logo: "/logos/mindcontext-beforge.svg",
-    alt: "Mind Context",
-    prompt: "Quiero agregar fuentes reales al Mind Context de este proyecto.",
+    label: "MindContextIA",
+    caption: "Memoria",
+    alt: "MindContextIA",
+    prompt: "Quiero agregar fuentes reales al MindContextIA de este proyecto.",
     summary: "Fuentes, memoria y modelos para que el contexto no se pierda.",
-    logoScale: "h-[58%] w-[58%]",
   },
   {
     id: "momentum",
     label: "Momentum",
     caption: "Anuncios",
-    logo: "/logos/momentum-mark.svg",
     alt: "Momentum",
     prompt: "Quiero preparar este proyecto para publicarlo o promocionarlo en Momentum.",
     summary: "Promoción, anuncios y salida comercial cuando el proyecto esté listo.",
-    compactLogo: true,
   },
 ];
 
@@ -111,16 +106,24 @@ function normalizeError(status: number) {
 }
 
 function ConnectorLogo({ connector, className = "" }: { connector: Connector; className?: string }) {
-  if (connector.compactLogo) {
+  if (!connector.logo) {
+    const mark = connector.id === "mind" ? "IA" : "M";
+    const palette =
+      connector.id === "mind"
+        ? "bg-[#f4f0ff] text-[#4d38ff] ring-[#6f5cff]/25"
+        : "bg-[#f6f7f8] text-[#080808] ring-white/60";
+
     return (
-      <span className={cn("grid place-items-center overflow-hidden rounded-2xl bg-white", className)}>
-        <img src={connector.logo} alt={connector.alt} className="h-[82%] w-[82%] object-contain" />
+      <span className={cn("grid place-items-center overflow-hidden rounded-2xl ring-1", palette, className)}>
+        <span className="text-[13px] font-black leading-none tracking-[-0.08em]" aria-label={connector.alt}>
+          {mark}
+        </span>
       </span>
     );
   }
 
   return (
-    <span className={cn("grid place-items-center overflow-hidden rounded-2xl bg-white", className)}>
+    <span className={cn("grid place-items-center overflow-hidden rounded-2xl bg-[#f8f8f5] ring-1 ring-white/70", className)}>
       <img src={connector.logo} alt={connector.alt} className={cn("object-contain", connector.logoScale || "h-[58%] w-[58%]")} />
     </span>
   );
@@ -394,9 +397,6 @@ export function PublicVForgeChat() {
                     introSignalActive ? "translate-y-5 opacity-0" : "-translate-y-2 opacity-100",
                   )}
                 >
-                  <div className="mx-auto mb-5 grid size-12 place-items-center rounded-full border border-white/10 bg-white/[0.055]">
-                    <Sparkles className="size-5 text-white/80" />
-                  </div>
                   <div role="heading" aria-level={1} className="text-[31px] font-semibold leading-[1.08] tracking-[-0.03em] text-white">
                     Control de tu software.
                     <br />
@@ -437,7 +437,12 @@ export function PublicVForgeChat() {
                   >
                     <div className="pointer-events-none absolute inset-x-2 top-1 h-5 rounded-full bg-white/10 blur-md" />
                     <ConnectorLogo connector={connector} className="relative size-8 rounded-xl shadow-[0_8px_18px_rgba(0,0,0,.24)]" />
-                    <span className="relative max-w-full truncate text-[11px] font-semibold leading-none text-white">
+                    <span
+                      className={cn(
+                        "relative max-w-full truncate font-semibold leading-none text-white",
+                        connector.id === "mind" ? "text-[10px] tracking-[-0.04em]" : "text-[11px]",
+                      )}
+                    >
                       {connector.label}
                     </span>
                     <span className="relative max-w-full truncate text-[10px] leading-none text-white/40">

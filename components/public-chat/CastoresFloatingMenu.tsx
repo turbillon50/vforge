@@ -248,21 +248,21 @@ export function CastoresFloatingMenu({
                       onClick={() => handleNavigate(item.href)}
                       className="relative flex min-h-[112px] cursor-pointer flex-col items-center gap-2 rounded-2xl p-3 text-center"
                       style={{
-                        background: isActive ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.11)",
+                        background: isActive ? "rgba(255,255,255,0.24)" : "rgba(255,255,255,0.16)",
                         border: isActive
                           ? "1px solid rgba(255,255,255,0.30)"
-                          : "1px solid rgba(255,255,255,0.10)",
+                          : "1px solid rgba(255,255,255,0.16)",
                         backdropFilter: "blur(10px)",
                       }}
                     >
                       <div
                         className="relative flex h-11 w-11 items-center justify-center rounded-xl"
                         style={{
-                          background: isActive ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)",
-                          color: "rgba(255,255,255,0.84)",
+                          background: "rgba(255,255,255,0.10)",
+                          color: "rgba(255,255,255,0.96)",
                           border: isActive
                             ? "1px solid rgba(255,255,255,0.28)"
-                            : "1px solid rgba(255,255,255,0.10)",
+                            : "1px solid rgba(255,255,255,0.16)",
                         }}
                       >
                         {item.icon}
@@ -277,7 +277,7 @@ export function CastoresFloatingMenu({
                           {item.label}
                         </p>
                         {item.desc && (
-                          <p className="mt-0.5 line-clamp-2 text-[9px] leading-snug text-white/40">
+                          <p className="mt-0.5 line-clamp-2 text-[9px] leading-snug text-white/60">
                             {item.desc}
                           </p>
                         )}
