@@ -198,6 +198,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isStudio = pathname === "/app/chat";
+  const isNativeChat = isStudio;
   const isFixedWorkspace =
     isStudio || pathname === "/app/trio" || pathname === "/forge" || pathname === "/v";
   const isSetup = pathname.startsWith("/app/setup");
@@ -219,6 +220,16 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   // Live y Setup: pantalla completa, sin chrome del shell
   if (isLive || isSetup) {
     return <ConnectionGate>{children}</ConnectionGate>;
+  }
+
+  if (isNativeChat) {
+    return (
+      <ConnectionGate>
+        <div className="h-dvh min-h-dvh w-full overflow-hidden overscroll-none bg-[#fbfaf7] text-[var(--color-ink)]">
+          {children}
+        </div>
+      </ConnectionGate>
+    );
   }
 
   const title =

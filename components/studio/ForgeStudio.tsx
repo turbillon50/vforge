@@ -829,12 +829,20 @@ export function ForgeStudio() {
       .map((part) => part[0]?.toUpperCase())
       .join("") || "LU";
   const anyPanelOpen = leftPanelOpen || connectorsOpen || widgetsOpen || workspaceOpen;
-  const closePanels = () => {
+  const closePanels = useCallback(() => {
     setLeftPanelOpen(false);
     setConnectorsOpen(false);
     setWidgetsOpen(false);
     setWorkspaceOpen(false);
-  };
+  }, []);
+  useEffect(() => {
+    if (!anyPanelOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closePanels();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [anyPanelOpen, closePanels]);
   const ask = (text: string) => {
     closePanels();
     setMobilePane("build");
@@ -900,7 +908,7 @@ export function ForgeStudio() {
 
   return (
     <div
-      className="vf-mobile-stable relative flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 overflow-hidden overscroll-none bg-[#fbfaf7] text-[var(--vf-fg)]"
+      className="vf-mobile-stable relative flex h-dvh min-h-0 w-full min-w-0 max-w-full flex-1 overflow-hidden overscroll-none bg-[#fbfaf7] text-[var(--vf-fg)]"
       data-chat-share={Math.round(chatShare)}
       data-mobile-pane={mobilePane}
     >
@@ -915,7 +923,7 @@ export function ForgeStudio() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-[min(86vw,340px)] flex-col border-r border-[#deded8] bg-white shadow-[24px_0_80px_rgba(0,0,0,0.12)] transition-transform duration-300",
+          "fixed inset-y-0 left-0 z-40 flex w-[min(86vw,340px)] flex-col border-r border-[#deded8] bg-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-[24px_0_80px_rgba(0,0,0,0.12)] transition-transform duration-300",
           leftPanelOpen ? "translate-x-0" : "-translate-x-full",
         )}
         aria-label="Historial y proyectos"
@@ -980,7 +988,7 @@ export function ForgeStudio() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 right-0 z-40 flex w-[min(88vw,380px)] flex-col border-l border-[#deded8] bg-white shadow-[-24px_0_80px_rgba(0,0,0,0.12)] transition-transform duration-300",
+          "fixed inset-y-0 right-0 z-40 flex w-[min(88vw,380px)] flex-col border-l border-[#deded8] bg-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-[-24px_0_80px_rgba(0,0,0,0.12)] transition-transform duration-300",
           connectorsOpen ? "translate-x-0" : "translate-x-full",
         )}
         aria-label="Conectores"
@@ -1029,7 +1037,7 @@ export function ForgeStudio() {
       </aside>
 
       {widgetsOpen ? (
-        <section className="fixed inset-x-3 bottom-[98px] z-50 mx-auto max-w-[560px] rounded-[28px] border border-[#deded8] bg-white p-4 shadow-[0_28px_90px_rgba(0,0,0,0.18)] sm:bottom-28" aria-label="Castores widgets">
+        <section className="fixed inset-x-3 bottom-[calc(98px+env(safe-area-inset-bottom))] z-50 mx-auto max-w-[560px] rounded-[28px] border border-[#deded8] bg-white p-4 shadow-[0_28px_90px_rgba(0,0,0,0.18)] sm:bottom-28" aria-label="Castores widgets">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <p className="text-[14px] font-semibold">Castores</p>
@@ -1142,8 +1150,8 @@ export function ForgeStudio() {
         </section>
       ) : null}
 
-      <main className="relative z-10 mx-auto flex h-full min-h-0 w-full min-w-0 max-w-full flex-col px-3 pb-[max(10px,env(safe-area-inset-bottom))] pt-2 sm:max-w-[960px] sm:px-5 sm:pt-4">
-        <header className="flex h-14 shrink-0 items-center justify-between gap-3">
+      <main className="relative z-10 mx-auto flex h-full min-h-0 w-full min-w-0 max-w-full flex-col px-0 pb-[max(10px,env(safe-area-inset-bottom))] pt-[max(10px,env(safe-area-inset-top))] sm:max-w-[960px] sm:px-5 sm:pt-4">
+        <header className="flex h-14 shrink-0 items-center justify-between gap-3 px-3 sm:px-0">
           <button type="button" onClick={() => setLeftPanelOpen(true)} className="grid h-11 w-11 place-items-center rounded-full border border-[#deded8] bg-white shadow-[0_6px_24px_rgba(0,0,0,0.04)]" aria-label="Abrir chats y proyectos">
             <IconMenu size={18} />
           </button>
@@ -1161,7 +1169,7 @@ export function ForgeStudio() {
           </div>
         </header>
 
-        <section className="mt-2 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden rounded-[28px] border border-[#deded8] bg-white shadow-[0_22px_80px_rgba(0,0,0,0.08)]">
+        <section className="mt-2 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-white sm:rounded-[28px] sm:border sm:border-[#deded8] sm:shadow-[0_22px_80px_rgba(0,0,0,0.08)]">
           <div className="flex min-h-12 shrink-0 items-center justify-between gap-3 border-b border-[#ededeb] px-4">
             <button type="button" onClick={() => setLeftPanelOpen(true)} className="hidden min-w-0 items-center gap-2 text-left text-[12px] text-[#71717a] sm:flex">
               <IconChat size={14} />
