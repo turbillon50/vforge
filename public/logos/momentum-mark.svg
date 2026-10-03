@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" aria-label="Vº Momentum">
+  <defs>
+    <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0f3f7"/>
+      <stop offset="35%" stop-color="#b8c0cb"/>
+      <stop offset="55%" stop-color="#5e6470"/>
+      <stop offset="75%" stop-color="#cdd4dd"/>
+      <stop offset="100%" stop-color="#f0f3f7"/>
+    </linearGradient>
+    <radialGradient id="ringGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="55%" stop-color="#1e90ff" stop-opacity="0"/>
+      <stop offset="75%" stop-color="#1e90ff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#4fb6ff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="ringBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+  <circle cx="148" cy="118" r="26" fill="url(#ringGlow)" filter="url(#ringBlur)"/>
+  <path d="M30 50 L100 170 L170 50 L150 50 L100 138 L50 50 Z"
+        fill="url(#chrome)" stroke="#9aa1ab" stroke-width="0.5" stroke-linejoin="round"/>
+  <circle cx="148" cy="118" r="14" fill="none" stroke="#1e90ff" stroke-width="3.5"/>
+  <circle cx="148" cy="118" r="14" fill="none" stroke="#4fb6ff" stroke-width="1.2" opacity="0.85"/>
+</svg>
