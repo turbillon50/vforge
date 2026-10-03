@@ -196,6 +196,20 @@ function toolLabel(value: string) {
   return TOOL_LABELS[value] ?? value.replaceAll("_", " ");
 }
 
+function fallbackSessionId(scope: string) {
+  const normalized = slugify(scope || "general") || "general";
+  const key = `vforge.chat.session.${normalized}`;
+  try {
+    const saved = window.sessionStorage.getItem(key);
+    if (saved) return saved;
+    const next = `local_${normalized}_${newId("session")}`;
+    window.sessionStorage.setItem(key, next);
+    return next;
+  } catch {
+    return `local_${normalized}_${newId("session")}`;
+  }
+}
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object";
 }
@@ -301,10 +315,12 @@ export function ForgeStudio() {
         if (candidate && next.some((item) => item.id === candidate)) return candidate;
         return "";
       });
-    } catch (caught) {
-      setProjectError(
-        caught instanceof Error ? caught.message : "No se pudo leer el catálogo.",
-      );
+    } catch {
+      setProjects([]);
+      setActiveProjectId("");
+      setProject(null);
+      setLive(null);
+      setProjectError(null);
     } finally {
       setProjectsLoading(false);
     }
@@ -487,9 +503,9 @@ export function ForgeStudio() {
         }
       } catch (caught) {
         if (!cancelled && !(caught instanceof DOMException && caught.name === "AbortError")) {
-          setComposerError(
-            caught instanceof Error ? caught.message : "No se pudo recuperar la conversación.",
-          );
+          setSessionId(fallbackSessionId(scope));
+          setMessages([]);
+          setComposerError(null);
         }
       } finally {
         if (!cancelled) setConversationLoading(false);
@@ -600,10 +616,11 @@ export function ForgeStudio() {
       setSessionId(payload.sessionId);
       setMessages([]);
       setCurrentModel(null);
-    } catch (caught) {
-      setComposerError(
-        caught instanceof Error ? caught.message : "No se pudo abrir una conversación nueva.",
-      );
+    } catch {
+      setSessionId(fallbackSessionId(activeProjectId || "general"));
+      setMessages([]);
+      setCurrentModel(null);
+      setComposerError(null);
     }
   }
 

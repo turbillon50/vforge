@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   clearPendingPrompt,
-  readPendingPrompt,
   type PendingLivePrompt,
 } from "@/lib/live/pending-prompt";
 
@@ -18,30 +17,27 @@ export function PendingTaskRunner() {
     const params = new URLSearchParams(window.location.search);
     const projectId = params.get("projectId") || params.get("project");
     const taskId = params.get("task");
-    const fromStorage = readPendingPrompt();
-    if (fromStorage?.prompt) {
-      setPending(fromStorage);
+    if (!taskId || !projectId) {
+      clearPendingPrompt();
       return;
     }
-    if (taskId && projectId) {
-      void fetch(
-        `/api/live/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}`,
-        { cache: "no-store" },
-      )
-        .then(async (res) => {
-          if (!res.ok) return;
-          const data = (await res.json()) as { task?: { id: string; prompt?: string } };
-          if (data.task?.prompt) {
-            setPending({
-              projectId,
-              taskId: data.task.id || taskId,
-              prompt: data.task.prompt,
-              at: Date.now(),
-            });
-          }
-        })
-        .catch(() => undefined);
-    }
+    void fetch(
+      `/api/live/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}`,
+      { cache: "no-store" },
+    )
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await res.json()) as { task?: { id: string; prompt?: string } };
+        if (data.task?.prompt) {
+          setPending({
+            projectId,
+            taskId: data.task.id || taskId,
+            prompt: data.task.prompt,
+            at: Date.now(),
+          });
+        }
+      })
+      .catch(() => undefined);
   }, []);
 
   const dismiss = useCallback(() => {
