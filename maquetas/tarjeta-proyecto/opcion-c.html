@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tarjeta de proyecto · Opción C</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--line:#e6e6e2;--line2:#efefeb;--ink:#0b0b0c;--ink2:#34363a;--ink3:#6b6e73;--ink4:#9a9da2;--acc:#FF5A1F;--ok:#15803d;--run:#b45309;--err:#dc2626;--sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box}html{overflow-x:clip;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}h1,h2,h3,h4,p{margin:0}
+.ic{flex:none;display:block}
+.wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+.top{display:flex;align-items:center;gap:12px;padding:20px 0;border-bottom:1px solid var(--line);margin-bottom:40px;flex-wrap:wrap}
+.top .mk{width:26px;height:26px;border-radius:7px;background:var(--ink);color:#fff;display:grid;place-items:center;font:700 13px/1 var(--sans)}
+.top b{font-weight:600}.top .sep{color:var(--ink4)}.top .op{color:var(--ink3)}
+.top .r{margin-left:auto;display:flex;gap:10px;align-items:center}
+.top .back{font-size:13px;color:var(--ink3)}.top .back:hover{color:var(--ink)}
+.ej{display:inline-flex;align-items:center;font:500 10px/1 var(--sans);letter-spacing:.02em;color:var(--ink3);border:1px dashed #cfcfca;border-radius:99px;padding:3px 7px;vertical-align:middle;white-space:nowrap;background:transparent}
+.vlabel{display:flex;align-items:baseline;gap:12px;margin:0 0 18px;flex-wrap:wrap}
+.vlabel .n{font:500 11px/1 var(--mono);color:var(--ink4);letter-spacing:.06em;text-transform:uppercase}
+.vlabel h2{font-size:15px;font-weight:600}.vlabel p{color:var(--ink3);font-size:13px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex:none}
+.dot.ok{background:var(--ok)}.dot.run{background:var(--run)}.dot.none{background:#c4c4bf}.dot.srv{background:var(--ink2)}.dot.err{background:var(--err)}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);white-space:nowrap}
+.lang{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink3);white-space:nowrap}.lang i{flex:none;width:8px;height:8px;border-radius:50%}
+.av{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;font:600 11px/1 var(--sans);border:2px solid #fff;flex:none}
+.av.k1{background:#1d1e21;color:#fff}.av.k2{background:#5a5d63;color:#fff}.av.k3{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.avs{display:inline-flex}.avs .av+.av{margin-left:-8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:10px;font:600 14px/1 var(--sans);border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;white-space:nowrap}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 1px 0 rgba(0,0,0,.04),0 6px 16px -8px rgba(255,90,31,.6)}
+.btn.pri:hover{filter:brightness(.96)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--ink2);padding:0 10px}
+.btn.lg{height:48px;padding:0 20px;font-size:15px;border-radius:12px}
+.mono{font-family:var(--mono)}
+.foot{margin:64px 0 40px;padding-top:20px;border-top:1px solid var(--line);color:var(--ink4);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media (max-width:640px){.wrap{padding:0 16px}.top{margin-bottom:28px;padding:14px 0;row-gap:8px}.top .sep{display:none}.top .op{flex-basis:100%;order:3;font-size:13px}.top .r{margin-left:auto}.top .r .back{font-size:12px}}
+
+.cap{position:relative;container-type:inline-size;aspect-ratio:16/10;margin:0;border-radius:12px;overflow:hidden;background:#f3f3f0;border:1px solid var(--line);display:flex;flex-direction:column;isolation:isolate}
+.cap>.bar{flex:none;height:clamp(12px,5.2cqw,26px);display:flex;align-items:center;gap:1.2cqw;padding:0 3cqw;background:#fbfbf9;border-bottom:1px solid var(--line);font:500 clamp(6px,2.2cqw,11px)/1 var(--mono);color:#8b8e93;white-space:nowrap;overflow:hidden}
+.cap>.bar i{flex:none;width:clamp(4px,1.6cqw,8px);height:clamp(4px,1.6cqw,8px);border-radius:50%;background:#dadad5}
+.cap>.bar span{margin-left:1.5cqw;padding:.5cqw 2cqw;border-radius:99px;background:#efefeb;overflow:hidden;text-overflow:ellipsis}
+.cap>.sk{flex:1;position:relative;padding:5cqw 6cqw;min-height:0;overflow:hidden}
+.cap .tag{position:absolute;left:clamp(6px,2.4cqw,12px);bottom:clamp(6px,2.4cqw,12px);z-index:2;font:500 clamp(8px,2.3cqw,11px)/1 var(--sans);padding:.55em .9em;border-radius:99px;background:rgba(255,255,255,.94);border:1px solid var(--line);color:var(--ink2);display:inline-flex;gap:.4em;align-items:center}
+.cap .tag::before{content:"";width:.6em;height:.6em;border-radius:2px;border:1.5px solid currentColor;opacity:.6}
+.cap.dark{background:#0a0a0f;border-color:#1d1d25}
+.cap.dark>.bar{background:#101016;border-color:#1d1d25;color:#6f7080}.cap.dark>.bar i{background:#2a2a35}.cap.dark>.bar span{background:#1a1a22}
+.ln{display:block;height:1.8cqw;border-radius:1cqw;background:#dedeD9;margin-bottom:1.6cqw}
+.cap.dark .ln{background:#2a2a36}.ln.k{background:#1d1e21}.cap.dark .ln.k{background:#ececf1}.ln.t{height:4cqw;border-radius:1.4cqw}.cap.dark .ln.v{background:#4b3f86}
+.sk-land{display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(60% 60% at 50% 18%,rgba(124,92,255,.34),transparent 70%),linear-gradient(rgba(124,92,255,.09) 1px,transparent 1px) 0 0/6cqw 6cqw,linear-gradient(90deg,rgba(124,92,255,.09) 1px,transparent 1px) 0 0/6cqw 6cqw}
+.sk-land .ln{margin-left:auto;margin-right:auto}
+.sk-land .pill{display:block;width:20cqw;height:3.2cqw;border-radius:99px;border:1px solid #3a3a52;margin-bottom:2.6cqw}
+.sk-land .btns{display:flex;gap:2cqw;margin-top:2cqw}.sk-land .btns b{width:14cqw;height:4.4cqw;border-radius:1.2cqw;background:#ececf1}.sk-land .btns b+b{background:transparent;border:1px solid #3a3a4a}
+.cap>.sk-chat{display:grid;grid-template-columns:26% 1fr;gap:4cqw;padding:0}
+.sk-chat .side{background:#efefeb;padding:4cqw 3cqw;border-right:1px solid var(--line)}
+.sk-chat .main{padding:4cqw 5cqw 4cqw 0;display:flex;flex-direction:column;gap:2cqw;min-height:0}
+.sk-chat .msg{width:62%;padding:2.2cqw 2.6cqw .6cqw;border-radius:2cqw;background:#fff;border:1px solid var(--line)}
+.sk-chat .msg.r{align-self:flex-end;background:#1d1e21;border-color:#1d1e21;width:44%}.sk-chat .msg.r .ln{background:#55575c}
+.sk-chat .comp{margin-top:auto;flex:none;height:6cqw;border-radius:2cqw;background:#fff;border:1px solid var(--line)}
+.sk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.4cqw;align-content:start}
+.sk-grid .tile{background:#fff;border:1px solid var(--line);border-radius:1.8cqw;padding:2.6cqw 2.6cqw 1cqw;min-height:13cqw}
+.spark{display:flex;align-items:flex-end;gap:.8cqw;height:7cqw}.spark i{flex:1;background:#cfcfca;border-radius:.4cqw .4cqw 0 0}
+.sk-qa{display:flex;justify-content:center;align-items:center;gap:4cqw;background:#ececE8}
+.sk-qa .ph{position:relative;width:17cqw;aspect-ratio:9/19;border-radius:3cqw;background:#fff;border:1px solid #d6d6d1;padding:3cqw 2cqw}
+.sk-qa .blk{height:9cqw;border-radius:1.2cqw;background:#ececE8;margin:1cqw 0 1.6cqw}
+.sk-qa .ok{position:absolute;top:-1.4cqw;right:-1.4cqw;width:3.6cqw;height:3.6cqw;border-radius:50%;background:#15803d;border:.6cqw solid #ececE8}.sk-qa .ok.wait{background:#b45309}
+.sk-code .ln{height:1.6cqw;margin-bottom:1.7cqw}
+.sk-cat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:2.4cqw}
+.sk-cat .cmp{min-width:0;min-height:0;background:#fff;border:1px solid var(--line);border-radius:1.8cqw;display:grid;place-items:center}
+.cmp i{display:block}.cmp .btn{width:60%;height:4cqw;border-radius:1cqw;background:#1d1e21}.cmp .btn.o{background:transparent;border:1px solid #1d1e21}
+.cmp .tog{width:8cqw;height:4.4cqw;border-radius:99px;background:#1d1e21;position:relative}.cmp .tog::after{content:"";position:absolute;right:.6cqw;top:.6cqw;width:3.2cqw;height:3.2cqw;border-radius:50%;background:#fff}
+.cmp .inp{width:70%;height:4.4cqw;border-radius:1cqw;border:1px solid #cfcfca}.cmp .av{width:8cqw;height:8cqw;border-radius:50%;background:#d9d9d4}
+.cmp .chip{width:50%;height:3.6cqw;border-radius:99px;background:#ececE8;border:1px solid #d6d6d1}.cmp .chk{width:5cqw;height:5cqw;border-radius:1cqw;background:#1d1e21}
+.sk-doc{padding:6cqw 16cqw;background:#fff}
+
+.cc{background:#fff;border:1px solid var(--line);border-radius:24px;overflow:hidden}
+.cc .cover{position:relative}
+.cc .cover>.cap{border:0;border-radius:0;aspect-ratio:21/8}
+.cc .cover .pills{position:absolute;top:16px;left:16px;display:flex;gap:8px;z-index:3;flex-wrap:wrap}
+.cc .cover .pills span{background:rgba(255,255,255,.95);border-radius:99px;padding:6px 11px;font-size:12px;font-weight:600;display:inline-flex;gap:6px;align-items:center}
+.cc .head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding:28px 32px 8px;flex-wrap:wrap}
+.cc .head h3{font-size:40px;line-height:1;font-weight:600;letter-spacing:-.035em}
+.cc .head p{color:var(--ink3);font-size:15px;margin-top:8px}
+.cc .head .r{display:flex;gap:16px;align-items:center}
+.cc .head .r .who{display:flex;gap:8px;align-items:center;color:var(--ink3);font-size:13px}
+.mos{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.15fr);gap:12px;padding:20px 32px 28px}
+.mos>.tile.big{grid-column:1;grid-row:1/3}.mos>.tile.links{grid-column:4;grid-row:1/3}
+.tile{border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;background:#fff;min-width:0}
+.tile .cap{border-radius:10px}
+.tile.big{grid-column:span 2;grid-row:span 2}
+.tile h4{font-size:14px;font-weight:600;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.tile h4 em{font-style:normal;font:500 10px/1 var(--sans);border:1px solid var(--ink);border-radius:99px;padding:3px 6px}
+.tile p{color:var(--ink3);font-size:12.5px}
+.tile .m{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--ink3);margin-top:auto}
+.tile .m span{display:inline-flex;gap:5px;align-items:center}
+.tile.big h4{font-size:16px}.tile.big .cmt{font-size:13px;color:var(--ink2);border-top:1px solid var(--line2);padding-top:10px;display:flex;gap:8px;align-items:center;min-width:0}
+.tile.big .cmt span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile.links{background:#fbfbfa}
+.tile.links .l{display:flex;gap:10px;align-items:center;font-size:13px;padding:6px 0;border-top:1px solid var(--line2)}.tile.links .l:first-of-type{border-top:0}
+.tile.links .l b{font-weight:500}.tile.links .l span{margin-left:auto;color:var(--ink3);font-size:12px;white-space:nowrap}
+.cc .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line)}
+.cc .stats div{padding:16px 32px;border-right:1px solid var(--line)}.cc .stats div:last-child{border-right:0}
+.cc .stats div>span{display:block;font-size:12px;color:var(--ink3)}.cc .stats b{font-size:18px;font-weight:600;letter-spacing:-.01em}
+/* expediente */
+.sec{margin-top:80px}
+.xc{background:#fff;border:1px solid var(--line);border-radius:24px;overflow:hidden}
+.xc>.cap{border:0;border-radius:0;aspect-ratio:21/6.5}
+.xc-in{padding:40px 56px 56px}
+.xc-t{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.xc-t .kick{font:500 12px/1 var(--mono);color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;display:flex;gap:10px;align-items:center}
+.xc-t h1{font-size:72px;line-height:.95;font-weight:600;letter-spacing:-.05em;margin-top:14px}
+.xc-t .lede{max-width:560px;color:var(--ink2);font-size:17px;line-height:1.5;margin-top:16px}
+.ficha{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--ink);border-bottom:1px solid var(--line);margin:40px 0 8px}
+.ficha div{padding:16px 16px 16px 0;min-width:0}.ficha div+div{padding-left:16px;border-left:1px solid var(--line)}
+.ficha span{display:block;font-size:12px;color:var(--ink3)}.ficha b{font-size:15px;font-weight:600;display:flex;gap:6px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch{display:grid;grid-template-columns:220px minmax(0,1fr);gap:40px;padding:44px 0;border-bottom:1px solid var(--line)}
+.ch:last-child{border-bottom:0;padding-bottom:0}
+.ch .num{font:500 13px/1 var(--mono);color:var(--ink4)}.ch h2{font-size:24px;font-weight:600;letter-spacing:-.02em;margin-top:10px;line-height:1.15}.ch .aside p{color:var(--ink3);font-size:13.5px;margin-top:8px}
+.ch .aside .ej{margin-top:12px}
+.mos2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.mos2 .tile.big{grid-column:span 3;grid-row:auto;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;align-items:center;padding:14px}
+.mos2 .tile.big .txt{display:flex;flex-direction:column;gap:10px}
+.mos2 .tile.big h4{font-size:20px}
+.infra{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+.infra h4{font-size:13px;font-weight:600;display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.mem .ll{display:grid;grid-template-columns:1fr 1fr;column-gap:28px}.mem .ll>div:nth-child(2){border-top:0;padding-top:0}
+.ll>div{padding:10px 0;border-top:1px solid var(--line2);font-size:13.5px}.ll>div:first-child{border-top:0;padding-top:0}
+.ll b{font-weight:500;display:block;overflow-wrap:anywhere}.ll span{color:var(--ink3);font-size:12.5px;display:flex;gap:6px;align-items:center}
+.agents{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.agents>div{border:1px solid var(--line);border-radius:16px;padding:18px}
+.agents .av{width:36px;height:36px;font-size:14px;margin-bottom:14px}
+.agents b{font-size:15px;font-weight:600;display:flex;gap:8px;align-items:center}.agents p{color:var(--ink2);font-size:13.5px;margin-top:4px}.agents .w{color:var(--ink3);font-size:12px;display:block;margin-top:10px}
+.tokrow{display:flex;align-items:center;gap:18px;margin-top:20px;flex-wrap:wrap}.tokrow b{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1}.tokrow span{color:var(--ink3)}
+.tokrow .bar3{flex:1;min-width:200px;display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--line2)}.bar3 i{display:block}
+.mem{display:grid;grid-template-columns:1fr;gap:24px}
+.cg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.cg>div{border:1px solid var(--line);border-radius:14px;padding:14px}.cg b{font-size:13.5px;font-weight:600;display:block;margin-top:10px}.cg span{color:var(--ink3);font-size:12.5px;display:block}.cg em{font-style:normal;font-size:12px;color:var(--ink2);display:flex;gap:6px;align-items:center;margin-top:8px}
+.tlc{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;position:relative}
+.tlc>div{padding:0 16px 0 0;position:relative}
+.tlc>div::before{content:"";display:block;height:2px;background:var(--ink);margin-bottom:14px}
+.tlc>div.now::before{background:repeating-linear-gradient(90deg,var(--ink) 0 6px,transparent 6px 10px)}
+.tlc span{font:500 12px/1 var(--mono);color:var(--ink3)}.tlc b{display:block;font-size:15px;font-weight:500;margin-top:8px;line-height:1.35}
+@media (max-width:1100px){.mos{grid-template-columns:repeat(2,minmax(0,1fr))}.mos>.tile.big,.mos>.tile.links{grid-column:span 2;grid-row:auto}
+ .ch{grid-template-columns:1fr;gap:20px}.xc-in{padding:36px}.infra{grid-template-columns:1fr 1fr}}
+@media (max-width:760px){
+ .ficha{grid-template-columns:1fr 1fr}.ficha div{border-left:0!important;padding:12px 0!important;border-bottom:1px solid var(--line2)}.ficha div:last-child{grid-column:span 2;border-bottom:0}
+ .mos2{grid-template-columns:1fr 1fr}.mos2 .tile.big{grid-column:span 2;grid-template-columns:1fr}.agents,.mem,.infra{grid-template-columns:1fr}
+ .tlc{grid-template-columns:1fr;gap:16px}.tlc>div{padding:0 0 0 18px}.tlc>div::before{position:absolute;left:0;top:0;bottom:0;width:2px;height:auto;margin:0}}
+@media (max-width:640px){
+ .cc{border-radius:18px}.cc .cover>.cap{aspect-ratio:4/3}.cc .head{padding:20px 16px 4px}.cc .head h3{font-size:34px}.cc .head .r{width:100%;justify-content:space-between}
+ .mos{padding:16px;gap:10px}.tile{padding:10px;border-radius:14px}.tile p{display:none}.tile.big p{display:block}
+ .cc .stats{grid-template-columns:1fr 1fr}.cc .stats div{padding:14px 16px;border-bottom:1px solid var(--line)}.cc .stats div:nth-child(2n){border-right:0}.cc .stats div:nth-last-child(-n+2){border-bottom:0}
+ .sec{margin-top:56px}.xc{border-radius:18px}.xc>.cap{aspect-ratio:4/3}.xc-in{padding:24px 16px 32px}.xc-t h1{font-size:52px}.xc-t .lede{font-size:15.5px}.xc-t .btn.pri{width:100%}
+ .ch{padding:32px 0}.ch h2{font-size:21px}.cg,.mem .ll{grid-template-columns:1fr}.mem .ll>div:nth-child(2){border-top:1px solid var(--line2);padding-top:10px}.mos2 .tile p{display:block}
+}
+</style></head>
+<body><div class="wrap">
+<header class="top"><span class="mk">V</span><b>VForge</b><span class="sep">/</span><span class="op">Maquetas · Tarjeta de proyecto · <b style="color:var(--ink)">Opción C</b> — Portada grande + mosaico</span><div class="r"><span class="ej">datos de ejemplo</span><a class="back" href="index.html">← Ver las 3 opciones</a></div></header>
+
+<section>
+  <div class="vlabel"><span class="n">Vista 1</span><h2>La tarjeta</h2><p>Una portada grande: el proyecto como portada de revista y sus repos en mosaico.</p></div>
+  <article class="cc">
+    <div class="cover"><figure class="cap dark "><div class="bar"><i></i><i></i><i></i><span>vforge.site</span></div><div class="sk sk-land"><b class="pill"></b><b class="ln k t" style="width:62%"></b><b class="ln k t" style="width:44%"></b><b class="ln" style="width:50%;margin-top:1cqw"></b><div class="btns"><b></b><b></b></div></div><figcaption class="tag">captura de la app</figcaption></figure><div class="pills"><span><i class="dot ok"></i>En producción</span><span><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19"/></svg>5 repositorios</span></div></div>
+    <div class="head"><div><h3>VForge</h3><p>Fábrica de apps · control room · <span class="mono">vforge.site</span></p></div><div class="r"><span class="who"><span class="avs"><span class="av k1 " title="Claude">C</span><span class="av k2 " title="Codex">X</span><span class="av k3 " title="V">V</span></span>3 trabajando ahora</span><a class="btn pri" href="#expediente">Abrir expediente</a></div></div>
+    <div class="mos"><div class="tile big"><figure class="cap dark "><div class="bar"><i></i><i></i><i></i><span>vforge.site</span></div><div class="sk sk-land"><b class="pill"></b><b class="ln k t" style="width:62%"></b><b class="ln k t" style="width:44%"></b><b class="ln" style="width:50%;margin-top:1cqw"></b><div class="btns"><b></b><b></b></div></div><figcaption class="tag">captura de la app</figcaption></figure><h4><span>turbillon50/vforge</span><em>principal</em></h4><p>La app</p><div class="cmt"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Merge PR #213: Encárgalo + Fábrica en vivo · hace 2 h</span></div><div class="m"><span><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="7" r="2"/><path d="M6 7v10M18 9v1a4 4 0 0 1-4 4H8"/></svg>main</span><span class="lang"><i style="background:#3a5a8c"></i>TypeScript</span><span class="st ok"><i class="dot ok"></i>Listo</span></div></div><div class="tile"><figure class="cap "><div class="bar"><i></i><i></i><i></i><span>vforge-live.vercel.app</span></div><div class="sk sk-qa"><div class="ph"><b class="ln k" style="width:60%"></b><b class="ln" style="width:90%"></b><b class="ln" style="width:70%"></b><div class="blk"></div><b class="ln" style="width:80%"></b><em class="ok"></em></div><div class="ph"><b class="ln k" style="width:60%"></b><b class="ln" style="width:90%"></b><b class="ln" style="width:70%"></b><div class="blk"></div><b class="ln" style="width:80%"></b><em class="ok"></em></div><div class="ph"><b class="ln k" style="width:60%"></b><b class="ln" style="width:90%"></b><b class="ln" style="width:70%"></b><div class="blk"></div><b class="ln" style="width:80%"></b><em class="ok wait"></em></div></div></figure><h4><span>vforge-live</span></h4><p>QA visual</p><div class="m"><span><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>hace 1 día</span><span class="st ok"><i class="dot ok"></i>Listo</span></div></div><div class="tile"><figure class="cap dark "><div class="bar"><i></i><i></i><i></i><span>vulcano-ops/scripts</span></div><div class="sk sk-code"><b class="ln v" style="margin-left:0cqw;width:34%"></b><b class="ln " style="margin-left:4cqw;width:56%"></b><b class="ln " style="margin-left:4cqw;width:40%"></b><b class="ln v" style="margin-left:8cqw;width:62%"></b><b class="ln " style="margin-left:8cqw;width:30%"></b><b class="ln " style="margin-left:4cqw;width:18%"></b><b class="ln " style="margin-left:0cqw;width:12%"></b><b class="ln v" style="margin-left:0cqw;width:46%"></b><b class="ln " style="margin-left:4cqw;width:52%"></b><b class="ln " style="margin-left:4cqw;width:26%"></b></div></figure><h4><span>vulcano-ops</span></h4><p>Operación del servidor</p><div class="m"><span><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>hace 5 h</span><span class="st srv"><i class="dot srv"></i>Servidor</span></div></div><div class="tile"><figure class="cap "><div class="bar"><i></i><i></i><i></i><span>catalogo-compoentes.vercel.app</span></div><div class="sk sk-cat"><div class="cmp"><i class="btn"></i></div><div class="cmp"><i class="tog"></i></div><div class="cmp"><i class="inp"></i></div><div class="cmp"><i class="av"></i></div><div class="cmp"><i class="chip"></i></div><div class="cmp"><i class="chk"></i></div><div class="cmp"><i class="btn o"></i></div><div class="cmp"><i class="inp"></i></div></div></figure><h4><span>catalogo-compoentes</span></h4><p>Librería de componentes</p><div class="m"><span><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>hace 12 min</span><span class="st run"><i class="dot run"></i>Compilando</span></div></div><div class="tile"><figure class="cap "><div class="bar"><i></i><i></i><i></i><span>skills-vault/README.md</span></div><div class="sk sk-doc"><b class="ln k t" style="width:46%"></b><b class="ln" style="width:100%;margin-top:2cqw"></b><b class="ln" style="width:94%"></b><b class="ln" style="width:70%"></b><b class="ln k" style="width:30%;margin-top:3cqw"></b><b class="ln" style="width:98%"></b><b class="ln" style="width:88%"></b><b class="ln" style="width:52%"></b></div></figure><h4><span>skills-vault</span></h4><p>Habilidades de agentes</p><div class="m"><span><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>hace 6 días</span><span class="st none"><i class="dot none"></i>Sin deploy</span></div></div>
+      <div class="tile links"><h4><span>Ligado con</span><span class="ej">ejemplo</span></h4><div class="l"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0zM12 16v5"/></svg><b>MindContext</b><span>12 herramientas</span></div><div class="l"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0zM12 16v5"/></svg><b>Momentum</b><span>7 herramientas</span></div><div class="l"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg><b>Eternime</b><span>24 memorias</span></div><div class="l"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><b>TRAMA</b><span>4 chats ligados</span></div></div>
+    </div>
+    <div class="stats"><div><span>Tokens hoy <span class="ej">ejemplo</span></span><b>1.24 M</b></div><div><span>Último deploy</span><b>hace 2 h</b></div><div><span>Base de datos</span><b>Neon</b></div><div><span>Chats en TRAMA</span><b>4</b></div></div>
+  </article>
+</section>
+
+<section class="sec" id="expediente">
+  <div class="vlabel"><span class="n">Vista 2</span><h2>Al abrirla: el expediente</h2><p>Lectura editorial por capítulos, de la portada a la línea de tiempo.</p></div>
+  <article class="xc">
+    <figure class="cap "><div class="bar"><i></i><i></i><i></i><span>vforge.site/app</span></div><div class="sk sk-grid"><b class="ln k" style="width:30%;grid-column:1/-1"></b><div class="tile"><b class="ln" style="width:40%"></b><b class="ln k t" style="width:30%"></b></div><div class="tile"><b class="ln" style="width:45%"></b><div class="spark"><i style="height:40%"></i><i style="height:65%"></i><i style="height:50%"></i><i style="height:80%"></i><i style="height:60%"></i><i style="height:95%"></i><i style="height:70%"></i></div></div><div class="tile"><b class="ln" style="width:58%"></b><b class="ln k t" style="width:56%"></b></div><div class="tile"><b class="ln" style="width:67%"></b><b class="ln k t" style="width:34%"></b></div><div class="tile"><b class="ln" style="width:46%"></b><b class="ln k t" style="width:47%"></b></div><div class="tile"><b class="ln" style="width:55%"></b><b class="ln k t" style="width:60%"></b></div></div><figcaption class="tag">captura de la app</figcaption></figure>
+    <div class="xc-in">
+      <div class="xc-t"><div><span class="kick">Expediente de proyecto <span class="ej">ejemplo</span></span><h1>VForge</h1><p class="lede">La fábrica de apps: el control room desde donde Claude, Codex y V construyen, prueban y despliegan. Cinco repositorios, una sola historia.</p></div><a class="btn pri lg">Entrar a la Sala</a></div>
+      <div class="ficha"><div><span>Dominio</span><b class="mono" style="font-weight:500">vforge.site</b></div><div><span>Estado</span><b><i class="dot ok"></i>Producción</b></div><div><span>Repositorios</span><b>5</b></div><div><span>Base de datos</span><b>Neon · main</b></div><div><span>Tokens hoy</span><b>1.24 M</b></div></div>
+
+      <section class="ch"><div class="aside"><span class="num">01</span><h2>Repositorios</h2><p>Todo lo que forma VForge, agrupado en un solo lugar.</p><span class="ej">ejemplo</span></div>
+        <div class="mos2"><div class="tile big"><figure class="cap dark "><div class="bar"><i></i><i></i><i></i><span>vforge.site</span></div><div class="sk sk-land"><b class="pill"></b><b class="ln k t" style="width:62%"></b><b class="ln k t" style="width:44%"></b><b class="ln" style="width:50%;margin-top:1cqw"></b><div class="btns"><b></b><b></b></div></div><figcaption class="tag">captura de la app</figcaption></figure><div class="txt"><h4><span>turbillon50/vforge</span><em>principal</em></h4><p>La app</p><div class="cmt"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Merge PR #213: Encárgalo + Fábrica en vivo · hace 2 h</span></div><div class="m"><span><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="7" r="2"/><path d="M6 7v10M18 9v1a4 4 0 0 1-4 4H8"/></svg>main</span><span class="lang"><i style="background:#3a5a8c"></i>TypeScript</span><span class="st ok"><i class="dot ok"></i>Listo</span></div></div></div><div class="tile"><figure class="cap "><div class="bar"><i></i><i></i><i></i><span>vforge-live.vercel.app</span></div><div class="sk sk-qa"><div class="ph"><b class="ln k" style="width:60%"></b><b class="ln" style="width:90%"></b><b class="ln" style="width:70%"></b><div class="blk"></div><b class="ln" style="width:80%"></b><em class="ok"></em></div><div class="ph"><b class="ln k" style="width:60%"></b><b class="ln" style="width:90%"></b><b class="ln" style="width:70%"></b><div class="blk"></div><b class="ln" style="width:80%"></b><em class="ok"></em></div><div class="ph"><b class="ln k" style="width:60%"></b><b class="ln" style="width:90%"></b><b class="ln" style="width:70%"></b><div class="blk"></div><b class="ln" style="width:80%"></b><em class="ok wait"></em></div></div></figure><h4><span>vforge-live</span></h4><p>QA visual</p><div class="m"><span><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>hace 1 día</span><span class="st ok"><i class="dot ok"></i>Listo</span></div></div><div class="tile"><figure class="cap dark "><div class="bar"><i></i><i></i><i></i><span>vulcano-ops/scripts</span></div><div class="sk sk-code"><b class="ln v" style="margin-left:0cqw;width:34%"></b><b class="ln " style="margin-left:4cqw;width:56%"></b><b class="ln " style="margin-left:4cqw;width:40%"></b><b class="ln v" style="margin-left:8cqw;width:62%"></b><b class="ln " style="margin-left:8cqw;width:30%"></b><b class="ln " style="margin-left:4cqw;width:18%"></b><b class="ln " style="margin-left:0cqw;width:12%"></b><b class="ln v" style="margin-left:0cqw;width:46%"></b><b class="ln " style="margin-left:4cqw;width:52%"></b><b class="ln " style="margin-left:4cqw;width:26%"></b></div></figure><h4><span>vulcano-ops</span></h4><p>Operación del servidor</p><div class="m"><span><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>hace 5 h</span><span class="st srv"><i class="dot srv"></i>Servidor</span></div></div><div class="tile"><figure class="cap "><div class="bar"><i></i><i></i><i></i><span>catalogo-compoentes.vercel.app</span></div><div class="sk sk-cat"><div class="cmp"><i class="btn"></i></div><div class="cmp"><i class="tog"></i></div><div class="cmp"><i class="inp"></i></div><div class="cmp"><i class="av"></i></div><div class="cmp"><i class="chip"></i></div><div class="cmp"><i class="chk"></i></div><div class="cmp"><i class="btn o"></i></div><div class="cmp"><i class="inp"></i></div></div></figure><h4><span>catalogo-compoentes</span></h4><p>Librería de componentes</p><div class="m"><span><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>hace 12 min</span><span class="st run"><i class="dot run"></i>Compilando</span></div></div><div class="tile"><figure class="cap "><div class="bar"><i></i><i></i><i></i><span>skills-vault/README.md</span></div><div class="sk sk-doc"><b class="ln k t" style="width:46%"></b><b class="ln" style="width:100%;margin-top:2cqw"></b><b class="ln" style="width:94%"></b><b class="ln" style="width:70%"></b><b class="ln k" style="width:30%;margin-top:3cqw"></b><b class="ln" style="width:98%"></b><b class="ln" style="width:88%"></b><b class="ln" style="width:52%"></b></div></figure><h4><span>skills-vault</span></h4><p>Habilidades de agentes</p><div class="m"><span><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>hace 6 días</span><span class="st none"><i class="dot none"></i>Sin deploy</span></div></div><div class="tile" style="justify-content:center;align-items:flex-start;background:#fbfbfa"><h4><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/></svg></h4><p style="color:var(--ink2)">12 capturas de la app</p><a class="btn" style="height:34px;font-size:13px">Ver galería</a></div></div></section>
+
+      <section class="ch"><div class="aside"><span class="num">02</span><h2>Infraestructura</h2><p>Dominios, despliegues y base de datos.</p><span class="ej">ejemplo</span></div>
+        <div class="infra">
+          <div><h4><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>Dominios</h4><div class="ll"><div><b class="mono">vforge.site</b><span>Producción</span></div><div><b class="mono">www.vforge.site</b><span>Redirige a vforge.site</span></div><div><b class="mono">vforge-live.vercel.app</b><span>QA visual</span></div><div><b class="mono">catalogo-compoentes.vercel.app</b><span>Preview</span></div></div></div>
+          <div><h4><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 20.5 19h-17z"/></svg>Despliegues</h4><div class="ll"><div><b>Producción · vforge</b><span><i class="dot ok"></i>Listo · hace 2 h</span></div><div><b>Producción · vforge-live</b><span><i class="dot ok"></i>Listo · hace 1 día</span></div><div><b>Preview · catalogo-compoentes</b><span><i class="dot run"></i>Compilando · hace 12 min</span></div></div></div>
+          <div><h4><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7" ry="2.5"/><path d="M5 5.5v13c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-13M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"/></svg>Neon Postgres</h4><div class="ll"><div><b>vforge-prod</b><span>Proyecto</span></div><div><b>main</b><span>Rama</span></div><div><b>aws-us-east-2</b><span>Región</span></div><div><b>38</b><span>Tablas</span></div><div><b>214 MB</b><span>Tamaño</span></div></div></div>
+        </div></section>
+
+      <section class="ch"><div class="aside"><span class="num">03</span><h2>Ahora mismo</h2><p>Quién trabaja y cuánto se ha gastado hoy.</p><span class="ej">ejemplo</span></div>
+        <div><div class="agents"><div><span class="av k1 " title="Claude">C</span><b>Claude <i class="dot ok"></i></b><p>Maquetas de la tarjeta de proyecto</p><span class="w">desde hace 18 min · 0.71 M tokens</span></div><div><span class="av k2 " title="Codex">X</span><b>Codex <i class="dot ok"></i></b><p>Revisión de /forge en celular</p><span class="w">desde hace 42 min · 0.38 M tokens</span></div><div><span class="av k3 " title="V">V</span><b>V <i class="dot ok"></i></b><p>Despacha la cola y aprende</p><span class="w">continuo · 0.15 M tokens</span></div></div>
+        <div class="tokrow"><b>1.24 M</b><span>tokens hoy</span><div class="bar3"><i style="width:57.3%;background:#1d1e21"></i><i style="width:30.6%;background:#7a7d83"></i><i style="width:12.1%;background:#c9c9c4"></i></div></div></div></section>
+
+      <section class="ch"><div class="aside"><span class="num">04</span><h2>Conversaciones y memoria</h2><p>Chats ligados en TRAMA y los MCP conectados.</p><span class="ej">ejemplo</span></div>
+        <div class="mem"><div><h4 style="font-size:13px;font-weight:600;display:flex;gap:8px;align-items:center;margin-bottom:12px"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>TRAMA</h4><div class="ll"><div><b>Fábrica en vivo — la Sala</b><span>126 mensajes · hoy</span></div><div><b>Encárgalo: agentes en jaula</b><span>88 mensajes · ayer</span></div><div><b>Rescate VForge (agosto)</b><span>342 mensajes · 21 ago</span></div><div><b>Catálogo de componentes — alcance</b><span>54 mensajes · 31 ago</span></div></div></div>
+        <div class="cg"><div><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0zM12 16v5"/></svg><b>MCP MindContext</b><span>Contexto, estándares y memoria del proyecto</span><em><i class="dot ok"></i>Conectado · 12 herramientas</em></div><div><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0zM12 16v5"/></svg><b>MCP Momentum</b><span>Proyectos, clientes y market de Momentum</span><em><i class="dot ok"></i>Conectado · 7 herramientas</em></div><div><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg><b>Eternime</b><span>Memorias ligadas a este proyecto</span><em><i class="dot ok"></i>24 memorias</em></div></div></div></section>
+
+      <section class="ch"><div class="aside"><span class="num">05</span><h2>Línea de tiempo</h2><p>Los hitos del proyecto.</p><span class="ej">ejemplo</span></div>
+        <div class="tlc"><div class=""><span>Jun 2026</span><b>Landing con patrón neon y WorkspaceShell</b></div><div class=""><span>Ago 2026</span><b>Rescate: mapa de repos y limpieza</b></div><div class=""><span>Ago 2026</span><b>Pivote a la visión MCP</b></div><div class=""><span>Sep 2026</span><b>Fábrica en vivo y Encárgalo (PR #213)</b></div><div class="now"><span>Hoy</span><b>Tarjeta de proyecto — en diseño</b></div></div></section>
+    </div>
+  </article>
+</section>
+<footer class="foot"><span>Maqueta estática · Opción C · nada de esto toca producción</span><span>Todos los datos son de ejemplo</span></footer>
+</div></body></html>
