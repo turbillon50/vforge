@@ -6,6 +6,8 @@ import { githubClientFromToken } from "@/lib/github/client";
 import { randomBytes } from "node:crypto";
 import { type McpPrincipal, isPublicTool, isAdmin } from "./rbac";
 import { MCP_TOOLS, type McpToolDef } from "./registry";
+import { partnerRemember, partnerRecall, partnerIdeas, SARA_WELCOME } from "./partner-sara";
+import { canCallTool } from "./rbac";
 
 /** El registro vive en `registry.ts` (sin dependencias) para que la página
  *  pública /mcp pueda contarlo sin arrastrar Neon ni GitHub. Se re-exporta
@@ -17,8 +19,7 @@ export type { McpToolDef };
 /** Tools visibles para un principal: public ve sólo las públicas; admin|client
  *  ven todas. Lo usa tools/list para no anunciar tools que igual rebotarían. */
 export function mcpToolsForScope(principal: McpPrincipal): McpToolDef[] {
-  if (principal.scope === "admin" || principal.scope === "client") return MCP_TOOLS;
-  return MCP_TOOLS.filter((t) => isPublicTool(t.name));
+  return MCP_TOOLS.filter((t) => canCallTool(principal, t.name));
 }
 
 function text(t: string) {
@@ -351,6 +352,34 @@ export async function runMcpTool(
   await ensureDatabaseHealed().catch(() => {});
 
   switch (name) {
+    case "partner_sara_inicio":
+      return text(SARA_WELCOME);
+    case "partner_sara_arsenal":
+      return text(JSON.stringify({
+        fabricacion: ["VForge", "GitHub", "Vercel", "Neon", "Clerk", "Name.com", "PWA", "QA"],
+        inteligencia: ["Cerebras", "Mesh", "Ollama", "Z.ai"],
+        productividad: ["Composio", "Google Workspace", "Slack", "HubSpot", "Notion", "Airtable"],
+        negocio: ["Stripe", "Mercado Pago", "Reloadly", "Twilio", "Resend"],
+        turismo: ["Google Maps", "Mapbox", "Duffel", "Viator", "Ticketmaster"],
+        web3: ["Alchemy", "Turnkey", "LI.FI", "Onramper"],
+        disponibilidad: "Catálogo de posibilidades; comprobar por proveedor autorizacion, cuota y funcion antes de ejecutar.",
+        limites: "Solo tu espacio de socia; sin llaves maestras, proyectos de Luis o compras sin aprobacion.",
+        siguiente_paso: "Pregunta una cosa sencilla sobre el negocio de Sara y ejecuta partner_sara_ideas."
+      }, null, 2));
+    case "partner_sara_ideas":
+      return text(JSON.stringify(partnerIdeas(String(args.actividad ?? "")), null, 2));
+    case "partner_sara_recordar": {
+      if (!userId || !orgId) return err("Requiere sesion autenticada y tenant propio.");
+      const topic = String(args.tema ?? "");
+      const content = String(args.contenido ?? "");
+      if (/token|contrase|password|api.key|credencial|secret/i.test(topic)) return err("No guardes secretos en la memoria.");
+      const receipt = await partnerRemember(userId, orgId, topic, content);
+      return text(JSON.stringify({ ok: true, receipt }));
+    }
+    case "partner_sara_memoria": {
+      if (!userId || !orgId) return err("Requiere sesion autenticada y tenant propio.");
+      return text(JSON.stringify({ items: await partnerRecall(userId, orgId, String(args.buscar ?? "")) }));
+    }
     case "vforge_brain_search": {
       const q = String(args.query ?? "").slice(0, 300);
       if (!q) return err("Falta 'query'.");
