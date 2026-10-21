@@ -41,6 +41,32 @@ export const MCP_TOOLS: McpToolDef[] = [
     inputSchema: { type: "object", properties: {} },
   },
 
+  /* ==================== SARA · PARTNER (AUTENTICADA) ==================== */
+  {
+    name: "partner_sara_inicio",
+    description: "PRIMERO: da a Sara la bienvenida a VForge Partner, explica en palabras sencillas como trabaja Luis y pregunta a que se dedica. Perfil de socia comercial, no desarrolladora. Debe usarse al iniciar su primer chat.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "partner_sara_arsenal",
+    description: "Muestra el arsenal integral para crear apps, automatizar, vender y desplegar. Indica con honestidad que solo las APIs probadas y autorizadas estan operativas. No revela llaves.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "partner_sara_ideas",
+    description: "Propone tres aplicaciones comerciales según lo que Sara cuenta sobre sus clientes, y hace una sola pregunta sencilla para avanzar hacia una demo real.",
+    inputSchema: { type: "object", properties: { actividad: { type: "string", description: "Negocio o clientes de Sara" } }, required: ["actividad"] },
+  },
+  {
+    name: "partner_sara_recordar",
+    description: "Guarda una preferencia, cliente u oportunidad autorizada por Sara en memoria persistente AISLADA por identidad y tenant. Jamás guardar credenciales ni información privada de Luis.",
+    inputSchema: { type: "object", properties: { tema: { type: "string" }, contenido: { type: "string" } }, required: ["tema", "contenido"] },
+  },
+  {
+    name: "partner_sara_memoria",
+    description: "Recupera memoria persistente PROPIA de Sara por tema o palabras; nunca lee memoria de otros usuarios ni Casa Luis.",
+    inputSchema: { type: "object", properties: { buscar: { type: "string" } } },
+  },
   /* ============================== TOOLS DE DATOS ============================== */
   {
     name: "vforge_brain_search",
