@@ -88,6 +88,10 @@ export const MCP_TOOLS: McpToolDef[] = [
     description: "Consulta en vivo Name.com por 3 dominios .site para una marca; muestra disponibilidad, costo inicial y renovacion en USD reales. Es solo una cotizacion; NO compra dominios ni cobra tarjeta. Solicitar aprobacion expresa de Luis antes de registrar.",
     inputSchema: {type:"object",properties:{ marca:{type:"string",description:"Nombre propuesto para proyecto, sin extension"} },required:["marca"]},
   },
+  { name: "partner_sara_pedir_pase", description: "Sara solicita un pase para tres demos de prueba con cuentas de infraestructura de Luis. No recibe llaves.", inputSchema: {type:"object",properties:{}} },
+  { name: "partner_sara_aprobar_pase", description: "SOLO LUIS: autoriza tres demos nuevas durante 48 horas, sin compras ni acceso a repos existentes.",inputSchema:{type:"object",properties:{solicitud:{type:"string"}},required:["solicitud"]} },
+  { name: "partner_sara_estado_pase", description: "Consulta usos restantes del pase de demo patrocinado.",inputSchema:{type:"object",properties:{}} },
+  { name: "partner_sara_construir_demo", description: "Con pase aprobado, crea demo PWA nueva con cuentas GitHub/Vercel de Luis. Paso uno genera plan, segundo requiere confirm y action_id; no compra dominios ni toca apps existentes.",inputSchema:{type:"object",properties:{marca:{type:"string"},idea:{type:"string"},confirm:{type:"boolean"},action_id:{type:"string"}},required:["marca","idea"]} },
   /* ============================== TOOLS DE DATOS ============================== */
   {
     name: "vforge_brain_search",

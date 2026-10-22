@@ -64,6 +64,10 @@ export const TOOL_KIND: Record<string, ToolKind> = {
   partner_sara_diseno: "data",
   partner_sara_documentos: "data",
   partner_sara_dominios: "data",
+  partner_sara_pedir_pase: "data",
+  partner_sara_aprobar_pase: "data",
+  partner_sara_estado_pase: "data",
+  partner_sara_construir_demo: "data",
   // ---- DATA (tenant / private, admin|client only) ----
   vforge_project_status: "data",
   vforge_project_feedback: "data",
@@ -128,6 +132,7 @@ export const TOOL_KIND: Record<string, ToolKind> = {
  * Associate = client. Un token public/ausente jamás las ve ni las llama.
  */
 export const OPERATOR_TOOLS: ReadonlySet<string> = new Set([
+  "partner_sara_aprobar_pase",
   "vulcano_taller_status",
   "vulcano_dispatch",
   "vulcano_brain_module",

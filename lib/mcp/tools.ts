@@ -11,6 +11,7 @@ import { isUnicornTool, runUnicornTool } from "./unicorn";
 import { partnerRemember, partnerRecall, partnerIdeas, SARA_WELCOME, SARA_ALIX_NOMBRE } from "./partner-sara";
 import { designPlan } from "./partner-design";
 import { partnerDomainQuote } from "./partner-domain";
+import { requestPartnerPass, approvePartnerPass, checkPartnerPass, makePartnerDemo } from "./partner-sponsored";
 
 /** El registro vive en `registry.ts` (sin dependencias) para que la página
  *  pública /mcp pueda contarlo sin arrastrar Neon ni GitHub. Se re-exporta
@@ -404,6 +405,29 @@ export async function runMcpTool(
     }
     case "partner_sara_dominios":
       return text(JSON.stringify(await partnerDomainQuote(String(args.marca ?? "")), null, 2));
+    case "partner_sara_pedir_pase":
+      return text(JSON.stringify(await requestPartnerPass(userId, orgId),null,2));
+    case "partner_sara_aprobar_pase":
+      return text(JSON.stringify(await approvePartnerPass(String(args.solicitud ?? ""),isAdminScope),null,2));
+    case "partner_sara_estado_pase":
+      return text(JSON.stringify(await checkPartnerPass(userId,orgId),null,2));
+    case "partner_sara_construir_demo": {
+      const marca=String(args.marca??"").trim(),idea=String(args.idea??"").trim();
+      if (!marca || !idea) return err("Indica nombre e idea de la demo");
+      if (args.confirm !== true) {
+        const access=await checkPartnerPass(userId,orgId);
+        if (!access.active) return text(JSON.stringify({ok:false,request:access.request,next:"Solicita pase con partner_sara_pedir_pase y pide a Luis aprobarlo"},null,2));
+        return savePlan(userId,name,{marca,idea},
+          "PLAN: crear demo PWA nueva para "+marca+" ("+idea+") en GitHub y Vercel de Luis. " +
+          "No edita aplicaciones existentes ni compra dominios. Requiere confirm:true y action_id.");
+      }
+      const pend=await loadPlan(userId,name,String(args.action_id??""));
+      if("error" in pend)return err(pend.error);
+      const plan=pend.params as {marca:string;idea:string};
+      const demo=await makePartnerDemo(userId,orgId,plan.marca,plan.idea);
+      await markExecuted(pend.id);
+      return text(JSON.stringify(demo,null,2));
+    }
     case "partner_sara_arsenal":
       return text(JSON.stringify({
         fabricacion: ["VForge", "GitHub", "Vercel", "Neon", "Clerk", "Name.com", "PWA", "QA"],
