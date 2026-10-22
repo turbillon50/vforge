@@ -193,7 +193,7 @@ export function canCallTool(principal: McpPrincipal, name: string): boolean {
   if (principal.scope === "client") return PARTNER_ALLOWED.has(name);
   // Tools de operador (brain_exec, brain_query, shell, deploy real) — solo admin (Luis)
   if (isOperatorTool(name)) return principal.scope === "admin";
-  return principal.scope === "admin" || principal.scope === "client";
+  return principal.scope === "admin";
 }
 
 /** Tools que este principal puede LLAMAR (lo que anuncia tools/list). Usa el
