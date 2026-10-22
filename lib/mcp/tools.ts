@@ -9,6 +9,8 @@ import { type McpPrincipal, isAdmin, toolsVisibleFor } from "./rbac";
 import { MCP_TOOLS, type McpToolDef } from "./registry";
 import { isUnicornTool, runUnicornTool } from "./unicorn";
 import { partnerRemember, partnerRecall, partnerIdeas, SARA_WELCOME, SARA_ALIX_NOMBRE } from "./partner-sara";
+import { designPlan } from "./partner-design";
+import { partnerDomainQuote } from "./partner-domain";
 
 /** El registro vive en `registry.ts` (sin dependencias) para que la página
  *  pública /mcp pueda contarlo sin arrastrar Neon ni GitHub. Se re-exporta
@@ -386,6 +388,22 @@ export async function runMcpTool(
       return text(SARA_WELCOME);
     case "partner_sara_nombre_alix":
       return text(SARA_ALIX_NOMBRE);
+    case "partner_sara_diseno":
+      return text(JSON.stringify(designPlan(String(args.idea ?? "")), null, 2));
+    case "partner_sara_documentos": {
+      const { partnerDocumentPack } = await import("./partner-documents");
+      const files = await partnerDocumentPack({
+        business: String(args.giro ?? ""),
+        app: String(args.aplicacion ?? ""),
+        description: String(args.descripcion ?? ""),
+      }, userId);
+      return text(JSON.stringify({
+        ok: true, files, sharing: "Los enlaces de documentos son compartibles. No se incluyen secretos ni datos personales.",
+        next_step: "Ahora pregunta a Sara si quiere ver dominios .site disponibles y, si acepta, usa partner_sara_dominios. No comprar sin Luis.",
+      }, null, 2));
+    }
+    case "partner_sara_dominios":
+      return text(JSON.stringify(await partnerDomainQuote(String(args.marca ?? "")), null, 2));
     case "partner_sara_arsenal":
       return text(JSON.stringify({
         fabricacion: ["VForge", "GitHub", "Vercel", "Neon", "Clerk", "Name.com", "PWA", "QA"],

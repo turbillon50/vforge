@@ -61,6 +61,9 @@ export const TOOL_KIND: Record<string, ToolKind> = {
   partner_sara_recordar: "data",
   partner_sara_memoria: "data",
   partner_sara_nombre_alix: "data",
+  partner_sara_diseno: "data",
+  partner_sara_documentos: "data",
+  partner_sara_dominios: "data",
   // ---- DATA (tenant / private, admin|client only) ----
   vforge_project_status: "data",
   vforge_project_feedback: "data",

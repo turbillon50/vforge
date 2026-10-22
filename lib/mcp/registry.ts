@@ -73,6 +73,21 @@ export const MCP_TOOLS: McpToolDef[] = [
     inputSchema: { type: "object", properties: {} },
   },
 
+  {
+    name: "partner_sara_diseno",
+    description: "CRITERIO CRAFT: antes de proponer o construir aplicaciones prepara el contrato visual basado en ATELIER, adaptado al giro. No copiar la estetica de ATELIER como plantilla. Incluye navegación, PWA, QA y roles.",
+    inputSchema: { type: "object", properties: { idea: {type:"string",description:"Giro y tipo de aplicacion"} }, required:["idea"] },
+  },
+  {
+    name: "partner_sara_documentos",
+    description: "Tras aceptar Sara una idea: produce 3 PDF reales con enlaces compartibles: roadmap, guia tecnica y contrato tipo no firmado. No inventar precio, firma ni plazos. Ejecutar antes de consultar dominios o preparar demo.",
+    inputSchema: { type:"object", properties: { giro:{type:"string"}, aplicacion:{type:"string"}, descripcion:{type:"string"} }, required:["giro","aplicacion"] },
+  },
+  {
+    name: "partner_sara_dominios",
+    description: "Consulta en vivo Name.com por 3 dominios .site para una marca; muestra disponibilidad, costo inicial y renovacion en USD reales. Es solo una cotizacion; NO compra dominios ni cobra tarjeta. Solicitar aprobacion expresa de Luis antes de registrar.",
+    inputSchema: {type:"object",properties:{ marca:{type:"string",description:"Nombre propuesto para proyecto, sin extension"} },required:["marca"]},
+  },
   /* ============================== TOOLS DE DATOS ============================== */
   {
     name: "vforge_brain_search",

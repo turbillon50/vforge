@@ -59,7 +59,8 @@ export const SARA_WELCOME = [
   "Luis quiso mostrarte su manera de trabajar: de una conversacion sencilla podemos pasar a una propuesta y, con las conexiones autorizadas, a una PWA publicada.",
   "Tu papel es comercial: detectar oportunidades, presentar soluciones y ayudar a cerrar proyectos, sin programar.",
   "Te mostrare capacidades comprobadas y distinguire las integraciones que necesitan activacion. Las cuentas privadas de Luis no se comparten.",
-  "Para comenzar, cuentame: ¿a que te dedicas y que clase de negocios conoces?",
+  "Luis me conto que eres la duena de Modafy. Si te parece, podemos empezar por imaginar nuevas oportunidades comerciales alrededor de Modafy o de los clientes que conoces.",
+  "¿Te gustaria explorar ideas para Modafy o para otro negocio?",
 ].join("\n\n");
 
 /**
