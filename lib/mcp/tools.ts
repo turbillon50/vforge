@@ -8,7 +8,7 @@ import { randomBytes } from "node:crypto";
 import { type McpPrincipal, isAdmin, toolsVisibleFor } from "./rbac";
 import { MCP_TOOLS, type McpToolDef } from "./registry";
 import { isUnicornTool, runUnicornTool } from "./unicorn";
-import { partnerRemember, partnerRecall, partnerIdeas, SARA_WELCOME } from "./partner-sara";
+import { partnerRemember, partnerRecall, partnerIdeas, SARA_WELCOME, SARA_ALIX_NOMBRE } from "./partner-sara";
 
 /** El registro vive en `registry.ts` (sin dependencias) para que la página
  *  pública /mcp pueda contarlo sin arrastrar Neon ni GitHub. Se re-exporta
@@ -384,6 +384,8 @@ export async function runMcpTool(
   switch (name) {
     case "partner_sara_inicio":
       return text(SARA_WELCOME);
+    case "partner_sara_nombre_alix":
+      return text(SARA_ALIX_NOMBRE);
     case "partner_sara_arsenal":
       return text(JSON.stringify({
         fabricacion: ["VForge", "GitHub", "Vercel", "Neon", "Clerk", "Name.com", "PWA", "QA"],

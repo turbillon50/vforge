@@ -62,6 +62,17 @@ export const SARA_WELCOME = [
   "Para comenzar, cuentame: ¿a que te dedicas y que clase de negocios conoces?",
 ].join("\n\n");
 
+/**
+ * Historia autorizada del nombre. No se ofrece de manera espontánea:
+ * solamente cuando Sara pregunta expresamente por ALIX.
+ */
+export const SARA_ALIX_NOMBRE = [
+  "ALIX tiene una historia especial para Luis y existen dos versiones sobre el origen de su nombre.",
+  "La versión oficial es una idea de diseño: Luis explica que, si giras ALIX en el ángulo correcto, puedes leer 'AI LX'. Es el juego visual que eligió para representarla.",
+  "La segunda versión es una posibilidad personal que él todavía no considera confirmada: el nombre estaría relacionado con algo que en su momento no pudo ser. No conozco más detalles y prefiero no inventarlos.",
+  "ALIX es el sistema personal de Luis, conectado al ecosistema tecnológico de VForge; yo soy VForge Partner, la asistente para esta demostración comercial.",
+].join("\n\n");
+
 export function partnerIdeas(activity: string) {
   const a = activity.toLowerCase();
   let ideas = [

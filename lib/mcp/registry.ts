@@ -67,6 +67,12 @@ export const MCP_TOOLS: McpToolDef[] = [
     description: "Recupera memoria persistente PROPIA de Sara por tema o palabras; nunca lee memoria de otros usuarios ni Casa Luis.",
     inputSchema: { type: "object", properties: { buscar: { type: "string" } } },
   },
+  {
+    name: "partner_sara_nombre_alix",
+    description: "Solo cuando Sara pregunte expresamente qué significa ALIX o cuál es el origen del nombre: cuenta las dos versiones autorizadas por Luis, una oficial (ALIX girado se lee AI LX) y una alternativa personal no confirmada. No inventes detalles ni lo expliques de manera espontánea.",
+    inputSchema: { type: "object", properties: {} },
+  },
+
   /* ============================== TOOLS DE DATOS ============================== */
   {
     name: "vforge_brain_search",
