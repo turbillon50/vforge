@@ -64,10 +64,9 @@ export const TOOL_KIND: Record<string, ToolKind> = {
   partner_sara_diseno: "data",
   partner_sara_documentos: "data",
   partner_sara_dominios: "data",
-  partner_sara_pedir_pase: "data",
-  partner_sara_aprobar_pase: "data",
-  partner_sara_estado_pase: "data",
-  partner_sara_construir_demo: "data",
+  partner_fabrica_crear: "data",
+  partner_fabrica_estado: "data",
+  partner_fabrica_proyectos: "data",
   // ---- DATA (tenant / private, admin|client only) ----
   vforge_project_status: "data",
   vforge_project_feedback: "data",
@@ -132,7 +131,6 @@ export const TOOL_KIND: Record<string, ToolKind> = {
  * Associate = client. Un token public/ausente jamás las ve ni las llama.
  */
 export const OPERATOR_TOOLS: ReadonlySet<string> = new Set([
-  "partner_sara_aprobar_pase",
   "vulcano_taller_status",
   "vulcano_dispatch",
   "vulcano_brain_module",
@@ -181,8 +179,18 @@ export function isPublicTool(name: string): boolean {
 }
 
 /** Can this principal CALL this tool? Public tools: always. Data: admin|client. Operator tools: admin ONLY. */
+const PARTNER_ALLOWED: ReadonlySet<string> = new Set([
+  "partner_sara_inicio", "partner_sara_arsenal", "partner_sara_ideas",
+  "partner_sara_recordar", "partner_sara_memoria", "partner_sara_nombre_alix",
+  "partner_sara_diseno", "partner_sara_documentos", "partner_sara_dominios",
+  "partner_fabrica_crear", "partner_fabrica_estado", "partner_fabrica_proyectos",
+]);
+
 export function canCallTool(principal: McpPrincipal, name: string): boolean {
   if (isPublicTool(name)) return true;
+  // Desde este MCP, una cuenta cliente solo tiene las herramientas comerciales
+  // acotadas: no recibe SQL, brain global, shell, dispatch directo ni recursos de Luis.
+  if (principal.scope === "client") return PARTNER_ALLOWED.has(name);
   // Tools de operador (brain_exec, brain_query, shell, deploy real) — solo admin (Luis)
   if (isOperatorTool(name)) return principal.scope === "admin";
   return principal.scope === "admin" || principal.scope === "client";

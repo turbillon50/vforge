@@ -49,7 +49,7 @@ export const MCP_TOOLS: McpToolDef[] = [
   },
   {
     name: "partner_sara_arsenal",
-    description: "Muestra el arsenal integral para crear apps, automatizar, vender y desplegar. Indica con honestidad que solo las APIs probadas y autorizadas estan operativas. No revela llaves.",
+    description: "Muestra el arsenal integral para crear apps y despachar la construcción real con partner_fabrica_crear, automatizar, vender y desplegar. Indica con honestidad que solo las APIs probadas y autorizadas estan operativas. No revela llaves.",
     inputSchema: { type: "object", properties: {} },
   },
   {
@@ -80,7 +80,7 @@ export const MCP_TOOLS: McpToolDef[] = [
   },
   {
     name: "partner_sara_documentos",
-    description: "Tras aceptar Sara una idea: produce 3 PDF reales con enlaces compartibles: roadmap, guia tecnica y contrato tipo no firmado. No inventar precio, firma ni plazos. Ejecutar antes de consultar dominios o preparar demo.",
+    description: "Tras pedir la app: produce 3 PDF reales OPCIONALES en paralelo, sin bloquear el inicio de construcción con enlaces compartibles: roadmap, guia tecnica y contrato tipo no firmado. No inventar precio, firma ni plazos. No retrasar la construcción por escribir documentos.",
     inputSchema: { type:"object", properties: { giro:{type:"string"}, aplicacion:{type:"string"}, descripcion:{type:"string"} }, required:["giro","aplicacion"] },
   },
   {
@@ -88,10 +88,24 @@ export const MCP_TOOLS: McpToolDef[] = [
     description: "Consulta en vivo Name.com por 3 dominios .site para una marca; muestra disponibilidad, costo inicial y renovacion en USD reales. Es solo una cotizacion; NO compra dominios ni cobra tarjeta. Solicitar aprobacion expresa de Luis antes de registrar.",
     inputSchema: {type:"object",properties:{ marca:{type:"string",description:"Nombre propuesto para proyecto, sin extension"} },required:["marca"]},
   },
-  { name: "partner_sara_pedir_pase", description: "Sara solicita un pase para tres demos de prueba con cuentas de infraestructura de Luis. No recibe llaves.", inputSchema: {type:"object",properties:{}} },
-  { name: "partner_sara_aprobar_pase", description: "SOLO LUIS: autoriza tres demos nuevas durante 48 horas, sin compras ni acceso a repos existentes.",inputSchema:{type:"object",properties:{solicitud:{type:"string"}},required:["solicitud"]} },
-  { name: "partner_sara_estado_pase", description: "Consulta usos restantes del pase de demo patrocinado.",inputSchema:{type:"object",properties:{}} },
-  { name: "partner_sara_construir_demo", description: "Con pase aprobado, crea demo PWA nueva con cuentas GitHub/Vercel de Luis. Paso uno genera plan, segundo requiere confirm y action_id; no compra dominios ni toca apps existentes.",inputSchema:{type:"object",properties:{marca:{type:"string"},idea:{type:"string"},confirm:{type:"boolean"},action_id:{type:"string"}},required:["marca","idea"]} },
+  {
+    name: "partner_fabrica_crear",
+    description: "HERRAMIENTA PRINCIPAL. Cuando la socia tenga una idea de APP, llámala inmediatamente sin pedir pase ni sugerir otra presentación: despacha la construcción de una aplicación completa en el motor real VForge (código, diseño Craft, auth, Neon, GitHub, Vercel, PWA y QA). NO CREA una landing estática. No prometas publicación hasta verificar estado.",
+    inputSchema: { type:"object",properties:{
+      nombre:{type:"string",description:"Marca/nombre provisional de la aplicación"},
+      idea:{type:"string",description:"Qué hace la app y quién la usa; puede venir expresado libremente en español"}
+    },required:["nombre","idea"] }
+  },
+  {
+    name: "partner_fabrica_estado",
+    description: "Consulta real y en vivo la cola de construcción de una app iniciada con partner_fabrica_crear, mostrando avances, errores y enlaces verificados. Usa run_id retornado. Nunca inventa deploy.",
+    inputSchema: { type:"object",properties:{run_id:{type:"string"}},required:["run_id"] }
+  },
+  {
+    name: "partner_fabrica_proyectos",
+    description: "Lista de hasta tres apps que la socia ordenó construir, sin confundir una solicitud en cola con app publicada. No requiere pases.",
+    inputSchema: { type:"object",properties:{} }
+  },
   /* ============================== TOOLS DE DATOS ============================== */
   {
     name: "vforge_brain_search",

@@ -11,6 +11,7 @@ import { isUnicornTool, runUnicornTool } from "./unicorn";
 import { partnerRemember, partnerRecall, partnerIdeas, SARA_WELCOME, SARA_ALIX_NOMBRE } from "./partner-sara";
 import { designPlan } from "./partner-design";
 import { partnerDomainQuote } from "./partner-domain";
+import { partnerBuild, partnerBuildStatus, partnerBuildList } from "./partner-factory";
 import { requestPartnerPass, approvePartnerPass, checkPartnerPass, makePartnerDemo } from "./partner-sponsored";
 
 /** El registro vive en `registry.ts` (sin dependencias) para que la página
@@ -428,6 +429,12 @@ export async function runMcpTool(
       await markExecuted(pend.id);
       return text(JSON.stringify(demo,null,2));
     }
+    case "partner_fabrica_crear":
+      return text(JSON.stringify(await partnerBuild(userId,orgId,args.nombre,args.idea),null,2));
+    case "partner_fabrica_estado":
+      return text(JSON.stringify(await partnerBuildStatus(userId,orgId,args.run_id),null,2));
+    case "partner_fabrica_proyectos":
+      return text(JSON.stringify(await partnerBuildList(userId,orgId),null,2));
     case "partner_sara_arsenal":
       return text(JSON.stringify({
         fabricacion: ["VForge", "GitHub", "Vercel", "Neon", "Clerk", "Name.com", "PWA", "QA"],

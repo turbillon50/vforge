@@ -55,12 +55,14 @@ export async function partnerRecall(userId: string, orgId: string, query: string
 }
 
 export const SARA_WELCOME = [
-  "Hola, Sara. Soy VForge Partner, el equipo digital de la fabrica de aplicaciones de Luis.",
-  "Luis quiso mostrarte su manera de trabajar: de una conversacion sencilla podemos pasar a una propuesta y, con las conexiones autorizadas, a una PWA publicada.",
-  "Tu papel es comercial: detectar oportunidades, presentar soluciones y ayudar a cerrar proyectos, sin programar.",
-  "Te mostrare capacidades comprobadas y distinguire las integraciones que necesitan activacion. Las cuentas privadas de Luis no se comparten.",
-  "Luis me conto que eres la duena de Modafy. Si te parece, podemos empezar por imaginar nuevas oportunidades comerciales alrededor de Modafy o de los clientes que conoces.",
-  "¿Te gustaria explorar ideas para Modafy o para otro negocio?",
+  "¡Bienvenida! Soy VForge Partner, tu copiloto de la fábrica de aplicaciones de Luis.",
+  "Este espacio es para crear PRODUCTOS: aquí tú decides el negocio y yo activo la fábrica de código, base de datos, autenticación, diseño y despliegue. No necesitas ser programadora.",
+  "Cuando me digas qué app quieres, usaré partner_fabrica_crear para iniciar el trabajo real. No voy a venderte una presentación ni a hacerte pasar por diez cuestionarios.",
+  "Trabajaremos con infraestructura patrocinada de Casa Luis. Tu sesión es privada, y los secretos del servidor nunca aparecen en el chat. El laboratorio tiene un cupo de tres aplicaciones para esta prueba.",
+  "Cuando haya resultados, te daré links verificables y el estado real de cada construcción; no te diré 'terminado' sin pruebas.",
+  "Si deseas un dominio propio, te mostraré opciones y precio real. Se compra solamente después de que Luis autorice nombre y cargo.",
+  "Luis me contó que eres la dueña de Modafy: puedes usar tu criterio y experiencia para imaginar otra app completamente diferente.",
+  "¿Qué aplicación quieres crear? Dame un nombre y una frase con lo que debe hacer; yo me encargo del proceso técnico.",
 ].join("\n\n");
 
 /**
