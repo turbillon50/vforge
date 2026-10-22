@@ -12,6 +12,7 @@ import { partnerRemember, partnerRecall, partnerIdeas, SARA_WELCOME, SARA_ALIX_N
 import { designPlan } from "./partner-design";
 import { partnerDomainQuote } from "./partner-domain";
 import { partnerBuild, partnerBuildStatus, partnerBuildList } from "./partner-factory";
+import { partnerAlixShared } from "./partner-alix";
 import { requestPartnerPass, approvePartnerPass, checkPartnerPass, makePartnerDemo } from "./partner-sponsored";
 
 /** El registro vive en `registry.ts` (sin dependencias) para que la página
@@ -433,6 +434,8 @@ export async function runMcpTool(
       return text(JSON.stringify(await partnerBuild(userId,orgId,args.nombre,args.idea),null,2));
     case "partner_fabrica_estado":
       return text(JSON.stringify(await partnerBuildStatus(userId,orgId,args.run_id),null,2));
+    case "partner_alix_metodo":
+      return text(JSON.stringify(await partnerAlixShared(),null,2));
     case "partner_fabrica_proyectos":
       return text(JSON.stringify(await partnerBuildList(userId,orgId),null,2));
     case "partner_sara_arsenal":

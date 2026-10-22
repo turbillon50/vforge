@@ -106,6 +106,11 @@ export const MCP_TOOLS: McpToolDef[] = [
     description: "Lista de hasta tres apps que la socia ordenó construir, sin confundir una solicitud en cola con app publicada. No requiere pases.",
     inputSchema: { type:"object",properties:{} }
   },
+  {
+    name:"partner_alix_metodo",
+    description:"Contexto de trabajo COMPARTIBLE con Sara desde ALIX: doctrina Craft, autonomía, evidencias y último relevo aprobado por Luis en Brain. Consulta en vivo; NO incluye memoria privada de ALIX, secretos ni conversaciones personales. Utilizar al inicio de proyectos o si Sara pregunta cómo trabaja ALIX/VForge.",
+    inputSchema:{type:"object",properties:{}}
+  },
   /* ============================== TOOLS DE DATOS ============================== */
   {
     name: "vforge_brain_search",

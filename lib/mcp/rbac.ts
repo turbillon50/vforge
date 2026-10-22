@@ -67,6 +67,7 @@ export const TOOL_KIND: Record<string, ToolKind> = {
   partner_fabrica_crear: "data",
   partner_fabrica_estado: "data",
   partner_fabrica_proyectos: "data",
+  partner_alix_metodo: "data",
   // ---- DATA (tenant / private, admin|client only) ----
   vforge_project_status: "data",
   vforge_project_feedback: "data",
@@ -184,6 +185,7 @@ const PARTNER_ALLOWED: ReadonlySet<string> = new Set([
   "partner_sara_recordar", "partner_sara_memoria", "partner_sara_nombre_alix",
   "partner_sara_diseno", "partner_sara_documentos", "partner_sara_dominios",
   "partner_fabrica_crear", "partner_fabrica_estado", "partner_fabrica_proyectos",
+  "partner_alix_metodo",
 ]);
 
 export function canCallTool(principal: McpPrincipal, name: string): boolean {
