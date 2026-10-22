@@ -1,200 +1,129 @@
-/* ============================================================
-   VForge · Auth craft/crystal — negro absoluto, cristal ahumado,
-   brasa ▽ latiendo, sweep de forjado. Monocromo estricto.
-   ============================================================ */
-
+/* VForge · Login editorial, responsive. Clerk remains the real auth engine. */
 .auth-scene {
-  --void: #000000;
-  --spark: #ffffff;
-  --ash: #8a8a8f;
-  --smoke: rgba(255, 255, 255, 0.6);
-  --glass-top: rgba(255, 255, 255, 0.07);
-  --glass-bot: rgba(255, 255, 255, 0.025);
-  --edge: rgba(255, 255, 255, 0.14);
-
-  position: relative;
-  min-height: 100dvh;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  padding: 56px 20px;
-  background: var(--void);
-  color: var(--spark);
-  font-family: var(--font-geist-sans), Geist, Arial, sans-serif;
-  isolation: isolate;
+  --spark:#f4f1e9;
+  --ash:#a09f9c;
+  --smoke:rgba(237,235,227,.68);
+  --edge:rgba(248,245,238,.14);
+  --glass-top:rgba(255,255,255,.047);
+  --glass-bot:rgba(255,255,255,.018);
+  position:relative; isolation:isolate; overflow:hidden;
+  min-height:100dvh; display:flex; flex-direction:column;
+  background:#0b0d0c; color:var(--spark);
+  font-family:var(--font-geist-sans),Geist,Arial,sans-serif;
 }
-
-/* glow radial superior — profundidad */
 .auth-scene::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -3;
-  background: radial-gradient(
-    120% 80% at 50% 8%,
-    rgba(255, 255, 255, 0.08),
-    rgba(255, 255, 255, 0) 55%
-  );
-  pointer-events: none;
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:-3;
+  background:
+    radial-gradient(ellipse 700px 600px at 18% 45%,rgba(179,171,139,.14),transparent 70%),
+    radial-gradient(ellipse 570px 530px at 88% 12%,rgba(225,228,210,.075),transparent 75%),
+    linear-gradient(155deg,#131715 0%,#0b0d0c 51%,#101410 100%);
 }
-
-/* grano film — textura craft */
-.auth-grain {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  pointer-events: none;
-  opacity: 0.05;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+.auth-grain {position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.042;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
-
-/* brasa ▽ de Forge — late detrás del cristal */
-.auth-ember {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: -1;
-  width: min(74vw, 460px);
-  height: auto;
-  transform: translate(-50%, -54%);
-  color: #fff;
-  opacity: 0.05;
-  filter: blur(2px) drop-shadow(0 0 60px rgba(255, 255, 255, 0.28));
-  animation: emberBreathe 9s ease-in-out infinite;
-  pointer-events: none;
+.auth-aurora {position:absolute;z-index:-2;width:54vw;height:54vw;max-width:750px;max-height:750px;
+  left:-26vw;top:32%;border:1px solid rgba(241,236,209,.075);border-radius:50%;
+  box-shadow:0 0 0 75px rgba(241,236,209,.018),0 0 0 156px rgba(241,236,209,.016),0 0 0 240px rgba(241,236,209,.009);
+  pointer-events:none;
 }
-
-@keyframes emberBreathe {
-  0%, 100% { opacity: 0.028; transform: translate(-50%, -54%) scale(1); }
-  50%      { opacity: 0.052; transform: translate(-50%, -54%) scale(1.04); }
+.auth-topbar {width:100%;min-height:90px;padding:0 clamp(25px,5.2vw,82px);display:flex;align-items:center;
+  justify-content:space-between;gap:24px;border-bottom:1px solid rgba(240,238,224,.065);flex-shrink:0;}
+.auth-home {display:inline-flex;align-items:center;gap:12px;text-decoration:none;color:#f2f1e9;
+  font-weight:630;font-size:15px;letter-spacing:.26em;}
+.auth-home svg {color:#e8e4d7;}
+.auth-brand-split {color:#aba896;font-weight:300;}
+.auth-topbar-note,.auth-back,.auth-footer {font-family:var(--font-geist-mono),monospace;font-size:10px;letter-spacing:.15em;}
+.auth-topbar-note {color:#8f958d;}
+.auth-topbar-slash {margin:0 10px;color:#d5d6ca;}
+.auth-back {display:flex;align-items:center;gap:8px;color:#c4c5bc;text-decoration:none;transition:color .2s,transform .2s;}
+.auth-back:hover {color:#fff;transform:translateX(-3px);}
+.auth-layout {width:min(100%,1190px);margin:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,440px);
+  align-items:center;column-gap:clamp(48px,8vw,148px);padding:52px 40px 63px;}
+.auth-editorial {min-height:510px;display:flex;flex-direction:column;justify-content:space-between;}
+.auth-pill {display:inline-flex;align-items:center;gap:10px;width:fit-content;padding:10px 13px;
+  border:1px solid rgba(226,228,213,.15);border-radius:999px;color:#c5c9b7;background:rgba(233,234,218,.034);
+  font-family:var(--font-geist-mono),monospace;font-size:9px;letter-spacing:.14em;font-weight:550;}
+.auth-live-dot,.auth-under-dot {display:inline-block;width:6px;height:6px;background:#c8d4ad;border-radius:50%;
+  box-shadow:0 0 12px rgba(198,211,166,.45);}
+.auth-hero-kicker {color:#c0bfae;margin:66px 0 20px;font-size:10px;letter-spacing:.25em;font-weight:650;}
+.auth-hero-title {font-family:Georgia,"Times New Roman",serif;font-size:clamp(48px,5.3vw,75px);
+  line-height:1.06;letter-spacing:-.045em;font-weight:400;margin:0;color:#f6f4ed;}
+.auth-hero-title span {color:#b6b5a4;font-style:italic;}
+.auth-hero-text {max-width:36ch;font-size:14px;line-height:1.8;color:#a9ada7;margin-top:28px;}
+.auth-flow {margin-top:65px;border-top:1px solid rgba(229,226,211,.15);padding-top:22px;}
+.auth-flow-label {font-size:10px;font-weight:550;color:#969b94;letter-spacing:.16em;margin-bottom:18px;}
+.auth-flow-steps {display:flex;align-items:center;gap:12px;white-space:nowrap;}
+.auth-flow-steps span:not(.auth-flow-line) {font-size:12px;color:#d7d9d0;letter-spacing:.02em;}
+.auth-flow-steps b {font-family:var(--font-geist-mono),monospace;color:#8e968b;font-size:10px;margin-right:6px;}
+.auth-flow-line {flex:1;height:1px;background:linear-gradient(90deg,rgba(242,238,216,.3),rgba(242,238,216,.07));}
+.auth-stack {width:100%;min-width:0;}
+.auth-form-eyebrow {display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:27px;}
+.auth-form-number,.auth-form-lock {font-family:var(--font-geist-mono),monospace;font-size:9px;letter-spacing:.14em;color:#a9aaa0;}
+.auth-form-lock {display:flex;align-items:center;gap:6px;color:#969c90;}
+.auth-intro {margin:0 0 25px;}
+.auth-eyebrow {font-family:var(--font-geist-mono),monospace;color:#b5b6a8;font-size:10px;letter-spacing:.18em;text-transform:uppercase;}
+.auth-title {font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:clamp(36px,4vw,50px);
+  letter-spacing:-.05em;line-height:1.08;margin:11px 0 0;color:#f8f7f2;}
+.auth-body {font-size:13px;line-height:1.65;color:#aeb2aa;max-width:40ch;margin:15px 0 0;}
+.auth-card {position:relative;min-height:310px;padding:28px 29px 24px;border:1px solid rgba(232,233,217,.19);
+  border-radius:18px;background:linear-gradient(140deg,rgba(242,240,220,.09),rgba(255,255,255,.018) 68%);
+  box-shadow:0 35px 85px rgba(0,0,0,.37),inset 0 1px 0 rgba(255,255,255,.11);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+.auth-card::before {content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(ellipse 120% 64% at 40% 0%,rgba(255,255,255,.055),transparent 70%);}
+.auth-card > * {position:relative;}
+.auth-under-card {display:flex;justify-content:space-between;gap:12px;align-items:center;
+  padding:22px 2px;font-family:var(--font-geist-mono),monospace;color:#797f76;font-size:9px;letter-spacing:.12em;}
+.auth-under-card span:first-child {display:flex;align-items:center;gap:8px;}
+.auth-under-dot {width:5px;height:5px;background:#b6c6a2;}
+.auth-footer {width:100%;min-height:67px;padding:19px clamp(25px,5.2vw,82px);display:flex;align-items:center;
+  justify-content:space-between;gap:25px;color:#787d74;border-top:1px solid rgba(240,238,224,.065);}
+.auth-loading {text-align:center;display:flex;flex-direction:column;align-items:center;gap:0;min-height:320px;}
+.auth-loading-mark {height:54px;width:54px;display:grid;place-items:center;position:relative;margin:6px 0 12px;color:#e4e4d9;}
+.auth-loading-spin {position:absolute;inset:0;border:1px solid rgba(238,237,218,.13);border-top-color:rgba(239,237,218,.8);
+  border-radius:50%;animation:auth-spin 1.3s linear infinite;}
+@keyframes auth-spin {to {transform:rotate(360deg);}}
+.auth-loading-heading {color:#f1f0e8;font-size:15px;font-weight:530;margin:6px 0 5px;}
+.auth-loading-sub {color:#9ba096;font-size:12px;line-height:1.6;margin:0 auto 19px;}
+.auth-loading-fields {width:100%;display:grid;gap:15px;text-align:left;}
+.auth-loading-fields>div {display:grid;gap:7px;}
+.auth-loading-label {display:block;height:8px;width:90px;border-radius:3px;background:#5a5f56;opacity:.44;}
+.auth-loading-label.short {width:67px;}
+.auth-loading-input {display:block;height:43px;border:1px solid rgba(240,240,220,.12);background:rgba(244,242,224,.035);border-radius:9px;}
+.auth-loading-cta {display:block;height:44px;background:rgba(238,237,215,.16);border-radius:9px;margin-top:3px;animation:auth-pulse 2s ease-in-out infinite;}
+@keyframes auth-pulse {50%{opacity:.55;}}
+.auth-loading-recovery {font-size:12px;color:#b8bbaf;margin-top:17px;}
+.auth-loading-recovery button {background:transparent;border:1px solid rgba(255,255,255,.22);border-radius:9px;
+  padding:10px 15px;color:#f5f4ed;cursor:pointer;margin-top:7px;}
+.auth-loading-recovery button:hover {background:rgba(255,255,255,.08);}
+@media(max-width:900px){
+  .auth-layout {grid-template-columns:minmax(0,1fr) minmax(320px,430px);padding:50px 28px;gap:40px;}
+  .auth-hero-title {font-size:clamp(40px,5.5vw,57px);}
+  .auth-hero-text {font-size:13px;}
+  .auth-flow-steps {gap:8px;}
 }
-
-/* ---- columna de contenido ---- */
-.auth-stack {
-  position: relative;
-  width: 100%;
-  max-width: 430px;
-  z-index: 1;
+@media(max-width:700px){
+  .auth-topbar {min-height:72px;padding:0 20px;}
+  .auth-topbar-note {display:none;}
+  .auth-layout {display:flex;flex-direction:column;gap:0;align-items:stretch;padding:27px 20px 32px;max-width:510px;}
+  .auth-editorial {min-height:unset;padding:0;}
+  .auth-pill,.auth-flow,.auth-hero-kicker,.auth-hero-text {display:none;}
+  .auth-hero-title {font-size:clamp(28px,7.4vw,36px);letter-spacing:-.04em;line-height:1.12;margin-bottom:27px;}
+  .auth-hero-title br {display:none;}
+  .auth-hero-title span {margin-left:.2em;}
+  .auth-form-eyebrow {margin-bottom:21px;}
+  .auth-title {font-size:40px;}
+  .auth-body {margin-top:11px;font-size:12.5px;max-width:43ch;}
+  .auth-card {margin-top:23px;border-radius:15px;padding:22px 20px;min-height:265px;}
+  .auth-under-card {padding:19px 1px;}
+  .auth-footer {padding:20px;min-height:60px;font-size:8px;letter-spacing:.1em;}
 }
-
-.auth-back {
-  position: absolute;
-  top: -34px;
-  left: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  letter-spacing: 0.01em;
-  color: var(--ash);
-  text-decoration: none;
-  transition: color 0.25s ease, gap 0.25s ease;
+@media(max-width:350px){
+  .auth-layout {padding-left:13px;padding-right:13px;}
+  .auth-card {padding:18px 14px;}
+  .auth-form-lock {font-size:8px;}
 }
-.auth-back:hover { color: var(--spark); gap: 10px; }
-
-.auth-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 11px;
-  margin-bottom: 30px;
-}
-.auth-brand svg { display: block; }
-.auth-brand .wm {
-  font-size: 15px;
-  font-weight: 300;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--spark);
-}
-
-.auth-eyebrow {
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--ash);
-}
-.auth-title {
-  margin-top: 12px;
-  font-size: clamp(30px, 8vw, 40px);
-  font-weight: 600;
-  line-height: 0.98;
-  letter-spacing: -0.045em;
-  color: var(--spark);
-}
-.auth-body {
-  margin-top: 14px;
-  max-width: 34ch;
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: var(--smoke);
-}
-
-/* ---- el cristal ---- */
-.auth-card {
-  position: relative;
-  margin-top: 26px;
-  padding: 26px 24px 22px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, var(--glass-top), var(--glass-bot));
-  border: 1px solid var(--edge);
-  backdrop-filter: blur(26px) saturate(125%);
-  -webkit-backdrop-filter: blur(26px) saturate(125%);
-  box-shadow:
-    0 40px 120px -30px rgba(0, 0, 0, 0.9),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-  overflow: hidden;
-  animation: cardForge 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-
-/* highlight specular fijo (borde que capta luz, esquina superior) */
-.auth-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.45),
-    rgba(255, 255, 255, 0) 32%,
-    rgba(255, 255, 255, 0) 70%,
-    rgba(255, 255, 255, 0.12)
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-/* sweep de forjado — recorre el cristal una vez al montar */
-.auth-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -60%;
-  width: 55%;
-  height: 100%;
-  background: linear-gradient(
-    100deg,
-    transparent,
-    rgba(255, 255, 255, 0.14),
-    transparent
-  );
-  transform: skewX(-18deg);
-  animation: cardSweep 1.5s ease 0.35s 1 both;
-  pointer-events: none;
-}
-
-@keyframes cardForge {
-  from { opacity: 0; transform: translateY(14px) scale(0.985); filter: blur(7px); }
-  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-}
-@keyframes cardSweep {
-  from { left: -60%; }
-  to   { left: 130%; }
-}
+@media(prefers-reduced-motion:reduce){.auth-loading-spin,.auth-loading-cta{animation:none;}}
 
 /* ============================================================
    Override del widget de Clerk (clases vf-* vía appearance)
