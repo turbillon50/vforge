@@ -431,7 +431,14 @@ export function VConversationPanel({
                     {mine && thumbs.length ? (
                       <Thumbs srcs={thumbs} size={mobile ? "h-16 w-16" : "h-12 w-12"} />
                     ) : null}
-                    <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                    <p
+                      className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
+                      style={{
+                        // Do not inherit global prose/text colors: owner bubbles are dark.
+                        color: mine ? ON_INK : INK,
+                        WebkitTextFillColor: mine ? ON_INK : INK,
+                      }}
+                    >
                       {visibleText(item.content)}
                     </p>
                   </article>
