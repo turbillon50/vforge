@@ -718,11 +718,11 @@ function LiveWorkspace({
         {esDueno ? (
           <div className="flex shrink-0 items-center gap-1 border-r border-[var(--border-1)] pr-2" aria-label="Abrir en ventana">
             <a
-              href={`/app/chat?project=${encodeURIComponent(project.id)}`}
+              href="/app/projects"
               className="rounded-md border border-black bg-black px-2.5 py-2 font-mono text-[8px] uppercase tracking-[0.1em] text-white"
-              title="Volver a Construir con este proyecto"
+              title="Volver a proyectos"
             >
-              ← Construir
+              ← Proyectos
             </a>
             {([
               ["iphone", "Celular ↗"],

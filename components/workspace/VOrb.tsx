@@ -241,14 +241,7 @@ export function VOrb() {
     drag.current = { moved: false, sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y };
     longPressFired.current = false;
     if (pressTimer.current) clearTimeout(pressTimer.current);
-    pressTimer.current = window.setTimeout(() => {
-      // Solo dispara si no se convirtió en arrastre
-      if (drag.current && !drag.current.moved) {
-        longPressFired.current = true;
-        if (open) setOpen(false);
-        startVoiceCapture();
-      }
-    }, LONG_PRESS_MS) as unknown as number;
+
   }
   function move(e: React.PointerEvent) {
     const d = drag.current; if (!d) return;

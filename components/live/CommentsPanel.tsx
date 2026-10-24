@@ -385,7 +385,7 @@ export function CommentsPanel({
                       {taskId ? "En cola" : "Aceptar"}
                     </button>
                     <button type="button" disabled={!!acceptingId || resolved} onClick={() => void acceptOne(comment, true)} className="inline-flex h-7 items-center gap-1 rounded-md bg-black px-2 font-mono text-[8px] uppercase tracking-[0.08em] text-white disabled:opacity-40">
-                      Aceptar → Estudio
+                      Aceptar → Abrir tarea
                     </button>
                     <button type="button" disabled={resolved || !!taskId} onClick={() => void resolveOne(comment)} className="inline-flex h-7 items-center gap-1 rounded-md border border-[var(--border-1)] px-2 font-mono text-[8px] uppercase tracking-[0.08em] disabled:opacity-40">
                       Resuelto
@@ -399,7 +399,7 @@ export function CommentsPanel({
       </div>
 
       <p className="mt-4 flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--fg-muted)]">
-        <IconCheck size={10} /> {canAccept ? "Owner: aceptar → cola + Estudio" : "Sólo miembros del proyecto"}
+        <IconCheck size={10} /> {canAccept ? "Owner: aceptar → cola + tarea" : "Sólo miembros del proyecto"}
       </p>
     </section>
   );
