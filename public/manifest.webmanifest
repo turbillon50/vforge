@@ -2,7 +2,7 @@
   "name": "VForge",
   "short_name": "VForge",
   "description": "Chat profesional para convertir una idea en una app.",
-  "start_url": "/chat",
+  "start_url": "/workspace",
   "display": "standalone",
   "background_color": "#080808",
   "theme_color": "#080808",

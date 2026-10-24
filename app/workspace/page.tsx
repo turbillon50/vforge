@@ -14,7 +14,7 @@ export default async function WorkspacePage() {
       (address) => address.id === user.primaryEmailAddressId,
     )?.emailAddress ?? user?.emailAddresses[0]?.emailAddress;
   if (!user || !email) redirect("/sign-in");
-  if (isOwnerUser(user)) redirect("/app/chat");
+  if (isOwnerUser(user)) redirect("/app/projects");
 
   const name = user.firstName || user.username || "";
   const [projects, connections] = await Promise.all([

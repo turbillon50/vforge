@@ -186,7 +186,7 @@ export default hasClerk
       // Tipo 1 — Owner (Luis/Jaime): acceso total a todo, nunca onboarding.
       if (owner) {
         if (onOnboarding) {
-          return NextResponse.redirect(new URL("/app/chat", req.url));
+          return NextResponse.redirect(new URL("/workspace", req.url));
         }
         return;
       }

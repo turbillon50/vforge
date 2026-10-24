@@ -61,7 +61,7 @@ export function ClientWorkspacePage() {
             <a href="/app/repovision" className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:bg-white/[0.12]">
               <IconBranch size={12} className="text-violet-300"/> Repositorio
             </a>
-            <a href="/app/chat" className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:bg-white/[0.12]">
+            <a href="/workspace" className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:bg-white/[0.12]">
               <IconChat size={12} className="text-emerald-400"/> Hablar con V
             </a>
           </div>

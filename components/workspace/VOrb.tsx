@@ -3,15 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { IconChats, IconCpu, IconMic, IconGlobe, IconWorkflow } from "@/components/brand/VFIcons";
+import { IconCpu, IconMic, IconGlobe, IconWorkflow } from "@/components/brand/VFIcons";
 
 // Accesos FIJOS de la burbuja de V — iguales en toda la app.
 // Taller (sala de máquinas) y Blueprint (editor de flujos) siempre primero.
 const ITEMS = [
   { label: "Taller", Icon: IconCpu, href: "/app/taller", primary: true },
   { label: "Blueprint", Icon: IconWorkflow, href: "/app/blueprint" },
-  { label: "Hablar con V", Icon: IconMic, href: "/app/chat?voice=1" },
-  { label: "Conversación", Icon: IconChats, href: "/app/chat" },
   { label: "Navegador", Icon: IconGlobe, href: "/app/vulcano" },
 ];
 
@@ -234,7 +232,7 @@ export function VOrb() {
       }
     }
     try { sessionStorage.setItem("vorb_dictation", text); } catch {}
-    router.push("/app/chat");
+    router.push("/workspace");
   }
 
   // ── Gestos del orbe: tap = menú · long-press = dictado · drag = mover ──
@@ -243,14 +241,7 @@ export function VOrb() {
     drag.current = { moved: false, sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y };
     longPressFired.current = false;
     if (pressTimer.current) clearTimeout(pressTimer.current);
-    pressTimer.current = window.setTimeout(() => {
-      // Solo dispara si no se convirtió en arrastre
-      if (drag.current && !drag.current.moved) {
-        longPressFired.current = true;
-        if (open) setOpen(false);
-        startVoiceCapture();
-      }
-    }, LONG_PRESS_MS) as unknown as number;
+
   }
   function move(e: React.PointerEvent) {
     const d = drag.current; if (!d) return;

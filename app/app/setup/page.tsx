@@ -42,7 +42,7 @@ export default function SetupPage() {
   function goStudio(skip = false) {
     if (skip) markSetupSkipped();
     else clearSetupSkipped();
-    router.push("/app/chat");
+    router.push("/workspace");
   }
 
   return (
