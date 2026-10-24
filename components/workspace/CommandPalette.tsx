@@ -43,7 +43,6 @@ function applyTheme(t: "dark" | "light") {
 
 const COMMANDS: Command[] = [
   // Navegación
-  { id:"nav-chat",      label:"Ir a Conversación", icon:"chat",     group:"Navegar", kbd:"G C", action:c=>c.router.push("/app/chat") },
   { id:"nav-taller",    label:"Ir a Taller",       icon:"cpu",      group:"Navegar", kbd:"G T", action:c=>c.router.push("/app/taller") },
   { id:"nav-blueprint", label:"Ir a Blueprint",    icon:"workflow", group:"Navegar", kbd:"G B", action:c=>c.router.push("/app/blueprint") },
   { id:"nav-repovision",label:"Ir a RepoVisión",   icon:"branch",   group:"Navegar", kbd:"G R", action:c=>c.router.push("/app/repovision") },

@@ -51,8 +51,8 @@ export function ClerkShell({ children }: { children: React.ReactNode }) {
       localization={esES}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/app/chat"
-      signUpFallbackRedirectUrl="/app/chat"
+      signInFallbackRedirectUrl="/workspace"
+      signUpFallbackRedirectUrl="/workspace"
       appearance={monochromeClerkAppearance}
     >
       {children}

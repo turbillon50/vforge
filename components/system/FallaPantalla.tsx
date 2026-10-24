@@ -15,7 +15,7 @@ export function FallaPantalla({
   titulo,
   explicacion,
   reintentar,
-  salida = { href: "/app/chat", texto: "Ir al Estudio" },
+  salida = { href: "/workspace", texto: "Ir al Estudio" },
   detalle,
 }: {
   titulo: string;

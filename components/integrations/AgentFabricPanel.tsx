@@ -101,7 +101,7 @@ export function AgentFabricPanel() {
       detail: modelCount > 0 ? `${modelCount} modelos registrados` : "Router configurado",
       active: fabric?.models?.configured === true,
       Icon: IconBrain,
-      action: <Link href="/app/chat" className="inline-flex min-h-11 items-center text-[12px] underline underline-offset-4">Abrir estudio</Link>,
+      action: <Link href="/workspace" className="inline-flex min-h-11 items-center text-[12px] underline underline-offset-4">Abrir estudio</Link>,
     },
     {
       id: "composio",

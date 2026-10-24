@@ -20,7 +20,7 @@ export default function Error({
       titulo="El Estudio se tropezó."
       explicacion="Tu trabajo no se perdió: lo guardado sigue guardado. Esto es solo esta vista."
       reintentar={reset}
-      salida={{ href: "/app/chat", texto: "Volver al Estudio" }}
+      salida={{ href: "/workspace", texto: "Volver al Estudio" }}
       detalle={[error?.message, error?.digest ? "digest: " + error.digest : null]
         .filter(Boolean)
         .join("\n")}

@@ -20,7 +20,7 @@ export default function Error({
       titulo="Esta herramienta no abrió."
       explicacion="Nada de lo tuyo cambió. Reintenta, o pasa al Estudio mientras tanto."
       reintentar={reset}
-      salida={{ href: "/app/chat", texto: "Ir al Estudio" }}
+      salida={{ href: "/workspace", texto: "Ir al Estudio" }}
       detalle={[error?.message, error?.digest ? "digest: " + error.digest : null]
         .filter(Boolean)
         .join("\n")}

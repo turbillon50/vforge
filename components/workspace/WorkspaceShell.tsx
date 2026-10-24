@@ -11,7 +11,6 @@ import {
   IconBoxes,
   IconCpu,
   IconFactory,
-  IconHammer,
   IconHilo,
   IconHome,
   IconLayers,
@@ -41,12 +40,6 @@ type NavItem = {
 };
 
 const PRIMARY_NAV: NavItem[] = [
-  {
-    href: "/app/chat",
-    label: "Construir",
-    description: "Chat, herramientas y preview",
-    Icon: IconHammer,
-  },
   {
     href: "/app/trio",
     label: "Trío",
@@ -133,7 +126,7 @@ function Sidebar({
   return (
     <div className="flex h-full flex-col bg-white">
       <div className="border-b border-[var(--border-1)] px-5 py-5">
-        <Link href="/app/chat" onClick={onNavigate} aria-label="VForge, estudio">
+        <Link href="/workspace" onClick={onNavigate} aria-label="VForge, proyectos">
           <VWordmark />
         </Link>
         <p className="mt-2 font-mono text-label-caps uppercase text-[var(--fg-muted)]">

@@ -1,13 +1,6 @@
-import type { Metadata } from "next";
-import { PublicVForgeChat } from "@/components/public-chat/PublicVForgeChat";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Chat · VForge",
-  description: "Chat publico de VForge para convertir una idea en una app lista para trabajar.",
-};
-
-export const dynamic = "force-dynamic";
-
-export default function PublicChatPage() {
-  return <PublicVForgeChat />;
+// Experimentos trasladados a MIA; V permanece en las salas.
+export default function RetiredChatPage() {
+  redirect("/workspace");
 }
