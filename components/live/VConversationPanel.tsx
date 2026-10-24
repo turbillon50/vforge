@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeSanitize from "rehype-sanitize";
 import { cn } from "@/lib/utils";
 import type { RoomTask } from "@/lib/live/room-tasks";
 import {
@@ -424,16 +427,22 @@ export function VConversationPanel({
                       mine ? "rounded-br-md" : "rounded-bl-md",
                     )}
                     style={{
-                      backgroundColor: mine ? INK : CARD,
-                      color: mine ? ON_INK : INK,
+                      backgroundColor: mine ? FIELD : CARD,
+                      color: INK,
                     }}
                   >
                     {mine && thumbs.length ? (
                       <Thumbs srcs={thumbs} size={mobile ? "h-16 w-16" : "h-12 w-12"} />
                     ) : null}
-                    <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
-                      {visibleText(item.content)}
-                    </p>
+                    <div className="break-words [overflow-wrap:anywhere] [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-x-auto [&_pre]:whitespace-pre-wrap [&_pre]:rounded-lg [&_pre]:bg-[var(--vchat-field)] [&_pre]:p-3 [&_a]:underline [&_table]:block [&_table]:overflow-x-auto [&_th]:p-2 [&_td]:p-2">
+                      {mine ? (
+                        <p className="whitespace-pre-wrap">{visibleText(item.content)}</p>
+                      ) : (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
+                          {visibleText(item.content)}
+                        </ReactMarkdown>
+                      )}
+                    </div>
                   </article>
                 </div>
               );
@@ -547,8 +556,11 @@ export function VConversationPanel({
             void addFiles(event.dataTransfer.files);
           }}
         >
+          <p className="mb-2 text-xs" style={{ color: MUTED }}>
+            Adjunta, arrastra o pega una foto o captura.
+          </p>
           {photos.length ? (
-            <div className="mb-3 flex gap-2">
+            <div className="mb-3 flex gap-2 overflow-x-auto">
               {photos.map((photo, index) => (
                 <button
                   key={`${photo.name}-${index}`}
@@ -587,10 +599,11 @@ export function VConversationPanel({
               onClick={() => fileRef.current?.click()}
               className={cn(
                 "grid shrink-0 place-items-center rounded-full border",
-                mobile ? "h-12 w-12" : "h-10 w-10",
+                mobile ? "h-12 w-12" : "h-11 w-11",
               )}
               style={{ borderColor: LINE, color: INK }}
-              aria-label="Adjuntar foto"
+              title="Adjuntar foto o captura"
+              aria-label="Adjuntar foto o captura"
             >
               <IconCamera size={mobile ? 20 : 17} />
             </button>
@@ -598,6 +611,13 @@ export function VConversationPanel({
               ref={textRef}
               value={message}
               onChange={(event) => setMessage(event.target.value)}
+              onPaste={(event) => {
+                const files = event.clipboardData.files;
+                if (files.length && Array.from(files).some((file) => file.type.startsWith("image/"))) {
+                  event.preventDefault();
+                  void addFiles(files);
+                }
+              }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey && !mobile) {
                   event.preventDefault();
@@ -606,10 +626,11 @@ export function VConversationPanel({
               }}
               rows={1}
               maxLength={6000}
+              aria-label="Mensaje para V"
               placeholder="Escríbele a V"
               enterKeyHint={mobile ? "enter" : "send"}
               className={cn(
-                "flex-1 resize-none rounded-2xl border px-4 outline-none",
+                "min-w-0 flex-1 resize-none rounded-2xl border px-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--vchat-ink)]",
                 mobile
                   ? "min-h-12 max-h-[132px] py-3 text-[16px] leading-6"
                   : "min-h-10 max-h-28 py-2.5 text-[15px] leading-5",
@@ -621,7 +642,7 @@ export function VConversationPanel({
               disabled={busy || (!message.trim() && photos.length === 0)}
               className={cn(
                 "grid shrink-0 place-items-center rounded-full disabled:opacity-30",
-                mobile ? "h-12 w-12" : "h-10 w-10",
+                mobile ? "h-12 w-12" : "h-11 w-11",
               )}
               style={{ backgroundColor: INK, color: ON_INK }}
               aria-label="Enviar"
