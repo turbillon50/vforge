@@ -16,8 +16,8 @@ import {
   IconMenu,
   IconX,
 } from "@/components/brand/VFIcons";
-import { UserButton, useUser } from "@clerk/nextjs";
-import { monochromeClerkAppearance } from "@/components/auth/ClerkShell";
+import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
+import { accountClerkAppearance } from "@/components/auth/ClerkShell";
 
 type IconComponent = (props: {
   size?: number;
@@ -122,7 +122,7 @@ function Sidebar({
                 size={16}
                 className={cn(active ? "text-white" : "text-black")}
               />
-              <div className="flex flex-col">
+              <div className="flex min-w-0 flex-col">
                 <span className="font-medium">{label}</span>
                 <span
                   className={cn(
@@ -219,25 +219,25 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
       >
         <header
           className={cn(
-            "flex h-[58px] items-center justify-between border-b border-[var(--border-1)]",
+            "flex h-[58px] items-center justify-between gap-2 border-b border-[var(--border-1)]",
             isStudio ? "" : "sticky top-0",
             "bg-white/95 px-4 md:px-6",
           )}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="grid h-9 w-9 place-items-center rounded-md border border-[var(--border-1)] md:hidden"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-[var(--border-1)] md:hidden"
               onClick={() => setDrawerOpen(true)}
               aria-label="Abrir menú"
             >
               <IconMenu size={16} />
             </button>
-            <div className="flex flex-col">
+            <div className="flex min-w-0 flex-col">
               <p className="text-[10px] uppercase tracking-[0.16em] text-gray-600">
                 VForge
               </p>
-              <h1 className="text-[15px] font-medium">{title}</h1>
+              <h1 className="truncate text-[15px] font-medium">{title}</h1>
             </div>
           </div>
           <ClientAccountMenu />
@@ -260,17 +260,22 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
 function ClientAccountMenu() {
   const { user } = useUser();
   return (
-    <div className="flex items-center gap-2 rounded-full border border-[var(--border-1)] bg-white py-1 pl-1 pr-3">
+    <div className="flex shrink-0 items-center gap-2 rounded-full border border-[var(--border-1)] bg-white py-1 pl-1 pr-3">
       <UserButton
         afterSignOutUrl="/"
         appearance={{
-          ...monochromeClerkAppearance,
+          ...accountClerkAppearance,
           elements: {
-            ...monochromeClerkAppearance.elements,
-            avatarBox: "h-7 w-7",
+            ...accountClerkAppearance.elements,
+            avatarBox: "h-9 w-9",
           },
         }}
       />
+      <SignOutButton redirectUrl="/sign-in">
+        <button type="button" aria-label="Cerrar sesión" className="min-h-11 shrink-0 rounded-full bg-[var(--color-ink)] px-3 text-sm font-semibold text-[var(--color-surface)]">
+          <span className="sm:hidden">Salir</span><span className="hidden sm:inline">Cerrar sesión</span>
+        </button>
+      </SignOutButton>
       <span className="hidden max-w-[110px] truncate text-[11px] font-medium sm:block">
         {user?.firstName ?? user?.username ?? "Cuenta"}
       </span>

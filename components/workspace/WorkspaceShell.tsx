@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { VWordmark } from "@/components/brand/VMark";
 import {
@@ -21,7 +21,7 @@ import {
   IconTrio,
   IconX,
 } from "@/components/brand/VFIcons";
-import { monochromeClerkAppearance } from "@/components/auth/ClerkShell";
+import { accountClerkAppearance } from "@/components/auth/ClerkShell";
 import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
 import { ConnectionGate } from "@/components/workspace/ConnectionGate";
 import { OwnerPushBanner } from "@/components/pwa/OwnerPushBanner";
@@ -351,13 +351,18 @@ function ClerkAccount() {
       <UserButton
         afterSignOutUrl="/"
         appearance={{
-          ...monochromeClerkAppearance,
+          ...accountClerkAppearance,
           elements: {
-            ...monochromeClerkAppearance.elements,
-            avatarBox: "h-7 w-7",
+            ...accountClerkAppearance.elements,
+            avatarBox: "h-9 w-9",
           },
         }}
       />
+      <SignOutButton redirectUrl="/sign-in">
+        <button type="button" aria-label="Cerrar sesión" className="min-h-11 shrink-0 rounded-full bg-[var(--color-ink)] px-3 text-sm font-semibold text-[var(--color-surface)]">
+          <span className="sm:hidden">Salir</span><span className="hidden sm:inline">Cerrar sesión</span>
+        </button>
+      </SignOutButton>
       <span className="hidden whitespace-nowrap text-[14px] font-medium sm:block">
         {user?.fullName ?? user?.firstName ?? user?.username ?? user?.primaryEmailAddress?.emailAddress ?? "Cuenta"}
       </span>

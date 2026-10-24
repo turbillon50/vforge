@@ -12,7 +12,7 @@ import {
   IconRocket,
   IconShield,
 } from "@/components/brand/VFIcons";
-import { monochromeClerkAppearance } from "@/components/auth/ClerkShell";
+import { accountClerkAppearance } from "@/components/auth/ClerkShell";
 import { ScopedCreateApp } from "@/components/workspace/ScopedCreateApp";
 import type { ScopedProject } from "@/lib/projects/scoped-catalog";
 
@@ -71,10 +71,10 @@ export function ScopedWorkspaceHome({
               <UserButton
                 afterSignOutUrl="/"
                 appearance={{
-                  ...monochromeClerkAppearance,
+                  ...accountClerkAppearance,
                   elements: {
-                    ...monochromeClerkAppearance.elements,
-                    avatarBox: "h-7 w-7",
+                    ...accountClerkAppearance.elements,
+                    avatarBox: "h-9 w-9",
                   },
                 }}
               />
