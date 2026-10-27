@@ -1,8 +1,10 @@
 {
   "name": "VForge",
   "short_name": "VForge",
-  "description": "Chat profesional para convertir una idea en una app.",
+  "description": "Proyectos, salas y Spaces de la fábrica VForge.",
   "start_url": "/workspace",
+  "scope": "/",
+  "id": "/",
   "display": "standalone",
   "background_color": "#080808",
   "theme_color": "#080808",

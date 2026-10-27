@@ -727,6 +727,7 @@ function LiveWorkspace({
             >
               ← Proyectos
             </a>
+            <Link href={`/app/spaces/${encodeURIComponent(project.id)}`} className="rounded-md border border-[var(--border-1)] px-3 py-2 text-sm">Space</Link>
             {([
               ["iphone", "Celular ↗"],
               ["ipad", "Tablet ↗"],
