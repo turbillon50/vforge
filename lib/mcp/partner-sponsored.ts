@@ -85,6 +85,8 @@ async function vercel(token:string,path:string,body:unknown){
 export async function makePartnerDemo(userId:string,orgId:string|null,brand:string,idea:string){
   const org=identity(userId,orgId);
   if(brand.length>90||idea.length>350||!brand.trim()||!idea.trim())throw new Error("Marca e idea breves requeridas");
+    const team=process.env.VFORGE_SPONSOR_VERCEL_TEAM_ID || process.env.VFORGE_VERCEL_TEAM_ID;
+    if (!team) throw new Error("Equipo Vercel institucional no configurado");
   const [gh,vc]=await Promise.all([
     getOperatorSecret("GITHUB_TOKEN"),getOperatorSecret("VERCEL_TOKEN")
   ]);
@@ -117,7 +119,6 @@ export async function makePartnerDemo(userId:string,orgId:string|null,brand:stri
         content:Buffer.from(content).toString("base64"),branch:repo.default_branch,
       });
     }
-    const team=process.env.VFORGE_SPONSOR_VERCEL_TEAM_ID||"team_gK8RSuGh0CYHEjgEqFRR2iIk";
     const p=await vercel(vc,"/v10/projects?teamId="+encodeURIComponent(team),{
       name:n,framework:null,gitRepository:{type:"github",repo:repo.full_name}
     });

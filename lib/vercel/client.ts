@@ -60,8 +60,13 @@ export async function getDefaultTeam(
   const data = await vercelJson<{
     teams: Array<{ id: string; slug: string }>;
   }>("/v2/teams", { method: "GET", token });
-  const first = data.teams[0];
-  if (!first) throw new Error("No Vercel teams visible to this token");
+  const configured = process.env.VFORGE_VERCEL_TEAM_ID;
+  const first = configured
+    ? data.teams.find((team) => team.id === configured)
+    : data.teams.length === 1 ? data.teams[0] : undefined;
+  if (!first) throw new Error(configured
+    ? "La credencial no tiene acceso al equipo Vercel configurado"
+    : "Configura VFORGE_VERCEL_TEAM_ID para seleccionar el equipo explícitamente");
   teamCache = {
     id: first.id,
     slug: first.slug,

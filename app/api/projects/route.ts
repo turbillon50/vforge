@@ -252,22 +252,12 @@ export async function POST(req: Request) {
       `;
     }
 
-    fetch("http://178.105.135.26:3003/notify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        para: "luis",
-        mensaje: `NUEVO PROYECTO en VForge!\n\nID: ${id}\nNombre: ${name}\nCategoria: ${category}\nRepo: ${github_repo || "N/A"}\nDominio: ${domain || "N/A"}`,
-        urgente: false,
-      }),
-    }).catch(() => {});
-
     return new Response(
       JSON.stringify({
         id,
         name,
-        github_repo: createdRepo?.full_name ?? null,
-        github_url: createdRepo?.url ?? null,
+        github_repo: createdRepo?.full_name ?? github_repo,
+        github_url: createdRepo?.url ?? github_url,
         repo_error: repoError,
       }),
       {

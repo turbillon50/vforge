@@ -273,6 +273,7 @@ export default function CarteraProjectsClient({
                 <Plus size={14} />
                 Alta de cliente nuevo
               </button>
+              <Link href="/app/spaces" className="rounded-md border border-black px-3 py-2 font-semibold">Spaces · nuevo proyecto</Link>
               <Link href="/app/demos" className="rounded-md border border-black bg-black px-3 py-2 font-semibold text-white">
                 Catálogo de demos
               </Link>
@@ -543,6 +544,7 @@ function EtapaCard({
           {latest ? `${etapaLabel(latest.etapa)}${latest.nota ? ` · ${latest.nota}` : ""}` : "sin historial"}
         </p>
         <div className="flex min-w-0 flex-wrap gap-2">
+          <MiniLink href={`/app/spaces/${encodeURIComponent(project.id)}`} label="Space" />
           {project.demo_url ? <MiniLink href={project.demo_url} label="Demo" /> : null}
           {project.contrato_url ? <MiniLink href={project.contrato_url} label="Contrato" /> : null}
         </div>

@@ -20,7 +20,7 @@ STACK TÉCNICO:
 - Next.js 15 + TypeScript en todas las apps
 - Neon PostgreSQL como base de datos (pooler ep-super-glitter-aqj6d5g0)
 - Clerk para autenticación
-- Vercel para deploy (team_gK8RSuGh0CYHEjgEqFRR2iIk)
+- Vercel para deploy (consultar el equipo configurado y verificar acceso; nunca asumir una cuenta histórica)
 - Resend para email transaccional
 - Stripe / MercadoPago para pagos
 - Hetzner (178.105.135.26) como servidor de ejecución y Brain relay

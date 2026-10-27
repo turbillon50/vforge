@@ -36,7 +36,7 @@ export function LivePortalMobileEntry({
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-svh flex-col overflow-hidden overscroll-none bg-white text-black">
+    <div className="flex h-dvh flex-col overflow-hidden overscroll-none bg-white text-black">
       <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-[var(--border-1)] px-3">
         <div className="flex min-w-0 items-center gap-2">
           <button
@@ -98,6 +98,7 @@ export function LivePortalMobileEntry({
               >
                 Volver a proyectos
               </Link>
+              {me.isPlatformOwner ? <Link href={`/app/spaces/${encodeURIComponent(project.id)}`} className="block rounded-xl border border-[var(--border-1)] px-4 py-3 text-[14px]">Abrir Space</Link> : null}
               {canInvite ? (
                 <div id="invite">
                   <InvitePanel projectId={project.id} projectName={project.name} compact />

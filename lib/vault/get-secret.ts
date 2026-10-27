@@ -71,6 +71,11 @@ export async function getOperatorSecret(
     }
   }
 
+  // The factory account is isolated from legacy shared operator credentials.
+  if (name === "VERCEL_TOKEN" && process.env.VFORGE_VERCEL_TOKEN) {
+    return process.env.VFORGE_VERCEL_TOKEN;
+  }
+
   // 2) Global operator vault
   let row: SecretRow | null = null;
   try {

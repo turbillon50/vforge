@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/workspace/PageHeader";
 import {
@@ -267,7 +268,7 @@ export default function IntegrationsPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 items-start gap-3">
                     <span className="grid h-10 w-10 shrink-0 place-items-center border border-black bg-white">
-                      <service.Icon size={17} />
+                      <Image src={`/logos/${service.id}.svg`} alt={service.name} width={26} height={26} />
                     </span>
                     <div className="min-w-0">
                       <h2 className="text-[14px] font-medium">

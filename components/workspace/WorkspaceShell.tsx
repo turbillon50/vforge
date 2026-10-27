@@ -40,6 +40,7 @@ type NavItem = {
 };
 
 const PRIMARY_NAV: NavItem[] = [
+  { href: "/app/spaces", label: "Spaces", description: "Contexto y módulos por proyecto", Icon: IconLayers },
   {
     href: "/app/trio",
     label: "Trío",
@@ -97,6 +98,7 @@ const PRIMARY_NAV: NavItem[] = [
 ];
 
 const TITLES: Record<string, string> = {
+  "/app/spaces": "Spaces",
   "/app/chat": "Estudio",
   "/app/home": "Estudio",
   "/app/trio": "Trío",
@@ -277,7 +279,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
               isFixedWorkspace ? "relative shrink-0" : "sticky top-0",
             )}
           >
-            <div className="flex h-[58px] items-center justify-between gap-4 px-page-sm md:px-page-md xl:px-page-lg">
+            <div className="flex min-h-[58px] py-2 items-center justify-between gap-4 px-page-sm md:px-page-md xl:px-page-lg">
               <div className="flex min-w-0 items-center gap-3">
                 <button
                   type="button"
@@ -317,7 +319,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
             {children}
           </main>
           {isFixedWorkspace ? null : (
-            <footer className="flex h-[72px] items-center justify-between border-t border-[var(--border-1)] bg-white px-page-sm md:px-page-md xl:px-page-lg">
+            <footer className="flex min-h-[72px] flex-wrap gap-3 py-4 items-center justify-between border-t border-[var(--border-1)] bg-white px-page-sm md:px-page-md xl:px-page-lg">
               <p className="font-mono text-label-caps uppercase text-[var(--fg-muted)]">
                 VForge
               </p>
