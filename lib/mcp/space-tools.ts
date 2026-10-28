@@ -77,7 +77,7 @@ export async function moduleCreate(args: { project_id: string; module: Partial<S
   if (!project_id || !module?.title) return err("project_id y module.title requeridos");
 
   const current = await spaceGet({ project_id }, principal);
-  if (current.isError) return current;
+  if ("isError" in current if (current.isError) return current;if (current.isError) return current; current.isError) return current;
 
   const data = JSON.parse(current.content[0].text);
   const newModule: SpaceModule = {
