@@ -289,3 +289,25 @@
   stroke:#4a8ad4!important;
   stroke-width:3!important;
 }
+
+/* Ports sit on the sphere edge, line connects them */
+.vf-space .space-node{
+  width:180px!important;
+}
+.vf-space .space-node .space-port{
+  top:70px!important;
+  transform:translateY(-50%);
+}
+.vf-space .space-node .space-port-out{
+  right:-9px!important;
+}
+.vf-space .space-node .space-port-in{
+  left:-9px!important;
+}
+.vf-space .space-plane svg{
+  z-index:1;
+  pointer-events:none;
+}
+.vf-space .space-node{
+  z-index:2;
+}
