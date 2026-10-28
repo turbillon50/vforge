@@ -20,15 +20,6 @@
 
 .vf-space .space-remove-module{border:1px solid #f0a8a8!important;background:#fff5f5!important;color:#a02020!important;font-size:13px!important;margin-top:12px}.vf-space .space-remove-module:hover{background:#ffe8e8!important}
 
-
-.vf-space .space-search{display:flex;align-items:end;gap:16px;justify-content:space-between;margin:12px 0 20px;flex-wrap:wrap}.vf-space .space-search label{width:min(100%,580px);font-weight:650}.vf-space .space-search input{width:100%;font-size:15px;min-height:46px}.vf-space .space-search span{font-size:12px;color:#5c6c81;padding-bottom:10px}.vf-space .space-search-empty{border:1px dashed #d0d9e6;border-radius:12px;padding:24px;text-align:center}
-
-/* Reusable Spaces preview dock; secondary to the modular canvas. */
-.vf-space .space-preview-dock{margin-top:16px;border:1px solid #d6e0eb;border-radius:15px;background:#fff;overflow:hidden}.vf-space .space-preview-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:7px 12px}.vf-space .space-preview-toggle{font-weight:650;border:0;background:transparent}.vf-space .space-preview-actions{display:flex;gap:5px;flex-wrap:wrap}.vf-space .space-preview-actions button{font-size:12px;min-height:34px;padding:6px 10px}.vf-space .space-preview-actions button[aria-pressed=true]{background:#e8f2ff;color:#1b4f93;outline:1px solid #91baf2}.vf-space .space-preview-body{height:min(45dvh,490px);overflow:auto;border-top:1px solid #d6e0eb;background:#e9edf3;padding:12px;text-align:center}.vf-space .space-preview-frame-wrap{width:100%;height:100%;overflow:auto;display:flex;justify-content:safe center}.vf-space .space-preview-frame-wrap iframe{border:1px solid #aab8c8;border-radius:12px;background:white;flex-shrink:0}.vf-space .space-preview-placeholder{display:grid;place-content:center;min-height:190px;gap:10px;color:#32455f}.vf-space .space-preview-placeholder p{font-size:13px}.vf-space .space-preview-expanded{position:fixed;inset:16px;z-index:1000;display:flex;flex-direction:column;box-shadow:0 20px 70px #0005}.vf-space .space-preview-expanded .space-preview-body{flex:1;height:auto;max-height:none}
-
-.vf-space .space-preview-live{height:100%;min-height:340px;text-align:left}.vf-space .space-preview-live>div{height:100%;min-height:340px}.vf-space .space-preview-expanded .space-preview-live{min-height:0}
-
-
 /* Cleaner drag grip for modular spheres */
 .vf-space .space-drag{
   width:auto!important;
@@ -113,6 +104,53 @@
   color:#fff!important;
 }
 
+/* All modules are spheres */
+.vf-space .space-node{
+  width:200px!important;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.vf-space .space-node .space-card{
+  width:148px!important;
+  height:148px!important;
+  min-height:148px!important;
+  border-radius:50%!important;
+  display:flex!important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:12px!important;
+  background:radial-gradient(circle at 30% 22%,#ffffff,#eef3f9 55%,#d5e0ee 100%)!important;
+  border:4px solid #c5d4e8!important;
+  box-shadow:0 8px 24px #0a183320,inset 0 1px 0 #ffffffaa!important;
+  color:#1a2b42!important;
+}
+.vf-space .space-node .space-card strong{
+  font-size:13px!important;
+  max-width:110px;
+  overflow-wrap:anywhere;
+}
+.vf-space .space-node .space-card small,
+.vf-space .space-node .space-card span{
+  font-size:10px!important;
+  max-width:110px;
+}
 
+/* ZIP sphere stays the accent one */
+.vf-space .space-node-zip .space-card{
+  background:radial-gradient(circle at 30% 20%,#a6e4ff,#326bd1 48%,#152653 100%)!important;
+  border:5px solid #b7dcff!important;
+  color:#fff!important;
+  box-shadow:0 12px 32px #205ac74a,inset 0 0 18px #ffffff44!important;
+}
+.vf-space .space-node-zip .space-card *{color:#fff!important}
 
-.vf-space .space-recent-link{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;margin:10px 0;border:1px solid #b7cde9;border-radius:12px;background:#f1f7ff}.vf-space .space-recent-link span{font-size:13px;color:#425675}.vf-space .space-recent-link a{display:inline-flex;align-items:center;background:#111b32;color:#fff;text-decoration:none;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:650}.vf-space .space-search{position:sticky;top:0;z-index:5;background:var(--color-background);padding:8px 0}
+/* Cleaner connection lines */
+.vf-space .space-plane svg path{
+  stroke:#7aa3d4;
+  stroke-width:2.5;
+  fill:none;
+  stroke-linecap:round;
+}
