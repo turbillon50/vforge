@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { EMPTY_SPACE, KINDS, STATUSES, spaceSchema, type Space, type SpaceModule } from "@/lib/spaces/model";
 import "./spaces.css";
+import { SpacePreviewDock } from "./SpacePreviewDock";
 import { ZipReceiver } from "./ZipReceiver";
 
 export function SpaceEditor({ projectId }: { projectId: string }) {
   const [space, setSpace] = useState<Space>(EMPTY_SPACE);
   const [revision, setRevision] = useState(0);
   const [name, setName] = useState(projectId);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "canvas">("canvas");
   const [zoom, setZoom] = useState(1);
@@ -31,7 +33,7 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
         const [a, b] = await Promise.all([fetch(`/api/projects/${encodeURIComponent(projectId)}/space`, { cache: "no-store" }), fetch(`/api/projects/${encodeURIComponent(projectId)}`, { cache: "no-store" })]);
         const data = await a.json(); const project = await b.json();
         if (!a.ok || !b.ok) throw new Error(data.error || project.error || "No se pudo abrir el proyecto");
-        if (active) { setSpace(data.document); setRevision(data.revision); setName(project.project.name); setLoaded(true); }
+        if (active) { setSpace(data.document); setRevision(data.revision); setName(project.project.name); setPreviewUrl(project.project.domain || project.project.vercel_url || null); setLoaded(true); }
       } catch (e) { if (active) setError(e instanceof Error ? e.message : "Error de conexión"); }
       finally { if (active) setLoading(false); }
     }
@@ -144,6 +146,7 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
           <button onClick={() => { void navigator.clipboard.writeText(`Proyecto: ${name}\nMódulo: ${current.id}\nContexto: ${space.context}\nEncargo: ${current.prompt}\nDevuelve resultado y evidencia para revisión.`).then(() => setSaved("Encargo copiado"), () => setError("No se pudo copiar; selecciona la instrucción manualmente")); }}>Copiar encargo</button>
         </fieldset></aside>}
       </div>
+      <SpacePreviewDock projectId={projectId} previewUrl={previewUrl} />
     </> : <p>No se cargó el Space. Recarga la página para volver a intentar.</p>}
   </section>;
 }
