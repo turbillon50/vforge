@@ -311,3 +311,55 @@
 .vf-space .space-node{
   z-index:2;
 }
+
+/* GEOMETRY LOCK — esfera 148, puertos en el ecuador, línea al centro del punto */
+.vf-space .space-node{
+  width:148px!important;
+  height:148px!important;
+  position:absolute!important;
+}
+.vf-space .space-node .space-card{
+  position:absolute!important;
+  inset:0!important;
+  width:148px!important;
+  height:148px!important;
+  min-width:0!important;
+  min-height:148px!important;
+  margin:0!important;
+  padding:10px!important;
+  border-radius:50%!important;
+  box-sizing:border-box!important;
+}
+.vf-space .space-node .space-port{
+  position:absolute!important;
+  top:74px!important;
+  width:16px!important;
+  height:16px!important;
+  min-width:16px!important;
+  min-height:16px!important;
+  padding:0!important;
+  margin:0!important;
+  border-radius:50%!important;
+  transform:translate(-50%,-50%)!important;
+  z-index:5!important;
+}
+.vf-space .space-node .space-port-in{
+  left:0!important;
+  right:auto!important;
+}
+.vf-space .space-node .space-port-out{
+  left:148px!important;
+  right:auto!important;
+}
+.vf-space .space-plane svg{
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  overflow:visible!important;
+}
+.vf-space .space-plane svg path{
+  stroke:#2f7de1!important;
+  stroke-width:3!important;
+  stroke-linecap:round!important;
+}
+.vf-space .space-node{z-index:2!important}
