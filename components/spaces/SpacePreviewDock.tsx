@@ -5,7 +5,7 @@ import { VentanaDispositivo } from "@/components/live/VentanaDispositivo";
 
 type Device = "mobile" | "desktop";
 /** Mounts the existing VForge live device engine when the dock opens. */
-export function SpacePreviewDock({ projectId, previewUrl }: { projectId: string; previewUrl: string | null }) {
+export function SpacePreviewDock({ projectId, previewUrl, previewRepo }: { projectId: string; previewUrl: string | null; previewRepo: string | null }) {
   const [open, setOpen] = useState(false);
   const [device, setDevice] = useState<Device>("mobile");
   const [expanded, setExpanded] = useState(false);
@@ -18,6 +18,7 @@ export function SpacePreviewDock({ projectId, previewUrl }: { projectId: string;
       if (parsed.protocol === "https:" && !parsed.username && !parsed.password) url = parsed.href;
     }
   } catch { /* Unusable preview URLs are not rendered. */ }
+  const canRun = Boolean(previewRepo?.trim());
   return <section className={`space-preview-dock${expanded ? " space-preview-expanded" : ""}`} aria-label="Vista previa del proyecto">
     <div className="space-preview-bar">
       <button type="button" className="space-preview-toggle" aria-expanded={open} onClick={() => setOpen(v => !v)}>▣ Vista previa {open ? "⌄" : "⌃"}</button>
@@ -28,7 +29,7 @@ export function SpacePreviewDock({ projectId, previewUrl }: { projectId: string;
       </div>
     </div>
     {open && <div className="space-preview-body">
-      <div className="space-preview-live"><VentanaDispositivo key={device} projectId={projectId} nombre={projectId} urlRespaldo={{movil:url,escritorio:url}} dispositivoInicial={device === "mobile" ? "iphone" : "escritorio"} rutaInicial="/" /></div>
+      {canRun ? <div className="space-preview-live"><VentanaDispositivo key={device} projectId={previewRepo!.split("/").pop() || projectId} nombre={projectId} urlRespaldo={{movil:url,escritorio:url}} dispositivoInicial={device === "mobile" ? "iphone" : "escritorio"} rutaInicial="/" /></div> : url ? <div className="space-preview-placeholder"><strong>Vista del último despliegue</strong><p>Este Space no tiene repositorio conectado al motor vivo. Abre la aplicación publicada mientras configuramos su proyecto ejecutable.</p><a href={url} target="_blank" rel="noopener noreferrer">Abrir aplicación</a></div> : <div className="space-preview-placeholder"><strong>Listo para conectar una aplicación</strong><p>Los módulos de este Space ya pueden construirse. Para encender el motor vivo, primero hay que vincular un repositorio ejecutable al proyecto.</p></div>}
 
     </div>}
   </section>;
