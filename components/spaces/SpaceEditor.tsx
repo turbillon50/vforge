@@ -76,6 +76,18 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
     if (!spaceSchema.safeParse(next).success) { setError("Conexión inválida: produciría un ciclo o incumpliría una dependencia."); return; }
     setError(""); edit(next);
   }
+  function removeModule(id: string) {
+    const target = space.modules.find(m => m.id === id);
+    if (!target) return;
+    const consumers = space.modules.filter(m => m.dependsOn.includes(id));
+    const message = `¿Eliminar el módulo «${target.title}» del lienzo?` +
+      (consumers.length ? `\nSe quitarán también ${consumers.length} conexión(es) con otros módulos, sin borrar esos módulos.` : "") +
+      "\nLos archivos externos y el contexto del proyecto no se eliminarán. Esta acción se aplicará al guardar cambios.";
+    if (!window.confirm(message)) return;
+    const next = { ...space, modules: space.modules.filter(m => m.id !== id).map(m => ({ ...m, dependsOn: m.dependsOn.filter(dep => dep !== id) })) };
+    if (!spaceSchema.safeParse(next).success) { setError("No se puede eliminar: revisa el estado y las dependencias de los demás módulos."); return; }
+    edit(next); setSelected(null); setLinkSource(source => source === id ? null : source);
+  }
   const current = space.modules.find(m => m.id === selected);
   const width = Math.max(1000, ...space.modules.map(m => m.x + 300));
   const height = Math.max(600, ...space.modules.map(m => m.y + 200));
@@ -127,6 +139,7 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
           <label>Depende de<select multiple value={current.dependsOn} onChange={e => update(current.id, { dependsOn: Array.from(e.target.selectedOptions, o => o.value) })}>{space.modules.filter(m => m.id !== current.id).map(m => <option key={m.id} value={m.id}>{m.title}</option>)}</select></label>
           <label>Resultado<textarea value={current.result} onChange={e => update(current.id, { result: e.target.value })} /></label>
           <label>Evidencia<textarea value={current.evidence} placeholder="Pruebas, archivo, commit o enlace verificado" onChange={e => update(current.id, { evidence: e.target.value })} /></label>
+          <button type="button" className="space-remove-module" onClick={() => removeModule(current.id)}>Eliminar módulo del lienzo</button>
           <p>Asignar un responsable no inicia una ejecución. Usa las herramientas de la sala y registra aquí el resultado comprobado.</p>
           <button onClick={() => { void navigator.clipboard.writeText(`Proyecto: ${name}\nMódulo: ${current.id}\nContexto: ${space.context}\nEncargo: ${current.prompt}\nDevuelve resultado y evidencia para revisión.`).then(() => setSaved("Encargo copiado"), () => setError("No se pudo copiar; selecciona la instrucción manualmente")); }}>Copiar encargo</button>
         </fieldset></aside>}

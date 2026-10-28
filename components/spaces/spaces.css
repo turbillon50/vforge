@@ -17,3 +17,5 @@
 
 /* Real connection ports backed by SpaceModule.dependsOn */
 .vf-space .space-node{position:absolute}.vf-space .space-node .space-port{position:absolute;top:calc(50% + 8px);z-index:8;width:24px;height:24px;min-width:24px;min-height:24px;padding:0;border:3px solid white;border-radius:50%;background:#2477e7;color:transparent;box-shadow:0 0 0 1px #317bd5,0 3px 9px #17478b55;cursor:crosshair}.vf-space .space-node .space-port-in{left:-12px}.vf-space .space-node .space-port-out{right:-12px}.vf-space .space-node-zip .space-port{top:calc(50% + 4px)}.vf-space .space-node-zip .space-card:before,.vf-space .space-node-zip .space-card:after{display:none}.vf-space .space-link-hint{position:absolute;top:10px;left:10px;z-index:12;border:1px solid #8db6f4;border-radius:10px;background:#eaf3ff;color:#183c75;padding:10px 12px;font-size:13px}.vf-space .space-link-hint button{margin-left:8px;border:1px solid #8db6f4;border-radius:6px;padding:4px 8px}
+
+.vf-space .space-remove-module{border:1px solid #f0a8a8!important;background:#fff5f5!important;color:#a02020!important;font-size:13px!important;margin-top:12px}.vf-space .space-remove-module:hover{background:#ffe8e8!important}
