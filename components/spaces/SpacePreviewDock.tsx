@@ -14,7 +14,7 @@ const STATUS: Record<string, string> = {
   done: "Completado",
 };
 
-const FLOW = ["ZIP original", "Brief 11 may", "Contrato 11 may", "Asociación 5 jul", "Cobranza 21 jul", "Momento Correcto", "Credix", "Attik"];
+const FLOW = ["ZIP original", "Brief 11 may", "Contrato 11 may", "Asociación 5 jul", "Cobranza 21 jul"];
 const SCREENS = ["Compendio: del archivo original al último", "Los audios siguen en el ZIP"];
 
 function LienzoEnMarco({ modules, device }: { modules: SpaceModule[]; device: Device }) {
