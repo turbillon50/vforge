@@ -397,3 +397,28 @@
 .vf-space .space-frame-phone .space-frame-screen{min-height:480px;border-radius:18px}
 .vf-space .space-frame-screen article{background:#fff;border:1px solid #d5d0c8;border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;gap:12px}
 .vf-space .space-frame-screen span{color:#5c6b7a;font-size:13px}
+
+.vf-space .space-preview-dock{
+  margin:0 0 16px;
+  border:1px solid #d7d2ca;
+  border-radius:12px;
+  background:#fff;
+  overflow:hidden;
+}
+.vf-space .space-preview-bar{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  align-items:center;
+  padding:8px;
+  background:#172b49;
+}
+.vf-space .space-preview-bar button{
+  background:#fff;
+  color:#172b49;
+  min-height:40px;
+}
+.vf-space .space-preview-actions{display:flex;gap:6px;flex-wrap:wrap}
+.vf-space .space-preview-body{padding:12px;background:#e7e2da}
+.vf-space .space-frame-desk{width:100%;min-height:560px}
+.vf-space .space-frame-desk .space-frame-screen{min-height:480px}

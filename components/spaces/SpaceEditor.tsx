@@ -123,6 +123,7 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
           </div>
         </div>
       </div>
+      <SpacePreviewDock projectId={projectId} previewUrl={previewUrl} previewRepo={previewRepo} modules={space.modules} />
       <div className="space-work">
         <div className="space-board" aria-label="Módulos del proyecto">
           {view === "canvas" && <div className="space-zoom-floating" aria-label="Zoom del lienzo"><button type="button" aria-label="Alejar" onClick={() => setZoom(Math.max(.4, zoom - .1))}>−</button><span>{Math.round(zoom*100)}%</span><button type="button" aria-label="Acercar" onClick={() => setZoom(Math.min(1.8, zoom + .1))}>+</button></div>}
@@ -147,7 +148,6 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
           <button onClick={() => { void navigator.clipboard.writeText(`Proyecto: ${name}\nMódulo: ${current.id}\nContexto: ${space.context}\nEncargo: ${current.prompt}\nDevuelve resultado y evidencia para revisión.`).then(() => setSaved("Encargo copiado"), () => setError("No se pudo copiar; selecciona la instrucción manualmente")); }}>Copiar encargo</button>
         </fieldset></aside>}
       </div>
-      <SpacePreviewDock projectId={projectId} previewUrl={previewUrl} previewRepo={previewRepo} modules={space.modules} />
     </> : <p>No se cargó el Space. Recarga la página para volver a intentar.</p>}
   </section>;
 }

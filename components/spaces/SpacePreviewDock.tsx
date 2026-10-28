@@ -32,7 +32,7 @@ function LienzoEnMarco({ modules, device }: { modules: SpaceModule[]; device: De
 }
 
 export function SpacePreviewDock({ projectId, previewUrl, previewRepo, modules }: { projectId: string; previewUrl: string | null; previewRepo: string | null; modules: SpaceModule[] }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [device, setDevice] = useState<Device>("desktop");
   const [expanded, setExpanded] = useState(false);
 
