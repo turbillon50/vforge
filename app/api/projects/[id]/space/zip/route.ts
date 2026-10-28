@@ -1,41 +1,32 @@
-import { put } from "@vercel/blob";
-import { NextRequest, NextResponse } from "next/server";
+import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { NextResponse } from "next/server";
 import { getCurrentVForgeIdentity } from "@/lib/api/vforge-owned";
 
 export const runtime = "nodejs";
 
-const SAFE = /[^a-zA-Z0-9._-]/g;
-
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: projectId } = await params;
-  const identity = await getCurrentVForgeIdentity();
-  if (!identity) return NextResponse.json({ error: "not_authorized" }, { status: 401 });
-
-  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
-  if (!token) return NextResponse.json({ error: "storage_unavailable" }, { status: 503 });
-
-  const form = await req.formData();
-  const file = form.get("file");
-  const sha256 = String(form.get("sha256") || "");
-  if (!(file instanceof File) || !file.name.toLowerCase().endsWith(".zip")) {
-    return NextResponse.json({ error: "invalid_zip" }, { status: 400 });
+  const body = (await request.json()) as HandleUploadBody;
+  try {
+    const jsonResponse = await handleUpload({
+      body,
+      request,
+      onBeforeGenerateToken: async () => {
+        const identity = await getCurrentVForgeIdentity();
+        if (!identity) throw new Error("not_authorized");
+        return {
+          allowedContentTypes: ["application/zip", "application/octet-stream", "application/x-zip-compressed"],
+          maximumSizeInBytes: 200 * 1024 * 1024,
+          addRandomSuffix: false,
+          tokenPayload: projectId,
+        };
+      },
+      onUploadCompleted: async () => {},
+    });
+    return NextResponse.json(jsonResponse);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "upload_failed";
+    const status = message === "not_authorized" ? 401 : 400;
+    return NextResponse.json({ error: message }, { status });
   }
-  if (file.size > 50_000_000) return NextResponse.json({ error: "too_large" }, { status: 413 });
-
-  const clean = (file.name || "archivo.zip").replace(SAFE, "_").slice(-80);
-  const pathname = `spaces/${projectId}/zips/${Date.now()}-${clean}`;
-  const blob = await put(pathname, file, {
-    access: "public",
-    contentType: "application/zip",
-    token,
-  });
-
-  return NextResponse.json({
-    ok: true,
-    url: blob.url,
-    pathname: blob.pathname,
-    sha256,
-    size: file.size,
-    assetId: blob.pathname,
-  });
 }
