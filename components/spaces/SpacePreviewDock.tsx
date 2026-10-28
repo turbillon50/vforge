@@ -14,13 +14,28 @@ const STATUS: Record<string, string> = {
   done: "Completado",
 };
 
+const FLOW = ["Ciudadano", "Diagnóstico", "Consulta o elite", "Centro", "Pago en resguardo"];
+const SCREENS = ["Tablero: conciliación, mediación y litigio", "Bóveda del reparto"];
+
 function LienzoEnMarco({ modules, device }: { modules: SpaceModule[]; device: Device }) {
   const desk = device === "desktop";
+  const drawn = modules.some(m => m.id === "mod_roles_funcionamiento" && m.result.trim());
   return (
     <div className={desk ? "space-frame space-frame-desk" : "space-frame space-frame-phone"}>
       <div className="space-frame-bar">{desk ? "Escritorio" : "Celular"}</div>
       <div className="space-frame-screen">
-        {modules.length === 0 ? <p>El lienzo está vacío.</p> : modules.map((m) => (
+        {drawn ? (
+          <>
+            <p className="space-draw-kicker">Funcionamiento</p>
+            <div className={desk ? "space-draw-flow" : "space-draw-flow space-draw-flow-stack"}>
+              {FLOW.map((step, i) => (
+                <span key={step}>{i > 0 && <i />}{step}</span>
+              ))}
+            </div>
+            <p className="space-draw-kicker">Pantallas nombradas</p>
+            {SCREENS.map(s => <article key={s}><strong>{s}</strong></article>)}
+          </>
+        ) : modules.length === 0 ? <p>El lienzo está vacío.</p> : modules.map((m) => (
           <article key={m.id}>
             <strong>{m.title}</strong>
             <span>{STATUS[m.status] || m.status}</span>

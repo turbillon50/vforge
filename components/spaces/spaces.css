@@ -430,3 +430,10 @@
 
 .vf-space .space-link-hint{position:sticky;top:0;z-index:8;margin:8px;padding:10px 12px;background:#172b49;color:#fff;border-radius:10px}
 .vf-space .space-link-hint button{margin-left:8px;background:#fff;color:#172b49}
+
+.vf-space .space-draw-kicker{margin:0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5c6b7a}
+.vf-space .space-draw-flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.vf-space .space-draw-flow span{display:inline-flex;align-items:center;gap:8px;background:#172b49;color:#fff;border-radius:8px;padding:10px 12px;font-size:14px}
+.vf-space .space-draw-flow i{display:inline-block;width:18px;height:2px;background:#8aa0b8}
+.vf-space .space-draw-flow-stack{flex-direction:column;align-items:stretch}
+.vf-space .space-draw-flow-stack i{width:2px;height:14px;margin:0 auto}
