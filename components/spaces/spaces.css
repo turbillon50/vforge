@@ -383,3 +383,17 @@
 .zip-picked{font-weight:700}
 .zip-error{color:#8d1d1d;font-weight:700}
 .zip-ok{color:#0d6b3a;font-weight:700}
+
+.vf-space .space-frame{
+  margin:16px auto;
+  background:#1b3a4b;
+  color:#fff;
+  box-sizing:border-box;
+}
+.vf-space .space-frame-desk{width:min(100%,920px);min-height:420px;border-radius:10px;padding:10px 10px 16px}
+.vf-space .space-frame-phone{width:320px;min-height:560px;border-radius:28px;padding:12px 12px 18px}
+.vf-space .space-frame-bar{font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:8px 10px 12px}
+.vf-space .space-frame-screen{background:#f4f1ea;color:#1b2430;border-radius:8px;min-height:360px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.vf-space .space-frame-phone .space-frame-screen{min-height:480px;border-radius:18px}
+.vf-space .space-frame-screen article{background:#fff;border:1px solid #d5d0c8;border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;gap:12px}
+.vf-space .space-frame-screen span{color:#5c6b7a;font-size:13px}

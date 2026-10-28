@@ -147,7 +147,7 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
           <button onClick={() => { void navigator.clipboard.writeText(`Proyecto: ${name}\nMódulo: ${current.id}\nContexto: ${space.context}\nEncargo: ${current.prompt}\nDevuelve resultado y evidencia para revisión.`).then(() => setSaved("Encargo copiado"), () => setError("No se pudo copiar; selecciona la instrucción manualmente")); }}>Copiar encargo</button>
         </fieldset></aside>}
       </div>
-      <SpacePreviewDock projectId={projectId} previewUrl={previewUrl} previewRepo={previewRepo} />
+      <SpacePreviewDock projectId={projectId} previewUrl={previewUrl} previewRepo={previewRepo} modules={space.modules} />
     </> : <p>No se cargó el Space. Recarga la página para volver a intentar.</p>}
   </section>;
 }

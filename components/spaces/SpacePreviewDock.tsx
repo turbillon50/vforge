@@ -2,12 +2,38 @@
 
 import { useState } from "react";
 import { VentanaDispositivo } from "@/components/live/VentanaDispositivo";
+import type { SpaceModule } from "@/lib/spaces/model";
 
 type Device = "mobile" | "desktop";
-/** Mounts the existing VForge live device engine when the dock opens. */
-export function SpacePreviewDock({ projectId, previewUrl, previewRepo }: { projectId: string; previewUrl: string | null; previewRepo: string | null }) {
+
+const STATUS: Record<string, string> = {
+  pending: "Pendiente",
+  working: "Trabajando",
+  blocked: "Bloqueado",
+  review: "En revisión",
+  done: "Completado",
+};
+
+function LienzoEnMarco({ modules, device }: { modules: SpaceModule[]; device: Device }) {
+  const desk = device === "desktop";
+  return (
+    <div className={desk ? "space-frame space-frame-desk" : "space-frame space-frame-phone"}>
+      <div className="space-frame-bar">{desk ? "Escritorio" : "Celular"}</div>
+      <div className="space-frame-screen">
+        {modules.length === 0 ? <p>El lienzo está vacío.</p> : modules.map((m) => (
+          <article key={m.id}>
+            <strong>{m.title}</strong>
+            <span>{STATUS[m.status] || m.status}</span>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function SpacePreviewDock({ projectId, previewUrl, previewRepo, modules }: { projectId: string; previewUrl: string | null; previewRepo: string | null; modules: SpaceModule[] }) {
   const [open, setOpen] = useState(false);
-  const [device, setDevice] = useState<Device>("mobile");
+  const [device, setDevice] = useState<Device>("desktop");
   const [expanded, setExpanded] = useState(false);
 
   let url: string | null = null;
@@ -29,8 +55,7 @@ export function SpacePreviewDock({ projectId, previewUrl, previewRepo }: { proje
       </div>
     </div>
     {open && <div className="space-preview-body">
-      {canRun ? <div className="space-preview-live"><VentanaDispositivo key={device} projectId={previewRepo!.split("/").pop() || projectId} nombre={projectId} urlRespaldo={{movil:url,escritorio:url}} dispositivoInicial={device === "mobile" ? "iphone" : "escritorio"} rutaInicial="/" /></div> : url ? <div className="space-preview-placeholder"><strong>Vista del último despliegue</strong><p>Este Space no tiene repositorio conectado al motor vivo. Abre la aplicación publicada mientras configuramos su proyecto ejecutable.</p><a href={url} target="_blank" rel="noopener noreferrer">Abrir aplicación</a></div> : <div className="space-preview-placeholder"><strong>Listo para conectar una aplicación</strong><p>Los módulos de este Space ya pueden construirse. Para encender el motor vivo, primero hay que vincular un repositorio ejecutable al proyecto.</p></div>}
-
+      {canRun ? <div className="space-preview-live"><VentanaDispositivo key={device} projectId={previewRepo!.split("/").pop() || projectId} nombre={projectId} urlRespaldo={{movil:url,escritorio:url}} dispositivoInicial={device === "mobile" ? "iphone" : "escritorio"} rutaInicial="/" /></div> : <LienzoEnMarco modules={modules} device={device} />}
     </div>}
   </section>;
 }
