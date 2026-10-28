@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { EMPTY_SPACE, KINDS, STATUSES, type Space, type SpaceModule } from "@/lib/spaces/model";
+import { EMPTY_SPACE, KINDS, STATUSES, spaceSchema, type Space, type SpaceModule } from "@/lib/spaces/model";
 import "./spaces.css";
 import { ZipReceiver } from "./ZipReceiver";
 
@@ -15,6 +15,7 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
   const [filesOpen, setFilesOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [modulePickerOpen, setModulePickerOpen] = useState(false);
+  const [linkSource, setLinkSource] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -65,6 +66,16 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
     const id = crypto.randomUUID(); const index = space.modules.length;
     edit({ ...space, modules: [...space.modules, { id, kind, title: KINDS[kind], status: "pending", responsible: "", prompt: "", result: "", evidence: "", dependsOn: [], x: 32 + (index % 3) * 280, y: 32 + Math.floor(index / 3) * 180 }] }); setSelected(id);
   }
+  function connect(sourceId: string, targetId: string) {
+    setLinkSource(null);
+    if (sourceId === targetId) { setError("Un módulo no puede conectarse consigo mismo."); return; }
+    const target = space.modules.find(m => m.id === targetId);
+    if (!target || target.dependsOn.includes(sourceId)) return;
+    const next = { ...space, modules: space.modules.map(m => m.id === targetId ? { ...m, dependsOn: [...m.dependsOn, sourceId] } : m) };
+    // Reuse the existing schema: rejects circular links and invalid dependencies.
+    if (!spaceSchema.safeParse(next).success) { setError("Conexión inválida: produciría un ciclo o incumpliría una dependencia."); return; }
+    setError(""); edit(next);
+  }
   const current = space.modules.find(m => m.id === selected);
   const width = Math.max(1000, ...space.modules.map(m => m.x + 300));
   const height = Math.max(600, ...space.modules.map(m => m.y + 200));
@@ -103,7 +114,8 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
           {!space.modules.length && <div className="space-empty"><h2>Tu lienzo está listo</h2><p>Agrega tu primer módulo para comenzar.</p></div>}
           {view === "list" ? <div className="space-list">{space.modules.map(m => <button key={m.id} className="space-card" aria-pressed={selected === m.id} onClick={() => setSelected(m.id)}><small>{KINDS[m.kind]} · {STATUSES[m.status]}</small><strong>{m.title}</strong><span>{m.responsible || "Sin asignar"}</span><small>{m.dependsOn.length} dependencias</small></button>)}</div> : <div className="space-scroll"><div style={{ width: width * zoom, height: height * zoom }}><div className="space-plane" style={{ width, height, transform: `scale(${zoom})` }}>
             <svg width={width} height={height} aria-hidden="true">{space.modules.flatMap(m => m.dependsOn.map(id => { const source = space.modules.find(n => n.id === id); return source ? <path key={`${id}-${m.id}`} d={`M ${source.x + 240} ${source.y + 60} C ${source.x + 280} ${source.y + 60}, ${m.x - 40} ${m.y + 60}, ${m.x} ${m.y + 60}`} fill="none" stroke="currentColor" strokeWidth="2" /> : null; }))}</svg>
-            {space.modules.map(m => <article key={m.id} className={`space-node ${m.kind === "zip_receiver" ? "space-node-zip" : ""}`} style={{ left: m.x, top: m.y }}><button disabled={busy} className="space-drag" aria-label={`Mover ${m.title}`} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); drag.current = { id: m.id, x: e.clientX, y: e.clientY, originX: m.x, originY: m.y }; }} onPointerMove={e => { const d = drag.current; if (d?.id === m.id) update(m.id, { x: Math.min(20000, Math.max(0, d.originX + (e.clientX - d.x) / zoom)), y: Math.min(20000, Math.max(0, d.originY + (e.clientY - d.y) / zoom)) }); }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}>⠿ Mover</button><button className="space-card" aria-pressed={selected === m.id} onClick={() => setSelected(m.id)}><small>{KINDS[m.kind]}</small><strong>{m.title}</strong><span>{STATUSES[m.status]}</span></button></article>)}
+            {linkSource && <div className="space-link-hint" role="status">Conectando desde {space.modules.find(m => m.id === linkSource)?.title}. Pulsa la entrada del módulo destino. <button type="button" onClick={() => setLinkSource(null)}>Cancelar</button></div>}
+            {space.modules.map(m => <article key={m.id} className={`space-node ${m.kind === "zip_receiver" ? "space-node-zip" : ""}`} style={{ left: m.x, top: m.y }}><button disabled={busy} className="space-drag" aria-label={`Mover ${m.title}`} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); drag.current = { id: m.id, x: e.clientX, y: e.clientY, originX: m.x, originY: m.y }; }} onPointerMove={e => { const d = drag.current; if (d?.id === m.id) update(m.id, { x: Math.min(20000, Math.max(0, d.originX + (e.clientX - d.x) / zoom)), y: Math.min(20000, Math.max(0, d.originY + (e.clientY - d.y) / zoom)) }); }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}>⠿ Mover</button><button type="button" className="space-port space-port-in" title={`Conectar entrada de ${m.title}`} aria-label={`Conectar entrada de ${m.title}`} onClick={() => linkSource ? connect(linkSource,m.id) : setError("Selecciona primero la salida de un módulo.")}>●</button><button className="space-card" aria-pressed={selected === m.id} onClick={() => setSelected(m.id)}><small>{KINDS[m.kind]}</small><strong>{m.title}</strong><span>{STATUSES[m.status]}</span></button><button type="button" className="space-port space-port-out" title={`Iniciar conexión desde ${m.title}`} aria-label={`Iniciar conexión desde ${m.title}`} onClick={() => {setLinkSource(m.id);setError("");}}>●</button></article>)}
           </div></div></div>}
         </div>
         {current && <aside className="space-inspector"><div className="space-toolbar"><h2>Editar módulo</h2><button onClick={() => setSelected(null)} aria-label="Cerrar editor">×</button></div><fieldset disabled={busy}>
