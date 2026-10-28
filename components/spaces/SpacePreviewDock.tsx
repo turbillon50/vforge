@@ -46,6 +46,27 @@ function LienzoEnMarco({ modules, device }: { modules: SpaceModule[]; device: De
   );
 }
 
+
+const VEDIKA_PREVIEWS = [
+  { label: "Védika A · Taller", url: "https://vedika-7634-54mdp6kpo-luisdelator-oss-projects.vercel.app/experimento", note: "Nueva pantalla experimental" },
+  { label: "Védika B · Base", url: "https://vedika-7634-jb4d0ipk2-luisdelator-oss-projects.vercel.app", note: "Versión original; alternativa B pendiente" },
+] as const;
+
+function VedikaComparison({ device }: { device: Device }) {
+  const mobile = device === "mobile";
+  return <div style={{ display: "grid", gridTemplateColumns: mobile ? "repeat(2,minmax(0,1fr))" : "repeat(2,minmax(0,1fr))", gap: 12, padding: 12, overflowX: "auto" }}>
+    {VEDIKA_PREVIEWS.map((item) => <section key={item.label} style={{ minWidth: mobile ? 220 : 280, border: "1px solid #d9dce1", borderRadius: 12, overflow: "hidden", background: "#fff" }}>
+      <div style={{ padding: "10px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <div><strong style={{ display: "block", fontSize: 13 }}>{item.label}</strong><small style={{ color: "#64748b" }}>{item.note}</small></div>
+        <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, textDecoration: "underline" }}>Abrir ↗</a>
+      </div>
+      <div style={{ height: mobile ? 600 : 580, overflow: "auto", background: "#eeece7", display: "flex", justifyContent: "center", padding: 8 }}>
+        <iframe key={device + item.label} title={item.label} src={item.url} loading="lazy" style={{ width: mobile ? 390 : "100%", minWidth: mobile ? 390 : 0, height: mobile ? 844 : 900, border: "1px solid #aaa", borderRadius: mobile ? 22 : 8, background: "#fff", transform: mobile ? "scale(.55)" : "none", transformOrigin: "top center", flexShrink: 0, marginBottom: mobile ? -380 : 0 }} />
+      </div>
+    </section>)}
+  </div>;
+}
+
 export function SpacePreviewDock({ projectId, previewUrl, previewRepo, modules }: { projectId: string; previewUrl: string | null; previewRepo: string | null; modules: SpaceModule[] }) {
   const [open, setOpen] = useState(true);
   const [device, setDevice] = useState<Device>("desktop");
@@ -70,7 +91,7 @@ export function SpacePreviewDock({ projectId, previewUrl, previewRepo, modules }
       </div>
     </div>
     {open && <div className="space-preview-body">
-      {canRun ? <div className="space-preview-live"><VentanaDispositivo key={device} projectId={previewRepo!.split("/").pop() || projectId} nombre={projectId} urlRespaldo={{movil:url,escritorio:url}} dispositivoInicial={device === "mobile" ? "iphone" : "escritorio"} rutaInicial="/" /></div> : <LienzoEnMarco modules={modules} device={device} />}
+      {projectId === "vedika77" ? <VedikaComparison device={device} /> : canRun ? <div className="space-preview-live"><VentanaDispositivo key={device} projectId={previewRepo!.split("/").pop() || projectId} nombre={projectId} urlRespaldo={{movil:url,escritorio:url}} dispositivoInicial={device === "mobile" ? "iphone" : "escritorio"} rutaInicial="/" /></div> : <LienzoEnMarco modules={modules} device={device} />}
     </div>}
   </section>;
 }
