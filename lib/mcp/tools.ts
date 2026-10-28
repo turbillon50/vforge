@@ -14,6 +14,7 @@ import { partnerDomainQuote } from "./partner-domain";
 import { partnerBuild, partnerBuildStatus, partnerBuildList } from "./partner-factory";
 import { partnerAlixShared } from "./partner-alix";
 import { requestPartnerPass, approvePartnerPass, checkPartnerPass, makePartnerDemo } from "./partner-sponsored";
+import { spaceGet, spaceUpdate, moduleCreate, SPACE_TOOL_NAMES } from "./space-tools";
 
 /** El registro vive en `registry.ts` (sin dependencias) para que la página
  *  pública /mcp pueda contarlo sin arrastrar Neon ni GitHub. Se re-exporta
@@ -347,6 +348,9 @@ export async function runMcpTool(
       return text(VFORGE_METHOD);
     case "help":
       return text(helpText(principal));
+    case "space_get": return spaceGet(args as any, principal);
+    case "space_update": return spaceUpdate(args as any, principal);
+    case "module_create": return moduleCreate(args as any, principal);
   }
 
   // --- MANOS del embudo + LUTOR: sólo Owner (admin). ---
