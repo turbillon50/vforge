@@ -377,3 +377,9 @@
   background:#fff;
   z-index:6;
 }
+
+.zip-send{min-height:48px;border:0;border-radius:12px;background:#172b49;color:#fff;font-size:16px;font-weight:700}
+.zip-send:disabled{opacity:.45}
+.zip-picked{font-weight:700}
+.zip-error{color:#8d1d1d;font-weight:700}
+.zip-ok{color:#0d6b3a;font-weight:700}
