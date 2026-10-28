@@ -14,8 +14,8 @@ const STATUS: Record<string, string> = {
   done: "Completado",
 };
 
-const FLOW = ["Ciudadano", "Diagnóstico", "Consulta o elite", "Centro", "Pago en resguardo"];
-const SCREENS = ["Tablero: conciliación, mediación y litigio", "Bóveda del reparto"];
+const FLOW = ["ZIP original", "Brief 11 may", "Contrato 11 may", "Asociación 5 jul", "Cobranza 21 jul", "Momento Correcto", "Credix", "Attik"];
+const SCREENS = ["Compendio: del archivo original al último", "Los audios siguen en el ZIP"];
 
 function LienzoEnMarco({ modules, device }: { modules: SpaceModule[]; device: Device }) {
   const desk = device === "desktop";
@@ -26,13 +26,13 @@ function LienzoEnMarco({ modules, device }: { modules: SpaceModule[]; device: De
       <div className="space-frame-screen">
         {drawn ? (
           <>
-            <p className="space-draw-kicker">Funcionamiento</p>
+            <p className="space-draw-kicker">Compendio</p>
             <div className={desk ? "space-draw-flow" : "space-draw-flow space-draw-flow-stack"}>
               {FLOW.map((step, i) => (
                 <span key={step}>{i > 0 && <i />}{step}</span>
               ))}
             </div>
-            <p className="space-draw-kicker">Pantallas nombradas</p>
+            <p className="space-draw-kicker">Cierre</p>
             {SCREENS.map(s => <article key={s}><strong>{s}</strong></article>)}
           </>
         ) : modules.length === 0 ? <p>El lienzo está vacío.</p> : modules.map((m) => (
