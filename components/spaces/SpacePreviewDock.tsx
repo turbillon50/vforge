@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { VentanaDispositivo } from "@/components/live/VentanaDispositivo";
+import type { Space } from "@/lib/spaces/model";
+import { buildSpacePreview } from "@/lib/spaces/preview-html";
 
 type Device = "mobile" | "desktop";
 /** Mounts the existing VForge live device engine when the dock opens. */
-export function SpacePreviewDock({ projectId, previewUrl, previewRepo }: { projectId: string; previewUrl: string | null; previewRepo: string | null }) {
+export function SpacePreviewDock({ projectId, previewUrl, previewRepo, space, projectName }: { projectId: string; previewUrl: string | null; previewRepo: string | null; space: Space; projectName: string }) {
   const [open, setOpen] = useState(false);
   const [device, setDevice] = useState<Device>("mobile");
   const [expanded, setExpanded] = useState(false);
@@ -29,7 +31,7 @@ export function SpacePreviewDock({ projectId, previewUrl, previewRepo }: { proje
       </div>
     </div>
     {open && <div className="space-preview-body">
-      {canRun ? <div className="space-preview-live"><VentanaDispositivo key={device} projectId={previewRepo!.split("/").pop() || projectId} nombre={projectId} urlRespaldo={{movil:url,escritorio:url}} dispositivoInicial={device === "mobile" ? "iphone" : "escritorio"} rutaInicial="/" /></div> : url ? <div className="space-preview-placeholder"><strong>Vista del último despliegue</strong><p>Este Space no tiene repositorio conectado al motor vivo. Abre la aplicación publicada mientras configuramos su proyecto ejecutable.</p><a href={url} target="_blank" rel="noopener noreferrer">Abrir aplicación</a></div> : <div className="space-preview-placeholder"><strong>Listo para conectar una aplicación</strong><p>Los módulos de este Space ya pueden construirse. Para encender el motor vivo, primero hay que vincular un repositorio ejecutable al proyecto.</p></div>}
+      {canRun ? <div className="space-preview-live"><VentanaDispositivo key={device} projectId={previewRepo!.split("/").pop() || projectId} nombre={projectId} urlRespaldo={{movil:url,escritorio:url}} dispositivoInicial={device === "mobile" ? "iphone" : "escritorio"} rutaInicial="/" /></div> : url ? <div className="space-preview-placeholder"><strong>Vista del último despliegue</strong><p>Este Space no tiene repositorio conectado al motor vivo. Abre la aplicación publicada mientras configuramos su proyecto ejecutable.</p><a href={url} target="_blank" rel="noopener noreferrer">Abrir aplicación</a></div> : <div className={`space-progressive-device ${device === "mobile" ? "space-progressive-mobile" : "space-progressive-desktop"}`}><div className="space-progressive-label">Vista HTML provisional · {device === "mobile" ? "393 × 852" : "1440 × 900"}</div><iframe title={`Prototipo HTML de ${projectName}`} sandbox="" srcDoc={buildSpacePreview(projectName, space)} /></div>}
 
     </div>}
   </section>;
