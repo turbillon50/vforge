@@ -3,7 +3,7 @@ import { z } from "zod";
 export const moduleSchema = z.object({
   id: z.string().min(1).max(80),
   title: z.string().trim().min(1).max(120),
-  kind: z.enum(["context", "analysis", "design", "frontend", "backend", "review", "delivery"]),
+  kind: z.enum(["context", "analysis", "design", "frontend", "backend", "review", "delivery", "zip_receiver"]),
   status: z.enum(["pending", "working", "blocked", "review", "done"]),
   responsible: z.string().max(200),
   prompt: z.string().max(12000),
@@ -38,5 +38,5 @@ export const spaceSchema = z.object({
 export type Space = z.infer<typeof spaceSchema>;
 export type SpaceModule = z.infer<typeof moduleSchema>;
 export const EMPTY_SPACE: Space = { context: "", modules: [] };
-export const KINDS = { context: "Contexto", analysis: "Evaluación", design: "Diseño", frontend: "Frontend", backend: "Backend", review: "Pruebas", delivery: "Entrega" };
+export const KINDS = { context: "Contexto", analysis: "Evaluación", design: "Diseño", frontend: "Frontend", backend: "Backend", review: "Pruebas", delivery: "Entrega", zip_receiver: "Receptor ZIP" };
 export const STATUSES = { pending: "Pendiente", working: "En trabajo", blocked: "Bloqueado", review: "En revisión", done: "Completado" };
