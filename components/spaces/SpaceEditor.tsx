@@ -12,6 +12,7 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "canvas">("canvas");
   const [zoom, setZoom] = useState(1);
+  const [filesOpen, setFilesOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -77,6 +78,14 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
     <div aria-live="polite">{error && <p role="alert" className="space-message">{error}</p>}{saved && <p className="space-message">{saved}</p>}</div>
     {loading ? <p>Cargando el proyecto…</p> : loaded ? <>
       <details className="space-context" open={space.modules.length === 0}><summary>Contexto del proyecto</summary><label>Acuerdos, objetivo y referencias<textarea disabled={busy} value={space.context} onChange={e => edit({ ...space, context: e.target.value })} placeholder="Qué necesita el proyecto y dónde están sus fuentes. Puedes cargar archivos desde la sala." /></label><Link href={`/app/live/${encodeURIComponent(projectId)}`}>Abrir archivos y herramientas en la sala →</Link></details>
+      <section className="space-file-entry" aria-label="Archivos del proyecto">
+        <div><strong>Archivos del proyecto</strong><p>Una entrada para documentos y conversaciones. Sin duplicar importadores.</p></div>
+        <button type="button" aria-expanded={filesOpen} onClick={() => setFilesOpen(v => !v)}>{filesOpen ? "Cerrar" : "+ Agregar archivos"}</button>
+      </section>
+      {filesOpen && <div className="space-file-options">
+        <div><strong>ZIP y documentos</strong><p>Analiza un ZIP desde el módulo Receptor ZIP y guarda su inventario en el expediente.</p><button type="button" onClick={() => { const existing = space.modules.find(m => m.kind === "zip_receiver"); if (existing) {setSelected(existing.id);setView("canvas");} else add("zip_receiver"); setFilesOpen(false); }}>Abrir Receptor ZIP</button></div>
+        <div><strong>Conversaciones WhatsApp</strong><p>Usa el importador de chats existente, sin crear otra copia.</p><Link href={`${base}/expediente`}>Ir a chats del expediente</Link></div>
+      </div>}
       <div className="space-toolbar"><div role="group" aria-label="Vista"><button aria-pressed={view === "list"} onClick={() => setView("list")}>Administrar</button><button aria-pressed={view === "canvas"} onClick={() => setView("canvas")}>Construir</button></div><label>Agregar módulo<select disabled={busy || space.modules.length >= 100} value="" onChange={e => { if (e.target.value) add(e.target.value as SpaceModule["kind"]); }}><option value="">Elegir…</option>{Object.entries(KINDS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>{view === "canvas" && <div><button aria-label="Reducir canvas" onClick={() => setZoom(Math.max(.4, zoom - .1))}>−</button><button onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button><button aria-label="Ampliar canvas" onClick={() => setZoom(Math.min(1.8, zoom + .1))}>+</button></div>}</div>
       <div className="space-work">
         <div className="space-board" aria-label="Módulos del proyecto">
