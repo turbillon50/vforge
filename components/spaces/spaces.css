@@ -50,3 +50,15 @@
   top:-22px;
   color:#8aa4c8!important;
 }
+
+/* Drag the sphere itself — no separate handle */
+.vf-space .space-node{
+  cursor:grab;
+  touch-action:none;
+}
+.vf-space .space-node:active{
+  cursor:grabbing;
+}
+.vf-space .space-node .space-port{
+  cursor:crosshair;
+}
