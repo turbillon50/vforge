@@ -266,3 +266,26 @@
   fill:none!important;
   stroke-linecap:round!important;
 }
+
+/* Ports as real connection points */
+.vf-space .space-node .space-port{
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  min-height:18px!important;
+  border:2px solid #fff!important;
+  background:#2f7de1!important;
+  box-shadow:0 0 0 1px #2f7de1, 0 2px 6px rgba(20,70,140,.35)!important;
+  z-index:10;
+}
+.vf-space .space-node .space-port-out{right:-9px!important}
+.vf-space .space-node .space-port-in{left:-9px!important}
+
+/* Line sits under ports */
+.vf-space .space-plane svg{
+  z-index:1;
+}
+.vf-space .space-plane svg path{
+  stroke:#4a8ad4!important;
+  stroke-width:3!important;
+}
