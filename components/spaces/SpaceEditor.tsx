@@ -13,6 +13,7 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
   const [view, setView] = useState<"list" | "canvas">("canvas");
   const [zoom, setZoom] = useState(1);
   const [filesOpen, setFilesOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -68,28 +69,28 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
   const height = Math.max(600, ...space.modules.map(m => m.y + 200));
   return <section className="vf-space">
     <header className="space-head">
-      <div><Link href="/app/projects">← Proyectos</Link><h1>{name}</h1><p>Space · contexto, módulos y evidencia</p></div>
+      <div><Link href="/app/projects">← Proyectos</Link><h1>{name}</h1><p>Construcción modular</p></div>
       <nav aria-label="Vistas del proyecto">
-        <Link href={`/app/live/${encodeURIComponent(projectId)}`}>Sala</Link>
-        <Link href={`${base}/expediente`}>Expediente</Link>
+        <button type="button" aria-expanded={toolsOpen} onClick={() => setToolsOpen(v => !v)}>{toolsOpen ? "Ocultar herramientas" : "Herramientas"}</button>
         <button disabled={busy || loading || !dirty} onClick={() => void save()}>{busy ? "Guardando…" : dirty ? "Guardar cambios" : "Guardado"}</button>
       </nav>
     </header>
     <div aria-live="polite">{error && <p role="alert" className="space-message">{error}</p>}{saved && <p className="space-message">{saved}</p>}</div>
     {loading ? <p>Cargando el proyecto…</p> : loaded ? <>
-      <details className="space-context" open={space.modules.length === 0}><summary>Contexto del proyecto</summary><label>Acuerdos, objetivo y referencias<textarea disabled={busy} value={space.context} onChange={e => edit({ ...space, context: e.target.value })} placeholder="Qué necesita el proyecto y dónde están sus fuentes. Puedes cargar archivos desde la sala." /></label><Link href={`/app/live/${encodeURIComponent(projectId)}`}>Abrir archivos y herramientas en la sala →</Link></details>
-      <section className="space-file-entry" aria-label="Archivos del proyecto">
+      {toolsOpen && <nav className="space-extra-links"><Link href={`/app/live/${encodeURIComponent(projectId)}`}>Sala</Link><Link href={`${base}/expediente`}>Expediente</Link></nav>}
+      {toolsOpen && <details className="space-context"><summary>Contexto del proyecto</summary><label>Acuerdos, objetivo y referencias<textarea disabled={busy} value={space.context} onChange={e => edit({ ...space, context: e.target.value })} placeholder="Qué necesita el proyecto y dónde están sus fuentes. Puedes cargar archivos desde la sala." /></label><Link href={`/app/live/${encodeURIComponent(projectId)}`}>Abrir archivos y herramientas en la sala →</Link></details>}
+      {toolsOpen && <section className="space-file-entry" aria-label="Archivos del proyecto">
         <div><strong>Archivos del proyecto</strong><p>Una entrada para documentos y conversaciones. Sin duplicar importadores.</p></div>
         <button type="button" aria-expanded={filesOpen} onClick={() => setFilesOpen(v => !v)}>{filesOpen ? "Cerrar" : "+ Agregar archivos"}</button>
-      </section>
-      {filesOpen && <div className="space-file-options">
+      </section>}
+      {toolsOpen && filesOpen && <div className="space-file-options">
         <div><strong>ZIP y documentos</strong><p>Analiza un ZIP desde el módulo Receptor ZIP y guarda su inventario en el expediente.</p><button type="button" onClick={() => { const existing = space.modules.find(m => m.kind === "zip_receiver"); if (existing) {setSelected(existing.id);setView("canvas");} else add("zip_receiver"); setFilesOpen(false); }}>Abrir Receptor ZIP</button></div>
         <div><strong>Conversaciones WhatsApp</strong><p>Usa el importador de chats existente, sin crear otra copia.</p><Link href={`${base}/expediente`}>Ir a chats del expediente</Link></div>
       </div>}
-      <div className="space-toolbar"><div role="group" aria-label="Vista"><button aria-pressed={view === "list"} onClick={() => setView("list")}>Administrar</button><button aria-pressed={view === "canvas"} onClick={() => setView("canvas")}>Construir</button></div><label>Agregar módulo<select disabled={busy || space.modules.length >= 100} value="" onChange={e => { if (e.target.value) add(e.target.value as SpaceModule["kind"]); }}><option value="">Elegir…</option>{Object.entries(KINDS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>{view === "canvas" && <div><button aria-label="Reducir canvas" onClick={() => setZoom(Math.max(.4, zoom - .1))}>−</button><button onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button><button aria-label="Ampliar canvas" onClick={() => setZoom(Math.min(1.8, zoom + .1))}>+</button></div>}</div>
+      <div className="space-toolbar space-toolbar-primary"><div role="group" aria-label="Vista"><button aria-pressed={view === "list"} onClick={() => setView("list")}>Administrar</button><button aria-pressed={view === "canvas"} onClick={() => setView("canvas")}>Construir</button></div><label className="space-add-module">+ Agregar módulo<select disabled={busy || space.modules.length >= 100} value="" onChange={e => { if (e.target.value) add(e.target.value as SpaceModule["kind"]); }}><option value="">Elegir…</option>{Object.entries(KINDS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>{view === "canvas" && <div className="space-zoom-controls"><button aria-label="Reducir canvas" onClick={() => setZoom(Math.max(.4, zoom - .1))}>−</button><button onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button><button aria-label="Ampliar canvas" onClick={() => setZoom(Math.min(1.8, zoom + .1))}>+</button></div>}</div>
       <div className="space-work">
         <div className="space-board" aria-label="Módulos del proyecto">
-          {!space.modules.length && <div className="space-empty"><h2>Empieza con lo que ya tienes</h2><p>Agrega contexto o un módulo. No necesitas repositorio ni despliegue.</p></div>}
+          {!space.modules.length && <div className="space-empty"><h2>Tu lienzo está listo</h2><p>Agrega tu primer módulo para comenzar.</p></div>}
           {view === "list" ? <div className="space-list">{space.modules.map(m => <button key={m.id} className="space-card" aria-pressed={selected === m.id} onClick={() => setSelected(m.id)}><small>{KINDS[m.kind]} · {STATUSES[m.status]}</small><strong>{m.title}</strong><span>{m.responsible || "Sin asignar"}</span><small>{m.dependsOn.length} dependencias</small></button>)}</div> : <div className="space-scroll"><div style={{ width: width * zoom, height: height * zoom }}><div className="space-plane" style={{ width, height, transform: `scale(${zoom})` }}>
             <svg width={width} height={height} aria-hidden="true">{space.modules.flatMap(m => m.dependsOn.map(id => { const source = space.modules.find(n => n.id === id); return source ? <path key={`${id}-${m.id}`} d={`M ${source.x + 240} ${source.y + 60} C ${source.x + 280} ${source.y + 60}, ${m.x - 40} ${m.y + 60}, ${m.x} ${m.y + 60}`} fill="none" stroke="currentColor" strokeWidth="2" /> : null; }))}</svg>
             {space.modules.map(m => <article key={m.id} className={`space-node ${m.kind === "zip_receiver" ? "space-node-zip" : ""}`} style={{ left: m.x, top: m.y }}><button disabled={busy} className="space-drag" aria-label={`Mover ${m.title}`} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); drag.current = { id: m.id, x: e.clientX, y: e.clientY, originX: m.x, originY: m.y }; }} onPointerMove={e => { const d = drag.current; if (d?.id === m.id) update(m.id, { x: Math.min(20000, Math.max(0, d.originX + (e.clientX - d.x) / zoom)), y: Math.min(20000, Math.max(0, d.originY + (e.clientY - d.y) / zoom)) }); }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}>⠿ Mover</button><button className="space-card" aria-pressed={selected === m.id} onClick={() => setSelected(m.id)}><small>{KINDS[m.kind]}</small><strong>{m.title}</strong><span>{STATUSES[m.status]}</span></button></article>)}
