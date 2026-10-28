@@ -490,21 +490,21 @@ export const MCP_TOOLS: McpToolDef[] = [
   },
   /* ================ MANOS del embudo + LUTOR (solo Owner) — lib/embudo/manos.ts ================ */
   ...MANOS_TOOLS.map((t) => ({ name: t.name, description: `MANOS (Owner): ${t.description}`, inputSchema: t.schema as McpToolDef["inputSchema"] })),
-];
 
-  /* ============================== SPACES (Védika Super) ============================== */
+  /* ============================== SPACES (Vedika Super) ============================== */
   {
     name: "space_get",
-    description: "Lee el documento Space completo de un proyecto (módulos, contexto, revision). Owner o miembro activo.",
+    description: "Lee el documento Space completo de un proyecto (modulos, contexto, revision). Owner o miembro activo.",
     inputSchema: { type: "object", properties: { project_id: { type: "string" } }, required: ["project_id"] },
   },
   {
     name: "space_update",
-    description: "Actualiza el documento Space completo con control de revisión CAS. Owner o miembro activo.",
+    description: "Actualiza el documento Space completo con control de revision CAS. Owner o miembro activo.",
     inputSchema: { type: "object", properties: { project_id: { type: "string" }, document: { type: "object" }, revision: { type: "number" } }, required: ["project_id", "document", "revision"] },
   },
   {
     name: "module_create",
-    description: "Crea un módulo nuevo en el Space (machihembrado). Owner o miembro activo.",
+    description: "Crea un modulo nuevo en el Space (machihembrado). Owner o miembro activo.",
     inputSchema: { type: "object", properties: { project_id: { type: "string" }, module: { type: "object" } }, required: ["project_id", "module"] },
   },
+];
