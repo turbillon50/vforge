@@ -427,3 +427,6 @@
 .vf-space .space-node .space-port{width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;background:#2f7de1!important;border:2px solid #fff!important}
 .vf-space .space-links{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid #d7d2ca;border-radius:10px;background:#f7f4ef}
 .vf-space .space-links button{text-align:left}
+
+.vf-space .space-link-hint{position:sticky;top:0;z-index:8;margin:8px;padding:10px 12px;background:#172b49;color:#fff;border-radius:10px}
+.vf-space .space-link-hint button{margin-left:8px;background:#fff;color:#172b49}
