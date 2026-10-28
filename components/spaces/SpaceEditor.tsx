@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { EMPTY_SPACE, KINDS, STATUSES, spaceSchema, type Space, type SpaceModule } from "@/lib/spaces/model";
 import "./spaces.css";
+import { SpacePreviewDock } from "./SpacePreviewDock";
 import { ZipReceiver } from "./ZipReceiver";
 
 export function SpaceEditor({ projectId }: { projectId: string }) {
   const [space, setSpace] = useState<Space>(EMPTY_SPACE);
   const [revision, setRevision] = useState(0);
   const [name, setName] = useState(projectId);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "canvas">("canvas");
   const [zoom, setZoom] = useState(1);
@@ -31,7 +33,7 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
         const [a, b] = await Promise.all([fetch(`/api/projects/${encodeURIComponent(projectId)}/space`, { cache: "no-store" }), fetch(`/api/projects/${encodeURIComponent(projectId)}`, { cache: "no-store" })]);
         const data = await a.json(); const project = await b.json();
         if (!a.ok || !b.ok) throw new Error(data.error || project.error || "No se pudo abrir el proyecto");
-        if (active) { setSpace(data.document); setRevision(data.revision); setName(project.project.name); setLoaded(true); }
+        if (active) { setSpace(data.document); setRevision(data.revision); setName(project.project.name); setPreviewUrl(project.project.domain || project.project.vercel_url || null); setLoaded(true); }
       } catch (e) { if (active) setError(e instanceof Error ? e.message : "Error de conexión"); }
       finally { if (active) setLoading(false); }
     }
@@ -127,11 +129,11 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
           {view === "list" ? <div className="space-list">{space.modules.map(m => <button key={m.id} className="space-card" aria-pressed={selected === m.id} onClick={() => setSelected(m.id)}><small>{KINDS[m.kind]} · {STATUSES[m.status]}</small><strong>{m.title}</strong><span>{m.responsible || "Sin asignar"}</span><small>{m.dependsOn.length} dependencias</small></button>)}</div> : <div className="space-scroll"><div style={{ width: width * zoom, height: height * zoom }}><div className="space-plane" style={{ width, height, transform: `scale(${zoom})` }}>
             <svg width={width} height={height} aria-hidden="true">{space.modules.flatMap(m => m.dependsOn.map(id => { const source = space.modules.find(n => n.id === id); return source ? <path key={`${id}-${m.id}`} d={`M ${source.x + 240} ${source.y + 60} C ${source.x + 280} ${source.y + 60}, ${m.x - 40} ${m.y + 60}, ${m.x} ${m.y + 60}`} fill="none" stroke="currentColor" strokeWidth="2" /> : null; }))}</svg>
             {linkSource && <div className="space-link-hint" role="status">Conectando desde {space.modules.find(m => m.id === linkSource)?.title}. Pulsa la entrada del módulo destino. <button type="button" onClick={() => setLinkSource(null)}>Cancelar</button></div>}
-            {space.modules.map(m => <article key={m.id} className={`space-node ${m.kind === "zip_receiver" ? "space-node-zip" : ""}`} style={{ left: m.x, top: m.y }}><button disabled={busy} className="space-drag" aria-label={`Mover ${m.title}`} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); drag.current = { id: m.id, x: e.clientX, y: e.clientY, originX: m.x, originY: m.y }; }} onPointerMove={e => { const d = drag.current; if (d?.id === m.id) update(m.id, { x: Math.min(20000, Math.max(0, d.originX + (e.clientX - d.x) / zoom)), y: Math.min(20000, Math.max(0, d.originY + (e.clientY - d.y) / zoom)) }); }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}>⠿ Mover</button><button type="button" className="space-port space-port-in" title={`Conectar entrada de ${m.title}`} aria-label={`Conectar entrada de ${m.title}`} onClick={() => linkSource ? connect(linkSource,m.id) : setError("Selecciona primero la salida de un módulo.")}>●</button><button className="space-card" aria-pressed={selected === m.id} onClick={() => setSelected(m.id)}><small>{KINDS[m.kind]}</small><strong>{m.title}</strong><span>{STATUSES[m.status]}</span></button><button type="button" className="space-port space-port-out" title={`Iniciar conexión desde ${m.title}`} aria-label={`Iniciar conexión desde ${m.title}`} onClick={() => {setLinkSource(m.id);setError("");}}>●</button></article>)}
+            {space.modules.map(m => <article key={m.id} className={`space-node ${m.kind === "zip_receiver" ? "space-node-zip" : ""}`} style={{ left: m.x, top: m.y }} onPointerDown={e => { if ((e.target as HTMLElement).closest(".space-port")) return; e.currentTarget.setPointerCapture(e.pointerId); drag.current = { id: m.id, x: e.clientX, y: e.clientY, originX: m.x, originY: m.y }; }} onPointerMove={e => { const d = drag.current; if (d?.id === m.id) update(m.id, { x: Math.min(20000, Math.max(0, d.originX + (e.clientX - d.x) / zoom)), y: Math.min(20000, Math.max(0, d.originY + (e.clientY - d.y) / zoom)) }); }} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}><button type="button" className="space-port space-port-in" title={`Conectar entrada de ${m.title}`} aria-label={`Conectar entrada de ${m.title}`} onClick={() => linkSource ? connect(linkSource,m.id) : setError("Selecciona primero la salida de un módulo.")}>●</button><button className="space-card" aria-pressed={selected === m.id} onClick={() => setSelected(m.id)}><small>{KINDS[m.kind]}</small><strong>{m.title}</strong><span>{STATUSES[m.status]}</span></button><button type="button" className="space-port space-port-out" title={`Iniciar conexión desde ${m.title}`} aria-label={`Iniciar conexión desde ${m.title}`} onClick={() => {setLinkSource(m.id);setError("");}}>●</button></article>)}
           </div></div></div>}
         </div>
         {current && <aside className="space-inspector"><div className="space-toolbar"><h2>Editar módulo</h2><button onClick={() => setSelected(null)} aria-label="Cerrar editor">×</button></div><fieldset disabled={busy}>
-          {current.kind === "zip_receiver" && <ZipReceiver onManifest={manifest => update(current.id, { result: JSON.stringify(manifest, null, 2), status: "review" })} />}
+          {current.kind === "zip_receiver" && <ZipReceiver projectId={projectId} onManifest={manifest => update(current.id, { result: JSON.stringify(manifest, null, 2), evidence: `blob:${manifest.blobPathname || ""} sha256:${manifest.sha256}`, status: "review" })} />}
           <label>Nombre<input value={current.title} maxLength={120} onChange={e => update(current.id, { title: e.target.value })} /></label>
           <label>Responsable<input value={current.responsible} maxLength={200} placeholder="Persona o agente asignado" onChange={e => update(current.id, { responsible: e.target.value })} /></label>
           <label>Estado<select value={current.status} onChange={e => update(current.id, { status: e.target.value as SpaceModule["status"] })}>{Object.entries(STATUSES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
@@ -144,6 +146,7 @@ export function SpaceEditor({ projectId }: { projectId: string }) {
           <button onClick={() => { void navigator.clipboard.writeText(`Proyecto: ${name}\nMódulo: ${current.id}\nContexto: ${space.context}\nEncargo: ${current.prompt}\nDevuelve resultado y evidencia para revisión.`).then(() => setSaved("Encargo copiado"), () => setError("No se pudo copiar; selecciona la instrucción manualmente")); }}>Copiar encargo</button>
         </fieldset></aside>}
       </div>
+      <SpacePreviewDock projectId={projectId} previewUrl={previewUrl} />
     </> : <p>No se cargó el Space. Recarga la página para volver a intentar.</p>}
   </section>;
 }
