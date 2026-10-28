@@ -363,3 +363,17 @@
   stroke-linecap:round!important;
 }
 .vf-space .space-node{z-index:2!important}
+
+/* Selected sphere is obvious */
+.vf-space .space-node .space-card[aria-pressed="true"]{
+  outline:3px solid #2f7de1!important;
+  outline-offset:5px!important;
+}
+.vf-space .space-inspector{
+  position:sticky;
+  top:12px;
+  max-height:calc(100dvh - 120px);
+  overflow:auto;
+  background:#fff;
+  z-index:6;
+}
