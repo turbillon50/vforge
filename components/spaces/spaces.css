@@ -154,3 +154,57 @@
   fill:none;
   stroke-linecap:round;
 }
+
+/* Force every module to be a sphere (Make-style) */
+.vf-space .space-node .space-card{
+  width:132px!important;
+  height:132px!important;
+  min-height:132px!important;
+  border-radius:50%!important;
+  display:flex!important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:10px!important;
+  background:radial-gradient(circle at 32% 28%,#ffffff 0%,#f4f7fb 45%,#e4ecf5 100%)!important;
+  border:3px solid #c9d6e8!important;
+  box-shadow:0 6px 20px #0a183318, inset 0 1px 0 #ffffff!important;
+  color:#1c2d44!important;
+}
+.vf-space .space-node .space-card strong{
+  font-size:12.5px!important;
+  font-weight:650!important;
+  max-width:100px;
+  line-height:1.2;
+  margin-top:2px;
+}
+.vf-space .space-node .space-card small{
+  font-size:9px!important;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:#7a8ca3!important;
+  margin-bottom:2px;
+}
+.vf-space .space-node .space-card span{
+  font-size:10px!important;
+  color:#5a6f88!important;
+  margin-top:4px;
+}
+
+/* ZIP sphere remains the accent */
+.vf-space .space-node-zip .space-card{
+  background:radial-gradient(circle at 30% 22%,#b8e8ff,#3a7ae0 50%,#1a3a6e 100%)!important;
+  border:4px solid #c5e4ff!important;
+  color:#fff!important;
+  box-shadow:0 10px 28px #1e5ac84a, inset 0 0 16px #ffffff55!important;
+}
+.vf-space .space-node-zip .space-card *{color:#fff!important}
+
+/* Connection line style closer to Make */
+.vf-space .space-plane svg path{
+  stroke:#9bb4d4;
+  stroke-width:2;
+  stroke-dasharray:0;
+  fill:none;
+}
