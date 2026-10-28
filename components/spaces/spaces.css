@@ -208,3 +208,53 @@
   stroke-dasharray:0;
   fill:none;
 }
+/* Make-style spheres for ALL modules */
+.vf-space .space-node{
+  width:180px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+}
+.vf-space .space-node .space-card{
+  width:140px!important;
+  height:140px!important;
+  min-height:140px!important;
+  border-radius:50%!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  padding:8px!important;
+  background:radial-gradient(circle at 35% 30%,#ffffff 0%,#f5f8fc 40%,#e6eef6 100%)!important;
+  border:3px solid #c8d5e6!important;
+  box-shadow:0 8px 22px rgba(10,24,51,.12), inset 0 1px 0 #fff!important;
+  color:#1a2b42!important;
+  overflow:hidden;
+}
+.vf-space .space-node .space-card strong{
+  font-size:12px!important;
+  font-weight:650!important;
+  max-width:96px;
+  line-height:1.15;
+}
+.vf-space .space-node .space-card small{
+  font-size:8.5px!important;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#7d90a6!important;
+}
+.vf-space .space-node .space-card span{
+  font-size:9.5px!important;
+  color:#5c7088!important;
+  margin-top:2px;
+}
+
+/* ZIP accent sphere */
+.vf-space .space-node-zip .space-card{
+  background:radial-gradient(circle at 32% 24%,#b9e9ff,#3b7de3 48%,#1a3d72 100%)!important;
+  border:4px solid #c8e6ff!important;
+  color:#fff!important;
+  box-shadow:0 10px 28px rgba(30,90,200,.28), inset 0 0 14px rgba(255,255,255,.35)!important;
+}
+.vf-space .space-node-zip .space-card *{color:#fff!important}
