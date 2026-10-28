@@ -258,3 +258,11 @@
   box-shadow:0 10px 28px rgba(30,90,200,.28), inset 0 0 14px rgba(255,255,255,.35)!important;
 }
 .vf-space .space-node-zip .space-card *{color:#fff!important}
+
+/* Clean connection line */
+.vf-space .space-plane svg path{
+  stroke:#6b9bd4!important;
+  stroke-width:2.5!important;
+  fill:none!important;
+  stroke-linecap:round!important;
+}
