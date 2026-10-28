@@ -16,7 +16,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         if (!identity) throw new Error("not_authorized");
         return {
           allowedContentTypes: ["application/zip", "application/octet-stream", "application/x-zip-compressed"],
-          maximumSizeInBytes: 200 * 1024 * 1024,
+          maximumSizeInBytes: 500 * 1024 * 1024,
           addRandomSuffix: false,
           tokenPayload: projectId,
         };

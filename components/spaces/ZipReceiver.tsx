@@ -32,7 +32,7 @@ export function ZipReceiver({ onManifest, projectId }: { onManifest: (m: ZipMani
     if (!picked) return;
     setBusy(true); setError("");
     try {
-      if (picked.size > 200_000_000) throw Error("Pasa de 200 MB.");
+      if (picked.size > 500_000_000) throw Error("Pasa de 500 MB.");
       if (!picked.name.toLowerCase().endsWith(".zip")) throw Error("Tiene que ser un archivo .zip");
       const safe = picked.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
       const blob = await upload(`spaces/${projectId}/zips/${Date.now()}-${safe}`, picked, {
