@@ -422,3 +422,8 @@
 .vf-space .space-preview-body{padding:12px;background:#e7e2da}
 .vf-space .space-frame-desk{width:100%;min-height:560px}
 .vf-space .space-frame-desk .space-frame-screen{min-height:480px}
+
+.vf-space .space-plane svg .space-link-hit{pointer-events:stroke!important;cursor:pointer}
+.vf-space .space-node .space-port{width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;background:#2f7de1!important;border:2px solid #fff!important}
+.vf-space .space-links{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid #d7d2ca;border-radius:10px;background:#f7f4ef}
+.vf-space .space-links button{text-align:left}
