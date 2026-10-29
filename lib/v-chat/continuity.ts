@@ -2,9 +2,10 @@
 export interface ChatTurn { role: "user" | "assistant"; content: string }
 export interface MemorySource {
   id: string;
-  source: "personal" | "historical" | "conversation";
+  source: "personal" | "historical" | "conversation" | "archive";
   at: string;
   content: string;
+  ref?: { type: string; id: string; author: string | null; metadata: Record<string, unknown> };
 }
 export interface MemoryContext { sources: MemorySource[]; status: "available" | "partial" | "unavailable" }
 export interface VProvider {
@@ -34,7 +35,7 @@ export function memorySearch(query: string): string {
 }
 
 export function selectVMemory(memory: MemoryContext): MemoryContext {
-  const budgets = { personal: 4000, historical: 8000, conversation: 2000 };
+  const budgets = { personal: 3000, historical: 3000, conversation: 2000, archive: 6000 };
   const sources = memory.sources.flatMap((source) => {
     const content = source.content.slice(0, Math.min(1800, budgets[source.source]));
     budgets[source.source] -= content.length;
@@ -67,7 +68,8 @@ export async function inferV(input: {
 }): Promise<{ reply: string; model: string }> {
   const asksForLiveOperation = /(?:puedes|podr[ií]as|quiero|necesito|ejecuta|consulta|revisa|inspecciona|comprueba|obt[eé]n|lee|muestra|ver)\b[\s\S]{0,140}\b(?:servidor|hetzner|hertzner|infraestructura|secrets?|vercel|neon|github|shell|terminal|despliegue|boot-context)/i.test(input.message);
   const asksForExplanation = /^(?:explica|analiza este|analiza el|compara|resume|traduce|redacta|escribe un ejemplo|qu[eé] significa)/i.test(input.message.trim());
-  if (asksForLiveOperation && !asksForExplanation) return {
+  const asksAboutArchive = /recuerd|memorias|hist[oó]ric|historia|enseñanzas|aprendimos|hablamos|nacimiento|mantras|semilla/i.test(input.message);
+  if (asksForLiveOperation && !asksForExplanation && !asksAboutArchive) return {
     reply: "Esta solicitud necesita una herramienta de infraestructura con acceso autorizado. En esta respuesta puedo conversar y usar los recuerdos recuperados, pero no realizar peticiones HTTP, leer archivos del servidor ni cambiar su configuración. No he ejecutado esa inspección. Hay que realizarla mediante el conector autorizado y contrastar su resultado real.",
     model: "v-capability-boundary",
   };
