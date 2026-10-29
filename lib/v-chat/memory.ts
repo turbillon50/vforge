@@ -47,6 +47,7 @@ export async function loadVMemory(message: string, personalUserId?: string): Pro
   const successful = results.filter((r) => r.status === "fulfilled");
   return {
     status: successful.length === results.length ? "available" : successful.length ? "partial" : "unavailable",
-    sources: results.flatMap((r) => r.status === "fulfilled" ? r.value : []),
+    sources: (results[0].status === "fulfilled" ? results.slice(0, 2) : results.slice(1))
+      .flatMap((r) => r.status === "fulfilled" ? r.value : []),
   };
 }
