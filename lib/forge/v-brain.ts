@@ -1,3 +1,4 @@
+import { originIdentitySection } from "@/lib/v-chat/origin-identity";
 /** V: identity + historical memory + interchangeable Cerebras/Mesh inference.
  * callHetznerClaude remains only for legacy callers outside V's private chat.
  */
@@ -77,7 +78,7 @@ export async function answerV(
   });
   if (process.env.V_CHAT_ENGINE === "mesh") providers.sort((a) => a.name === "mesh" ? -1 : 1);
   const result = await inferV({
-    system: `${options.voice ? V_VOICE_SYSTEM_PROMPT : V_TEXT_SYSTEM_PROMPT}\n\n${memorySection(memory)}`,
+    system: `${options.voice ? V_VOICE_SYSTEM_PROMPT : V_TEXT_SYSTEM_PROMPT}\n\n${originIdentitySection()}\n\n${memorySection(memory)}`,
     message, history, providers, voice: options.voice,
   });
   return {
