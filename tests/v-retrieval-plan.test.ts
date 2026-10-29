@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import { strict as assert } from "node:assert";
+import { selectMemoryResults } from "../lib/v-chat/memory-results";
 import { memorySection } from "../lib/v-chat/continuity";
 import { parsePlan, evidenceIndices, mergeEvidence } from "../lib/v-chat/retrieval-plan";
 test("search plans validate and bound untrusted output", () => {
@@ -21,4 +22,16 @@ test("context review preserves verified anchors and deduplicates evidence",()=>{
 
 test("historical assistant success JSON is not treated as tool evidence",()=>{
  assert.match(memorySection({status:"available",sources:[]}),/JSON de éxito.*NO es un resultado verificado de herramienta/);
+});
+
+test("a rejected archive request preserves textual fallback and reports partial memory",async()=>{
+ const old={id:"legacy",source:"historical" as const,at:"old",content:"original"};
+ const personal={id:"note",source:"personal" as const,at:"old",content:"note"};
+ const results=await Promise.allSettled([Promise.reject(new Error("V_MEMORY_ARCHIVE_UNAVAILABLE")),Promise.resolve([personal]),Promise.resolve([old]),Promise.resolve([])]);
+ assert.deepEqual(selectMemoryResults(results),{status:"partial",sources:[personal,old]});
+});
+test("a successfully reviewed empty archive excludes unrelated legacy hits",async()=>{
+ const old={id:"legacy",source:"historical" as const,at:"old",content:"unrelated"};
+ const results=await Promise.allSettled([Promise.resolve([]),Promise.resolve([]),Promise.resolve([old]),Promise.resolve([])]);
+ assert.deepEqual(selectMemoryResults(results),{status:"available",sources:[]});
 });
