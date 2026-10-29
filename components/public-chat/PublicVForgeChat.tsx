@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUp,
@@ -608,12 +609,12 @@ export function PublicVForgeChat() {
                 Puedes conversar sin registro. Cuando toque conectar pagos, proyectos privados o deploys,
                 esta zona abre el acceso de cuenta.
               </p>
-              <a
+              <Link
                 href="/sign-in?redirect_url=/app/chat"
                 className="mt-4 flex h-12 items-center justify-center rounded-full bg-white text-sm font-semibold text-black"
               >
                 Entrar
-              </a>
+              </Link>
             </div>
           </aside>
         </div>
