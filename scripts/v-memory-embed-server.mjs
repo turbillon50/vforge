@@ -25,8 +25,10 @@ const server = http.createServer(async (req, res) => {
     let data;
     try { data = JSON.parse(body); } catch { return send(400, { error: 'invalid_json' }); }
     if (typeof data.text !== 'string' || !data.text.trim() || data.text.length > 2000) return send(400, { error: 'invalid_text' });
-    for (let attempt = 0; attempt < config.EMBED_ENDPOINTS.length; attempt++) {
-      const endpoint = config.EMBED_ENDPOINTS[cursor++ % config.EMBED_ENDPOINTS.length];
+    const start = cursor++;
+    const candidates = config.EMBED_ENDPOINTS.map((_, i) => config.EMBED_ENDPOINTS[(start + i) % config.EMBED_ENDPOINTS.length]);
+    if (config.FALLBACK_EMBED_ENDPOINT) candidates.push(config.FALLBACK_EMBED_ENDPOINT);
+    for (const endpoint of candidates) {
       try {
         await verifyEndpoint(endpoint);
         const [vector] = await embed(endpoint, [data.text], true);

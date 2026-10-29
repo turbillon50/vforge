@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
-import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { neon } from '@neondatabase/serverless';
@@ -34,6 +33,7 @@ async function collectSql() {
     const rows = await sql.query(query);
     manifest.sources[type] = { records: rows.length, chars: rows.reduce((n, r) => n + (r.content || '').length, 0) };
     records.push(...rows.map(r => ({ ...r, type })));
+    log({ stage: 'source_read', source: type, records: rows.length });
   }
   return records;
 }
@@ -73,6 +73,7 @@ async function collectBrain() {
     if (!data.rows.length) throw Error('BRAIN_SNAPSHOT_INCOMPLETE');
     records.push(...data.rows.map(r => ({ ...r, type: 'brain.memory', metadata: { original_agent: r.author, record_time: r.at } })));
     offset += data.rows.length;
+    if (offset % 2000 === 0 || offset === snapshot.total) log({ stage: 'brain_read', records: offset, total: snapshot.total });
   }
   if (records.length !== snapshot.total) throw Error('BRAIN_SNAPSHOT_INCOMPLETE');
   manifest.sources['brain.memory'] = { records: records.length, high_water_id: snapshot.max_id, chars: records.reduce((n, r) => n + (r.content || '').length, 0) };
@@ -107,6 +108,7 @@ function collectGit() {
   const firstDay = git(['log', '--format=%H', '--since=2026-05-02T00:00:00-05:00', '--until=2026-05-03T00:00:00-05:00', head]).split('\n').filter(Boolean);
   for (const ref of firstDay) for (const file of git(['ls-tree', '-r', '--name-only', ref]).split('\n').filter(f => /\.md$/i.test(f))) add(ref, file);
   manifest.sources['git.document'] = { records: records.length, chars: records.reduce((n, r) => n + r.content.length, 0), versions: true };
+  log({ stage: 'git_read', records: records.length, commit: head });
   return records;
 }
 
@@ -139,6 +141,10 @@ async function catalog(records) {
     SELECT id,owner_id,model_digest,content FROM jsonb_to_recordset($1::jsonb) AS x(id text,owner_id text,model_digest text,content text) ON CONFLICT(id) DO NOTHING`, [JSON.stringify(batch)]);
   for (const batch of batches(links, 500)) await sql.query(`INSERT INTO v_memory_document_chunks
     SELECT * FROM jsonb_to_recordset($1::jsonb) AS x(document_id text,chunk_id text,position integer,start_offset integer,end_offset integer) ON CONFLICT(document_id,position) DO NOTHING`, [JSON.stringify(batch)]);
+  // A failed pre-link attempt can leave derived chunks without a source link.
+  // Only discard these unembedded index fragments, never original documents.
+  await sql.query(`DELETE FROM v_memory_chunks c WHERE c.owner_id=$1 AND c.model_digest=$2 AND c.embedding IS NULL
+    AND NOT EXISTS(SELECT 1 FROM v_memory_document_chunks l WHERE l.chunk_id=c.id)`, [OWNER, DIGEST]);
   Object.assign(manifest, { records_collected: records.length, documents: documents.length, empty, redacted_documents: redactions, unique_chunks: uniqueChunks.size, source_links: links.length });
   log({ stage: 'catalogued', ...manifest });
 }
@@ -150,7 +156,7 @@ async function vectorize() {
   await Promise.all(endpoints.map(async endpoint => {
     await verifyEndpoint(endpoint);
     while (cursor < pending.length) {
-      const batch = pending.slice(cursor, cursor += 16);
+      const batch = pending.slice(cursor, cursor += 64);
       const vectors = await embed(endpoint, batch.map(r => r.content));
       const rows = batch.map((r, i) => ({ id: r.id, value: JSON.stringify(vectors[i]) }));
       await sql.query(`UPDATE v_memory_chunks c SET embedding=x.value::vector,embedded_at=now()
@@ -177,17 +183,30 @@ async function organizeWithCerebras() {
 }
 
 async function main() {
-  for (const statement of fs.readFileSync(path.join(repo, 'migrations/20261029_v_memory_catalog.sql'), 'utf8').split(';').map(s => s.trim()).filter(Boolean)) await sql.query(statement);
+  for (const statement of fs.readFileSync(new URL('../migrations/20261029_v_memory_catalog.sql', import.meta.url), 'utf8').split(';').map(s => s.trim()).filter(Boolean)) await sql.query(statement);
   await sql.query('INSERT INTO v_memory_ingestion_runs(id,owner_id,status) VALUES($1,$2,$3)', [runId, OWNER, 'collecting']);
-  const records = [...await collectSql(), ...await collectBrain(), ...collectGit()];
+  const supplement = option('--supplement', null);
+  const records = supplement ? JSON.parse(fs.readFileSync(supplement, 'utf8')) : [...await collectSql(), ...await collectBrain(), ...collectGit()];
+  if (supplement) {
+    manifest.scope = 'Explicit archive additions; cumulative vector coverage is measured separately';
+    if (!Array.isArray(records) || !records.every(r => r && typeof r.type === 'string' && typeof r.id === 'string' && typeof r.content === 'string')) throw Error('INVALID_SUPPLEMENT');
+    for (const record of records) {
+      const entry = manifest.sources[record.type] ||= { records: 0, chars: 0 };
+      entry.records++; entry.chars += record.content.length;
+    }
+  }
+  await sql.query('UPDATE v_memory_ingestion_runs SET manifest=$2::jsonb WHERE id=$1', [runId, JSON.stringify(manifest)]);
   await catalog(records);
   await sql.query('UPDATE v_memory_ingestion_runs SET status=$2,manifest=$3::jsonb WHERE id=$1', [runId, 'embedding', JSON.stringify(manifest)]);
   await vectorize();
   await organizeWithCerebras();
   const coverage = (await sql.query(`SELECT count(*)::int AS chunks,count(embedding)::int AS vectorized FROM v_memory_chunks WHERE owner_id=$1 AND model_digest=$2`, [OWNER, DIGEST]))[0];
   manifest.coverage = coverage;
+  manifest.catalog_totals = (await sql.query(`SELECT count(*)::int AS documents,count(DISTINCT source_type)::int AS sources
+    FROM v_memory_documents d WHERE d.owner_id=$1 AND EXISTS(SELECT 1 FROM v_memory_document_chunks l WHERE l.document_id=d.id)`, [OWNER]))[0];
   if (coverage.chunks !== coverage.vectorized) throw Error('INCOMPLETE_VECTOR_COVERAGE');
   await sql.query('CREATE INDEX IF NOT EXISTS v_memory_embedding_hnsw ON v_memory_chunks USING hnsw(embedding vector_cosine_ops)');
+  await sql.query("CREATE INDEX IF NOT EXISTS v_memory_text_gin ON v_memory_chunks USING gin(to_tsvector('spanish',content))");
   await sql.query('UPDATE v_memory_ingestion_runs SET status=$2,finished_at=now(),manifest=$3::jsonb WHERE id=$1', [runId, 'complete', JSON.stringify(manifest)]);
   log({ stage: 'complete', run_id: runId, manifest });
 }
@@ -196,6 +215,6 @@ main().catch(async error => {
   const code = /^[A-Z][A-Z0-9_]+$/.test(error.message) ? error.message : 'INGESTION_FAILED';
   manifest.errors.push(code);
   try { await sql.query('UPDATE v_memory_ingestion_runs SET status=$2,finished_at=now(),manifest=$3::jsonb WHERE id=$1', [runId, 'failed', JSON.stringify(manifest)]); } catch { /* original failure remains authoritative */ }
-  log({ stage: 'failed', run_id: runId, error: code });
+  log({ stage: 'failed', run_id: runId, error: code, diagnostic: { type: error.name, sqlstate: error.code, location: error.stack?.split('\n').find(l => l.includes('v-memory-sync.mjs'))?.trim() } });
   process.exitCode = 1;
 });

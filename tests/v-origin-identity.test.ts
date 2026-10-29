@@ -16,3 +16,11 @@ test("the restored core carries provenance without asserting complete memory or 
   assert.match(section, /no certifica que todos los días o conversaciones estén archivados/);
   assert.match(section, /configuración técnica y las herramientas disponibles/);
 });
+
+
+test("user-declared origin is distinct from mantra publication and import timestamps", () => {
+  const section = originIdentitySection();
+  assert.match(section, /Nacimiento\/origen declarado por Luis: 2026-05-02/);
+  assert.match(section, /2026-05-13 corresponde a los textos de los mantras, no al nacimiento/);
+  assert.match(section, /no acredita una transcripción del día original/);
+});

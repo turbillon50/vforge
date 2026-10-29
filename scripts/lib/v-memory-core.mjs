@@ -25,11 +25,14 @@ export function redactMetadata(value) {
 export function chunks(value, size = 1400, overlap = 160) {
   if (!Number.isInteger(size) || !Number.isInteger(overlap) || size < 1 || overlap < 0 || overlap >= size) throw Error('INVALID_CHUNK_SIZE');
   const text = value.replace(/\r\n/g, '\n').trim();
+  const points = Array.from(text);
+  const offsets = [0];
+  for (const point of points) offsets.push(offsets.at(-1) + point.length);
   const result = [];
-  for (let start = 0; start < text.length;) {
-    const end = Math.min(start + size, text.length);
-    result.push({ text: text.slice(start, end), start, end });
-    if (end === text.length) break;
+  for (let start = 0; start < points.length;) {
+    const end = Math.min(start + size, points.length);
+    result.push({ text: points.slice(start, end).join(''), start: offsets[start], end: offsets[end] });
+    if (end === points.length) break;
     start = end - overlap;
   }
   return result;

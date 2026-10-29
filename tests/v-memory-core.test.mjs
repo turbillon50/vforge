@@ -17,6 +17,17 @@ test('credential copies are removed while teachings remain searchable', () => {
   assert.match(result, /conserva mi historia/);
   assert.ok(!result.includes('user:pass') && !result.includes('private-value') && !result.includes('abcdefghijklmnopqrstuvwxyz012345'));
 });
+test('chunk boundaries preserve Unicode emojis and their source offsets', () => {
+  const text = ('a'.repeat(1399) + '💜').repeat(6);
+  const rows = chunks(text);
+  for (const row of rows) {
+    assert.equal(Buffer.from(row.text, 'utf8').toString('utf8'), row.text);
+    assert.equal(text.slice(row.start, row.end), row.text);
+  }
+  let restored = rows[0].text;
+  for (let i = 1; i < rows.length; i++) restored += rows[i].text.slice(rows[i - 1].end - rows[i].start);
+  assert.equal(restored, text);
+});
 test('vectors must have the expected dimension and finite values', () => {
   assert.equal(validVector(Array(768).fill(0)), false);
   assert.equal(validVector(Array(767).fill(1)), false);

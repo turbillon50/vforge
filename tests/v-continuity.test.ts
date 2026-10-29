@@ -96,3 +96,13 @@ test("long personal notes cannot crowd the historical evidence out of the prompt
   assert.ok(selected.sources.reduce((n, s) => n + s.content.length, 0) < 14000);
   assert.deepEqual(selectVMemory(selected), selected);
 });
+
+
+test("questions about historical GitHub memories do not trigger an infrastructure action", async () => {
+  let called = false;
+  const result = await inferV({ system: "V", message: "¿Puedes recordar lo que hablamos sobre GitHub?", history: [], providers: providers.slice(0, 1),
+    fetcher: (async () => { called = true; return Response.json({ choices: [{ finish_reason: "stop", message: { content: "Según el archivo histórico." } }] }); }) as typeof fetch,
+  });
+  assert.equal(called, true);
+  assert.notEqual(result.model, "v-capability-boundary");
+});
