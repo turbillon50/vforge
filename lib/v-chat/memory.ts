@@ -1,10 +1,12 @@
 import { queryAll } from "@/lib/db/client";
 import { memorySearch, type MemoryContext, type MemorySource } from "./continuity";
+import { loadVectorMemory } from "./vector-memory";
 
 /** Read the original records in place. No backfill, rewriting or synthetic embeddings. */
 export async function loadVMemory(message: string, personalUserId?: string): Promise<MemoryContext> {
   const search = memorySearch(message);
   const queries: Array<Promise<MemorySource[]>> = [
+    loadVectorMemory(message),
     personalUserId ? queryAll<MemorySource>(
       `SELECT id::text, 'personal' AS source, updated_at::text AS at,
               key || ': ' || value AS content

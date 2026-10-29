@@ -1,0 +1,19 @@
+[Unit]
+Description=V memory query embeddings (verified GPU model, authenticated)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/agents/v-memory
+ExecStart=/root/.nvm/versions/node/v20.20.2/bin/node /root/agents/v-memory/scripts/v-memory-embed-server.mjs /etc/vl-secrets/v-memory-embed.json
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target

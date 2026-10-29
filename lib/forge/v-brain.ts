@@ -83,7 +83,7 @@ export async function answerV(
   });
   return {
     ...result,
-    memory: { status: memory.status, sources: memory.sources.map(({ id, source, at }) => ({ id, source, at })) },
+    memory: { status: memory.status, sources: memory.sources.map(({ id, source, at, ref }) => ({ id, source, at, ...(ref ? { ref } : {}) })) },
   };
 }
 
