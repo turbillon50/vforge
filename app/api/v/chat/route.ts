@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { voiceBrain, textBrain, type ChatTurn } from "@/lib/forge/v-brain";
+import { retrieveVHistoricalContext } from "@/lib/forge/v-historical-memory";
 import { persistVTurn, getVMessages } from "@/lib/v-chat/store";
 import { matchPlugins } from "@/lib/v/plugins/registry";
 import { runMatchedPlugins } from "@/lib/v/plugins/runner";
@@ -106,7 +107,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const reply = await textBrain(message, contextHistory);
+    const historicalContext = await retrieveVHistoricalContext(message);
+    const enrichedMessage = historicalContext ? `${historicalContext}\n\nMENSAJE ACTUAL DE LUIS:\n${message}` : message;
+    const reply = await textBrain(enrichedMessage, contextHistory);
 
     if (persistable && reply.trim()) {
       await persistVTurn({
