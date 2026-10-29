@@ -330,7 +330,7 @@ function Stat({
 
 /* ─── Componentes adicionales ─────────────────────────────────────── */
 
-export function AddSecretModal({ onClose, onSaved, token }: {
+function AddSecretModal({ onClose, onSaved, token }: {
   onClose: () => void;
   onSaved: () => void;
   token: string;
