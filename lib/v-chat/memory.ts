@@ -1,5 +1,6 @@
 import { queryAll } from "@/lib/db/client";
 import { memorySearch, type MemoryContext, type MemorySource } from "./continuity";
+import { selectMemoryResults } from "./memory-results";
 import { loadVectorMemory } from "./vector-memory";
 
 /** Read the original records in place. No backfill, rewriting or synthetic embeddings. */
@@ -44,9 +45,5 @@ export async function loadVMemory(message: string, personalUserId?: string): Pro
     ),
   ];
   const results = await Promise.allSettled(queries);
-  const successful = results.filter((r) => r.status === "fulfilled");
-  return {
-    status: successful.length === results.length ? "available" : successful.length ? "partial" : "unavailable",
-    sources: results.flatMap((r) => r.status === "fulfilled" ? r.value : []),
-  };
+  return selectMemoryResults(results);
 }

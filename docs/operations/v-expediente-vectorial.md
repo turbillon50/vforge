@@ -69,3 +69,9 @@ Retirar las dos variables nuevas desactiva la consulta vectorial conservando el
 fallback textual. Detener sólo v-memory-embed y retirar su include Nginx revierte
 el servicio. Conservar las tablas de índice y originales; no ejecutar DROP ni
 restaurar una copia antigua sobre conversaciones nuevas.
+
+## Relevancia y contexto de la conversación
+
+Cerebras expande la intención de búsqueda sin proponer respuestas y selecciona evidencia literal entre candidatos híbridos. Las citas de selección deben existir en el contenido; índices inexistentes y citas inventadas se descartan. Los mensajes pertinentes de `conversations` permiten recuperar mensajes de la misma sesión hasta tres minutos antes/después y revisar su relevancia de nuevo. Esto permite relacionar una prueba de continuidad con su respuesta corta posterior. Los datos del archivo se tratan como citas, nunca como instrucciones.
+
+Una búsqueda del archivo revisada con éxito sustituye los candidatos léxicos antiguos para evitar ruido duplicado; las notas personales se conservan. Si falla el servicio de revisión, se conserva la recuperación antigua y se informa memoria parcial. La selección sigue siendo probabilística: una cita existente no garantiza por sí sola que una interpretación sea correcta. El sistema no certifica que un recuerdo ausente jamás haya existido.
