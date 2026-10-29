@@ -14,6 +14,7 @@ import {
 interface Message {
   role: "user" | "assistant";
   content: string;
+  model?: string | null;
 }
 
 interface SessionRow {
@@ -93,7 +94,7 @@ export default function VChatPage() {
       const hist: Message[] = Array.isArray(data?.messages)
         ? data.messages
             .filter((m: Message) => m && (m.role === "user" || m.role === "assistant"))
-            .map((m: Message) => ({ role: m.role, content: m.content }))
+            .map((m: Message) => ({ role: m.role, content: m.content, model: typeof m.model === "string" ? m.model : null }))
         : [];
       // Sólo mostramos this session's turns; si está vacío, el saludo de V.
       setMessages(hist.length ? hist : [INTRO]);
@@ -204,7 +205,7 @@ export default function VChatPage() {
         setNotice(data.error || "No pude confirmar el guardado. Reintenta el envío.");
         return;
       }
-      setMessages([...newMessages, { role: "assistant", content: data.reply }]);
+      setMessages([...newMessages, { role: "assistant", content: data.reply, model: typeof data.model === "string" ? data.model : null }]);
       pendingRef.current = null;
       setNotice(data.memory?.status === "partial" || data.memory?.status === "unavailable"
         ? "Conversación guardada. Parte de la memoria histórica no estuvo disponible."
@@ -295,6 +296,11 @@ export default function VChatPage() {
                     }`}
                   >
                     {msg.content}
+                    {msg.role === "assistant" && msg.model && (
+                      <p className="mt-2 border-t border-[var(--border-1)] pt-2 text-xs text-muted-foreground">
+                        {msg.model === "v-plugin" ? "Respuesta de herramienta" : msg.model === "v-capability-boundary" ? "Aviso de capacidades" : `Motor reportado: ${msg.model.replace(":", " · ")}`}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))

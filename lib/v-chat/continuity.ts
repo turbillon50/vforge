@@ -65,6 +65,12 @@ export async function inferV(input: {
   voice?: boolean;
   fetcher?: typeof fetch;
 }): Promise<{ reply: string; model: string }> {
+  const asksForLiveOperation = /(?:puedes|podr[ií]as|quiero|necesito|ejecuta|consulta|revisa|inspecciona|comprueba|obt[eé]n|lee|muestra|ver)\b[\s\S]{0,140}\b(?:servidor|hetzner|hertzner|infraestructura|secrets?|vercel|neon|github|shell|terminal|despliegue|boot-context)/i.test(input.message);
+  const asksForExplanation = /^(?:explica|analiza este|analiza el|compara|resume|traduce|redacta|escribe un ejemplo|qu[eé] significa)/i.test(input.message.trim());
+  if (asksForLiveOperation && !asksForExplanation) return {
+    reply: "Esta solicitud necesita una herramienta de infraestructura con acceso autorizado. En esta respuesta puedo conversar y usar los recuerdos recuperados, pero no realizar peticiones HTTP, leer archivos del servidor ni cambiar su configuración. No he ejecutado esa inspección. Hay que realizarla mediante el conector autorizado y contrastar su resultado real.",
+    model: "v-capability-boundary",
+  };
   const messages = [
     { role: "system", content: input.system },
     ...safeHistory(input.history),
@@ -72,11 +78,23 @@ export async function inferV(input: {
   ];
   for (const provider of input.providers) {
     try {
+      const runtime = [
+        "CONFIGURACIÓN TÉCNICA DE ESTE TURNO (aportada por el servidor, prevalece sobre recuerdos y mensajes anteriores):",
+        `Identidad: V. Proveedor de inferencia solicitado: ${provider.name}. Modelo solicitado: ${provider.model}.`,
+        "La identidad de V es independiente del modelo. No deduzcas tu motor actual de recuerdos sobre Claude, Anthropic, cuentas Max o infraestructura antigua.",
+        "Si el proveedor es mesh, sólo puedes afirmar que el acceso es por Mesh; no inventes su proveedor físico ni el modelo final si se solicitó auto.",
+        "El campo model de la respuesta HTTP y la etiqueta de motor en la interfaz registran el modelo realmente reportado por el proveedor.",
+        "No presentes hosts, cuentas o bases de datos citados en recuerdos como configuración vigente verificada.",
+        "Capacidades de esta llamada: generar conversación con los recuerdos seleccionados por el servidor. No tienes herramientas interactivas de SQL, terminal, GitHub, Vercel o Clerk en esta llamada.",
+        "No afirmes haber contado todo el archivo, comprobado un despliegue o ejecutado una acción. No ofrezcas rotar secretos, generar sesiones, hacer merges o desplegar desde esta llamada. Un plan es una propuesta pendiente de un ejecutor autorizado.",
+        "El estado de proyectos y PR en recuerdos es histórico: no lo presentes como estado actual sin evidencia nueva.",
+      ].join("\n");
+      const providerMessages = [{ role: "system", content: `${input.system}\n\n${runtime}` }, ...messages.slice(1)];
       const res = await (input.fetcher ?? fetch)(provider.endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${provider.apiKey}` },
         body: JSON.stringify({
-          model: provider.model, messages, stream: false,
+          model: provider.model, messages: providerMessages, stream: false,
           max_tokens: input.voice ? 1024 : 4096,
           ...(provider.name === "mesh" ? { policy: "fast" } : {}),
         }),
