@@ -1,6 +1,6 @@
 import { queryAll } from "@/lib/db/client";
 import type { MemorySource } from "./continuity";
-import { planRetrieval, rankEvidence } from "./retrieval-plan";
+import { planRetrieval, rankEvidence, mergeEvidence } from "./retrieval-plan";
 
 const DIGEST = "0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f";
 
@@ -75,7 +75,7 @@ export async function loadVectorMemory(message: string): Promise<MemorySource[]>
      ORDER BY c.id,d.source_time LIMIT 36`, [JSON.stringify(seeds), DIGEST],
   ) : [];
   const pool = [...new Map([...anchors, ...neighbors].map(r => [r.id, r])).values()];
-  const relevant = neighbors.length ? await rankEvidence(message, pool) : anchors;
+  const relevant = neighbors.length ? mergeEvidence(anchors, await rankEvidence(message, pool)) : anchors;
   return relevant.map(row => ({
     id: `${row.source_type}:${row.source_id}`, source: "archive", at: row.source_time || "sin fecha de origen",
     content: `[Archivo ${row.source_type}; registro ${row.source_id}; autor ${row.author || "sin identificar"}; fecha del registro/versión ${row.source_time || "desconocida"}; ${row.title || ""}${row.redacted ? "; copia con credenciales ocultas" : ""}]\n${row.content}`,
