@@ -1,3 +1,4 @@
+import { requireVOwner } from "@/lib/v-chat/auth";
 import {
   listVSessions,
   makeVSessionId,
@@ -14,6 +15,9 @@ export const dynamic = "force-dynamic";
  *                                  la fila se crea al guardarse el primer turno).
  */
 export async function GET(req: Request) {
+  const access = await requireVOwner(req);
+  if (access instanceof Response) return access;
+  try {
   const { searchParams } = new URL(req.url);
   const limit = Math.min(
     Math.max(parseInt(searchParams.get("limit") ?? "40", 10) || 40, 1),
@@ -21,16 +25,21 @@ export async function GET(req: Request) {
   );
   const sessions = await listVSessions(OPERATOR_USER_ID, limit);
   return json({ sessions });
+  } catch { return json({ error: "No pude recuperar tus conversaciones. Reintenta." }, 503); }
 }
 
-export async function POST() {
-  await ensureVChatTables();
-  return json({ sessionId: makeVSessionId(), created: true });
+export async function POST(req: Request) {
+  const access = await requireVOwner(req);
+  if (access instanceof Response) return access;
+  try {
+    await ensureVChatTables();
+    return json({ sessionId: makeVSessionId(), created: true });
+  } catch { return json({ error: "No pude abrir una conversación. Reintenta." }, 503); }
 }
 
-function json(body: unknown): Response {
+function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
-    status: 200,
+    status,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }

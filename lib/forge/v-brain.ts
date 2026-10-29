@@ -1,16 +1,11 @@
-/**
- * Cerebro de V — usa `claude --print` en Hetzner con la cuenta de usuario de Luis.
- * Sin API key de Anthropic. Sin costo por token.
- * El CLI de Claude ya está autenticado en /root/.local/bin/claude en el servidor.
- *
- * Flujo:
- *   VForge (Vercel)  →  POST /v-server/claude  →  Hetzner v-server api.py
- *   Hetzner api.py   →  claude --print "<prompt>"  →  respuesta
- *   respuesta        →  VForge  →  usuario
+/** V: identity + historical memory + interchangeable Cerebras/Mesh inference.
+ * callHetznerClaude remains only for legacy callers outside V's private chat.
  */
 
 import { V_VOICE_SYSTEM_PROMPT } from "@/lib/forge/v-voice-persona";
 import { V_TEXT_SYSTEM_PROMPT } from "@/lib/forge/v-text-persona";
+import { loadVMemory } from "@/lib/v-chat/memory";
+import { inferV, memorySection, selectVMemory, type VProvider } from "@/lib/v-chat/continuity";
 import { assertValidModelOutput } from "@/lib/forge/provider-errors";
 
 // URL del v-server en Hetzner (via nginx /v-server/ → localhost:5000)
@@ -21,32 +16,6 @@ const V_SERVER_TOKEN = process.env.HETZNER_SECRET || "";
 export interface ChatTurn {
   role: "user" | "assistant";
   content: string;
-}
-
-/**
- * Construye el prompt completo para `claude --print`.
- * Incluye system prompt + historial formateado + mensaje actual.
- */
-function buildPrompt(
-  systemPrompt: string,
-  message: string,
-  history: ChatTurn[],
-  maxHistoryTurns = 6,
-): string {
-  const turns = history
-    .slice(-maxHistoryTurns * 2)
-    .map((m) => `${m.role === "user" ? "Luis" : "V"}: ${m.content}`)
-    .join("\n");
-
-  return [
-    systemPrompt,
-    "",
-    turns ? `CONVERSACIÓN ANTERIOR:\n${turns}\n` : "",
-    `Luis: ${message}`,
-    "V:",
-  ]
-    .filter(Boolean)
-    .join("\n");
 }
 
 /**
@@ -86,30 +55,41 @@ export async function callHetznerClaude(
   );
 }
 
-/**
- * Cerebro de V en modo VOZ.
- * Respuestas cortas y naturales al oído (sin markdown, sin listas).
- */
-export async function voiceBrain(
+/** V's identity and retrieved history are shared across engines and surfaces. */
+export async function answerV(
   message: string,
   history: ChatTurn[] = [],
-): Promise<string> {
-  const prompt = buildPrompt(V_VOICE_SYSTEM_PROMPT, message, history, 4);
-
-  const reply = await callHetznerClaude(prompt, 45000);
-  return reply || "Perdón hermano, no te capté. ¿Me lo repites?";
+  options: { voice?: boolean; personalUserId?: string } = {},
+) {
+  const memory = selectVMemory(await loadVMemory(message, options.personalUserId ?? process.env.V_MEMORY_USER_ID));
+  const providers: VProvider[] = [];
+  const cerebrasKey = process.env.CEREBRAS_API_KEY?.trim();
+  const meshKey = process.env.MESH_API_KEY?.trim();
+  if (cerebrasKey) providers.push({
+    name: "cerebras", apiKey: cerebrasKey,
+    endpoint: `${(process.env.CEREBRAS_BASE_URL || "https://api.cerebras.ai/v1").replace(/\/$/, "")}/chat/completions`,
+    model: process.env.CEREBRAS_MODEL?.trim() || "gpt-oss-120b",
+  });
+  if (meshKey) providers.push({
+    name: "mesh", apiKey: meshKey,
+    endpoint: `${(process.env.MESH_ROUTER_URL || "https://api.mindcontextia.one/mesh").replace(/\/$/, "")}/v1/chat/completions`,
+    model: "auto",
+  });
+  if (process.env.V_CHAT_ENGINE === "mesh") providers.sort((a) => a.name === "mesh" ? -1 : 1);
+  const result = await inferV({
+    system: `${options.voice ? V_VOICE_SYSTEM_PROMPT : V_TEXT_SYSTEM_PROMPT}\n\n${memorySection(memory)}`,
+    message, history, providers, voice: options.voice,
+  });
+  return {
+    ...result,
+    memory: { status: memory.status, sources: memory.sources.map(({ id, source, at }) => ({ id, source, at })) },
+  };
 }
 
-/**
- * Cerebro de V en modo TEXTO.
- * Puede usar Markdown, respuestas largas, código.
- */
-export async function textBrain(
-  message: string,
-  history: ChatTurn[] = [],
-): Promise<string> {
-  const prompt = buildPrompt(V_TEXT_SYSTEM_PROMPT, message, history, 12);
+export async function voiceBrain(message: string, history: ChatTurn[] = []): Promise<string> {
+  return (await answerV(message, history, { voice: true })).reply;
+}
 
-  const reply = await callHetznerClaude(prompt, 60000);
-  return reply || "Perdón hermano, me perdí. ¿Me lo repites?";
+export async function textBrain(message: string, history: ChatTurn[] = []): Promise<string> {
+  return (await answerV(message, history)).reply;
 }

@@ -17,6 +17,7 @@ const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 //   1) operator token (Bearer VFORGE_OPERATOR_TOKEN) — para curl/CLI del owner
 //      y endpoints como /api/admin/migrate.
 //   2) sesión Clerk de owner — para la UI (/activity health pill, cockpit…).
+const isVConversation = createRouteMatcher(["/api/v/chat", "/api/v/messages", "/api/v/sessions"]);
 const isAdminRoute = createRouteMatcher(["/api/admin/(.*)"]);
 const isTwilioWebhook = createRouteMatcher(["/api/v/voice/twilio(.*)"]);
 // Rutas MCP: Clerk NO debe validar el Bearer (son tokens vfmcp_* propios,
@@ -134,7 +135,7 @@ export default hasClerk
       // Auth dual en /api/admin: un operator token válido salta Clerk (el Bearer
       // no es un JWT de Clerk, así que Clerk lo rechazaría con 401). Sin token
       // válido, la ruta cae al control de Clerk de abajo (la UI usa su sesión).
-      if (isAdminRoute(req) && hasValidOperatorToken(req)) return;
+      if ((isAdminRoute(req) || isVConversation(req)) && hasValidOperatorToken(req)) return;
       // Webhooks de Twilio (llamada de voz a V): Twilio no pasa por Clerk; se
       // autentican con X-Twilio-Signature dentro del propio handler.
       if (isTwilioWebhook(req)) return;
@@ -143,7 +144,7 @@ export default hasClerk
       // hace su propia autenticación interna. Dejar pasar siempre.
       if (isMcpRoute(req)) return;
       if (isLiveEyes(req)) return;
-      if (!isProtected(req)) return;
+      if (!isProtected(req) && !isVConversation(req)) return;
       const { userId, sessionClaims, redirectToSignIn } = await auth();
       const isApi = req.nextUrl.pathname.startsWith("/api");
 
@@ -167,7 +168,7 @@ export default hasClerk
       // de arriba. El onboarding NO bloquea APIs (rompería /api/onboarding/*
       // y /api/user/complete-onboarding, que el flujo necesita).
       if (isApi) {
-        if (isOwnerOnly(req)) {
+        if (isOwnerOnly(req) || isVConversation(req)) {
           const owner = await resolveOwner(userId);
           if (!owner) {
             return new NextResponse(JSON.stringify({ error: "forbidden" }), {
@@ -223,7 +224,7 @@ export default hasClerk
       // Tipo 2 — Cliente intentando entrar a una ruta exclusiva del owner
       // (/app, /forge, /v): se le redirige a su propio workspace, pero sólo
       // después de completar su onboarding.
-      if (isOwnerOnly(req)) {
+      if (isOwnerOnly(req) || isVConversation(req)) {
         return NextResponse.redirect(new URL("/workspace", req.url));
       }
     }, { signInUrl: "/sign-in", signUpUrl: "/sign-up" })

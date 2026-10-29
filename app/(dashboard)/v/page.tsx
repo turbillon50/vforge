@@ -55,8 +55,11 @@ export default function VChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [hydrating, setHydrating] = useState(true);
+  const [historyReady, setHistoryReady] = useState(false);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [notice, setNotice] = useState("");
+  const pendingRef = useRef<{ sid: string; text: string; id: string } | null>(null);
   const sessionIdRef = useRef<string>("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -68,20 +71,25 @@ export default function VChatPage() {
     try {
       const res = await fetch("/api/v/sessions?limit=40", { cache: "no-store" });
       const data = await res.json();
+      if (!res.ok) throw new Error("sessions");
       if (Array.isArray(data?.sessions)) setSessions(data.sessions);
     } catch {
-      /* lista best-effort */
+      setNotice("No pude cargar la lista de conversaciones. Abre Hilos para reintentar.");
     }
   }, []);
 
   const loadHistory = useCallback(async (sid: string) => {
     setHydrating(true);
+    setHistoryReady(false);
+    setMessages([INTRO]);
     try {
       const res = await fetch(
         `/api/v/messages?sessionId=${encodeURIComponent(sid)}&limit=200`,
         { cache: "no-store" },
       );
       const data = await res.json();
+      if (!res.ok) throw new Error("history");
+      if (sessionIdRef.current !== sid) return;
       const hist: Message[] = Array.isArray(data?.messages)
         ? data.messages
             .filter((m: Message) => m && (m.role === "user" || m.role === "assistant"))
@@ -89,10 +97,11 @@ export default function VChatPage() {
         : [];
       // Sólo mostramos this session's turns; si está vacío, el saludo de V.
       setMessages(hist.length ? hist : [INTRO]);
+      setHistoryReady(true);
     } catch {
-      setMessages([INTRO]);
+      if (sessionIdRef.current === sid) setNotice("No pude recuperar el historial. Vuelve a abrir este hilo para reintentar.");
     } finally {
-      setHydrating(false);
+      if (sessionIdRef.current === sid) setHydrating(false);
     }
   }, []);
 
@@ -117,15 +126,21 @@ export default function VChatPage() {
       void loadHistory(stored);
     } else {
       setHydrating(false);
+      setHistoryReady(true);
     }
   }, [loadSessions, loadHistory]);
 
   function switchSession(sid: string) {
+    if (loading) return;
+    setNotice("");
     if (sid === sessionIdRef.current) {
       setDrawerOpen(false);
+      void loadHistory(sid);
       return;
     }
     sessionIdRef.current = sid;
+    setInput("");
+    pendingRef.current = null;
     try {
       localStorage.setItem(STORAGE_KEY, sid);
     } catch {
@@ -136,6 +151,10 @@ export default function VChatPage() {
   }
 
   function newSession() {
+    if (loading) return;
+    setNotice("");
+    setInput("");
+    pendingRef.current = null;
     const sid = makeSessionId();
     sessionIdRef.current = sid;
     try {
@@ -146,11 +165,17 @@ export default function VChatPage() {
     setMessages([INTRO]);
     setDrawerOpen(false);
     setHydrating(false);
+    setHistoryReady(true);
   }
 
   async function sendMessage() {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || loading || hydrating || !historyReady) return;
+    setNotice("");
+    const sid = sessionIdRef.current;
+    if (!pendingRef.current || pendingRef.current.sid !== sid || pendingRef.current.text !== text) {
+      pendingRef.current = { sid, text, id: crypto.randomUUID() };
+    }
 
     const newMessages: Message[] = [...messages, { role: "user", content: text }];
     setMessages(newMessages);
@@ -163,7 +188,8 @@ export default function VChatPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: text,
-          session_id: sessionIdRef.current,
+          session_id: sid,
+          turn_id: pendingRef.current.id,
           history: newMessages
             .slice(0, -1)
             .filter((m) => m.content !== INTRO.content)
@@ -172,16 +198,22 @@ export default function VChatPage() {
       });
 
       const data = await res.json();
-      const reply = data.reply || data.error || "Sin respuesta";
-      setMessages([...newMessages, { role: "assistant", content: reply }]);
-      // El turno ya quedó persistido server-side; refrescamos la lista de hilos
-      // para que el nuevo aparezca / suba con su título.
+      if (!res.ok || !data.persisted || typeof data.reply !== "string") {
+        setMessages(messages);
+        setInput(text);
+        setNotice(data.error || "No pude confirmar el guardado. Reintenta el envío.");
+        return;
+      }
+      setMessages([...newMessages, { role: "assistant", content: data.reply }]);
+      pendingRef.current = null;
+      setNotice(data.memory?.status === "partial" || data.memory?.status === "unavailable"
+        ? "Conversación guardada. Parte de la memoria histórica no estuvo disponible."
+        : `Conversación guardada${data.memory?.sources?.length ? ` · ${data.memory.sources.length} recuerdos consultados` : ""}.`);
       void loadSessions();
     } catch {
-      setMessages([
-        ...newMessages,
-        { role: "assistant", content: "Error conectando con V. Intenta de nuevo." },
-      ]);
+      setMessages(messages);
+      setInput(text);
+      setNotice("Se interrumpió la conexión. Tu mensaje sigue aquí; puedes volver a enviarlo.");
     } finally {
       setLoading(false);
     }
@@ -277,20 +309,23 @@ export default function VChatPage() {
             <div ref={bottomRef} />
           </div>
 
+          {notice && <p role="status" aria-live="polite" className="mt-3 text-sm text-[var(--fg-secondary)]">{notice}</p>}
           {/* Input */}
           <div className="mt-4 flex gap-2">
             <textarea
               className="flex-1 resize-none rounded-xl border bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               rows={2}
               placeholder="Escribe un mensaje… (Enter para enviar)"
+              aria-label="Mensaje para V"
+              maxLength={16000}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}
-              disabled={loading}
+              disabled={loading || hydrating || !historyReady}
             />
             <button
               onClick={sendMessage}
-              disabled={loading || !input.trim()}
+              disabled={loading || hydrating || !historyReady || !input.trim()}
               className="self-end rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-medium text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
             >
               Enviar
@@ -339,6 +374,7 @@ export default function VChatPage() {
               <div className="px-4 pb-3">
                 <button
                   onClick={newSession}
+                  disabled={loading}
                   className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-1)] bg-white px-3 py-2.5 text-sm font-medium text-black transition hover:border-black active:scale-[0.98]"
                 >
                   <IconPlus size={15} /> Nueva conversación
@@ -359,6 +395,7 @@ export default function VChatPage() {
                         <li key={s.id}>
                           <button
                             onClick={() => switchSession(s.id)}
+                            disabled={loading}
                             className={`w-full rounded-xl border px-3 py-2.5 text-left transition active:scale-[0.99] ${
                               active
                                 ? "border-black bg-white"

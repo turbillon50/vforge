@@ -161,10 +161,16 @@ export function VoiceConversation() {
             history,
             mode: "voice",
             session_id: sessionId.current,
+            turn_id: crypto.randomUUID(),
           }),
         });
         const chatData = await chatRes.json();
-        const reply = (chatData.reply || chatData.error || "Perdón, me trabé.").trim();
+        if (!chatRes.ok || !chatData.persisted || typeof chatData.reply !== "string") {
+          setError(chatData.error || "No pude guardar la conversación. Intenta de nuevo.");
+          setPhase("idle");
+          return;
+        }
+        const reply = chatData.reply.trim();
         setTurns((t) => [...t, { role: "assistant", text: reply }]);
 
         // 3) TTS

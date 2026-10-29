@@ -1,3 +1,4 @@
+import { requireVOwner } from "@/lib/v-chat/auth";
 import { getVMessages, OPERATOR_USER_ID } from "@/lib/v-chat/store";
 
 export const runtime = "nodejs";
@@ -8,6 +9,9 @@ export const dynamic = "force-dynamic";
  * Historial cronológico de un hilo de V para rehidratar el chat tras recargar.
  */
 export async function GET(req: Request) {
+  const access = await requireVOwner(req);
+  if (access instanceof Response) return access;
+  try {
   const { searchParams } = new URL(req.url);
   const sessionId = searchParams.get("sessionId");
   if (!sessionId) {
@@ -25,4 +29,7 @@ export async function GET(req: Request) {
     status: 200,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
+  } catch {
+    return Response.json({ error: "No pude recuperar esta conversación. Reintenta." }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
 }
