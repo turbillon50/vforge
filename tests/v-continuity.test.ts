@@ -24,7 +24,9 @@ test("provider failure preserves identity, historical provenance and recent turn
   assert.equal(result.model, "mesh:replacement");
   const first = requests[0].messages as Array<{ role: string; content: string }>;
   const second = requests[1].messages as Array<{ role: string; content: string }>;
-  assert.deepEqual(first.slice(1), second.slice(1));
+  assert.deepEqual(first.filter(m=>m.role!=="system"), second.filter(m=>m.role!=="system"));
+  assert.equal(first.filter(m=>m.role==="system").length,1);
+  assert.equal(second.filter(m=>m.role==="system").length,1);
   assert.ok(first[0].content.startsWith(system));
   assert.ok(second[0].content.startsWith(system));
   assert.match(first[0].content, /Proveedor de inferencia solicitado: cerebras/);
