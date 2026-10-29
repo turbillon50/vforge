@@ -25,7 +25,7 @@ export function deriveTitle(text: string | null | undefined): string {
 }
 export function makeVSessionId(): string { return `vs_${randomUUID()}`; }
 export interface VSession { id: string; titulo: string; created_at: string; last_at: string; count: number }
-export interface VMessage { id: string; role: "user" | "assistant"; content: string; created_at: string }
+export interface VMessage { id: string; role: "user" | "assistant"; content: string; model: string | null; created_at: string }
 
 /** Stable IDs make a retry safe without changing historical tables. */
 export function vTurnIds(userId: string, sessionId: string, turnId: string): [string, string] {
@@ -91,8 +91,8 @@ export async function getVMessages(sessionId: string, userId = OPERATOR_USER_ID,
   if (!sessionId) return [];
   await ensureVChatTables();
   return queryAll<VMessage>(
-    `SELECT id::text,role,content,created_at FROM (
-       SELECT id,role,content,created_at FROM v_chat_messages
+    `SELECT id::text,role,content,model,created_at FROM (
+       SELECT id,role,content,model,created_at FROM v_chat_messages
        WHERE user_id=$1 AND session_id=$2 ORDER BY created_at DESC,id DESC LIMIT $3
      ) recent ORDER BY created_at ASC,id ASC`, [userId, sessionId, limit],
   );

@@ -22,7 +22,14 @@ test("provider failure preserves identity, historical provenance and recent turn
   });
   assert.equal(result.reply, "Respuesta real");
   assert.equal(result.model, "mesh:replacement");
-  assert.deepEqual(requests[0].messages, requests[1].messages);
+  const first = requests[0].messages as Array<{ role: string; content: string }>;
+  const second = requests[1].messages as Array<{ role: string; content: string }>;
+  assert.deepEqual(first.slice(1), second.slice(1));
+  assert.ok(first[0].content.startsWith(system));
+  assert.ok(second[0].content.startsWith(system));
+  assert.match(first[0].content, /Proveedor de inferencia solicitado: cerebras/);
+  assert.match(second[0].content, /Proveedor de inferencia solicitado: mesh/);
+  assert.match(second[0].content, /No deduzcas tu motor actual de recuerdos sobre Claude/);
   assert.match(JSON.stringify(requests[1].messages), /old-1/);
   assert.equal(requests[1].policy, "fast");
 });
@@ -43,6 +50,14 @@ test("when all engines fail the request fails instead of fabricating a reply", a
   await assert.rejects(inferV({ system: "V", message: "hola", history: [], providers,
     fetcher: (async () => { throw new Error("network"); }) as typeof fetch,
   }), /^Error: V_ENGINE_UNAVAILABLE$/);
+});
+
+test("an infrastructure inspection without a dispatched tool cannot produce invented HTTP results", async () => {
+  const result = await inferV({ system: "V", message: "¿Puedes ver tu infraestructura en hertzner y cerebras?", history: [], providers,
+    fetcher: (async () => { throw new Error("must not call model for an unavailable action"); }) as typeof fetch,
+  });
+  assert.equal(result.model, "v-capability-boundary");
+  assert.match(result.reply, /No he ejecutado esa inspección/);
 });
 
 test("untrusted browser history cannot add system roles or exceed the budget", () => {
