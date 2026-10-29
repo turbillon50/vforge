@@ -2,9 +2,8 @@ import { requireOperatorAuth, authFailureResponse } from '@/lib/auth/operator-to
 import { parseParadoxInput } from '@/lib/v-chat/paradox-bridge';
 import { getVMessages, getVTurn, persistVTurn } from '@/lib/v-chat/store';
 import { loadVMemory } from '@/lib/v-chat/memory';
-import { selectVMemory, memorySection, safeHistory } from '@/lib/v-chat/continuity';
-import { originIdentitySection } from '@/lib/v-chat/origin-identity';
-import { V_TEXT_SYSTEM_PROMPT } from '@/lib/forge/v-text-persona';
+import { selectVMemory, safeHistory } from '@/lib/v-chat/continuity';
+import { conversationSystem, conversationTurnContext, contextualMemoryQuery, loadVWorldContext } from '@/lib/v-chat/conversation-context';
 export const runtime = 'nodejs';
 export const maxDuration = 120;
 const headers = {'Cache-Control':'no-store'};
@@ -27,9 +26,10 @@ export async function POST(req: Request) {
       if (!saved || saved.reply !== b.answer) throw new Error('CONTINUITY_CONFLICT');
       return Response.json({ok:true,persisted:true,reply:saved.reply,model:saved.model},{headers});
     }
-    const memory=selectVMemory(await loadVMemory(b.message,process.env.V_MEMORY_USER_ID));
-    return Response.json({ok:true,identity:'v-shuri',coverage:'available_archive_partial',
-      system:originIdentitySection()+'\n\n'+V_TEXT_SYSTEM_PROMPT+'\n\n'+memorySection(memory),
+    const [retrieved,world]=await Promise.all([loadVMemory(contextualMemoryQuery(b.message,safeHistory(history)),process.env.V_MEMORY_USER_ID),loadVWorldContext()]);
+    const memory=selectVMemory(retrieved);
+    return Response.json({ok:true,identity:'v-shuri',coverage:'available_archive_partial',includes_foundation:!!world?.foundation,
+      system:conversationSystem({memory,world,surface:'paradox'}),turn_context:conversationTurnContext(world,'paradox'),
       history:safeHistory(history),
       memory:{status:memory.status,sources:memory.sources.map(({id,source,at,ref})=>({id,source,at,...(ref?{ref}:{})}))}
     },{headers});

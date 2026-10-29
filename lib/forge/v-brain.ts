@@ -1,12 +1,10 @@
-import { originIdentitySection } from "@/lib/v-chat/origin-identity";
+import { conversationSystem, conversationTurnContext, contextualMemoryQuery, loadVWorldContext } from "@/lib/v-chat/conversation-context";
 /** V: identity + historical memory + interchangeable Cerebras/Mesh inference.
  * callHetznerClaude remains only for legacy callers outside V's private chat.
  */
 
-import { V_VOICE_SYSTEM_PROMPT } from "@/lib/forge/v-voice-persona";
-import { V_TEXT_SYSTEM_PROMPT } from "@/lib/forge/v-text-persona";
 import { loadVMemory } from "@/lib/v-chat/memory";
-import { inferV, memorySection, selectVMemory, type VProvider } from "@/lib/v-chat/continuity";
+import { inferV, selectVMemory, type VProvider } from "@/lib/v-chat/continuity";
 import { assertValidModelOutput } from "@/lib/forge/provider-errors";
 
 // URL del v-server en Hetzner (via nginx /v-server/ → localhost:5000)
@@ -62,14 +60,15 @@ export async function answerV(
   history: ChatTurn[] = [],
   options: { voice?: boolean; personalUserId?: string } = {},
 ) {
-  const memory = selectVMemory(await loadVMemory(message, options.personalUserId ?? process.env.V_MEMORY_USER_ID));
+  const [retrieved, world] = await Promise.all([loadVMemory(contextualMemoryQuery(message,history), options.personalUserId ?? process.env.V_MEMORY_USER_ID),loadVWorldContext()]);
+  const memory = selectVMemory(retrieved);
   const providers: VProvider[] = [];
   const cerebrasKey = process.env.CEREBRAS_API_KEY?.trim();
   const meshKey = process.env.MESH_API_KEY?.trim();
   if (cerebrasKey) providers.push({
     name: "cerebras", apiKey: cerebrasKey,
     endpoint: `${(process.env.CEREBRAS_BASE_URL || "https://api.cerebras.ai/v1").replace(/\/$/, "")}/chat/completions`,
-    model: process.env.CEREBRAS_MODEL?.trim() || "gpt-oss-120b",
+    model: process.env.V_CONVERSATION_MODEL?.trim() || "qwen-3.8-27b",
   });
   if (meshKey) providers.push({
     name: "mesh", apiKey: meshKey,
@@ -78,7 +77,8 @@ export async function answerV(
   });
   if (process.env.V_CHAT_ENGINE === "mesh") providers.sort((a) => a.name === "mesh" ? -1 : 1);
   const result = await inferV({
-    system: `${options.voice ? V_VOICE_SYSTEM_PROMPT : V_TEXT_SYSTEM_PROMPT}\n\n${originIdentitySection()}\n\n${memorySection(memory)}`,
+    system: conversationSystem({memory,world,voice:options.voice}),
+    turnContext: conversationTurnContext(world),
     message, history, providers, voice: options.voice,
   });
   return {

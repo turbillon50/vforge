@@ -62,6 +62,7 @@ export function memorySection(memory: MemoryContext): string {
 /** Bounded failover. Every provider receives identical identity, memory and turns. */
 export async function inferV(input: {
   system: string;
+  turnContext?: string;
   message: string;
   history: ChatTurn[];
   providers: VProvider[];
@@ -93,13 +94,13 @@ export async function inferV(input: {
         "No afirmes haber contado todo el archivo, comprobado un despliegue o ejecutado una acción. No ofrezcas rotar secretos, generar sesiones, hacer merges o desplegar desde esta llamada. Un plan es una propuesta pendiente de un ejecutor autorizado.",
         "El estado de proyectos y PR en recuerdos es histórico: no lo presentes como estado actual sin evidencia nueva.",
       ].join("\n");
-      const providerMessages = [{ role: "system", content: `${input.system}\n\n${runtime}` }, ...messages.slice(1)];
+      const providerMessages = [{ role: "system", content: input.system + "\n\n" + runtime + "\n" + (input.turnContext||"") + "\nResponde al sentido del mensaje dentro del hilo. Las respuestas anteriores pueden contener errores: no las imites. Una invitación o expresión de afecto no pide un formulario, una tarea ni una oferta automática de soporte." }, ...messages.slice(1)];
       const res = await (input.fetcher ?? fetch)(provider.endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${provider.apiKey}` },
         body: JSON.stringify({
           model: provider.model, messages: providerMessages, stream: false,
-          max_tokens: input.voice ? 1024 : 4096,
+          max_tokens: input.voice ? 1024 : 4096, temperature:0.4,
           ...(provider.name === "mesh" ? { policy: "fast" } : {}),
         }),
         signal: AbortSignal.timeout(25000),
