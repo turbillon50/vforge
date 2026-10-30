@@ -207,6 +207,7 @@ export default function VCanonicalChat() {
 
     try {
       const res = await fetch("/api/v/canonical/chat", {
+        signal: AbortSignal.timeout(100000),
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

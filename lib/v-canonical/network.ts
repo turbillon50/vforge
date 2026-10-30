@@ -51,7 +51,7 @@ export async function remoteFetch(endpoint: string, init: RequestInit = {}) {
     ...init,
     redirect: "error",
     cache: "no-store",
-    signal: AbortSignal.timeout(18000),
+    signal: init.signal ?? AbortSignal.timeout(18000),
   });
 }
 export async function boundedText(response: Response, max = 160000) {
@@ -75,10 +75,11 @@ export async function boundedText(response: Response, max = 160000) {
 }
 
 export function inferenceEndpoint(
-  engine: "cerebras" | "mesh",
+  engine: "cerebras" | "mesh" | "custom",
   base: string,
 ): string {
   const clean = base.replace(/\/+$/, "");
+  if (clean.endsWith("/chat/completions")) return clean;
   return (
     (engine === "mesh" ? clean.replace(/\/v1$/, "") + "/v1" : clean) +
     "/chat/completions"

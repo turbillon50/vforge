@@ -14,9 +14,12 @@ export interface Connection {
   status: string;
   detail?: string;
   checkedAt?: string;
+  purpose?: "skills" | "components" | "examples" | "ai-module" | "reference";
 }
 export interface CanonConfig {
-  engine: "cerebras" | "mesh";
+  engine: "cerebras" | "mesh" | "custom";
+  customEndpoint?: string;
+  customSecret?: string;
   model: string;
   connections: Connection[];
 }
@@ -91,6 +94,8 @@ export async function saveConfig(config: CanonConfig) {
 export function publicConfig(config: CanonConfig) {
   return {
     ...config,
+    customSecret: undefined,
+    hasCustomSecret: !!config.customSecret,
     connections: config.connections.map((c) => ({
       ...c,
       secret: undefined,
@@ -104,8 +109,8 @@ export function mergeConfig(input: unknown, old: CanonConfig): CanonConfig {
   if (!input || typeof input !== "object")
     throw Error("Configuración inválida.");
   const b = input as Record<string, unknown>;
-  if (b.engine !== "cerebras" && b.engine !== "mesh")
-    throw Error("Selecciona Cerebras o Mesh.");
+  if (b.engine !== "cerebras" && b.engine !== "mesh" && b.engine !== "custom")
+    throw Error("Selecciona un proveedor válido.");
   if (
     typeof b.model !== "string" ||
     b.model.length > 120 ||
@@ -113,6 +118,32 @@ export function mergeConfig(input: unknown, old: CanonConfig): CanonConfig {
     b.connections.length > 30
   )
     throw Error("Revisa las conexiones.");
+  const customEndpoint =
+    typeof b.customEndpoint === "string"
+      ? b.customEndpoint.trim()
+      : old.customEndpoint;
+  const customSecret =
+    typeof b.customSecret === "string" && b.customSecret.trim()
+      ? b.customSecret.trim()
+      : old.customSecret;
+  if (
+    (customEndpoint?.length || 0) > 2000 ||
+    (customSecret?.length || 0) > 10000
+  )
+    throw Error("Configuración demasiado larga.");
+  if (b.engine === "custom") {
+    if (!customEndpoint || !customSecret || !b.model.trim())
+      throw Error("Revisa URL, API key y modelo del proveedor.");
+    const u = new URL(customEndpoint);
+    if (
+      u.protocol !== "https:" ||
+      u.username ||
+      u.password ||
+      u.search ||
+      u.hash
+    )
+      throw Error("Usa una URL HTTPS sin credenciales ni parámetros.");
+  }
   const ids = new Set<string>();
   let databases = 0;
   const connections = b.connections.map((raw: unknown): Connection => {
@@ -163,12 +194,26 @@ export function mergeConfig(input: unknown, old: CanonConfig): CanonConfig {
           "MCP requiere HTTPS; usa el campo de token para autenticar.",
         );
     }
+    const purpose =
+      c.purpose === undefined
+        ? prev?.purpose || "reference"
+        : String(c.purpose);
+    if (
+      c.kind === "repository" &&
+      !["skills", "components", "examples", "ai-module", "reference"].includes(
+        purpose,
+      )
+    )
+      throw Error("Función del repositorio inválida.");
     const unchanged =
       prev && prev.endpoint === endpoint && prev.secret === secret;
     return {
       id: c.id,
       name: c.name.trim(),
       kind: c.kind as ConnectionKind,
+      ...(c.kind === "repository"
+        ? { purpose: purpose as Connection["purpose"] }
+        : {}),
       endpoint,
       secret,
       enabled: c.enabled !== false,
@@ -178,5 +223,11 @@ export function mergeConfig(input: unknown, old: CanonConfig): CanonConfig {
     };
   });
   if (databases > 5) throw Error("V admite hasta cinco connection strings.");
-  return { engine: b.engine, model: b.model.trim(), connections };
+  return {
+    engine: b.engine,
+    model: b.model.trim(),
+    customEndpoint,
+    customSecret,
+    connections,
+  };
 }
