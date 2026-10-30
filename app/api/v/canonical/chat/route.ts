@@ -28,6 +28,12 @@ const identifier = /^[a-zA-Z0-9_-]{1,120}$/;
 export async function POST(req: NextRequest) {
   const access = await requireVOwner(req);
   if (access instanceof Response) return access;
+  const origin = req.headers.get("origin");
+  if (origin && origin !== new URL(req.url).origin)
+    return NextResponse.json(
+      { error: "Origen inválido." },
+      { status: 403, headers },
+    );
   let body;
   try {
     const raw = await req.text();

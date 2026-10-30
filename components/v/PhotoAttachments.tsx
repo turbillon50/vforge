@@ -86,7 +86,11 @@ export function PhotoAttachments({
           setBusy(true);
           onBusy(true);
           try {
-            onChange([...photos, ...(await Promise.all(files.map(compress)))]);
+            const prepared = [
+              ...photos,
+              ...(await Promise.all(files.map(compress))),
+            ];
+            onChange([...new Map(prepared.map((p) => [p.data, p])).values()]);
           } catch (e) {
             setError(e instanceof Error ? e.message : "No pude abrir la foto.");
           } finally {
