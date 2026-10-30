@@ -266,14 +266,23 @@ export function microtaskTools(
         const recoveredRequested = /recuperad|respaldo|backup/i.test(
           userMessage,
         );
-        const autoSource =
-          !args.source_tool && recoveredRequested
-            ? evidence.get("v_memoria_recuperada")
-            : undefined;
+        // A model may call the chart directly without first calling the inventory tool.
+        // Resolve the actual recovery counts here rather than trusting copied numbers.
+        if (recoveredRequested && !evidence.has("v_memoria_recuperada")) {
+          const recovered = await recoverySources();
+          evidence.set("v_memoria_recuperada", {
+            name: "Respaldos recuperados de V",
+            rows: recovered.recovered as Record<string, unknown>[],
+          });
+        }
+        const autoSource = recoveredRequested
+          ? evidence.get("v_memoria_recuperada")
+          : undefined;
         const source =
-          typeof args.source_tool === "string"
+          autoSource ||
+          (typeof args.source_tool === "string"
             ? evidence.get(args.source_tool)
-            : autoSource;
+            : undefined);
         if (autoSource) {
           args.label_column = "source";
           args.value_column = "records";
