@@ -207,6 +207,7 @@ export default function VCanonicalChat() {
 
     try {
       const res = await fetch("/api/v/canonical/chat", {
+        signal: AbortSignal.timeout(100000),
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -264,8 +265,8 @@ export default function VCanonicalChat() {
   }
 
   return (
-    <div className="relative mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col px-4 py-6">
-      <div className="mb-4 flex items-start justify-between gap-3">
+    <div className="relative mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col px-4 py-4">
+      <div className="mb-3 flex shrink-0 items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-2xl font-bold">Conversación</h2>
           <p className="text-sm text-muted-foreground">
@@ -296,10 +297,10 @@ export default function VCanonicalChat() {
       ) : (
         <>
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-4 pr-1">
             {hydrating ? (
               <div className="flex justify-start">
-                <div className="bg-muted rounded-2xl px-4 py-3 text-sm text-muted-foreground animate-pulse">
+                <div className="border border-[var(--border-1)] bg-white rounded-2xl px-4 py-3 text-sm text-black animate-pulse">
                   Cargando conversación…
                 </div>
               </div>
@@ -313,12 +314,12 @@ export default function VCanonicalChat() {
                     className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
                       msg.role === "user"
                         ? "bg-black text-white"
-                        : "bg-muted text-foreground"
+                        : "border border-[var(--border-1)] bg-white text-black"
                     }`}
                   >
                     {msg.content}
                     {msg.role === "assistant" && msg.model && (
-                      <p className="mt-2 border-t border-[var(--border-1)] pt-2 text-xs text-muted-foreground">
+                      <p className="mt-2 border-t border-[var(--border-1)] pt-2 text-xs text-black/65">
                         {msg.model === "v-plugin"
                           ? "Respuesta de herramienta"
                           : msg.model === "v-capability-boundary"
@@ -332,7 +333,7 @@ export default function VCanonicalChat() {
             )}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-muted rounded-2xl px-4 py-3 text-sm text-muted-foreground animate-pulse">
+                <div className="border border-[var(--border-1)] bg-white rounded-2xl px-4 py-3 text-sm text-black animate-pulse">
                   V está pensando…
                 </div>
               </div>
@@ -350,7 +351,7 @@ export default function VCanonicalChat() {
             </p>
           )}
           {/* Input */}
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex shrink-0 gap-2">
             <textarea
               className="flex-1 resize-none rounded-xl border bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               rows={2}

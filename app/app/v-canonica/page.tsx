@@ -14,9 +14,9 @@ export default async function VCanonicalPage() {
       </main>
     );
   return (
-    <main className="flex min-h-[calc(100dvh-6rem)] flex-col">
+    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden">
       <CanonicalSettings />
-      <div className="min-h-[32rem] flex-1">
+      <div className="min-h-0 flex-1 overflow-hidden">
         <VCanonicalChat />
       </div>
     </main>

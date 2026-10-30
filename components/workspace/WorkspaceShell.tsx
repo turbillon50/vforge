@@ -196,7 +196,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const isStudio = pathname === "/app/chat";
   const isNativeChat = isStudio;
   const isFixedWorkspace =
-    isStudio || pathname === "/app/trio" || pathname === "/forge" || pathname === "/v";
+    isStudio || pathname.startsWith("/app/v-canonica") || pathname === "/app/trio" || pathname === "/forge" || pathname === "/v";
   const isSetup = pathname.startsWith("/app/setup");
   const isLive = pathname.startsWith("/app/live/");
 

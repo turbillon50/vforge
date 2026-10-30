@@ -98,3 +98,57 @@ test("cada motor usa su ruta real de inferencia sin duplicar v1", () => {
     "https://api.cerebras.ai/v1/chat/completions",
   );
 });
+
+test("clasificación de repositorios persiste y rechaza funciones desconocidas", () => {
+  const config = structuredClone(defaults);
+  config.connections.push({
+    id: "repo",
+    name: "Componentes",
+    kind: "repository",
+    endpoint: "https://github.com/turbillon50/skills-vault",
+    enabled: true,
+    status: "pending",
+    purpose: "components",
+  });
+  assert.equal(
+    mergeConfig(config, defaults).connections[3].purpose,
+    "components",
+  );
+  assert.throws(
+    () =>
+      mergeConfig(
+        {
+          ...config,
+          connections: [{ ...config.connections[3], purpose: "unknown" }],
+        },
+        defaults,
+      ),
+    /inválida/,
+  );
+});
+test("proveedor propio exige URL HTTPS, modelo y credencial que nunca sale en público", () => {
+  const input = {
+    ...structuredClone(defaults),
+    engine: "custom",
+    model: "modelo",
+    customEndpoint: "https://provider.example/v1",
+    customSecret: "private-api-key",
+  };
+  const saved = mergeConfig(input, defaults);
+  assert.equal(saved.engine, "custom");
+  assert.ok(!JSON.stringify(publicConfig(saved)).includes("private-api-key"));
+  const again = mergeConfig(publicConfig(saved), saved);
+  assert.equal(again.customSecret, "private-api-key");
+  assert.throws(
+    () =>
+      mergeConfig(
+        { ...input, customEndpoint: "http://localhost/v1" },
+        defaults,
+      ),
+    /HTTPS/,
+  );
+  assert.equal(
+    inferenceEndpoint("custom", "https://provider.example/v1/chat/completions"),
+    "https://provider.example/v1/chat/completions",
+  );
+});

@@ -1,3 +1,4 @@
+import { providerRequest } from "@/lib/v-canonical/provider";
 import { requireVOwner } from "@/lib/v-chat/auth";
 import {
   loadConfig,
@@ -34,6 +35,27 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const old = await loadConfig();
+    if (body.action === "test-engine") {
+      const response = await providerRequest(old, {
+        messages: [
+          { role: "user", content: "Responde solamente: conexión confirmada." },
+        ],
+        max_tokens: 300,
+      });
+      const data = await response.json();
+      if (!response.ok || !data.choices?.[0]?.message?.content)
+        return Response.json(
+          {
+            error:
+              "El motor no confirmó respuesta. Revisa proveedor, modelo y credencial.",
+          },
+          { status: 502, headers },
+        );
+      return Response.json(
+        { ok: true, model: data.model || old.model, engine: old.engine },
+        { headers },
+      );
+    }
     if (body.action === "test") {
       const c = old.connections.find((c) => c.id === body.id);
       if (!c)
