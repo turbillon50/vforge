@@ -1,5 +1,11 @@
 "use client";
 import Link from "next/link";
+import {
+  GithubConnection,
+  CerebrasModules,
+  ArchiveSources,
+  type ExtraConfig,
+} from "./ConfigurationExtras";
 import { useEffect, useState } from "react";
 type Purpose = "skills" | "components" | "examples" | "ai-module" | "reference";
 type Connection = {
@@ -16,7 +22,7 @@ type Connection = {
   checkedAt?: string;
   purpose?: Purpose;
 };
-type Config = {
+type Config = ExtraConfig & {
   engine: "cerebras" | "mesh" | "custom";
   model: string;
   customEndpoint?: string;
@@ -24,9 +30,10 @@ type Config = {
   hasCustomSecret?: boolean;
   connections: Connection[];
 };
-type Tab = "engine" | "mcp" | "database" | "repository";
+type Tab = "engine" | "modules" | "mcp" | "database" | "repository";
 const tabs: { id: Tab; label: string }[] = [
   { id: "engine", label: "Motor y modelo" },
+  { id: "modules", label: "Microtareas" },
   { id: "mcp", label: "MCP" },
   { id: "database", label: "Memoria" },
   { id: "repository", label: "Repositorios" },
@@ -213,7 +220,7 @@ export function CanonicalSettings({ room = false }: { room?: boolean }) {
             }
           >
             {t.label}
-            {config && t.id !== "engine"
+            {config && t.id !== "engine" && t.id !== "modules"
               ? " · " + config.connections.filter((c) => c.kind === t.id).length
               : ""}
           </button>
@@ -222,6 +229,17 @@ export function CanonicalSettings({ room = false }: { room?: boolean }) {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">
         {!config ? (
           <p role="status">{notice || "Abriendo la sala…"}</p>
+        ) : tab === "modules" ? (
+          <CerebrasModules
+            config={config}
+            busy={busy}
+            dirty={dirty}
+            edit={edit}
+            post={post}
+            save={store}
+            setBusy={setBusy}
+            setNotice={setNotice}
+          />
         ) : tab === "engine" ? (
           <div className="max-w-2xl space-y-5">
             <div>
@@ -312,6 +330,26 @@ export function CanonicalSettings({ room = false }: { room?: boolean }) {
           </div>
         ) : (
           <div className="space-y-4">
+            {tab === "repository" && (
+              <GithubConnection
+                config={config}
+                busy={busy}
+                dirty={dirty}
+                edit={edit}
+                post={post}
+                save={store}
+                setBusy={setBusy}
+                setNotice={setNotice}
+              />
+            )}
+            {tab === "database" && (
+              <ArchiveSources
+                busy={busy}
+                post={post}
+                setBusy={setBusy}
+                setNotice={setNotice}
+              />
+            )}
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold">
@@ -428,11 +466,9 @@ export function CanonicalSettings({ room = false }: { room?: boolean }) {
                       }
                     />
                   </label>
-                  {c.kind !== "database" && (
+                  {c.kind === "mcp" && (
                     <label className="block text-sm">
-                      {c.kind === "repository"
-                        ? "Token GitHub para repos privados"
-                        : "Token Bearer"}
+                      Token Bearer
                       <input
                         type="password"
                         autoComplete="new-password"

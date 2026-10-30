@@ -152,3 +152,42 @@ test("proveedor propio exige URL HTTPS, modelo y credencial que nunca sale en p�
     "https://provider.example/v1/chat/completions",
   );
 });
+
+test("un token GitHub compartido se conserva sin salir en la respuesta pública", () => {
+  const c = mergeConfig(
+    {
+      ...defaults,
+      githubSecret: "github-private-credential",
+      githubRoles: { "turbillon50/vforge": "examples" },
+    },
+    defaults,
+  );
+  assert.equal(c.githubRoles?.["turbillon50/vforge"], "examples");
+  assert.ok(
+    !JSON.stringify(publicConfig(c)).includes("github-private-credential"),
+  );
+  assert.equal(
+    mergeConfig(publicConfig(c), c).githubSecret,
+    "github-private-credential",
+  );
+});
+test("microtareas permiten modelos independientes y rechazan módulos desconocidos", () => {
+  const c = mergeConfig(
+    {
+      ...defaults,
+      microtasks: [
+        { id: "search", name: "Buscar", model: "gpt-oss-120b", enabled: false },
+      ],
+    },
+    defaults,
+  );
+  assert.equal(c.microtasks?.[0].enabled, false);
+  assert.throws(
+    () =>
+      mergeConfig(
+        { ...defaults, microtasks: [{ id: "shell", model: "gpt-oss-120b" }] },
+        defaults,
+      ),
+    /inválido/,
+  );
+});

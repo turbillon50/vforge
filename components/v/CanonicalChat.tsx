@@ -1,10 +1,14 @@
 "use client";
+import { ChartResult } from "./ChartResult";
+import type { ChartArtifact } from "@/lib/v-canonical/charts";
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconHistory, IconPlus, IconX } from "@/components/brand/VFIcons";
 
 interface Message {
+  id?: string;
+  artifacts?: ChartArtifact[];
   role: "user" | "assistant";
   content: string;
   model?: string | null;
@@ -90,7 +94,7 @@ export default function VCanonicalChat() {
     setMessages([INTRO]);
     try {
       const res = await fetch(
-        `/api/v/messages?sessionId=${encodeURIComponent(sid)}&limit=200`,
+        `/api/v/canonical/messages?sessionId=${encodeURIComponent(sid)}&limit=200`,
         { cache: "no-store" },
       );
       const data = await res.json();
@@ -106,6 +110,8 @@ export default function VCanonicalChat() {
               role: m.role,
               content: m.content,
               model: typeof m.model === "string" ? m.model : null,
+              id: typeof m.id === "string" ? m.id : undefined,
+              artifacts: Array.isArray(m.artifacts) ? m.artifacts : [],
             }))
         : [];
       // Sólo mostramos this session's turns; si está vacío, el saludo de V.
@@ -235,6 +241,8 @@ export default function VCanonicalChat() {
         {
           role: "assistant",
           content: data.reply,
+          id: data.assistant_id,
+          artifacts: data.artifacts,
           model: typeof data.model === "string" ? data.model : null,
         },
       ]);
@@ -318,6 +326,9 @@ export default function VCanonicalChat() {
                     }`}
                   >
                     {msg.content}
+                    {msg.artifacts?.map((a, j) => (
+                      <ChartResult key={j} value={a} />
+                    ))}
                     {msg.role === "assistant" && msg.model && (
                       <p className="mt-2 border-t border-[var(--border-1)] pt-2 text-xs text-black/65">
                         {msg.model === "v-plugin"

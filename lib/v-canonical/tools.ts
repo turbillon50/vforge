@@ -154,8 +154,15 @@ export async function repositoryRead(c: Connection, path = "README.md") {
 export async function testConnection(c: Connection) {
   if (!c.endpoint) throw Error("Falta configurar la conexión.");
   if (c.kind === "database") {
-    await databaseRead(c);
-    return "PostgreSQL respondió; lectura verificada.";
+    const d = await databaseSchema(c);
+    return (
+      "Base real: " +
+      String(d.actual_database?.database || "desconocida") +
+      " · " +
+      d.tables.returned +
+      (d.tables.truncated ? "+" : "") +
+      " tablas accesibles."
+    );
   }
   if (c.kind === "repository") {
     const r = await repositoryRead(c);
@@ -171,4 +178,29 @@ export async function testConnection(c: Connection) {
   } finally {
     await m.close();
   }
+}
+
+export async function databaseSchema(c: Connection, filter = "") {
+  const safe = filter.replace(/[^a-zA-Z0-9_]/g, "").slice(0, 80);
+  const meta = await databaseRead(
+    c,
+    "SELECT current_database() AS database, current_user AS role",
+  );
+  const tables = await databaseRead(
+    c,
+    "SELECT table_schema,table_name FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog','information_schema') ORDER BY (table_schema='public') DESC,table_schema,table_name",
+  );
+  const columns = await databaseRead(
+    c,
+    "SELECT table_schema,table_name,column_name,data_type FROM information_schema.columns WHERE table_schema NOT IN ('pg_catalog','information_schema')" +
+      (safe ? " AND table_name='" + safe + "'" : "") +
+      " ORDER BY (table_schema='public') DESC,table_schema,table_name,ordinal_position",
+  );
+  return {
+    connection: c.name,
+    actual_database: meta.rows[0],
+    tables,
+    columns,
+    note: "El nombre mostrado de la conexión puede no coincidir con su base real. Si hay más columnas, consulta table con un nombre de tables.",
+  };
 }

@@ -1,3 +1,5 @@
+import { saveArtifacts, sessionArtifacts } from "@/lib/v-canonical/artifacts";
+import { vTurnIds, OPERATOR_USER_ID } from "@/lib/v-chat/store";
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { answerCanonical } from "@/lib/v-canonical/agent";
@@ -70,6 +72,11 @@ export async function POST(req: NextRequest) {
         {
           ok: true,
           reply: cached.reply,
+          assistant_id: vTurnIds(OPERATOR_USER_ID, sessionId, turnId)[1],
+          artifacts:
+            (await sessionArtifacts(sessionId))[
+              vTurnIds(OPERATOR_USER_ID, sessionId, turnId)[1]
+            ] || [],
           model: cached.model,
           persisted: true,
           mode,
@@ -79,7 +86,22 @@ export async function POST(req: NextRequest) {
         { headers },
       );
     }
-    const history = safeHistory(stored.length ? stored : body.history);
+    const historicalArtifacts = stored.length
+      ? await sessionArtifacts(sessionId)
+      : {};
+    const history = safeHistory(
+      stored.length
+        ? stored.map((m) => ({
+            ...m,
+            content:
+              m.content +
+              (historicalArtifacts[m.id]?.length
+                ? "\nDatos de gráficas guardadas y verificadas por servidor (prevalecen sobre descripciones anteriores): " +
+                  JSON.stringify(historicalArtifacts[m.id])
+                : ""),
+          }))
+        : body.history,
+    );
     const result = await answerCanonical(
       message,
       history,
@@ -92,12 +114,15 @@ export async function POST(req: NextRequest) {
       assistantText: result.reply,
       model: result.model,
     });
+    const assistantId = vTurnIds(OPERATOR_USER_ID, sessionId, turnId)[1];
+    await saveArtifacts(sessionId, assistantId, result.artifacts);
     const saved = await getVTurn(sessionId, turnId);
     if (!saved) throw new Error("V_STORAGE_UNAVAILABLE");
     return NextResponse.json(
       {
         ok: true,
         ...result,
+        assistant_id: assistantId,
         reply: saved.reply,
         model: saved.model,
         persisted: true,
