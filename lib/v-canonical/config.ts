@@ -1,3 +1,4 @@
+import { DEFAULT_MICROTASKS, type MicrotaskConfig } from "./microtasks";
 import { queryAll } from "@/lib/db/client";
 import {
   encryptOperatorSecret,
@@ -20,6 +21,9 @@ export interface CanonConfig {
   engine: "cerebras" | "mesh" | "custom";
   customEndpoint?: string;
   customSecret?: string;
+  githubSecret?: string;
+  githubRoles?: Record<string, NonNullable<Connection["purpose"]>>;
+  microtasks?: MicrotaskConfig[];
   model: string;
   connections: Connection[];
 }
@@ -81,8 +85,16 @@ export async function loadConfig(): Promise<CanonConfig> {
     ["v-canonica"],
   );
   return rows[0]
-    ? JSON.parse(unseal(rows[0].payload))
-    : structuredClone(defaults);
+    ? {
+        ...JSON.parse(unseal(rows[0].payload)),
+        microtasks:
+          JSON.parse(unseal(rows[0].payload)).microtasks ??
+          structuredClone(DEFAULT_MICROTASKS),
+      }
+    : {
+        ...structuredClone(defaults),
+        microtasks: structuredClone(DEFAULT_MICROTASKS),
+      };
 }
 export async function saveConfig(config: CanonConfig) {
   await ensure();
@@ -95,6 +107,8 @@ export function publicConfig(config: CanonConfig) {
   return {
     ...config,
     customSecret: undefined,
+    githubSecret: undefined,
+    hasGithubSecret: !!(config.githubSecret || process.env.GITHUB_TOKEN),
     hasCustomSecret: !!config.customSecret,
     connections: config.connections.map((c) => ({
       ...c,
@@ -144,6 +158,55 @@ export function mergeConfig(input: unknown, old: CanonConfig): CanonConfig {
     )
       throw Error("Usa una URL HTTPS sin credenciales ni parámetros.");
   }
+  const githubSecret =
+    typeof b.githubSecret === "string" && b.githubSecret.trim()
+      ? b.githubSecret.trim()
+      : old.githubSecret;
+  if ((githubSecret?.length || 0) > 10000)
+    throw Error("Token GitHub demasiado largo.");
+  const githubRoles: Record<string, NonNullable<Connection["purpose"]>> = {};
+  const roles = b.githubRoles ?? old.githubRoles ?? {};
+  if (
+    !roles ||
+    typeof roles !== "object" ||
+    Array.isArray(roles) ||
+    Object.keys(roles).length > 2000
+  )
+    throw Error("Revisa los repositorios GitHub.");
+  for (const [repo, purpose] of Object.entries(roles)) {
+    if (
+      !/^[\w.-]+\/[\w.-]+$/.test(repo) ||
+      !["skills", "components", "examples", "ai-module", "reference"].includes(
+        String(purpose),
+      )
+    )
+      throw Error("Función de repositorio inválida.");
+    githubRoles[repo] = purpose as NonNullable<Connection["purpose"]>;
+  }
+  const moduleInput = b.microtasks ?? old.microtasks ?? DEFAULT_MICROTASKS;
+  if (!Array.isArray(moduleInput) || moduleInput.length > 3)
+    throw Error("Revisa las microtareas.");
+  const moduleIds = new Set<string>();
+  const microtasks: MicrotaskConfig[] = moduleInput.map((m: unknown) => {
+    if (!m || typeof m !== "object") throw Error("Microtarea inválida.");
+    const x = m as Record<string, unknown>;
+    const preset = DEFAULT_MICROTASKS.find((p) => p.id === x.id);
+    if (
+      !preset ||
+      moduleIds.has(String(x.id)) ||
+      typeof x.model !== "string" ||
+      !x.model.trim() ||
+      x.model.length > 120
+    )
+      throw Error("Modelo de microtarea inválido.");
+    moduleIds.add(String(x.id));
+    return {
+      id: preset.id,
+      name: preset.name,
+      model: x.model.trim(),
+      enabled: x.enabled !== false,
+    };
+  });
   const ids = new Set<string>();
   let databases = 0;
   const connections = b.connections.map((raw: unknown): Connection => {
@@ -229,5 +292,8 @@ export function mergeConfig(input: unknown, old: CanonConfig): CanonConfig {
     customEndpoint,
     customSecret,
     connections,
+    githubSecret,
+    githubRoles,
+    microtasks,
   };
 }
