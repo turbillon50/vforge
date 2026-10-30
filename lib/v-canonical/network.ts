@@ -73,3 +73,14 @@ export async function boundedText(response: Response, max = 160000) {
     await reader.cancel().catch(() => {});
   }
 }
+
+export function inferenceEndpoint(
+  engine: "cerebras" | "mesh",
+  base: string,
+): string {
+  const clean = base.replace(/\/+$/, "");
+  return (
+    (engine === "mesh" ? clean.replace(/\/v1$/, "") + "/v1" : clean) +
+    "/chat/completions"
+  );
+}

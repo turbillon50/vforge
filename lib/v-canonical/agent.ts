@@ -1,3 +1,4 @@
+import { inferenceEndpoint } from "./network";
 import { createHash } from "node:crypto";
 import { queryAll } from "@/lib/db/client";
 import { loadConfig, type Connection } from "./config";
@@ -257,7 +258,7 @@ export async function answerCanonical(
     const evidence: Array<{ tool: string; result: string }> = [];
     let executions = 0;
     for (let step = 0; step < 5; step++) {
-      const response = await fetch(base + "/chat/completions", {
+      const response = await fetch(inferenceEndpoint(engine, base), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

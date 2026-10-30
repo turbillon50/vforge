@@ -267,9 +267,9 @@ export default function VCanonicalChat() {
     <div className="relative mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col px-4 py-6">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold">Conversación</h1>
+          <h2 className="text-2xl font-bold">Conversación</h2>
           <p className="text-sm text-muted-foreground">
-            Pídele tareas, consulta proyectos, o platica con ella por voz.
+            Habla con V, consulta su memoria y usa sus conexiones.
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { defaults, mergeConfig, publicConfig } from "../lib/v-canonical/config";
-import { privateAddress } from "../lib/v-canonical/network";
+import { privateAddress, inferenceEndpoint } from "../lib/v-canonical/network";
 test("V limita bases a cinco, sin limitar MCP o repos", () => {
   const c = structuredClone(defaults);
   for (let i = 0; i < 5; i++)
@@ -82,4 +82,19 @@ test("IPv4 públicos mapeados en IPv6 se aceptan y los privados siguen bloqueado
   assert.equal(privateAddress("::ffff:0808:0808"), false);
   assert.equal(privateAddress("::ffff:7f00:1"), true);
   assert.equal(privateAddress("ff00::1"), true);
+});
+
+test("cada motor usa su ruta real de inferencia sin duplicar v1", () => {
+  assert.equal(
+    inferenceEndpoint("mesh", "https://api.mindcontextia.one/mesh"),
+    "https://api.mindcontextia.one/mesh/v1/chat/completions",
+  );
+  assert.equal(
+    inferenceEndpoint("mesh", "https://api.mindcontextia.one/mesh/v1/"),
+    "https://api.mindcontextia.one/mesh/v1/chat/completions",
+  );
+  assert.equal(
+    inferenceEndpoint("cerebras", "https://api.cerebras.ai/v1/"),
+    "https://api.cerebras.ai/v1/chat/completions",
+  );
 });
