@@ -1,6 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Private authenticated photos and local previews. */
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 export interface ChatPhoto {
   name: string;
   data?: string;
@@ -66,18 +66,8 @@ export function PhotoAttachments({
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  return (
-    <div className="mt-2 shrink-0">
-      <input
-        ref={input}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        multiple
-        className="sr-only"
-        aria-label="Seleccionar fotos"
-        onChange={async (e) => {
-          const files = Array.from(e.target.files || []);
-          e.target.value = "";
+  const addFiles = useCallback(async (files: File[]) => {
+    if (disabled || !files.length) return;
           setError("");
           if (files.length + photos.length > 3) {
             setError("Puedes adjuntar hasta 3 fotos por mensaje.");
@@ -97,6 +87,34 @@ export function PhotoAttachments({
             setBusy(false);
             onBusy(false);
           }
+  }, [disabled, photos, onChange, onBusy]);
+  useEffect(() => {
+    const onPaste = (event: ClipboardEvent) => {
+      if (disabled) return;
+      const files = Array.from(event.clipboardData?.items || [])
+        .filter(item => item.kind === "file" && item.type.startsWith("image/"))
+        .map(item => item.getAsFile())
+        .filter((file): file is File => file !== null);
+      if (!files.length) return;
+      event.preventDefault();
+      void addFiles(files);
+    };
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+  }, [addFiles, disabled]);
+  return (
+    <div className="mt-2 shrink-0">
+      <input
+        ref={input}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        className="sr-only"
+        aria-label="Seleccionar fotos"
+        onChange={async (e) => {
+          const files = Array.from(e.target.files || []);
+          e.target.value = "";
+          void addFiles(files);
         }}
       />
       <button
@@ -108,7 +126,7 @@ export function PhotoAttachments({
         {busy ? "Preparando fotos…" : "＋ Adjuntar fotos"}
       </button>
       <span className="ml-2 text-xs text-black/60">
-        JPG, PNG o WebP · hasta 3
+        Pega con Ctrl+V o adjunta · hasta 3 fotos
       </span>
       {photos.length > 0 && (
         <div className="flex flex-wrap gap-3 mt-2">
