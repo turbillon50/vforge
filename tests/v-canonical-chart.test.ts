@@ -56,3 +56,17 @@ test("una gráfica real no anuncia archivos temporales inventados", () => {
   );
   assert.equal(safeChartReply("Respuesta normal", false), "Respuesta normal");
 });
+
+test("credenciales JSON y variables de entorno históricas quedan protegidas", () => {
+  const sample =
+    '{"secret":"private-secret-value"}\nVULCANO_TOKEN="private-token-value"\nMCP_KEY=another-private-key';
+  const safe = redactText(sample);
+  assert.ok(!safe.includes("private-secret-value"));
+  assert.ok(!safe.includes("private-token-value"));
+  assert.ok(!safe.includes("another-private-key"));
+});
+
+test("la redacción repetida no altera los marcadores ya protegidos", () => {
+  const first = redactText('{"secret":"private-secret-value"}');
+  assert.equal(redactText(first), first);
+});

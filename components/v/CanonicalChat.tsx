@@ -1,4 +1,9 @@
 "use client";
+import {
+  PhotoAttachments,
+  PhotoList,
+  type ChatPhoto,
+} from "./PhotoAttachments";
 import { ChartResult } from "./ChartResult";
 import type { ChartArtifact } from "@/lib/v-canonical/charts";
 
@@ -7,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { IconHistory, IconPlus, IconX } from "@/components/brand/VFIcons";
 
 interface Message {
+  photos?: ChatPhoto[];
   id?: string;
   artifacts?: ChartArtifact[];
   role: "user" | "assistant";
@@ -56,6 +62,8 @@ function whenLabel(iso: string): string {
 export default function VCanonicalChat() {
   const [mode] = useState<Mode>("text");
   const [messages, setMessages] = useState<Message[]>([INTRO]);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photos, setPhotos] = useState<ChatPhoto[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [hydrating, setHydrating] = useState(true);
@@ -111,6 +119,7 @@ export default function VCanonicalChat() {
               content: m.content,
               model: typeof m.model === "string" ? m.model : null,
               id: typeof m.id === "string" ? m.id : undefined,
+              photos: Array.isArray(m.photos) ? m.photos : [],
               artifacts: Array.isArray(m.artifacts) ? m.artifacts : [],
             }))
         : [];
@@ -153,7 +162,7 @@ export default function VCanonicalChat() {
   }, [loadSessions, loadHistory]);
 
   function switchSession(sid: string) {
-    if (loading) return;
+    if (loading || photoBusy) return;
     setNotice("");
     if (sid === sessionIdRef.current) {
       setDrawerOpen(false);
@@ -162,6 +171,7 @@ export default function VCanonicalChat() {
     }
     sessionIdRef.current = sid;
     setInput("");
+    setPhotos([]);
     pendingRef.current = null;
     try {
       localStorage.setItem(STORAGE_KEY, sid);
@@ -173,9 +183,10 @@ export default function VCanonicalChat() {
   }
 
   function newSession() {
-    if (loading) return;
+    if (loading || photoBusy) return;
     setNotice("");
     setInput("");
+    setPhotos([]);
     pendingRef.current = null;
     const sid = makeSessionId();
     sessionIdRef.current = sid;
@@ -191,8 +202,9 @@ export default function VCanonicalChat() {
   }
 
   async function sendMessage() {
-    const text = input.trim();
-    if (!text || loading || hydrating || !historyReady) return;
+    const text =
+      input.trim() || (photos.length ? "¿Qué ves en estas fotos?" : "");
+    if (!text || loading || photoBusy || hydrating || !historyReady) return;
     setNotice("");
     const sid = sessionIdRef.current;
     if (
@@ -205,7 +217,7 @@ export default function VCanonicalChat() {
 
     const newMessages: Message[] = [
       ...messages,
-      { role: "user", content: text },
+      { role: "user", content: text, photos },
     ];
     setMessages(newMessages);
     setInput("");
@@ -218,6 +230,7 @@ export default function VCanonicalChat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: text,
+          photos: photos.map((p) => ({ name: p.name, data: p.data })),
           session_id: sid,
           turn_id: pendingRef.current.id,
           history: newMessages
@@ -237,7 +250,11 @@ export default function VCanonicalChat() {
         return;
       }
       setMessages([
-        ...newMessages,
+        ...newMessages.map((m, i) =>
+          i === newMessages.length - 1
+            ? { ...m, photos: data.photos || m.photos }
+            : m,
+        ),
         {
           role: "assistant",
           content: data.reply,
@@ -247,6 +264,7 @@ export default function VCanonicalChat() {
         },
       ]);
       pendingRef.current = null;
+      setPhotos([]);
       setNotice(
         data.memory?.status === "partial" ||
           data.memory?.status === "unavailable"
@@ -325,6 +343,9 @@ export default function VCanonicalChat() {
                         : "border border-[var(--border-1)] bg-white text-black"
                     }`}
                   >
+                    {msg.photos?.length ? (
+                      <PhotoList photos={msg.photos} />
+                    ) : null}
                     {msg.content}
                     {msg.artifacts?.map((a, j) => (
                       <ChartResult key={j} value={a} />
@@ -361,6 +382,15 @@ export default function VCanonicalChat() {
               {notice}
             </p>
           )}
+          <PhotoAttachments
+            onBusy={setPhotoBusy}
+            photos={photos}
+            onChange={(p) => {
+              setPhotos(p);
+              pendingRef.current = null;
+            }}
+            disabled={loading || photoBusy || hydrating || !historyReady}
+          />
           {/* Input */}
           <div className="mt-4 flex shrink-0 gap-2">
             <textarea
@@ -372,11 +402,17 @@ export default function VCanonicalChat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}
-              disabled={loading || hydrating || !historyReady}
+              disabled={loading || photoBusy || hydrating || !historyReady}
             />
             <button
               onClick={sendMessage}
-              disabled={loading || hydrating || !historyReady || !input.trim()}
+              disabled={
+                loading ||
+                photoBusy ||
+                hydrating ||
+                !historyReady ||
+                (!input.trim() && !photos.length)
+              }
               className="self-end rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-medium text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
             >
               Enviar
