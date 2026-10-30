@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test:prepare": "mkdir -p .test-dist/lib/mcp && cp lib/mcp/unicorn-shared.mjs .test-dist/lib/mcp/unicorn-shared.mjs",
     "test": "tsc -p tsconfig.test.json && npm run test:prepare && node --require \"./.test-dist/tests/alias-hook.js\" --test \".test-dist/tests/roles.test.js\" \".test-dist/tests/invite-token.test.js\" \".test-dist/tests/owner-auth.test.js\" \".test-dist/tests/viewport-url.test.js\" \".test-dist/tests/review-context.test.js\" \".test-dist/tests/archive-text.test.js\" \".test-dist/tests/provider-errors.test.js\" \".test-dist/tests/room-context.test.js\" \".test-dist/tests/factory-spine.test.js\" \".test-dist/tests/read-page.test.js\" \".test-dist/tests/project-tools.test.js\" \".test-dist/tests/see-page.test.js\" \".test-dist/tests/work-order.test.js\" \".test-dist/tests/v-factory-hands.test.js\" \".test-dist/tests/chat-attachments.test.js\" \".test-dist/tests/unicorn-mcp.test.js\" \".test-dist/tests/spaces.test.js\" \"tests/vforge-api-viewport.test.mjs\" \"tests/vivo-edicion.test.mjs\" \".test-dist/tests/v-continuity.test.js\" \".test-dist/tests/v-origin-identity.test.js\" \".test-dist/tests/v-paradox.test.js\" \".test-dist/tests/v-conversation-context.test.js\" \".test-dist/tests/v-retrieval-plan.test.js\" && node --test tests/v-memory-core.test.mjs",
-    "audit:contrast": "python3 scripts/contrast_audit.py"
+    "audit:contrast": "python3 scripts/contrast_audit.py",
+    "test:canonical": "tsc -p tsconfig.test.json && node --require ./.test-dist/tests/alias-hook.js --test .test-dist/tests/v-canonical.test.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
@@ -35,6 +36,7 @@
     "octokit": "^5.0.5",
     "openai": "^6.35.0",
     "pdf-lib": "^1.17.1",
+    "pg": "^8.23.1",
     "qrcode": "^1.5.4",
     "react": "^19",
     "react-dom": "^19",
@@ -51,6 +53,7 @@
     "@eslint/eslintrc": "^3.3.5",
     "@next/eslint-plugin-next": "^16.2.4",
     "@types/node": "^22",
+    "@types/pg": "^8.23.1",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",

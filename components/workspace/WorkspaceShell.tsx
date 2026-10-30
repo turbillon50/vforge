@@ -40,6 +40,7 @@ type NavItem = {
 };
 
 const PRIMARY_NAV: NavItem[] = [
+  { href: "/app/v-canonica", label: "V canónica", description: "Chat, memoria y conexiones de V", Icon: IconLayers },
   { href: "/app/spaces", label: "Spaces", description: "Contexto y módulos por proyecto", Icon: IconLayers },
   {
     href: "/app/trio",
