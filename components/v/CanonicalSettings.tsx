@@ -123,8 +123,8 @@ export function CanonicalSettings() {
   const field =
     "w-full rounded-xl border border-[var(--border-1)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--fg-primary)]";
   return (
-    <section className="mx-auto w-full max-w-3xl border-b border-[var(--border-1)] px-4 py-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <section className="mx-auto flex min-h-0 max-h-[55%] w-full max-w-3xl shrink-0 flex-col border-b border-[var(--border-1)] bg-white px-4 py-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs text-[var(--fg-secondary)]">
             CASA OFICIAL · ACCESO OWNER
@@ -149,7 +149,7 @@ export function CanonicalSettings() {
         </p>
       )}
       {open && config && (
-        <div className="mt-5 space-y-5">
+        <div className="mt-4 min-h-0 space-y-5 overflow-y-auto overscroll-contain pr-1">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm">
               Motor de V
