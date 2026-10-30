@@ -70,3 +70,35 @@ test("la redacción repetida no altera los marcadores ya protegidos", () => {
   const first = redactText('{"secret":"private-secret-value"}');
   assert.equal(redactText(first), first);
 });
+
+test("gráfica de respaldos consulta los datos reales aunque el modelo omita inventariar", async () => {
+  const { recoveryChartSource } = await import("../lib/v-canonical/microtasks");
+  const evidence = new Map();
+  let calls = 0;
+  const load = async () => {
+    calls++;
+    return {
+      recovered: [
+        { source: "memory", records: 138 },
+        { source: "brain_files", records: 221 },
+      ],
+    };
+  };
+  const source = await recoveryChartSource(
+    "Grafica los respaldos recuperados",
+    evidence,
+    load,
+  );
+  assert.equal(calls, 1);
+  assert.deepEqual(source?.rows, [
+    { source: "memory", records: 138 },
+    { source: "brain_files", records: 221 },
+  ]);
+  await recoveryChartSource("respaldos", evidence, load);
+  assert.equal(calls, 1);
+  assert.equal(
+    await recoveryChartSource("temperatura", new Map(), load),
+    undefined,
+  );
+  assert.equal(calls, 1);
+});

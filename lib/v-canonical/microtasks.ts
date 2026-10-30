@@ -80,6 +80,24 @@ async function specialist(
   text = text.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, "");
   return { model: d.model || taskConfig.model, data: JSON.parse(text) };
 }
+// A direct chart call must work without a preceding inventory tool call.
+export async function recoveryChartSource(
+  message: string,
+  evidence: Map<string, QueryEvidence>,
+  load: () => Promise<{
+    recovered: unknown[];
+  }> = recoverySources,
+): Promise<QueryEvidence | undefined> {
+  if (!/recuperad|respaldo|backup/i.test(message)) return undefined;
+  if (!evidence.has("v_memoria_recuperada")) {
+    const result = await load();
+    evidence.set("v_memoria_recuperada", {
+      name: "Respaldos recuperados de V",
+      rows: result.recovered as Record<string, unknown>[],
+    });
+  }
+  return evidence.get("v_memoria_recuperada");
+}
 export function microtaskTools(
   config: CanonConfig,
   evidence: Map<string, QueryEvidence>,
@@ -263,17 +281,12 @@ export function microtaskTools(
       },
       run: async (args) => {
         let chart: ChartArtifact;
-        const recoveredRequested = /recuperad|respaldo|backup/i.test(
-          userMessage,
-        );
-        const autoSource =
-          !args.source_tool && recoveredRequested
-            ? evidence.get("v_memoria_recuperada")
-            : undefined;
+        const autoSource = await recoveryChartSource(userMessage, evidence);
         const source =
-          typeof args.source_tool === "string"
+          autoSource ||
+          (typeof args.source_tool === "string"
             ? evidence.get(args.source_tool)
-            : autoSource;
+            : undefined);
         if (autoSource) {
           args.label_column = "source";
           args.value_column = "records";
