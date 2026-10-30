@@ -2,11 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  IconHistory,
-  IconPlus,
-  IconX,
-} from "@/components/brand/VFIcons";
+import { IconHistory, IconPlus, IconX } from "@/components/brand/VFIcons";
 
 interface Message {
   role: "user" | "assistant";
@@ -24,7 +20,10 @@ interface SessionRow {
 
 type Mode = "text" | "voice";
 
-const INTRO: Message = { role: "assistant", content: "Hola, soy V. ¿En qué te ayudo hoy?" };
+const INTRO: Message = {
+  role: "assistant",
+  content: "Hola, soy V. ¿En qué te ayudo hoy?",
+};
 const STORAGE_KEY = "v_chat_session";
 
 function makeSessionId(): string {
@@ -44,7 +43,10 @@ function whenLabel(iso: string): string {
   const days = Math.floor(hrs / 24);
   if (days === 1) return "ayer";
   if (days < 7) return `hace ${days} d`;
-  return new Date(t).toLocaleDateString("es-MX", { day: "numeric", month: "short" });
+  return new Date(t).toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "short",
+  });
 }
 
 export default function VCanonicalChat() {
@@ -57,7 +59,9 @@ export default function VCanonicalChat() {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [notice, setNotice] = useState("");
-  const pendingRef = useRef<{ sid: string; text: string; id: string } | null>(null);
+  const pendingRef = useRef<{ sid: string; text: string; id: string } | null>(
+    null,
+  );
   const sessionIdRef = useRef<string>("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -67,12 +71,16 @@ export default function VCanonicalChat() {
 
   const loadSessions = useCallback(async () => {
     try {
-      const res = await fetch("/api/v/sessions?limit=40", { cache: "no-store" });
+      const res = await fetch("/api/v/sessions?limit=40", {
+        cache: "no-store",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error("sessions");
       if (Array.isArray(data?.sessions)) setSessions(data.sessions);
     } catch {
-      setNotice("No pude cargar la lista de conversaciones. Abre Hilos para reintentar.");
+      setNotice(
+        "No pude cargar la lista de conversaciones. Abre Hilos para reintentar.",
+      );
     }
   }, []);
 
@@ -90,14 +98,24 @@ export default function VCanonicalChat() {
       if (sessionIdRef.current !== sid) return;
       const hist: Message[] = Array.isArray(data?.messages)
         ? data.messages
-            .filter((m: Message) => m && (m.role === "user" || m.role === "assistant"))
-            .map((m: Message) => ({ role: m.role, content: m.content, model: typeof m.model === "string" ? m.model : null }))
+            .filter(
+              (m: Message) =>
+                m && (m.role === "user" || m.role === "assistant"),
+            )
+            .map((m: Message) => ({
+              role: m.role,
+              content: m.content,
+              model: typeof m.model === "string" ? m.model : null,
+            }))
         : [];
       // Sólo mostramos this session's turns; si está vacío, el saludo de V.
       setMessages(hist.length ? hist : [INTRO]);
       setHistoryReady(true);
     } catch {
-      if (sessionIdRef.current === sid) setNotice("No pude recuperar el historial. Vuelve a abrir este hilo para reintentar.");
+      if (sessionIdRef.current === sid)
+        setNotice(
+          "No pude recuperar el historial. Vuelve a abrir este hilo para reintentar.",
+        );
     } finally {
       if (sessionIdRef.current === sid) setHydrating(false);
     }
@@ -171,11 +189,18 @@ export default function VCanonicalChat() {
     if (!text || loading || hydrating || !historyReady) return;
     setNotice("");
     const sid = sessionIdRef.current;
-    if (!pendingRef.current || pendingRef.current.sid !== sid || pendingRef.current.text !== text) {
+    if (
+      !pendingRef.current ||
+      pendingRef.current.sid !== sid ||
+      pendingRef.current.text !== text
+    ) {
       pendingRef.current = { sid, text, id: crypto.randomUUID() };
     }
 
-    const newMessages: Message[] = [...messages, { role: "user", content: text }];
+    const newMessages: Message[] = [
+      ...messages,
+      { role: "user", content: text },
+    ];
     setMessages(newMessages);
     setInput("");
     setLoading(true);
@@ -199,19 +224,33 @@ export default function VCanonicalChat() {
       if (!res.ok || !data.persisted || typeof data.reply !== "string") {
         setMessages(messages);
         setInput(text);
-        setNotice(data.error || "No pude confirmar el guardado. Reintenta el envío.");
+        setNotice(
+          data.error || "No pude confirmar el guardado. Reintenta el envío.",
+        );
         return;
       }
-      setMessages([...newMessages, { role: "assistant", content: data.reply, model: typeof data.model === "string" ? data.model : null }]);
+      setMessages([
+        ...newMessages,
+        {
+          role: "assistant",
+          content: data.reply,
+          model: typeof data.model === "string" ? data.model : null,
+        },
+      ]);
       pendingRef.current = null;
-      setNotice(data.memory?.status === "partial" || data.memory?.status === "unavailable"
-        ? "Conversación guardada. Parte de la memoria histórica no estuvo disponible."
-        : `Conversación guardada${data.memory?.sources?.length ? ` · ${data.memory.sources.length} recuerdos consultados` : ""}.`);
+      setNotice(
+        data.memory?.status === "partial" ||
+          data.memory?.status === "unavailable"
+          ? "Conversación guardada. Parte de la memoria histórica no estuvo disponible."
+          : `Conversación guardada${data.memory?.sources?.length ? ` · ${data.memory.sources.length} recuerdos consultados` : ""}.`,
+      );
       void loadSessions();
     } catch {
       setMessages(messages);
       setInput(text);
-      setNotice("Se interrumpió la conexión. Tu mensaje sigue aquí; puedes volver a enviarlo.");
+      setNotice(
+        "Se interrumpió la conexión. Tu mensaje sigue aquí; puedes volver a enviarlo.",
+      );
     } finally {
       setLoading(false);
     }
@@ -243,13 +282,17 @@ export default function VCanonicalChat() {
             aria-label="Conversaciones guardadas"
             className="flex min-h-11 items-center gap-1.5 rounded-full border border-[var(--border-1)] bg-white px-3 py-2 text-xs font-medium text-[var(--fg-secondary)] transition hover:text-black active:scale-95"
           >
-            <IconHistory size={14} /> <span className="hidden sm:inline">Hilos</span>
+            <IconHistory size={14} />{" "}
+            <span className="hidden sm:inline">Hilos</span>
           </button>
         </div>
       </div>
 
       {mode === "voice" ? (
-        <p className="text-sm">La voz sigue disponible en el chat de V original. Esta casa usa conversación escrita y conexiones.</p>
+        <p className="text-sm">
+          La voz sigue disponible en el chat de V original. Esta casa usa
+          conversación escrita y conexiones.
+        </p>
       ) : (
         <>
           {/* Messages */}
@@ -276,7 +319,11 @@ export default function VCanonicalChat() {
                     {msg.content}
                     {msg.role === "assistant" && msg.model && (
                       <p className="mt-2 border-t border-[var(--border-1)] pt-2 text-xs text-muted-foreground">
-                        {msg.model === "v-plugin" ? "Respuesta de herramienta" : msg.model === "v-capability-boundary" ? "Aviso de capacidades" : `Motor reportado: ${msg.model.replace(":", " · ")}`}
+                        {msg.model === "v-plugin"
+                          ? "Respuesta de herramienta"
+                          : msg.model === "v-capability-boundary"
+                            ? "Aviso de capacidades"
+                            : `Motor reportado: ${msg.model.replace(":", " · ")}`}
                       </p>
                     )}
                   </div>
@@ -293,7 +340,15 @@ export default function VCanonicalChat() {
             <div ref={bottomRef} />
           </div>
 
-          {notice && <p role="status" aria-live="polite" className="mt-3 text-sm text-[var(--fg-secondary)]">{notice}</p>}
+          {notice && (
+            <p
+              role="status"
+              aria-live="polite"
+              className="mt-3 text-sm text-[var(--fg-secondary)]"
+            >
+              {notice}
+            </p>
+          )}
           {/* Input */}
           <div className="mt-4 flex gap-2">
             <textarea
@@ -344,7 +399,8 @@ export default function VCanonicalChat() {
             >
               <div className="flex items-center justify-between px-4 pb-3 pt-5">
                 <h2 className="flex items-center gap-2 text-sm font-semibold text-black">
-                  <IconHistory size={16} className="text-black" /> Conversaciones
+                  <IconHistory size={16} className="text-black" />{" "}
+                  Conversaciones
                 </h2>
                 <button
                   onClick={() => setDrawerOpen(false)}
@@ -368,8 +424,8 @@ export default function VCanonicalChat() {
               <div className="flex-1 overflow-y-auto px-2 pb-4">
                 {sessions.length === 0 ? (
                   <p className="px-3 py-6 text-center text-[12px] text-[var(--fg-muted)]">
-                    Aún no hay conversaciones guardadas. Escríbele a V y este hilo
-                    aparecerá aquí.
+                    Aún no hay conversaciones guardadas. Escríbele a V y este
+                    hilo aparecerá aquí.
                   </p>
                 ) : (
                   <ul className="space-y-1">
@@ -392,7 +448,10 @@ export default function VCanonicalChat() {
                             <p className="mt-0.5 flex items-center gap-2 text-[11px] text-[var(--fg-tertiary)]">
                               <span>{whenLabel(s.last_at)}</span>
                               <span className="text-[var(--fg-muted)]">·</span>
-                              <span>{s.count} {s.count === 1 ? "mensaje" : "mensajes"}</span>
+                              <span>
+                                {s.count}{" "}
+                                {s.count === 1 ? "mensaje" : "mensajes"}
+                              </span>
                             </p>
                           </button>
                         </li>
