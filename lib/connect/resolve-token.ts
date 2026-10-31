@@ -28,7 +28,7 @@ async function userTokensWithClerkFallback(
 export interface ResolvedAccess {
   userId: string | null;
   isOwner: boolean;
-  /** Token GitHub a usar para ESTE request (owner→operador, usuario→el suyo). */
+  /** Credencial personal primero; el owner conserva fallback al operador. */
   githubToken: string | null;
   /** Token Vercel idem. */
   vercelToken: string | null;
@@ -37,14 +37,14 @@ export interface ResolvedAccess {
 /**
  * AISLAMIENTO MULTI-TENANT. Resuelve qué credenciales usar según QUIÉN
  * hace el request:
- *  - Owner (Luis): usa los tokens del operador (su GITHUB_TOKEN / VERCEL_TOKEN).
+ *  - Owner: conserva sus conexiones personales; si faltan usa el operador.
  *  - Cualquier otro usuario: SOLO su propio token conectado (user_secrets).
  *    Si no conectó nada → null (estado vacío). NUNCA el del owner.
  */
 /**
  * Variante para contextos SIN sesion Clerk (p. ej. MCP, donde el userId
  * viene de un token Bearer ya validado). Misma logica de aislamiento:
- * owner -> tokens del operador, usuario -> sus propios tokens del vault.
+ * owner -> personales con fallback al operador; cliente -> sólo personales.
  */
 export async function resolveAccessForUser(
   userId: string | null,
@@ -62,9 +62,10 @@ export async function resolveAccessForUser(
   }
 
   if (owner) {
+    const personal = await userTokensWithClerkFallback(userId);
     const [gh, vc] = await Promise.all([
-      getOperatorSecret("GITHUB_TOKEN").catch(() => null),
-      getOperatorSecret("VERCEL_TOKEN").catch(() => null),
+      personal.githubToken ?? getOperatorSecret("GITHUB_TOKEN").catch(() => null),
+      personal.vercelToken ?? getOperatorSecret("VERCEL_TOKEN").catch(() => null),
     ]);
     return { userId, isOwner: true, githubToken: gh, vercelToken: vc };
   }
@@ -91,9 +92,10 @@ export async function resolveAccess(): Promise<ResolvedAccess> {
   if (!userId) return { userId: null, isOwner: false, githubToken: null, vercelToken: null };
 
   if (owner) {
+    const personal = await userTokensWithClerkFallback(userId);
     const [gh, vc] = await Promise.all([
-      getOperatorSecret("GITHUB_TOKEN").catch(() => null),
-      getOperatorSecret("VERCEL_TOKEN").catch(() => null),
+      personal.githubToken ?? getOperatorSecret("GITHUB_TOKEN").catch(() => null),
+      personal.vercelToken ?? getOperatorSecret("VERCEL_TOKEN").catch(() => null),
     ]);
     return { userId, isOwner: true, githubToken: gh, vercelToken: vc };
   }
