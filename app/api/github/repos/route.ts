@@ -15,7 +15,16 @@ export async function GET(req: Request) {
     Math.max(parseInt(searchParams.get("max") ?? "200", 10) || 200, 1),
     500,
   );
-  const access = await resolveAccess();
+  let access: Awaited<ReturnType<typeof resolveAccess>>;
+  try {
+    access = await resolveAccess();
+  } catch {
+    console.error("[github/repos] credential resolution unavailable");
+    return Response.json(
+      { error: "No se pudieron verificar las conexiones del usuario" },
+      { status: 502, headers: { "Cache-Control": "no-store" } },
+    );
+  }
   if (!access.userId) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
