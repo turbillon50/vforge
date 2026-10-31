@@ -109,7 +109,7 @@ def sync_catalog(houses, previous):
         return {"status": "error", "error": "provider_not_verified"}
     if gh.get("account") != "dluisdelatorre-beep":
         return {"status": "error", "error": "github_identity_mismatch"}
-    fingerprint = hashlib.sha256(json.dumps(sources, sort_keys=True).encode()).hexdigest()
+    fingerprint = hashlib.sha256(json.dumps({"version": 2, "sources": sources}, sort_keys=True).encode()).hexdigest()
     if previous.get("fingerprint") == fingerprint and previous.get("status") == "ok":
         return previous
     items = []
