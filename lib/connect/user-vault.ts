@@ -23,7 +23,7 @@ export async function upsertUserByClerkId(
     VALUES (${clerkId}, ${clerkId}, ${email ?? clerkId + "@clerk.local"}, 'client', ${fullName ?? null}, ${avatarUrl ?? null})
     ON CONFLICT (id) DO UPDATE SET
       clerk_user_id = EXCLUDED.clerk_user_id,
-      email         = COALESCE(EXCLUDED.email, users.email),
+      email         = COALESCE(${email ?? null}, users.email),
       name          = COALESCE(EXCLUDED.name, users.name),
       avatar_url    = COALESCE(EXCLUDED.avatar_url, users.avatar_url)
   `;

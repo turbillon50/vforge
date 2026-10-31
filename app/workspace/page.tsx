@@ -4,6 +4,7 @@ import { ScopedWorkspaceHome } from "@/components/workspace/ScopedWorkspaceHome"
 import { isOwnerUser } from "@/lib/auth/owner";
 import { listUserConnections } from "@/lib/connect/user-vault";
 import { listScopedProjects } from "@/lib/projects/scoped-catalog";
+import { currentPersonalActor, resolvePersonalSpace } from "@/lib/workspace/personal";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,8 @@ export default async function WorkspacePage() {
     )?.emailAddress ?? user?.emailAddresses[0]?.emailAddress;
   if (!user || !email) redirect("/sign-in");
   if (isOwnerUser(user)) redirect("/app/projects");
+  const actor = await currentPersonalActor();
+  if (actor && await resolvePersonalSpace(actor)) redirect("/workspace/casa");
 
   const name = user.firstName || user.username || "";
   const [projects, connections] = await Promise.all([

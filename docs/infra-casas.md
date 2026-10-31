@@ -6,10 +6,28 @@
 configurados en `VFORGE_OWNER_EMAILS`. No se elevan permisos con metadata de
 Clerk. El cambio de esa variable requiere un nuevo despliegue.
 
-El 31 de octubre de 2026 Luis autorizó agregar `dluisdelatorre@gmail.com` y
-`casa1acevedo@gmail.com` sin retirar propietarios existentes. En ese momento
-ambos correos pertenecían a **un mismo usuario de Clerk**. Agregarlos a la lista
-no crea dos identidades ni transfiere las cuentas de los proveedores.
+El 31 de octubre de 2026 se separó la identidad compartida. `dluisdelatorre@gmail.com`
+es propietario global y `casa1acevedo@gmail.com` tiene su propia identidad de Clerk,
+propietario de los diez proyectos verificados de Casa Acevedo. Este último correo
+se retiró del allowlist global sin retirar a los demás propietarios existentes.
+
+El selector consulta `/api/workspace/context`. Luis puede entrar a la fábrica o
+consultar Casa Acevedo manteniendo su propia sesión. Acevedo sólo recibe su espacio;
+una URL, un correo coincidente o metadata no le otorgan acceso a otros espacios.
+La tabla `vforge_personal_spaces` vincula cada espacio con un ID de Clerk estable.
+Aplicar `migrations/20261031_personal_spaces.sql` antes de desplegar estos endpoints.
+
+`/workspace/casa` muestra proyectos por membresía y `/api/workspace/infra` devuelve
+sólo la casa asignada. Del gateway compartido únicamente muestra estado; excluye
+el inventario global de endpoints y claves. Selene conserva su implementación
+existente. Obsidian queda pendiente hasta disponer de la referencia de su bóveda;
+esta migración no copia memorias ni modifica el agente que las está construyendo.
+
+Se trasladaron ocho registros cifrados GitHub/Vercel del usuario compartido al
+usuario de Acevedo sin descifrarlos. El historial compartido y las apps sin una
+coincidencia verificada no se transfirieron. Al cerrar la separación se revocan
+las sesiones y tokens MCP/OAuth de la identidad antes compartida; ambos deben
+volver a identificarse con su propio correo y generar sus tokens nuevos.
 
 Los owners conservan acceso al catálogo global. Sus conexiones personales tienen
 prioridad para resolver credenciales; el fallback del operador sigue permitido

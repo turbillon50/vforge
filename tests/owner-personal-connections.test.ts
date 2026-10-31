@@ -12,7 +12,7 @@ let personal: Record<string, string> = {};
 let operatorReads = 0;
 loader._load = function (request, ...args) {
   if (request === "@clerk/nextjs/server") return {
-    clerkClient: async () => ({ users: { getUser: async () => ({ emailAddresses: [{ emailAddress: email }] }) } }),
+    clerkClient: async () => ({ users: { getUser: async () => ({ emailAddresses: [{ emailAddress: email, verification: { status: "verified" } }] }) } }),
     auth: async () => ({ userId: "test-user" }),
   };
   if (request === "@/lib/connect/user-vault") return {

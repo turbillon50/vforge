@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { createHash, randomBytes } from "node:crypto";
-import { isOwnerEmail } from "@/lib/auth/owner";
+import { isOwnerUser } from "@/lib/auth/owner";
 import { clerkClient } from "@clerk/nextjs/server";
 import type { McpPrincipal, McpScope } from "./rbac";
 
@@ -46,7 +46,7 @@ async function scopeForUser(userId: string): Promise<{ scope: McpScope; orgId: s
   try {
     const cc = await clerkClient();
     const u = await cc.users.getUser(userId);
-    const owner = (u.emailAddresses ?? []).some((e) => isOwnerEmail(e.emailAddress));
+    const owner = isOwnerUser(u);
     if (owner) return { scope: "admin", orgId: null };
   } catch {
     /* si Clerk falla, degradamos a client (fail-closed: nunca admin por error) */

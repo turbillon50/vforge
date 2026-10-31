@@ -26,3 +26,8 @@ test("stale Clerk owner metadata cannot elevate a secondary account", () => {
 
   assert.equal(isOwnerUser(staleUser), false);
 });
+
+test("an allowlisted email must be verified to grant platform ownership", () => {
+  assert.equal(isOwnerUser({ emailAddresses: [{ emailAddress: "turbillon50@gmail.com" }] }), false);
+  assert.equal(isOwnerUser({ emailAddresses: [{ emailAddress: "turbillon50@gmail.com", verification: { status: "verified" } }] }), true);
+});

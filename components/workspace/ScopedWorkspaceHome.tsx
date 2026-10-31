@@ -15,6 +15,7 @@ import {
 import { accountClerkAppearance } from "@/components/auth/ClerkShell";
 import { ScopedCreateApp } from "@/components/workspace/ScopedCreateApp";
 import type { ScopedProject } from "@/lib/projects/scoped-catalog";
+import { WorkspaceSelector } from "@/components/workspace/WorkspaceSelector";
 
 const ROLE_LABEL: Record<string, string> = {
   owner: "Owner",
@@ -92,6 +93,7 @@ export function ScopedWorkspaceHome({
             </SignOutButton>
           </div>
         </div>
+        <WorkspaceSelector />
       </header>
 
       <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[220px_minmax(0,1fr)]">
