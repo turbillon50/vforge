@@ -40,6 +40,7 @@ type NavItem = {
 };
 
 const PRIMARY_NAV: NavItem[] = [
+  { href: "/app/infraestructura", label: "Infraestructura", description: "Hetzner, MetaMCP, Nginx y fuentes verificadas", Icon: IconCpu },
   { href: "/app/v-canonica", label: "V canónica", description: "Chat, memoria y conexiones de V", Icon: IconLayers },
   { href: "/app/spaces", label: "Spaces", description: "Contexto y módulos por proyecto", Icon: IconLayers },
   {
@@ -99,6 +100,7 @@ const PRIMARY_NAV: NavItem[] = [
 ];
 
 const TITLES: Record<string, string> = {
+  "/app/infraestructura": "Infraestructura",
   "/app/spaces": "Spaces",
   "/app/chat": "Estudio",
   "/app/home": "Estudio",

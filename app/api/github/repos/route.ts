@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * AISLAMIENTO: cada usuario ve SOLO sus repos (su token GitHub). El owner
- * usa el token del operador. Sin token conectado → lista vacía + needsConnect.
+ * conserva su conexión personal y tiene fallback al operador. Sin credencial
+ * resuelta → lista vacía + needsConnect.
  */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -14,7 +15,16 @@ export async function GET(req: Request) {
     Math.max(parseInt(searchParams.get("max") ?? "200", 10) || 200, 1),
     500,
   );
-  const access = await resolveAccess();
+  let access: Awaited<ReturnType<typeof resolveAccess>>;
+  try {
+    access = await resolveAccess();
+  } catch {
+    console.error("[github/repos] credential resolution unavailable");
+    return Response.json(
+      { error: "No se pudieron verificar las conexiones del usuario" },
+      { status: 502, headers: { "Cache-Control": "no-store" } },
+    );
+  }
   if (!access.userId) {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
@@ -28,7 +38,7 @@ export async function GET(req: Request) {
     );
   }
   try {
-    const repos = await listAllUserRepos({ max, token: access.isOwner ? undefined : access.githubToken });
+    const repos = await listAllUserRepos({ max, token: access.githubToken });
     return new Response(JSON.stringify({ repos, total: repos.length }), {
       status: 200,
       headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
