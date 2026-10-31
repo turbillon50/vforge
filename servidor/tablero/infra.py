@@ -109,7 +109,7 @@ def sync_catalog(houses, previous):
         return {"status": "error", "error": "provider_not_verified"}
     if gh.get("account") != "dluisdelatorre-beep":
         return {"status": "error", "error": "github_identity_mismatch"}
-    fingerprint = hashlib.sha256(json.dumps({"version": 2, "sources": sources}, sort_keys=True).encode()).hexdigest()
+    fingerprint = hashlib.sha256(json.dumps({"version": 3, "sources": sources}, sort_keys=True).encode()).hexdigest()
     if previous.get("fingerprint") == fingerprint and previous.get("status") == "ok":
         return previous
     items = []
@@ -168,6 +168,13 @@ def sync_catalog(houses, previous):
       ON CONFLICT(project_id,repo_full_name) DO UPDATE SET
         default_branch=EXCLUDED.default_branch,private=EXCLUDED.private,
         html_url=EXCLUDED.html_url,updated_at=now() RETURNING project_id
+    ), memberships AS (
+      INSERT INTO project_live_members(project_id,email,role,status)
+      SELECT s.id,space.owner_email,'owner','active' FROM saved s
+      CROSS JOIN vforge_personal_spaces space WHERE space.id='acevedo'
+      ON CONFLICT(project_id,(lower(email))) DO UPDATE SET
+        role='owner',status='active',expires_at=NULL
+      RETURNING project_id
     ), audit AS (
       INSERT INTO audit_events(user_id,action,resource_type,ring,payload)
       VALUES('operator_luis','projects.sync.acevedo','projects',1,

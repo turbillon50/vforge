@@ -26,6 +26,7 @@ import { hasClerkPublishableKey } from "@/lib/auth/clerk-key";
 import { ConnectionGate } from "@/components/workspace/ConnectionGate";
 import { OwnerPushBanner } from "@/components/pwa/OwnerPushBanner";
 import { LimiteDeError } from "@/components/system/LimiteDeError";
+import { WorkspaceSelector } from "@/components/workspace/WorkspaceSelector";
 
 type IconComponent = (props: {
   size?: number;
@@ -303,6 +304,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
               </div>
               <AccountMenu />
             </div>
+            <WorkspaceSelector />
           </header>
 
           {/* El aviso de push vive AQUÍ, en el flujo, no flotando encima del

@@ -32,12 +32,13 @@ export function isOwnerEmail(email: string | null | undefined): boolean {
 }
 
 type MinimalUser = {
-  emailAddresses?: Array<{ emailAddress: string }>;
+  emailAddresses?: Array<{ emailAddress: string; verification?: { status: string | null } | null }>;
 };
 
 export function isOwnerUser(user: MinimalUser | null | undefined): boolean {
   if (!user) return false;
-  return (user.emailAddresses ?? []).some((e) => isOwnerEmail(e.emailAddress));
+  return (user.emailAddresses ?? []).some((e) =>
+    e.verification?.status === "verified" && isOwnerEmail(e.emailAddress));
 }
 
 /** Cache en memoria para no pegarle a Clerk en cada request del middleware. */

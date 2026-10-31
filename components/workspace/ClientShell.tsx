@@ -18,6 +18,7 @@ import {
 } from "@/components/brand/VFIcons";
 import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 import { accountClerkAppearance } from "@/components/auth/ClerkShell";
+import { WorkspaceSelector } from "@/components/workspace/WorkspaceSelector";
 
 type IconComponent = (props: {
   size?: number;
@@ -213,13 +214,13 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
       {/* Main content area */}
       <div
         className={cn(
-          "flex flex-col flex-1",
-          isStudio ? "h-full overflow-hidden" : "min-h-svh",
+          "flex min-h-0 min-w-0 flex-col flex-1",
+          isStudio ? "h-full overflow-hidden" : "h-full",
         )}
       >
         <header
           className={cn(
-            "flex h-[58px] items-center justify-between gap-2 border-b border-[var(--border-1)]",
+            "flex h-[58px] shrink-0 items-center justify-between gap-2 border-b border-[var(--border-1)]",
             isStudio ? "" : "sticky top-0",
             "bg-white/95 px-4 md:px-6",
           )}
@@ -242,12 +243,13 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
           </div>
           <ClientAccountMenu />
         </header>
+        <WorkspaceSelector />
 
         <main
           className={cn(
             isStudio
-              ? "h-[calc(100svh-58px)] overflow-hidden"
-              : "flex-1 overflow-auto p-6 md:p-8",
+              ? "min-h-0 flex-1 overflow-hidden"
+              : "min-h-0 flex-1 overflow-auto p-6 md:p-8",
           )}
         >
           {children}
