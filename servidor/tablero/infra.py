@@ -144,9 +144,9 @@ def sync_catalog(houses, previous):
         ORDER BY p.created_at LIMIT 1),i.id) AS project_id,i.* FROM incoming i
     ), saved AS (
       INSERT INTO projects(id,name,description,github_repo,github_url,github_private,
-        github_default_branch,vercel_project_id,vercel_url,client_name,category,status)
+        github_default_branch,vercel_project_id,vercel_url,client_name,category,status,cartera_tipo)
       SELECT project_id,name,description,repo,github_url,private,branch,vercel_id,url,
-        'Acevedo','en_revision','unknown' FROM resolved
+        'Acevedo','en_revision','unknown',ARRAY['Acevedo']::text[] FROM resolved
       ON CONFLICT(id) DO UPDATE SET
         github_repo=COALESCE(projects.github_repo,EXCLUDED.github_repo),
         github_url=COALESCE(projects.github_url,EXCLUDED.github_url),
@@ -154,7 +154,9 @@ def sync_catalog(houses, previous):
         github_default_branch=COALESCE(EXCLUDED.github_default_branch,projects.github_default_branch),
         vercel_project_id=COALESCE(EXCLUDED.vercel_project_id,projects.vercel_project_id),
         vercel_url=COALESCE(EXCLUDED.vercel_url,projects.vercel_url),
-        client_name=COALESCE(projects.client_name,'Acevedo'),updated_at=now()
+        client_name=COALESCE(projects.client_name,'Acevedo'),
+        cartera_tipo=CASE WHEN cardinality(COALESCE(projects.cartera_tipo,'{}'::text[]))=0
+          THEN ARRAY['Acevedo']::text[] ELSE projects.cartera_tipo END,updated_at=now()
       WHERE (projects.github_repo IS NULL OR projects.github_repo=EXCLUDED.github_repo)
         AND (projects.vercel_project_id IS NULL OR EXCLUDED.vercel_project_id IS NULL
              OR projects.vercel_project_id=EXCLUDED.vercel_project_id)
