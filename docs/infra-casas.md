@@ -29,9 +29,10 @@ coincidencia verificada no se transfirieron. Al cerrar la separación se revocan
 las sesiones y tokens MCP/OAuth de la identidad antes compartida; ambos deben
 volver a identificarse con su propio correo y generar sus tokens nuevos.
 
-Los owners conservan acceso al catálogo global. Sus conexiones personales tienen
-prioridad para resolver credenciales; el fallback del operador sigue permitido
-para owners. Esto no constituye aislamiento entre propietarios.
+Los owners consultan el catálogo global con las credenciales del operador. Los
+usuarios personales resuelven exclusivamente su propio vault; nunca toman tokens
+del operador. Consultar Casa Acevedo desde el selector no cambia el actor ni sus
+credenciales para ejecutar operaciones.
 
 ## Lecturas y fuentes
 

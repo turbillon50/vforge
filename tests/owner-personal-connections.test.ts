@@ -30,25 +30,25 @@ const resolver = require("../lib/connect/resolve-token") as {
 };
 loader._load = original;
 
-test("a platform owner keeps personal provider connections after promotion", async () => {
+test("a platform owner uses factory credentials even when personal tokens exist", async () => {
   email = "turbillon50@gmail.com";
   personal = { GITHUB_USER_TOKEN: "personal-github", VERCEL_USER_TOKEN: "personal-vercel" };
   operatorReads = 0;
   const access = await resolver.resolveAccessForUser("test-user");
   assert.equal(access.isOwner, true);
-  assert.equal(access.githubToken, "personal-github");
-  assert.equal(access.vercelToken, "personal-vercel");
-  assert.equal(operatorReads, 0);
+  assert.equal(access.githubToken, "operator:GITHUB_TOKEN");
+  assert.equal(access.vercelToken, "operator:VERCEL_TOKEN");
+  assert.equal(operatorReads, 2);
 });
 
-test("an owner falls back only for the missing provider", async () => {
+test("an owner does not combine personal and factory provider credentials", async () => {
   email = "turbillon50@gmail.com";
   personal = { GITHUB_USER_TOKEN: "personal-github" };
   operatorReads = 0;
   const access = await resolver.resolveAccessForUser("test-user");
-  assert.equal(access.githubToken, "personal-github");
+  assert.equal(access.githubToken, "operator:GITHUB_TOKEN");
   assert.equal(access.vercelToken, "operator:VERCEL_TOKEN");
-  assert.equal(operatorReads, 1);
+  assert.equal(operatorReads, 2);
 });
 
 test("a client without personal connections never borrows operator credentials", async () => {
