@@ -4,7 +4,10 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconHistory, IconPlus, IconX } from "@/components/brand/VFIcons";
 
+interface Photo { name: string; data: string; mime: string }
+
 interface Message {
+  photos?: Photo[];
   role: "user" | "assistant";
   content: string;
   model?: string | null;
@@ -53,6 +56,8 @@ export default function VCanonicalChat() {
   const [mode] = useState<Mode>("text");
   const [messages, setMessages] = useState<Message[]>([INTRO]);
   const [input, setInput] = useState("");
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const photoRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [hydrating, setHydrating] = useState(true);
   const [historyReady, setHistoryReady] = useState(false);
@@ -156,6 +161,7 @@ export default function VCanonicalChat() {
     }
     sessionIdRef.current = sid;
     setInput("");
+    setPhotos([]);
     pendingRef.current = null;
     try {
       localStorage.setItem(STORAGE_KEY, sid);
@@ -170,6 +176,7 @@ export default function VCanonicalChat() {
     if (loading) return;
     setNotice("");
     setInput("");
+    setPhotos([]);
     pendingRef.current = null;
     const sid = makeSessionId();
     sessionIdRef.current = sid;
@@ -184,24 +191,50 @@ export default function VCanonicalChat() {
     setHistoryReady(true);
   }
 
+  async function addPhotos(files: File[]) {
+    if (loading || hydrating) return;
+    setNotice("");
+    try {
+      const next: Photo[] = [];
+      for (const file of files) {
+        if (!/^image\/(png|jpeg|webp)$/.test(file.type)) throw Error("Usa imágenes PNG, JPG o WebP.");
+        if (file.size > 20 * 1024 * 1024) throw Error("Cada foto debe pesar menos de 20 MB.");
+        const url = URL.createObjectURL(file);
+        try {
+          const img = new Image(); img.src = url; await img.decode();
+          const scale = Math.min(1, 1800 / Math.max(img.width, img.height));
+          const canvas = document.createElement("canvas"); canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext("2d"); if (!ctx) throw Error("No pude preparar la imagen.");
+          ctx.fillStyle = "white"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const data = canvas.toDataURL("image/jpeg", .88);
+          if (data.length > 1100000) throw Error("La imagen es demasiado grande; recorta la captura.");
+          next.push({ name: file.name || "captura.jpg", mime: "image/jpeg", data });
+        } finally { URL.revokeObjectURL(url); }
+      }
+      setPhotos(previous => [...previous, ...next].slice(0, 3));
+    } catch (error) { setNotice(error instanceof Error ? error.message : "No pude adjuntar la imagen."); }
+  }
+
   async function sendMessage() {
-    const text = input.trim();
+    const selectedPhotos = [...photos];
+    const text = input.trim() || (selectedPhotos.length ? "Revisa las imágenes adjuntas." : "");
     if (!text || loading || hydrating || !historyReady) return;
     setNotice("");
     const sid = sessionIdRef.current;
     if (
       !pendingRef.current ||
       pendingRef.current.sid !== sid ||
-      pendingRef.current.text !== text
+      pendingRef.current.text !== text + JSON.stringify(selectedPhotos)
     ) {
-      pendingRef.current = { sid, text, id: crypto.randomUUID() };
+      pendingRef.current = { sid, text: text + JSON.stringify(selectedPhotos), id: crypto.randomUUID() };
     }
 
     const newMessages: Message[] = [
       ...messages,
-      { role: "user", content: text },
+      { role: "user", content: text, photos: selectedPhotos },
     ];
     setMessages(newMessages);
+    setPhotos([]);
     setInput("");
     setLoading(true);
 
@@ -212,6 +245,7 @@ export default function VCanonicalChat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: text,
+          attachments: selectedPhotos,
           session_id: sid,
           turn_id: pendingRef.current.id,
           history: newMessages
@@ -225,6 +259,7 @@ export default function VCanonicalChat() {
       if (!res.ok || !data.persisted || typeof data.reply !== "string") {
         setMessages(messages);
         setInput(text);
+        setPhotos(selectedPhotos);
         setNotice(
           data.error || "No pude confirmar el guardado. Reintenta el envío.",
         );
@@ -249,6 +284,7 @@ export default function VCanonicalChat() {
     } catch {
       setMessages(messages);
       setInput(text);
+        setPhotos(selectedPhotos);
       setNotice(
         "Se interrumpió la conexión. Tu mensaje sigue aquí; puedes volver a enviarlo.",
       );
@@ -317,6 +353,7 @@ export default function VCanonicalChat() {
                         : "border border-[var(--border-1)] bg-white text-black"
                     }`}
                   >
+                    {msg.photos?.map((photo, index) => <img key={index} src={photo.data} alt={photo.name} className="mb-2 max-h-64 rounded-lg object-contain" />)}
                     {msg.content}
                     {msg.role === "assistant" && msg.model && (
                       <p className="mt-2 border-t border-[var(--border-1)] pt-2 text-xs text-black/65">
@@ -350,22 +387,26 @@ export default function VCanonicalChat() {
               {notice}
             </p>
           )}
+          {photos.length > 0 && <div className="mt-3 flex gap-3" aria-label="Fotos adjuntas">{photos.map((photo, index) => <div key={index} className="relative"><img src={photo.data} alt={photo.name} className="h-20 w-24 rounded-lg border object-cover" /><button type="button" aria-label={"Quitar " + photo.name} onClick={() => setPhotos(previous => previous.filter((_, i) => i !== index))} className="absolute right-0 top-0 rounded-full bg-black px-2 text-white">×</button></div>)}</div>}
           {/* Input */}
           <div className="mt-4 flex shrink-0 gap-2">
+            <input ref={photoRef} type="file" accept="image/png,image/jpeg,image/webp" multiple className="hidden" onChange={event => { void addPhotos(Array.from(event.target.files || [])); event.target.value = ""; }} />
+            <button type="button" disabled={loading || hydrating || !historyReady} onClick={() => photoRef.current?.click()} className="self-end rounded-xl border px-3 py-3 text-sm" aria-label="Adjuntar fotos">＋ Foto</button>
             <textarea
               className="flex-1 resize-none rounded-xl border bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               rows={2}
-              placeholder="Escribe un mensaje… (Enter para enviar)"
+              placeholder="Escribe o pega una captura con Ctrl+V…"
               aria-label="Mensaje para V"
               maxLength={16000}
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onPaste={event => { const files = Array.from(event.clipboardData.items).filter(item => item.kind === "file" && item.type.startsWith("image/")).map(item => item.getAsFile()).filter((file): file is File => Boolean(file)); if (files.length) { event.preventDefault(); void addPhotos(files); } }}
               onKeyDown={handleKey}
               disabled={loading || hydrating || !historyReady}
             />
             <button
               onClick={sendMessage}
-              disabled={loading || hydrating || !historyReady || !input.trim()}
+              disabled={loading || hydrating || !historyReady || (!input.trim() && !photos.length)}
               className="self-end rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-medium text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
             >
               Enviar
